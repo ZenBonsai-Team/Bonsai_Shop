@@ -1,5 +1,8 @@
 package com.example.bonsai_shop.customer.service;
 
+import com.example.bonsai_shop.data.common.CloudinaryFolder;
+import com.example.bonsai_shop.data.dto.CloudinaryUploadResponse;
+import com.example.bonsai_shop.data.service.CloudinaryStorageService;
 import com.example.bonsai_shop.entity.PasswordResetOtp;
 import com.example.bonsai_shop.entity.Role;
 import com.example.bonsai_shop.entity.User;
@@ -25,6 +28,7 @@ public class UserService {
     private final EmailService emailService;
     private final FileStorageService fileStorageService;
     private final RegisterOtpRepository otpRepository;
+    private final CloudinaryStorageService cloudinaryStorageService;
 
     // ===== ĐĂNG KÝ =====
     @Transactional
@@ -86,14 +90,23 @@ public class UserService {
         if (phone != null) user.setPhone(phone);
         if (address != null) user.setAddress(address);
 
-        String oldAvatar = user.getAvatar();
+        String oldAvatarPublicID = user.getAvatarPublicId();
 
         if (avatarFile != null && !avatarFile.isEmpty()) {
-            String avatarPath = fileStorageService.storeAvatar(avatarFile);
-            user.setAvatar(avatarPath);
-            fileStorageService.deleteFile(oldAvatar); // Xóa avatar cũ nếu có
-        }
+            CloudinaryUploadResponse result =
+                    cloudinaryStorageService.uploadImage(
+                            avatarFile,
+                            CloudinaryFolder.AVATAR
+                    );
 
+
+            user.setAvatar(result.getUrl());
+            user.setAvatarPublicId(result.getPublicId());
+
+            if (oldAvatarPublicID != null && !oldAvatarPublicID.isBlank()) {
+                cloudinaryStorageService.deleteFile(oldAvatarPublicID, "image");
+            }
+        }
         userRepository.save(user);
     }
 
