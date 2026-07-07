@@ -13,6 +13,7 @@
             <a th:href="@{/seller}">Dashboard</a>
             <a th:href="@{/seller/products}">My Products</a>
             <a class="active" th:href="@{/seller/catalog}">Catalog</a>
+            <a th:href="@{/seller/profile}">My Profile</a>
             <a href="#">Appointments</a>
         </nav>
         <form method="post" th:action="@{/logout}">
@@ -24,7 +25,7 @@
     <header class="page-header">
         <div>
             <h1>Taxonomy Management</h1>
-            <p>Quáº£n lÃ½ Category, Variety, Segment vÃ  Tag dÃ¹ng khi táº¡o sáº£n pháº©m.</p>
+            <p>Quản lý Category, Variety, Segment và Tag dùng khi tạo sản phẩm.</p>
         </div>
         <a class="btn secondary" th:href="@{/seller/products/new}">Create Product</a>
     </header>
@@ -37,7 +38,7 @@
             <div class="taxonomy-toolbar">
                 <div>
                     <h2>Category</h2>
-                    <p>Chá»n category Ä‘á»ƒ xem varieties.</p>
+                    <p>Chọn category để xem varieties.</p>
                 </div>
                 <button type="button" class="btn small" data-open-modal="category-modal" data-mode="create">+ Add Category</button>
             </div>
@@ -60,7 +61,7 @@
                             Edit
                         </button>
                         <form method="post" th:action="@{/seller/catalog/categories/{id}/delete(id=${category.categoryId})}">
-                            <button type="submit" class="text-danger" onclick="return confirm('XÃ³a category nÃ y?')">Delete</button>
+                            <button type="submit" class="text-danger" onclick="return confirm('Xóa category này?')">Delete</button>
                         </form>
                     </div>
                 </div>
@@ -72,7 +73,7 @@
             <div class="taxonomy-toolbar">
                 <div>
                     <h2>Variety</h2>
-                    <p>Danh sÃ¡ch variety theo category.</p>
+                    <p>Danh sách variety theo category.</p>
                 </div>
                 <button type="button" class="btn small" data-open-modal="variety-modal" data-mode="create">+ Add Variety</button>
             </div>
@@ -80,9 +81,9 @@
             <table class="compact-table">
                 <thead>
                 <tr>
-                    <th>TÃªn variety</th>
+                    <th>Tên variety</th>
                     <th>Category</th>
-                    <th>MÃ´ táº£</th>
+                    <th>Mô tả</th>
                     <th>Actions</th>
                 </tr>
                 </thead>
@@ -101,7 +102,7 @@
                             Edit
                         </button>
                         <form method="post" th:action="@{/seller/catalog/varieties/{id}/delete(id=${variety.varietyId})}">
-                            <button type="submit" class="text-danger" onclick="return confirm('XÃ³a variety nÃ y?')">Delete</button>
+                            <button type="submit" class="text-danger" onclick="return confirm('Xóa variety này?')">Delete</button>
                         </form>
                     </td>
                 </tr>
@@ -121,7 +122,7 @@
             <table class="compact-table">
                 <thead>
                 <tr>
-                    <th>TÃªn segment</th>
+                    <th>Tên segment</th>
                     <th>Actions</th>
                 </tr>
                 </thead>
@@ -137,7 +138,7 @@
                             Edit
                         </button>
                         <form method="post" th:action="@{/seller/catalog/segments/{id}/delete(id=${segment.segmentId})}">
-                            <button type="submit" class="text-danger" onclick="return confirm('XÃ³a segment nÃ y?')">Delete</button>
+                            <button type="submit" class="text-danger" onclick="return confirm('Xóa segment này?')">Delete</button>
                         </form>
                     </td>
                 </tr>
@@ -155,7 +156,7 @@
             <table class="compact-table">
                 <thead>
                 <tr>
-                    <th>TÃªn tag</th>
+                    <th>Tên tag</th>
                     <th>Actions</th>
                 </tr>
                 </thead>
@@ -171,7 +172,7 @@
                             Edit
                         </button>
                         <form method="post" th:action="@{/seller/catalog/tags/{id}/delete(id=${tag.tagId})}">
-                            <button type="submit" class="text-danger" onclick="return confirm('XÃ³a tag nÃ y?')">Delete</button>
+                            <button type="submit" class="text-danger" onclick="return confirm('Xóa tag này?')">Delete</button>
                         </form>
                     </td>
                 </tr>
@@ -187,12 +188,12 @@
     <form class="modal-card" method="post" th:action="@{/seller/catalog/categories}" data-create-action="/seller/catalog/categories">
         <header>
             <h2 data-modal-title>Create Category</h2>
-            <button type="button" class="modal-close">Ã—</button>
+            <button type="button" class="modal-close">×</button>
         </header>
-        <label>TÃªn category
+        <label>Tên category
             <input name="categoryName" required data-field="name">
         </label>
-        <label>MÃ´ táº£
+        <label>Mô tả
             <input name="description" data-field="description">
         </label>
         <button type="submit">Save</button>
@@ -203,18 +204,18 @@
     <form class="modal-card" method="post" th:action="@{/seller/catalog/varieties}" data-create-action="/seller/catalog/varieties">
         <header>
             <h2 data-modal-title>Create Variety</h2>
-            <button type="button" class="modal-close">Ã—</button>
+            <button type="button" class="modal-close">×</button>
         </header>
         <label>Category
             <select name="categoryId" required data-field="categoryId">
-                <option value="">-- Chá»n category --</option>
+                <option value="">-- Chọn category --</option>
                 <option th:each="category : ${categories}" th:value="${category.categoryId}" th:text="${category.categoryName}"></option>
             </select>
         </label>
-        <label>TÃªn variety
+        <label>Tên variety
             <input name="varietyName" required data-field="name">
         </label>
-        <label>MÃ´ táº£
+        <label>Mô tả
             <input name="description" data-field="description">
         </label>
         <button type="submit">Save</button>
@@ -225,9 +226,9 @@
     <form class="modal-card" method="post" th:action="@{/seller/catalog/segments}" data-create-action="/seller/catalog/segments">
         <header>
             <h2 data-modal-title>Create Segment</h2>
-            <button type="button" class="modal-close">Ã—</button>
+            <button type="button" class="modal-close">×</button>
         </header>
-        <label>TÃªn segment
+        <label>Tên segment
             <input name="segmentName" required data-field="name">
         </label>
         <button type="submit">Save</button>
@@ -238,9 +239,9 @@
     <form class="modal-card" method="post" th:action="@{/seller/catalog/tags}" data-create-action="/seller/catalog/tags">
         <header>
             <h2 data-modal-title>Create Tag</h2>
-            <button type="button" class="modal-close">Ã—</button>
+            <button type="button" class="modal-close">×</button>
         </header>
-        <label>TÃªn tag
+        <label>Tên tag
             <input name="tagName" required data-field="name">
         </label>
         <button type="submit">Save</button>

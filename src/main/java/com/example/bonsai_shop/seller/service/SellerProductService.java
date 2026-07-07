@@ -54,12 +54,18 @@ public class SellerProductService {
     }
 
     public List<Product> getMyProducts(String sellerEmail) {
-        return productRepository.findBySellerOrderByCreatedAtDesc(getSeller(sellerEmail));
+        Integer sellerId = getSellerId(sellerEmail);
+        return productRepository.findBySellerUserIdOrderByCreatedAtDesc(sellerId);
     }
 
     public Product getMyProduct(String sellerEmail, Integer productId) {
-        return productRepository.findByProductIdAndSeller(productId, getSeller(sellerEmail))
+        Integer sellerId = getSellerId(sellerEmail);
+        return productRepository.findByProductIdAndSellerUserId(productId, sellerId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm thuộc seller này!"));
+    }
+
+    private Integer getSellerId(String sellerEmail) {
+        return getSeller(sellerEmail).getUserId();
     }
 
     @Transactional

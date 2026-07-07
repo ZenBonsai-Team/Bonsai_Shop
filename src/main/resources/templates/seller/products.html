@@ -13,6 +13,7 @@
             <a th:href="@{/seller}">Dashboard</a>
             <a class="active" th:href="@{/seller/products}">My Products</a>
             <a th:href="@{/seller/catalog}">Catalog</a>
+            <a th:href="@{/seller/profile}">My Profile</a>
             <a href="#">Appointments</a>
         </nav>
         <form method="post" th:action="@{/logout}">
@@ -51,7 +52,7 @@
                     <th>Name</th>
                     <th>Price</th>
                     <th>Status</th>
-                    <th>More</th>
+                    <th>Actions</th>
                 </tr>
                 </thead>
                 <tbody id="productTableBody">
@@ -64,18 +65,13 @@
                         <span th:if="${!product.isPublicPrice}">Liên hệ</span>
                     </td>
                     <td><span class="status-chip" th:text="${product.productStatus}"></span></td>
-                    <td>
-                        <details class="more-menu">
-                            <summary>...</summary>
-                            <div>
-                                <a th:href="@{/seller/products/{id}/edit(id=${product.productId})}">Edit Info</a>
-                                <a th:href="@{/seller/products/{id}/media(id=${product.productId})}">Media</a>
-                                <a th:href="@{/seller/products/{id}/preview(id=${product.productId})}">Preview</a>
-                                <form method="post" th:action="@{/seller/products/{id}/delete(id=${product.productId})}">
-                                    <button type="submit" class="text-danger" onclick="return confirm('Xóa sản phẩm này?')">Delete</button>
-                                </form>
-                            </div>
-                        </details>
+                    <td class="table-actions">
+                        <a th:href="@{/seller/products/{id}/edit(id=${product.productId})}">Edit</a>
+                        <a th:href="@{/seller/products/{id}/media(id=${product.productId})}">Media</a>
+                        <a th:href="@{/seller/products/{id}/preview(id=${product.productId})}">Preview</a>
+                        <form method="post" th:action="@{/seller/products/{id}/delete(id=${product.productId})}">
+                            <button type="submit" class="text-danger" onclick="return confirm('Xóa sản phẩm này?')">Delete</button>
+                        </form>
                     </td>
                 </tr>
                 </tbody>

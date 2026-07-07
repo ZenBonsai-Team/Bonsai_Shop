@@ -2,7 +2,6 @@ package com.example.bonsai_shop.product.repository;
 
 import com.example.bonsai_shop.product.dto.ProductCardDTO;
 import com.example.bonsai_shop.entity.Product;
-import com.example.bonsai_shop.entity.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -13,8 +12,8 @@ import java.util.List;
 import java.util.Optional;
 
 public interface ProductRepository extends JpaRepository<Product, Integer>, JpaSpecificationExecutor<Product> {
-    List<Product> findBySellerOrderByCreatedAtDesc(User seller);
-    Optional<Product> findByProductIdAndSeller(Integer productId, User seller);
+    List<Product> findBySellerUserIdOrderByCreatedAtDesc(Integer sellerId);
+    Optional<Product> findByProductIdAndSellerUserId(Integer productId, Integer sellerId);
     boolean existsByProductCode(String productCode);
     boolean existsByVarietyVarietyId(Integer varietyId);
     boolean existsBySegmentSegmentId(Integer segmentId);

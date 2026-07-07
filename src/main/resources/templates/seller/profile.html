@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>My Profile</title>
+    <link rel="stylesheet" th:href="@{/css/seller.css}">
+</head>
+<body>
+<div class="seller-portal">
+    <aside class="seller-sidebar">
+        <h2>Seller Portal</h2>
+        <nav>
+            <a th:href="@{/seller}">Dashboard</a>
+            <a th:href="@{/seller/products}">My Products</a>
+            <a th:href="@{/seller/catalog}">Catalog</a>
+            <a class="active" th:href="@{/seller/profile}">My Profile</a>
+            <a href="#">Appointments</a>
+        </nav>
+        <form method="post" th:action="@{/logout}">
+            <input th:if="${_csrf != null}" type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+            <button type="submit" class="sidebar-logout">Logout</button>
+        </form>
+    </aside>
+
+    <main class="portal-content">
+        <header class="page-header">
+            <div>
+                <h1>My Profile</h1>
+                <p>Thông tin tài khoản seller của bạn.</p>
+            </div>
+            <a class="btn secondary" th:href="@{/seller}">Back to Dashboard</a>
+        </header>
+
+        <section class="seller-profile-card">
+            <div class="seller-profile-header">
+                <div class="seller-profile-avatar">
+                    <img th:if="${seller.avatar != null}" th:src="${seller.avatar}" alt="avatar">
+                    <span th:if="${seller.avatar == null}" th:text="${#strings.substring(seller.fullName, 0, 1)}">S</span>
+                </div>
+                <div>
+                    <h2 th:text="${seller.fullName}">Seller Name</h2>
+                    <p th:text="${seller.email}">seller@example.com</p>
+                    <span class="status-chip" th:text="${seller.status}">ACTIVE</span>
+                </div>
+            </div>
+
+            <div class="seller-profile-fields">
+                <div class="profile-row">
+                    <span>👤</span>
+                    <div>
+                        <small>Họ và tên</small>
+                        <strong th:text="${seller.fullName}">-</strong>
+                    </div>
+                </div>
+                <div class="profile-row">
+                    <span>🆔</span>
+                    <div>
+                        <small>Tên đăng nhập</small>
+                        <strong th:text="${seller.username != null ? seller.username : 'Chưa cập nhật'}">-</strong>
+                    </div>
+                </div>
+                <div class="profile-row">
+                    <span>📧</span>
+                    <div>
+                        <small>Email</small>
+                        <strong th:text="${seller.email}">-</strong>
+                    </div>
+                </div>
+                <div class="profile-row">
+                    <span>📱</span>
+                    <div>
+                        <small>Số điện thoại</small>
+                        <strong th:text="${seller.phone != null ? seller.phone : 'Chưa cập nhật'}">-</strong>
+                    </div>
+                </div>
+                <div class="profile-row">
+                    <span>🏠</span>
+                    <div>
+                        <small>Địa chỉ</small>
+                        <strong th:text="${seller.address != null ? seller.address : 'Chưa cập nhật'}">-</strong>
+                    </div>
+                </div>
+                <div class="profile-row">
+                    <span>📅</span>
+                    <div>
+                        <small>Ngày tham gia</small>
+                        <strong th:text="${#temporals.format(seller.createdAt, 'dd/MM/yyyy')}">-</strong>
+                    </div>
+                </div>
+            </div>
+
+            <div class="actions seller-profile-actions">
+                <a class="btn" th:href="@{/seller/profile/update}">Edit Profile</a>
+                <a class="btn secondary" th:href="@{/seller/profile/change-password}">Change Password</a>
+            </div>
+        </section>
+    </main>
+</div>
+</body>
+</html>

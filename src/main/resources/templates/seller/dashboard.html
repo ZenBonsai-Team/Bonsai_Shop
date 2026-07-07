@@ -13,6 +13,7 @@
             <a class="active" th:href="@{/seller}">Dashboard</a>
             <a th:href="@{/seller/products}">My Products</a>
             <a th:href="@{/seller/catalog}">Catalog</a>
+            <a th:href="@{/seller/profile}">My Profile</a>
             <a href="#">Appointments</a>
         </nav>
         <form method="post" th:action="@{/logout}">
@@ -49,7 +50,7 @@
             </div>
         </section>
 
-        <section class="portal-grid">
+        <section class="portal-grid single-column">
             <div class="portal-card">
                 <h2>Need Attention</h2>
                 <ul class="attention-list">
@@ -57,20 +58,6 @@
                     <li><strong th:text="${missingDescriptionProducts}">0</strong> products missing description</li>
                     <li><strong th:text="${hiddenPriceProducts}">0</strong> products hide price</li>
                 </ul>
-            </div>
-
-            <div class="portal-card">
-                <h2>Seller Profile</h2>
-                <dl class="summary-list">
-                    <dt>Name</dt>
-                    <dd th:text="${seller.fullName}">Seller</dd>
-                    <dt>Email</dt>
-                    <dd th:text="${seller.email}">seller@example.com</dd>
-                    <dt>Phone</dt>
-                    <dd th:text="${seller.phone != null ? seller.phone : 'N/A'}">N/A</dd>
-                    <dt>Status</dt>
-                    <dd th:text="${seller.status}">ACTIVE</dd>
-                </dl>
             </div>
         </section>
 
