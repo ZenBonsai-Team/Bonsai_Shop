@@ -2,8 +2,8 @@
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="vi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
     <title>BSMS - Chi tiết tác phẩm</title>
     
     <!-- Fonts & Icons -->
@@ -20,6 +20,9 @@
     <!-- ===================================================== -->
     <link rel="stylesheet" th:href="@{/css/common.css}">
     <link rel="stylesheet" th:href="@{/css/product-detail.css}">
+    <!-- Checkout Modal CSS & JS -->
+    <link rel="stylesheet" th:href="@{/css/checkout-modal.css}">
+    <script th:src="@{/js/checkout-modal.js}"></script>
 </head>
 <body>
 
@@ -240,12 +243,25 @@
                 <div class="action-flex-row">
                     <!-- Buy Now Button -->
                     <!-- <button class="btn-buy-vnpay" th:if="${product.productStatus == 'AVAILABLE'}">Buy Now • VNPay</button> -->
-                    <form th:action="@{/vnpay/create-payment}" method="get" style="width: 100%;" th:if="${product.productStatus == 'AVAILABLE'}">
-                        <input type="hidden" name="productId" th:value="${product.productId}" />                 
-                        <button type="submit" class="btn-buy-vnpay">
-                            Gửi yêu cầu mua
-                        </button>
-                    </form>
+                    <button type="button" 
+        class="btn-buy-vnpay" 
+        th:if="${product.productStatus == 'AVAILABLE'}"
+        th:data-id="${product.productId}"
+        th:data-name="${product.productName}"
+        th:data-code="${product.productCode}"
+        th:data-price="${#numbers.formatDecimal(product.price, 0, 'POINT', 0, 'POINT') + ' đ'}"
+        th:data-img="${product.firstImageUrl}"
+        th:data-segment="${product.segment != null ? product.segment.segmentName : 'Popular'}"
+        onclick="openCheckoutModal(
+            this.getAttribute('data-id'), 
+            this.getAttribute('data-name'), 
+            this.getAttribute('data-code'), 
+            this.getAttribute('data-price'), 
+            this.getAttribute('data-img'), 
+            this.getAttribute('data-segment')
+        )">
+    Gửi yêu cầu mua
+</button>
 
                     <button class="btn-card-disabled" style="width: 100%; padding: 14px 0;" disabled th:if="${product.productStatus == 'RESERVED'}"><i class="fa-solid fa-lock"></i> Reserved</button>
                     <button class="btn-card-disabled" style="width: 100%; padding: 14px 0;" disabled th:if="${product.productStatus == 'SOLD'}"><i class="fa-solid fa-ban"></i> Sold</button>
@@ -678,5 +694,6 @@
         }
     }
 </script>
+<div th:replace="~{fragments/checkout-modal :: checkoutModal}"></div>
 </body>
 </html>
