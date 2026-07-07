@@ -1,14 +1,20 @@
 package com.example.bonsai_shop.seller.service;
 
 import com.example.bonsai_shop.customer.repository.UserRepository;
+import com.example.bonsai_shop.entity.Category;
 import com.example.bonsai_shop.entity.Product;
 import com.example.bonsai_shop.entity.ProductMedia;
 import com.example.bonsai_shop.entity.ProductSegment;
+import com.example.bonsai_shop.entity.ProductTag;
+import com.example.bonsai_shop.entity.Tag;
 import com.example.bonsai_shop.entity.User;
 import com.example.bonsai_shop.entity.Variety;
+import com.example.bonsai_shop.product.repository.CategoryRepository;
 import com.example.bonsai_shop.product.repository.ProductMediaRepository;
 import com.example.bonsai_shop.product.repository.ProductRepository;
 import com.example.bonsai_shop.product.repository.ProductSegmentRepository;
+import com.example.bonsai_shop.product.repository.ProductTagRepository;
+import com.example.bonsai_shop.product.repository.TagRepository;
 import com.example.bonsai_shop.product.repository.VarietyRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -16,16 +22,28 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
+import java.security.SecureRandom;
+import java.text.Normalizer;
 import java.time.LocalDateTime;
+import java.util.Locale;
 import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 public class SellerProductService {
 
+    private static final SecureRandom RANDOM = new SecureRandom();
+    private static final String CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    private static final Set<String> VALID_SHOT_TYPES = Set.of("FRONT", "BACK", "LEFT", "RIGHT", "TOP", "DETAIL", "ROOT", "TRUNK", "BRANCH", "POT", "OVERVIEW");
+
     private final ProductRepository productRepository;
+    private final CategoryRepository categoryRepository;
     private final ProductMediaRepository productMediaRepository;
     private final ProductSegmentRepository productSegmentRepository;
+    private final ProductTagRepository productTagRepository;
+    private final TagRepository tagRepository;
     private final VarietyRepository varietyRepository;
     private final UserRepository userRepository;
     private final SellerMediaStorageService mediaStorageService;
@@ -48,7 +66,6 @@ public class SellerProductService {
     public Product createProduct(String sellerEmail,
                                  Integer varietyId,
                                  Integer segmentId,
-                                 String productCode,
                                  String productName,
                                  String description,
                                  Integer age,
@@ -57,7 +74,8 @@ public class SellerProductService {
                                  String style,
                                  BigDecimal price,
                                  Boolean isPublicPrice,
-                                 String productStatus) {
+                                 String productStatus,
+                                 List<Integer> tagIds) {
         User seller = getSeller(sellerEmail);
         Variety variety = varietyRepository.findById(varietyId)
                 .orElseThrow(() -> new RuntimeException("Variety không tồn tại!"));
@@ -68,7 +86,7 @@ public class SellerProductService {
                 .seller(seller)
                 .variety(variety)
                 .segment(segment)
-                .productCode(productCode)
+                .productCode(createTemporaryProductCode())
                 .productName(productName)
                 .description(description)
                 .age(age)
@@ -82,7 +100,11 @@ public class SellerProductService {
                 .createdAt(LocalDateTime.now())
                 .build();
 
-        return productRepository.save(product);
+        Product savedProduct = productRepository.save(product);
+        savedProduct.setProductCode(generateProductCode(savedProduct.getVariety()));
+        Product productWithCode = productRepository.save(savedProduct);
+        syncProductTags(productWithCode, tagIds);
+        return productWithCode;
     }
 
     @Transactional
@@ -90,7 +112,6 @@ public class SellerProductService {
                                  Integer productId,
                                  Integer varietyId,
                                  Integer segmentId,
-                                 String productCode,
                                  String productName,
                                  String description,
                                  Integer age,
@@ -99,7 +120,8 @@ public class SellerProductService {
                                  String style,
                                  BigDecimal price,
                                  Boolean isPublicPrice,
-                                 String productStatus) {
+                                 String productStatus,
+                                 List<Integer> tagIds) {
         Product product = getMyProduct(sellerEmail, productId);
         Variety variety = varietyRepository.findById(varietyId)
                 .orElseThrow(() -> new RuntimeException("Variety không tồn tại!"));
@@ -108,7 +130,6 @@ public class SellerProductService {
 
         product.setVariety(variety);
         product.setSegment(segment);
-        product.setProductCode(productCode);
         product.setProductName(productName);
         product.setDescription(description);
         product.setAge(age);
@@ -119,7 +140,9 @@ public class SellerProductService {
         product.setIsPublicPrice(Boolean.TRUE.equals(isPublicPrice));
         product.setProductStatus(productStatus);
 
-        return productRepository.save(product);
+        Product savedProduct = productRepository.save(product);
+        syncProductTags(savedProduct, tagIds);
+        return savedProduct;
     }
 
     @Transactional
@@ -140,29 +163,29 @@ public class SellerProductService {
                          MultipartFile file,
                          String slotType,
                          String caption,
-                         Boolean isThumbnail,
-                         Integer displayOrder) {
+                         Boolean isThumbnail) {
         Product product = getMyProduct(sellerEmail, productId);
         String mediaUrl = mediaStorageService.storeProductMedia(file);
         String contentType = file.getContentType();
         String mediaType = contentType != null && contentType.startsWith("video/") ? "VIDEO" : "IMAGE";
+        String normalizedShotType = normalizeShotType(slotType, mediaType);
+        List<ProductMedia> existingMedia = productMediaRepository.findByProductOrderByDisplayOrderAscMediaIdAsc(product);
 
         if (Boolean.TRUE.equals(isThumbnail)) {
-            productMediaRepository.findByProductOrderByDisplayOrderAscMediaIdAsc(product)
-                    .forEach(media -> {
-                        media.setIsThumbnail(false);
-                        productMediaRepository.save(media);
-                    });
+            existingMedia.forEach(media -> {
+                media.setIsThumbnail(false);
+                productMediaRepository.save(media);
+            });
         }
 
         ProductMedia media = ProductMedia.builder()
                 .product(product)
                 .mediaUrl(mediaUrl)
                 .mediaType(mediaType)
-                .slotType(slotType)
+                .slotType(normalizedShotType)
                 .caption(caption)
                 .isThumbnail(Boolean.TRUE.equals(isThumbnail))
-                .displayOrder(displayOrder == null ? 0 : displayOrder)
+                .displayOrder(getNextDisplayOrder(existingMedia))
                 .build();
 
         productMediaRepository.save(media);
@@ -179,6 +202,24 @@ public class SellerProductService {
                     media.setIsThumbnail(media.getMediaId().equals(selected.getMediaId()));
                     productMediaRepository.save(media);
                 });
+    }
+
+    @Transactional
+    public void updateMediaOrder(String sellerEmail,
+                                 Integer productId,
+                                 List<Integer> mediaIds,
+                                 List<Integer> displayOrders) {
+        Product product = getMyProduct(sellerEmail, productId);
+        if (mediaIds == null || displayOrders == null || mediaIds.size() != displayOrders.size()) {
+            throw new RuntimeException("Dữ liệu thứ tự media không hợp lệ!");
+        }
+
+        for (int index = 0; index < mediaIds.size(); index++) {
+            ProductMedia media = productMediaRepository.findByMediaIdAndProduct(mediaIds.get(index), product)
+                    .orElseThrow(() -> new RuntimeException("Media không tồn tại!"));
+            media.setDisplayOrder(displayOrders.get(index) == null ? 0 : displayOrders.get(index));
+            productMediaRepository.save(media);
+        }
     }
 
     @Transactional
@@ -201,11 +242,131 @@ public class SellerProductService {
         productRepository.save(product);
     }
 
+    @Transactional
+    public void hideProduct(String sellerEmail, Integer productId) {
+        Product product = getMyProduct(sellerEmail, productId);
+        product.setProductStatus("HIDDEN");
+        productRepository.save(product);
+    }
+
     public List<Variety> getVarieties() {
         return varietyRepository.findAll();
     }
 
+    public List<Category> getCategories() {
+        return categoryRepository.findAll();
+    }
+
     public List<ProductSegment> getSegments() {
         return productSegmentRepository.findAll();
+    }
+
+    public List<Tag> getTags() {
+        return tagRepository.findAll();
+    }
+
+    public List<Integer> getSelectedTagIds(Product product) {
+        return productTagRepository.findByProduct(product).stream()
+                .map(productTag -> productTag.getTag().getTagId())
+                .toList();
+    }
+
+    public List<Tag> getProductTags(Product product) {
+        return productTagRepository.findByProduct(product).stream()
+                .map(ProductTag::getTag)
+                .toList();
+    }
+
+    private void syncProductTags(Product product, List<Integer> tagIds) {
+        productTagRepository.deleteByProduct(product);
+
+        if (tagIds == null || tagIds.isEmpty()) {
+            return;
+        }
+
+        List<Tag> tags = tagRepository.findAllById(tagIds);
+        tags.stream()
+                .map(tag -> ProductTag.builder()
+                        .product(product)
+                        .tag(tag)
+                        .build())
+                .forEach(productTagRepository::save);
+    }
+
+    private String createTemporaryProductCode() {
+        return "TMP-" + UUID.randomUUID();
+    }
+
+    private Integer getNextDisplayOrder(List<ProductMedia> existingMedia) {
+        return existingMedia.stream()
+                .map(ProductMedia::getDisplayOrder)
+                .filter(displayOrder -> displayOrder != null)
+                .max(Integer::compareTo)
+                .map(displayOrder -> displayOrder + 1)
+                .orElse(0);
+    }
+
+    private String normalizeShotType(String shotType, String mediaType) {
+        if ("VIDEO".equals(mediaType) && (shotType == null || shotType.isBlank())) {
+            return null;
+        }
+
+        if (shotType == null || shotType.isBlank()) {
+            throw new RuntimeException("Vui lòng chọn góc chụp!");
+        }
+
+        String normalizedShotType = shotType.trim().toUpperCase(Locale.ROOT);
+        if (!VALID_SHOT_TYPES.contains(normalizedShotType)) {
+            throw new RuntimeException("Góc chụp không hợp lệ!");
+        }
+
+        return normalizedShotType;
+    }
+
+    private String generateProductCode(Variety variety) {
+        String categoryPart = abbreviate(variety.getCategory().getCategoryName());
+        String varietyPart = abbreviate(variety.getVarietyName());
+        String productCode;
+
+        do {
+            productCode = String.format("BSMS-%s-%s-%s", categoryPart, varietyPart, randomCodeSuffix());
+        } while (productRepository.existsByProductCode(productCode));
+
+        return productCode;
+    }
+
+    private String abbreviate(String value) {
+        String normalized = Normalizer.normalize(value, Normalizer.Form.NFD)
+                .replaceAll("\\p{M}", "")
+                .toUpperCase(Locale.ROOT)
+                .replaceAll("[^A-Z0-9 ]", " ")
+                .trim()
+                .replaceAll("\\s+", " ");
+
+        if (normalized.isBlank()) {
+            return "GEN";
+        }
+
+        String[] words = normalized.split(" ");
+        if (words.length >= 2) {
+            StringBuilder initials = new StringBuilder();
+            for (String word : words) {
+                initials.append(word.charAt(0));
+                if (initials.length() == 4) {
+                    break;
+                }
+            }
+            return initials.toString();
+        }
+
+        return normalized.length() <= 4 ? normalized : normalized.substring(0, 4);
+    }
+
+    private String randomCodeSuffix() {
+        StringBuilder suffix = new StringBuilder();
+        for (int i = 0; i < 6; i++) {
+            suffix.append(CODE_ALPHABET.charAt(RANDOM.nextInt(CODE_ALPHABET.length())));
+        }
+        return suffix.toString();
     }
 }

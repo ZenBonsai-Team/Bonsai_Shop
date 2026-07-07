@@ -15,6 +15,9 @@ import java.util.Optional;
 public interface ProductRepository extends JpaRepository<Product, Integer>, JpaSpecificationExecutor<Product> {
     List<Product> findBySellerOrderByCreatedAtDesc(User seller);
     Optional<Product> findByProductIdAndSeller(Integer productId, User seller);
+    boolean existsByProductCode(String productCode);
+    boolean existsByVarietyVarietyId(Integer varietyId);
+    boolean existsBySegmentSegmentId(Integer segmentId);
 
     @Query("""
         SELECT new com.example.bonsai_shop.product.dto.ProductCardDTO(
@@ -35,15 +38,14 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
         JOIN p.seller u
         LEFT JOIN p.productMedias m
         WHERE
-                p.isPublicPrice = true
-                AND p.productStatus = 'AVAILABLE'
+                p.productStatus = 'AVAILABLE'
                 AND (m.isThumbnail = true OR m IS NULL)
     """)
     Page<ProductCardDTO> findMarketplaceProducts(Pageable pageable);
 
-    @Query("SELECT p FROM Product p JOIN FETCH p.variety JOIN FETCH p.seller WHERE p.isPublicPrice = true")
+    @Query("SELECT p FROM Product p JOIN FETCH p.variety JOIN FETCH p.seller WHERE p.productStatus <> 'HIDDEN'")
     Page<Product> findAllActiveProducts(Pageable pageable);
 
-    @Query("SELECT p FROM Product p JOIN FETCH p.variety JOIN FETCH p.seller WHERE p.isPublicPrice = true AND p.productStatus = 'AVAILABLE'")
+    @Query("SELECT p FROM Product p JOIN FETCH p.variety JOIN FETCH p.seller WHERE p.productStatus = 'AVAILABLE'")
     Page<Product> findAvailableProductsOnly(Pageable pageable);
 }

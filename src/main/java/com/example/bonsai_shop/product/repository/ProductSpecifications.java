@@ -29,8 +29,8 @@ public class ProductSpecifications {
                 root.fetch("seller", JoinType.INNER);
             }
 
-            // Baseline condition: isPublicPrice = true
-            predicates.add(cb.equal(root.get("isPublicPrice"), true));
+            // Baseline condition: hidden products are not shown on marketplace.
+            predicates.add(cb.notEqual(root.get("productStatus"), "HIDDEN"));
 
             // keyword (matches product name or code)
             if (keyword != null && !keyword.trim().isEmpty()) {
@@ -70,11 +70,13 @@ public class ProductSpecifications {
 
             // minPrice
             if (minPrice != null) {
+                predicates.add(cb.equal(root.get("isPublicPrice"), true));
                 predicates.add(cb.ge(root.get("price"), minPrice));
             }
 
             // maxPrice
             if (maxPrice != null) {
+                predicates.add(cb.equal(root.get("isPublicPrice"), true));
                 predicates.add(cb.le(root.get("price"), maxPrice));
             }
 

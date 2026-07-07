@@ -6,29 +6,104 @@
     <link rel="stylesheet" th:href="@{/css/seller.css}">
 </head>
 <body>
-<main class="container">
-    <header class="page-header">
-        <div>
-            <h1>Seller Dashboard</h1>
-            <p>Quản lý sản phẩm bonsai của bạn.</p>
-        </div>
-        <a class="btn" th:href="@{/seller/products}">My Products</a>
-    </header>
+<div class="seller-portal">
+    <aside class="seller-sidebar">
+        <h2>Seller Portal</h2>
+        <nav>
+            <a class="active" th:href="@{/seller}">Dashboard</a>
+            <a th:href="@{/seller/products}">My Products</a>
+            <a th:href="@{/seller/catalog}">Catalog</a>
+            <a href="#">Appointments</a>
+        </nav>
+        <form method="post" th:action="@{/logout}">
+            <input th:if="${_csrf != null}" type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+            <button type="submit" class="sidebar-logout">Logout</button>
+        </form>
+    </aside>
 
-    <section class="stats">
-        <div class="card">
-            <strong th:text="${totalProducts}">0</strong>
-            <span>Tổng sản phẩm</span>
-        </div>
-        <div class="card">
-            <strong th:text="${publishedProducts}">0</strong>
-            <span>Đã publish</span>
-        </div>
-        <div class="card">
-            <strong th:text="${draftProducts}">0</strong>
-            <span>Bản nháp</span>
-        </div>
-    </section>
-</main>
+    <main class="portal-content">
+        <header class="page-header">
+            <div>
+                <h1>Dashboard</h1>
+                <p>Overview sản phẩm và hoạt động seller.</p>
+            </div>
+            <a class="btn" th:href="@{/seller/products/new}">Create Product</a>
+        </header>
+
+        <section class="seller-kpis">
+            <div class="card">
+                <strong th:text="${totalProducts}">0</strong>
+                <span>Total Products</span>
+            </div>
+            <div class="card">
+                <strong th:text="${publishedProducts}">0</strong>
+                <span>Published</span>
+            </div>
+            <div class="card">
+                <strong th:text="${draftProducts}">0</strong>
+                <span>Draft</span>
+            </div>
+            <div class="card">
+                <strong th:text="${hiddenProducts}">0</strong>
+                <span>Hidden</span>
+            </div>
+        </section>
+
+        <section class="portal-grid">
+            <div class="portal-card">
+                <h2>Need Attention</h2>
+                <ul class="attention-list">
+                    <li><strong th:text="${draftProducts}">0</strong> draft products need publishing</li>
+                    <li><strong th:text="${missingDescriptionProducts}">0</strong> products missing description</li>
+                    <li><strong th:text="${hiddenPriceProducts}">0</strong> products hide price</li>
+                </ul>
+            </div>
+
+            <div class="portal-card">
+                <h2>Seller Profile</h2>
+                <dl class="summary-list">
+                    <dt>Name</dt>
+                    <dd th:text="${seller.fullName}">Seller</dd>
+                    <dt>Email</dt>
+                    <dd th:text="${seller.email}">seller@example.com</dd>
+                    <dt>Phone</dt>
+                    <dd th:text="${seller.phone != null ? seller.phone : 'N/A'}">N/A</dd>
+                    <dt>Status</dt>
+                    <dd th:text="${seller.status}">ACTIVE</dd>
+                </dl>
+            </div>
+        </section>
+
+        <section class="portal-card">
+            <div class="section-header">
+                <h2>Recent Products</h2>
+                <a th:href="@{/seller/products}">View all</a>
+            </div>
+            <table class="compact-table">
+                <thead>
+                <tr>
+                    <th>Code</th>
+                    <th>Name</th>
+                    <th>Status</th>
+                    <th>Price</th>
+                    <th>Action</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="product : ${recentProducts}">
+                    <td th:text="${product.productCode}"></td>
+                    <td th:text="${product.productName}"></td>
+                    <td><span class="status-chip" th:text="${product.productStatus}"></span></td>
+                    <td>
+                        <span th:if="${product.isPublicPrice}" th:text="${#numbers.formatDecimal(product.price, 0, 'POINT', 0, 'POINT') + ' VNĐ'}"></span>
+                        <span th:if="${!product.isPublicPrice}">Liên hệ</span>
+                    </td>
+                    <td><a th:href="@{/seller/products/{id}/preview(id=${product.productId})}">Preview</a></td>
+                </tr>
+                </tbody>
+            </table>
+        </section>
+    </main>
+</div>
 </body>
 </html>

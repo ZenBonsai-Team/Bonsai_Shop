@@ -1,6 +1,7 @@
 package com.example.bonsai_shop.seller.controller;
 
 import com.example.bonsai_shop.entity.Product;
+import com.example.bonsai_shop.entity.ProductMedia;
 import com.example.bonsai_shop.seller.service.SellerProductService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -16,6 +17,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Controller
 @RequestMapping("/seller/products")
@@ -40,7 +42,6 @@ public class SellerProductController {
     public String create(@AuthenticationPrincipal UserDetails userDetails,
                          @RequestParam Integer varietyId,
                          @RequestParam Integer segmentId,
-                         @RequestParam String productCode,
                          @RequestParam String productName,
                          @RequestParam(required = false) String description,
                          @RequestParam(required = false) Integer age,
@@ -49,13 +50,13 @@ public class SellerProductController {
                          @RequestParam(required = false) String style,
                          @RequestParam BigDecimal price,
                          @RequestParam(defaultValue = "false") Boolean isPublicPrice,
+                         @RequestParam(required = false) List<Integer> tagIds,
                          RedirectAttributes redirectAttributes) {
         try {
             Product product = sellerProductService.createProduct(
                     userDetails.getUsername(),
                     varietyId,
                     segmentId,
-                    productCode,
                     productName,
                     description,
                     age,
@@ -64,7 +65,8 @@ public class SellerProductController {
                     style,
                     price,
                     isPublicPrice,
-                    "DRAFT"
+                    "DRAFT",
+                    tagIds
             );
             redirectAttributes.addFlashAttribute("success", "Đã lưu thông tin cây. Tiếp tục upload media.");
             return "redirect:/seller/products/" + product.getProductId() + "/media";
@@ -88,7 +90,6 @@ public class SellerProductController {
                          @PathVariable Integer productId,
                          @RequestParam Integer varietyId,
                          @RequestParam Integer segmentId,
-                         @RequestParam String productCode,
                          @RequestParam String productName,
                          @RequestParam(required = false) String description,
                          @RequestParam(required = false) Integer age,
@@ -98,6 +99,7 @@ public class SellerProductController {
                          @RequestParam BigDecimal price,
                          @RequestParam(defaultValue = "false") Boolean isPublicPrice,
                          @RequestParam String productStatus,
+                         @RequestParam(required = false) List<Integer> tagIds,
                          RedirectAttributes redirectAttributes) {
         try {
             sellerProductService.updateProduct(
@@ -105,7 +107,6 @@ public class SellerProductController {
                     productId,
                     varietyId,
                     segmentId,
-                    productCode,
                     productName,
                     description,
                     age,
@@ -114,7 +115,8 @@ public class SellerProductController {
                     style,
                     price,
                     isPublicPrice,
-                    productStatus
+                    productStatus,
+                    tagIds
             );
             redirectAttributes.addFlashAttribute("success", "Đã cập nhật sản phẩm.");
             return "redirect:/seller/products/" + productId + "/preview";
@@ -154,7 +156,6 @@ public class SellerProductController {
                            @RequestParam(required = false) String slotType,
                            @RequestParam(required = false) String caption,
                            @RequestParam(defaultValue = "false") Boolean isThumbnail,
-                           @RequestParam(required = false) Integer displayOrder,
                            RedirectAttributes redirectAttributes) {
         try {
             sellerProductService.addMedia(
@@ -163,8 +164,7 @@ public class SellerProductController {
                     file,
                     slotType,
                     caption,
-                    isThumbnail,
-                    displayOrder
+                    isThumbnail
             );
             redirectAttributes.addFlashAttribute("success", "Đã thêm media.");
         } catch (RuntimeException e) {
@@ -181,6 +181,21 @@ public class SellerProductController {
         try {
             sellerProductService.setThumbnail(userDetails.getUsername(), productId, mediaId);
             redirectAttributes.addFlashAttribute("success", "Đã đặt thumbnail.");
+        } catch (RuntimeException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/seller/products/" + productId + "/media";
+    }
+
+    @PostMapping("/{productId}/media/order")
+    public String updateMediaOrder(@AuthenticationPrincipal UserDetails userDetails,
+                                   @PathVariable Integer productId,
+                                   @RequestParam(required = false) List<Integer> mediaIds,
+                                   @RequestParam(required = false) List<Integer> displayOrders,
+                                   RedirectAttributes redirectAttributes) {
+        try {
+            sellerProductService.updateMediaOrder(userDetails.getUsername(), productId, mediaIds, displayOrders);
+            redirectAttributes.addFlashAttribute("success", "Đã cập nhật thứ tự media.");
         } catch (RuntimeException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
@@ -206,8 +221,18 @@ public class SellerProductController {
                           @PathVariable Integer productId,
                           Model model) {
         Product product = sellerProductService.getMyProduct(userDetails.getUsername(), productId);
+        List<ProductMedia> mediaList = sellerProductService.getMedia(product);
+        ProductMedia thumbnail = mediaList.stream()
+                .filter(media -> Boolean.TRUE.equals(media.getIsThumbnail()))
+                .findFirst()
+                .orElse(mediaList.isEmpty() ? null : mediaList.get(0));
+
         model.addAttribute("product", product);
-        model.addAttribute("mediaList", sellerProductService.getMedia(product));
+        model.addAttribute("mediaList", mediaList);
+        model.addAttribute("thumbnail", thumbnail);
+        model.addAttribute("tags", sellerProductService.getProductTags(product));
+        model.addAttribute("imageCount", mediaList.stream().filter(media -> "IMAGE".equals(media.getMediaType())).count());
+        model.addAttribute("videoCount", mediaList.stream().filter(media -> "VIDEO".equals(media.getMediaType())).count());
         return "seller/product-preview";
     }
 
@@ -225,9 +250,26 @@ public class SellerProductController {
         }
     }
 
+    @PostMapping("/{productId}/hide")
+    public String hide(@AuthenticationPrincipal UserDetails userDetails,
+                       @PathVariable Integer productId,
+                       RedirectAttributes redirectAttributes) {
+        try {
+            sellerProductService.hideProduct(userDetails.getUsername(), productId);
+            redirectAttributes.addFlashAttribute("success", "Đã ẩn sản phẩm khỏi marketplace.");
+        } catch (RuntimeException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/seller/products/" + productId + "/preview";
+    }
+
     private void addProductFormData(Model model, Product product) {
         model.addAttribute("product", product);
+        model.addAttribute("categories", sellerProductService.getCategories());
         model.addAttribute("varieties", sellerProductService.getVarieties());
         model.addAttribute("segments", sellerProductService.getSegments());
+        model.addAttribute("tags", sellerProductService.getTags());
+        model.addAttribute("selectedCategoryId", product == null ? null : product.getVariety().getCategory().getCategoryId());
+        model.addAttribute("selectedTagIds", product == null ? List.of() : sellerProductService.getSelectedTagIds(product));
     }
 }
