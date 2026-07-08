@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="vi">
 <head>
@@ -442,7 +442,10 @@
                             
                             <div class="card-price-rating-row">
                                 <!-- Price binding -->
-                                <span class="card-price-val" th:text="${#numbers.formatDecimal(product.price, 0, 'POINT', 0, 'POINT') + ' đ'}">4.500.000 đ</span>
+                                <span class="card-price-val"
+                                      th:if="${product.isPublicPrice}"
+                                      th:text="${#numbers.formatDecimal(product.price, 0, 'POINT', 0, 'POINT') + ' đ'}">4.500.000 đ</span>
+                                <span class="card-price-val" th:if="${!product.isPublicPrice}">Liên hệ</span>
                                 
                                 <!-- Rating binding with fallback -->
                                 <!--
@@ -924,3 +927,5 @@
 </script>
 </body>
 </html>
+
+

@@ -30,8 +30,8 @@ public class ProductSpecifications {
                 root.fetch("seller", JoinType.INNER);
             }
 
-            // Baseline condition: isPublicPrice = true
-            predicates.add(cb.equal(root.get("isPublicPrice"), true));
+            // Customer marketplace must not expose seller-only product states.
+            predicates.add(cb.not(root.get("productStatus").in("DRAFT", "HIDDEN")));
 
             // keyword (matches product name or code)
             if (keyword != null && !keyword.trim().isEmpty()) {
@@ -42,11 +42,13 @@ public class ProductSpecifications {
                 ));
             }
 
-            // status & availableOnly
             if (Boolean.TRUE.equals(availableOnly)) {
                 predicates.add(cb.equal(root.get("productStatus"), "AVAILABLE"));
             } else if (status != null && !status.trim().isEmpty()) {
-                predicates.add(cb.equal(root.get("productStatus"), status));
+                String normalizedStatus = status.trim().toUpperCase();
+                if (!"DRAFT".equals(normalizedStatus) && !"HIDDEN".equals(normalizedStatus)) {
+                    predicates.add(cb.equal(root.get("productStatus"), normalizedStatus));
+                }
             }
 
             // segment (checks segmentId or segmentName)
@@ -69,44 +71,16 @@ public class ProductSpecifications {
                 }
             }
 
-            // minPrice and maxPrice manual input
-            if (minPrice != null || maxPrice != null) {
-                if (minPrice != null) {
-                    predicates.add(cb.ge(root.get("price"), minPrice));
-                }
-                if (maxPrice != null) {
-                    predicates.add(cb.le(root.get("price"), maxPrice));
-                }
-            } else if (priceRanges != null && !priceRanges.isEmpty()) {
-                // quick price ranges
-                List<Predicate> rangePredicates = new ArrayList<>();
-                for (String range : priceRanges) {
-                    if (range != null) {
-                        switch (range) {
-                            case "under1M":
-                                rangePredicates.add(cb.lessThan(root.get("price"), new BigDecimal("1000000")));
-                                break;
-                            case "1Mto5M":
-                                rangePredicates.add(cb.between(root.get("price"), new BigDecimal("1000000"), new BigDecimal("5000000")));
-                                break;
-                            case "5Mto10M":
-                                rangePredicates.add(cb.between(root.get("price"), new BigDecimal("5000000"), new BigDecimal("10000000")));
-                                break;
-                            case "10Mto30M":
-                                rangePredicates.add(cb.between(root.get("price"), new BigDecimal("10000000"), new BigDecimal("30000000")));
-                                break;
-                            case "30Mto100M":
-                                rangePredicates.add(cb.between(root.get("price"), new BigDecimal("30000000"), new BigDecimal("100000000")));
-                                break;
-                            case "over100M":
-                                rangePredicates.add(cb.greaterThan(root.get("price"), new BigDecimal("100000000")));
-                                break;
-                        }
-                    }
-                }
-                if (!rangePredicates.isEmpty()) {
-                    predicates.add(cb.or(rangePredicates.toArray(new Predicate[0])));
-                }
+            // minPrice
+            if (minPrice != null) {
+                predicates.add(cb.equal(root.get("isPublicPrice"), true));
+                predicates.add(cb.ge(root.get("price"), minPrice));
+            }
+
+            // maxPrice
+            if (maxPrice != null) {
+                predicates.add(cb.equal(root.get("isPublicPrice"), true));
+                predicates.add(cb.le(root.get("price"), maxPrice));
             }
 
             // ages (multiple checkboxes: OR logic between selected ranges)

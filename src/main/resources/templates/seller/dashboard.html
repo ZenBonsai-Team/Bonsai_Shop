@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Seller Dashboard</title>
+    <link rel="stylesheet" th:href="@{/css/seller.css}">
+</head>
+<body>
+<div class="seller-portal">
+    <aside class="seller-sidebar">
+        <h2>Seller Portal</h2>
+        <nav>
+            <a class="active" th:href="@{/seller}">Dashboard</a>
+            <a th:href="@{/seller/products}">My Products</a>
+            <a th:href="@{/seller/catalog}">Catalog</a>
+            <a th:href="@{/seller/profile}">My Profile</a>
+            <a href="#">Appointments</a>
+        </nav>
+        <form method="post" th:action="@{/logout}">
+            <input th:if="${_csrf != null}" type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+            <button type="submit" class="sidebar-logout">Logout</button>
+        </form>
+    </aside>
+
+    <main class="portal-content">
+        <header class="page-header">
+            <div>
+                <h1>Dashboard</h1>
+                <p>Overview sản phẩm và hoạt động seller.</p>
+            </div>
+            <a class="btn" th:href="@{/seller/products/new}">Create Product</a>
+        </header>
+
+        <section class="seller-kpis">
+            <div class="card">
+                <strong th:text="${totalProducts}">0</strong>
+                <span>Total Products</span>
+            </div>
+            <div class="card">
+                <strong th:text="${publishedProducts}">0</strong>
+                <span>Published</span>
+            </div>
+            <div class="card">
+                <strong th:text="${soldProducts}">0</strong>
+                <span>Sold Products</span>
+            </div>
+            <div class="card">
+                <strong th:text="${#numbers.formatDecimal(monthlyRevenue, 0, 'POINT', 0, 'POINT') + ' VNĐ'}">0 VNĐ</strong>
+                <span>Revenue This Month</span>
+            </div>
+            <div class="card">
+                <strong th:text="${monthlySoldItems}">0</strong>
+                <span>Sold This Month</span>
+            </div>
+            <div class="card">
+                <strong th:text="${draftProducts}">0</strong>
+                <span>Draft</span>
+            </div>
+            <div class="card">
+                <strong th:text="${hiddenProducts}">0</strong>
+                <span>Hidden</span>
+            </div>
+        </section>
+
+        <section class="portal-grid single-column">
+            <div class="portal-card">
+                <h2>Need Attention</h2>
+                <ul class="attention-list">
+                    <li><strong th:text="${draftProducts}">0</strong> draft products need publishing</li>
+                    <li><strong th:text="${missingDescriptionProducts}">0</strong> products missing description</li>
+                    <li><strong th:text="${hiddenPriceProducts}">0</strong> products hide price</li>
+                    <li><strong th:text="${hiddenProducts}">0</strong> hidden products are not visible to customers</li>
+                </ul>
+            </div>
+        </section>
+
+        <section class="portal-card">
+            <div class="section-header">
+                <h2>Recent Products</h2>
+                <a th:href="@{/seller/products}">View all</a>
+            </div>
+            <table class="compact-table">
+                <thead>
+                <tr>
+                    <th>Code</th>
+                    <th>Name</th>
+                    <th>Status</th>
+                    <th>Price</th>
+                    <th>Action</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="product : ${recentProducts}">
+                    <td th:text="${product.productCode}"></td>
+                    <td th:text="${product.productName}"></td>
+                    <td><span class="status-chip" th:text="${product.productStatus}"></span></td>
+                    <td>
+                        <span th:if="${product.isPublicPrice}" th:text="${#numbers.formatDecimal(product.price, 0, 'POINT', 0, 'POINT') + ' VNĐ'}"></span>
+                        <span th:if="${!product.isPublicPrice}">Liên hệ</span>
+                    </td>
+                    <td><a th:href="@{/seller/products/{id}/preview(id=${product.productId})}">Preview</a></td>
+                </tr>
+                </tbody>
+            </table>
+        </section>
+    </main>
+</div>
+</body>
+</html>
