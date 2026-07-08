@@ -11,6 +11,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 
 @Configuration
 @RequiredArgsConstructor
@@ -27,11 +28,13 @@ public class SecurityConfig {
         @Bean
         public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
                 http
+                                .userDetailsService(customUserDetailsService)
                                 .authorizeHttpRequests(auth -> auth
                                                 // Trang công khai
                                                 .requestMatchers(
                                                                 "/",
-                                                                "/products/**",
+                                                                "/product/**",
+                                                                "/marketplace",
                                                                 "/register",
                                                                 "/login",
                                                                 "/forgot-password",
@@ -63,7 +66,7 @@ public class SecurityConfig {
                                 .formLogin(form -> form
                                                 .loginPage("/login") // trang login tự tạo
                                                 .loginProcessingUrl("/login") // URL xử lý form login
-                                                .defaultSuccessUrl("/home", true) // sau login về trang chủ
+                                                .successHandler(roleBasedSuccessHandler())
                                                 .failureUrl("/login?error") // login sai về trang này
                                                 .permitAll())
                                 .logout(logout -> logout
@@ -77,11 +80,30 @@ public class SecurityConfig {
                 return http.build();
         }
 
-        @Bean
-        public AuthenticationManager authenticationManager(HttpSecurity http) throws Exception {
-                AuthenticationManagerBuilder builder = http.getSharedObject(AuthenticationManagerBuilder.class);
-                builder.userDetailsService(customUserDetailsService)
-                                .passwordEncoder(passwordEncoder());
-                return builder.build();
-        }
+    @Bean
+    public AuthenticationSuccessHandler roleBasedSuccessHandler() {
+        return (request, response, authentication) -> {
+            boolean isAdmin = authentication.getAuthorities().stream()
+                    .anyMatch(authority -> "ROLE_ADMIN".equals(authority.getAuthority()));
+            boolean isSeller = authentication.getAuthorities().stream()
+                    .anyMatch(authority -> "ROLE_SELLER".equals(authority.getAuthority()));
+
+            if (isAdmin) {
+                response.sendRedirect("/admin/users");
+            } else if (isSeller) {
+                response.sendRedirect("/seller");
+            } else {
+                response.sendRedirect("/home");
+            }
+        };
+    }
+    @Bean
+    public AuthenticationManager authenticationManager(HttpSecurity http) throws Exception {
+        AuthenticationManagerBuilder builder =
+                http.getSharedObject(AuthenticationManagerBuilder.class);
+        builder.userDetailsService(customUserDetailsService)
+                .passwordEncoder(passwordEncoder());
+        return builder.build();
+    }
 }
+

@@ -1,29 +1,60 @@
+/* WELCOME BAR */
+.welcome-bar {
+    position: relative;
+    background: #fefbec;
+    text-align: center;
+    padding: 12px 40px;
+    color: #001f11;
+    font-weight: bold;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
 
+.close-welcome-btn {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    color: #001f11;
+    opacity: 0.6;
+    transition: opacity 0.2s;
+    line-height: 1;
+    padding: 0;
+}
 
-        /* --- HERO STYLES --- */
-        .hero-centered {
-            padding: 90px 0;
-            text-align: center;
-            background: linear-gradient(rgba(250, 248, 245, 0.88), rgba(250, 248, 245, 0.88)), 
-                        url('https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?auto=format&fit=crop&q=80&w=1600') no-repeat center center;
-            background-size: cover;
-            border-bottom: 1px solid var(--border-color);
-            position: relative;
-        }
+.close-welcome-btn:hover {
+    opacity: 1;
+}
 
-        .hero-pill-badge {
-            font-family: var(--font-sans);
-            font-size: 0.72rem;
-            font-weight: 500;
-            letter-spacing: 0.05em;
-            color: var(--text-dark);
-            background-color: rgba(0, 99, 25, 0.05);
-            border: 3px solid rgba(0, 60, 16, 0.175);
-            padding: 5px 16px;
-            border-radius: 50px;
-            display: inline-block;
-            margin-bottom: 20px;
-        }
+/* --- HERO STYLES --- */
+.hero-centered {
+    padding: 90px 0;
+    text-align: center;
+    background: linear-gradient(rgba(250, 248, 245, 0.88), rgba(250, 248, 245, 0.88)), 
+    url('/images/hero-banner-1.jpg') no-repeat center center;
+    background-size: cover;
+    border-bottom: 1px solid var(--border-color);
+    position: relative;
+}
+
+.hero-pill-badge {
+    font-family: var(--font-sans);
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    color: var(--text-dark);
+    background-color: rgba(0, 99, 25, 0.05);
+    border: 3px solid rgba(0, 60, 16, 0.175);
+    padding: 5px 16px;
+    border-radius: 50px;
+    display: inline-block;
+    margin-bottom: 20px;
+}
 
         .hero-main-title {
             font-size: 3.4rem;

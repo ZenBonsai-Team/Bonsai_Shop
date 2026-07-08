@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>My Products</title>
+    <link rel="stylesheet" th:href="@{/css/seller.css}">
+</head>
+<body>
+<div class="seller-portal">
+    <aside class="seller-sidebar">
+        <h2>Seller Portal</h2>
+        <nav>
+            <a th:href="@{/seller}">Dashboard</a>
+            <a class="active" th:href="@{/seller/products}">My Products</a>
+            <a th:href="@{/seller/catalog}">Catalog</a>
+            <a th:href="@{/seller/profile}">My Profile</a>
+            <a href="#">Appointments</a>
+        </nav>
+        <form method="post" th:action="@{/logout}">
+            <input th:if="${_csrf != null}" type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+            <button type="submit" class="sidebar-logout">Logout</button>
+        </form>
+    </aside>
+
+    <main class="portal-content">
+        <header class="page-header">
+            <div>
+                <h1>My Products</h1>
+                <p>Quản lý sản phẩm thuộc seller đang đăng nhập.</p>
+            </div>
+            <a class="btn" th:href="@{/seller/products/new}">Create New Product</a>
+        </header>
+
+        <div th:if="${success}" class="alert success" th:text="${success}"></div>
+        <div th:if="${error}" class="alert error" th:text="${error}"></div>
+
+        <section class="portal-card">
+            <div class="product-toolbar">
+                <input id="productSearch" placeholder="Search product name or code...">
+                <div class="filter-chips">
+                    <button type="button" class="filter-chip active" data-status="ALL">All</button>
+                    <button type="button" class="filter-chip" data-status="AVAILABLE">Published</button>
+                    <button type="button" class="filter-chip" data-status="DRAFT">Draft</button>
+                    <button type="button" class="filter-chip" data-status="HIDDEN">Hidden</button>
+                    <button type="button" class="filter-chip" data-status="SOLD">Sold</button>
+                </div>
+            </div>
+
+            <table class="compact-table product-table">
+                <thead>
+                <tr>
+                    <th>Code</th>
+                    <th>Name</th>
+                    <th>Price</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+                </thead>
+                <tbody id="productTableBody">
+                <tr th:each="product : ${products}"
+                    th:attr="data-status=${product.productStatus},data-search-text=${product.productCode + ' ' + product.productName}">
+                    <td th:text="${product.productCode}"></td>
+                    <td th:text="${product.productName}"></td>
+                    <td>
+                        <span th:if="${product.isPublicPrice}" th:text="${#numbers.formatDecimal(product.price, 0, 'POINT', 0, 'POINT') + ' VNĐ'}"></span>
+                        <span th:if="${!product.isPublicPrice}">Liên hệ</span>
+                    </td>
+                    <td><span class="status-chip" th:text="${product.productStatus}"></span></td>
+                    <td class="table-actions">
+                        <a th:if="${product.productStatus != 'SOLD'}" th:href="@{/seller/products/{id}/edit(id=${product.productId})}">Edit</a>
+                        <a th:if="${product.productStatus != 'SOLD'}" th:href="@{/seller/products/{id}/media(id=${product.productId})}">Media</a>
+                        <a th:href="@{/seller/products/{id}/preview(id=${product.productId})}">Preview</a>
+                        <form th:if="${product.productStatus != 'SOLD'}" method="post" th:action="@{/seller/products/{id}/delete(id=${product.productId})}">
+                            <button type="submit" class="text-danger" onclick="return confirm('Xóa sản phẩm này?')">Delete</button>
+                        </form>
+                        <span th:if="${product.productStatus == 'SOLD'}" class="muted-text">Locked</span>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </section>
+    </main>
+</div>
+
+<script>
+    const productSearch = document.getElementById('productSearch');
+    const productRows = [...document.querySelectorAll('#productTableBody tr')];
+    let currentStatus = 'ALL';
+
+    function applyProductFilters() {
+        const keyword = productSearch.value.trim().toLowerCase();
+        productRows.forEach((row) => {
+            const matchesStatus = currentStatus === 'ALL' || row.dataset.status === currentStatus;
+            const matchesKeyword = !keyword || row.dataset.searchText.toLowerCase().includes(keyword);
+            row.hidden = !(matchesStatus && matchesKeyword);
+        });
+    }
+
+    document.querySelectorAll('.filter-chip').forEach((button) => {
+        button.addEventListener('click', () => {
+            document.querySelectorAll('.filter-chip').forEach((chip) => chip.classList.remove('active'));
+            button.classList.add('active');
+            currentStatus = button.dataset.status;
+            applyProductFilters();
+        });
+    });
+
+    productSearch.addEventListener('input', applyProductFilters);
+</script>
+</body>
+</html>

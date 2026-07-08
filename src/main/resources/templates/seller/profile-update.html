@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Edit Seller Profile</title>
+    <link rel="stylesheet" th:href="@{/css/seller.css}">
+</head>
+<body>
+<div class="seller-portal">
+    <aside class="seller-sidebar">
+        <h2>Seller Portal</h2>
+        <nav>
+            <a th:href="@{/seller}">Dashboard</a>
+            <a th:href="@{/seller/products}">My Products</a>
+            <a th:href="@{/seller/catalog}">Catalog</a>
+            <a class="active" th:href="@{/seller/profile}">My Profile</a>
+            <a href="#">Appointments</a>
+        </nav>
+        <form method="post" th:action="@{/logout}">
+            <input th:if="${_csrf != null}" type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+            <button type="submit" class="sidebar-logout">Logout</button>
+        </form>
+    </aside>
+
+    <main class="portal-content">
+        <header class="page-header">
+            <div>
+                <h1>Edit Profile</h1>
+                <p>Cập nhật thông tin tài khoản seller.</p>
+            </div>
+            <a class="btn secondary" th:href="@{/seller/profile}">Back to My Profile</a>
+        </header>
+
+        <div th:if="${error}" class="alert error" th:text="${error}"></div>
+
+        <section class="seller-profile-card">
+            <form class="seller-profile-form" method="post" th:action="@{/seller/profile/update}" enctype="multipart/form-data">
+                <div class="seller-profile-header">
+                    <div class="seller-profile-avatar">
+                        <img th:if="${seller.avatar != null}" th:src="${seller.avatar}" alt="avatar">
+                        <span th:if="${seller.avatar == null}" th:text="${#strings.substring(seller.fullName, 0, 1)}">S</span>
+                    </div>
+                    <div>
+                        <h2 th:text="${seller.fullName}">Seller Name</h2>
+                        <p th:text="${seller.email}">seller@example.com</p>
+                        <label class="avatar-upload">
+                            Avatar
+                            <input type="file" name="avatarFile" accept="image/*">
+                        </label>
+                    </div>
+                </div>
+
+                <div class="seller-profile-fields">
+                    <label class="profile-row">
+                        <span>👤</span>
+                        <div>
+                            <small>Họ và tên</small>
+                            <input name="fullName" required th:value="${seller.fullName}">
+                        </div>
+                    </label>
+                    <label class="profile-row">
+                        <span>🆔</span>
+                        <div>
+                            <small>Tên đăng nhập</small>
+                            <input name="username" th:value="${seller.username}" placeholder="Chưa cập nhật">
+                        </div>
+                    </label>
+                    <label class="profile-row">
+                        <span>📧</span>
+                        <div>
+                            <small>Email không thể thay đổi</small>
+                            <input th:value="${seller.email}" disabled>
+                        </div>
+                    </label>
+                    <label class="profile-row">
+                        <span>📱</span>
+                        <div>
+                            <small>Số điện thoại</small>
+                            <input name="phone" th:value="${seller.phone}" placeholder="Chưa cập nhật">
+                        </div>
+                    </label>
+                    <label class="profile-row">
+                        <span>🏠</span>
+                        <div>
+                            <small>Địa chỉ</small>
+                            <input name="address" th:value="${seller.address}" placeholder="Chưa cập nhật">
+                        </div>
+                    </label>
+                </div>
+
+                <div class="actions seller-profile-actions">
+                    <button type="submit">Save Changes</button>
+                    <a class="btn secondary" th:href="@{/seller/profile}">Cancel</a>
+                </div>
+            </form>
+        </section>
+    </main>
+</div>
+</body>
+</html>

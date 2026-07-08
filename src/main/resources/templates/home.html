@@ -15,7 +15,7 @@
 
     <div class="nav-links">
         <a th:href="@{/marketplace}">Trang chủ</a>
-        <a th:href="@{/products}">Sản phẩm</a>
+        <a th:href="@{/marketplace}">Sản phẩm</a>
         <a th:href="@{/wishlist}">Yêu thích</a>
         <a th:href="@{/cart}">Giỏ hàng</a>
     </div>
@@ -32,6 +32,8 @@
               th:href="@{/admin/users}">
                ⚙️ Quản trị
              </a>
+            <a th:if="${#authorization.expression('hasRole(''ROLE_SELLER'') or hasRole(''ROLE_ADMIN'')')}"
+               th:href="@{/seller}">Seller Dashboard</a>
             <a th:href="@{/profile}" style="color:#d8f3dc;">Profile</a>
             <form method="post" th:action="@{/logout}" style="display:inline;">
                 <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
@@ -50,7 +52,7 @@
 <div class="hero">
     <h1>🌿 Bonsai Shop</h1>
     <p>Khám phá bộ sưu tập cây bonsai độc đáo, tinh tế và đẳng cấp</p>
-    <a th:href="@{/products}" class="btn">Xem sản phẩm</a>
+    <a th:href="@{/marketplace}" class="btn">Xem sản phẩm</a>
 </div>
 
 <!-- FEATURES -->

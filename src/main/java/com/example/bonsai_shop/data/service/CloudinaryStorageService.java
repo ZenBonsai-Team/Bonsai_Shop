@@ -12,26 +12,17 @@ import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
-
 public class CloudinaryStorageService {
 
     private final Cloudinary cloudinary;
 
-    public CloudinaryUploadResponse uploadImage(
-            MultipartFile file,
-            CloudinaryFolder folder
-    ) {
+    public CloudinaryUploadResponse uploadImage(MultipartFile file, CloudinaryFolder folder) {
         validateFile(file, "image");
-
         return upload(file, folder.getPath(), "image");
     }
 
-    public CloudinaryUploadResponse uploadVideo(
-            MultipartFile file,
-            CloudinaryFolder folder
-    ) {
+    public CloudinaryUploadResponse uploadVideo(MultipartFile file, CloudinaryFolder folder) {
         validateFile(file, "video");
-
         return upload(file, folder.getPath(), "video");
     }
 
@@ -50,11 +41,7 @@ public class CloudinaryStorageService {
         }
     }
 
-    private CloudinaryUploadResponse upload(
-            MultipartFile file,
-            String folder,
-            String resourceType
-    ) {
+    private CloudinaryUploadResponse upload(MultipartFile file, String folder, String resourceType) {
         try {
             Map uploadResult = cloudinary.uploader().upload(
                     file.getBytes(),
@@ -68,7 +55,6 @@ public class CloudinaryStorageService {
             String publicId = uploadResult.get("public_id").toString();
 
             return new CloudinaryUploadResponse(url, publicId, resourceType);
-
         } catch (IOException e) {
             throw new RuntimeException("Upload file lên Cloudinary thất bại!");
         }
@@ -80,14 +66,13 @@ public class CloudinaryStorageService {
         }
 
         String contentType = file.getContentType();
-
         if (contentType == null || !contentType.startsWith(expectedType + "/")) {
             throw new RuntimeException("File không đúng định dạng " + expectedType + "!");
         }
 
         long maxSize = expectedType.equals("video")
-                ? 100 * 1024 * 1024
-                : 5 * 1024 * 1024;
+                ? 100L * 1024 * 1024
+                : 5L * 1024 * 1024;
 
         if (file.getSize() > maxSize) {
             throw new RuntimeException(
