@@ -1148,3 +1148,78 @@ Trước khi nghiệm thu bàn giao tính năng, Senior Front-end Developer cầ
 2.  **Lỗi Stale State (Dữ liệu cũ tồn đọng)**: Khi bấm xem cây A, mở modal điền thông tin nửa chừng rồi tắt đi, sau đó bấm xem cây B và mở lại modal -> Nếu không gọi hàm reset form sạch sẽ, thông tin sản phẩm và dữ liệu nhập dở của cây A vẫn tồn đọng, dễ dẫn đến việc đặt nhầm sản phẩm.
 3.  **Lỗi thiếu kiểm tra Client-side**: Phụ thuộc 100% vào validation của Spring Boot dẫn đến việc mỗi lần nhập lỗi, trang phải gửi request đi, nhận về phản hồi lỗi và render lại gây tốn tài nguyên băng thông và mang lại trải nghiệm giật lag cho khách hàng.
 4.  **Lỗi cuộn trang nền (Nested Scrolling)**: Khi modal hiển thị, nếu cuộn chuột quá đà, trang nền vẫn cuộn trượt lên xuống độc lập. Cần khắc phục triệt để bằng cách đảm bảo Bootstrap gán đúng thuộc tính `overflow: hidden` lên body khi hiển thị.
+5.  **Quên kích hoạt Persistence của Đơn hàng (Order)**: Việc cập nhật thực thể liên quan (như `ProductStatus` của cây sang `RESERVED`) chạy thành công nhưng bản thân đơn hàng lại không được tạo trong Database. Lỗi này xảy ra khi quên gọi `@Autowired` và phương thức lưu của repository lưu trữ đơn hàng (`orderRepository.save(order)`).
+
+---
+
+## 7. Phụ Lục: Phân Tích Thực Tế Về Xác Thực (Authentication) & Lưu Trữ (Persistence)
+
+### 7.1. Cơ Chế Lưu Trữ Đơn Hàng vs Cập Nhật Trạng Thái Cây
+Trong quá trình chạy thử nghiệm, khi nhấn **Xác nhận đặt mua**, cơ sở dữ liệu có thể rơi vào tình trạng chỉ cập nhật cây sang `RESERVED` mà không sinh ra Đơn hàng mới.
+*   **Nguyên nhân**: Trong mã nguồn REST Controller `OrderApiController.java`, lệnh lưu đơn hàng `orderRepository.save(order)` có thể đang bị comment hoặc thiếu tiêm dependency (`@Autowired private OrderRepository orderRepository`).
+*   **Hậu quả**: Đối tượng `BonsaiOrder` chỉ tồn tại tạm thời trong bộ nhớ và bị giải phóng khi luồng request kết thúc. Trong khi đó, lệnh `productRepository.save(product)` hoạt động độc lập nên trạng thái cây vẫn bị khóa thành công trên database.
+
+### 7.2. Luồng Đi Của Phiên Đăng Nhập (Session Flow) Khi Chuyển Trang
+Khi cấu hình Spring Security, luồng truyền tải thông tin tài khoản được quản lý dưới dạng Session:
+
+```text
+[Đăng nhập thành công] ──> [Server tạo Session] ──> [Browser lưu Cookie: JSESSIONID]
+                                                                  │
+                                                      (Tự động đính kèm ở mọi Request)
+                                                                  │
+                                                                  ▼
+                                                   [Request GET: /marketplace]
+                                                                  │
+                                           ┌──────────────────────┴──────────────────────┐
+                                           ▼                                             ▼
+                              [Giao diện (Thymeleaf/Navbar)]                   [Backend (Spring Security)]
+                             - Nút Sign In/Register code tĩnh.                 - Cookie khớp Session ID.
+                             - Luôn hiện Sign In / Register.                   - User đã xác thực ở SecurityContext.
+                             - Không hiển thị tên/avatar user.                 - Sẵn sàng cung cấp @AuthenticationPrincipal
+                                                                                 cho AJAX API khi bấm đặt mua cây.
+```
+
+*   **Tại sao giao diện Navbar vẫn hiện "Sign In" dù đã đăng nhập?**
+    *   Do phần header/navbar trong `product-detail.html` hay `marketplace.html` đang sử dụng mã HTML tĩnh cho phần đăng nhập.
+    *   Để sửa phần này (nếu có yêu cầu), cần tích hợp thư viện Thymeleaf Security để ẩn nút Sign In/Register và hiện thông tin tài khoản khi phát hiện trạng thái đã được xác thực:
+        ```html
+        <!-- Ví dụ minh họa (Không sửa code dự án) -->
+        <div sec:authorize="isAnonymous()">
+            <a href="/login" class="btn-auth-signin">Sign In</a>
+        </div>
+        <div sec:authorize="isAuthenticated()">
+            <span class="text-dark">Xin chào, <span sec:authentication="name">Username</span></span>
+        </div>
+        ```
+*   **Luồng gửi kèm thông tin tài khoản khi Checkout (AJAX)**:
+    *   Khi người dùng bấm đặt hàng từ Modal, JS gửi yêu cầu `POST /api/orders/checkout`. Request này tự động mang theo `JSESSIONID` cookie trong tiêu đề HTTP.
+    *   Nhờ cookie này, Spring Security giải cấu trúc phiên và tự động tiêm tài khoản người dùng vào tham số `@AuthenticationPrincipal UserDetails currentUser` của API Controller.
+    *   Điều này giúp hệ thống tự động gán khách hàng tương ứng vào trường `customer` của `BonsaiOrder` mà không cần yêu cầu người dùng phải nhập tay Email/Tên tài khoản để liên kết.
+
+### 7.3. Cấu Hình Cho Phép Đặt Hàng Không Cần Đăng Nhập (Guest Checkout)
+Để thiết kế đúng quy tắc nghiệp vụ cho phép mua hàng không bắt buộc đăng nhập, hệ thống cần đồng bộ cả cấu hình bảo mật ở Spring Security và tầng Controller:
+
+1.  **Cấu hình công khai (Permit All) trong `SecurityConfig.java`**:
+    Các đường dẫn phục vụ việc duyệt xem sản phẩm và đặt hàng của khách vãng lai cần được khai báo trong danh sách `.permitAll()` để bộ lọc Spring Security không chuyển hướng hay chặn yêu cầu:
+    *   `/marketplace` (Trang danh sách, tìm kiếm, lọc cây cảnh)
+    *   `/product/**` (Trang xem chi tiết tác phẩm cây cảnh dạng số ít, ví dụ: `/product/123`)
+    *   `/api/orders/checkout` (Đường dẫn API xử lý yêu cầu đặt mua sản phẩm gửi lên bằng AJAX)
+
+    *Ví dụ minh họa cấu hình Spring Security:*
+    ```java
+    .requestMatchers(
+            "/",
+            "/products/**",
+            "/product/**",        // Cho phép xem chi tiết sản phẩm dạng số ít
+            "/marketplace",       // Cho phép truy cập trang tìm kiếm sản phẩm công khai
+            "/api/orders/checkout", // Cho phép tạo đơn đặt hàng không cần đăng nhập
+            "/register",
+            "/login",
+            // ... các tài nguyên và API công khai khác ...
+    ).permitAll()
+    ```
+
+2.  **Logic tiếp nhận đối tượng User trong `OrderApiController.java`**:
+    Controller tiếp nhận đơn hàng cần phân tách hành vi dựa trên trạng thái phiên đăng nhập của Client:
+    *   **Trường hợp đã đăng nhập (`currentUser != null`)**: Trích xuất username (email) từ context bảo mật, truy vấn bản ghi `User` từ database và gán vào trường `customer` của `BonsaiOrder`. Việc này giúp lưu vết lịch sử mua hàng cho người dùng.
+    *   **Trường hợp chưa đăng nhập (`currentUser == null`)**: Trường `customer` sẽ được để trống (`null`). Tuy nhiên, đơn hàng vẫn được lưu bình thường và hiển thị các thông tin giao nhận (`customerName`, `customerPhone`, `customerEmail`, `shippingAddress`) được điền từ form của khách hàng vãng lai.

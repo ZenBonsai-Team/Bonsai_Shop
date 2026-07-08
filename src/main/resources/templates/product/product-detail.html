@@ -244,24 +244,24 @@
                     <!-- Buy Now Button -->
                     <!-- <button class="btn-buy-vnpay" th:if="${product.productStatus == 'AVAILABLE'}">Buy Now • VNPay</button> -->
                     <button type="button" 
-        class="btn-buy-vnpay" 
-        th:if="${product.productStatus == 'AVAILABLE'}"
-        th:data-id="${product.productId}"
-        th:data-name="${product.productName}"
-        th:data-code="${product.productCode}"
-        th:data-price="${#numbers.formatDecimal(product.price, 0, 'POINT', 0, 'POINT') + ' đ'}"
-        th:data-img="${product.firstImageUrl}"
-        th:data-segment="${product.segment != null ? product.segment.segmentName : 'Popular'}"
-        onclick="openCheckoutModal(
-            this.getAttribute('data-id'), 
-            this.getAttribute('data-name'), 
-            this.getAttribute('data-code'), 
-            this.getAttribute('data-price'), 
-            this.getAttribute('data-img'), 
-            this.getAttribute('data-segment')
-        )">
-    Gửi yêu cầu mua
-</button>
+                        class="btn-buy-vnpay" 
+                        th:if="${product.productStatus == 'AVAILABLE'}"
+                        th:data-id="${product.productId}"
+                        th:data-name="${product.productName}"
+                        th:data-code="${product.productCode}"
+                        th:data-price="${#numbers.formatDecimal(product.price, 0, 'POINT', 0, 'POINT') + ' đ'}"
+                        th:data-img="${product.firstImageUrl}"
+                        th:data-segment="${product.segment != null ? product.segment.segmentName : 'Popular'}"
+                        onclick="openCheckoutModal(
+                            this.getAttribute('data-id'), 
+                            this.getAttribute('data-name'), 
+                            this.getAttribute('data-code'), 
+                            this.getAttribute('data-price'), 
+                            this.getAttribute('data-img'), 
+                            this.getAttribute('data-segment')
+                        )">
+                    Gửi yêu cầu mua
+                    </button>
 
                     <button class="btn-card-disabled" style="width: 100%; padding: 14px 0;" disabled th:if="${product.productStatus == 'RESERVED'}"><i class="fa-solid fa-lock"></i> Reserved</button>
                     <button class="btn-card-disabled" style="width: 100%; padding: 14px 0;" disabled th:if="${product.productStatus == 'SOLD'}"><i class="fa-solid fa-ban"></i> Sold</button>

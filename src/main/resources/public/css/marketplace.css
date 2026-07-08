@@ -1,4 +1,11 @@
-
+/* WELCOME BAR */
+.welcome-bar {
+    background: #f1ffe5;
+    text-align: center;
+    padding: 12px;
+    color: #2d6a4f;
+    font-weight: bold;
+}
 
         /* --- HERO STYLES --- */
         .hero-centered {

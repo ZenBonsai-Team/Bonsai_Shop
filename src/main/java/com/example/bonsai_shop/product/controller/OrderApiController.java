@@ -7,6 +7,7 @@ import com.example.bonsai_shop.entity.Product;
 import com.example.bonsai_shop.entity.User;
 import com.example.bonsai_shop.product.dto.PurchaseOrderRequestDTO;
 import com.example.bonsai_shop.product.repository.ProductRepository;
+import com.example.bonsai_shop.product.repository.OrderRepository;
 import com.example.bonsai_shop.customer.repository.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -34,6 +35,9 @@ public class OrderApiController {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private OrderRepository orderRepository;
 
     @PostMapping("/checkout")
     @Transactional
@@ -94,8 +98,8 @@ public class OrderApiController {
         product.setProductStatus("RESERVED");
         productRepository.save(product);
 
-        // Giả sử có OrderRepository để lưu đơn hàng
-        // orderRepository.save(order);
+        // Lưu đơn hàng vào cơ sở dữ liệu
+        orderRepository.save(order);
 
         // 6. Xử lý phân nhánh Phương thức thanh toán
         if ("VNPAY".equalsIgnoreCase(dto.getPaymentMethod())) {

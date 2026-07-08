@@ -73,7 +73,7 @@
             <!-- Auth & Cart -->
             <div class="d-flex align-items-center gap-3">
                 <!-- User Login Area -->
-                <!-- Future:
+                <!-- Future: -->
                 <div sec:authorize="isAnonymous()" class="d-flex align-items-center gap-2">
                     <a th:href="@{/login}" class="btn-auth-signin">Sign In</a>
                     <a th:href="@{/register}" class="btn btn-auth-register">Register</a>
@@ -84,9 +84,9 @@
                         <button type="submit" class="btn btn-link text-dark p-0 nav-icon-link" title="Đăng xuất"><i class="fa-solid fa-arrow-right-from-bracket"></i></button>
                     </form>
                 </div>
-                -->
-                <a href="#" class="btn-auth-signin">Sign In</a>
-                <a href="#" class="btn btn-auth-register">Register</a>
+               
+                <!-- <a href="#" class="btn-auth-signin">Sign In</a>
+                <a href="#" class="btn btn-auth-register">Register</a> -->
 
                 <!-- Cart icon with orange badge count -->
                 <a href="#" class="nav-icon-link text-decoration-none position-relative ms-1" title="Giỏ hàng">
@@ -99,6 +99,11 @@
         </div>
     </div>
 </nav>
+
+<!-- WELCOME BAR (chỉ hiện khi đã đăng nhập) -->
+<div class="welcome-bar" sec:authorize="isAuthenticated()">
+    Chào mừng <span th:text="${username}"></span> đã quay trở lại!
+</div>
 
 <!-- ===================================================== -->
 <!-- HERO -->
