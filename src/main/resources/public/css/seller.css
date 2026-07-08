@@ -129,6 +129,15 @@ textarea {
     background: #ffd6d6;
 }
 
+.warning {
+    background: #fff3cd;
+}
+
+.muted-text {
+    color: #6b7280;
+    font-size: 0.9rem;
+}
+
 .media-grid {
     display: grid;
     gap: 16px;
@@ -689,7 +698,7 @@ textarea {
 .seller-kpis {
     display: grid;
     gap: 16px;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
     margin-bottom: 18px;
 }
 

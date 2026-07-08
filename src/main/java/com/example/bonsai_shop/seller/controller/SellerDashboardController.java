@@ -2,6 +2,7 @@ package com.example.bonsai_shop.seller.controller;
 
 import com.example.bonsai_shop.entity.Product;
 import com.example.bonsai_shop.entity.User;
+import com.example.bonsai_shop.product.repository.OrderDetailRepository;
 import com.example.bonsai_shop.seller.service.SellerProductService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -11,6 +12,8 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Controller
@@ -19,15 +22,32 @@ import java.util.List;
 public class SellerDashboardController {
 
     private final SellerProductService sellerProductService;
+    private final OrderDetailRepository orderDetailRepository;
 
     @GetMapping
     public String dashboard(@AuthenticationPrincipal UserDetails userDetails, Model model) {
         List<Product> products = sellerProductService.getMyProducts(userDetails.getUsername());
         User seller = sellerProductService.getSeller(userDetails.getUsername());
+        LocalDateTime monthStart = LocalDate.now().withDayOfMonth(1).atStartOfDay();
+        LocalDateTime nextMonthStart = monthStart.plusMonths(1);
+
         model.addAttribute("totalProducts", products.size());
         model.addAttribute("publishedProducts", products.stream()
                 .filter(product -> "AVAILABLE".equals(product.getProductStatus()))
                 .count());
+        model.addAttribute("soldProducts", products.stream()
+                .filter(product -> "SOLD".equals(product.getProductStatus()))
+                .count());
+        model.addAttribute("monthlySoldItems", orderDetailRepository.countMonthlySoldItemsBySeller(
+                seller.getUserId(),
+                monthStart,
+                nextMonthStart
+        ));
+        model.addAttribute("monthlyRevenue", orderDetailRepository.sumMonthlyRevenueBySeller(
+                seller.getUserId(),
+                monthStart,
+                nextMonthStart
+        ));
         model.addAttribute("draftProducts", products.stream()
                 .filter(product -> "DRAFT".equals(product.getProductStatus()))
                 .count());

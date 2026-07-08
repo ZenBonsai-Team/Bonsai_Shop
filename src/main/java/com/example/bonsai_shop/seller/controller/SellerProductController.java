@@ -79,8 +79,13 @@ public class SellerProductController {
     @GetMapping("/{productId}/edit")
     public String editForm(@AuthenticationPrincipal UserDetails userDetails,
                            @PathVariable Integer productId,
-                           Model model) {
+                           Model model,
+                           RedirectAttributes redirectAttributes) {
         Product product = sellerProductService.getMyProduct(userDetails.getUsername(), productId);
+        if (sellerProductService.isSold(product)) {
+            redirectAttributes.addFlashAttribute("error", "Sản phẩm đã bán không thể chỉnh sửa.");
+            return "redirect:/seller/products/" + productId + "/preview";
+        }
         addProductFormData(model, product);
         return "seller/product-form";
     }
@@ -146,6 +151,7 @@ public class SellerProductController {
         Product product = sellerProductService.getMyProduct(userDetails.getUsername(), productId);
         model.addAttribute("product", product);
         model.addAttribute("mediaList", sellerProductService.getMedia(product));
+        model.addAttribute("isSold", sellerProductService.isSold(product));
         return "seller/product-media";
     }
 
@@ -233,6 +239,7 @@ public class SellerProductController {
         model.addAttribute("tags", sellerProductService.getProductTags(product));
         model.addAttribute("imageCount", mediaList.stream().filter(media -> "IMAGE".equals(media.getMediaType())).count());
         model.addAttribute("videoCount", mediaList.stream().filter(media -> "VIDEO".equals(media.getMediaType())).count());
+        model.addAttribute("isSold", sellerProductService.isSold(product));
         return "seller/product-preview";
     }
 

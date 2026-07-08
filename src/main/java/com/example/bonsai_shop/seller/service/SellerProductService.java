@@ -129,6 +129,7 @@ public class SellerProductService {
                                  String productStatus,
                                  List<Integer> tagIds) {
         Product product = getMyProduct(sellerEmail, productId);
+        ensureNotSold(product);
         Variety variety = varietyRepository.findById(varietyId)
                 .orElseThrow(() -> new RuntimeException("Variety không tồn tại!"));
         ProductSegment segment = productSegmentRepository.findById(segmentId)
@@ -154,6 +155,7 @@ public class SellerProductService {
     @Transactional
     public void deleteProduct(String sellerEmail, Integer productId) {
         Product product = getMyProduct(sellerEmail, productId);
+        ensureNotSold(product);
         productMediaRepository.findByProductOrderByDisplayOrderAscMediaIdAsc(product)
                 .forEach(media -> mediaStorageService.deleteProductMedia(media.getMediaUrl()));
         productRepository.delete(product);
@@ -171,6 +173,7 @@ public class SellerProductService {
                          String caption,
                          Boolean isThumbnail) {
         Product product = getMyProduct(sellerEmail, productId);
+        ensureNotSold(product);
         String mediaUrl = mediaStorageService.storeProductMedia(file);
         String contentType = file.getContentType();
         String mediaType = contentType != null && contentType.startsWith("video/") ? "VIDEO" : "IMAGE";
@@ -200,6 +203,7 @@ public class SellerProductService {
     @Transactional
     public void setThumbnail(String sellerEmail, Integer productId, Integer mediaId) {
         Product product = getMyProduct(sellerEmail, productId);
+        ensureNotSold(product);
         ProductMedia selected = productMediaRepository.findByMediaIdAndProduct(mediaId, product)
                 .orElseThrow(() -> new RuntimeException("Media không tồn tại!"));
 
@@ -216,6 +220,7 @@ public class SellerProductService {
                                  List<Integer> mediaIds,
                                  List<Integer> displayOrders) {
         Product product = getMyProduct(sellerEmail, productId);
+        ensureNotSold(product);
         if (mediaIds == null || displayOrders == null || mediaIds.size() != displayOrders.size()) {
             throw new RuntimeException("Dữ liệu thứ tự media không hợp lệ!");
         }
@@ -231,6 +236,7 @@ public class SellerProductService {
     @Transactional
     public void deleteMedia(String sellerEmail, Integer productId, Integer mediaId) {
         Product product = getMyProduct(sellerEmail, productId);
+        ensureNotSold(product);
         ProductMedia media = productMediaRepository.findByMediaIdAndProduct(mediaId, product)
                 .orElseThrow(() -> new RuntimeException("Media không tồn tại!"));
 
@@ -241,6 +247,7 @@ public class SellerProductService {
     @Transactional
     public void publish(String sellerEmail, Integer productId) {
         Product product = getMyProduct(sellerEmail, productId);
+        ensureNotSold(product);
         if (productMediaRepository.findByProductOrderByDisplayOrderAscMediaIdAsc(product).isEmpty()) {
             throw new RuntimeException("Cần ít nhất một ảnh hoặc video trước khi publish!");
         }
@@ -251,6 +258,7 @@ public class SellerProductService {
     @Transactional
     public void hideProduct(String sellerEmail, Integer productId) {
         Product product = getMyProduct(sellerEmail, productId);
+        ensureNotSold(product);
         product.setProductStatus("HIDDEN");
         productRepository.save(product);
     }
@@ -297,6 +305,16 @@ public class SellerProductService {
                         .tag(tag)
                         .build())
                 .forEach(productTagRepository::save);
+    }
+
+    public boolean isSold(Product product) {
+        return product != null && "SOLD".equalsIgnoreCase(product.getProductStatus());
+    }
+
+    private void ensureNotSold(Product product) {
+        if (isSold(product)) {
+            throw new RuntimeException("Sản phẩm đã bán không thể chỉnh sửa.");
+        }
     }
 
     private String createTemporaryProductCode() {

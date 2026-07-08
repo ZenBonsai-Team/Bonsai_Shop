@@ -29,8 +29,8 @@ public class ProductSpecifications {
                 root.fetch("seller", JoinType.INNER);
             }
 
-            // Baseline condition: hidden products are not shown on marketplace.
-            predicates.add(cb.notEqual(root.get("productStatus"), "HIDDEN"));
+            // Customer marketplace must not expose seller-only product states.
+            predicates.add(cb.not(root.get("productStatus").in("DRAFT", "HIDDEN")));
 
             // keyword (matches product name or code)
             if (keyword != null && !keyword.trim().isEmpty()) {
@@ -41,11 +41,13 @@ public class ProductSpecifications {
                 ));
             }
 
-            // status & availableOnly
             if (Boolean.TRUE.equals(availableOnly)) {
                 predicates.add(cb.equal(root.get("productStatus"), "AVAILABLE"));
             } else if (status != null && !status.trim().isEmpty()) {
-                predicates.add(cb.equal(root.get("productStatus"), status));
+                String normalizedStatus = status.trim().toUpperCase();
+                if (!"DRAFT".equals(normalizedStatus) && !"HIDDEN".equals(normalizedStatus)) {
+                    predicates.add(cb.equal(root.get("productStatus"), normalizedStatus));
+                }
             }
 
             // segment (checks segmentId or segmentName)

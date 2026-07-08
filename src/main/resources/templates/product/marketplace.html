@@ -733,7 +733,7 @@
             text-decoration: underline;
         }
 
-        /* --- SHOWCASE "TUYá»‚N CHá»ŒN / Bá»˜ SÆ¯U Táº¬P Ná»”I Báº¬T" SECTION --- */
+        /* --- SHOWCASE "TUYỂN CHỌN / BỘ SƯU TẬP NỔI BẬT" SECTION --- */
         .showcase-bg-container {
             background-color: var(--bg-beige);
             padding: 80px 0;
@@ -1115,7 +1115,7 @@
     <div class="container">
         <!-- Brand Logo -->
         <a class="navbar-brand navbar-brand-custom" href="#">
-            ðŸŒ¿ BSMS
+            🌿 BSMS
         </a>
         
         <!-- Toggle for Mobile -->
@@ -1167,7 +1167,7 @@
                 <div sec:authorize="isAuthenticated()" class="d-flex align-items-center gap-2">
                     <a th:href="@{/profile}" class="nav-icon-link text-decoration-none" title="Profile"><i class="fa-regular fa-user"></i></a>
                     <form method="post" th:action="@{/logout}" class="m-0">
-                        <button type="submit" class="btn btn-link text-dark p-0 nav-icon-link" title="ÄÄƒng xuáº¥t"><i class="fa-solid fa-arrow-right-from-bracket"></i></button>
+                        <button type="submit" class="btn btn-link text-dark p-0 nav-icon-link" title="Đăng xuất"><i class="fa-solid fa-arrow-right-from-bracket"></i></button>
                     </form>
                 </div>
                 -->
@@ -1175,7 +1175,7 @@
                 <a href="#" class="btn btn-auth-register">Register</a>
 
                 <!-- Cart icon with orange badge count -->
-                <a href="#" class="nav-icon-link text-decoration-none position-relative ms-1" title="Giá» hÃ ng">
+                <a href="#" class="nav-icon-link text-decoration-none position-relative ms-1" title="Giỏ hàng">
                     <!-- Future: th:href="@{/cart}" -->
                     <i class="fa-solid fa-bag-shopping"></i>
                     <!-- Future: th:text="${cartSize}" -->
@@ -1191,14 +1191,14 @@
 <!-- ===================================================== -->
 <header class="hero-centered">
     <div class="container">
-        <span class="hero-pill-badge">Bá»™ sÆ°u táº­p cá»‘ Ä‘á»‹nh giÃ¡ â€¢ Pháº£ há»‡ minh báº¡ch</span>
-        <h1 class="hero-main-title serif-text">Sá»Ÿ Há»¯u TÃ¡c Pháº©m CÃ¢y Cáº£nh<br>Nghá»‡ Thuáº­t Cá»‘ Äá»‹nh GiÃ¡</h1>
+        <span class="hero-pill-badge">Bộ sưu tập cố định giá • Phả hệ minh bạch</span>
+        <h1 class="hero-main-title serif-text">Sở Hữu Tác Phẩm Cây Cảnh<br>Nghệ Thuật Cố Định Giá</h1>
         <p class="hero-subtitle-desc">
-            Má»—i tÃ¡c pháº©m lÃ  má»™t di sáº£n cÃ³ há»“ sÆ¡ pháº£ há»‡ rÃµ rÃ ng, Ä‘Æ°á»£c tuyá»ƒn chá»n tá»« nhÃ  vÆ°á»n nghá»‡ nhÃ¢n Báº¯c Bá»™. Váº­n chuyá»ƒn chuyÃªn dá»¥ng cÃ³ cáº©u cho cÃ¢y cá»¡ lá»›n.
+            Mỗi tác phẩm là một di sản có hồ sơ phả hệ rõ ràng, được tuyển chọn từ nhà vườn nghệ nhân Bắc Bộ. Vận chuyển chuyên dụng có cẩu cho cây cỡ lớn.
         </p>
         <div class="d-flex justify-content-center align-items-center">
-            <a href="#marketplace-anchor" class="btn btn-hero-solid text-decoration-none">KhÃ¡m phÃ¡ bá»™ sÆ°u táº­p</a>
-            <a href="#" class="btn btn-hero-outline text-decoration-none">Xem theo phÃ¢n loáº¡i</a>
+            <a href="#marketplace-anchor" class="btn btn-hero-solid text-decoration-none">Khám phá bộ sưu tập</a>
+            <a href="#" class="btn btn-hero-outline text-decoration-none">Xem theo phân loại</a>
         </div>
     </div>
     <!-- TODO:
@@ -1247,15 +1247,15 @@
     <!-- Mobile Filter Toggle Bar -->
     <div class="mobile-filter-bar d-lg-none">
         <button class="btn btn-outline-dark btn-sm rounded-0 px-3 py-2" id="mobileFilterToggleBtn">
-            <i class="fa-solid fa-sliders me-2"></i>Bá»™ lá»c nÃ¢ng cao
+            <i class="fa-solid fa-sliders me-2"></i>Bộ lọc nâng cao
         </button>
         <div class="d-flex align-items-center gap-2">
-            <span class="text-muted small">Sáº¯p xáº¿p:</span>
+            <span class="text-muted small">Sắp xếp:</span>
             <select class="form-select form-select-sm border-0 bg-light" style="width: 140px;" id="mobileSortSelect">
-                <option value="featured" th:selected="${sort == 'featured' || sort == null}">Ná»•i báº­t</option>
-                <option value="price_asc" th:selected="${sort == 'price_asc'}">GiÃ¡: Tháº¥p Ä‘áº¿n Cao</option>
-                <option value="price_desc" th:selected="${sort == 'price_desc'}">GiÃ¡: Cao Ä‘áº¿n Tháº¥p</option>
-                <option value="age_desc" th:selected="${sort == 'age_desc'}">Tuá»•i lá»›n nháº¥t</option>
+                <option value="featured" th:selected="${sort == 'featured' || sort == null}">Nổi bật</option>
+                <option value="price_asc" th:selected="${sort == 'price_asc'}">Giá: Thấp đến Cao</option>
+                <option value="price_desc" th:selected="${sort == 'price_desc'}">Giá: Cao đến Thấp</option>
+                <option value="age_desc" th:selected="${sort == 'age_desc'}">Tuổi lớn nhất</option>
             </select>
         </div>
     </div>
@@ -1271,10 +1271,10 @@
             <form method="get" action="/marketplace" id="filterForm">
                 <div class="filter-panel">
                     <div class="filter-panel-header">
-                        <h5 class="filter-panel-title">Bá»™ lá»c nÃ¢ng cao</h5>
+                        <h5 class="filter-panel-title">Bộ lọc nâng cao</h5>
                         <!-- Button to close drawer on mobile -->
                         <button type="button" class="btn-close d-lg-none close-filter-btn" id="mobileFilterCloseBtn" aria-label="Close"></button>
-                        <a href="/marketplace" class="filter-panel-clear-link">XoÃ¡</a>
+                        <a href="/marketplace" class="filter-panel-clear-link">Xoá</a>
                     </div>
     
                     <!-- Preserved search, sorting and min price state -->
@@ -1285,23 +1285,23 @@
                     <!-- Species Checklist -->
                     <div class="filter-block">
                         <div class="filter-block-title">
-                            LoÃ i cÃ¢y (Species)
+                            Loài cây (Species)
                             <i class="fa-solid fa-chevron-up"></i>
                         </div>
                         <div class="filter-block-content">
                             <label class="checkbox-label">
-                                Sanh Nam Äiá»n
-                                <input type="checkbox" name="species" value="Sanh Nam Äiá»n" th:checked="${species != null && species.contains('Sanh Nam Äiá»n')}">
+                                Sanh Nam Điền
+                                <input type="checkbox" name="species" value="Sanh Nam Điền" th:checked="${species != null && species.contains('Sanh Nam Điền')}">
                                 <span class="checkbox-checkmark"></span>
                             </label>
                             <label class="checkbox-label">
-                                Sanh QuÃª
-                                <input type="checkbox" name="species" value="Sanh QuÃª" th:checked="${species != null && species.contains('Sanh QuÃª')}">
+                                Sanh Quê
+                                <input type="checkbox" name="species" value="Sanh Quê" th:checked="${species != null && species.contains('Sanh Quê')}">
                                 <span class="checkbox-checkmark"></span>
                             </label>
                             <label class="checkbox-label">
-                                TÃ¹ng La HÃ¡n
-                                <input type="checkbox" name="species" value="TÃ¹ng La HÃ¡n" th:checked="${species != null && species.contains('TÃ¹ng La HÃ¡n')}">
+                                Tùng La Hán
+                                <input type="checkbox" name="species" value="Tùng La Hán" th:checked="${species != null && species.contains('Tùng La Hán')}">
                                 <span class="checkbox-checkmark"></span>
                             </label>
                             <label class="checkbox-label">
@@ -1310,8 +1310,8 @@
                                 <span class="checkbox-checkmark"></span>
                             </label>
                             <label class="checkbox-label">
-                                Mai Chiáº¿u Thá»§y
-                                <input type="checkbox" name="species" value="Mai Chiáº¿u Thá»§y" th:checked="${species != null && species.contains('Mai Chiáº¿u Thá»§y')}">
+                                Mai Chiếu Thủy
+                                <input type="checkbox" name="species" value="Mai Chiếu Thủy" th:checked="${species != null && species.contains('Mai Chiếu Thủy')}">
                                 <span class="checkbox-checkmark"></span>
                             </label>
                         </div>
@@ -1320,33 +1320,33 @@
                     <!-- Style Checklist -->
                     <div class="filter-block">
                         <div class="filter-block-title">
-                            Tháº¿ dÃ¡ng (Style)
+                            Thế dáng (Style)
                             <i class="fa-solid fa-chevron-up"></i>
                         </div>
                         <div class="filter-block-content">
                             <label class="checkbox-label">
-                                DÃ¡ng Trá»±c
-                                <input type="checkbox" name="styles" value="DÃ¡ng Trá»±c" th:checked="${styles != null && styles.contains('DÃ¡ng Trá»±c')}">
+                                Dáng Trực
+                                <input type="checkbox" name="styles" value="Dáng Trực" th:checked="${styles != null && styles.contains('Dáng Trực')}">
                                 <span class="checkbox-checkmark"></span>
                             </label>
                             <label class="checkbox-label">
-                                DÃ¡ng HoÃ nh
-                                <input type="checkbox" name="styles" value="DÃ¡ng HoÃ nh" th:checked="${styles != null && styles.contains('DÃ¡ng HoÃ nh')}">
+                                Dáng Hoành
+                                <input type="checkbox" name="styles" value="Dáng Hoành" th:checked="${styles != null && styles.contains('Dáng Hoành')}">
                                 <span class="checkbox-checkmark"></span>
                             </label>
                             <label class="checkbox-label">
-                                DÃ¡ng Huyá»n
-                                <input type="checkbox" name="styles" value="DÃ¡ng Huyá»n" th:checked="${styles != null && styles.contains('DÃ¡ng Huyá»n')}">
+                                Dáng Huyền
+                                <input type="checkbox" name="styles" value="Dáng Huyền" th:checked="${styles != null && styles.contains('Dáng Huyền')}">
                                 <span class="checkbox-checkmark"></span>
                             </label>
                             <label class="checkbox-label">
-                                DÃ¡ng XiÃªn
-                                <input type="checkbox" name="styles" value="DÃ¡ng XiÃªn" th:checked="${styles != null && styles.contains('DÃ¡ng XiÃªn')}">
+                                Dáng Xiên
+                                <input type="checkbox" name="styles" value="Dáng Xiên" th:checked="${styles != null && styles.contains('Dáng Xiên')}">
                                 <span class="checkbox-checkmark"></span>
                             </label>
                             <label class="checkbox-label">
-                                DÃ¡ng Song Thá»¥
-                                <input type="checkbox" name="styles" value="DÃ¡ng Song Thá»¥" th:checked="${styles != null && styles.contains('DÃ¡ng Song Thá»¥')}">
+                                Dáng Song Thụ
+                                <input type="checkbox" name="styles" value="Dáng Song Thụ" th:checked="${styles != null && styles.contains('Dáng Song Thụ')}">
                                 <span class="checkbox-checkmark"></span>
                             </label>
                         </div>
@@ -1355,7 +1355,7 @@
                     <!-- Age Checklist -->
                     <div class="filter-block">
                         <div class="filter-block-title">
-                            Tuá»•i cÃ¢y (Age)
+                            Tuổi cây (Age)
                             <i class="fa-solid fa-chevron-up"></i>
                         </div>
                         <div class="filter-block-content">
@@ -1365,12 +1365,12 @@
                                 <span class="checkbox-checkmark"></span>
                             </label>
                             <label class="checkbox-label">
-                                5â€“10 years
+                                5–10 years
                                 <input type="checkbox" name="ages" value="5to10" th:checked="${ages != null && ages.contains('5to10')}">
                                 <span class="checkbox-checkmark"></span>
                             </label>
                             <label class="checkbox-label">
-                                11â€“20 years
+                                11–20 years
                                 <input type="checkbox" name="ages" value="11to20" th:checked="${ages != null && ages.contains('11to20')}">
                                 <span class="checkbox-checkmark"></span>
                             </label>
@@ -1385,14 +1385,14 @@
                     <!-- Price Slider Range -->
                     <div class="filter-block">
                         <div class="filter-block-title">
-                            Khoáº£ng giÃ¡
+                            Khoảng giá
                             <i class="fa-solid fa-chevron-up"></i>
                         </div>
                         <div class="filter-block-content range-slider-wrap">
                             <input type="range" name="maxPrice" class="price-slider-input" min="500000" max="20000000" step="500000" id="priceRangeSlider" th:value="${maxPrice ?: 20000000}">
                             <div class="range-vals">
-                                <span>500.000 Ä‘</span>
-                                <span id="priceRangeMaxVal" style="color: var(--primary-color); font-weight:700;" th:text="${maxPrice != null ? #numbers.formatDecimal(maxPrice, 0, 'POINT', 0, 'POINT') + ' Ä‘' : '20.000.000 Ä‘'}">20.000.000 Ä‘</span>
+                                <span>500.000 đ</span>
+                                <span id="priceRangeMaxVal" style="color: var(--primary-color); font-weight:700;" th:text="${maxPrice != null ? #numbers.formatDecimal(maxPrice, 0, 'POINT', 0, 'POINT') + ' đ' : '20.000.000 đ'}">20.000.000 đ</span>
                             </div>
                         </div>
                     </div>
@@ -1403,13 +1403,13 @@
                             <label class="indicator-label-wrap">
                                 <input type="checkbox" name="availableOnly" th:checked="${availableOnly}" style="accent-color: var(--primary-color);">
                                 <span class="status-dot-green"></span>
-                                Chá»‰ hiá»ƒn thá»‹ AVAILABLE
+                                Chỉ hiển thị AVAILABLE
                             </label>
                         </div>
                     </div>
     
                     <!-- Filter Actions -->
-                    <button type="submit" class="btn-filter-apply">Ãp dá»¥ng bá»™ lá»c</button>
+                    <button type="submit" class="btn-filter-apply">Áp dụng bộ lọc</button>
                 </div>
             </form>
         </aside>
@@ -1420,14 +1420,14 @@
         <section class="col-lg-9">
             <!-- Grid Header Info -->
             <div class="d-none d-lg-flex justify-content-between align-items-center mb-4">
-                <span class="text-secondary small font-monospace" th:text="${'Hiá»ƒn thá»‹ ' + products.totalElements + ' tÃ¡c pháº©m'}">Hiá»ƒn thá»‹ 8 tÃ¡c pháº©m</span>
+                <span class="text-secondary small font-monospace" th:text="${'Hiển thị ' + products.totalElements + ' tác phẩm'}">Hiển thị 8 tác phẩm</span>
                 <div class="d-flex align-items-center gap-2">
-                    <span class="text-secondary small">Sáº¯p xáº¿p:</span>
+                    <span class="text-secondary small">Sắp xếp:</span>
                     <select class="form-select form-select-sm border-light-subtle shadow-sm" style="width: 140px; font-weight: 500; cursor: pointer;" id="gridSortSelect">
-                        <option value="featured" th:selected="${sort == 'featured' || sort == null}">Ná»•i báº­t</option>
-                        <option value="price_asc" th:selected="${sort == 'price_asc'}">GiÃ¡ tháº¥p Ä‘áº¿n cao</option>
-                        <option value="price_desc" th:selected="${sort == 'price_desc'}">GiÃ¡ cao Ä‘áº¿n tháº¥p</option>
-                        <option value="age_desc" th:selected="${sort == 'age_desc'}">Tuá»•i cÃ¢y lá»›n nháº¥t</option>
+                        <option value="featured" th:selected="${sort == 'featured' || sort == null}">Nổi bật</option>
+                        <option value="price_asc" th:selected="${sort == 'price_asc'}">Giá thấp đến cao</option>
+                        <option value="price_desc" th:selected="${sort == 'price_desc'}">Giá cao đến thấp</option>
+                        <option value="age_desc" th:selected="${sort == 'age_desc'}">Tuổi cây lớn nhất</option>
                     </select>
                 </div>
             </div>
@@ -1453,7 +1453,7 @@
                             Wishlist icon kept UI-only.
                             Reason: Wishlist interaction logic is not requested for this task.
                             -->
-                            <button class="card-btn-wishlist" title="YÃªu thÃ­ch"><i class="fa-regular fa-heart"></i></button>
+                            <button class="card-btn-wishlist" title="Yêu thích"><i class="fa-regular fa-heart"></i></button>
                             
                             <!-- Image URL binding with default fallback -->
                             <!--
@@ -1467,18 +1467,18 @@
                         
                         <div class="card-content">
                             <!-- Variety/Species binding -->
-                            <span class="card-species-tag" th:text="${product.variety != null ? product.variety.varietyName : 'Bonsai'}">Sanh Nam Äiá»n</span>
+                            <span class="card-species-tag" th:text="${product.variety != null ? product.variety.varietyName : 'Bonsai'}">Sanh Nam Điền</span>
                             
                             <!-- Title binding -->
-                            <h3 class="card-title-serif" th:text="${product.productName}">Sanh Nam Äiá»n DÃ¡ng Trá»±c Cá»•</h3>
+                            <h3 class="card-title-serif" th:text="${product.productName}">Sanh Nam Điền Dáng Trực Cổ</h3>
                             
                             <!-- Pedigree/Code binding -->
-                            <p class="card-pedigree-code text-muted mb-1" style="font-size:0.7rem;" th:text="${'MÃ£: ' + product.productCode}">MÃ£: BSMS-SND-102</p>
+                            <p class="card-pedigree-code text-muted mb-1" style="font-size:0.7rem;" th:text="${'Mã: ' + product.productCode}">Mã: BSMS-SND-102</p>
                             
                             <!-- Dimensions Metadata (Age, Height, TrunkDiameter) -->
                             <p class="card-dimensions-meta text-muted mb-2" 
-                               th:text="${'Tuá»•i: ' + (product.age != null ? product.age + ' nÄƒm' : 'N/A') + ' â€¢ Cao: ' + (product.height != null ? product.height + 'cm' : 'N/A') + ' â€¢ ThÃ¢n: ' + (product.trunkDiameter != null ? product.trunkDiameter + 'cm' : 'N/A')}">
-                                Tuá»•i: 12 nÄƒm â€¢ Cao: 65cm â€¢ ThÃ¢n: 15cm
+                               th:text="${'Tuổi: ' + (product.age != null ? product.age + ' năm' : 'N/A') + ' • Cao: ' + (product.height != null ? product.height + 'cm' : 'N/A') + ' • Thân: ' + (product.trunkDiameter != null ? product.trunkDiameter + 'cm' : 'N/A')}">
+                                Tuổi: 12 năm • Cao: 65cm • Thân: 15cm
                             </p>
                             
                             <div class="card-price-rating-row">
@@ -1513,7 +1513,7 @@
                                 <button th:if="${product.productStatus == 'RESERVED'}" class="btn-card-disabled" disabled>Reserved</button>
                                 <button th:if="${product.productStatus == 'SOLD'}" class="btn-card-disabled" disabled>Sold</button>
                                 
-                                <a th:href="@{'/product/' + ${product.productId}}" class="card-view-details-link">View Details â†’</a>
+                                <a th:href="@{'/product/' + ${product.productId}}" class="card-view-details-link">View Details →</a>
                             </div>
                         </div>
                     </div>
@@ -1581,21 +1581,21 @@
 </main>
 
 <!-- ===================================================== -->
-<!-- SHOWCASE "TUYá»‚N CHá»ŒN / Bá»˜ SÆ¯U Táº¬P Ná»”I Báº¬T" SECTION -->
+<!-- SHOWCASE "TUYỂN CHỌN / BỘ SƯU TẬP NỔI BẬT" SECTION -->
 <!-- ===================================================== -->
 <section class="showcase-bg-container">
     <div class="container">
         <!-- Showcase Main Title -->
         <div class="showcase-section-header">
-            <span class="showcase-sub">Tuyá»ƒn Chá»n</span>
-            <h2 class="showcase-main-title serif-text">Bá»™ sÆ°u táº­p ná»•i báº­t</h2>
+            <span class="showcase-sub">Tuyển Chọn</span>
+            <h2 class="showcase-main-title serif-text">Bộ sưu tập nổi bật</h2>
         </div>
 
         <!-- Best Sellers Grid -->
         <div class="showcase-row-wrapper">
             <div class="showcase-row-header">
                 <h3 class="showcase-row-title serif-text">Best Sellers</h3>
-                <a href="#" class="showcase-row-link-all">Xem táº¥t cáº£</a>
+                <a href="#" class="showcase-row-link-all">Xem tất cả</a>
             </div>
 
             <!-- 4 Column row for Best Sellers -->
@@ -1606,21 +1606,21 @@
                     <div class="product-card">
                         <div class="card-image-wrap">
                             <span class="card-status-badge avail">AVAILABLE</span>
-                            <button class="card-btn-wishlist" title="YÃªu thÃ­ch"><i class="fa-regular fa-heart"></i></button>
-                            <img src="https://images.unsplash.com/photo-1599599810769-bcde5a160d32?auto=format&fit=crop&q=80&w=600" alt="Sanh Nam Äiá»n DÃ¡ng Trá»±c Cá»•" class="card-img-asset">
+                            <button class="card-btn-wishlist" title="Yêu thích"><i class="fa-regular fa-heart"></i></button>
+                            <img src="https://images.unsplash.com/photo-1599599810769-bcde5a160d32?auto=format&fit=crop&q=80&w=600" alt="Sanh Nam Điền Dáng Trực Cổ" class="card-img-asset">
                         </div>
                         <div class="card-content">
-                            <span class="card-species-tag">Sanh Nam Äiá»n</span>
-                            <h3 class="card-title-serif">Sanh Nam Äiá»n DÃ¡ng Trá»±c Cá»•</h3>
-                            <p class="card-pedigree-code text-muted mb-1" style="font-size:0.7rem;">MÃ£: BSMS-SND-102</p>
-                            <p class="card-dimensions-meta text-muted mb-2">Tuá»•i: 12 nÄƒm â€¢ Cao: 65cm â€¢ ThÃ¢n: 15cm</p>
+                            <span class="card-species-tag">Sanh Nam Điền</span>
+                            <h3 class="card-title-serif">Sanh Nam Điền Dáng Trực Cổ</h3>
+                            <p class="card-pedigree-code text-muted mb-1" style="font-size:0.7rem;">Mã: BSMS-SND-102</p>
+                            <p class="card-dimensions-meta text-muted mb-2">Tuổi: 12 năm • Cao: 65cm • Thân: 15cm</p>
                             <div class="card-price-rating-row">
-                                <span class="card-price-val">4.500.000 Ä‘</span>
+                                <span class="card-price-val">4.500.000 đ</span>
                                 <span class="card-rating-val">4.8 <i class="fa-solid fa-star"></i></span>
                             </div>
                             <div class="mt-2">
                                 <button class="btn-card-cart-outline"><i class="fa-solid fa-cart-shopping"></i> Add to Cart</button>
-                                <a href="#" class="card-view-details-link">View Details â†’</a>
+                                <a href="#" class="card-view-details-link">View Details →</a>
                             </div>
                         </div>
                     </div>
@@ -1631,21 +1631,21 @@
                     <div class="product-card">
                         <div class="card-image-wrap">
                             <span class="card-status-badge avail">AVAILABLE</span>
-                            <button class="card-btn-wishlist" title="YÃªu thÃ­ch"><i class="fa-regular fa-heart"></i></button>
-                            <img src="https://images.unsplash.com/photo-1515150144380-bca9f1650ed9?auto=format&fit=crop&q=80&w=600" alt="TÃ¹ng La HÃ¡n DÃ¡ng HoÃ nh" class="card-img-asset">
+                            <button class="card-btn-wishlist" title="Yêu thích"><i class="fa-regular fa-heart"></i></button>
+                            <img src="https://images.unsplash.com/photo-1515150144380-bca9f1650ed9?auto=format&fit=crop&q=80&w=600" alt="Tùng La Hán Dáng Hoành" class="card-img-asset">
                         </div>
                         <div class="card-content">
-                            <span class="card-species-tag">TÃ¹ng La HÃ¡n</span>
-                            <h3 class="card-title-serif">TÃ¹ng La HÃ¡n DÃ¡ng HoÃ nh</h3>
-                            <p class="card-pedigree-code text-muted mb-1" style="font-size:0.7rem;">MÃ£: BSMS-TLH-218</p>
-                            <p class="card-dimensions-meta text-muted mb-2">Tuá»•i: 18 nÄƒm â€¢ Cao: 80cm â€¢ ThÃ¢n: 22cm</p>
+                            <span class="card-species-tag">Tùng La Hán</span>
+                            <h3 class="card-title-serif">Tùng La Hán Dáng Hoành</h3>
+                            <p class="card-pedigree-code text-muted mb-1" style="font-size:0.7rem;">Mã: BSMS-TLH-218</p>
+                            <p class="card-dimensions-meta text-muted mb-2">Tuổi: 18 năm • Cao: 80cm • Thân: 22cm</p>
                             <div class="card-price-rating-row">
-                                <span class="card-price-val">8.900.000 Ä‘</span>
+                                <span class="card-price-val">8.900.000 đ</span>
                                 <span class="card-rating-val">4.9 <i class="fa-solid fa-star"></i></span>
                             </div>
                             <div class="mt-2">
                                 <button class="btn-card-cart-outline"><i class="fa-solid fa-cart-shopping"></i> Add to Cart</button>
-                                <a href="#" class="card-view-details-link">View Details â†’</a>
+                                <a href="#" class="card-view-details-link">View Details →</a>
                             </div>
                         </div>
                     </div>
@@ -1656,21 +1656,21 @@
                     <div class="product-card">
                         <div class="card-image-wrap">
                             <span class="card-status-badge resv">RESERVED</span>
-                            <button class="card-btn-wishlist" title="YÃªu thÃ­ch"><i class="fa-regular fa-heart"></i></button>
-                            <img src="https://images.unsplash.com/photo-1502082553048-f009c37129b9?auto=format&fit=crop&q=80&w=600" alt="Linh Sam DÃ¡ng Huyá»n" class="card-img-asset">
+                            <button class="card-btn-wishlist" title="Yêu thích"><i class="fa-regular fa-heart"></i></button>
+                            <img src="https://images.unsplash.com/photo-1502082553048-f009c37129b9?auto=format&fit=crop&q=80&w=600" alt="Linh Sam Dáng Huyền" class="card-img-asset">
                         </div>
                         <div class="card-content">
                             <span class="card-species-tag">Linh Sam</span>
-                            <h3 class="card-title-serif">Linh Sam DÃ¡ng Huyá»n</h3>
-                            <p class="card-pedigree-code text-muted mb-1" style="font-size:0.7rem;">MÃ£: BSMS-LSM-077</p>
-                            <p class="card-dimensions-meta text-muted mb-2">Tuá»•i: 9 nÄƒm â€¢ Cao: 55cm â€¢ ThÃ¢n: 11cm</p>
+                            <h3 class="card-title-serif">Linh Sam Dáng Huyền</h3>
+                            <p class="card-pedigree-code text-muted mb-1" style="font-size:0.7rem;">Mã: BSMS-LSM-077</p>
+                            <p class="card-dimensions-meta text-muted mb-2">Tuổi: 9 năm • Cao: 55cm • Thân: 11cm</p>
                             <div class="card-price-rating-row">
-                                <span class="card-price-val">3.200.000 Ä‘</span>
+                                <span class="card-price-val">3.200.000 đ</span>
                                 <span class="card-rating-val">4.7 <i class="fa-solid fa-star"></i></span>
                             </div>
                             <div class="mt-2">
                                 <button class="btn-card-disabled" disabled>Reserved</button>
-                                <a href="#" class="card-view-details-link">View Details â†’</a>
+                                <a href="#" class="card-view-details-link">View Details →</a>
                             </div>
                         </div>
                     </div>
@@ -1681,21 +1681,21 @@
                     <div class="product-card">
                         <div class="card-image-wrap">
                             <span class="card-status-badge avail">AVAILABLE</span>
-                            <button class="card-btn-wishlist" title="YÃªu thÃ­ch"><i class="fa-regular fa-heart"></i></button>
-                            <img src="https://images.unsplash.com/photo-1463936575829-25148e1db1b8?auto=format&fit=crop&q=80&w=600" alt="Mai Chiáº¿u Thá»§y Bonsai Hoa" class="card-img-asset">
+                            <button class="card-btn-wishlist" title="Yêu thích"><i class="fa-regular fa-heart"></i></button>
+                            <img src="https://images.unsplash.com/photo-1463936575829-25148e1db1b8?auto=format&fit=crop&q=80&w=600" alt="Mai Chiếu Thủy Bonsai Hoa" class="card-img-asset">
                         </div>
                         <div class="card-content">
-                            <span class="card-species-tag">Mai Chiáº¿u Thá»§y</span>
-                            <h3 class="card-title-serif">Mai Chiáº¿u Thá»§y Bonsai Hoa</h3>
-                            <p class="card-pedigree-code text-muted mb-1" style="font-size:0.7rem;">MÃ£: BSMS-MCT-145</p>
-                            <p class="card-dimensions-meta text-muted mb-2">Tuá»•i: 14 nÄƒm â€¢ Cao: 70cm â€¢ ThÃ¢n: 18cm</p>
+                            <span class="card-species-tag">Mai Chiếu Thủy</span>
+                            <h3 class="card-title-serif">Mai Chiếu Thủy Bonsai Hoa</h3>
+                            <p class="card-pedigree-code text-muted mb-1" style="font-size:0.7rem;">Mã: BSMS-MCT-145</p>
+                            <p class="card-dimensions-meta text-muted mb-2">Tuổi: 14 năm • Cao: 70cm • Thân: 18cm</p>
                             <div class="card-price-rating-row">
-                                <span class="card-price-val">6.700.000 Ä‘</span>
+                                <span class="card-price-val">6.700.000 đ</span>
                                 <span class="card-rating-val">4.8 <i class="fa-solid fa-star"></i></span>
                             </div>
                             <div class="mt-2">
                                 <button class="btn-card-cart-outline"><i class="fa-solid fa-cart-shopping"></i> Add to Cart</button>
-                                <a href="#" class="card-view-details-link">View Details â†’</a>
+                                <a href="#" class="card-view-details-link">View Details →</a>
                             </div>
                         </div>
                     </div>
@@ -1708,7 +1708,7 @@
         <div class="showcase-row-wrapper">
             <div class="showcase-row-header">
                 <h3 class="showcase-row-title serif-text">New Arrivals</h3>
-                <a href="#" class="showcase-row-link-all">Xem táº¥t cáº£</a>
+                <a href="#" class="showcase-row-link-all">Xem tất cả</a>
             </div>
 
             <!-- 4 Column row for New Arrivals -->
@@ -1719,21 +1719,21 @@
                     <div class="product-card">
                         <div class="card-image-wrap">
                             <span class="card-status-badge sld">SOLD</span>
-                            <button class="card-btn-wishlist" title="YÃªu thÃ­ch"><i class="fa-regular fa-heart"></i></button>
-                            <img src="https://images.unsplash.com/photo-1512428559087-560fa5ceab42?auto=format&fit=crop&q=80&w=600" alt="Sanh QuÃª DÃ¡ng Song Thá»¥" class="card-img-asset">
+                            <button class="card-btn-wishlist" title="Yêu thích"><i class="fa-regular fa-heart"></i></button>
+                            <img src="https://images.unsplash.com/photo-1512428559087-560fa5ceab42?auto=format&fit=crop&q=80&w=600" alt="Sanh Quê Dáng Song Thụ" class="card-img-asset">
                         </div>
                         <div class="card-content">
-                            <span class="card-species-tag">Sanh QuÃª</span>
-                            <h3 class="card-title-serif">Sanh QuÃª DÃ¡ng Song Thá»¥</h3>
-                            <p class="card-pedigree-code text-muted mb-1" style="font-size:0.7rem;">MÃ£: BSMS-SQW-301</p>
-                            <p class="card-dimensions-meta text-muted mb-2">Tuá»•i: 20 nÄƒm â€¢ Cao: 95cm â€¢ ThÃ¢n: 26cm</p>
+                            <span class="card-species-tag">Sanh Quê</span>
+                            <h3 class="card-title-serif">Sanh Quê Dáng Song Thụ</h3>
+                            <p class="card-pedigree-code text-muted mb-1" style="font-size:0.7rem;">Mã: BSMS-SQW-301</p>
+                            <p class="card-dimensions-meta text-muted mb-2">Tuổi: 20 năm • Cao: 95cm • Thân: 26cm</p>
                             <div class="card-price-rating-row">
-                                <span class="card-price-val">12.500.000 Ä‘</span>
+                                <span class="card-price-val">12.500.000 đ</span>
                                 <span class="card-rating-val">5.0 <i class="fa-solid fa-star"></i></span>
                             </div>
                             <div class="mt-2">
                                 <button class="btn-card-disabled" disabled>Sold</button>
-                                <a href="#" class="card-view-details-link">View Details â†’</a>
+                                <a href="#" class="card-view-details-link">View Details →</a>
                             </div>
                         </div>
                     </div>
@@ -1744,21 +1744,21 @@
                     <div class="product-card">
                         <div class="card-image-wrap">
                             <span class="card-status-badge avail">AVAILABLE</span>
-                            <button class="card-btn-wishlist" title="YÃªu thÃ­ch"><i class="fa-regular fa-heart"></i></button>
-                            <img src="https://images.unsplash.com/photo-1463936575829-25148e1db1b8?auto=format&fit=crop&q=80&w=600" alt="TÃ¹ng Cá»‘i DÃ¡ng XiÃªn" class="card-img-asset">
+                            <button class="card-btn-wishlist" title="Yêu thích"><i class="fa-regular fa-heart"></i></button>
+                            <img src="https://images.unsplash.com/photo-1463936575829-25148e1db1b8?auto=format&fit=crop&q=80&w=600" alt="Tùng Cối Dáng Xiên" class="card-img-asset">
                         </div>
                         <div class="card-content">
-                            <span class="card-species-tag">TÃ¹ng Cá»‘i</span>
-                            <h3 class="card-title-serif">TÃ¹ng Cá»‘i DÃ¡ng XiÃªn</h3>
-                            <p class="card-pedigree-code text-muted mb-1" style="font-size:0.7rem;">MÃ£: BSMS-TGC-080</p>
-                            <p class="card-dimensions-meta text-muted mb-2">Tuá»•i: 11 nÄƒm â€¢ Cao: 60cm â€¢ ThÃ¢n: 13cm</p>
+                            <span class="card-species-tag">Tùng Cối</span>
+                            <h3 class="card-title-serif">Tùng Cối Dáng Xiên</h3>
+                            <p class="card-pedigree-code text-muted mb-1" style="font-size:0.7rem;">Mã: BSMS-TGC-080</p>
+                            <p class="card-dimensions-meta text-muted mb-2">Tuổi: 11 năm • Cao: 60cm • Thân: 13cm</p>
                             <div class="card-price-rating-row">
-                                <span class="card-price-val">3.900.000 Ä‘</span>
+                                <span class="card-price-val">3.900.000 đ</span>
                                 <span class="card-rating-val">4.6 <i class="fa-solid fa-star"></i></span>
                             </div>
                             <div class="mt-2">
                                 <button class="btn-card-cart-outline"><i class="fa-solid fa-cart-shopping"></i> Add to Cart</button>
-                                <a href="#" class="card-view-details-link">View Details â†’</a>
+                                <a href="#" class="card-view-details-link">View Details →</a>
                             </div>
                         </div>
                     </div>
@@ -1769,21 +1769,21 @@
                     <div class="product-card">
                         <div class="card-image-wrap">
                             <span class="card-status-badge avail">AVAILABLE</span>
-                            <button class="card-btn-wishlist" title="YÃªu thÃ­ch"><i class="fa-regular fa-heart"></i></button>
-                            <img src="https://images.unsplash.com/photo-1515150144380-bca9f1650ed9?auto=format&fit=crop&q=80&w=600" alt="Sanh HoÃ nh Bonsai VÆ°á»n" class="card-img-asset">
+                            <button class="card-btn-wishlist" title="Yêu thích"><i class="fa-regular fa-heart"></i></button>
+                            <img src="https://images.unsplash.com/photo-1515150144380-bca9f1650ed9?auto=format&fit=crop&q=80&w=600" alt="Sanh Hoành Bonsai Vườn" class="card-img-asset">
                         </div>
                         <div class="card-content">
-                            <span class="card-species-tag">Sanh QuÃª</span>
-                            <h3 class="card-title-serif">Sanh HoÃ nh Bonsai VÆ°á»n</h3>
-                            <p class="card-pedigree-code text-muted mb-1" style="font-size:0.7rem;">MÃ£: BSMS-SNH-184</p>
-                            <p class="card-dimensions-meta text-muted mb-2">Tuá»•i: 15 nÄƒm â€¢ Cao: 75cm â€¢ ThÃ¢n: 17cm</p>
+                            <span class="card-species-tag">Sanh Quê</span>
+                            <h3 class="card-title-serif">Sanh Hoành Bonsai Vườn</h3>
+                            <p class="card-pedigree-code text-muted mb-1" style="font-size:0.7rem;">Mã: BSMS-SNH-184</p>
+                            <p class="card-dimensions-meta text-muted mb-2">Tuổi: 15 năm • Cao: 75cm • Thân: 17cm</p>
                             <div class="card-price-rating-row">
-                                <span class="card-price-val">5.800.000 Ä‘</span>
+                                <span class="card-price-val">5.800.000 đ</span>
                                 <span class="card-rating-val">4.7 <i class="fa-solid fa-star"></i></span>
                             </div>
                             <div class="mt-2">
                                 <button class="btn-card-cart-outline"><i class="fa-solid fa-cart-shopping"></i> Add to Cart</button>
-                                <a href="#" class="card-view-details-link">View Details â†’</a>
+                                <a href="#" class="card-view-details-link">View Details →</a>
                             </div>
                         </div>
                     </div>
@@ -1794,21 +1794,21 @@
                     <div class="product-card">
                         <div class="card-image-wrap">
                             <span class="card-status-badge avail">AVAILABLE</span>
-                            <button class="card-btn-wishlist" title="YÃªu thÃ­ch"><i class="fa-regular fa-heart"></i></button>
-                            <img src="https://images.unsplash.com/photo-1416879595882-3373a0480b5b?auto=format&fit=crop&q=80&w=600" alt="Mini Bonsai Äá»ƒ BÃ n" class="card-img-asset">
+                            <button class="card-btn-wishlist" title="Yêu thích"><i class="fa-regular fa-heart"></i></button>
+                            <img src="https://images.unsplash.com/photo-1416879595882-3373a0480b5b?auto=format&fit=crop&q=80&w=600" alt="Mini Bonsai Để Bàn" class="card-img-asset">
                         </div>
                         <div class="card-content">
-                            <span class="card-species-tag">Sanh Nam Äiá»n</span>
-                            <h3 class="card-title-serif">Mini Bonsai Äá»ƒ BÃ n</h3>
-                            <p class="card-pedigree-code text-muted mb-1" style="font-size:0.7rem;">MÃ£: BSMS-MNB-009</p>
-                            <p class="card-dimensions-meta text-muted mb-2">Tuá»•i: 4 nÄƒm â€¢ Cao: 25cm â€¢ ThÃ¢n: 5cm</p>
+                            <span class="card-species-tag">Sanh Nam Điền</span>
+                            <h3 class="card-title-serif">Mini Bonsai Để Bàn</h3>
+                            <p class="card-pedigree-code text-muted mb-1" style="font-size:0.7rem;">Mã: BSMS-MNB-009</p>
+                            <p class="card-dimensions-meta text-muted mb-2">Tuổi: 4 năm • Cao: 25cm • Thân: 5cm</p>
                             <div class="card-price-rating-row">
-                                <span class="card-price-val">950.000 Ä‘</span>
+                                <span class="card-price-val">950.000 đ</span>
                                 <span class="card-rating-val">4.5 <i class="fa-solid fa-star"></i></span>
                             </div>
                             <div class="mt-2">
                                 <button class="btn-card-cart-outline"><i class="fa-solid fa-cart-shopping"></i> Add to Cart</button>
-                                <a href="#" class="card-view-details-link">View Details â†’</a>
+                                <a href="#" class="card-view-details-link">View Details →</a>
                             </div>
                         </div>
                     </div>
@@ -1829,28 +1829,28 @@
                 <div class="service-feature-card">
                     <div class="service-icon-circle"><i class="fa-solid fa-leaf"></i></div>
                     <h4 class="service-label-title">Authentic Bonsai</h4>
-                    <p class="service-desc-text">CÃ¢y tháº­t, áº£nh tháº­t â€” Cam káº¿t hÃ¬nh áº£nh chuáº©n xÃ¡c thá»±c táº¿ 100%.</p>
+                    <p class="service-desc-text">Cây thật, ảnh thật — Cam kết hình ảnh chuẩn xác thực tế 100%.</p>
                 </div>
             </div>
             <div class="col-md-3 col-sm-6">
                 <div class="service-feature-card">
                     <div class="service-icon-circle"><i class="fa-solid fa-shield-halved"></i></div>
                     <h4 class="service-label-title">Verified Sellers</h4>
-                    <p class="service-desc-text">NhÃ  vÆ°á»n nghá»‡ nhÃ¢n uy tÃ­n Báº¯c Bá»™ vá»›i nghá»‡ nhÃ¢n cÃ³ kinh nghiá»‡m lÃ¢u nÄƒm trong ngÃ nh.</p>
+                    <p class="service-desc-text">Nhà vườn nghệ nhân uy tín Bắc Bộ với nghệ nhân có kinh nghiệm lâu năm trong ngành.</p>
                 </div>
             </div>
             <div class="col-md-3 col-sm-6">
                 <div class="service-feature-card">
                     <div class="service-icon-circle"><i class="fa-solid fa-credit-card"></i></div>
                     <h4 class="service-label-title">Secure Payment</h4>
-                    <p class="service-desc-text">TÃ­ch há»£p cá»•ng thanh toÃ¡n VNPay an toÃ n, báº£o máº­t tuyá»‡t Ä‘á»‘i.</p>
+                    <p class="service-desc-text">Tích hợp cổng thanh toán VNPay an toàn, bảo mật tuyệt đối.</p>
                 </div>
             </div>
             <div class="col-md-3 col-sm-6">
                 <div class="service-feature-card">
                     <div class="service-icon-circle"><i class="fa-solid fa-truck-ramp-box"></i></div>
                     <h4 class="service-label-title">Delivery Support</h4>
-                    <p class="service-desc-text">Váº­n chuyá»ƒn chuyÃªn dá»¥ng cÃ³ cáº©u cho cÃ¡c cÃ¢y cá»¡ lá»›n, an toÃ n.</p>
+                    <p class="service-desc-text">Vận chuyển chuyên dụng có cẩu cho các cây cỡ lớn, an toàn.</p>
                 </div>
             </div>
         </div>
@@ -1865,9 +1865,9 @@
         <div class="row g-5">
             <!-- Brand Section -->
             <div class="col-lg-4 col-md-6">
-                <div class="footer-logo-title">ðŸŒ¿ BSMS</div>
+                <div class="footer-logo-title">🌿 BSMS</div>
                 <p class="footer-desc-para">
-                    Ná»n táº£ng quáº£n lÃ½ vÃ  giao dá»‹ch cÃ¢y cáº£nh nghá»‡ thuáº­t â€” gÃ¬n giá»¯ vÃ  phÃ¡t huy di sáº£n nghá»‡ thuáº­t bonsai Báº¯c Bá»™ Viá»‡t Nam.
+                    Nền tảng quản lý và giao dịch cây cảnh nghệ thuật — gìn giữ và phát huy di sản nghệ thuật bonsai Bắc Bộ Việt Nam.
                 </p>
                 <div class="footer-social-strip">
                     <a href="#" class="footer-social-btn"><i class="fa-brands fa-facebook-f"></i></a>
@@ -1901,7 +1901,7 @@
 
         <!-- Copyright Row -->
         <div class="footer-base-row">
-            <span>Â© 2026 BSMS â€” Bonsai Shop Management System. All rights reserved.</span>
+            <span>© 2026 BSMS — Bonsai Shop Management System. All rights reserved.</span>
             <span>Powered by VNPay - Crane Logistics Network</span>
         </div>
     </div>
@@ -1918,7 +1918,7 @@
     if (priceSlider && priceDisplayVal) {
         priceSlider.addEventListener('input', (e) => {
             const formattedVal = new Intl.NumberFormat('vi-VN').format(e.target.value);
-            priceDisplayVal.textContent = formattedVal + ' Ä‘';
+            priceDisplayVal.textContent = formattedVal + ' đ';
         });
     }
 
@@ -1967,4 +1967,5 @@
 </script>
 </body>
 </html>
+
 

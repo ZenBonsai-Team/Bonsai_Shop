@@ -1,73 +1,56 @@
 package com.example.bonsai_shop.seller.service;
 
-import org.springframework.beans.factory.annotation.Value;
+import com.example.bonsai_shop.data.common.CloudinaryFolder;
+import com.example.bonsai_shop.data.dto.CloudinaryUploadResponse;
+import com.example.bonsai_shop.data.service.CloudinaryStorageService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Set;
-import java.util.UUID;
-
 @Service
+@RequiredArgsConstructor
 public class SellerMediaStorageService {
 
-    private static final Set<String> ALLOWED_TYPES = Set.of(
-            "image/jpeg",
-            "image/png",
-            "image/webp",
-            "image/gif",
-            "video/mp4",
-            "video/webm"
-    );
-
-    @Value("${file.product-media-dir:uploads/products}")
-    private String uploadDir;
+    private final CloudinaryStorageService cloudinaryStorageService;
 
     public String storeProductMedia(MultipartFile file) {
-        if (file == null || file.isEmpty()) {
-            throw new RuntimeException("File không hợp lệ!");
-        }
-
         String contentType = file.getContentType();
-        if (contentType == null || !ALLOWED_TYPES.contains(contentType)) {
-            throw new RuntimeException("Chỉ hỗ trợ ảnh JPG/PNG/WEBP/GIF hoặc video MP4/WEBM!");
-        }
+        boolean isVideo = contentType != null && contentType.startsWith("video/");
 
-        if (file.getSize() > 50L * 1024 * 1024) {
-            throw new RuntimeException("Media không được vượt quá 50MB!");
-        }
+        CloudinaryUploadResponse response = isVideo
+                ? cloudinaryStorageService.uploadVideo(file, CloudinaryFolder.PRODUCT_VIDEO)
+                : cloudinaryStorageService.uploadImage(file, CloudinaryFolder.PRODUCT_IMAGE);
 
-        try {
-            Path uploadPath = Paths.get(uploadDir);
-            Files.createDirectories(uploadPath);
-
-            String originalFilename = file.getOriginalFilename();
-            String extension = "";
-            if (originalFilename != null && originalFilename.contains(".")) {
-                extension = originalFilename.substring(originalFilename.lastIndexOf("."));
-            }
-
-            String filename = UUID.randomUUID() + extension;
-            Files.copy(file.getInputStream(), uploadPath.resolve(filename));
-            return "/products/" + filename;
-        } catch (IOException e) {
-            throw new RuntimeException("Không thể lưu media: " + e.getMessage());
-        }
+        return response.getUrl();
     }
 
     public void deleteProductMedia(String mediaUrl) {
-        if (mediaUrl == null || mediaUrl.isBlank()) {
+        CloudinaryFileReference fileReference = parseCloudinaryUrl(mediaUrl);
+        if (fileReference == null) {
             return;
         }
 
-        try {
-            String filename = mediaUrl.substring(mediaUrl.lastIndexOf("/") + 1);
-            Files.deleteIfExists(Paths.get(uploadDir).resolve(filename));
-        } catch (IOException e) {
-            throw new RuntimeException("Không thể xóa media cũ!");
+        cloudinaryStorageService.deleteFile(fileReference.publicId(), fileReference.resourceType());
+    }
+
+    private CloudinaryFileReference parseCloudinaryUrl(String mediaUrl) {
+        if (mediaUrl == null || mediaUrl.isBlank() || !mediaUrl.contains("/upload/")) {
+            return null;
         }
+
+        String resourceType = mediaUrl.contains("/video/upload/") ? "video" : "image";
+        String uploadMarker = "/upload/";
+        int uploadIndex = mediaUrl.indexOf(uploadMarker);
+        String pathAfterUpload = mediaUrl.substring(uploadIndex + uploadMarker.length());
+        String pathWithoutVersion = pathAfterUpload.replaceFirst("^v\\d+/", "");
+        int extensionIndex = pathWithoutVersion.lastIndexOf('.');
+        String publicId = extensionIndex > 0
+                ? pathWithoutVersion.substring(0, extensionIndex)
+                : pathWithoutVersion;
+
+        return new CloudinaryFileReference(publicId, resourceType);
+    }
+
+    private record CloudinaryFileReference(String publicId, String resourceType) {
     }
 }

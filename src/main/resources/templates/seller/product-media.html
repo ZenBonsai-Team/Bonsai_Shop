@@ -20,8 +20,9 @@
 
     <div th:if="${success}" class="alert success" th:text="${success}"></div>
     <div th:if="${error}" class="alert error" th:text="${error}"></div>
+    <div th:if="${isSold}" class="alert warning">Sản phẩm đã bán nên không thể chỉnh sửa media.</div>
 
-    <form class="form-card" method="post" enctype="multipart/form-data"
+    <form th:if="${!isSold}" class="form-card" method="post" enctype="multipart/form-data"
           th:action="@{/seller/products/{id}/media(id=${product.productId})}">
         <label>File ảnh/video
             <input id="mediaFileInput" type="file" name="file" accept="image/*,video/mp4,video/webm" required>
@@ -54,7 +55,7 @@
     </form>
 
     <form id="mediaOrderForm" method="post" th:action="@{/seller/products/{id}/media/order(id=${product.productId})}"></form>
-    <div class="actions media-toolbar" th:if="${!#lists.isEmpty(mediaList)}">
+    <div class="actions media-toolbar" th:if="${!isSold && !#lists.isEmpty(mediaList)}">
         <button type="submit" form="mediaOrderForm">Save Display Order</button>
     </div>
 
@@ -68,9 +69,9 @@
             <span th:text="${media.caption}"></span>
             <label>Display order
                 <input type="hidden" name="mediaIds" th:value="${media.mediaId}" form="mediaOrderForm">
-                <input type="number" name="displayOrders" min="0" th:value="${media.displayOrder}" form="mediaOrderForm">
+                <input type="number" name="displayOrders" min="0" th:value="${media.displayOrder}" th:disabled="${isSold}" form="mediaOrderForm">
             </label>
-            <div class="actions">
+            <div class="actions" th:if="${!isSold}">
                 <form method="post" th:action="@{/seller/products/{productId}/media/{mediaId}/thumbnail(productId=${product.productId},mediaId=${media.mediaId})}">
                     <button type="submit">Set thumbnail</button>
                 </form>
