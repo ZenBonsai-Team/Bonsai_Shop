@@ -27,3 +27,4 @@ public class Variety {
     @OneToMany(mappedBy = "variety", cascade = CascadeType.ALL)
     private List<Product> products;
 }
+

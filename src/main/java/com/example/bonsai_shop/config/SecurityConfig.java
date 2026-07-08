@@ -33,7 +33,8 @@ public class SecurityConfig {
                                                 // Trang công khai
                                                 .requestMatchers(
                                                                 "/",
-                                                                "/products/**",
+                                                                "/product/**",
+                                                                "/marketplace",
                                                                 "/register",
                                                                 "/login",
                                                                 "/forgot-password",
