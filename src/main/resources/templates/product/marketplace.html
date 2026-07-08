@@ -102,7 +102,8 @@
 
 <!-- WELCOME BAR (chỉ hiện khi đã đăng nhập) -->
 <div class="welcome-bar" sec:authorize="isAuthenticated()">
-    Chào mừng <span th:text="${username}"></span> đã quay trở lại!
+    <span>Chào mừng <span th:text="${username}"></span> đã quay trở lại!</span>
+    <button class="close-welcome-btn" onclick="this.parentElement.style.display='none'" aria-label="Đóng">&times;</button>
 </div>
 
 <!-- ===================================================== -->
@@ -544,25 +545,20 @@
 <!-- ===================================================== -->
 <!-- SHOWCASE "TUYỂN CHỌN / BỘ SƯU TẬP NỔI BẬT" SECTION -->
 <!-- ===================================================== -->
-<section class="showcase-bg-container">
+<!-- <section class="showcase-bg-container">
     <div class="container">
-        <!-- Showcase Main Title -->
         <div class="showcase-section-header">
             <span class="showcase-sub">Tuyển Chọn</span>
             <h2 class="showcase-main-title serif-text">Bộ sưu tập nổi bật</h2>
-        </div>
+        </div> -->
 
-        <!-- Best Sellers Grid -->
-        <div class="showcase-row-wrapper">
+        <!-- <div class="showcase-row-wrapper">
             <div class="showcase-row-header">
                 <h3 class="showcase-row-title serif-text">Best Sellers</h3>
                 <a href="#" class="showcase-row-link-all">Xem tất cả</a>
             </div>
 
-            <!-- 4 Column row for Best Sellers -->
             <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-xl-4 g-3">
-                
-                <!-- Best Sellers Card 1 -->
                 <div class="col">
                     <div class="product-card">
                         <div class="card-image-wrap">
@@ -587,7 +583,6 @@
                     </div>
                 </div>
 
-                <!-- Best Sellers Card 2 -->
                 <div class="col">
                     <div class="product-card">
                         <div class="card-image-wrap">
@@ -612,7 +607,6 @@
                     </div>
                 </div>
 
-                <!-- Best Sellers Card 3 -->
                 <div class="col">
                     <div class="product-card">
                         <div class="card-image-wrap">
@@ -637,7 +631,6 @@
                     </div>
                 </div>
 
-                <!-- Best Sellers Card 4 -->
                 <div class="col">
                     <div class="product-card">
                         <div class="card-image-wrap">
@@ -661,21 +654,18 @@
                         </div>
                     </div>
                 </div>
-
             </div>
-        </div>
+        </div> -->
 
         <!-- New Arrivals Grid -->
-        <div class="showcase-row-wrapper">
+        <!-- <div class="showcase-row-wrapper">
             <div class="showcase-row-header">
                 <h3 class="showcase-row-title serif-text">New Arrivals</h3>
                 <a href="#" class="showcase-row-link-all">Xem tất cả</a>
-            </div>
+            </div> -->
 
             <!-- 4 Column row for New Arrivals -->
-            <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-xl-4 g-3">
-
-                <!-- New Arrivals Card 1 -->
+            <!-- <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-xl-4 g-3">
                 <div class="col">
                     <div class="product-card">
                         <div class="card-image-wrap">
@@ -700,7 +690,6 @@
                     </div>
                 </div>
 
-                <!-- New Arrivals Card 2 -->
                 <div class="col">
                     <div class="product-card">
                         <div class="card-image-wrap">
@@ -725,7 +714,6 @@
                     </div>
                 </div>
 
-                <!-- New Arrivals Card 3 -->
                 <div class="col">
                     <div class="product-card">
                         <div class="card-image-wrap">
@@ -750,7 +738,6 @@
                     </div>
                 </div>
 
-                <!-- New Arrivals Card 4 -->
                 <div class="col">
                     <div class="product-card">
                         <div class="card-image-wrap">
@@ -775,10 +762,10 @@
                     </div>
                 </div>
 
-            </div>
-        </div>
+            </div> -->
+        <!-- </div>
     </div>
-</section>
+</section> -->
 
 <!-- ===================================================== -->
 <!-- SERVICE FEATURES SECTION -->
