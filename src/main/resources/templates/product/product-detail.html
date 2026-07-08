@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BSMS - Chi tiết tác phẩm</title>
+    
+    <!-- Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- ===================================================== -->
+    <!-- STYLES (Reused design system from Marketplace) -->
+    <!-- ===================================================== -->
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+    <link rel="stylesheet" th:href="@{/css/product-detail.css}">
+</head>
+<body>
+
+<!-- ===================================================== -->
+<!-- NAVBAR (Identical to Marketplace) -->
+<!-- ===================================================== -->
+<nav class="navbar navbar-expand-lg navbar-custom sticky-top">
+    <div class="container">
+        <!-- Brand Logo -->
+        <a class="navbar-brand navbar-brand-custom" href="#">
+            🌿 BSMS
+        </a>
+        
+        <!-- Toggle for Mobile -->
+        <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="fa-solid fa-bars fs-4 text-dark"></i>
+        </button>
+
+        <!-- Navigation Menu -->
+        <div class="collapse navbar-collapse" id="navbarContent">
+            <ul class="navbar-nav mx-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                    <!-- Future: th:href="@{/}" -->
+                    <a class="nav-link nav-link-custom" href="#">Home</a>
+                </li>
+                <li class="nav-item">
+                    <!-- Future: th:href="@{/marketplace}" -->
+                    <a class="nav-link nav-link-custom active" href="#">Bonsai Marketplace</a>
+                </li>
+                <li class="nav-item">
+                    <!-- Future: th:href="@{/showroom}" -->
+                    <a class="nav-link nav-link-custom" href="#">Community</a>
+                </li>
+                <li class="nav-item">
+                    <!-- Future: th:href="@{/vip}" -->
+                    <a class="nav-link nav-link-custom" href="#">VIP Elite Showroom</a>
+                </li>
+                <li class="nav-item">
+                    <!-- Future: th:href="@{/contact}" -->
+                    <a class="nav-link nav-link-custom" href="#">Contact</a>
+                </li>
+            </ul>
+
+            <!-- Auth & Cart -->
+            <div class="d-flex align-items-center gap-3">
+                <a href="#" class="btn-auth-signin">Sign In</a>
+                <a href="#" class="btn btn-auth-register">Register</a>
+
+                <!-- Cart icon with orange badge count -->
+                <a href="#" class="nav-icon-link text-decoration-none position-relative ms-1" title="Giỏ hàng">
+                    <!-- Future: th:href="@{/cart}" -->
+                    <i class="fa-solid fa-bag-shopping"></i>
+                    <span class="badge-count-orange">2</span>
+                </a>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- ===================================================== -->
+<!-- BREADCRUMB -->
+<!-- ===================================================== -->
+<div class="container breadcrumb-container">
+    <nav aria-label="breadcrumb">
+        <ul class="breadcrumb-list">
+            <li class="breadcrumb-item"><a href="#">Home</a></li>
+            <li class="breadcrumb-item"><a href="#">Marketplace</a></li>
+            <!-- CALL DB: product.productName -->
+            <li class="breadcrumb-item active" aria-current="page" th:text="${product.productName}">Tùng La Hán Dáng Hoành</li>
+        </ul>
+    </nav>
+</div>
+
+<!-- ===================================================== -->
+<!-- MAIN PRODUCT DISPLAY (Gallery & Info Grid) -->
+<!-- ===================================================== -->
+<main class="container py-3">
+    <div class="row g-5">
+        
+        <!-- Left Column: Product Gallery -->
+        <section class="col-lg-6">
+            <!-- Main Display Image -->
+            <!-- CALL DB: product.firstImageUrl, product.productName -->
+            <div class="gallery-main-wrap">
+                <img id="mainGalleryImg" th:src="${product.firstImageUrl != null ? product.firstImageUrl : 'https://images.unsplash.com/photo-1599599810769-bcde5a160d32?auto=format&fit=crop&q=80&w=800'}" th:alt="${product.productName}" class="gallery-main-img">
+            </div>
+
+            <!-- Thumbnail Selector Strip -->
+            <div class="gallery-thumbnails-row">
+                <!-- CALL DB: product.productMedias, product.productName -->
+                <!-- Dynamic thumbnails if media exists in DB -->
+                <th:block th:if="${product.productMedias != null and !product.productMedias.isEmpty()}">
+                    <div th:each="media, iterStat : ${product.productMedias}"
+                         th:classappend="${iterStat.first ? 'active' : ''}"
+                         class="gallery-thumb-item"
+                         th:data-image-url="${media.mediaUrl}"
+                         onclick="switchMainImage(this, this.getAttribute('data-image-url'))">
+                        <img th:src="${media.mediaUrl}" th:alt="${product.productName}">
+                    </div>
+                </th:block>
+                <!-- HARDCODED Fallback if no media exists in DB -->
+                <th:block th:if="${product.productMedias == null or product.productMedias.isEmpty()}">
+                    <div class="gallery-thumb-item active" onclick="switchMainImage(this, 'https://images.unsplash.com/photo-1599599810769-bcde5a160d32?auto=format&fit=crop&q=80&w=800')">
+                        <!-- HARDCODED --><img src="https://images.unsplash.com/photo-1599599810769-bcde5a160d32?auto=format&fit=crop&q=80&w=150" alt="Front View">
+                    </div>
+                    <div class="gallery-thumb-item" onclick="switchMainImage(this, 'https://images.unsplash.com/photo-1592150621744-aca64f48394a?auto=format&fit=crop&q=80&w=800')">
+                        <!-- HARDCODED --><img src="https://images.unsplash.com/photo-1592150621744-aca64f48394a?auto=format&fit=crop&q=80&w=150" alt="Side View">
+                    </div>
+                    <div class="gallery-thumb-item" onclick="switchMainImage(this, 'https://images.unsplash.com/photo-1502082553048-f009c37129b9?auto=format&fit=crop&q=80&w=800')">
+                        <!-- HARDCODED --><img src="https://images.unsplash.com/photo-1502082553048-f009c37129b9?auto=format&fit=crop&q=80&w=150" alt="Root Structure">
+                    </div>
+                    <div class="gallery-thumb-item" onclick="switchMainImage(this, 'https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?auto=format&fit=crop&q=80&w=800')">
+                        <!-- HARDCODED --><img src="https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?auto=format&fit=crop&q=80&w=150" alt="Foliage Detail">
+                    </div>
+                    <div class="gallery-thumb-item" onclick="switchMainImage(this, 'https://images.unsplash.com/photo-1583847268964-b28dc8f51f92?auto=format&fit=crop&q=80&w=800')">
+                        <!-- HARDCODED --><img src="https://images.unsplash.com/photo-1583847268964-b28dc8f51f92?auto=format&fit=crop&q=80&w=150" alt="Pot View">
+                    </div>
+                </th:block>
+            </div>
+
+            <div class="gallery-caption-text">
+                Front • Side • Root structure • Foliage detail • Pot
+            </div>
+        </section>
+
+        <!-- Right Column: Product Information -->
+        <section class="col-lg-6">
+            <!-- Badges Row -->
+            <div class="info-badge-row">
+                <!-- CALL DB: product.segment.segmentName -->
+                <span class="badge-premium" th:text="${product.segment != null ? product.segment.segmentName : 'N/A'}">Premium</span>
+                <!-- CALL DB: product.style -->
+                <span class="badge-style" th:text="${product.style != null ? product.style : 'N/A'}">Dáng Hoành</span>
+                <!-- CALL DB: product.productStatus -->
+                <span th:text="${product.productStatus != null ? product.productStatus : 'N/A'}"
+                      th:classappend="${product.productStatus != null ? (product.productStatus == 'AVAILABLE' ? 'avail' : (product.productStatus == 'RESERVED' ? 'resv' : 'sold')) : 'avail'}"
+                      class="badge-status-pill">AVAILABLE</span>
+            </div>
+
+            <!-- Product Title & Scientific Name -->
+            <!-- CALL DB: product.productName -->
+            <h1 class="product-title" th:text="${product.productName}">Tùng La Hán Dáng Hoành</h1>
+            <!-- HARDCODED: Tên khoa học không có trong database entity (Variety chỉ có varietyName) -->
+            <p class="product-scientific-name"><!-- HARDCODED -->Podocarpus macrophyllus</p>
+
+            <!-- Star ratings and Product Code -->
+            <div class="rating-code-row">
+                <span class="rating-star-val">
+                    <i class="fa-solid fa-star"></i>
+                    <!-- CALL DB: product.averageRating -->
+                    <span th:text="${product.averageRating != null ? #numbers.formatDecimal(product.averageRating, 1, 1) : '0.0'}">4.9</span>
+                </span>
+                <span class="text-muted">|</span>
+                <!-- CALL DB: product.productCode -->
+                <span th:text="${'Mã: ' + product.productCode}">Mã: BSMS-TLH-218</span>
+            </div>
+
+            <!-- Price Panel -->
+            <div class="price-panel">
+                <div class="price-label">Giá cố định</div>
+                <!-- CALL DB: product.price -->
+                <div class="price-value-large" th:text="${#numbers.formatDecimal(product.price, 0, 'POINT', 0, 'POINT') + ' đ'}">8.900.000 đ</div>
+                <p class="price-subtext">Đã bao gồm hồ sơ phả hệ • Phí vận chuyển cẩu chuyên dụng tính riêng</p>
+            </div>
+
+            <!-- Parameters Grid Spec -->
+            <div class="spec-grid-layout">
+                <div class="spec-grid-cell">
+                        <div class="spec-cell-lbl"><i class="fa-regular fa-calendar"></i> Tuổi</div>
+                        <!-- CALL DB: product.age (với fallback thiết kế tĩnh) -->
+                        <div class="spec-cell-val" th:text="${product.age != null ? product.age + ' năm' : '18 năm'}">18 năm</div>
+                </div>
+                <div class="spec-grid-cell">
+                    <div class="spec-cell-lbl"><i class="fa-solid fa-arrows-up-down"></i> Chiều cao</div>
+                    <!-- CALL DB: product.height (với fallback thiết kế tĩnh) -->
+                    <div class="spec-cell-val" th:text="${product.height != null ? product.height + ' cm' : '80 cm'}">80 cm</div>
+                </div>
+                <div class="spec-grid-cell">
+                    <div class="spec-cell-lbl"><i class="fa-solid fa-arrows-left-right"></i> Tán rộng</div>
+                    <!-- HARDCODED: Tán rộng không có trong DB entity -->
+                    <div class="spec-cell-val"><!-- HARDCODED -->70 cm</div>
+                </div>
+                <div class="spec-grid-cell">
+                    <div class="spec-cell-lbl"><i class="fa-solid fa-circle-notch"></i> Đường kính thân</div>
+                    <!-- CALL DB: product.trunkDiameter (với fallback thiết kế tĩnh) -->
+                    <div class="spec-cell-val" th:text="${product.trunkDiameter != null ? product.trunkDiameter + ' cm' : '22 cm'}">22 cm</div>
+                </div>
+                <div class="spec-grid-cell">
+                    <div class="spec-cell-lbl"><i class="fa-solid fa-seedling"></i> Loài</div>
+                    <!-- CALL DB: product.variety.varietyName (với fallback thiết kế tĩnh) -->
+                    <div class="spec-cell-val" th:text="${product.variety != null and product.variety.varietyName != null ? product.variety.varietyName : 'Tùng La Hán'}">Tùng La Hán</div>
+                </div>
+                <div class="spec-grid-cell">
+                    <div class="spec-cell-lbl"><i class="fa-solid fa-leaf"></i> Thế dáng</div>
+                    <!-- CALL DB: product.style (với fallback thiết kế tĩnh) -->
+                    <div class="spec-cell-val" th:text="${product.style != null ? product.style : 'Dáng Hoành'}">Dáng Hoành</div>
+                </div>
+            </div>
+
+            <!-- Seller Brief Info -->
+            <!-- HARDCODED: Chi tiết nghệ nhân/nhà vườn không có trong DB entity (User chỉ có thông tin cơ bản) -->
+            <div class="seller-summary-box">
+                <!-- HARDCODED -->
+                <div class="seller-avatar-wrap">
+                    <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150" alt="Avatar">
+                </div>
+                <div class="seller-summary-info">
+                    <div class="seller-summary-name">Nghệ nhân Nguyễn Văn Thành</div>
+                    <div class="seller-summary-meta">Vườn Thành Cổ • Nam Định</div>
+                </div>
+                <div class="seller-summary-rating">
+                    <i class="fa-solid fa-star"></i> 4.9
+                </div>
+            </div>
+
+            <!-- Buying and Add to Cart Action buttons -->
+            <div class="mt-4">
+                <div class="action-flex-row">
+                    <!-- Buy Now Button -->
+                    <!-- <button class="btn-buy-vnpay" th:if="${product.productStatus == 'AVAILABLE'}">Buy Now • VNPay</button> -->
+                    <form th:action="@{/vnpay/create-payment}" method="get" style="width: 100%;" th:if="${product.productStatus == 'AVAILABLE'}">
+                        <input type="hidden" name="productId" th:value="${product.productId}" />                 
+                        <button type="submit" class="btn-buy-vnpay">
+                            Gửi yêu cầu mua
+                        </button>
+                    </form>
+
+                    <button class="btn-card-disabled" style="width: 100%; padding: 14px 0;" disabled th:if="${product.productStatus == 'RESERVED'}"><i class="fa-solid fa-lock"></i> Reserved</button>
+                    <button class="btn-card-disabled" style="width: 100%; padding: 14px 0;" disabled th:if="${product.productStatus == 'SOLD'}"><i class="fa-solid fa-ban"></i> Sold</button>
+                    
+                    <!-- Wishlist Button -->
+                    <button class="btn-action-square" title="Yêu thích">
+                        <i class="fa-regular fa-heart"></i>
+                    </button>
+                    
+                    <!-- Share Button -->
+                    <button class="btn-action-square" title="Chia sẻ">
+                        <i class="fa-solid fa-share-nodes"></i>
+                    </button>
+                </div>
+
+                <!-- Add to Cart Outline -->
+                <button class="btn-add-cart-outline" th:if="${product.productStatus == 'AVAILABLE'}">
+                    <i class="fa-solid fa-cart-shopping"></i> Add to Cart
+                </button>
+
+                <!-- Small Policy Guarantees -->
+                <div class="guarantees-row">
+                    <div class="guarantees-item">
+                        <i class="fa-solid fa-shield-check"></i>
+                        <span>Bảo đảm phả hệ</span>
+                    </div>
+                    <div class="guarantees-item">
+                        <i class="fa-solid fa-truck-fast"></i>
+                        <span>Vận chuyển toàn quốc</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </div>
+</main>
+
+<!-- ===================================================== -->
+<!-- PRODUCT STORY / DESCRIPTION SECTION -->
+<!-- ===================================================== -->
+<article class="story-section">
+    <div class="container">
+        <span class="section-tag-gold">Câu chuyện tác phẩm</span>
+        <h2 class="story-heading">Một đời cây — một đời nghệ nhân</h2>
+        
+        <!-- CALL DB: product.description -->
+        <p class="story-intro-para" th:text="${product.description}">
+            Tùng được uốn nắn qua hơn 18 năm dưới bàn tay của nghệ nhân Nguyễn Văn Thành tại vùng đất Nam Định — cái nôi của nghệ thuật bonsai Bắc Bộ.
+        </p>
+
+        <!-- Chronological Story Bullet Nodes -->
+        <!-- HARDCODED: Các phần cốt truyện chi tiết không lưu trong DB (được giữ làm text tĩnh) -->
+        <div class="story-timeline-wrap">
+            <div class="story-timeline-node">
+                <!-- HARDCODED -->
+                <h3 class="story-node-title">Nguồn gốc</h3>
+                <p class="story-node-desc">
+                    Cây gốc khai thác từ vùng đồi trung du, được dưỡng và tạo thế tại vườn Thành Cổ từ năm 2012. Đất trồng pha trộn theo công thức truyền thức của làng nghề, giúp bộ rễ phát triển bền bỉ và lá xanh quanh năm.
+                </p>
+            </div>
+            <div class="story-timeline-node">
+                <!-- HARDCODED: Lịch sử tác phẩm không lưu trong DB -->
+                <h3 class="story-node-title">Lịch sử</h3>
+                <p class="story-node-desc">
+                    Tác phẩm đã từng tham gia triển lãm Bonsai Việt Nam 2022 và được hội đồng nghệ nhân đánh giá cao về thế dáng cân đối và bộ thân chi tiết.
+                </p>
+            </div>
+            <div class="story-timeline-node">
+                <!-- HARDCODED: Nghệ thuật chế tác không lưu trong DB -->
+                <h3 class="story-node-title">Nghệ thuật chế tác</h3>
+                <p class="story-node-desc">
+                    Mỗi đường chỉ, mỗi nét thân đều được uốn tỉ mỉ bằng kỹ thuật truyền thống, tôn vinh vẻ đẹp tự nhiên thay vì ép buộc dáng cây theo khuôn mẫu.
+                </p>
+            </div>
+        </div>
+    </div>
+</article>
+
+<!-- ===================================================== -->
+<!-- DETAILED SPECIFICATIONS SECTION -->
+<!-- ===================================================== -->
+<section class="specs-table-section">
+    <div class="container">
+        <div class="row">
+            
+            <!-- Left Side: Table Title -->
+            <div class="col-lg-4">
+                <div class="specs-side-header">
+                    <span class="section-tag-gold" style="text-align:left;">Thông số chi tiết</span>
+                    <h2 class="specs-side-title">Specification</h2>
+                    <p class="specs-side-desc">
+                        Bảng thông số kỹ thuật và pháp lý đi kèm tác phẩm. Mọi thông tin đều được xác minh bởi BSMS trước khi niêm yết.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Right Side: Spec Table -->
+            <div class="col-lg-8">
+                <table class="specs-table">
+                    <tbody>
+                        <tr>
+                            <td class="specs-table-lbl">MÃ SẢN PHẨM</td>
+                            <!-- CALL DB: product.productCode (với fallback thiết kế tĩnh) -->
+                            <td class="specs-table-val" th:text="${product.productCode != null ? product.productCode : 'BSMS-TLH-218'}">BSMS-TLH-218</td>
+                        </tr>
+                        <tr>
+                            <td class="specs-table-lbl">TÊN THƯƠNG GỌI</td>
+                            <!-- CALL DB: product.productName (với fallback thiết kế tĩnh) -->
+                            <td class="specs-table-val" th:text="${product.productName != null ? product.productName : 'Tùng La Hán Dáng Hoành'}">Tùng La Hán Dáng Hoành</td>
+                        </tr>
+                        <tr>
+                            <td class="specs-table-lbl">TÊN KHOA HỌC</td>
+                            <!-- HARDCODED: Tên khoa học không có trong DB entity (Variety chỉ có varietyName) -->
+                            <td class="specs-table-val"><i><!-- HARDCODED -->Podocarpus macrophyllus</i></td>
+                        </tr>
+                        <tr>
+                            <td class="specs-table-lbl">LOÀI</td>
+                            <!-- CALL DB: product.variety.varietyName (với fallback thiết kế tĩnh) -->
+                            <td class="specs-table-val" th:text="${product.variety != null and product.variety.varietyName != null ? product.variety.varietyName : 'Tùng La Hán'}">Tùng La Hán</td>
+                        </tr>
+                        <tr>
+                            <td class="specs-table-lbl">THẾ DÁNG</td>
+                            <!-- CALL DB: product.style (với fallback thiết kế tĩnh) -->
+                            <td class="specs-table-val" th:text="${product.style != null ? product.style : 'Dáng Hoành'}">Dáng Hoành</td>
+                        </tr>
+                        <tr>
+                            <td class="specs-table-lbl">TUỔI CÂY</td>
+                            <!-- CALL DB: product.age (với fallback thiết kế tĩnh) -->
+                            <td class="specs-table-val" th:text="${product.age != null ? product.age + ' năm' : '18 năm'}">18 năm</td>
+                        </tr>
+                        <tr>
+                            <td class="specs-table-lbl">CHIỀU CAO</td>
+                            <!-- CALL DB: product.height (với fallback thiết kế tĩnh) -->
+                            <td class="specs-table-val" th:text="${product.height != null ? product.height + ' cm' : '80 cm'}">80 cm</td>
+                        </tr>
+                        <tr>
+                            <td class="specs-table-lbl">TÁN RỘNG</td>
+                            <!-- HARDCODED: Tán rộng không có trong DB entity -->
+                            <td class="specs-table-val"><!-- HARDCODED -->70 cm</td>
+                        </tr>
+                        <tr>
+                            <td class="specs-table-lbl">ĐƯỜNG KÍNH THÂN</td>
+                            <!-- CALL DB: product.trunkDiameter (với fallback thiết kế tĩnh) -->
+                            <td class="specs-table-val" th:text="${product.trunkDiameter != null ? product.trunkDiameter + ' cm' : '22 cm'}">22 cm</td>
+                        </tr>
+                        <tr>
+                            <td class="specs-table-lbl">PHÂN KHÚC</td>
+                            <!-- CALL DB: product.segment.segmentName (với fallback thiết kế tĩnh) -->
+                            <td class="specs-table-val" th:text="${product.segment != null and product.segment.segmentName != null ? product.segment.segmentName : 'Premium'}">Premium</td>
+                        </tr>
+                        <tr>
+                            <td class="specs-table-lbl">TÌNH TRẠNG</td>
+                            <!-- CALL DB: product.productStatus (với fallback thiết kế tĩnh) -->
+                            <td class="specs-table-val">
+                                <span th:text="${product.productStatus != null ? product.productStatus : 'AVAILABLE'}"
+                                      th:classappend="${product.productStatus != null ? (product.productStatus == 'AVAILABLE' ? '' : (product.productStatus == 'RESERVED' ? 'resv' : 'disabled')) : ''}"
+                                      class="table-status-badge">AVAILABLE</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="specs-table-lbl">SẴN HÀNG GIAO NGAY</td>
+                            <!-- HARDCODED: Sẵn hàng giao ngay không có trong DB entity -->
+                            <td class="specs-table-val"><!-- HARDCODED -->Có</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+<!-- ===================================================== -->
+<!-- SELLER BANNER ROW -->
+<!-- ===================================================== -->
+<section class="container py-5">
+    <!-- Detailed Seller Profile Box -->
+    <!-- HARDCODED: Chi tiết nghệ nhân/nhà vườn không có trong DB entity (User chỉ có thông tin cơ bản) -->
+    <div class="seller-profile-banner">
+        <!-- HARDCODED -->
+        <div class="seller-profile-left">
+            <div class="seller-large-avatar">
+                <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150" alt="Nghệ nhân Nguyễn Văn Thành">
+            </div>
+            <div>
+                <span class="seller-badge-gold">Verified Seller • Nghệ nhân Bắc Bộ</span>
+                <h3 class="seller-large-name">Nghệ nhân Nguyễn Văn Thành</h3>
+                <p class="seller-large-location"><i class="fa-solid fa-location-dot me-1"></i> Vườn Thành Cổ • Nam Định, Việt Nam</p>
+                <div class="seller-large-stats">
+                    <span><i class="fa-solid fa-star text-warning me-1"></i><strong>4.9</strong> (218 đánh giá)</span>
+                    <span class="text-muted">•</span>
+                    <span><strong>42</strong> tác phẩm đang niêm yết</span>
+                    <span class="text-muted">•</span>
+                    <span>Tham gia từ 2021</span>
+                </div>
+            </div>
+        </div>
+        <div class="seller-profile-right">
+            <a href="#" class="btn-view-profile-outline">View Seller Profile</a>
+        </div>
+    </div>
+</section>
+
+<!-- ===================================================== -->
+<!-- RELATED PRODUCTS SECTION // FIX CỨNG-->
+<!-- ===================================================== -->
+<section class="related-section">
+    <div class="container">
+        
+        <div class="related-header">
+            <h2 class="related-title">You May Also Like</h2>
+            <a href="#" class="related-link-all">Xem tất cả <i class="fa-solid fa-arrow-right"></i></a>
+        </div>
+
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-xl-4 g-3">
+            
+            <!-- Card 1 (AVAILABLE) -->
+            <div class="col">
+                <div class="product-card">
+                    <div class="card-image-wrap">
+                        <span class="card-status-badge avail">AVAILABLE</span>
+                        <button class="card-btn-wishlist" title="Yêu thích"><i class="fa-regular fa-heart"></i></button>
+                        <img src="https://images.unsplash.com/photo-1599599810769-bcde5a160d32?auto=format&fit=crop&q=80&w=600" alt="Sanh Nam Điền Dáng Trực Cổ" class="card-img-asset">
+                    </div>
+                    <div class="card-content">
+                        <span class="card-species-tag">Sanh Nam Điền</span>
+                        <h3 class="card-title-serif">Sanh Nam Điền Dáng Trực Cổ</h3>
+                        <p class="card-pedigree-code text-muted mb-1" style="font-size:0.7rem;">Mã: BSMS-SND-102</p>
+                        <p class="card-dimensions-meta text-muted mb-2">Tuổi: 12 năm • Cao: 65cm • Thân: 15cm</p>
+                        <div class="card-price-rating-row">
+                            <span class="card-price-val">4.500.000 đ</span>
+                            <span class="card-rating-val">4.8 <i class="fa-solid fa-star"></i></span>
+                        </div>
+                        <div class="mt-2">
+                            <button class="btn-card-cart-outline"><i class="fa-solid fa-cart-shopping"></i> Add to Cart</button>
+                            <a href="#" class="card-view-details-link">View Details →</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 2 (RESERVED) -->
+            <div class="col">
+                <div class="product-card">
+                    <div class="card-image-wrap">
+                        <span class="card-status-badge resv">RESERVED</span>
+                        <button class="card-btn-wishlist" title="Yêu thích"><i class="fa-regular fa-heart"></i></button>
+                        <img src="https://images.unsplash.com/photo-1592150621744-aca64f48394a?auto=format&fit=crop&q=80&w=600" alt="Linh Sam Dáng Huyền" class="card-img-asset">
+                    </div>
+                    <div class="card-content">
+                        <span class="card-species-tag">Linh Sam</span>
+                        <h3 class="card-title-serif">Linh Sam Dáng Huyền</h3>
+                        <p class="card-pedigree-code text-muted mb-1" style="font-size:0.7rem;">Mã: BSMS-LSM-077</p>
+                        <p class="card-dimensions-meta text-muted mb-2">Tuổi: 8 năm • Cao: 45cm • Thân: 8cm</p>
+                        <div class="card-price-rating-row">
+                            <span class="card-price-val">3.200.000 đ</span>
+                            <span class="card-rating-val">4.7 <i class="fa-solid fa-star"></i></span>
+                        </div>
+                        <div class="mt-2">
+                            <button class="btn-card-disabled" disabled><i class="fa-solid fa-lock"></i> Reserved</button>
+                            <a href="#" class="card-view-details-link">View Details →</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 3 (AVAILABLE) -->
+            <div class="col">
+                <div class="product-card">
+                    <div class="card-image-wrap">
+                        <span class="card-status-badge avail">AVAILABLE</span>
+                        <button class="card-btn-wishlist" title="Yêu thích"><i class="fa-regular fa-heart"></i></button>
+                        <img src="https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?auto=format&fit=crop&q=80&w=600" alt="Mai Chiếu Thủy Bonsai Hoa" class="card-img-asset">
+                    </div>
+                    <div class="card-content">
+                        <span class="card-species-tag">Mai Chiếu Thủy</span>
+                        <h3 class="card-title-serif">Mai Chiếu Thủy Bonsai Hoa</h3>
+                        <p class="card-pedigree-code text-muted mb-1" style="font-size:0.7rem;">Mã: BSMS-MCT-145</p>
+                        <p class="card-dimensions-meta text-muted mb-2">Tuổi: 10 năm • Cao: 55cm • Thân: 12cm</p>
+                        <div class="card-price-rating-row">
+                            <span class="card-price-val">6.700.000 đ</span>
+                            <span class="card-rating-val">4.8 <i class="fa-solid fa-star"></i></span>
+                        </div>
+                        <div class="mt-2">
+                            <button class="btn-card-cart-outline"><i class="fa-solid fa-cart-shopping"></i> Add to Cart</button>
+                            <a href="#" class="card-view-details-link">View Details →</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 4 (SOLD) -->
+            <div class="col">
+                <div class="product-card">
+                    <div class="card-image-wrap">
+                        <span class="card-status-badge sld">SOLD</span>
+                        <button class="card-btn-wishlist" title="Yêu thích"><i class="fa-regular fa-heart"></i></button>
+                        <img src="https://images.unsplash.com/photo-1583847268964-b28dc8f51f92?auto=format&fit=crop&q=80&w=600" alt="Sanh Quê Dáng Song Thụ" class="card-img-asset">
+                    </div>
+                    <div class="card-content">
+                        <span class="card-species-tag">Sanh Quê</span>
+                        <h3 class="card-title-serif">Sanh Quê Dáng Song Thụ</h3>
+                        <p class="card-pedigree-code text-muted mb-1" style="font-size:0.7rem;">Mã: BSMS-SNQ-301</p>
+                        <p class="card-dimensions-meta text-muted mb-2">Tuổi: 25 năm • Cao: 90cm • Thân: 20cm</p>
+                        <div class="card-price-rating-row">
+                            <span class="card-price-val">12.500.000 đ</span>
+                            <span class="card-rating-val">5.0 <i class="fa-solid fa-star"></i></span>
+                        </div>
+                        <div class="mt-2">
+                            <button class="btn-card-disabled" disabled><i class="fa-solid fa-ban"></i> Sold</button>
+                            <a href="#" class="card-view-details-link">View Details →</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+<!-- ===================================================== -->
+<!-- SERVICE FEATURES SECTION (Identical to Marketplace) -->
+<!-- ===================================================== -->
+<section class="service-features-section">
+    <div class="container">
+        <div class="row g-3">
+            <div class="col-md-3 col-sm-6">
+                <div class="service-feature-card">
+                    <div class="service-icon-circle"><i class="fa-solid fa-leaf"></i></div>
+                    <h4 class="service-label-title">Authentic Bonsai</h4>
+                    <p class="service-desc-text">Cây thật, ảnh thật — Cam kết hình ảnh chuẩn xác thực tế 100%.</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <div class="service-feature-card">
+                    <div class="service-icon-circle"><i class="fa-solid fa-shield-halved"></i></div>
+                    <h4 class="service-label-title">Verified Sellers</h4>
+                    <p class="service-desc-text">Nhà vườn nghệ nhân uy tín Bắc Bộ với nghệ nhân có kinh nghiệm lâu năm trong ngành.</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <div class="service-feature-card">
+                    <div class="service-icon-circle"><i class="fa-solid fa-credit-card"></i></div>
+                    <h4 class="service-label-title">Secure Payment</h4>
+                    <p class="service-desc-text">Tích hợp cổng thanh toán VNPay an toàn, bảo mật tuyệt đối.</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <div class="service-feature-card">
+                    <div class="service-icon-circle"><i class="fa-solid fa-truck-ramp-box"></i></div>
+                    <h4 class="service-label-title">Delivery Support</h4>
+                    <p class="service-desc-text">Vận chuyển chuyên dụng có cẩu cho các cây cỡ lớn, an toàn.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ===================================================== -->
+<!-- FOOTER (Identical to Marketplace) -->
+<!-- ===================================================== -->
+<footer class="footer-dark">
+    <div class="container">
+        <div class="row g-5">
+            <!-- Brand Section -->
+            <div class="col-lg-4 col-md-6">
+                <div class="footer-logo-title">🌿 BSMS</div>
+                <p class="footer-desc-para">
+                    Nền tảng quản lý và giao dịch cây cảnh nghệ thuật — gìn giữ và phát huy di sản nghệ thuật bonsai Bắc Bộ Việt Nam.
+                </p>
+                <div class="footer-social-strip">
+                    <a href="#" class="footer-social-btn"><i class="fa-brands fa-facebook-f"></i></a>
+                    <a href="#" class="footer-social-btn"><i class="fa-brands fa-instagram"></i></a>
+                    <a href="#" class="footer-social-btn"><i class="fa-brands fa-youtube"></i></a>
+                    <a href="#" class="footer-social-btn"><i class="fa-brands fa-pinterest-p"></i></a>
+                </div>
+            </div>
+            
+            <!-- Company Links -->
+            <div class="col-lg-3 col-md-6 col-6">
+                <h5 class="footer-column-heading">Company</h5>
+                <ul class="footer-column-links">
+                    <li><a href="#">About Us</a></li>
+                    <li><a href="#">Contact</a></li>
+                    <li><a href="#">Terms of Service</a></li>
+                    <li><a href="#">Privacy Policy</a></li>
+                </ul>
+            </div>
+
+            <!-- Connect Info -->
+            <div class="col-lg-5 col-md-12 col-6">
+                <h5 class="footer-column-heading">Connect</h5>
+                <ul class="footer-connect-list">
+                    <li><i class="fa-solid fa-phone"></i>Hotline: 1900 6868</li>
+                    <li><i class="fa-solid fa-envelope"></i>Email: support@bsms.vn</li>
+                    <li class="text-secondary mt-3" style="font-size:0.75rem; color: rgba(255,255,255,0.4) !important;">Powered by VNPay & Crane Logistics Network</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Copyright Row -->
+        <div class="footer-base-row">
+            <span>© 2026 BSMS — Bonsai Shop Management System. All rights reserved.</span>
+            <span>Powered by VNPay - Crane Logistics Network</span>
+        </div>
+    </div>
+</footer>
+
+<!-- Bootstrap Bundle JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- ===================================================== -->
+<!-- UI SCRIPT FOR DETAIL INTERACTION -->
+<!-- ===================================================== -->
+<script>
+    // Switches the main gallery display image when clicking on a thumbnail.
+    function switchMainImage(thumbElement, imageUrl) {
+        // Update main image source
+        const mainImg = document.getElementById('mainGalleryImg');
+        if (mainImg) {
+            mainImg.src = imageUrl;
+        }
+
+        // Toggle active border styling on thumbnail list items
+        const thumbs = document.querySelectorAll('.gallery-thumb-item');
+        thumbs.forEach(t => t.classList.remove('active'));
+        
+        if (thumbElement) {
+            thumbElement.classList.add('active');
+        }
+    }
+</script>
+</body>
+</html>

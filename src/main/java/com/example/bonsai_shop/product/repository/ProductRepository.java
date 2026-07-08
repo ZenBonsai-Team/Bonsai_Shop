@@ -47,4 +47,5 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
 
     @Query("SELECT p FROM Product p JOIN FETCH p.variety JOIN FETCH p.seller WHERE p.productStatus = 'AVAILABLE'")
     Page<Product> findAvailableProductsOnly(Pageable pageable);
+
 }

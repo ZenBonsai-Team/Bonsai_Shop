@@ -9,6 +9,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import java.math.BigDecimal;
 import java.util.List;
@@ -31,6 +32,7 @@ public class MarketplaceController {
             @RequestParam(required = false) List<String> ages,
             @RequestParam(required = false) List<String> species,
             @RequestParam(required = false) List<String> styles,
+            @RequestParam(required = false) List<String> priceRanges,
             @RequestParam(required = false) String sort,
             Model model) {
 
@@ -58,6 +60,7 @@ public class MarketplaceController {
                 ages,
                 species,
                 styles,
+                priceRanges,
                 PageRequest.of(page, 12, springSort)
         );
 
@@ -72,8 +75,24 @@ public class MarketplaceController {
         model.addAttribute("ages", ages);
         model.addAttribute("species", species);
         model.addAttribute("styles", styles);
+        model.addAttribute("priceRanges", priceRanges);
         model.addAttribute("sort", sort);
 
         return "/product/marketplace";
+    }
+
+    @GetMapping({"/products/detail", "/product/{id}"})
+    public String productDetail(@PathVariable(value = "id", required = false) Integer id, Model model) {
+        if (id != null) {
+            Product product = productService.getProductById(id);
+            model.addAttribute("product", product);
+        } else {
+            Page<Product> products = productService.getAllActiveProducts(PageRequest.of(0, 1));
+            if (!products.isEmpty()) {
+                Product product = productService.getProductById(products.getContent().get(0).getProductId());
+                model.addAttribute("product", product);
+            }
+        }
+        return "product/product-detail";
     }
 }

@@ -19,7 +19,8 @@ public class ProductSpecifications {
             BigDecimal maxPrice,
             List<String> ages,
             List<String> species,
-            List<String> styles) {
+            List<String> styles,
+            List<String> priceRanges) {
         return (Root<Product> root, CriteriaQuery<?> query, CriteriaBuilder cb) -> {
             List<Predicate> predicates = new ArrayList<>();
 
