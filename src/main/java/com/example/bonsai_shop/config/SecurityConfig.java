@@ -28,6 +28,7 @@ public class SecurityConfig {
         @Bean
         public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
                 http
+                                .userDetailsService(customUserDetailsService)
                                 .authorizeHttpRequests(auth -> auth
                                                 // Trang công khai
                                                 .requestMatchers(
@@ -64,7 +65,7 @@ public class SecurityConfig {
                                 .formLogin(form -> form
                                                 .loginPage("/login") // trang login tự tạo
                                                 .loginProcessingUrl("/login") // URL xử lý form login
-                                                .defaultSuccessUrl("/home", true) // sau login về trang chủ
+                                                .successHandler(roleBasedSuccessHandler())
                                                 .failureUrl("/login?error") // login sai về trang này
                                                 .permitAll())
                                 .logout(logout -> logout
