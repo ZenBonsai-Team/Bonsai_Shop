@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="vi" 
+      xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/dashboard-layout :: layout(~{::title}, ~{::#moderator-content}, ~{::#page-styles}, ~{::#page-scripts})}">
+<head>
+    <title>Quản lý đơn hàng - Moderator Portal</title>
+    
+    <!-- Specific Styles -->
+    <th:block id="page-styles">
+        <link rel="stylesheet" href="../../public/css/moderator-orders.css" th:href="@{/css/moderator-orders.css}">
+    </th:block>
+</head>
+<body>
+
+    <!-- Main Workspace Content -->
+    <div id="moderator-content">
+        <!-- KPI Metrics Header Cards -->
+        <section class="kpi-row">
+            <div class="kpi-card kpi-all">
+                <div class="kpi-icon-wrapper">📁</div>
+                <div class="kpi-data">
+                    <span class="kpi-label">Tổng đơn hàng</span>
+                    <span class="kpi-value" id="kpiTotalCount">0</span>
+                </div>
+            </div>
+            <div class="kpi-card kpi-pending">
+                <div class="kpi-icon-wrapper">⏳</div>
+                <div class="kpi-data">
+                    <span class="kpi-label">Chờ kiểm duyệt</span>
+                    <span class="kpi-value" id="kpiPendingCount">0</span>
+                </div>
+            </div>
+            <div class="kpi-card kpi-approved">
+                <div class="kpi-icon-wrapper">✅</div>
+                <div class="kpi-data">
+                    <span class="kpi-label">Đã duyệt (Chờ TT)</span>
+                    <span class="kpi-value" id="kpiApprovedCount">0</span>
+                </div>
+            </div>
+            <div class="kpi-card kpi-paid">
+                <div class="kpi-icon-wrapper">💰</div>
+                <div class="kpi-data">
+                    <span class="kpi-label">Đã thanh toán</span>
+                    <span class="kpi-value" id="kpiPaidCount">0</span>
+                </div>
+            </div>
+            <div class="kpi-card kpi-rejected">
+                <div class="kpi-icon-wrapper">❌</div>
+                <div class="kpi-data">
+                    <span class="kpi-label">Bị từ chối</span>
+                    <span class="kpi-value" id="kpiRejectedCount">0</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Main Orders DataTable Management Panel -->
+        <div class="management-card">
+            
+            <!-- Toolbar Header: Search & Sort -->
+            <div class="toolbar-header">
+                <div class="toolbar-search-row">
+                    <!-- Search Input -->
+                    <div class="search-input-wrapper">
+                        <span class="search-icon">🔍</span>
+                        <input type="text" id="orderSearchInput" placeholder="Tìm kiếm theo mã đơn, khách hàng hoặc tên cây cảnh...">
+                    </div>
+                    
+                    <!-- Sorting Dropdown -->
+                    <div class="sort-select-wrapper">
+                        <select id="orderSortSelect">
+                            <option value="date_desc">Mới nhất xếp trước</option>
+                            <option value="date_asc">Cũ nhất xếp trước</option>
+                            <option value="price_desc">Giá trị lớn nhất</option>
+                            <option value="price_asc">Giá trị nhỏ nhất</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Status Filter Tabs -->
+                <div class="filter-tabs" id="statusFilterTabs">
+                    <button class="tab-btn active" data-status="ALL">Tất cả đơn hàng</button>
+                    <button class="tab-btn" data-status="PENDING">Chờ duyệt (Pending)</button>
+                    <button class="tab-btn" data-status="APPROVED">Đã duyệt (Approved)</button>
+                    <button class="tab-btn" data-status="PAID">Đã thanh toán (Paid)</button>
+                    <button class="tab-btn" data-status="CANCELLED">Đã hủy (Cancelled)</button>
+                    <button class="tab-btn" data-status="REJECTED">Từ chối (Rejected)</button>
+                </div>
+            </div>
+
+            <!-- Table Data Body -->
+            <div class="table-container">
+                <table class="orders-table" id="ordersDataTable">
+                    <thead>
+                        <tr>
+                            <th>Mã Đơn Hàng</th>
+                            <th>Khách Hàng</th>
+                            <th>Sản Phẩm Cây Cảnh</th>
+                            <th class="col-price">Tổng Tiền</th>
+                            <th>Ngày Đặt</th>
+                            <th>Trạng Thái</th>
+                            <th style="width: 100px;">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ordersTableBody">
+                        <!-- Filled Dynamically via JS Controller -->
+                        <tr>
+                            <td colspan="7" class="empty-state">
+                                <div class="empty-state-icon">🔄</div>
+                                <div class="empty-state-title">Đang tải dữ liệu...</div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination Toolbar Footer -->
+            <div class="pagination-footer">
+                <div class="pagination-info" id="paginationInfo">
+                    Hiển thị 0 đến 0 trong tổng số 0 đơn hàng
+                </div>
+                <div class="pagination-controls" id="paginationControls">
+                    <!-- Page buttons will be inserted dynamically -->
+                </div>
+            </div>
+        </div>
+
+        <!-- ======================================================= -->
+        <!-- RENDER CHÚ THÍCH NGHIỆP VỤ & TÍCH HỢP (Dành cho Sinh Viên) -->
+        <!-- ======================================================= -->
+        <section class="kpi-card" style="display: block; padding: 24px; background: #eef7f4; border-color: #a7d7c5;">
+            <h3 style="color: var(--primary-hover); margin-bottom: 8px;">💡 Hướng dẫn Tích hợp Backend (Thymeleaf/Spring API)</h3>
+            <p style="font-size: 13px; color: #375a4c; margin-bottom: 12px; line-height: 1.6;">
+                Trang này được thiết kế theo cấu trúc tách biệt giữa <strong>Giao diện (View)</strong> và <strong>Dữ liệu (Service Mock API)</strong>.
+                Để kết nối trang này với CSDL thật thông qua Spring Boot, sinh viên thực hiện các bước sau:
+            </p>
+            <ul style="font-size: 13px; color: #375a4c; padding-left: 20px; line-height: 1.6; display: flex; flex-direction: column; gap: 6px;">
+                <li>
+                    1. Thay thế các hàm giả lập trong 
+                    <a th:href="@{/js/mock-data/orders.js}" style="font-weight: 600; color: var(--primary-color);">orders.js</a> 
+                    bằng các lệnh gọi API thực tế sử dụng <code>fetch()</code> hoặc <code>axios</code> đến các endpoint Spring Controller như:
+                    <code>GET /api/orders</code> (lấy danh sách có lọc/tìm kiếm), <code>POST /api/orders/{code}/verify</code> (duyệt đơn và lưu phí).
+                </li>
+                <li>
+                    2. Cấu hình bảo mật phân quyền trong file <code>SecurityConfig.java</code> (ví dụ: chỉ cho phép user có Authority <code>ACTION_ORDER_VIEW_ALL</code> và <code>ACTION_ORDER_HANDLE_CLAIM</code> truy cập).
+                </li>
+                <li>
+                    3. Bổ sung ghi log hoạt động đơn hàng vào bảng <code>OrderLog</code> mỗi khi Moderator nhấn phê duyệt hoặc từ chối đơn hàng trên UI.
+                </li>
+            </ul>
+        </section>
+
+        <!-- ======================================================= -->
+        <!-- ELEMENT CHỨA COMPONENT DRAWER CHI TIẾT ĐƠN HÀNG           -->
+        <!-- ======================================================= -->
+        <div class="drawer-backdrop" id="drawerBackdrop"></div>
+        <div class="drawer-panel" id="drawerPanel">
+            <div class="drawer-header">
+                <div class="drawer-title">
+                    <span>Chi Tiết Đơn Hàng</span>
+                    <span class="col-code" id="drawerOrderCode">BSMS-XXXXX</span>
+                </div>
+                <button class="drawer-close-btn" id="btnDrawerClose">&times;</button>
+            </div>
+            
+            <div class="drawer-body">
+                <!-- Status Row -->
+                <div class="drawer-section" style="display:flex; justify-content:space-between; align-items:center;">
+                    <span class="detail-label">Trạng thái:</span>
+                    <span id="drawerStatusBadge" class="status-badge pending">PENDING</span>
+                </div>
+
+                <!-- Customer Details -->
+                <div class="drawer-section">
+                    <h4 class="section-title">Khách hàng đặt hàng</h4>
+                    <div class="detail-grid">
+                        <span class="detail-label">Họ tên:</span>
+                        <span class="detail-value" id="drawerCustName">-</span>
+                        
+                        <span class="detail-label">Điện thoại:</span>
+                        <span class="detail-value" id="drawerCustPhone">-</span>
+                        
+                        <span class="detail-label">Email:</span>
+                        <span class="detail-value" id="drawerCustEmail">-</span>
+                        
+                        <span class="detail-label">Địa chỉ:</span>
+                        <span class="detail-value" id="drawerCustAddress">-</span>
+                    </div>
+                </div>
+
+                <!-- Product Details -->
+                <div class="drawer-section">
+                    <h4 class="section-title">Thông tin tác phẩm Bonsai</h4>
+                    <div class="product-card-info">
+                        <img src="" id="drawerProdImg" class="product-card-img" alt="Bonsai Image">
+                        <div class="product-card-details">
+                            <span class="product-card-name" id="drawerProdName">Bonsai Name</span>
+                            <span class="product-card-price" id="drawerProdPrice">0 VND</span>
+                            <span style="font-size:12px; color:var(--text-muted);">Số lượng đặt: <strong id="drawerQty">1</strong></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Notes / Additional Details -->
+                <div class="drawer-section">
+                    <h4 class="section-title">Yêu cầu từ khách hàng</h4>
+                    <p style="font-size: 13px; color: var(--text-muted); font-style: italic; background:#fcfcfc; padding:8px; border-radius:4px; border:1px solid #f0f0f0;" id="drawerNotes">
+                        Không có yêu cầu đặc biệt.
+                    </p>
+                </div>
+
+                <!-- Financial Inputs (Moderator Edit Crane & Shipping Fees) -->
+                <div class="drawer-section">
+                    <h4 class="section-title">Phí Vận Chuyển & Cẩu Cây</h4>
+                    <p style="font-size:12px; color:var(--text-muted); margin-bottom:8px;">
+                        Moderator nhập chi phí phát sinh trước khi duyệt đơn hàng (đơn vị: VNĐ):
+                    </p>
+                    <div class="fees-form-group">
+                        <div class="input-field-group">
+                            <label for="inputCraneFee">Phí xe cẩu (Crane Fee)</label>
+                            <input type="text" id="inputCraneFee" placeholder="Ví dụ: 500000" disabled>
+                        </div>
+                        <div class="input-field-group">
+                            <label for="inputShippingFee">Phí vận chuyển (Ship)</label>
+                            <input type="text" id="inputShippingFee" placeholder="Ví dụ: 300000" disabled>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Total Amount Summary Card -->
+                <div class="drawer-section" style="background:#f7faf8; padding: 16px; border-radius: var(--radius-sm); border:1px solid var(--border-color);">
+                    <div class="detail-grid">
+                        <span class="detail-label">Giá gốc Bonsai:</span>
+                        <span class="detail-value" id="drawerBasePrice">0 VND</span>
+                        
+                        <span class="detail-label">Đặt cọc trước:</span>
+                        <span class="detail-value" id="drawerDeposit">0 VND</span>
+                        
+                        <span class="detail-label" style="color:var(--primary-color); font-weight:700; font-size:15px;">TỔNG THANH TOÁN:</span>
+                        <span class="detail-value" style="color:var(--primary-color); font-weight:700; font-size:15px;" id="drawerFinalTotal">0 VND</span>
+                    </div>
+                </div>
+
+                <!-- Slide down Rejection Dialog -->
+                <div class="reject-reason-box" id="rejectReasonBox">
+                    <label for="textareaRejectReason" style="font-size:12px; font-weight:700; color:#c53030;">Nhập lý do từ chối duyệt đơn:</label>
+                    <textarea id="textareaRejectReason" rows="3" placeholder="Nhập lý do chi tiết để thông báo lại cho Seller/Khách hàng..."></textarea>
+                    <div class="reject-action-row">
+                        <button class="btn-mini btn-mini-cancel" id="btnRejectCancel">Hủy</button>
+                        <button class="btn-mini btn-mini-confirm" id="btnRejectConfirm">Xác nhận Từ chối</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Drawer Bottom Buttons (Only Active for PENDING) -->
+            <div class="drawer-footer">
+                <button class="btn-block btn-reject" id="btnRejectOrder">Từ chối duyệt</button>
+                <button class="btn-block btn-verify" id="btnVerifyOrder">Phê duyệt đơn</button>
+            </div>
+        </div>
+
+        <!-- ======================================================= -->
+        <!-- ELEMENT CONFIRM DIALOG XÁC NHẬN PHÊ DUYỆT                   -->
+        <!-- ======================================================= -->
+        <div class="modal-backdrop" id="confirmDialog">
+            <div class="modal-dialog">
+                <div class="modal-body">
+                    <div class="modal-icon">⚠️</div>
+                    <h3 class="modal-title">Xác nhận thao tác</h3>
+                    <p class="modal-message">Bạn có chắc chắn muốn tiến hành?</p>
+                    <div class="modal-summary-box" id="confirmSummary">
+                        <!-- Filled in JS -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn-modal btn-modal-cancel" id="btnConfirmCancel">Hủy bỏ</button>
+                    <button class="btn-modal btn-modal-confirm" id="btnConfirmOk">Đồng ý</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Specific Scripts -->
+    <th:block id="page-scripts">
+        <!-- Mock Data Layer -->
+        <script src="../../public/js/mock-data/orders.js" th:src="@{/js/mock-data/orders.js}"></script>
+        <!-- Reusable Modal components -->
+        <script src="../../public/js/components/confirm-dialog.js" th:src="@{/js/components/confirm-dialog.js}"></script>
+        <script src="../../public/js/components/order-drawer.js" th:src="@{/js/components/order-drawer.js}"></script>
+        <!-- Main Dashboard controller -->
+        <script src="../../public/js/moderator_orders.js" th:src="@{/js/moderator_orders.js}"></script>
+    </th:block>
+
+</body>
+</html>

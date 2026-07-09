@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" th:fragment="layout(title, content, styles, scripts)">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:replace="${title}">Bonsai Shop Portal</title>
+    <!-- Google Font Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../public/css/dashboard-layout.css" th:href="@{/css/dashboard-layout.css}">
+    <!-- Specific Page Styles -->
+    <th:block th:replace="${styles} ?: ~{}"></th:block>
+</head>
+<body>
+    <div class="dashboard-layout">
+        <!-- Reusable Dynamic Sidebar -->
+        <aside th:replace="~{fragments/sidebar :: sidebar}"></aside>
+
+        <!-- Main Workspace Area -->
+        <div class="dashboard-main">
+            <!-- Reusable Dynamic Header -->
+            <header th:replace="~{fragments/header :: header}"></header>
+
+            <!-- Main Content Injection Point -->
+            <main class="dashboard-content">
+                <div th:replace="${content}">
+                    <p>Mã nguồn chính của trang sẽ được tải ở đây.</p>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Global Layout Logic (JS Toggles) -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const toggleBtn = document.querySelector('.sidebar-toggle-btn');
+            const sidebar = document.querySelector('.dashboard-sidebar');
+            
+            if (toggleBtn && sidebar) {
+                toggleBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    sidebar.classList.toggle('open');
+                });
+                
+                // Close sidebar when clicking outside on mobile devices
+                document.addEventListener('click', (e) => {
+                    if (window.innerWidth <= 992 && 
+                        !sidebar.contains(e.target) && 
+                        !toggleBtn.contains(e.target)) {
+                        sidebar.classList.remove('open');
+                    }
+                });
+            }
+        });
+    </script>
+    
+    <!-- Specific Page Scripts -->
+    <th:block th:replace="${scripts} ?: ~{}"></th:block>
+</body>
+</html>
