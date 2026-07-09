@@ -17,35 +17,35 @@
         <!-- KPI Metrics Header Cards -->
         <section class="kpi-row">
             <div class="kpi-card kpi-all">
-                <div class="kpi-icon-wrapper">📁</div>
+                <div class="kpi-icon-wrapper"><i class="fa-solid fa-box"></i></div>
                 <div class="kpi-data">
                     <span class="kpi-label">Tổng đơn hàng</span>
                     <span class="kpi-value" id="kpiTotalCount">0</span>
                 </div>
             </div>
             <div class="kpi-card kpi-pending">
-                <div class="kpi-icon-wrapper">⏳</div>
+                <div class="kpi-icon-wrapper"><i class="fa-solid fa-gauge-high"></i></div>
                 <div class="kpi-data">
                     <span class="kpi-label">Chờ kiểm duyệt</span>
                     <span class="kpi-value" id="kpiPendingCount">0</span>
                 </div>
             </div>
             <div class="kpi-card kpi-approved">
-                <div class="kpi-icon-wrapper">✅</div>
+                <div class="kpi-icon-wrapper"><i class="fa-solid fa-circle-check"></i></div>
                 <div class="kpi-data">
                     <span class="kpi-label">Đã duyệt (Chờ TT)</span>
                     <span class="kpi-value" id="kpiApprovedCount">0</span>
                 </div>
             </div>
             <div class="kpi-card kpi-paid">
-                <div class="kpi-icon-wrapper">💰</div>
+                <div class="kpi-icon-wrapper"><i class="fa-solid fa-box"></i></div>
                 <div class="kpi-data">
                     <span class="kpi-label">Đã thanh toán</span>
                     <span class="kpi-value" id="kpiPaidCount">0</span>
                 </div>
             </div>
             <div class="kpi-card kpi-rejected">
-                <div class="kpi-icon-wrapper">❌</div>
+                <div class="kpi-icon-wrapper"><i class="fa-solid fa-circle-xmark"></i></div>
                 <div class="kpi-data">
                     <span class="kpi-label">Bị từ chối</span>
                     <span class="kpi-value" id="kpiRejectedCount">0</span>
@@ -61,7 +61,7 @@
                 <div class="toolbar-search-row">
                     <!-- Search Input -->
                     <div class="search-input-wrapper">
-                        <span class="search-icon">🔍</span>
+                        <span class="search-icon"><i class="fa-solid fa-magnifying-glass"></i></span>
                         <input type="text" id="orderSearchInput" placeholder="Tìm kiếm theo mã đơn, khách hàng hoặc tên cây cảnh...">
                     </div>
                     
@@ -98,14 +98,14 @@
                             <th class="col-price">Tổng Tiền</th>
                             <th>Ngày Đặt</th>
                             <th>Trạng Thái</th>
-                            <th style="width: 100px;">Thao tác</th>
+                            <th style="width: 160px;">Thao tác</th>
                         </tr>
                     </thead>
                     <tbody id="ordersTableBody">
                         <!-- Filled Dynamically via JS Controller -->
                         <tr>
                             <td colspan="7" class="empty-state">
-                                <div class="empty-state-icon">🔄</div>
+                                <div class="empty-state-icon"><i class="fa-solid fa-rotate"></i></div>
                                 <div class="empty-state-title">Đang tải dữ liệu...</div>
                             </td>
                         </tr>
@@ -128,7 +128,7 @@
         <!-- RENDER CHÚ THÍCH NGHIỆP VỤ & TÍCH HỢP (Dành cho Sinh Viên) -->
         <!-- ======================================================= -->
         <section class="kpi-card" style="display: block; padding: 24px; background: #eef7f4; border-color: #a7d7c5;">
-            <h3 style="color: var(--primary-hover); margin-bottom: 8px;">💡 Hướng dẫn Tích hợp Backend (Thymeleaf/Spring API)</h3>
+            <h3 style="color: var(--primary-hover); margin-bottom: 8px;"><i class="fa-solid fa-lightbulb"></i> Hướng dẫn Tích hợp Backend (Thymeleaf/Spring API)</h3>
             <p style="font-size: 13px; color: #375a4c; margin-bottom: 12px; line-height: 1.6;">
                 Trang này được thiết kế theo cấu trúc tách biệt giữa <strong>Giao diện (View)</strong> và <strong>Dữ liệu (Service Mock API)</strong>.
                 Để kết nối trang này với CSDL thật thông qua Spring Boot, sinh viên thực hiện các bước sau:
@@ -253,8 +253,8 @@
 
             <!-- Drawer Bottom Buttons (Only Active for PENDING) -->
             <div class="drawer-footer">
-                <button class="btn-block btn-reject" id="btnRejectOrder">Từ chối duyệt</button>
-                <button class="btn-block btn-verify" id="btnVerifyOrder">Phê duyệt đơn</button>
+                <button class="btn-block btn-reject" id="btnRejectOrder"><i class="fa-solid fa-circle-xmark"></i> Từ chối duyệt</button>
+                <button class="btn-block btn-verify" id="btnVerifyOrder"><i class="fa-solid fa-circle-check"></i> Phê duyệt đơn</button>
             </div>
         </div>
 
@@ -264,7 +264,7 @@
         <div class="modal-backdrop" id="confirmDialog">
             <div class="modal-dialog">
                 <div class="modal-body">
-                    <div class="modal-icon">⚠️</div>
+                    <div class="modal-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
                     <h3 class="modal-title">Xác nhận thao tác</h3>
                     <p class="modal-message">Bạn có chắc chắn muốn tiến hành?</p>
                     <div class="modal-summary-box" id="confirmSummary">

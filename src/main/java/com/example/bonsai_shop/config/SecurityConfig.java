@@ -87,11 +87,17 @@ public class SecurityConfig {
                     .anyMatch(authority -> "ROLE_ADMIN".equals(authority.getAuthority()));
             boolean isSeller = authentication.getAuthorities().stream()
                     .anyMatch(authority -> "ROLE_SELLER".equals(authority.getAuthority()));
+            boolean isModerator = authentication.getAuthorities().stream()
+                    .anyMatch(authority -> "ROLE_MODERATOR".equals(authority.getAuthority())
+                            || "ROLE_ORDER_MODERATOR".equals(authority.getAuthority())
+                            || "ACTION_ORDER_VIEW_ALL".equals(authority.getAuthority()));
 
             if (isAdmin) {
                 response.sendRedirect("/admin/users");
             } else if (isSeller) {
                 response.sendRedirect("/seller");
+            } else if (isModerator) {
+                response.sendRedirect("/moderator/orders");
             } else {
                 response.sendRedirect("/home");
             }

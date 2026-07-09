@@ -5,7 +5,7 @@
 <header th:fragment="header" class="dashboard-header" xmlns:th="http://www.thymeleaf.org">
     <!-- Left Hand Side: Sidebar trigger (mobile) & Breadcrumbs -->
     <div class="header-left">
-        <button class="sidebar-toggle-btn" aria-label="Toggle Sidebar">☰</button>
+        <button class="sidebar-toggle-btn" aria-label="Toggle Sidebar"><i class="fa-solid fa-bars"></i></button>
         
         <!-- Breadcrumb Component -->
         <div th:replace="~{fragments/breadcrumb :: breadcrumb}"></div>
@@ -15,7 +15,7 @@
     <div class="header-right">
         <!-- Notification Center -->
         <button class="header-action-btn" aria-label="Notifications">
-            <span>🔔</span>
+            <span><i class="fa-solid fa-bell"></i></span>
             <span class="badge-dot"></span>
         </button>
 
@@ -23,8 +23,7 @@
         <!-- Fallbacks to placeholder details if not authenticated in Thymeleaf Spring Security -->
         <div class="header-user-profile">
             <img class="user-profile-avatar" 
-                 th:src="${#authentication != null and #authentication.principal != null and #authentication.principal.attributes != null ? #authentication.principal.attributes['avatar'] : '/images/default-avatar.png'}" 
-                 onerror="this.src='https://api.dicebear.com/7.x/adventurer/svg?seed=moderator'"
+                 src="https://api.dicebear.com/7.x/adventurer/svg?seed=moderator"
                  alt="User Avatar">
             
             <div class="user-profile-info">

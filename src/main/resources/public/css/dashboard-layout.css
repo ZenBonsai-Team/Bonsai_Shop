@@ -1,27 +1,39 @@
 /**
- * CSS Variables & Stylesheet for Reusable Dashboard Layout
+ * Premium Bonsai Design System Stylesheet for Reusable Dashboard Layout
+ * Synchronized with Marketplace theme and common.css tokens
  * Under: src/main/resources/public/css/dashboard-layout.css
  */
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
+
 :root {
-    --primary-color: #2d6a4f;      /* Brand Green */
-    --primary-hover: #1b4332;
-    --primary-light: #d8f3dc;
-    --bg-main: #f4f6f0;            /* Soft greenish gray background */
-    --bg-card: #ffffff;
-    --text-main: #1f2d24;          /* Dark green-black text */
-    --text-muted: #6e7d73;
-    --border-color: #e2e8e4;
-    --sidebar-bg: #1c3629;         /* Premium deep forest green */
-    --sidebar-text: #e8f5e9;
-    --sidebar-active-bg: #2d6a4f;
-    --sidebar-active-text: #ffffff;
-    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
-    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.06);
-    --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.1);
-    --radius-sm: 6px;
-    --radius-md: 10px;
-    --radius-lg: 16px;
-    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Color Palette synced with common.css design tokens */
+    --primary-color: #1C3322;       /* Deep Forest Green */
+    --primary-hover: #132417;
+    --accent-color: #B8926A;        /* Antique Gold */
+    --accent-hover: #9E7B56;
+    
+    --bg-main: #FAF8F5;            /* Soft Warm Washi Off-white */
+    --bg-card: #FFFFFF;
+    --bg-beige: #F4F1EA;           /* Soft Warm Beige */
+    
+    --text-main: #1E221F;          /* Charcoal Pine */
+    --text-muted: #536257;         /* Muted Forest Grey */
+    --border-color: #E8E4DD;       /* Subtle Warm Grey Border */
+    --border-light: rgba(28, 51, 34, 0.06);
+    
+    /* Premium Shadows & Transitions */
+    --shadow-subtle: 0 4px 20px rgba(28, 51, 34, 0.03);
+    --shadow-hover: 0 12px 30px rgba(28, 51, 34, 0.06);
+    --shadow-lg: 0 20px 40px rgba(28, 51, 34, 0.08);
+    
+    /* Typography */
+    --font-serif: 'Cormorant Garamond', serif;
+    --font-sans: 'Plus Jakarta Sans', sans-serif;
+    
+    --radius-sm: 4px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 * {
@@ -31,11 +43,18 @@
 }
 
 body {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-family: var(--font-sans);
     background: var(--bg-main);
     color: var(--text-main);
-    line-height: 1.5;
+    line-height: 1.6;
     -webkit-font-smoothing: antialiased;
+}
+
+/* Headings utilize the premium Sans font */
+h1, h2, h3, h4, h5, h6, .brand-name, .section-title {
+    font-family: var(--font-sans);
+    font-weight: 600;
+    letter-spacing: -0.01em;
 }
 
 /* Page Layout */
@@ -45,84 +64,87 @@ body {
     overflow: hidden;
 }
 
-/* Sidebar Styling */
+/* Premium Sidebar Layout */
 .dashboard-sidebar {
-    width: 260px;
-    background: var(--sidebar-bg);
-    color: var(--sidebar-text);
+    width: 280px;
+    background: var(--primary-color);
+    color: #fff;
     display: flex;
     flex-direction: column;
     flex-shrink: 0;
     transition: var(--transition);
-    border-right: 1px solid rgba(255, 255, 255, 0.05);
+    border-right: 1px solid rgba(255, 255, 255, 0.03);
     z-index: 100;
 }
 
 .sidebar-brand {
-    padding: 24px;
+    padding: 32px 24px;
     display: flex;
     align-items: center;
-    gap: 12px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    gap: 14px;
+    border-bottom: 1px solid rgba(250, 248, 245, 0.05);
 }
 
 .sidebar-brand .logo-icon {
-    width: 36px;
-    height: 36px;
-    background: var(--primary-color);
-    border-radius: var(--radius-sm);
+    width: 40px;
+    height: 40px;
+    background: var(--accent-color);
+    border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #fff;
+    color: var(--primary-color);
     font-weight: bold;
-    font-size: 20px;
+    font-size: 22px;
+    box-shadow: 0 4px 10px rgba(184, 146, 106, 0.2);
 }
 
 .sidebar-brand .brand-name {
-    font-size: 18px;
-    font-weight: 700;
-    letter-spacing: 0.5px;
+    font-size: 1.45rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
     color: #ffffff;
+    text-transform: uppercase;
 }
 
 .sidebar-nav {
     flex: 1;
-    padding: 24px 16px;
+    padding: 32px 18px;
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 8px;
 }
 
 .sidebar-nav-item {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 12px 16px;
-    color: var(--sidebar-text);
+    gap: 14px;
+    padding: 14px 20px;
+    color: rgba(250, 248, 245, 0.7);
     text-decoration: none;
-    font-size: 14px;
+    font-size: 0.98rem;
     font-weight: 500;
+    letter-spacing: 0.05em;
     border-radius: var(--radius-sm);
     transition: var(--transition);
-    opacity: 0.85;
+    border-left: 3px solid transparent;
 }
 
 .sidebar-nav-item:hover {
-    background: rgba(255, 255, 255, 0.05);
-    opacity: 1;
+    background: rgba(250, 248, 245, 0.04);
+    color: #ffffff;
 }
 
 .sidebar-nav-item.active {
-    background: var(--sidebar-active-bg);
-    color: var(--sidebar-active-text);
-    opacity: 1;
+    background: rgba(250, 248, 245, 0.06);
+    color: #ffffff;
     font-weight: 600;
+    border-left-color: var(--accent-color);
 }
 
 .sidebar-footer {
-    padding: 16px;
-    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 24px;
+    border-top: 1px solid rgba(250, 248, 245, 0.05);
 }
 
 .sidebar-logout-btn {
@@ -130,66 +152,69 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
+    gap: 10px;
     padding: 12px;
     background: transparent;
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(250, 248, 245, 0.15);
     border-radius: var(--radius-sm);
-    color: #ff8a80;
+    color: rgba(250, 248, 245, 0.6);
     cursor: pointer;
-    font-size: 14px;
-    font-weight: 600;
+    font-size: 0.98rem;
+    font-weight: 500;
+    letter-spacing: 0.05em;
     transition: var(--transition);
 }
 
 .sidebar-logout-btn:hover {
-    background: rgba(255, 138, 128, 0.1);
-    border-color: #ff8a80;
+    background: rgba(255, 82, 82, 0.08);
+    border-color: #ff5252;
+    color: #ff5252;
 }
 
-/* Main Area Layout */
+/* Main Dashboard Wrapper */
 .dashboard-main {
     flex: 1;
     display: flex;
     flex-direction: column;
-    min-width: 0; /* Prevents flex items from overflowing */
+    min-width: 0;
 }
 
 /* Header Styling */
 .dashboard-header {
-    height: 70px;
+    height: 80px;
     background: var(--bg-card);
     border-bottom: 1px solid var(--border-color);
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 32px;
-    box-shadow: var(--shadow-sm);
+    padding: 0 40px;
+    box-shadow: var(--shadow-subtle);
     z-index: 90;
 }
 
 .header-left {
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 20px;
 }
 
-/* Toggle Menu button (for responsiveness) */
+/* Mobile toggle button */
 .sidebar-toggle-btn {
     background: none;
     border: none;
-    font-size: 20px;
+    font-size: 24px;
     cursor: pointer;
     color: var(--text-main);
-    display: none; /* hidden on desktop */
+    display: none;
 }
 
 /* Breadcrumbs */
 .breadcrumb-container {
     display: flex;
     align-items: center;
-    gap: 8px;
-    font-size: 14px;
+    gap: 10px;
+    font-size: 0.92rem;
+    letter-spacing: 0.02em;
 }
 
 .breadcrumb-item {
@@ -203,8 +228,7 @@ body {
 }
 
 .breadcrumb-separator {
-    color: var(--text-muted);
-    opacity: 0.6;
+    color: var(--border-color);
 }
 
 .breadcrumb-item.active {
@@ -216,59 +240,58 @@ body {
 .header-right {
     display: flex;
     align-items: center;
-    gap: 20px;
+    gap: 24px;
 }
 
-/* Notification Badge */
+/* Notifications Button */
 .header-action-btn {
     background: none;
     border: none;
     cursor: pointer;
     color: var(--text-muted);
     position: relative;
-    padding: 6px;
+    padding: 8px;
     border-radius: 50%;
     transition: var(--transition);
 }
 
 .header-action-btn:hover {
-    background: var(--bg-main);
+    background: var(--bg-beige);
     color: var(--text-main);
 }
 
 .header-action-btn .badge-dot {
     position: absolute;
-    top: 4px;
-    right: 4px;
-    width: 8px;
-    height: 8px;
-    background: #ff5252;
+    top: 6px;
+    right: 6px;
+    width: 6px;
+    height: 6px;
+    background: var(--accent-color);
     border-radius: 50%;
-    border: 2px solid var(--bg-card);
 }
 
-/* User Profile Badge */
+/* User profile header widget */
 .header-user-profile {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 4px 8px;
+    gap: 14px;
+    padding: 6px 12px;
     border-radius: var(--radius-sm);
     transition: var(--transition);
     cursor: pointer;
 }
 
 .header-user-profile:hover {
-    background: var(--bg-main);
+    background: var(--bg-beige);
 }
 
 .user-profile-avatar {
-    width: 36px;
-    height: 36px;
+    width: 38px;
+    height: 38px;
     border-radius: 50%;
     object-fit: cover;
-    background: var(--primary-light);
-    border: 2px solid var(--border-color);
+    border: 1px solid var(--border-color);
+    background: var(--bg-beige);
 }
 
 .user-profile-info {
@@ -277,28 +300,28 @@ body {
 }
 
 .user-profile-name {
-    font-size: 14px;
+    font-size: 0.98rem;
     font-weight: 600;
     color: var(--text-main);
 }
 
 .user-profile-role {
-    font-size: 11px;
+    font-size: 0.82rem;
     font-weight: 500;
-    color: var(--text-muted);
+    color: var(--accent-color);
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.08em;
 }
 
-/* Main Content Container */
+/* Main scrollable body content workspace */
 .dashboard-content {
     flex: 1;
-    padding: 32px;
+    padding: 40px;
     overflow-y: auto;
     max-width: 100%;
 }
 
-/* Responsive CSS */
+/* Responsive queries */
 @media (max-width: 992px) {
     .sidebar-toggle-btn {
         display: block;
@@ -308,7 +331,7 @@ body {
         position: fixed;
         top: 0;
         bottom: 0;
-        left: -260px;
+        left: -280px;
         box-shadow: var(--shadow-lg);
     }
     
@@ -317,14 +340,26 @@ body {
     }
     
     .dashboard-header {
-        padding: 0 16px;
+        padding: 0 20px;
     }
     
     .dashboard-content {
-        padding: 20px 16px;
+        padding: 24px 20px;
     }
     
     .user-profile-info {
-        display: none; /* Hide names on smaller screens */
+        display: none;
     }
+}
+
+/* Font Awesome icon alignment sizing overrides */
+.nav-icon {
+    width: 24px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.nav-icon i {
+    font-size: 18px;
 }

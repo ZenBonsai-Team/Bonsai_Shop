@@ -122,7 +122,7 @@ function renderTable(orders) {
         tableBody.innerHTML = `
             <tr>
                 <td colspan="7" class="empty-state">
-                    <div class="empty-state-icon">🚫</div>
+                    <div class="empty-state-icon"><i class="fa-solid fa-ban"></i></div>
                     <div class="empty-state-title">Không tìm thấy đơn hàng nào</div>
                     <div class="empty-state-desc">Hãy thử đổi từ khóa tìm kiếm hoặc lọc trạng thái khác.</div>
                 </td>
@@ -161,7 +161,7 @@ function renderTable(orders) {
                 <span class="status-badge ${order.orderStatus.toLowerCase()}">${order.orderStatus}</span>
             </td>
             <td>
-                <button class="page-btn active" style="padding: 4px 8px; font-size:12px;">Xem chi tiết</button>
+                <button class="page-btn active" style="padding: 4px 8px; font-size:12px;"><i class="fa-solid fa-eye"></i> Xem chi tiết</button>
             </td>
         `;
 
