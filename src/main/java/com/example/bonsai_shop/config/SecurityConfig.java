@@ -89,7 +89,7 @@ public class SecurityConfig {
                     .anyMatch(authority -> "ROLE_SELLER".equals(authority.getAuthority()));
 
             if (isAdmin) {
-                response.sendRedirect("/admin/users");
+                response.sendRedirect("/admin");
             } else if (isSeller) {
                 response.sendRedirect("/seller");
             } else {

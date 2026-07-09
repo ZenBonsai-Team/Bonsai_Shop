@@ -1,12 +1,9 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <title>Đăng ký - Bonsai Shop</title>
-    <link rel="stylesheet" th:href="@{/css/register.css}"/>
-</head>
+<head th:replace="~{fragments/head :: head('Đăng ký - BSMS', '/css/register.css')}"></head>
 <body>
-
+<div th:replace="~{fragments/navbar :: navbar}"></div>
+<main class="register-page-wrapper">
 <div class="register-container">
 
     <!-- LOGO -->
@@ -75,7 +72,8 @@
     </div>
 
 </div>
-
+</main>
+<div th:replace="~{fragments/footer :: footer}"></div>
 <script th:src="@{/js/register.js}"></script>
 </body>
 </html>

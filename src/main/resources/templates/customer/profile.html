@@ -1,12 +1,8 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <title>Thông tin cá nhân - Bonsai Shop</title>
-    <link rel="stylesheet" th:href="@{/css/profile.css}"/>
-</head>
+<head th:replace="~{fragments/head :: head('Thông tin cá nhân - BSMS', '/css/profile.css')}"></head>
 <body>
-
+<div th:replace="~{fragments/navbar :: navbar}"></div>
 <div class="profile-container">
 
     <!-- HEADER -->
@@ -94,6 +90,6 @@
     </div>
 
 </div>
-
+<div th:replace="~{fragments/footer :: footer}"></div>
 </body>
 </html>
