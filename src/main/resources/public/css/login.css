@@ -5,9 +5,6 @@
 }
 
 body {
-    font-family: var(--font-sans, Arial, sans-serif);
-    background: var(--bg-washi, #fcfbf9);
-    min-height: 100vh;
     font-family: 'Georgia', serif;
     height: 100vh;
     overflow: hidden;
@@ -62,16 +59,8 @@ body {
     background: rgba(255,255,255,0.15);
     border-radius: 10px;
     display: flex;
-    flex-direction: column;
-}
-
-.login-page-wrapper {
-    flex: 1;
-    display: flex;
     align-items: center;
     justify-content: center;
-    padding: 40px 20px;
-    background: linear-gradient(135deg, var(--primary-color, #1C3322), var(--primary-hover, #132417));
     font-size: 18px;
     backdrop-filter: blur(6px);
     border: 1px solid rgba(255,255,255,0.2);
@@ -99,9 +88,6 @@ body {
 
 .tagline h2 {
     color: white;
-.login-logo h1 {
-    color: var(--primary-color, #1C3322);
-    font-family: var(--font-serif, serif);
     font-size: 28px;
     font-weight: 400;
     line-height: 1.4;
@@ -323,8 +309,6 @@ body {
 /* ================================================ */
 .btn-signin {
     width: 100%;
-    padding: 13px;
-    background: var(--accent-color, #B8926A);
     padding: 14px;
     background: #2d6a4f;
     color: white;
@@ -403,8 +387,6 @@ body {
     border-color: #d1d5db;
     box-shadow: 0 2px 6px rgba(0,0,0,0.06);
 }
-.btn-login:hover { background: var(--accent-hover, #9E7B56); }
-.btn-login:active { transform: scale(0.98); }
 
 /* ================================================ */
 /* LINK ĐĂNG KÝ */
