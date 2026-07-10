@@ -2,111 +2,177 @@
 <html xmlns:th="http://www.thymeleaf.org" lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Chỉnh sửa thông tin - Bonsai Shop</title>
-    <link rel="stylesheet" th:href="@{/css/profile_update.css}"/>
+    <title>Chỉnh sửa hồ sơ - ZenBonsai</title>
+    <link rel="stylesheet" th:href="@{/css/profile_update.css}">
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
 </head>
 <body>
 
-<div class="profile-container">
+<header class="topbar">
+    <a th:href="@{/home}" class="logo">ZenBonsai</a>
 
-    <!-- HEADER -->
-    <div class="profile-avatar-wrapper">
-        <!-- Hiện ảnh nếu có, không thì hiện chữ cái đầu -->
-        <div class="profile-avatar">
-            <img th:if="${user.avatar != null}" th:src="${user.avatar}" alt="avatar"/>
-            <span th:unless="${user.avatar != null}"
-                  th:text="${#strings.substring(user.fullName, 0, 1)}">U</span>
+    <nav class="top-nav">
+        <a th:href="@{/products}">Bộ sưu tập</a>
+        <a href="#">Kiến thức Bonsai</a>
+        <a href="#">Dịch vụ chăm sóc</a>
+        <a href="#">Về chúng tôi</a>
+    </nav>
+</header>
+
+<div class="page-layout">
+
+    <aside class="sidebar">
+        <div class="menu-group">
+            <p>TÀI KHOẢN</p>
+            <a th:href="@{/profile}" class="active">
+                <i class="fa-regular fa-user"></i>
+                Hồ sơ cá nhân
+            </a>
+            <a href="#">
+                <i class="fa-solid fa-gear"></i>
+                Cài đặt tài khoản
+            </a>
         </div>
 
-        <!-- Form upload riêng, ẩn input, click vào icon camera để mở -->
-        <form method="post" th:action="@{/profile/update}" enctype="multipart/form-data" id="avatarForm">
-            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
-            <input type="file" name="avatarFile" id="avatarInput" accept="image/*"
-                   style="display:none" onchange="document.getElementById('avatarForm').submit()"/>
-            <label for="avatarInput" class="avatar-edit-icon">📷</label>
+        <div class="menu-group">
+            <p>MUA SẮM</p>
+            <a th:href="@{/orders}">
+                <i class="fa-solid fa-clock-rotate-left"></i>
+                Lịch sử đơn hàng
+            </a>
+            <a th:href="@{/wishlist}">
+                <i class="fa-regular fa-heart"></i>
+                Danh sách yêu thích
+            </a>
+        </div>
+
+        <div class="menu-group">
+            <p>DỊCH VỤ</p>
+            <a href="#">
+                <i class="fa-solid fa-scissors"></i>
+                Lịch chăm sóc
+            </a>
+        </div>
+
+        <form method="post" th:action="@{/logout}" class="logout-form">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+            <button type="submit">
+                <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                Đăng xuất
+            </button>
         </form>
-    </div>
+    </aside>
 
-    <h2 style="text-align:center; color:#2d6a4f; margin: 10px 0 5px;">Chỉnh sửa thông tin</h2>
+    <main class="main-content">
 
-    <!-- THÔNG BÁO -->
-    <div th:if="${success}" th:text="${success}" class="alert alert-success"></div>
-    <div th:if="${error}" th:text="${error}" class="alert alert-error"></div>
+        <section class="edit-card">
 
-    <!-- FORM CHỈNH SỬA -->
-    <form method="post" th:action="@{/profile/update}">
-        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
-
-        <div class="profile-body">
-
-            <div class="profile-field">
-                <div class="profile-field-icon">👤</div>
-                <div class="profile-field-info">
-                    <div class="profile-field-label">Họ và tên</div>
-                    <input type="text" name="fullName" class="profile-field-value-input"
-                           th:value="${user.fullName}" required/>
+            <div class="avatar-wrapper">
+                <div class="avatar">
+                    <img th:if="${user.avatar != null}" th:src="${user.avatar}" alt="avatar">
+                    <span th:unless="${user.avatar != null}"
+                          th:text="${#strings.substring(user.fullName, 0, 1)}">U</span>
                 </div>
+
+                <form method="post"
+                      th:action="@{/profile/update}"
+                      enctype="multipart/form-data"
+                      id="avatarForm">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                    <input type="file"
+                           name="avatarFile"
+                           id="avatarInput"
+                           accept="image/*"
+                           hidden
+                           onchange="document.getElementById('avatarForm').submit()">
+                    <label for="avatarInput" class="avatar-edit">
+                        <i class="fa-solid fa-pen"></i>
+                    </label>
+                </form>
             </div>
 
-            <div class="profile-field">
-                <div class="profile-field-icon">🆔</div>
-                <div class="profile-field-info">
-                    <div class="profile-field-label">Tên đăng nhập</div>
-                    <input type="text" name="username" class="profile-field-value-input"
-                           th:value="${user.username}" placeholder="Chưa cập nhật"/>
+            <h1>Chỉnh sửa thông tin</h1>
+            <p class="subtitle">Cập nhật thông tin định danh của bạn</p>
+
+            <div th:if="${success}" th:text="${success}" class="alert alert-success"></div>
+            <div th:if="${error}" th:text="${error}" class="alert alert-error"></div>
+
+            <form method="post" th:action="@{/profile/update}" class="edit-form">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+
+                <div class="form-row">
+                    <div class="field-icon"><i class="fa-regular fa-user"></i></div>
+                    <div class="field-content">
+                        <label>Họ và tên</label>
+                        <input type="text" name="fullName" th:value="${user.fullName}" required>
+                    </div>
                 </div>
-            </div>
 
-            <!-- EMAIL - KHÔNG CHO SỬA -->
-            <div class="profile-field">
-                <div class="profile-field-icon">📧</div>
-                <div class="profile-field-info">
-                    <div class="profile-field-label">Email (không thể thay đổi)</div>
-                    <input type="email" class="profile-field-value-input"
-                           th:value="${user.email}" disabled/>
+                <div class="form-row">
+                    <div class="field-icon"><i class="fa-regular fa-address-card"></i></div>
+                    <div class="field-content">
+                        <label>Tên đăng nhập</label>
+                        <input type="text" name="username" th:value="${user.username}" placeholder="Chưa cập nhật">
+                    </div>
                 </div>
-            </div>
 
-            <div class="profile-field">
-                <div class="profile-field-icon">📱</div>
-                <div class="profile-field-info">
-                    <div class="profile-field-label">Số điện thoại</div>
-                    <input type="text" name="phone" class="profile-field-value-input"
-                           th:value="${user.phone}" placeholder="Chưa cập nhật"/>
+                <div class="form-row">
+                    <div class="field-icon"><i class="fa-regular fa-envelope"></i></div>
+                    <div class="field-content">
+                        <label>Email không thể thay đổi</label>
+                        <input type="email" th:value="${user.email}" disabled>
+                    </div>
                 </div>
-            </div>
 
-            <div class="profile-field">
-                <div class="profile-field-icon">🏠</div>
-                <div class="profile-field-info">
-                    <div class="profile-field-label">Địa chỉ</div>
-                    <input type="text" name="address" class="profile-field-value-input"
-                           th:value="${user.address}" placeholder="Chưa cập nhật"/>
+                <div class="form-row">
+                    <div class="field-icon"><i class="fa-solid fa-mobile-screen"></i></div>
+                    <div class="field-content">
+                        <label>Số điện thoại</label>
+                        <input type="text" name="phone" th:value="${user.phone}" placeholder="Chưa cập nhật">
+                    </div>
                 </div>
-            </div>
 
-            <div class="profile-field">
-                <div class="profile-field-icon">📅</div>
-                <div class="profile-field-info">
-                    <div class="profile-field-label">Ngày tham gia</div>
-                    <input type="text" class="profile-field-value-input"
-                           th:value="${#temporals.format(user.createdAt, 'dd/MM/yyyy')}" disabled/>
+                <div class="form-row">
+                    <div class="field-icon"><i class="fa-solid fa-house"></i></div>
+                    <div class="field-content">
+                        <label>Địa chỉ</label>
+                        <input type="text" name="address" th:value="${user.address}" placeholder="Chưa cập nhật">
+                    </div>
                 </div>
-            </div>
 
-        </div>
+                <div class="form-row">
+                    <div class="field-icon"><i class="fa-regular fa-calendar-days"></i></div>
+                    <div class="field-content">
+                        <label>Ngày tham gia</label>
+                        <input type="text"
+                               th:value="${#temporals.format(user.createdAt, 'dd/MM/yyyy')}"
+                               disabled>
+                    </div>
+                </div>
 
-        <!-- ACTIONS -->
-        <div class="profile-actions">
-            <button type="submit" class="btn-update">💾 Lưu thay đổi</button>
-        </div>
-    </form>
+                <button type="submit" class="save-btn">
+                    <i class="fa-regular fa-floppy-disk"></i>
+                    Lưu thay đổi
+                </button>
 
-    <div class="profile-actions" style="padding-top: 0;">
-        <a th:href="@{/profile}" class="btn-back">← Hủy, quay lại xem hồ sơ</a>
-    </div>
+                <a th:href="@{/profile}" class="cancel-link">
+                    Hủy, quay lại xem hồ sơ
+                </a>
+            </form>
 
+        </section>
+
+    </main>
 </div>
+
+<footer class="footer">
+    <h2>ZenBonsai</h2>
+    <a href="#">Chính sách bảo mật</a>
+    <a href="#">Điều khoản sử dụng</a>
+    <a href="#">Liên hệ</a>
+    <span>© 2025 ZenBonsai. Nghệ thuật của sự kiên nhẫn.</span>
+</footer>
 
 </body>
 </html>

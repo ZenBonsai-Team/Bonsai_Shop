@@ -1,9 +1,66 @@
-* { margin: 0; padding: 0; box-sizing: border-box; }
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
 
 body {
     font-family: var(--font-sans, Arial, sans-serif);
     background: var(--bg-washi, #fcfbf9);
     min-height: 100vh;
+    font-family: 'Georgia', serif;
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* ================================================ */
+/* LAYOUT CHÍNH - CHIA ĐÔI */
+/* ================================================ */
+.login-wrapper {
+    display: flex;
+    height: 100vh;
+}
+
+/* ================================================ */
+/* BÊN TRÁI - ẢNH NỀN + TAGLINE */
+/* ================================================ */
+.login-left {
+    width: 52%;
+    background-image: url('../images/login-bg.png');
+    background-size: cover;
+    background-position: center;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 36px 44px;
+}
+
+/* Lớp phủ tối mờ trên ảnh */
+.login-left::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+            to bottom,
+            rgba(30, 50, 30, 0.45) 0%,
+            rgba(20, 40, 20, 0.65) 100%
+    );
+}
+
+/* Brand logo */
+.brand {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.brand-icon {
+    width: 38px;
+    height: 38px;
+    background: rgba(255,255,255,0.15);
+    border-radius: 10px;
     display: flex;
     flex-direction: column;
 }
@@ -15,122 +72,363 @@ body {
     justify-content: center;
     padding: 40px 20px;
     background: linear-gradient(135deg, var(--primary-color, #1C3322), var(--primary-hover, #132417));
+    font-size: 18px;
+    backdrop-filter: blur(6px);
+    border: 1px solid rgba(255,255,255,0.2);
 }
 
-.login-container {
-    background: white;
-    border-radius: 15px;
-    padding: 40px;
-    width: 400px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-    animation: fadeIn 0.5s ease;
+.brand-name {
+    color: white;
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
 }
 
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(-20px); }
-    to   { opacity: 1; transform: translateY(0); }
+/* Tagline phía dưới */
+.tagline {
+    position: relative;
 }
 
-.login-logo {
-    text-align: center;
-    margin-bottom: 25px;
+.tagline-line {
+    width: 36px;
+    height: 3px;
+    background: #74c69d;
+    margin-bottom: 18px;
+    border-radius: 2px;
 }
+
+.tagline h2 {
+    color: white;
 .login-logo h1 {
     color: var(--primary-color, #1C3322);
     font-family: var(--font-serif, serif);
     font-size: 28px;
-    margin-top: 10px;
-}
-.login-logo p {
-    color: #666;
-    font-size: 14px;
-    margin-top: 5px;
+    font-weight: 400;
+    line-height: 1.4;
+    max-width: 380px;
+    margin-bottom: 20px;
+    letter-spacing: -0.3px;
 }
 
+.tagline-sub {
+    color: #74c69d;
+    font-size: 12px;
+    letter-spacing: 2.5px;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-weight: 600;
+    margin-bottom: 20px;
+}
+
+.tagline-dots {
+    display: flex;
+    gap: 6px;
+}
+
+.dot {
+    width: 22px;
+    height: 3px;
+    background: rgba(255,255,255,0.3);
+    border-radius: 2px;
+    transition: background 0.3s;
+}
+
+.dot.active {
+    background: #74c69d;
+    width: 32px;
+}
+
+/* ================================================ */
+/* BÊN PHẢI - FORM */
+/* ================================================ */
+.login-right {
+    width: 48%;
+    background: #fafaf8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+    overflow-y: auto;
+}
+
+.login-form-container {
+    width: 100%;
+    max-width: 420px;
+}
+
+.welcome-back {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: #888;
+    margin-bottom: 10px;
+}
+
+.login-title {
+    font-size: 32px;
+    font-weight: 400;
+    color: #1a1a1a;
+    line-height: 1.2;
+    margin-bottom: 36px;
+    letter-spacing: -0.5px;
+}
+
+/* ================================================ */
+/* ALERTS */
+/* ================================================ */
+.alert {
+    padding: 12px 16px;
+    border-radius: 10px;
+    font-size: 14px;
+    margin-bottom: 20px;
+    font-family: 'Segoe UI', Arial, sans-serif;
+}
+
+.alert-error {
+    background: #fef2f2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+}
+
+.alert-success {
+    background: #f0fdf4;
+    color: #166534;
+    border: 1px solid #bbf7d0;
+}
+
+/* ================================================ */
+/* FORM ELEMENTS */
+/* ================================================ */
 .form-group {
     margin-bottom: 20px;
 }
+
 .form-group label {
     display: block;
-    color: #333;
-    font-weight: bold;
-    margin-bottom: 8px;
+    font-family: 'Segoe UI', Arial, sans-serif;
     font-size: 14px;
-}
-.form-group input {
-    width: 100%;
-    padding: 12px 15px;
-    border: 2px solid #e0e0e0;
-    border-radius: 8px;
-    font-size: 15px;
-    transition: border-color 0.3s;
-    outline: none;
-}
-.form-group input:focus {
-    border-color: #2d6a4f;
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 8px;
 }
 
-.input-wrapper {
+.form-group input[type="email"],
+.form-group input[type="password"],
+.form-group input[type="text"] {
+    width: 100%;
+    padding: 13px 16px;
+    border: 1.5px solid #e5e5e0;
+    border-radius: 10px;
+    font-size: 15px;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: #f5f5f0;
+    color: #1a1a1a;
+    outline: none;
+    transition: all 0.25s;
+}
+
+.form-group input:focus {
+    border-color: #2d6a4f;
+    background: #ffffff;
+    box-shadow: 0 0 0 3px rgba(45, 106, 79, 0.08);
+}
+
+.form-group input::placeholder {
+    color: #b0b0a8;
+}
+
+/* Password row */
+.password-label-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.forgot-link {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 13px;
+    color: #2d6a4f;
+    text-decoration: none;
+    font-weight: 500;
+}
+.forgot-link:hover { text-decoration: underline; }
+
+/* Toggle mật khẩu */
+.input-password-wrapper {
     position: relative;
 }
-.input-wrapper input {
-    padding-right: 45px;
+.input-password-wrapper input {
+    padding-right: 44px;
 }
-.toggle-password {
+.toggle-eye {
     position: absolute;
-    right: 12px;
+    right: 14px;
     top: 50%;
     transform: translateY(-50%);
     cursor: pointer;
+    font-size: 16px;
     color: #999;
-    font-size: 18px;
     user-select: none;
 }
-.toggle-password:hover { color: #2d6a4f; }
+.toggle-eye:hover { color: #2d6a4f; }
 
-.btn-login {
+/* Checkbox remember me */
+.checkbox-group {
+    margin-bottom: 24px;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 14px;
+    color: #555;
+    cursor: pointer;
+    user-select: none;
+}
+
+.checkbox-label input[type="checkbox"] {
+    display: none;
+}
+
+.custom-checkbox {
+    width: 18px;
+    height: 18px;
+    border: 1.5px solid #d1d5db;
+    border-radius: 5px;
+    background: white;
+    flex-shrink: 0;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.checkbox-label input[type="checkbox"]:checked + .custom-checkbox {
+    background: #2d6a4f;
+    border-color: #2d6a4f;
+}
+
+.checkbox-label input[type="checkbox"]:checked + .custom-checkbox::after {
+    content: '✓';
+    color: white;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+/* ================================================ */
+/* NÚT ĐĂNG NHẬP */
+/* ================================================ */
+.btn-signin {
     width: 100%;
     padding: 13px;
     background: var(--accent-color, #B8926A);
+    padding: 14px;
+    background: #2d6a4f;
     color: white;
     border: none;
-    border-radius: 8px;
+    border-radius: 10px;
     font-size: 16px;
-    font-weight: bold;
+    font-weight: 600;
+    font-family: 'Segoe UI', Arial, sans-serif;
     cursor: pointer;
-    transition: background 0.3s, transform 0.1s;
-    margin-top: 5px;
+    transition: all 0.25s;
+    letter-spacing: 0.3px;
+}
+
+.btn-signin:hover {
+    background: #1b4332;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(45, 106, 79, 0.3);
+}
+
+.btn-signin:active { transform: translateY(0); }
+
+/* ================================================ */
+/* DIVIDER */
+/* ================================================ */
+.divider {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin: 24px 0;
+}
+
+.divider::before,
+.divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: #e5e5e0;
+}
+
+.divider span {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 13px;
+    color: #9ca3af;
+    white-space: nowrap;
+}
+
+/* ================================================ */
+/* SOCIAL BUTTONS */
+/* ================================================ */
+.social-buttons {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 28px;
+}
+
+.btn-social {
+    flex: 1;
+    padding: 12px;
+    background: white;
+    border: 1.5px solid #e5e5e0;
+    border-radius: 10px;
+    font-size: 14px;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-weight: 500;
+    color: #374151;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.2s;
+}
+
+.btn-social:hover {
+    background: #f9f9f7;
+    border-color: #d1d5db;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.06);
 }
 .btn-login:hover { background: var(--accent-hover, #9E7B56); }
 .btn-login:active { transform: scale(0.98); }
 
+/* ================================================ */
+/* LINK ĐĂNG KÝ */
+/* ================================================ */
 .register-link {
     text-align: center;
-    margin-top: 20px;
-    color: #666;
+    font-family: 'Segoe UI', Arial, sans-serif;
     font-size: 14px;
+    color: #6b7280;
 }
+
 .register-link a {
     color: #2d6a4f;
+    font-weight: 600;
     text-decoration: none;
-    font-weight: bold;
 }
 .register-link a:hover { text-decoration: underline; }
 
-.alert {
-    padding: 10px 15px;
-    border-radius: 8px;
-    margin-bottom: 15px;
-    font-size: 14px;
-    text-align: center;
-}
-.alert-error {
-    background: #ffe0e0;
-    color: #c0392b;
-    border: 1px solid #f5c6cb;
-}
-.alert-success {
-    background: #d4edda;
-    color: #155724;
-    border: 1px solid #c3e6cb;
+/* ================================================ */
+/* RESPONSIVE */
+/* ================================================ */
+@media (max-width: 768px) {
+    .login-left { display: none; }
+    .login-right { width: 100%; padding: 30px 24px; }
+    .login-title { font-size: 26px; }
+    body { overflow-y: auto; }
 }

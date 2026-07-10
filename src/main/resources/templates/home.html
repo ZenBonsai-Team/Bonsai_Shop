@@ -2,6 +2,13 @@
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="vi">
 <head th:replace="~{fragments/head :: head('BSMS - Vườn Bonsai Nghệ Thuật', '/css/home.css')}"></head>
+<head>
+    <meta charset="UTF-8">
+    <title>ZenBonsai - Trang Chủ</title>
+    <link rel="stylesheet" th:href="@{/css/home.css}">
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+</head>
 <body>
 
 <!-- NAVBAR & WELCOME BAR -->
@@ -19,9 +26,121 @@
             <a th:href="@{/marketplace}" class="btn btn-hero-solid text-decoration-none">Khám phá Chợ Bonsai</a>
             <a href="#" class="btn btn-hero-outline text-decoration-none">VIP Elite Showroom (Sắp ra mắt)</a>
         </div>
+<nav class="navbar">
+    <a th:href="@{/marketplace}" class="logo">ZenBonsai</a>
+
+    <div class="nav-links">
+        <a th:href="@{/marketplace}">Bộ sưu tập</a>
+        <a th:href="@{/products}">Kiến thức Bonsai</a>
+        <a th:href="@{/wishlist}">Dịch vụ chăm sóc</a>
+
     </div>
 </header>
 
+    <div class="auth-links">
+        <span sec:authorize="isAnonymous()">
+            <a th:href="@{/login}">Đăng nhập</a>
+            <a th:href="@{/register}">Đăng ký</a>
+        </span>
+
+        <span sec:authorize="isAuthenticated()" class="user-actions">
+
+     <!-- Giỏ hàng -->
+    <a th:href="@{/cart}" class="cart-icon">
+        <i class="fa-solid fa-cart-shopping"></i>
+    </a>
+
+            <!-- User -->
+    <div class="user-dropdown">
+         <button type="button" class="user-icon-btn" onclick="toggleUserMenu()">
+             <i class="fa-solid fa-circle-user user-icon"></i>
+          </button>
+
+        <div class="dropdown-menu" id="userDropdownMenu">
+
+            <a th:href="@{/profile}">
+                <i class="fa-solid fa-user"></i>
+                View Profile
+            </a>
+
+            <form th:action="@{/logout}" method="post">
+
+                <input type="hidden"
+                       th:name="${_csrf.parameterName}"
+                       th:value="${_csrf.token}"/>
+
+                <button type="submit">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                    Đăng xuất
+                </button>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</span>
+    </div>
+</nav>
+
+<section class="hero" id="heroSlider">
+    <button class="hero-arrow hero-arrow-left" type="button" onclick="prevHeroImage()">
+        <i class="fa-solid fa-chevron-left"></i>
+    </button>
+
+    <button class="hero-arrow hero-arrow-right" type="button" onclick="nextHeroImage()">
+        <i class="fa-solid fa-chevron-right"></i>
+    </button>
+
+    <div class="hero-content">
+        <p>NGHỆ THUẬT SỐNG XANH</p>
+        <h1>ZenBonsai</h1>
+        <span>Khám phá vẻ đẹp tĩnh tại trong từng dáng cây</span>
+    </div>
+
+    <a th:href="@{/products}" class="scroll-down">
+        CUỘN ĐỂ KHÁM PHÁ
+        <span>⌄</span>
+    </a>
+</section>
+
+<div class="welcome-bar" sec:authorize="isAuthenticated()">
+    Chào mừng <span th:text="${username}"></span> đã quay trở lại!
+</div>
+
+<section class="collection">
+    <div class="section-heading">
+        <div>
+            <p>DÀNH CHO NHÀ SƯU TẦM</p>
+            <h2>Bộ Sưu Tập Di Sản</h2>
+        </div>
+        <a th:href="@{/products}">Xem tất cả tác phẩm</a>
+    </div>
+
+    <div class="product-grid">
+        <div class="product-card">
+            <img src="/images/bonsai-1.png" alt="Bonsai">
+            <p>TUỔI: 45 NĂM</p>
+            <h3>Shimpaku Juniper 'Eternity'</h3>
+            <strong>125.000.000 ₫</strong>
+        </div>
+
+        <div class="product-card">
+            <img src="/images/bonsai-2.png" alt="Bonsai">
+            <p>TUỔI: 80 NĂM</p>
+            <h3>Kuro-Matsu Black Pine</h3>
+            <strong>480.000.000 ₫</strong>
+        </div>
+
+        <div class="product-card">
+            <img src="/images/bonsai-3.png" alt="Bonsai">
+            <p>TUỔI: 30 NĂM</p>
+            <h3>Satsuki Azalea 'Grace'</h3>
+            <strong>85.000.000 ₫</strong>
+        </div>
+    </div>
+</section>
 <!-- GIOI THIEU VUON CAU & NGHỆ THUẬT BONSAI -->
 <section class="container py-5 mt-4">
     <div class="row align-items-center mb-5">
@@ -31,7 +150,7 @@
                 Chơi cây cảnh không chỉ là một thú vui tao nhã, mà còn là cả một nghệ thuật tu tâm dưỡng tính. Mỗi chậu bonsai tại vườn chúng tôi là một câu chuyện, một tác phẩm nghệ thuật sống động được tạo tác qua hàng chục năm.
             </p>
             <p class="text-secondary" style="line-height: 1.8;">
-                Uy tín của nhà vườn được xây dựng dựa trên sự tận tâm, minh bạch phả hệ của từng cây, và niềm đam mê vô tận với nghệ thuật cây cảnh Bắc Bộ. 
+                Uy tín của nhà vườn được xây dựng dựa trên sự tận tâm, minh bạch phả hệ của từng cây, và niềm đam mê vô tận với nghệ thuật cây cảnh Bắc Bộ.
             </p>
         </div>
         <div class="col-lg-6">
@@ -76,6 +195,67 @@
 
 <!-- FOOTER -->
 <div th:replace="~{fragments/footer :: footer}"></div>
+<section class="about">
+    <div class="about-image"></div>
 
+    <div class="about-content">
+        <p>TRIẾT LÝ CỦA CHÚNG TÔI</p>
+        <h2>Tại sao là<br>ZenBonsai?</h2>
+        <h4>“Bonsai không chỉ là một cái cây, đó là một cuộc hành trình vượt thời gian.”</h4>
+        <span>
+            Tại ZenBonsai, chúng tôi không chỉ cung cấp những tác phẩm nghệ thuật sống.
+            Chúng tôi chia sẻ tri thức, kinh nghiệm và sự tận tâm trong từng dáng cây.
+        </span>
+        <a th:href="@{/products}" class="outline-btn">Tìm hiểu thêm</a>
+    </div>
+</section>
+
+<section class="standard">
+    <div class="standard-img">
+        <img src="/images/tools.png" alt="Bonsai tools">
+    </div>
+
+    <div class="standard-info">
+        <h2>Tiêu chuẩn ZenBonsai</h2>
+
+        <div class="info-row">
+            <span>Nguồn gốc</span>
+            <strong>Vườn ươm Omiya, Nhật Bản</strong>
+        </div>
+
+        <div class="info-row">
+            <span>Chế tác</span>
+            <strong>Nghệ nhân cấp quốc gia</strong>
+        </div>
+
+        <div class="info-row">
+            <span>Dụng cụ</span>
+            <strong>Thép Masakuni rèn tay</strong>
+        </div>
+
+        <div class="info-row">
+            <span>Hậu mãi</span>
+            <strong>Bảo hành sinh trưởng 12 tháng</strong>
+        </div>
+
+        <blockquote>
+            “Một tác phẩm luôn đi kèm chứng nhận danh tính và bộ hướng dẫn chăm sóc chuyên biệt.”
+        </blockquote>
+    </div>
+</section>
+
+<footer class="footer">
+    <div>
+        <h2>ZenBonsai</h2>
+        <p>© 2025 ZenBonsai. Nghệ thuật của sự kiên nhẫn.</p>
+    </div>
+
+    <div class="footer-links">
+        <a href="#">Chính sách bảo mật</a>
+        <a href="#">Điều khoản sử dụng</a>
+        <a href="#">Liên hệ</a>
+    </div>
+</footer>
+<script th:src="@{/js/home.js}"></script>
 </body>
 </html>
