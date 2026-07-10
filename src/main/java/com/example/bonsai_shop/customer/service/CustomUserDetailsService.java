@@ -4,6 +4,8 @@ import com.example.bonsai_shop.entity.User;
 import com.example.bonsai_shop.customer.repository.RoleActionRepository;
 import com.example.bonsai_shop.customer.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.DisabledException;
+import org.springframework.security.authentication.LockedException;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.*;
 import org.springframework.stereotype.Service;
@@ -24,6 +26,13 @@ public class CustomUserDetailsService implements UserDetailsService {
 
         if ("PENDING".equals(user.getStatus())) {
             throw new UsernameNotFoundException("Tài khoản chưa được xác thực email!");
+        }
+        if ("LOCKED".equals(user.getStatus())) {
+            throw new LockedException("Tài khoản đã bị khóa!");
+        }
+
+        if (!"ACTIVE".equals(user.getStatus())) {
+            throw new DisabledException("Tài khoản không hoạt động!");
         }
         // 1. Authority cho Role (dùng cho hasRole())
         SimpleGrantedAuthority roleAuthority =
