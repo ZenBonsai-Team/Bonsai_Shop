@@ -45,6 +45,8 @@ public class SecurityConfig {
                                                                 "/resend-otp-reset",
                                                                 "/vnpay/**", // ← cho phép thanh toán VNPAY
                                                                 "/avatars/**", // ← cho phép xem ảnh avatar
+                                                                "/community", // ← cho phép xem trang cộng đồng công khai
+                                                                "/community/post/**", // ← cho phép xem bài viết chi tiết
                                                                 "/css/**", // ← cho phép CSS
                                                                 "/js/**", // ← cho phép JS
                                                                 "/images/**" // ← cho phép images

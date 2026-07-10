@@ -77,6 +77,7 @@ public class MarketplaceController {
         model.addAttribute("styles", styles);
         model.addAttribute("priceRanges", priceRanges);
         model.addAttribute("sort", sort);
+        model.addAttribute("activePage", "marketplace");
 
         return "/product/marketplace";
     }
@@ -93,6 +94,7 @@ public class MarketplaceController {
                 model.addAttribute("product", product);
             }
         }
+        model.addAttribute("activePage", "marketplace");
         return "product/product-detail";
     }
 }
