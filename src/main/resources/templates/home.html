@@ -1,88 +1,13 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="vi">
-<head th:replace="~{fragments/head :: head('BSMS - Vườn Bonsai Nghệ Thuật', '/css/home.css')}"></head>
-<head>
-    <meta charset="UTF-8">
-    <title>ZenBonsai - Trang Chủ</title>
-    <link rel="stylesheet" th:href="@{/css/home.css}">
-    <link rel="stylesheet"
-          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
-</head>
+
+<head th:replace="~{fragments/head :: head('ZenBonsai - Trang Chủ', '/css/home.css')}"></head>
+
 <body>
 
-<!-- NAVBAR & WELCOME BAR -->
-<div th:replace="~{fragments/navbar :: navbar}"></div>
-
-<!-- HERO SECTION -->
-<header class="hero-centered">
-    <div class="container">
-        <span class="hero-pill-badge">Di sản nghệ thuật Bắc Bộ</span>
-        <h1 class="hero-main-title serif-text">Vườn Cây Cảnh Nghệ Thuật<br>Đỉnh Cao</h1>
-        <p class="hero-subtitle-desc">
-            Nơi hội tụ tinh hoa đất trời và bàn tay tài hoa của các nghệ nhân. Chúng tôi tự hào lưu giữ những kiệt tác bonsai mang đậm dấu ấn thời gian, giá trị thẩm mỹ và tinh thần sâu sắc.
-        </p>
-        <div class="d-flex justify-content-center align-items-center gap-3">
-            <a th:href="@{/marketplace}" class="btn btn-hero-solid text-decoration-none">Khám phá Chợ Bonsai</a>
-            <a href="#" class="btn btn-hero-outline text-decoration-none">VIP Elite Showroom (Sắp ra mắt)</a>
-        </div>
-<nav class="navbar">
-    <a th:href="@{/marketplace}" class="logo">ZenBonsai</a>
-
-    <div class="nav-links">
-        <a th:href="@{/marketplace}">Bộ sưu tập</a>
-        <a th:href="@{/products}">Kiến thức Bonsai</a>
-        <a th:href="@{/wishlist}">Dịch vụ chăm sóc</a>
-
-    </div>
-</header>
-
-    <div class="auth-links">
-        <span sec:authorize="isAnonymous()">
-            <a th:href="@{/login}">Đăng nhập</a>
-            <a th:href="@{/register}">Đăng ký</a>
-        </span>
-
-        <span sec:authorize="isAuthenticated()" class="user-actions">
-
-     <!-- Giỏ hàng -->
-    <a th:href="@{/cart}" class="cart-icon">
-        <i class="fa-solid fa-cart-shopping"></i>
-    </a>
-
-            <!-- User -->
-    <div class="user-dropdown">
-         <button type="button" class="user-icon-btn" onclick="toggleUserMenu()">
-             <i class="fa-solid fa-circle-user user-icon"></i>
-          </button>
-
-        <div class="dropdown-menu" id="userDropdownMenu">
-
-            <a th:href="@{/profile}">
-                <i class="fa-solid fa-user"></i>
-                View Profile
-            </a>
-
-            <form th:action="@{/logout}" method="post">
-
-                <input type="hidden"
-                       th:name="${_csrf.parameterName}"
-                       th:value="${_csrf.token}"/>
-
-                <button type="submit">
-                    <i class="fa-solid fa-right-from-bracket"></i>
-                    Đăng xuất
-                </button>
-
-            </form>
-
-        </div>
-
-    </div>
-
-</span>
-    </div>
-</nav>
+<!-- HEADER GIỐNG MARKETPLACE -->
+<div th:replace="~{fragments/navbar :: navbar}" th:with="activePage='home'"></div>
 
 <section class="hero" id="heroSlider">
     <button class="hero-arrow hero-arrow-left" type="button" onclick="prevHeroImage()">
@@ -99,15 +24,11 @@
         <span>Khám phá vẻ đẹp tĩnh tại trong từng dáng cây</span>
     </div>
 
-    <a th:href="@{/products}" class="scroll-down">
+    <a th:href="@{/marketplace}" class="scroll-down">
         CUỘN ĐỂ KHÁM PHÁ
         <span>⌄</span>
     </a>
 </section>
-
-<div class="welcome-bar" sec:authorize="isAuthenticated()">
-    Chào mừng <span th:text="${username}"></span> đã quay trở lại!
-</div>
 
 <section class="collection">
     <div class="section-heading">
@@ -115,7 +36,7 @@
             <p>DÀNH CHO NHÀ SƯU TẦM</p>
             <h2>Bộ Sưu Tập Di Sản</h2>
         </div>
-        <a th:href="@{/products}">Xem tất cả tác phẩm</a>
+        <a th:href="@{/marketplace}">Xem tất cả tác phẩm</a>
     </div>
 
     <div class="product-grid">
@@ -141,60 +62,7 @@
         </div>
     </div>
 </section>
-<!-- GIOI THIEU VUON CAU & NGHỆ THUẬT BONSAI -->
-<section class="container py-5 mt-4">
-    <div class="row align-items-center mb-5">
-        <div class="col-lg-6">
-            <h2 class="serif-text mb-4" style="font-size: 2.5rem; color: var(--primary-color);">Tinh Hoa Nghệ Thuật Bonsai</h2>
-            <p class="text-secondary" style="line-height: 1.8;">
-                Chơi cây cảnh không chỉ là một thú vui tao nhã, mà còn là cả một nghệ thuật tu tâm dưỡng tính. Mỗi chậu bonsai tại vườn chúng tôi là một câu chuyện, một tác phẩm nghệ thuật sống động được tạo tác qua hàng chục năm.
-            </p>
-            <p class="text-secondary" style="line-height: 1.8;">
-                Uy tín của nhà vườn được xây dựng dựa trên sự tận tâm, minh bạch phả hệ của từng cây, và niềm đam mê vô tận với nghệ thuật cây cảnh Bắc Bộ.
-            </p>
-        </div>
-        <div class="col-lg-6">
-            <img src="https://images.unsplash.com/photo-1512428559087-560fa5ceab42?auto=format&fit=crop&q=80&w=800" class="img-fluid rounded shadow" alt="Vườn Bonsai">
-        </div>
-    </div>
-</section>
 
-<!-- PHÂN KHÚC SẢN PHẨM -->
-<section style="background-color: #fcfbf9; padding: 80px 0;">
-    <div class="container">
-        <div class="text-center mb-5">
-            <h2 class="serif-text" style="font-size: 2.5rem; color: var(--primary-color);">Khám Phá Các Phân Khúc</h2>
-            <p class="text-secondary">Lựa chọn phù hợp với nhu cầu và đam mê của bạn</p>
-        </div>
-        <div class="row g-4">
-            <!-- Marketplace -->
-            <div class="col-md-6">
-                <div class="card border-0 shadow-sm h-100" style="border-radius: 12px; overflow: hidden;">
-                    <img src="https://images.unsplash.com/photo-1515150144380-bca9f1650ed9?auto=format&fit=crop&q=80&w=600" class="card-img-top" alt="Marketplace" style="height: 300px; object-fit: cover;">
-                    <div class="card-body p-5 text-center">
-                        <h3 class="serif-text mb-3">Marketplace (Đại trà)</h3>
-                        <p class="text-secondary mb-4">Các tác phẩm bonsai tầm trung, đa dạng về kiểu dáng và kích thước, được niêm yết giá công khai để bạn dễ dàng lựa chọn.</p>
-                        <a th:href="@{/marketplace}" class="btn btn-outline-dark rounded-pill px-4">Vào Chợ Bonsai</a>
-                    </div>
-                </div>
-            </div>
-            <!-- Showroom -->
-            <div class="col-md-6">
-                <div class="card border-0 shadow-sm h-100" style="background-color: var(--primary-color); color: white; border-radius: 12px; overflow: hidden;">
-                    <img src="https://images.unsplash.com/photo-1502082553048-f009c37129b9?auto=format&fit=crop&q=80&w=600" class="card-img-top" alt="Showroom" style="height: 300px; object-fit: cover; opacity: 0.9;">
-                    <div class="card-body p-5 text-center">
-                        <h3 class="serif-text mb-3">VIP Showroom (Cao cấp)</h3>
-                        <p class="mb-4" style="color: rgba(255,255,255,0.8);">Tuyển tập các kiệt tác cổ thụ, đồ tuổi lớn, giá trị thẩm mỹ và kinh tế cực cao. Không niêm yết giá công khai. Yêu cầu đặt lịch hẹn (Booking) xem trực tiếp.</p>
-                        <a href="#" class="btn btn-light rounded-pill px-4">Đặt Lịch Ngay</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- FOOTER -->
-<div th:replace="~{fragments/footer :: footer}"></div>
 <section class="about">
     <div class="about-image"></div>
 
@@ -206,7 +74,7 @@
             Tại ZenBonsai, chúng tôi không chỉ cung cấp những tác phẩm nghệ thuật sống.
             Chúng tôi chia sẻ tri thức, kinh nghiệm và sự tận tâm trong từng dáng cây.
         </span>
-        <a th:href="@{/products}" class="outline-btn">Tìm hiểu thêm</a>
+        <a th:href="@{/marketplace}" class="outline-btn">Tìm hiểu thêm</a>
     </div>
 </section>
 
@@ -244,18 +112,8 @@
     </div>
 </section>
 
-<footer class="footer">
-    <div>
-        <h2>ZenBonsai</h2>
-        <p>© 2025 ZenBonsai. Nghệ thuật của sự kiên nhẫn.</p>
-    </div>
+<div th:replace="~{fragments/footer :: footer}"></div>
 
-    <div class="footer-links">
-        <a href="#">Chính sách bảo mật</a>
-        <a href="#">Điều khoản sử dụng</a>
-        <a href="#">Liên hệ</a>
-    </div>
-</footer>
 <script th:src="@{/js/home.js}"></script>
 </body>
 </html>
