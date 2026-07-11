@@ -1,0 +1,22 @@
+package com.example.bonsai_shop.product.dto;
+
+import lombok.*;
+import java.math.BigDecimal;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class ProductDetailResponseDTO {
+    private Integer productId;
+    private String productCode;
+    private String productName;
+    private String description;
+    private Integer age;
+    private Float height;
+    private Float trunkDiameter;
+    private String style;
+    private BigDecimal price;
+    private String productStatus;
+    private String imageUrl;
+}

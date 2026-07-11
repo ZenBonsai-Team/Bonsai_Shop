@@ -94,21 +94,20 @@ async function renderDashboard() {
  */
 async function updateKPIs() {
     try {
-        // In actual system: fetch metadata count map from endpoint
         const response = await fetch('/api/orders/kpis');
         if(!response.ok){
             throw new Error('Không thể lấy dữ liệu KPIs');
         }
 
-        const date = await response.json();
+        const data = await response.json();
     
-        document.getElementById('kpiTotalCount').textContent = total;
-        document.getElementById('kpiPendingCount').textContent = pending;
-        document.getElementById('kpiApprovedCount').textContent = approved;
-        document.getElementById('kpiPaidCount').textContent = paid;
-        document.getElementById('kpiRejectedCount').textContent = rejected;
+        document.getElementById('kpiTotalCount').textContent = data.total || 0;
+        document.getElementById('kpiPendingCount').textContent = data.pending || 0;
+        document.getElementById('kpiApprovedCount').textContent = data.approved || 0;
+        document.getElementById('kpiPaidCount').textContent = data.paid || 0;
+        document.getElementById('kpiRejectedCount').textContent = data.rejected || 0;
     } catch (error) {
-        console.error("Không thể cập nhật số liệu KPUs: ", error);
+        console.error("Không thể cập nhật số liệu KPIs: ", error);
     }
 }
 
@@ -145,9 +144,6 @@ function renderTable(orders) {
             });
         });
 
-        // Safe image fallback
-        const prodImg = order.product.image || 'https://picsum.photos/100/100?random=' + order.product.id;
-        
         tr.innerHTML = `
             <td class="col-code">${order.orderCode}</td>
             <td class="col-customer">
@@ -155,8 +151,11 @@ function renderTable(orders) {
                 <span class="cust-phone">${escapeHtml(order.customer.phone)}</span>
             </td>
             <td class="col-product">
-                <img src="${prodImg}" onerror="this.src='https://picsum.photos/100/100?random=${order.product.id}'" class="prod-img" alt="${escapeHtml(order.product.name)}">
-                <span class="prod-name">${escapeHtml(order.product.name)}</span>
+                <span class="prod-name-link" 
+                      style="cursor: pointer; font-weight: 600; text-decoration: underline; color: var(--primary-color);" 
+                      onclick="event.stopPropagation(); openProductDetailDrawer(${order.product.id})">
+                    ${escapeHtml(order.product.name)}
+                </span>
             </td>
             <td class="col-price">${formatVND(order.totalAmount)}</td>
             <td>${formatDate(order.orderDate)}</td>
@@ -267,4 +266,62 @@ function escapeHtml(text) {
         "'": '&#039;'
     };
     return text.toString().replace(/[&<>"']/g, function(m) { return map[m]; });
+}
+
+/**
+ * Mở Side Drawer và tải thông tin chi tiết của cây cảnh dựa trên ProductID
+ * @param {number} productId ID của sản phẩm cần lấy dữ liệu
+ */
+async function openProductDetailDrawer(productId) {
+    const drawerEl = document.getElementById('productDetailDrawer');
+    const bsOffcanvas = bootstrap.Offcanvas.getOrCreateInstance(drawerEl);
+    
+    document.getElementById('prodDrawerLoading').classList.remove('d-none');
+    document.getElementById('prodDrawerError').classList.add('d-none');
+    document.getElementById('prodDrawerContent').classList.add('d-none');
+    
+    bsOffcanvas.show();
+
+    try {
+        const response = await fetch(`/api/products/${productId}`);
+        if (!response.ok) {
+            throw new Error(`Mã lỗi hệ thống: ${response.status}`);
+        }
+        const data = await response.json();
+
+        document.getElementById('prodDrawerName').textContent = data.productName;
+        document.getElementById('prodDrawerCode').textContent = `Mã cây: ${data.productCode}`;
+        document.getElementById('prodDrawerDesc').textContent = data.description || 'Không có mô tả chi tiết cho tác phẩm này.';
+        
+        const priceFormatted = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(data.price);
+        document.getElementById('prodDrawerPrice').textContent = priceFormatted;
+
+        document.getElementById('prodDrawerStyle').textContent = data.style || 'Chưa cập nhật';
+        document.getElementById('prodDrawerAge').textContent = data.age ? `${data.age} năm` : 'Chưa cập nhật';
+        document.getElementById('prodDrawerHeight').textContent = data.height ? `${data.height} cm` : 'Chưa cập nhật';
+        document.getElementById('prodDrawerDiameter').textContent = data.trunkDiameter ? `${data.trunkDiameter} cm` : 'Chưa cập nhật';
+        
+        const imgUrl = data.imageUrl || 'https://images.unsplash.com/photo-1599599810769-bcde5a160d32?auto=format&fit=crop&q=80&w=800';
+        document.getElementById('prodDrawerImg').src = imgUrl;
+
+        const statusEl = document.getElementById('prodDrawerStatus');
+        statusEl.textContent = data.productStatus;
+        if (data.productStatus === 'AVAILABLE') {
+            statusEl.className = 'badge bg-success';
+        } else if (data.productStatus === 'RESERVED') {
+            statusEl.className = 'badge bg-warning text-dark';
+        } else {
+            statusEl.className = 'badge bg-danger';
+        }
+
+        document.getElementById('prodDrawerLoading').classList.add('d-none');
+        document.getElementById('prodDrawerContent').classList.remove('d-none');
+
+    } catch (error) {
+        console.error("Lỗi khi tải chi tiết sản phẩm:", error);
+        document.getElementById('prodDrawerLoading').classList.add('d-none');
+        document.getElementById('prodDrawerError').classList.remove('d-none');
+        document.getElementById('prodDrawerErrorMessage').textContent = 
+            error.message.includes('404') ? 'Không tìm thấy tác phẩm này trên hệ thống!' : 'Lỗi kết nối máy chủ, vui lòng kiểm tra lại mạng.';
+    }
 }
