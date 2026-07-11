@@ -92,21 +92,24 @@ async function renderDashboard() {
 /**
  * Dynamically computes and updates the top KPI indicators from active database
  */
-function updateKPIs() {
-    // In actual system: fetch metadata count map from endpoint
-    const orders = ordersDb; // Referenced from orders.js global database
-    
-    const total = orders.length;
-    const pending = orders.filter(o => o.orderStatus === 'PENDING').length;
-    const approved = orders.filter(o => o.orderStatus === 'APPROVED').length;
-    const paid = orders.filter(o => o.orderStatus === 'PAID').length;
-    const rejected = orders.filter(o => o.orderStatus === 'REJECTED').length;
+async function updateKPIs() {
+    try {
+        // In actual system: fetch metadata count map from endpoint
+        const response = await fetch('/api/orders/kpis');
+        if(!response.ok){
+            throw new Error('Không thể lấy dữ liệu KPIs');
+        }
 
-    document.getElementById('kpiTotalCount').textContent = total;
-    document.getElementById('kpiPendingCount').textContent = pending;
-    document.getElementById('kpiApprovedCount').textContent = approved;
-    document.getElementById('kpiPaidCount').textContent = paid;
-    document.getElementById('kpiRejectedCount').textContent = rejected;
+        const date = await response.json();
+    
+        document.getElementById('kpiTotalCount').textContent = total;
+        document.getElementById('kpiPendingCount').textContent = pending;
+        document.getElementById('kpiApprovedCount').textContent = approved;
+        document.getElementById('kpiPaidCount').textContent = paid;
+        document.getElementById('kpiRejectedCount').textContent = rejected;
+    } catch (error) {
+        console.error("Không thể cập nhật số liệu KPUs: ", error);
+    }
 }
 
 /**

@@ -6,7 +6,11 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "ORDER_LOG")
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class OrderLog {
 
     @Id
@@ -16,7 +20,7 @@ public class OrderLog {
 
     @ManyToOne
     @JoinColumn(name = "OrderID", nullable = false)
-    private BonsaiOrder order;
+    private Order order;
 
     @ManyToOne
     @JoinColumn(name = "ActionByID", nullable = false)

@@ -1,17 +1,20 @@
 package com.example.bonsai_shop.product.controller;
 
 import com.example.bonsai_shop.config.VNPayConfig;
-import com.example.bonsai_shop.entity.BonsaiOrder;
+import com.example.bonsai_shop.entity.Order;
 import com.example.bonsai_shop.entity.OrderDetail;
 import com.example.bonsai_shop.entity.Product;
 import com.example.bonsai_shop.entity.User;
+import com.example.bonsai_shop.product.dto.OrderResponseDTO;
 import com.example.bonsai_shop.product.dto.PurchaseOrderRequestDTO;
 import com.example.bonsai_shop.product.repository.ProductRepository;
+import com.example.bonsai_shop.product.service.OrderService;
 import com.example.bonsai_shop.product.repository.OrderRepository;
 import com.example.bonsai_shop.customer.repository.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -25,6 +28,7 @@ import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/orders")
@@ -38,6 +42,31 @@ public class OrderApiController {
 
     @Autowired
     private OrderRepository orderRepository;
+
+    @Autowired
+    private OrderService orderService;
+
+    @GetMapping
+    public ResponseEntity<Map<String, Object>> getOrders(
+            @RequestParam(defaultValue = "") String search,
+            @RequestParam(defaultValue = "All") String status,
+            @RequestParam(defaultValue = "date_desc") String sort,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "5") int limit) {
+
+        Page<Order> orderPage = orderService.getFilteredOrders(search, status, sort, page, limit);
+
+        List<OrderResponseDTO> dtoList = orderPage.getContent().stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("orders", dtoList);
+        response.put("totalCount", orderPage.getTotalElements());
+        response.put("pages", orderPage.getTotalPages());
+
+        return ResponseEntity.ok(response);
+    }
 
     @PostMapping("/checkout")
     @Transactional
@@ -72,7 +101,7 @@ public class OrderApiController {
 
         // 3. Khởi tạo BonsaiOrder
         String orderCode = "BSMS-" + VNPayConfig.getRandomNumber(6).toUpperCase();
-        BonsaiOrder order = BonsaiOrder.builder()
+        Order order = Order.builder()
                 .customer(customer)
                 .orderCode(orderCode)
                 .customerName(dto.getCustomerName())
@@ -170,5 +199,39 @@ public class OrderApiController {
         queryUrl += "&vnp_SecureHash=" + vnp_SecureHash;
 
         return VNPayConfig.vnp_PayUrl + "?" + queryUrl;
+    }
+
+    private OrderResponseDTO convertToDTO(Order order) {
+        OrderResponseDTO.ProductDTO prodcutDTO = null;
+        if (order.getOrderDetails() != null && !order.getOrderDetails().isEmpty()) {
+            OrderDetail detail = order.getOrderDetails().get(0);
+            Product prod = detail.getProduct();
+            if (prod != null) {
+                prodcutDTO = OrderResponseDTO.ProductDTO.builder()
+                        .id(prod.getProductId())
+                        .name(prod.getProductName())
+                        .image(prod.getFirstImageUrl())
+                        .price(prod.getPrice())
+                        .build();
+            }
+        }
+        return OrderResponseDTO.builder()
+                .orderId(order.getOrderId())
+                .orderCode(order.getOrderCode())
+                .customer(OrderResponseDTO.CustomerDTO.builder()
+                        .name(order.getCustomer().getFullName())
+                        .email(order.getCustomer().getEmail())
+                        .phone(order.getCustomer().getPhone())
+                        .build())
+                .product(prodcutDTO)
+                .quantity(1)
+                .totalAmount(order.getTotalAmount())
+                .depositAmount(order.getDepositAmount())
+                .orderDate(order.getOrderDate())
+                .orderStatus(order.getOrderStatus())
+                .craneFee(order.getCraneFee())
+                .shippingFee(order.getShippingFee())
+                .notes(order.getNotes())
+                .build();
     }
 }

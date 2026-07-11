@@ -8,6 +8,10 @@
     <!-- Specific Styles -->
     <th:block id="page-styles">
         <link rel="stylesheet" href="../../public/css/moderator-orders.css" th:href="@{/css/moderator-orders.css}">
+
+        <!-- Nhúng CSRF Tokens để chống lỗi 403 Forbidden khi gọi các POST APIs xử lý đơn hàng -->
+        <meta name="_csrf" th:content="${_csrf.token}"/>
+        <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
     </th:block>
 </head>
 <body>
@@ -123,31 +127,6 @@
                 </div>
             </div>
         </div>
-
-        <!-- ======================================================= -->
-        <!-- RENDER CHÚ THÍCH NGHIỆP VỤ & TÍCH HỢP (Dành cho Sinh Viên) -->
-        <!-- ======================================================= -->
-        <section class="kpi-card" style="display: block; padding: 24px; background: #eef7f4; border-color: #a7d7c5;">
-            <h3 style="color: var(--primary-hover); margin-bottom: 8px;"><i class="fa-solid fa-lightbulb"></i> Hướng dẫn Tích hợp Backend (Thymeleaf/Spring API)</h3>
-            <p style="font-size: 13px; color: #375a4c; margin-bottom: 12px; line-height: 1.6;">
-                Trang này được thiết kế theo cấu trúc tách biệt giữa <strong>Giao diện (View)</strong> và <strong>Dữ liệu (Service Mock API)</strong>.
-                Để kết nối trang này với CSDL thật thông qua Spring Boot, sinh viên thực hiện các bước sau:
-            </p>
-            <ul style="font-size: 13px; color: #375a4c; padding-left: 20px; line-height: 1.6; display: flex; flex-direction: column; gap: 6px;">
-                <li>
-                    1. Thay thế các hàm giả lập trong 
-                    <a th:href="@{/js/mock-data/orders.js}" style="font-weight: 600; color: var(--primary-color);">orders.js</a> 
-                    bằng các lệnh gọi API thực tế sử dụng <code>fetch()</code> hoặc <code>axios</code> đến các endpoint Spring Controller như:
-                    <code>GET /api/orders</code> (lấy danh sách có lọc/tìm kiếm), <code>POST /api/orders/{code}/verify</code> (duyệt đơn và lưu phí).
-                </li>
-                <li>
-                    2. Cấu hình bảo mật phân quyền trong file <code>SecurityConfig.java</code> (ví dụ: chỉ cho phép user có Authority <code>ACTION_ORDER_VIEW_ALL</code> và <code>ACTION_ORDER_HANDLE_CLAIM</code> truy cập).
-                </li>
-                <li>
-                    3. Bổ sung ghi log hoạt động đơn hàng vào bảng <code>OrderLog</code> mỗi khi Moderator nhấn phê duyệt hoặc từ chối đơn hàng trên UI.
-                </li>
-            </ul>
-        </section>
 
         <!-- ======================================================= -->
         <!-- ELEMENT CHỨA COMPONENT DRAWER CHI TIẾT ĐƠN HÀNG           -->
