@@ -39,6 +39,8 @@ public class SecurityConfig {
                                 "/resend-otp",
                                 "/reset-password",
                                 "/verify-otp-to-reset-password",
+                                "/bonsai-luxury",
+                                "/bonsai_luxury_detail/**",
                                 "/resend-otp-reset",
                                 "/avatars/**",  // ← cho phép xem ảnh avatar
                                 "/css/**",      // ← cho phép CSS

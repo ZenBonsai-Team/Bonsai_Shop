@@ -1,16 +1,15 @@
 package com.example.bonsai_shop.product.service;
 
-import com.example.bonsai_shop.product.dto.ProductCardDTO;
-import com.example.bonsai_shop.entity.Product;
-import com.example.bonsai_shop.product.repository.ProductRepository;
-import lombok.RequiredArgsConstructor;
+import java.math.BigDecimal;
+import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-
+import com.example.bonsai_shop.entity.Product;
+import com.example.bonsai_shop.product.dto.ProductCardDTO;
+import com.example.bonsai_shop.product.repository.ProductRepository;
 import com.example.bonsai_shop.product.repository.ProductSpecifications;
-import java.math.BigDecimal;
-import java.util.List;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -47,5 +46,13 @@ public class ProductService {
                 ),
                 pageable
         );
+    }
+    
+    public Page<ProductCardDTO> getPreniumProducts(Pageable pageable) {
+        return productRepository.findPremiumProducts(pageable);
+    }
+
+    public ProductCardDTO getPreniumProductsById(Integer productId) {
+        return productRepository.findPremiumProductById(productId);
     }
 }

@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="vi"
+      xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.w3.org/1999/xhtml">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Bonsai Luxury — Chi tiết tác phẩm</title>
+    <meta name="description"
+          content="Chi tiết tác phẩm Bonsai cao cấp tại Bonsai Luxury. Đặt lịch xem và yêu cầu tư vấn.">
+    <link rel="stylesheet" href="../../public/css/bonsai_luxury_detail.css" th:href="@{/css/bonsai_luxury_detail.css}">
+    <link
+            href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Playfair+Display:wght@400;600;700&display=swap"
+            rel="stylesheet">
+</head>
+
+<body th:data-authenticated="${#authorization.expression('isAuthenticated')}">
+<!-- HEADER (giữ navbar chính của site) -->
+<header class="site-header" role="banner">
+    <div class="container header-inner">
+        <a href="/bonsai-luxury" class="brand" aria-label="Bonsai Luxury Home">
+            <span class="logo-serif">BON</span><span class="logo-sans">SAI</span>
+        </a>
+
+        <button class="hamburger" aria-label="Mở menu" aria-expanded="false" aria-controls="mainNav">
+            <span class="hamburger-box"><span class="hamburger-inner"></span></span>
+        </button>
+
+        <nav id="mainNav" class="main-nav" role="navigation" aria-label="Điều hướng chính">
+            <ul class="menu">
+                <li><a class="nav-link" href="/bonsai-luxury">Trang chủ</a></li>
+                <li><a class="nav-link" href="/bonsai-luxury#collection">Bộ sưu tập</a></li>
+                <li><a class="nav-link" href="/bonsai-luxury#services">Dịch vụ</a></li>
+                <li><a class="nav-link" href="/bonsai-luxury#about">Xưởng nghệ thuật</a></li>
+                <li><a class="nav-link" href="/bonsai-luxury#contact">Liên hệ</a></li>
+            </ul>
+        </nav>
+
+        <div class="header-actions" role="group" aria-label="Hành động">
+
+
+            <!-- Search -->
+            <div class="search-wrap" aria-hidden="false">
+                <label for="siteSearch" class="visually-hidden">
+                    Tìm kiếm
+                </label>
+
+                <input id="siteSearch"
+                       class="search-input"
+                       type="search"
+                       placeholder="Tìm Bonsai, chậu, dịch vụ..."
+                       aria-label="Tìm kiếm Bonsai">
+
+                <button class="search-clear"
+                        aria-label="Xóa tìm kiếm"
+                        hidden>
+                    ✕
+                </button>
+            </div>
+
+
+
+            <!-- Cart -->
+            <button class="icon-btn cart"
+                    aria-label="Giỏ hàng"
+                    title="Giỏ hàng">
+
+                <span class="cart-emoji">🛒</span>
+
+                <span class="cart-count"
+                      aria-hidden="true">
+            0
+        </span>
+
+            </button>
+
+
+
+            <!-- =============================== -->
+            <!-- GUEST -->
+            <!-- =============================== -->
+
+            <div sec:authorize="!isAuthenticated()"
+                 id="guest-menu"
+                 class="guest-actions">
+
+                <a href="/login"
+                   class="btn-login-premium">
+                    Đăng nhập
+                </a>
+
+
+                <a href="/register"
+                   class="btn-register-premium">
+                    Đăng ký
+                </a>
+
+            </div>
+
+
+
+
+            <!-- =============================== -->
+            <!-- USER LOGIN -->
+            <!-- =============================== -->
+
+            <div sec:authorize="isAuthenticated()"
+                 id="user-menu"
+                 class="user-menu-premium">
+                <button class="user-btn-premium"
+                        aria-haspopup="true"
+                        aria-expanded="false">
+                    <div class="avatar-wrapper">
+                        <img src=""
+                             class="avatar"
+                             alt="Avatar"
+                             th:alt="${#authentication.name}">
+                        <span class="status-indicator"></span>
+                    </div>
+                    <span class="username-text"
+                          sec:authentication="name">
+                Khách quý
+            </span>
+                    <span class="chevron-icon">
+                ▼
+            </span>
+                </button>
+                <div class="dropdown-premium"
+                     role="menu">
+                    <div class="dropdown-header">
+                <span class="user-role">
+                    Thành viên Premium
+                </span>
+                    </div>
+                    <a href="/profile"
+                       role="menuitem">
+                        👤 Hồ sơ cá nhân
+                    </a>
+                    <a href="/orders"
+                       role="menuitem">
+                        📦 Lịch sử tác phẩm
+                    </a>
+                    <a href="/appointments"
+                       role="menuitem">
+                        📋 My Appointment
+                    </a>
+                    <a href="/wishlist"
+                       role="menuitem">
+                        ❤️ Tuyển chọn lưu trữ
+                    </a>
+                    <a href="/settings"
+                       role="menuitem">
+                        ⚙ Cài đặt tài khoản
+                    </a>
+                    <div class="dropdown-divider"></div>
+                    <form th:action="@{/logout}"
+                          method="post"
+                          class="logout-form">
+                        <button type="submit"
+                                class="logout-btn-premium"
+                                role="menuitem">
+                            🚪 Đăng xuất hệ thống
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+
+<!-- PRODUCT DETAIL -->
+<main class="container product-detail" id="productDetail" aria-labelledby="productTitle">
+    <div class="product-hero">
+        <div class="hero-media">
+            <img id="mainImage"
+                 th:src="${product.thumbnailUrl != null ? product.thumbnailUrl : 'https://images.unsplash.com/photo-1599599810769-bcde5a160d32?auto=format&fit=crop&q=80&w=1200'}"
+                 th:alt="${product.productName != null ? product.productName : 'Bonsai Luxury'}"
+                 loading="lazy">
+
+            <div class="thumbs" aria-hidden="false">
+                <button class="thumb active" type="button"
+                        th:attr="data-src=${product.thumbnailUrl != null ? product.thumbnailUrl : 'https://images.unsplash.com/photo-1599599810769-bcde5a160d32?auto=format&fit=crop&q=80&w=1200'}">
+                    <img th:src="${product.thumbnailUrl != null ? product.thumbnailUrl : 'https://images.unsplash.com/photo-1599599810769-bcde5a160d32?auto=format&fit=crop&q=80&w=300'}"
+                         th:alt="${product.productName != null ? product.productName : 'Bonsai thumbnail'}">
+                </button>
+
+                <button class="thumb" type="button"
+                        th:attr="data-src=${product.thumbnailUrl != null ? product.thumbnailUrl : 'https://images.unsplash.com/photo-1599599810769-bcde5a160d32?auto=format&fit=crop&q=80&w=1200'}">
+                    <img th:src="${product.thumbnailUrl != null ? product.thumbnailUrl : 'https://images.unsplash.com/photo-1599599810769-bcde5a160d32?auto=format&fit=crop&q=80&w=300'}"
+                         th:alt="${product.productName != null ? product.productName : 'Bonsai thumbnail'}">
+                </button>
+
+                <button class="thumb" type="button"
+                        th:attr="data-src=${product.thumbnailUrl != null ? product.thumbnailUrl : 'https://images.unsplash.com/photo-1599599810769-bcde5a160d32?auto=format&fit=crop&q=80&w=1200'}">
+                    <img th:src="${product.thumbnailUrl != null ? product.thumbnailUrl : 'https://images.unsplash.com/photo-1599599810769-bcde5a160d32?auto=format&fit=crop&q=80&w=300'}"
+                         th:alt="${product.productName != null ? product.productName : 'Bonsai thumbnail'}">
+                </button>
+            </div>
+        </div>
+
+        <div class="product-info">
+            <span class="hanko-seal" aria-hidden="true">共生</span>
+            <p class="product-kicker">
+                Bonsai Luxury · <span th:text="${product.productCode != null ? product.productCode : 'N/A'}">BL-120</span>
+            </p>
+
+            <h1 id="productTitle" class="product-title"
+                th:text="${product.productName != null ? product.productName : 'Tên tác phẩm'}">
+                Tùng La Hán
+            </h1>
+
+            <p class="product-sub">
+                <span th:text="${product.age != null ? product.age : 'N/A'}">120</span>
+                năm tuổi — tác phẩm độc bản cho không gian trưng bày riêng.
+            </p>
+
+            <div class="product-meta">
+                <span class="price">Giá theo yêu cầu</span>
+                <span class="badge">Tác phẩm độc bản</span>
+            </div>
+
+            <div class="detail-showroom-strip" aria-label="Thông tin trưng bày">
+                <div>
+                    <span>Showroom</span>
+                    <strong>Sẵn sàng trưng bày</strong>
+                </div>
+                <div>
+                    <span>Hồ sơ</span>
+                    <strong>Documented specimen</strong>
+                </div>
+                <div>
+                    <span>Bàn giao</span>
+                    <strong>White-glove delivery</strong>
+                </div>
+            </div>
+
+            <div class="product-ctas">
+                <button class="btn primary schedule-btn"
+                        type="button"
+                        th:data-id="${product.productId}">
+                    Đặt lịch xem
+                </button>
+            </div>
+
+            <ul class="product-highlights">
+                <li><strong>Xuất xứ:</strong> Xưởng Bonsai Luxury</li>
+                <li><strong>Trạng thái:</strong> <span th:text="${product.status != null ? product.status : 'AVAILABLE'}"></span></li>
+
+            </ul>
+
+            <dl class="certificate-panel" aria-label="Hồ sơ nhanh">
+                <div>
+                    <dt>Mã tác phẩm</dt>
+                    <dd th:text="${product.productCode != null ? product.productCode : 'N/A'}"></dd>
+                </div>
+                <div>
+                    <dt>Loại cây</dt>
+                    <dd th:text="${product.varietyName != null ? product.varietyName : 'Bonsai'}"></dd>
+                </div>
+                <div>
+                    <dt>Chiều cao</dt>
+                    <dd>
+                        <span th:text="${product.height != null ? product.height : 'N/A'}"></span> cm
+                    </dd>
+                </div>
+                <div>
+                    <dt>Đường kính thân</dt>
+                    <dd>
+                        <span th:text="${product.trunkDiameter != null ? product.trunkDiameter : 'N/A'}"></span> cm
+                    </dd>
+                </div>
+                <div>
+                    <dt>Nghệ nhân</dt>
+                    <dd th:text="${product.sellerName != null ? product.sellerName : 'Xưởng Bonsai Luxury'}"></dd>
+                </div>
+            </dl>
+        </div>
+    </div>
+
+    <section class="product-description" aria-labelledby="descTitle">
+        <p class="section-kicker">Nguồn gốc</p>
+        <h2 id="descTitle" class="section-title">Câu chuyện tác phẩm</h2>
+        <p>
+            Cây Bonsai Luxury này là một tác phẩm được tuyển chọn theo dáng, chất thân và khả năng trưng bày
+            trong không gian cao cấp. Tác phẩm được chăm sóc tỉ mỉ, tạo hình bởi nghệ nhân và bàn giao theo
+            tiêu chuẩn riêng của showroom.
+        </p>
+        <div class="provenance-quote">
+            <span>Documented specimen</span>
+            <strong>
+                Được thẩm định theo dáng, chất thân, sức khỏe rễ và khả năng trưng bày trong không gian cao cấp.
+            </strong>
+        </div>
+    </section>
+
+    <section class="product-profile" aria-labelledby="profileTitle">
+        <p class="section-kicker">Hồ sơ tác phẩm</p>
+        <h2 id="profileTitle" class="section-title">Hồ sơ bàn giao</h2>
+        <div class="profile-grid">
+            <article>
+                <span>01</span>
+                <h3>Thẩm định dáng và chất thân</h3>
+                <p>Ghi nhận dáng cây, điểm nhìn chính, tuổi ước tính và hiện trạng sinh trưởng trước khi bàn giao.</p>
+            </article>
+            <article>
+                <span>02</span>
+                <h3>Lịch chăm sóc riêng</h3>
+                <p>Đề xuất tưới, xoay sáng, cắt tỉa và bón dưỡng theo điều kiện trưng bày thực tế.</p>
+            </article>
+            <article>
+                <span>03</span>
+                <h3>Bảo dưỡng sau sở hữu</h3>
+                <p>Đội ngũ kỹ thuật theo dõi định kỳ, hỗ trợ phục hồi và tinh chỉnh tán khi cần.</p>
+            </article>
+        </div>
+    </section>
+
+    <section class="product-services" aria-labelledby="servicesTitle">
+        <p class="section-kicker">Dịch vụ cao cấp</p>
+        <h2 id="servicesTitle" class="section-title">Chăm sóc sau bàn giao</h2>
+        <ul class="services-list">
+            <li>🔧 Bảo dưỡng định kỳ theo lịch chuyên biệt</li>
+            <li>👨‍🎨 Tư vấn nghệ nhân và điều chỉnh dáng</li>
+            <li>🚚 Vận chuyển cao cấp &amp; lắp đặt tại chỗ</li>
+            <li>🛡️ Bảo hành rễ &amp; sức khỏe cây</li>
+        </ul>
+    </section>
+
+    <section class="product-gallery" aria-labelledby="galleryTitle">
+        <h2 id="galleryTitle" class="section-title">Hình ảnh chi tiết</h2>
+        <div class="gallery-grid">
+            <button class="gallery-item" type="button" th:attr="data-src=${product.thumbnailUrl}">
+                <img th:src="${product.thumbnailUrl != null ? product.thumbnailUrl : 'https://images.unsplash.com/photo-1599599810769-bcde5a160d32?auto=format&fit=crop&q=80&w=400'}"
+                     th:alt="${product.productName != null ? product.productName : 'Bonsai detail'}">
+            </button>
+            <button class="gallery-item" type="button" th:attr="data-src=${product.thumbnailUrl}">
+                <img th:src="${product.thumbnailUrl != null ? product.thumbnailUrl : 'https://images.unsplash.com/photo-1599599810769-bcde5a160d32?auto=format&fit=crop&q=80&w=400'}"
+                     th:alt="${product.productName != null ? product.productName : 'Bonsai detail'}">
+            </button>
+            <button class="gallery-item" type="button" th:attr="data-src=${product.thumbnailUrl}">
+                <img th:src="${product.thumbnailUrl != null ? product.thumbnailUrl : 'https://images.unsplash.com/photo-1599599810769-bcde5a160d32?auto=format&fit=crop&q=80&w=400'}"
+                     th:alt="${product.productName != null ? product.productName : 'Bonsai detail'}">
+            </button>
+        </div>
+    </section>
+</main>
+
+<!-- FOOTER -->
+<footer class="footer">
+    <div class="container footer-inner">
+        <div>
+            <strong>Bonsai Luxury</strong>
+            <p>Showroom &amp; Xưởng — Hotline: <a href="tel:+84988776322">+84 988 776 322</a></p>
+        </div>
+        <div>
+            <small>© <span id="year"></span> Bonsai Luxury. All rights reserved.</small>
+        </div>
+    </div>
+</footer>
+
+<!-- Modal containers -->
+<div id="overlayRoot" aria-hidden="true"></div>
+<!-- BOOKING MODAL -->
+<div id="bookingModal"
+     class="popup"
+     aria-hidden="true"
+     style="display:none;">
+    <div class="booking-card popup-content">
+        <button class="popup-close"
+                id="closeBookingBtn"
+                type="button">
+            ✕
+        </button>
+        <div class="booking-header">
+            <span class="booking-kicker">
+                Premium Service
+            </span>
+            <h3 class="booking-title">
+                Yêu cầu đặt lịch xem
+            </h3>
+            <p>
+                Tác phẩm:
+                <strong id="modalProductTitle"
+                        class="gold-text">
+                    —
+                </strong>
+            </p>
+        </div>
+        <form class="booking-form"
+              th:action="@{/appointments/create}"
+              method="post"
+              id="actualBookingForm">
+            <input type="hidden"
+                   id="modalProductId"
+                   name="productId">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>
+                        Ngày xem
+                    </label>
+                    <input type="date"
+                           id="appointmentDate"
+                           name="appointmentDate"
+                           required>
+                </div>
+                <div class="form-group">
+                    <label>
+                        Giờ xem
+                    </label>
+                    <input type="time"
+                           id="appointmentTime"
+                           name="appointmentTime"
+                           min="08:00"
+                           max="17:00"
+                           required>
+                </div>
+                <div class="form-group full-width">
+                    <label>
+                        Lời nhắn
+                    </label>
+                    <textarea id="note"
+                              name="note"
+                              rows="3">
+                    </textarea>
+                </div>
+            </div>
+            <div class="form-actions">
+                <button type="button"
+                        id="cancelBookingBtn"
+                        class="btn outline">
+                    Hủy
+                </button>
+                <button type="submit"
+                        class="btn primary submit-booking-btn">
+                    Xác nhận đặt lịch
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+<script src="../../public/js/bonsai_luxury_detail.js" th:src="@{/js/bonsai_luxury_detail.js}"></script>
+</body>
+
+</html>

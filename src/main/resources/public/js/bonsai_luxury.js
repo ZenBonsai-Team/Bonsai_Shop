@@ -1,209 +1,266 @@
-/* bonsai_luxury.js - Premium interactions (full) */
+/* ==========================================================================
+   Bonsai Luxury — Premium Interactions (Production Ready)
+   ========================================================================== */
 document.addEventListener('DOMContentLoaded', () => {
-    /* Footer year */
+
+    /* ----------------------------------------------------------------------
+       1. TIỆN ÍCH & CẤU HÌNH CƠ BẢN (Utilities)
+       ---------------------------------------------------------------------- */
+    // Tự động cập nhật năm ở Footer
     const yearEl = document.getElementById('year');
     if (yearEl) yearEl.textContent = new Date().getFullYear();
 
-    /* Smooth scroll for nav links */
+    // Mã hóa HTML để chống XSS
+    const escapeHtml = (str) => {
+        return String(str).replace(/[&<>"']/g, function (m) {
+            return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[m];
+        });
+    };
+
+    // Hàm hiển thị thông báo góc màn hình (Toast)
+    const showToast = (text) => {
+        const existing = document.querySelector('.toast');
+        if (existing) existing.remove();
+
+        const t = document.createElement('div');
+        t.className = 'toast';
+        t.textContent = text;
+        document.body.appendChild(t);
+
+        // Hiệu ứng mờ dần trước khi xóa
+        setTimeout(() => {
+            t.style.opacity = '0';
+            t.style.transition = 'opacity 0.4s ease';
+            setTimeout(() => t.remove(), 400);
+        }, 3500);
+    };
+
+    /* ----------------------------------------------------------------------
+       2. HIỆU ỨNG GIAO DIỆN CHUNG (UI/UX)
+       ---------------------------------------------------------------------- */
+    // Đã loại bỏ logic đổi màu Navbar (.scrolled) để giữ nguyên trạng thái một màu cố định.
+
+    // Cuộn mượt (Smooth Scroll) cho các liên kết mỏ neo (#)
     document.querySelectorAll('.nav-link').forEach(link => {
         const href = link.getAttribute('href');
-        if (href && href.startsWith('#')) {
+        if (href && href.startsWith('#') && href.length > 1) {
             link.addEventListener('click', (e) => {
                 e.preventDefault();
                 const target = document.querySelector(href);
-                if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
             });
         }
     });
 
-    /* HERO SLIDER (auto + manual) */
-    (function heroSlider() {
-        const slider = document.getElementById('heroSlider');
-        if (!slider) return;
-        const slides = Array.from(slider.querySelectorAll('.slide'));
-        let idx = 0;
-        const show = (i) => slides.forEach((s, j) => s.classList.toggle('active', j === i));
-        show(idx);
-        const next = () => { idx = (idx + 1) % slides.length; show(idx); };
-        const prev = () => { idx = (idx - 1 + slides.length) % slides.length; show(idx); };
-        let timer = setInterval(next, 5000);
-        slider.addEventListener('mouseenter', () => clearInterval(timer));
-        slider.addEventListener('mouseleave', () => timer = setInterval(next, 5000));
-        const prevBtn = document.querySelector('.slider-controls .prev');
-        const nextBtn = document.querySelector('.slider-controls .next');
-        if (prevBtn) prevBtn.addEventListener('click', () => { prev(); resetTimer(); });
-        if (nextBtn) nextBtn.addEventListener('click', () => { next(); resetTimer(); });
-        function resetTimer(){ clearInterval(timer); timer = setInterval(next, 5000); }
-    })();
-
-    /* STUDIO SLIDER (About replacement) */
-    (function studioSlider() {
-        const slides = Array.from(document.querySelectorAll('.studio-slide'));
-        if (!slides.length) return;
-        const prevBtn = document.querySelector('.prev-studio');
-        const nextBtn = document.querySelector('.next-studio');
-        let idx = 0;
-        const showSlide = i => {
-            slides.forEach((s, j) => s.classList.toggle('active', j === i));
-            const current = slides[i];
-            const studioName = current?.dataset?.name || '';
-            document.querySelectorAll('.contact-studio').forEach(b => b.dataset.studio = studioName);
-        };
-        showSlide(idx);
-        const next = () => { idx = (idx + 1) % slides.length; showSlide(idx); };
-        const prev = () => { idx = (idx - 1 + slides.length) % slides.length; showSlide(idx); };
-        let timer = setInterval(next, 6000);
-        if (nextBtn) nextBtn.addEventListener('click', () => { next(); resetTimer(); });
-        if (prevBtn) prevBtn.addEventListener('click', () => { prev(); resetTimer(); });
-        document.querySelector('.studio-slider')?.addEventListener('mouseenter', () => clearInterval(timer));
-        document.querySelector('.studio-slider')?.addEventListener('mouseleave', () => timer = setInterval(next, 6000));
-        function resetTimer(){ clearInterval(timer); timer = setInterval(next, 6000); }
-    })();
-
-    /* SCROLL REVEAL for product cards */
+    // Hiệu ứng Fade-in các thẻ sản phẩm khi cuộn đến
     const revealOnScroll = () => {
         document.querySelectorAll('.card').forEach(card => {
             const rect = card.getBoundingClientRect();
-            if (rect.top < window.innerHeight - 80) card.classList.add('visible');
+            if (rect.top < window.innerHeight - 50) {
+                card.classList.add('visible');
+            }
         });
     };
     revealOnScroll();
     window.addEventListener('scroll', revealOnScroll, { passive: true });
 
-    /* QUICK VIEW POPUP for images (detail preview) */
-    const overlayRoot = document.getElementById('overlayRoot') || (function(){
-        const d = document.createElement('div'); d.id = 'overlayRoot'; document.body.appendChild(d); return d;
-    })();
+    /* ----------------------------------------------------------------------
+       3. HỆ THỐNG SLIDER (Hero & Studio)
+       ---------------------------------------------------------------------- */
+    // Hàm khởi tạo Slider dùng chung
+    const initSlider = (sliderId, slideClass, intervalTime) => {
+        const slider = document.getElementById(sliderId);
+        if (!slider) return;
 
-    function escapeHtml(str) {
-        return String(str).replace(/[&<>"']/g, function(m){ return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[m]; });
-    }
-    function formatVND(value) {
-        const n = Number(value);
-        if (Number.isNaN(n)) return value;
-        return n.toLocaleString('vi-VN') + '₫';
-    }
-    function showToast(text) {
-        const t = document.createElement('div');
-        t.className = 'toast';
-        t.textContent = text;
-        document.body.appendChild(t);
-        setTimeout(()=> t.remove(), 3500);
-    }
+        const slides = Array.from(slider.querySelectorAll(slideClass));
+        if (!slides.length) return;
 
-    document.querySelectorAll('.quick-view').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            const card = e.currentTarget.closest('.card');
-            const img = card.querySelector('img');
-            const title = card.dataset.title || card.querySelector('.card-title').textContent;
-            const meta = card.querySelector('.card-meta')?.textContent || '';
-            const price = card.dataset.price ? formatVND(card.dataset.price) : card.querySelector('.price')?.textContent || '';
+        let idx = 0;
+        let timer;
 
-            const popup = document.createElement('div');
-            popup.className = 'popup';
-            popup.innerHTML = `
-        <div class="popup-content" role="dialog" aria-modal="true" aria-label="Xem nhanh ${escapeHtml(title)}">
-          <button class="popup-close" aria-label="Đóng">✕</button>
-          <div class="popup-body">
-            <img src="${img.src}" alt="${escapeHtml(img.alt)}">
-            <div class="popup-text">
-              <h3>${escapeHtml(title)}</h3>
-              <div class="meta"><span>${escapeHtml(meta)}</span><span>${price}</span></div>
-              <p>Chi tiết ngắn gọn về tác phẩm. Bạn có thể xem trang chi tiết để biết thêm thông tin hoặc đặt lịch thăm xưởng.</p>
-              <div style="margin-top:12px;display:flex;gap:10px;">
-                <a href="detail.html?id=${card.dataset.id}" class="btn small">Xem chi tiết</a>
-                <button class="btn small outline schedule-btn" data-id="${card.dataset.id}">Đặt lịch ngay</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      `;
-            overlayRoot.appendChild(popup);
-            // close handlers
-            popup.querySelector('.popup-close').addEventListener('click', () => popup.remove());
-            popup.addEventListener('click', (ev) => { if (ev.target === popup) popup.remove(); });
-            document.addEventListener('keydown', function esc(e){ if (e.key === 'Escape'){ popup.remove(); document.removeEventListener('keydown', esc); }});
-            // attach schedule handler inside popup
-            popup.querySelectorAll('.schedule-btn').forEach(b => b.addEventListener('click', openBookingModal));
-        });
-    });
+        const showSlide = (i) => slides.forEach((s, j) => s.classList.toggle('active', j === i));
 
-    /* SCHEDULE / BOOKING modal (for schedule-btn and card buttons) */
-    const bookingRoot = document.getElementById('bookingRoot') || (function(){
-        const d = document.createElement('div'); d.id = 'bookingRoot'; document.body.appendChild(d); return d;
-    })();
+        const next = () => { idx = (idx + 1) % slides.length; showSlide(idx); };
+        const prev = () => { idx = (idx - 1 + slides.length) % slides.length; showSlide(idx); };
 
-    document.querySelectorAll('.schedule-btn').forEach(btn => btn.addEventListener('click', openBookingModal));
+        const resetTimer = () => {
+            clearInterval(timer);
+            timer = setInterval(next, intervalTime);
+        };
 
-    function openBookingModal(e) {
-        const id = e.currentTarget.dataset.id || e.target.dataset.id;
-        const card = document.querySelector(`.card[data-id="${id}"]`);
-        const title = card ? (card.dataset.title || card.querySelector('.card-title').textContent) : 'Tác phẩm';
-        const booking = document.createElement('div');
-        booking.className = 'popup';
-        booking.innerHTML = `
-      <div class="booking-card" role="dialog" aria-modal="true" aria-label="Đặt lịch ${escapeHtml(title)}">
-        <button class="booking-close" aria-label="Đóng">✕</button>
-        <h3>Đặt lịch xem tác phẩm: ${escapeHtml(title)}</h3>
-        <form class="booking-form">
-          <input name="name" placeholder="Họ và tên" required>
-          <input name="phone" placeholder="Số điện thoại" required>
-          <input name="email" placeholder="Email (không bắt buộc)">
-          <label style="display:block;margin-top:6px;">
-            <span style="display:block;margin-bottom:6px;color:var(--muted)">Chọn ngày</span>
-            <input type="date" name="date" required>
-          </label>
-          <label style="display:block;margin-top:6px;">
-            <span style="display:block;margin-bottom:6px;color:var(--muted)">Ghi chú</span>
-            <textarea name="note" rows="3" placeholder="Yêu cầu thêm (ví dụ: giờ, địa điểm)"></textarea>
-          </label>
-          <div class="booking-actions">
-            <button type="button" class="btn outline booking-cancel">Hủy</button>
-            <button type="submit" class="btn primary">Gửi yêu cầu</button>
-          </div>
-        </form>
-      </div>
-    `;
-        bookingRoot.appendChild(booking);
-        // handlers
-        booking.querySelector('.booking-close').addEventListener('click', () => booking.remove());
-        booking.querySelector('.booking-cancel').addEventListener('click', () => booking.remove());
-        booking.addEventListener('click', (ev) => { if (ev.target === booking) booking.remove(); });
-        booking.querySelector('.booking-form').addEventListener('submit', (ev) => {
-            ev.preventDefault();
-            const submitBtn = ev.currentTarget.querySelector('button[type="submit"]');
-            submitBtn.textContent = 'Đang gửi...';
-            submitBtn.disabled = true;
-            // simulate send
-            setTimeout(() => {
-                submitBtn.textContent = 'Gửi yêu cầu';
-                submitBtn.disabled = false;
-                booking.remove();
-                showToast('Yêu cầu đặt lịch đã được gửi. Chúng tôi sẽ liên hệ để xác nhận.');
-            }, 900);
-        });
-    }
+        // Khởi tạo
+        showSlide(idx);
+        timer = setInterval(next, intervalTime);
 
-    /* DETAIL buttons: if you prefer modal instead of navigation, intercept here (optional) */
-    document.querySelectorAll('.detail-btn').forEach(link => {
-        // If you want to open modal instead of navigating, uncomment below and implement modal content.
-        // link.addEventListener('click', (e) => { e.preventDefault(); /* open modal */ });
-    });
+        // Nút điều hướng (nếu có)
+        const parent = slider.parentElement;
+        const prevBtn = parent.querySelector('.prev') || parent.querySelector('.prev-studio');
+        const nextBtn = parent.querySelector('.next') || parent.querySelector('.next-studio');
 
-    /* SEARCH FILTER (client-side) */
+        if (prevBtn) prevBtn.addEventListener('click', () => { prev(); resetTimer(); });
+        if (nextBtn) nextBtn.addEventListener('click', () => { next(); resetTimer(); });
+
+        // Tạm dừng khi hover
+        slider.addEventListener('mouseenter', () => clearInterval(timer));
+        slider.addEventListener('mouseleave', () => resetTimer());
+    };
+
+    initSlider('heroSlider', '.slide', 5000);
+    initSlider('studioSlider', '.studio-slide', 6000);
+
+    /* ----------------------------------------------------------------------
+         4. BỘ LỌC TÌM KIẾM & HIỂN THỊ SẢN PHẨM (Search & Filter)
+         ---------------------------------------------------------------------- */
     const searchInput = document.getElementById('search');
-    if (searchInput) {
-        searchInput.addEventListener('input', (e) => {
-            const q = e.target.value.trim().toLowerCase();
-            document.querySelectorAll('#productGrid .card').forEach(card => {
-                const title = (card.dataset.title || card.querySelector('.card-title').textContent).toLowerCase();
-                const price = (card.dataset.price || '').toString();
-                const match = !q || title.includes(q) || price.includes(q);
-                card.style.display = match ? '' : 'none';
-            });
+    const varietyFilter = document.getElementById('varietyFilter');
+    const segmentFilter = document.getElementById('segmentFilter');
+    const ageFilter = document.getElementById('ageFilter');       // THÊM MỚI
+    const heightFilter = document.getElementById('heightFilter'); // THÊM MỚI
+    const resetFiltersBtn = document.getElementById('resetFilters');
+    const filterSummary = document.getElementById('filterSummary');
+    const emptyState = document.querySelector('#productGrid .empty-state');
+    const productCards = Array.from(document.querySelectorAll('#productGrid .card'));
+
+    // Tự động trích xuất các Option lọc dựa trên dữ liệu thật trên DOM
+    const populateFilterOptions = () => {
+        if (!productCards.length) return;
+
+        const varietySet = new Set();
+
+        productCards.forEach(card => {
+            const variety = card.dataset.variety?.trim();
+            if (variety) varietySet.add(variety);
+        });
+
+        Array.from(varietySet).sort().forEach(value => {
+            if(varietyFilter) {
+                const option = document.createElement('option');
+                option.value = value;
+                option.textContent = value;
+                varietyFilter.appendChild(option);
+            }
+        });
+    };
+
+    // Hàm bổ trợ kiểm tra giá trị số có nằm trong khoảng lọc (min-max) không
+    const checkRangeMatch = (filterValue, cardValueStr) => {
+        if (!filterValue) return true; // Không chọn lọc khoảng này -> Mặc định khớp
+        if (!cardValueStr) return false; // Có lọc nhưng sản phẩm thiếu dữ liệu số -> Không khớp
+
+        const cardValue = parseFloat(cardValueStr);
+        if (isNaN(cardValue)) return false;
+
+        // Xử lý trường hợp đặc biệt dấu "+" (Ví dụ: 50+, 100+)
+        if (filterValue.endsWith('+')) {
+            const min = parseFloat(filterValue);
+            return cardValue >= min;
+        }
+
+        // Xử lý khoảng bình thường phân tách bằng dấu "-" (Ví dụ: 0-5, 5-15)
+        const parts = filterValue.split('-');
+        const min = parseFloat(parts[0]);
+        const max = parseFloat(parts[1]);
+        return cardValue >= min && cardValue <= max;
+    };
+
+    const applyFilters = () => {
+        const q = searchInput?.value.trim().toLowerCase() || '';
+        const variety = varietyFilter?.value.toLowerCase() || '';
+        const segment = segmentFilter?.value.toLowerCase() || '';
+        const ageRange = ageFilter?.value || '';       // THÊM MỚI
+        const heightRange = heightFilter?.value || ''; // THÊM MỚI
+        let visibleCount = 0;
+
+        productCards.forEach(card => {
+            const title = (card.dataset.title || card.querySelector('.card-title')?.textContent || '').toLowerCase();
+            const meta = (card.querySelector('.card-meta')?.textContent || '').toLowerCase();
+            const cardVariety = (card.dataset.variety || '').toLowerCase();
+            const cardSegment = (card.dataset.segment || '').toLowerCase();
+
+            // Lấy giá trị tuổi và chiều cao từ thuộc tính data của thẻ card
+            const cardAge = card.dataset.age || '';       // THÊM MỚI
+            const cardHeight = card.dataset.height || ''; // THÊM MỚI
+
+            const textMatch = !q || title.includes(q) || meta.includes(q);
+            const varietyMatch = !variety || cardVariety === variety;
+            const segmentMatch = !segment || cardSegment === segment;
+
+            // Thực hiện tính toán so khớp khoảng số cho tuổi và chiều cao
+            const ageMatch = checkRangeMatch(ageRange, cardAge);         // THÊM MỚI
+            const heightMatch = checkRangeMatch(heightRange, cardHeight); // THÊM MỚI
+
+            // Tổng hợp tất cả điều kiện lọc
+            const shouldShow = textMatch && varietyMatch && segmentMatch && ageMatch && heightMatch;
+
+            card.style.display = shouldShow ? '' : 'none';
+            if (shouldShow) visibleCount += 1;
+        });
+
+        if (filterSummary) {
+            filterSummary.textContent = `Hiển thị ${visibleCount} tác phẩm`;
+        }
+        if (emptyState) {
+            emptyState.style.display = visibleCount ? 'none' : 'block';
+        }
+    };
+
+    // Gắn sự kiện cho bộ lọc
+    populateFilterOptions();
+    if (searchInput) searchInput.addEventListener('input', applyFilters);
+    if (varietyFilter) varietyFilter.addEventListener('change', applyFilters);
+    if (segmentFilter) segmentFilter.addEventListener('change', applyFilters);
+    if (ageFilter) ageFilter.addEventListener('change', applyFilters);       // THÊM MỚI
+    if (heightFilter) heightFilter.addEventListener('change', applyFilters); // THÊM MỚI
+
+    if (resetFiltersBtn) {
+        resetFiltersBtn.addEventListener('click', () => {
+            if (varietyFilter) varietyFilter.value = '';
+            if (segmentFilter) segmentFilter.value = '';
+            if (ageFilter) ageFilter.value = '';         // THÊM MỚI
+            if (heightFilter) heightFilter.value = '';   // THÊM MỚI
+            if (searchInput) searchInput.value = '';
+            applyFilters();
         });
     }
 
-    /* Accessibility: show focus outlines for keyboard users */
-    document.body.addEventListener('keydown', (e) => { if (e.key === 'Tab') document.documentElement.classList.add('show-focus'); });
+    // Chạy mặc định lần đầu để quản lý hiển thị sản phẩm chính xác
+    applyFilters();
+
+
+    /* ----------------------------------------------------------------------
+       5. KHẢ NĂNG TRUY CẬP (Accessibility)
+       ---------------------------------------------------------------------- */
+    document.body.addEventListener('keydown', (e) => {
+        if (e.key === 'Tab') document.documentElement.classList.add('show-focus');
+    });
+
+    /* ----------------------------------------------------------------------
+       6. ĐIỀU KHIỂN CLICK DROPDOWN ACCOUNT (Bổ sung mới ở đây)
+       ---------------------------------------------------------------------- */
+    const userBtn = document.querySelector('.user-btn-premium');
+    const userDropdown = document.querySelector('.dropdown-premium');
+    const chevron = document.querySelector('.chevron-icon');
+
+    if (userBtn && userDropdown) {
+        // Sự kiện Click vào nút User
+        userBtn.addEventListener('click', (e) => {
+            e.stopPropagation(); // Ngăn sự kiện nổi bọt gây đóng menu ngay lập tức
+            userDropdown.classList.toggle('active');
+
+            if (chevron) {
+                chevron.style.transform = userDropdown.classList.contains('active') ? 'rotate(180deg)' : 'rotate(0deg)';
+            }
+        });
+
+        // Click ra bất cứ đâu ngoài Menu thì đóng dropdown lại
+        document.addEventListener('click', (e) => {
+            if (!userBtn.contains(e.target) && !userDropdown.contains(e.target)) {
+                userDropdown.classList.remove('active');
+                if (chevron) chevron.style.transform = 'rotate(0deg)';
+            }
+        });
+    }
+
 });

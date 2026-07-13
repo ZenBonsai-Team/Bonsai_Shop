@@ -1,369 +1,400 @@
-/* bonsai_luxury.js - Premium interactions (full) */
+/* ==========================================================================
+   Bonsai Luxury — Interactive Premium Script
+   ========================================================================== */
 document.addEventListener('DOMContentLoaded', () => {
-    /* ---------------------------
-       Helper utilities
-       --------------------------- */
+
+    // Rút gọn phương thức Selector tuyển chọn mẫu
     const $ = (sel, ctx = document) => Array.from(ctx.querySelectorAll(sel));
     const one = (sel, ctx = document) => ctx.querySelector(sel);
     const escapeHtml = s => String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[m]);
-    const formatVND = v => {
-        const n = Number(v);
-        return Number.isNaN(n) ? v : n.toLocaleString('vi-VN') + '₫';
-    };
+
+    // Toast thông báo chuẩn cao cấp
     const showToast = (text) => {
+        const existing = one('.toast');
+        if (existing) existing.remove();
+
         const t = document.createElement('div');
         t.className = 'toast';
         t.textContent = text;
         document.body.appendChild(t);
-        setTimeout(() => t.remove(), 3500);
+        setTimeout(() => {
+            t.style.opacity = '0';
+            t.style.transition = 'opacity 0.5s ease';
+            setTimeout(() => t.remove(), 500);
+        }, 4000);
     };
 
-    /* ---------------------------
-       Header interactions
-       --------------------------- */
-    (function headerInit(){
-        const hamburger = one('.hamburger');
-        const mainNav = one('#mainNav');
-        const searchInput = one('#siteSearch') || one('.search-input');
-        const searchClear = one('.search-clear');
-        const cartCount = one('.cart-count');
+    /* ----------------------------------------------------------------------
+       1. THUMBNAIL INTERACTION (Chuyển đổi ảnh chính mượt mà)
+       ---------------------------------------------------------------------- */
+    const mainImg = one('#mainImage');
+    const thumbBtns = $('.thumb');
 
-        if (hamburger && mainNav) {
-            hamburger.addEventListener('click', () => {
-                const expanded = hamburger.getAttribute('aria-expanded') === 'true';
-                hamburger.setAttribute('aria-expanded', String(!expanded));
-                mainNav.classList.toggle('open', !expanded);
-            });
-        }
+    thumbBtns.forEach(thumb => {
+        thumb.addEventListener('click', function() {
+            if (!mainImg) return;
 
-        if (searchInput && searchClear) {
-            searchInput.addEventListener('input', () => {
-                searchClear.hidden = !searchInput.value.trim();
-            });
-            searchClear.addEventListener('click', () => {
-                searchInput.value = '';
-                searchClear.hidden = true;
-                searchInput.focus();
-                searchInput.dispatchEvent(new Event('input', { bubbles: true }));
-            });
-        }
+            // Xóa trạng thái active cũ, gán trạng thái mới
+            thumbBtns.forEach(t => t.classList.remove('active'));
+            this.classList.add('active');
 
-        if (cartCount) {
-            let last = Number(cartCount.textContent || 0);
-            const obs = new MutationObserver(() => {
-                const n = Number(cartCount.textContent || 0);
-                if (n > last) {
-                    const cart = one('.cart');
-                    if (cart) cart.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.08)' }, { transform: 'scale(1)' }], { duration: 420, easing: 'ease-out' });
-                }
-                last = n;
-            });
-            obs.observe(cartCount, { childList: true, characterData: true, subtree: true });
-        }
-
-        // Close mobile nav on link click
-        one('#mainNav')?.addEventListener('click', (e) => {
-            if (e.target.matches('.nav-link') && mainNav.classList.contains('open')) {
-                mainNav.classList.remove('open');
-                hamburger?.setAttribute('aria-expanded', 'false');
+            // Lấy link ảnh từ thuộc tính data-src của Thymeleaf attribute gán sang
+            const newSrc = this.getAttribute('data-src');
+            if (newSrc) {
+                mainImg.style.opacity = '0.3';
+                setTimeout(() => {
+                    mainImg.src = newSrc;
+                    mainImg.style.opacity = '1';
+                }, 15000); // Đổi ảnh mượt trong 150ms trễ
+                mainImg.style.opacity = '1';
+                mainImg.src = newSrc;
             }
         });
+    });
+
+    /* ----------------------------------------------------------------------
+       2. LIGHTBOX PREVIEW GALLERY (Phóng to ảnh chi tiết lúc click)
+       ---------------------------------------------------------------------- */
+    const galleryItems = $('.gallery-item');
+    const overlayRoot = document.getElementById('overlayRoot') || (() => {
+        const d = document.createElement('div'); d.id = 'overlayRoot'; document.body.appendChild(d); return d;
     })();
 
-    /* ---------------------------
-       Hero slider (auto + manual)
-       --------------------------- */
-    (function heroSlider(){
-        const slider = one('#heroSlider');
-        if (!slider) return;
-        const slides = $('.slide', slider);
-        if (!slides.length) return;
-        let idx = 0;
-        const show = i => slides.forEach((s,j) => s.classList.toggle('active', j === i));
-        show(idx);
-        const next = () => { idx = (idx + 1) % slides.length; show(idx); };
-        const prev = () => { idx = (idx - 1 + slides.length) % slides.length; show(idx); };
-        let timer = setInterval(next, 5000);
-        slider.addEventListener('mouseenter', () => clearInterval(timer));
-        slider.addEventListener('mouseleave', () => timer = setInterval(next, 5000));
-        one('.slider-controls .prev')?.addEventListener('click', () => { prev(); reset(); });
-        one('.slider-controls .next')?.addEventListener('click', () => { next(); reset(); });
-        function reset(){ clearInterval(timer); timer = setInterval(next, 5000); }
-    })();
+    galleryItems.forEach(item => {
+        item.addEventListener('click', function() {
+            const imgSrc = this.getAttribute('data-src') || one('img', this)?.src;
+            if (!imgSrc) return;
 
-    /* ---------------------------
-       Studio slider (About)
-       --------------------------- */
-    (function studioSlider(){
-        const slides = $('.studio-slide');
-        if (!slides.length) return;
-        const prevBtn = one('.prev-studio');
-        const nextBtn = one('.next-studio');
-        let idx = 0;
-        const show = i => slides.forEach((s,j) => s.classList.toggle('active', j === i));
-        show(idx);
-        const next = () => { idx = (idx + 1) % slides.length; show(idx); updateContact(); };
-        const prev = () => { idx = (idx - 1 + slides.length) % slides.length; show(idx); updateContact(); };
-        let timer = setInterval(next, 6000);
-        prevBtn?.addEventListener('click', () => { prev(); reset(); });
-        nextBtn?.addEventListener('click', () => { next(); reset(); });
-        one('.studio-slider')?.addEventListener('mouseenter', () => clearInterval(timer));
-        one('.studio-slider')?.addEventListener('mouseleave', () => timer = setInterval(next, 6000));
-        function reset(){ clearInterval(timer); timer = setInterval(next, 6000); }
-        function updateContact(){
-            const current = slides[idx];
-            const name = current?.dataset?.name || '';
-            $('.contact-studio').forEach(b => b.dataset.studio = name);
-        }
-        updateContact();
-    })();
+            const lightbox = document.createElement('div');
+            lightbox.className = 'popup';
+            lightbox.innerHTML = `
+                <div class="popup-content" style="max-width: 800px; padding: 10px; background: transparent; border: none; box-shadow: none;">
+                    <button class="popup-close" style="color: #FFF; background: rgba(0,0,0,0.5); top: -40px; right: 0;">✕</button>
+                    <img src="${escapeHtml(imgSrc)}" alt="Bonsai Luxury Zoom" style="width: 100%; height: auto; max-height: 85vh; object-fit: contain; border: 1px solid rgba(255,255,255,0.2);">
+                </div>
+            `;
+            overlayRoot.appendChild(lightbox);
 
-    /* ---------------------------
-       Scroll reveal for cards
-       --------------------------- */
-    (function reveal(){
-        const revealOnScroll = () => {
-            $('.card').forEach(card => {
-                const rect = card.getBoundingClientRect();
-                if (rect.top < window.innerHeight - 80) card.classList.add('visible');
-            });
-        };
-        revealOnScroll();
-        window.addEventListener('scroll', revealOnScroll, { passive: true });
-    })();
-
-    /* ---------------------------
-       Quick view & product modals
-       --------------------------- */
-    (function productInteractions(){
-        const overlayRoot = document.getElementById('overlayRoot') || (() => { const d = document.createElement('div'); d.id = 'overlayRoot'; document.body.appendChild(d); return d; })();
-        const bookingRoot = document.getElementById('bookingRoot') || (() => { const d = document.createElement('div'); d.id = 'bookingRoot'; document.body.appendChild(d); return d; })();
-
-        // Quick view from collection cards
-        $('.quick-view').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const card = e.currentTarget.closest('.card');
-                if (!card) return;
-                const img = one('img', card);
-                const title = card.dataset.title || one('.card-title', card)?.textContent || 'Tác phẩm';
-                const meta = one('.card-meta', card)?.textContent || '';
-                const price = card.dataset.price ? formatVND(card.dataset.price) : one('.price', card)?.textContent || '';
-                const popup = document.createElement('div');
-                popup.className = 'popup';
-                popup.innerHTML = `
-          <div class="popup-content" role="dialog" aria-modal="true" aria-label="Xem nhanh ${escapeHtml(title)}">
-            <button class="popup-close" aria-label="Đóng">✕</button>
-            <img src="${escapeHtml(img?.src || '')}" alt="${escapeHtml(img?.alt || '')}">
-            <div class="popup-text">
-              <h3>${escapeHtml(title)}</h3>
-              <div class="meta"><span>${escapeHtml(meta)}</span><span>${escapeHtml(price)}</span></div>
-              <p>Chi tiết ngắn gọn về tác phẩm. Bạn có thể xem trang chi tiết để biết thêm thông tin hoặc đặt lịch thăm xưởng.</p>
-              <div style="margin-top:12px;display:flex;gap:10px;">
-                <a href="detail.html?id=${encodeURIComponent(card.dataset.id || '')}" class="btn small">Xem chi tiết</a>
-                <button class="btn small outline schedule-btn" data-id="${escapeHtml(card.dataset.id || '')}">Đặt lịch ngay</button>
-              </div>
-            </div>
-          </div>
-        `;
-                overlayRoot.appendChild(popup);
-                popup.querySelector('.popup-close')?.focus();
-                const remove = () => popup.remove();
-                popup.querySelector('.popup-close')?.addEventListener('click', remove);
-                popup.addEventListener('click', (ev) => { if (ev.target === popup) remove(); });
-                document.addEventListener('keydown', function esc(e){ if (e.key === 'Escape'){ remove(); document.removeEventListener('keydown', esc); }});
-                // attach schedule handler inside popup
-                popup.querySelectorAll('.schedule-btn').forEach(b => b.addEventListener('click', openBookingModal));
-            });
+            const closeBox = () => lightbox.remove();
+            lightbox.querySelector('.popup-close')?.addEventListener('click', closeBox);
+            lightbox.addEventListener('click', (ev) => { if (ev.target === lightbox) closeBox(); });
         });
+    });
 
-        // Schedule buttons (cards and popups)
-        $('.schedule-btn').forEach(b => b.addEventListener('click', openBookingModal));
+    /* ----------------------------------------------------------------------
+    3. PREMIUM BOOKING MODAL (Thymeleaf Form + Login Check)
+    ---------------------------------------------------------------------- */
 
-        function openBookingModal(e){
-            const id = e.currentTarget?.dataset?.id || e.target?.dataset?.id || '';
-            const card = one(`.card[data-id="${id}"]`);
-            const title = card ? (card.dataset.title || one('.card-title', card)?.textContent) : document.title || 'Tác phẩm';
-            const booking = document.createElement('div');
-            booking.className = 'popup';
-            booking.innerHTML = `
-        <div class="booking-card" role="dialog" aria-modal="true" aria-label="Đặt lịch ${escapeHtml(title)}">
-          <button class="booking-close" aria-label="Đóng">✕</button>
-          <h3>Đặt lịch xem tác phẩm: ${escapeHtml(title)}</h3>
-          <form class="booking-form">
-            <input name="name" placeholder="Họ và tên" required>
-            <input name="phone" placeholder="Số điện thoại" required>
-            <input name="email" placeholder="Email (không bắt buộc)">
-            <label style="display:block;margin-top:6px;">
-              <span style="display:block;margin-bottom:6px;color:var(--muted)">Chọn ngày</span>
-              <input type="date" name="date" required>
-            </label>
-            <label style="display:block;margin-top:6px;">
-              <span style="display:block;margin-bottom:6px;color:var(--muted)">Ghi chú</span>
-              <textarea name="note" rows="3" placeholder="Yêu cầu thêm (ví dụ: giờ, địa điểm)"></textarea>
-            </label>
-            <div class="booking-actions">
-              <button type="button" class="btn outline booking-cancel">Hủy</button>
-              <button type="submit" class="btn primary">Gửi yêu cầu</button>
-            </div>
-          </form>
-        </div>
-      `;
-            bookingRoot.appendChild(booking);
-            booking.querySelector('.booking-close')?.focus();
-            const remove = () => booking.remove();
-            booking.querySelector('.booking-close')?.addEventListener('click', remove);
-            booking.querySelector('.booking-cancel')?.addEventListener('click', remove);
-            booking.addEventListener('click', (ev) => { if (ev.target === booking) remove(); });
-            booking.querySelector('.booking-form')?.addEventListener('submit', (ev) => {
-                ev.preventDefault();
-                const submitBtn = ev.currentTarget.querySelector('button[type="submit"]');
-                submitBtn.textContent = 'Đang gửi...';
-                submitBtn.disabled = true;
-                setTimeout(() => {
-                    submitBtn.textContent = 'Gửi yêu cầu';
-                    submitBtn.disabled = false;
-                    remove();
-                    showToast('Yêu cầu đặt lịch đã được gửi. Chúng tôi sẽ liên hệ để xác nhận.');
-                }, 900);
-            });
+    const bookingModal = document.getElementById('bookingModal');
+
+    const modalProductId = document.getElementById('modalProductId');
+    const modalProductTitle = document.getElementById('modalProductTitle');
+
+    const actualBookingForm = document.getElementById('actualBookingForm');
+
+    const closeBookingBtn = document.getElementById('closeBookingBtn');
+    const cancelBookingBtn = document.getElementById('cancelBookingBtn');
+
+    const dateInput = document.getElementById('appointmentDate');
+    const timeInput = document.getElementById('appointmentTime');
+
+
+// ===============================
+// ĐÓNG MODAL
+// ===============================
+    const closeModal = () => {
+
+        if(!bookingModal) return;
+
+        bookingModal.style.opacity = '0';
+
+        setTimeout(()=>{
+            bookingModal.style.display = 'none';
+            bookingModal.setAttribute(
+                'aria-hidden',
+                'true'
+            );
+
+        },300);
+    };
+
+
+// ===============================
+// MỞ MODAL
+// ===============================
+    const openBookingModal = (e)=>{
+
+        const btn = e.currentTarget;
+
+        const id = btn.dataset.id;
+
+
+        // lấy tên sản phẩm
+        const title =
+            document.getElementById('productTitle')
+                ?.textContent
+                ?.trim()
+            ||
+            "Tác phẩm độc bản";
+
+
+        if(modalProductId){
+            modalProductId.value = id;
         }
 
-        // Detail buttons: optional interception (left as navigation by default)
-        $('.detail-btn').forEach(link => {
-            // If you want modal detail instead of navigation, intercept here.
-            // link.addEventListener('click', (e) => { e.preventDefault(); /* open modal */ });
-        });
 
-        // Search filter integration (if search input exists)
-        const searchInput = one('#search') || one('.search-input');
-        if (searchInput) {
-            searchInput.addEventListener('input', (e) => {
-                const q = e.target.value.trim().toLowerCase();
-                $('#productGrid .card').forEach(card => {
-                    const title = (card.dataset.title || one('.card-title', card)?.textContent || '').toLowerCase();
-                    const price = (card.dataset.price || '').toString();
-                    const match = !q || title.includes(q) || price.includes(q);
-                    card.style.display = match ? '' : 'none';
-                });
-            });
-        }
-    })();
-
-    /* ---------------------------
-       Product detail page interactions
-       --------------------------- */
-    (function detailPage(){
-        const mainImage = one('#mainImage');
-        const overlayRoot = document.getElementById('overlayRoot') || (() => { const d = document.createElement('div'); d.id = 'overlayRoot'; document.body.appendChild(d); return d; })();
-        const bookingRoot = document.getElementById('bookingRoot') || (() => { const d = document.createElement('div'); d.id = 'bookingRoot'; document.body.appendChild(d); return d; })();
-
-        // Thumbnails -> main image
-        $('.thumb').forEach(btn => {
-            btn.addEventListener('click', () => {
-                $('.thumb').forEach(t => t.classList.remove('active'));
-                btn.classList.add('active');
-                const src = btn.dataset.src;
-                if (mainImage && src) mainImage.src = src;
-            });
-        });
-
-        // Click main image to open lightbox
-        if (mainImage) {
-            mainImage.addEventListener('click', () => {
-                const src = mainImage.src;
-                const popup = document.createElement('div');
-                popup.className = 'popup';
-                popup.innerHTML = `
-          <div class="popup-content" role="dialog" aria-modal="true" aria-label="Xem ảnh lớn">
-            <button class="popup-close" aria-label="Đóng">✕</button>
-            <img src="${escapeHtml(src)}" alt="">
-          </div>
-        `;
-                overlayRoot.appendChild(popup);
-                popup.querySelector('.popup-close')?.focus();
-                const remove = () => popup.remove();
-                popup.querySelector('.popup-close')?.addEventListener('click', remove);
-                popup.addEventListener('click', (ev) => { if (ev.target === popup) remove(); });
-                document.addEventListener('keydown', function esc(e){ if (e.key === 'Escape'){ remove(); document.removeEventListener('keydown', esc); }});
-            });
+        if(modalProductTitle){
+            modalProductTitle.textContent = title;
         }
 
-        // Gallery items open lightbox
-        $('.gallery-item').forEach(item => {
-            item.addEventListener('click', () => {
-                const src = item.dataset.src || one('img', item)?.src;
-                if (!src) return;
-                const popup = document.createElement('div');
-                popup.className = 'popup';
-                popup.innerHTML = `
-          <div class="popup-content" role="dialog" aria-modal="true" aria-label="Xem ảnh chi tiết">
-            <button class="popup-close" aria-label="Đóng">✕</button>
-            <img src="${escapeHtml(src)}" alt="">
-          </div>
-        `;
-                overlayRoot.appendChild(popup);
-                popup.querySelector('.popup-close')?.focus();
-                const remove = () => popup.remove();
-                popup.querySelector('.popup-close')?.addEventListener('click', remove);
-                popup.addEventListener('click', (ev) => { if (ev.target === popup) remove(); });
-                document.addEventListener('keydown', function esc(e){ if (e.key === 'Escape'){ remove(); document.removeEventListener('keydown', esc); }});
-            });
+
+
+        // ngày mặc định ngày mai
+
+        if(dateInput){
+
+            const tomorrow = new Date();
+
+            tomorrow.setDate(
+                tomorrow.getDate()+1
+            );
+
+
+            const yyyy =
+                tomorrow.getFullYear();
+
+            const mm =
+                String(
+                    tomorrow.getMonth()+1
+                ).padStart(2,'0');
+
+
+            const dd =
+                String(
+                    tomorrow.getDate()
+                ).padStart(2,'0');
+
+
+            const minDate =
+                `${yyyy}-${mm}-${dd}`;
+
+
+            dateInput.min = minDate;
+
+            dateInput.value = minDate;
+        }
+
+
+
+        if(timeInput){
+            timeInput.value="";
+        }
+
+
+
+        // hiện modal
+
+        if(bookingModal){
+
+            bookingModal.style.display='flex';
+
+            bookingModal.setAttribute(
+                'aria-hidden',
+                'false'
+            );
+
+
+            void bookingModal.offsetWidth;
+
+
+            bookingModal.style.opacity='1';
+
+        }
+
+    };
+
+
+
+// ===============================
+// CLICK ĐẶT LỊCH
+// ===============================
+
+    document
+        .querySelectorAll('.schedule-btn')
+        .forEach(btn=>{
+
+
+            btn.addEventListener(
+                'click',
+                (e)=>{
+
+
+                    /*
+                      Kiểm tra login
+                      Nếu chưa login -> login page
+                    */
+
+                    const authenticated =
+                        document.body.dataset.authenticated === "true";
+
+
+                    if(!authenticated){
+
+                        window.location.href="/login";
+
+                        return;
+                    }
+
+
+
+                    openBookingModal(e);
+
+                }
+            );
+
+
         });
 
-        // Schedule & consult buttons on detail page
-        $('.schedule-btn').forEach(btn => btn.addEventListener('click', (e) => {
-            const title = one('.product-title')?.textContent || 'Tác phẩm';
-            // reuse booking modal from productInteractions
-            const evt = { currentTarget: { dataset: { id: btn.dataset.id || 'p1' } }, target: btn };
-            // call openBookingModal indirectly by dispatching click on schedule-btn handled earlier
-            btn.dispatchEvent(new Event('click', { bubbles: true }));
-        }));
-        $('.consult-btn').forEach(btn => btn.addEventListener('click', (e) => {
-            const title = one('.product-title')?.textContent || 'Tác phẩm';
-            // open consult modal (same booking modal but without date)
-            const id = btn.dataset.id || 'p1';
-            const booking = document.createElement('div');
-            booking.className = 'popup';
-            booking.innerHTML = `
-        <div class="booking-card" role="dialog" aria-modal="true" aria-label="Yêu cầu tư vấn ${escapeHtml(title)}">
-          <button class="booking-close" aria-label="Đóng">✕</button>
-          <h3>Yêu cầu tư vấn: ${escapeHtml(title)}</h3>
-          <form class="booking-form">
-            <input name="name" placeholder="Họ và tên" required>
-            <input name="phone" placeholder="Số điện thoại" required>
-            <input name="email" placeholder="Email (không bắt buộc)">
-            <textarea name="note" rows="3" placeholder="Ghi chú / Yêu cầu thêm"></textarea>
-            <div class="booking-actions">
-              <button type="button" class="btn outline booking-cancel">Hủy</button>
-              <button type="submit" class="btn primary">Gửi yêu cầu</button>
-            </div>
-          </form>
-        </div>
-      `;
-            bookingRoot.appendChild(booking);
-            booking.querySelector('.booking-close')?.focus();
-            const remove = () => booking.remove();
-            booking.querySelector('.booking-close')?.addEventListener('click', remove);
-            booking.querySelector('.booking-cancel')?.addEventListener('click', remove);
-            booking.addEventListener('click', (ev) => { if (ev.target === booking) remove(); });
-            booking.querySelector('.booking-form')?.addEventListener('submit', (ev) => {
-                ev.preventDefault();
-                const submitBtn = ev.currentTarget.querySelector('button[type="submit"]');
-                submitBtn.textContent = 'Đang gửi...';
-                submitBtn.disabled = true;
-                setTimeout(() => {
-                    submitBtn.textContent = 'Gửi yêu cầu';
-                    submitBtn.disabled = false;
-                    remove();
-                    showToast('Yêu cầu tư vấn đã được gửi. Chúng tôi sẽ liên hệ để xác nhận.');
-                }, 900);
-            });
-        }));
-    })();
 
-    /* ---------------------------
-       Accessibility: keyboard focus outlines
-       --------------------------- */
-    document.body.addEventListener('keydown', (e) => { if (e.key === 'Tab') document.documentElement.classList.add('show-focus'); });
 
+// ===============================
+// BUTTON CLOSE
+// ===============================
+
+    closeBookingBtn
+        ?.addEventListener(
+            'click',
+            closeModal
+        );
+
+
+    cancelBookingBtn
+        ?.addEventListener(
+            'click',
+            closeModal
+        );
+
+
+
+// click ra ngoài
+
+    bookingModal
+        ?.addEventListener(
+            'click',
+            e=>{
+
+                if(e.target === bookingModal){
+
+                    closeModal();
+
+                }
+
+            }
+        );
+
+
+
+// ===============================
+// VALIDATE FORM
+// ===============================
+
+    actualBookingForm
+        ?.addEventListener(
+            'submit',
+            e=>{
+
+
+                // check ngày
+
+                if(dateInput.value){
+
+                    const selected =
+                        new Date(dateInput.value);
+
+
+                    const today =
+                        new Date();
+
+
+                    today.setHours(
+                        0,0,0,0
+                    );
+
+
+                    selected.setHours(
+                        0,0,0,0
+                    );
+
+
+
+                    if(selected <= today){
+
+                        e.preventDefault();
+
+                        showToast(
+                            "Vui lòng chọn ngày từ ngày mai."
+                        );
+
+                        return;
+                    }
+
+                }
+
+
+
+                // check giờ
+
+                if(!timeInput.value){
+
+                    e.preventDefault();
+
+                    showToast(
+                        "Vui lòng chọn giờ xem."
+                    );
+
+                    return;
+
+                }
+
+
+
+                if(
+                    timeInput.value < "08:00"
+                    ||
+                    timeInput.value > "17:00"
+                ){
+
+                    e.preventDefault();
+
+
+                    showToast(
+                        "Vui lòng chọn thời gian từ 08:00 đến 17:00."
+                    );
+
+
+                    return;
+
+                }
+
+
+
+                const submitBtn =
+                    actualBookingForm
+                        .querySelector(
+                            ".submit-booking-btn"
+                        );
+
+
+                if(submitBtn){
+
+                    submitBtn.disabled=true;
+
+                    submitBtn.textContent=
+                        "Đang xử lý...";
+
+                }
+
+
+            }
+        );
 });
