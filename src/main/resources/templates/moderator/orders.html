@@ -71,26 +71,29 @@
                         <input type="text" id="orderSearchInput" placeholder="Tìm kiếm theo mã đơn, khách hàng hoặc tên cây cảnh...">
                     </div>
                     
-                    <!-- Status Filter Dropdown -->
-                    <div class="status-select-wrapper">
-                        <select id="orderStatusSelect">
-                            <option value="ALL">Tất cả trạng thái</option>
-                            <option value="PENDING">Chờ duyệt (Pending)</option>
-                            <option value="APPROVED">Đã duyệt (Approved)</option>
-                            <option value="PAID">Đã thanh toán (Paid)</option>
-                            <option value="CANCELLED">Đã hủy (Cancelled)</option>
-                            <option value="REJECTED">Từ chối (Rejected)</option>
-                        </select>
-                    </div>
+                    <!-- Group Filters & Sort together -->
+                    <div class="toolbar-filters-group">
+                        <!-- Status Filter Dropdown -->
+                        <div class="status-select-wrapper">
+                            <select id="orderStatusSelect">
+                                <option value="ALL">Tất cả trạng thái</option>
+                                <option value="PENDING">Chờ duyệt (Pending)</option>
+                                <option value="APPROVED">Đã duyệt (Approved)</option>
+                                <option value="PAID">Đã thanh toán (Paid)</option>
+                                <option value="CANCELLED">Đã hủy (Cancelled)</option>
+                                <option value="REJECTED">Từ chối (Rejected)</option>
+                            </select>
+                        </div>
 
-                    <!-- Sorting Dropdown -->
-                    <div class="sort-select-wrapper">
-                        <select id="orderSortSelect">
-                            <option value="date_desc">Mới nhất xếp trước</option>
-                            <option value="date_asc">Cũ nhất xếp trước</option>
-                            <option value="price_desc">Giá trị lớn nhất</option>
-                            <option value="price_asc">Giá trị nhỏ nhất</option>
-                        </select>
+                        <!-- Sorting Dropdown -->
+                        <div class="sort-select-wrapper">
+                            <select id="orderSortSelect">
+                                <option value="date_desc">Mới nhất xếp trước</option>
+                                <option value="date_asc">Cũ nhất xếp trước</option>
+                                <option value="price_desc">Giá trị lớn nhất</option>
+                                <option value="price_asc">Giá trị nhỏ nhất</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
                 

@@ -82,13 +82,22 @@
 
 .search-input-wrapper {
     position: relative;
-    max-width: 600px;
+    flex: 1;
+    min-width: 300px;
+    max-width: 800px;
     width: 100%;
 }
 
 .search-input-wrapper input {
+    width: 100%;
     padding: 8px 12px 8px 36px;
     font-size: 0.85rem;
+}
+
+.toolbar-filters-group {
+    display: flex;
+    gap: 12px;
+    align-items: center;
 }
 
 .search-input-wrapper input:focus {

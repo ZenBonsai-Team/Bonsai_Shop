@@ -217,11 +217,10 @@ public class OrderApiController {
 
         // 6. Xử lý phân nhánh Phương thức thanh toán
         if ("VNPAY".equalsIgnoreCase(dto.getPaymentMethod())) {
-            // Logic tạo URL thanh toán VNPay
-            String paymentUrl = buildVNPayUrl(request, orderCode, product.getPrice());
+            // Logic tạo URL thanh toán VNPay (Tạm thời không nhảy sang trang VNPay mà xử lý hiển thị thành công giống COD)
             response.put("success", true);
             response.put("paymentMethod", "VNPAY");
-            response.put("redirectUrl", paymentUrl);
+            response.put("orderCode", orderCode);
         } else {
             // Thanh toán COD thành công
             response.put("success", true);

@@ -9,7 +9,7 @@ const DashboardState = {
     selectedStatus: 'ALL',
     sortBy: 'date_desc',
     currentPage: 1,
-    pageSize: 5
+    pageSize: 8
 };
 
 document.addEventListener('DOMContentLoaded', () => {
