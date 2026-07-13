@@ -62,9 +62,11 @@ public class OrderService {
         kpis.put("approved", orderRepository.countByOrderStatus("APPROVED"));
         kpis.put("paid", orderRepository.countByOrderStatus("PAID"));
         kpis.put("cancelled", orderRepository.countByOrderStatus("CANCELLED"));
+        kpis.put("rejected", orderRepository.countByOrderStatus("REJECTED"));
         return kpis;
     }
 
+    @Transactional
     public boolean verifyOrder(String orderCode, BigDecimal craneFee, BigDecimal shippingFee, User moderator) {
         Order order = orderRepository.findByOrderCode(orderCode).orElse(null);
         if (order == null || !"PENDING".equals(order.getOrderStatus())) {
@@ -85,9 +87,30 @@ public class OrderService {
 
         orderRepository.save(order);
 
+        // 3. Ghi OrderLog nhật ký hoạt động
+        OrderLog log = OrderLog.builder()
+                .order(order)
+                .actionBy(moderator)
+                .actionType("VERIFY")
+                .fromStatus(oldStatus)
+                .toStatus("APPROVED")
+                .actionAt(LocalDateTime.now())
+                .build();
+        orderLogRepository.save(log);
+
+        // 4. Lưu OrderHandling
+        OrderHandling handling = OrderHandling.builder()
+                .order(order)
+                .moderator(moderator)
+                .handledAt(LocalDateTime.now())
+                .isActive(true)
+                .build();
+        orderHandlingRepository.save(handling);
+
         return true;
     }
 
+    @Transactional
     public boolean rejectOrder(String orderCode, String reason, User moderator) {
         Order order = orderRepository.findByOrderCode(orderCode).orElse(null);
         if (order == null || !"PENDING".equals(order.getOrderStatus())) {
@@ -110,13 +133,23 @@ public class OrderService {
         }
 
         // 3. Ghi OrderLog nhật ký hoạt động
-        OrderLog log = OrderLog.builder().order(order).actionBy(moderator).actionType("REJECT").fromStatus(oldStatus)
-                .toStatus("REJECTED").actionAt(LocalDateTime.now()).build();
+        OrderLog log = OrderLog.builder()
+                .order(order)
+                .actionBy(moderator)
+                .actionType("REJECT")
+                .fromStatus(oldStatus)
+                .toStatus("REJECTED")
+                .actionAt(LocalDateTime.now())
+                .build();
         orderLogRepository.save(log);
 
         // 4. Lưu OrderHandling
-        OrderHandling handling = OrderHandling.builder().order(order).moderator(moderator)
-                .handledAt(LocalDateTime.now()).isActive(true).build();
+        OrderHandling handling = OrderHandling.builder()
+                .order(order)
+                .moderator(moderator)
+                .handledAt(LocalDateTime.now())
+                .isActive(true)
+                .build();
         orderHandlingRepository.save(handling);
 
         return true;

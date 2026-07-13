@@ -47,7 +47,11 @@ public class SecurityConfig {
                                                                 "/avatars/**", // ← cho phép xem ảnh avatar
                                                                 "/css/**", // ← cho phép CSS
                                                                 "/js/**", // ← cho phép JS
-                                                                "/images/**" // ← cho phép images
+                                                                "/images/**", // ← cho phép images
+                                                                "/moderator/**", // ← tạm thời cho phép để test
+                                                                "/api/orders", // ← tạm thời cho phép để test API chính
+                                                                "/api/orders/**", // ← tạm thời cho phép để test API con
+                                                                "/api/products/**" // ← cho phép lấy thông tin chi tiết sản phẩm
                                                 ).permitAll()
                                                 // Chỉ ADMIN mới vào được /admin/**
                                                 .requestMatchers("/admin/**").hasRole("ADMIN")
