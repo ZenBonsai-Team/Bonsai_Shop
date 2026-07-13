@@ -673,6 +673,7 @@
     overflow: hidden;
     z-index: 300;
     border: 1px solid var(--border-color);
+    pointer-events: auto; /* Fix Bootstrap 5 conflict where .modal-dialog overrides to pointer-events: none */
 }
 
 .modal-backdrop.show .modal-dialog {
