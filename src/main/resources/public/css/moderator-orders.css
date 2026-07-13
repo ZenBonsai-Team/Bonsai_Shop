@@ -7,42 +7,35 @@
 /* KPI Metric Cards Grid */
 .kpi-row {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 24px;
-    margin-bottom: 32px;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+    margin-bottom: 20px;
 }
 
 .kpi-card {
     background: var(--bg-card);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-sm);
-    padding: 24px;
+    padding: 12px 18px;
     display: flex;
     align-items: center;
-    gap: 20px;
+    gap: 12px;
     box-shadow: var(--shadow-subtle);
     transition: var(--transition);
-    border-top: 3px solid var(--border-color); /* Default top border */
+    border-top: 3px solid var(--border-color);
 }
 
 .kpi-card:hover {
-    transform: translateY(-3px);
+    transform: translateY(-2px);
     box-shadow: var(--shadow-hover);
 }
 
 .kpi-icon-wrapper {
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 20px;
-    background: var(--bg-beige);
-    color: var(--primary-color);
+    width: 36px;
+    height: 36px;
+    font-size: 16px;
 }
 
-/* Elegant status styling for KPI cards */
 .kpi-all { border-top-color: var(--primary-color); }
 .kpi-pending { border-top-color: #ea580c; }
 .kpi-approved { border-top-color: var(--accent-color); }
@@ -55,20 +48,12 @@
 }
 
 .kpi-label {
-    font-size: 0.88rem;
-    color: var(--text-muted);
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
+    font-size: 0.72rem;
 }
 
 .kpi-value {
-    font-size: 2rem;
-    font-family: var(--font-sans);
-    font-weight: 700;
-    color: var(--text-main);
-    line-height: 1.2;
-    margin-top: 4px;
+    font-size: 1.4rem;
+    margin-top: 2px;
 }
 
 /* Main Management Card Container */
@@ -78,44 +63,41 @@
     border-radius: var(--radius-sm);
     box-shadow: var(--shadow-subtle);
     overflow: hidden;
-    margin-bottom: 40px;
+    margin-bottom: 24px;
 }
 
 /* Toolbar Toolbar (Search, Filter, Sort) */
 .toolbar-header {
-    padding: 32px 32px 0 32px;
-    border-bottom: 1px solid var(--border-color);
-    display: flex;
-    flex-direction: column;
-    gap: 24px;
-    background: #fdfdfd;
+    padding: 16px 20px 0 20px;
+    gap: 16px;
 }
 
 .toolbar-search-row {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 20px;
+    gap: 16px;
     flex-wrap: wrap;
 }
 
 .search-input-wrapper {
     position: relative;
-    max-width: 440px;
+    flex: 1;
+    min-width: 300px;
+    max-width: 800px;
     width: 100%;
 }
 
 .search-input-wrapper input {
     width: 100%;
-    padding: 12px 16px 12px 42px;
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-sm);
-    font-size: 0.95rem;
-    font-family: var(--font-sans);
-    color: var(--text-main);
-    background: var(--bg-main);
-    outline: none;
-    transition: var(--transition);
+    padding: 8px 12px 8px 36px;
+    font-size: 0.85rem;
+}
+
+.toolbar-filters-group {
+    display: flex;
+    gap: 12px;
+    align-items: center;
 }
 
 .search-input-wrapper input:focus {
@@ -126,29 +108,29 @@
 
 .search-input-wrapper .search-icon {
     position: absolute;
-    left: 16px;
+    left: 12px;
     top: 50%;
     transform: translateY(-50%);
     color: var(--text-muted);
-    font-size: 14px;
+    font-size: 12px;
     pointer-events: none;
 }
 
-.sort-select-wrapper select {
-    padding: 12px 18px;
+.sort-select-wrapper select,
+.status-select-wrapper select {
+    padding: 8px 12px;
+    font-size: 0.85rem;
     border: 1px solid var(--border-color);
     border-radius: var(--radius-sm);
-    font-size: 0.95rem;
     font-family: var(--font-sans);
-    color: var(--text-main);
-    background: #fff;
     outline: none;
+    background: #fff;
     cursor: pointer;
-    min-width: 200px;
     transition: var(--transition);
 }
 
-.sort-select-wrapper select:focus {
+.sort-select-wrapper select:focus,
+.status-select-wrapper select:focus {
     border-color: var(--primary-color);
     box-shadow: 0 0 0 3px rgba(28, 51, 34, 0.08);
 }
@@ -165,11 +147,11 @@
 }
 
 .tab-btn {
-    padding: 14px 28px;
+    padding: 10px 18px;
     background: none;
     border: none;
     border-bottom: 2px solid transparent;
-    font-size: 0.95rem;
+    font-size: 0.85rem;
     font-weight: 500;
     font-family: var(--font-sans);
     color: var(--text-muted);
@@ -199,22 +181,23 @@
     width: 100%;
     border-collapse: collapse;
     text-align: left;
-    font-size: 0.98rem;
+    font-size: 0.85rem;
+    line-height: 1.4;
 }
 
 .orders-table th {
     background: var(--bg-beige);
-    padding: 18px 32px;
+    padding: 10px 16px;
     font-weight: 600;
     color: var(--text-muted);
     border-bottom: 1px solid var(--border-color);
     text-transform: uppercase;
-    font-size: 0.85rem;
+    font-size: 0.78rem;
     letter-spacing: 0.08em;
 }
 
 .orders-table td {
-    padding: 22px 32px;
+    padding: 10px 16px;
     border-bottom: 1px solid var(--border-color);
     color: var(--text-main);
     transition: var(--transition);
@@ -232,9 +215,9 @@
 /* Elegant Status Chips */
 .status-badge {
     display: inline-block;
-    padding: 6px 14px;
+    padding: 4px 10px;
     border-radius: 20px;
-    font-size: 0.82rem;
+    font-size: 0.72rem;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.05em;
@@ -249,28 +232,27 @@
 
 /* Column overrides */
 .col-code { font-family: var(--font-sans); font-weight: 700; color: var(--primary-color); letter-spacing: 0.02em; }
-.col-customer .cust-phone { font-size: 0.85rem; color: var(--text-muted); display: block; margin-top: 3px; }
+.col-customer .cust-phone { font-size: 0.75rem; color: var(--text-muted); display: block; margin-top: 2px; }
 .col-product .prod-name { font-weight: 600; }
-.col-product .prod-img { width: 44px; height: 44px; border-radius: var(--radius-sm); object-fit: cover; vertical-align: middle; margin-right: 12px; border: 1px solid var(--border-color); }
 .col-price {
     font-weight: 700;
     text-align: right;
     font-family: var(--font-sans);
-    font-size: 1.25rem;
+    font-size: 0.95rem;
     color: var(--primary-color);
 }
 .orders-table th.col-price { text-align: right; }
 
 /* Pagination Footer toolbar */
 .pagination-footer {
-    padding: 20px 32px;
+    padding: 12px 20px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     border-top: 1px solid var(--border-color);
     flex-wrap: wrap;
-    gap: 20px;
-    font-size: 0.9rem;
+    gap: 16px;
+    font-size: 0.8rem;
     color: var(--text-muted);
 }
 
@@ -284,10 +266,10 @@
     border: 1px solid var(--border-color);
     background: #fff;
     color: var(--text-main);
-    padding: 8px 16px;
+    padding: 6px 12px;
     border-radius: var(--radius-sm);
     cursor: pointer;
-    font-size: 0.88rem;
+    font-size: 0.78rem;
     font-weight: 500;
     transition: var(--transition);
     font-family: var(--font-sans);
@@ -709,6 +691,7 @@
     overflow: hidden;
     z-index: 300;
     border: 1px solid var(--border-color);
+    pointer-events: auto; /* Fix Bootstrap 5 conflict where .modal-dialog overrides to pointer-events: none */
 }
 
 .modal-backdrop.show .modal-dialog {
