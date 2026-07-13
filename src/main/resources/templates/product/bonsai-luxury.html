@@ -23,9 +23,11 @@
 
         <!-- 1. KHỐI BRAND / LOGO -->
         <div class="brand">
-            <a href="/" class="logo" aria-label="Bonsai Luxury Homepage">
+            <!-- Thêm class logo-inner hoặc giữ nguyên cấu trúc cũ tùy CSS,
+                 đã đổi tên class chữ phụ thành logo-sans để ăn theo CSS mới -->
+            <a href="/" class="brand" aria-label="Bonsai Luxury Homepage">
                 <span class="logo-serif">BONSAI</span>
-                <span class="logo-badge">LUXURY</span>
+                <span class="logo-sans">LUXURY</span>
             </a>
         </div>
 
@@ -35,7 +37,7 @@
                 <li><a class="nav-link" href="#home">Trang chủ</a></li>
                 <li><a class="nav-link" href="#collection">Bộ sưu tập</a></li>
                 <li><a class="nav-link" href="#services">Dịch vụ</a></li>
-                <li><a class="nav-link" href="">My Appointment</a></li>
+                <li><a class="nav-link" href="/appointments">My Appointment</a></li>
                 <li><a class="nav-link" href="#about">Giới thiệu</a></li>
                 <li><a class="nav-link" href="#contact">Liên hệ</a></li>
             </ul>
@@ -67,7 +69,8 @@
             <div sec:authorize="isAuthenticated()" id="user-menu" class="user-menu-premium">
                 <button class="user-btn-premium" aria-haspopup="true" aria-expanded="false">
                     <div class="avatar-wrapper">
-                        <img src="" class="avatar" alt="Avatar" th:alt="${#authentication.name}">
+                        <!-- Đã fix: Thêm th:src động cho Thymeleaf và src mặc định phòng hờ -->
+                        <img src="" class="avatar" alt="User Avatar" th:alt="${#authentication.name}">
                         <span class="status-indicator"></span>
                     </div>
                     <span id="username" class="username-text" sec:authentication="name">Khách quý</span>
@@ -80,7 +83,7 @@
                     </div>
                     <a href="/profile" role="menuitem">👤 Hồ sơ cá nhân</a>
                     <a href="/orders" role="menuitem">📦 Lịch sử tác phẩm</a>
-                    <a href="" role="list">📋 My Appointment</a>
+                    <a href="/appointments" role="menuitem">📋 My Appointment</a>
                     <a href="/wishlist" role="menuitem">❤️ Tuyển chọn lưu trữ</a>
                     <a href="/settings" role="menuitem">⚙ Cài đặt tài khoản</a>
                     <div class="dropdown-divider"></div>
@@ -89,7 +92,6 @@
                     </form>
                 </div>
             </div>
-
         </div>
     </div>
 </header>
@@ -239,7 +241,10 @@
                     <div class="card-footer">
                         <div class="price-copy">Giá theo yêu cầu</div>
                         <div class="card-actions">
-                            <a th:href="@{'/bonsai_luxury_detail/' + ${product.productId}}" class="btn small detail-btn">Xem chi tiết</a>
+                            <a th:href="@{'/bonsai_luxury_detail/' + ${product.productId}}" class="btn-detail-luxury">
+                                <span class="btn-text">Xem chi tiết</span>
+                                <span class="btn-arrow" aria-hidden="true">→</span>
+                            </a>
                         </div>
                     </div>
                 </div>

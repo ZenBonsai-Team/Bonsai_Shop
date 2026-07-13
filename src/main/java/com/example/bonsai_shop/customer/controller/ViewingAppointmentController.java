@@ -1,6 +1,7 @@
 package com.example.bonsai_shop.customer.controller;
 
 
+import com.example.bonsai_shop.customer.dto.AppoimentDetailDTO;
 import com.example.bonsai_shop.customer.service.UserService;
 import com.example.bonsai_shop.customer.service.ViewingAppointmentService;
 import com.example.bonsai_shop.entity.Product;
@@ -8,8 +9,8 @@ import com.example.bonsai_shop.entity.User;
 import com.example.bonsai_shop.entity.ViewingAppointment;
 import com.example.bonsai_shop.product.repository.ProductRepository;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
@@ -17,6 +18,7 @@ import java.security.Principal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.List;
 
 @Controller
 @RequiredArgsConstructor
@@ -34,29 +36,20 @@ public class ViewingAppointmentController {
             @RequestParam(required = false) String note,
             Principal principal,
             RedirectAttributes redirectAttributes){
-        // Lấy ID khách hàng đang login
+        // Lấy khách hàng
         User user = userService.findByEmail(principal.getName());
-        System.out.println(user.getUserId());
 
-        //Lấy ID cây
+        // Lấy sản phẩm
         Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new  RuntimeException("Product not found"));
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm!"));
 
-        if ("RESERVED".equals(product.getProductStatus())) {
-            throw new RuntimeException("Sản phẩm đã có lịch hẹn!");
-        }
+        // Tạo ngày giờ hẹn
+        LocalDateTime finalAppointmentDate = LocalDateTime.of(
+                appointmentDate,
+                LocalTime.parse(appointmentTime)
+        );
 
-        if ("SOLD".equals(product.getProductStatus())) {
-            throw new RuntimeException("Sản phẩm đã được bán!");
-        }
-
-        LocalDateTime finalAppointmentDate =
-                LocalDateTime.of(
-                        appointmentDate,
-                        LocalTime.parse(appointmentTime)
-                );
-
-        //Tạo Lịch Hẹn
+        // Tạo lịch hẹn
         ViewingAppointment appointment = new ViewingAppointment();
         appointment.setCustomer(user);
         appointment.setProduct(product);
@@ -64,15 +57,23 @@ public class ViewingAppointmentController {
         appointment.setNote(note);
         appointment.setStatus("PENDING");
 
-        //lưu appointment
-        try{
+        try {
+
             viewingAppointmentService.createViewingAppointment(appointment);
+
             redirectAttributes.addFlashAttribute(
                     "success",
-                    "Đặt lịch thành công!");
-        }catch (RuntimeException e){
-            redirectAttributes.addFlashAttribute("error",e.getMessage());
+                    "🎉 Đặt lịch xem thành công! Chúng tôi sẽ sớm liên hệ với bạn."
+            );
 
+        } catch (RuntimeException e) {
+
+            redirectAttributes.addFlashAttribute(
+                    "error",
+                    e.getMessage()
+            );
+
+            // Lưu lại dữ liệu nếu muốn hiển thị lại form
             redirectAttributes.addFlashAttribute("productId", productId);
             redirectAttributes.addFlashAttribute("productTitle", product.getProductName());
             redirectAttributes.addFlashAttribute("appointmentDate", appointmentDate);
@@ -80,6 +81,24 @@ public class ViewingAppointmentController {
             redirectAttributes.addFlashAttribute("note", note);
         }
 
-        return "redirect:/bonsai-luxury";
+        return "redirect:/bonsai_luxury_detail/" + productId;
+    }
+
+    @GetMapping("/appointments")
+    public String myAppointment(Model model,
+                                Principal principal){
+    User user = userService.findByEmail(principal.getName());
+    List <ViewingAppointment> viewingAppointments = viewingAppointmentService.findByCustomer(user);
+    model.addAttribute("viewingAppointments", viewingAppointments);
+    return "customer/view-appointment";
+    }
+
+    @GetMapping("/appointment/detail/{id}")
+    @ResponseBody
+    public AppoimentDetailDTO viewingAppointmentdetail(@PathVariable Integer id,
+                                                       Principal principal){
+        User user = userService.findByEmail(principal.getName());
+       return  viewingAppointmentService.findByIdAndCustomer(id, user);
+
     }
 }

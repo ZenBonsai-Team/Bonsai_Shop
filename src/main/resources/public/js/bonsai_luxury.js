@@ -237,30 +237,31 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     /* ----------------------------------------------------------------------
-       6. ĐIỀU KHIỂN CLICK DROPDOWN ACCOUNT (Bổ sung mới ở đây)
+       6. ĐIỀU KHIỂN CLICK DROPDOWN ACCOUNT (Đồng bộ Premium)
        ---------------------------------------------------------------------- */
+    // Khối bao bọc cha chứa toàn bộ menu user
+    const userMenuContainer = document.querySelector('.user-menu-premium');
     const userBtn = document.querySelector('.user-btn-premium');
-    const userDropdown = document.querySelector('.dropdown-premium');
-    const chevron = document.querySelector('.chevron-icon');
 
-    if (userBtn && userDropdown) {
+    if (userMenuContainer && userBtn) {
         // Sự kiện Click vào nút User
         userBtn.addEventListener('click', (e) => {
             e.stopPropagation(); // Ngăn sự kiện nổi bọt gây đóng menu ngay lập tức
-            userDropdown.classList.toggle('active');
 
-            if (chevron) {
-                chevron.style.transform = userDropdown.classList.contains('active') ? 'rotate(180deg)' : 'rotate(0deg)';
-            }
+            // Toggle class 'active' tại THẺ CHA để kích hoạt cả menu và xoay chevron từ CSS
+            userMenuContainer.classList.toggle('active');
+
+            // Cập nhật thuộc tính hỗ trợ tiếp cận ARIA
+            const isExpanded = userMenuContainer.classList.contains('active');
+            userBtn.setAttribute('aria-expanded', isExpanded);
         });
 
-        // Click ra bất cứ đâu ngoài Menu thì đóng dropdown lại
+        // Click ra bất cứ đâu ngoài vùng Menu thì tự động đóng lại
         document.addEventListener('click', (e) => {
-            if (!userBtn.contains(e.target) && !userDropdown.contains(e.target)) {
-                userDropdown.classList.remove('active');
-                if (chevron) chevron.style.transform = 'rotate(0deg)';
+            if (!userMenuContainer.contains(e.target)) {
+                userMenuContainer.classList.remove('active');
+                userBtn.setAttribute('aria-expanded', 'false');
             }
         });
     }
-
 });

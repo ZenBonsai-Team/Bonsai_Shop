@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="vi"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>My Appointments — Bonsai Luxury</title>
+    <meta name="description" content="Quản lý lịch hẹn xem tác phẩm Bonsai cá nhân độc quyền tại showroom Bonsai Luxury.">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/view-appointment.css}">
+</head>
+
+<body>
+<header class="navbar" role="banner">
+    <div class="container nav-inner">
+
+        <!-- 1. KHỐI BRAND / LOGO -->
+        <div class="brand">
+            <a href="/" class="brand" aria-label="Bonsai Luxury Homepage">
+                <span class="logo-serif">BONSAI</span>
+                <span class="logo-sans">LUXURY</span>
+            </a>
+        </div>
+
+        <!-- 2. HỆ THỐNG ĐIỀU HƯỚNG TRUNG TÂM -->
+        <nav class="main-nav" role="navigation" aria-label="Điều hướng chính">
+            <ul class="menu">
+                <li><a class="nav-link" href="/#home">Trang chủ</a></li>
+                <li><a class="nav-link" href="/#collection">Bộ sưu tập</a></li>
+                <li><a class="nav-link" href="/#services">Dịch vụ</a></li>
+                <li><a class="nav-link" href="/appointments">My Appointment</a></li>
+                <li><a class="nav-link" href="/#about">Giới thiệu</a></li>
+                <li><a class="nav-link" href="/#contact">Liên hệ</a></li>
+            </ul>
+        </nav>
+
+        <!-- 3. CỤM TIỆN ÍCH & TÀI KHOẢN CAO CẤP -->
+        <div class="nav-actions">
+            <!-- Ô tìm kiếm tối giản -->
+            <div class="search-wrap">
+                <input id="search" class="search-bar" type="search" placeholder="Tìm tác phẩm...">
+                <span class="search-icon">🔍</span>
+            </div>
+
+            <!-- Giỏ hàng Premium -->
+            <button class="icon-btn cart" aria-label="Giỏ hàng cá nhân">
+                <span class="cart-icon">👜</span>
+                <span class="cart-count">0</span>
+            </button>
+
+            <!-- Trạng thái 1: Khách vãng lai -->
+            <div sec:authorize="!isAuthenticated()" id="guest-menu" class="guest-actions">
+                <a href="/login" class="btn-login-premium">Đăng nhập</a>
+                <a href="/register" class="btn-register-premium">Đăng Ký</a>
+            </div>
+
+            <!-- Trạng thái 2: Thành viên đã đăng nhập -->
+            <div sec:authorize="isAuthenticated()" id="user-menu" class="user-menu-premium">
+                <button class="user-btn-premium" aria-haspopup="true" aria-expanded="false">
+                    <div class="avatar-wrapper">
+                        <img src="" class="avatar" alt="User Avatar" th:alt="${#authentication.name}">
+                        <span class="status-indicator"></span>
+                    </div>
+                    <span id="username" class="username-text" sec:authentication="name">Khách quý</span>
+                    <span class="chevron-icon">▼</span>
+                </button>
+
+                <div class="dropdown-premium" role="menu">
+                    <div class="dropdown-header">
+                        <span class="user-role">Thành viên Premium</span>
+                    </div>
+                    <a href="/profile" role="menuitem">👤 Hồ sơ cá nhân</a>
+                    <a href="/orders" role="menuitem">📦 Lịch sử tác phẩm</a>
+                    <a href="/appointments" role="menuitem">📋 My Appointment</a>
+                    <a href="/wishlist" role="menuitem">❤️ Tuyển chọn lưu trữ</a>
+                    <a href="/settings" role="menuitem">⚙ Cài đặt tài khoản</a>
+                    <div class="dropdown-divider"></div>
+                    <form th:action="@{/logout}" method="post" class="logout-form">
+                        <button type="submit" class="logout-btn-premium" role="menuitem">🚪 Đăng xuất hệ thống</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<main class="appointment-page">
+    <!-- Tiêu đề trang chuẩn Luxury Exhibition -->
+    <section class="appointment-hero">
+        <div class="container hero-appointment-inner">
+            <p class="appointment-kicker">Private Viewing Schedule</p>
+            <h1 class="appointment-title">Lịch Hẹn Của Tôi</h1>
+            <p class="appointment-subtitle">Không gian theo dõi, cập nhật trạng thái đặt lịch thưởng lãm và tiếp đón riêng tại Showroom Di Sản.</p>
+        </div>
+    </section>
+
+    <!-- Danh sách lịch hẹn -->
+    <section class="container appointment-list-container">
+        <div class="appointment-grid">
+            <article class="appointment-card" th:each="appointment : ${viewingAppointments}">
+                <!-- Khối nội dung thông tin chi tiết lịch hẹn -->
+                <div class="appointment-content">
+                    <div class="card-header-meta">
+                        <span class="appointment-status-tag" th:text="${appointment.status}" th:data-status="${appointment.status}">Chờ xác nhận</span>
+                        <span class="product-code-tag" th:text="${appointment.product.productCode}">#BS-9999</span>
+                    </div>
+
+                    <h2 class="appointment-product-name" th:text="${appointment.product.productName}">Bonsai Tùng La Hán Đại Thụ</h2>
+
+                    <div class="divider-line"></div>
+
+                    <div class="appointment-details-list">
+                        <div class="detail-item">
+                            <span class="detail-icon">📅</span>
+                            <div class="detail-text">
+                                <label>Ngày thưởng lãm</label>
+                                <span th:text="${#temporals.format(appointment.appointmentDate,'dd/MM/yyyy')}">12/05/2026</span>
+                            </div>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-icon">🕒</span>
+                            <div class="detail-text">
+                                <label>Giờ tiếp đón</label>
+                                <span th:text="${#temporals.format(appointment.appointmentDate,'HH:mm')}">14:30</span>
+                            </div>
+                        </div>
+                        <div class="detail-item full-width" th:if="${appointment.note != null && !#strings.isEmpty(appointment.note)}">
+                            <span class="detail-icon">📝</span>
+                            <div class="detail-text">
+                                <label>Yêu cầu/Ghi chú riêng</label>
+                                <p class="note-paragraph" th:text="${appointment.note}">Yêu cầu chuẩn bị trà sen và xem thêm dáng huyền.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Khu vực các nút bấm Premium Action -->
+                    <div class="appointment-actions">
+                        <button
+                                class="btn-apt-luxury type-view view-detail-btn"
+                                th:data-id="${appointment.appointmentId}">
+                          <span class="btn-text">View Detail</span>
+                        </button>
+
+                    </div>
+                </div>
+            </article>
+
+            <!-- Trạng thái trống (Empty State) -->
+            <div class="empty-appointment-state" th:if="${viewingAppointments == null || #lists.isEmpty(viewingAppointments)}">
+                <div class="empty-icon-wrap">🌿</div>
+                <h2>Chưa có lịch thưởng lãm</h2>
+                <p>Quý khách hiện chưa đăng ký lịch xem riêng tác phẩm nào tại không gian Showroom của chúng tôi.</p>
+                <a href="/#collection" class="btn-discover-luxury">Khám phá bộ sưu tập</a>
+            </div>
+        </div>
+    </section>
+</main>
+<div id="appointmentModal" class="modal">
+
+    <div class="modal-content">
+
+        <span class="close-btn">&times;</span>
+
+        <h2>Appointment Detail</h2>
+
+        <p><strong>Tên Bonsai:</strong> <span id="detailName"></span></p>
+
+        <p><strong>Mã cây:</strong> <span id="detailCode"></span></p>
+
+        <p><strong>Ngày:</strong> <span id="detailDate"></span></p>
+
+        <p><strong>Giờ:</strong> <span id="detailTime"></span></p>
+
+        <p><strong>Trạng thái:</strong> <span id="detailStatus"></span></p>
+
+        <p><strong>Ghi chú:</strong> <span id="detailNote"></span></p>
+
+        <div class="modal-actions">
+
+            <button class="btn outline">
+                Update
+            </button>
+
+            <button class="btn danger">
+                Cancel
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+<footer id="contact" class="footer" role="contentinfo">
+    <div class="container footer-inner">
+        <div class="footer-col">
+            <h4>Bonsai Luxury</h4>
+            <p>Không gian nghệ thuật Bonsai di sản cao cấp hàng đầu.</p>
+        </div>
+        <div class="footer-col">
+            <h4>Chính sách</h4>
+            <ul>
+                <li><a href="#">Giao hàng &amp; đổi trả</a></li>
+                <li><a href="#">Bảo hành</a></li>
+            </ul>
+        </div>
+        <div class="footer-col social">
+            <h4>Kết nối</h4>
+            <div class="social-icons">
+                <a href="#" aria-label="Website chính thức">🌐</a>
+                <a href="#" aria-label="Instagram">📷</a>
+                <a href="#" aria-label="YouTube channel">▶️</a>
+            </div>
+        </div>
+    </div>
+    <div class="footer-bottom">
+        <p>© <span id="year"></span> Bonsai Luxury. All rights reserved.</p>
+    </div>
+</footer>
+
+<script th:src="@{/js/view-appointment.js}"></script>
+</body>
+</html>
