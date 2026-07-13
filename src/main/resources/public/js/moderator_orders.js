@@ -23,6 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
 function initApp() {
     const searchInput = document.getElementById('orderSearchInput');
     const sortSelect = document.getElementById('orderSortSelect');
+    const statusSelect = document.getElementById('orderStatusSelect');
     const tabContainer = document.getElementById('statusFilterTabs');
 
     // Search input handler with 300ms debounce
@@ -43,6 +44,23 @@ function initApp() {
         renderDashboard();
     });
 
+    // Status select change handler
+    statusSelect.addEventListener('change', (e) => {
+        DashboardState.selectedStatus = e.target.value;
+        DashboardState.currentPage = 1;
+
+        // Sync with tabs
+        tabContainer.querySelectorAll('.tab-btn').forEach(t => {
+            if (t.dataset.status === e.target.value) {
+                t.classList.add('active');
+            } else {
+                t.classList.remove('active');
+            }
+        });
+
+        renderDashboard();
+    });
+
     // Status Tab buttons handler
     tabContainer.addEventListener('click', (e) => {
         const btn = e.target.closest('.tab-btn');
@@ -55,6 +73,10 @@ function initApp() {
         // Update state and refresh
         DashboardState.selectedStatus = btn.dataset.status;
         DashboardState.currentPage = 1;
+
+        // Sync with select dropdown
+        statusSelect.value = btn.dataset.status;
+
         renderDashboard();
     });
 
