@@ -1,29 +1,14 @@
 <!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <title>Seller Dashboard</title>
-    <link rel="stylesheet" th:href="@{/css/seller.css}">
-</head>
+<head th:replace="~{fragments/head :: head('Seller Dashboard', '/css/dashboard.css')}"></head>
 <body>
-<div class="seller-portal">
-    <aside class="seller-sidebar">
-        <h2>Seller Portal</h2>
-        <nav>
-            <a class="active" th:href="@{/seller}">Dashboard</a>
-            <a th:href="@{/seller/products}">My Products</a>
-            <a th:href="@{/seller/catalog}">Catalog</a>
-            <a th:href="@{/seller/profile}">My Profile</a>
-            <a href="#">Appointments</a>
-        </nav>
-        <form method="post" th:action="@{/logout}">
-            <input th:if="${_csrf != null}" type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-            <button type="submit" class="sidebar-logout">Logout</button>
-        </form>
-    </aside>
+<div th:replace="~{fragments/navbar :: navbar}"></div>
 
-    <main class="portal-content">
-        <header class="page-header">
+<div class="dashboard-layout">
+    <div th:replace="~{fragments/sidebar :: sidebar('seller-dashboard')}"></div>
+
+    <main class="dashboard-main">
+        <header class="dashboard-header">
             <div>
                 <h1>Dashboard</h1>
                 <p>Overview sản phẩm và hoạt động seller.</p>

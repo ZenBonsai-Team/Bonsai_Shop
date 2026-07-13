@@ -45,6 +45,8 @@ public class SecurityConfig {
                                                                 "/resend-otp-reset",
                                                                 "/vnpay/**", // ← cho phép thanh toán VNPAY
                                                                 "/avatars/**", // ← cho phép xem ảnh avatar
+                                                                "/community", // ← cho phép xem trang cộng đồng công khai
+                                                                "/community/post/**", // ← cho phép xem bài viết chi tiết
                                                                 "/css/**", // ← cho phép CSS
                                                                 "/js/**", // ← cho phép JS
                                                                 "/images/**" // ← cho phép images
@@ -93,7 +95,7 @@ public class SecurityConfig {
                             || "ACTION_ORDER_VIEW_ALL".equals(authority.getAuthority()));
 
             if (isAdmin) {
-                response.sendRedirect("/admin/users");
+                response.sendRedirect("/admin");
             } else if (isSeller) {
                 response.sendRedirect("/seller");
             } else if (isModerator) {

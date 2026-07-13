@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="vi">
+<head th:replace="~{fragments/head :: head('Quản trị - Bonsai Shop', '/css/dashboard.css')}"></head>
+<body>
+
+<div class="dashboard-layout">
+    <!-- Sidebar -->
+    <div th:replace="~{fragments/sidebar :: sidebar('admin-dashboard')}"></div>
+
+    <!-- Main Content -->
+    <main class="dashboard-main">
+        <!-- Admin Top Navbar -->
+        <div th:replace="~{fragments/admin_navbar :: admin_navbar}"></div>
+        
+        <div class="dashboard-content-wrapper">
+            <header class="dashboard-header">
+                <div>
+                    <h1 class="serif-text mb-1">Dashboard</h1>
+                    <p class="text-secondary mb-0">Tổng quan hệ thống và hoạt động quản trị.</p>
+                </div>
+            </header>
+
+        <section class="dashboard-kpis">
+            <div class="kpi-card">
+                <div class="kpi-icon"><i class="fa-solid fa-users"></i></div>
+                <div class="kpi-info">
+                    <strong>150</strong>
+                    <span>Total Users</span>
+                </div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-icon"><i class="fa-solid fa-leaf"></i></div>
+                <div class="kpi-info">
+                    <strong>340</strong>
+                    <span>Total Bonsai</span>
+                </div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-icon"><i class="fa-solid fa-chart-line"></i></div>
+                <div class="kpi-info">
+                    <strong>1.2B VNĐ</strong>
+                    <span>Revenue</span>
+                </div>
+            </div>
+        </section>
+
+        <section class="dashboard-content-box mt-4">
+            <h2 class="serif-text mb-3">Hoạt động gần đây</h2>
+            <p class="text-secondary">Tính năng này đang được phát triển...</p>
+        </section>
+        </div>
+    </main>
+</div>
+
+</body>
+</html>

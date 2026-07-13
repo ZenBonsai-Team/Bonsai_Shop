@@ -1,110 +1,13 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BSMS - Bonsai Marketplace</title>
-    
-    <!-- Fonts & Icons -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-    
-    <!-- Bootstrap 5 CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-
-    <!-- ===================================================== -->
-    <!-- STYLES -->
-    <!-- ===================================================== -->
-    <link rel="stylesheet" th:href="@{/css/common.css}">
-    <link rel="stylesheet" th:href="@{/css/marketplace.css}">
-</head>
+<head th:replace="~{fragments/head :: head('BSMS - Bonsai Marketplace', '/css/marketplace.css')}"></head>
 <body>
 
 <!-- ===================================================== -->
-<!-- NAVBAR -->
+<!-- NAVBAR & WELCOME BAR -->
 <!-- ===================================================== -->
-<nav class="navbar navbar-expand-lg navbar-custom sticky-top">
-    <div class="container">
-        <!-- Brand Logo -->
-        <a class="navbar-brand navbar-brand-custom" th:href="@{/home}">
-            🌿 BSMS
-        </a>
-        
-        <!-- Toggle for Mobile -->
-        <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
-            <i class="fa-solid fa-bars fs-4 text-dark"></i>
-        </button>
-
-        <!-- Navigation Menu -->
-        <div class="collapse navbar-collapse" id="navbarContent">
-            <ul class="navbar-nav mx-auto mb-2 mb-lg-0">
-                <li class="nav-item">
-                    <a class="nav-link nav-link-custom" th:href="@{/home}">Home</a>
-                </li>
-                <li class="nav-item">
-                    <!-- Future: th:href="@{/marketplace}" -->
-                    <a class="nav-link nav-link-custom active" href="#">Bonsai Marketplace</a>
-                </li>
-                <li class="nav-item">
-                    <!-- Future: th:href="@{/showroom}" -->
-                    <a class="nav-link nav-link-custom" href="#">Community</a>
-                </li>
-                <li class="nav-item">
-                    <!-- Future: th:href="@{/vip}" -->
-                    <a class="nav-link nav-link-custom" href="#">VIP Elite Showroom</a>
-                </li>
-                <li class="nav-item">
-                    <!-- Future: th:href="@{/contact}" -->
-                    <a class="nav-link nav-link-custom" href="#">Contact</a>
-                </li>
-            </ul>
-
-            <!-- Search box in Navbar -->
-            <!-- <form action="/marketplace" method="get" class="d-flex align-items-center me-3">
-                <div class="nav-search-box">
-                    <i class="fa-solid fa-magnifying-glass nav-search-icon"></i>
-                    <input type="text" name="keyword" th:value="${keyword}" class="nav-search-input" placeholder="Search trees by name or product code...">
-                </div>
-            </form> -->
-
-            <!-- Auth & Cart -->
-            <div class="d-flex align-items-center gap-3">
-                <!-- User Login Area -->
-                <!-- Future: -->
-                <div sec:authorize="isAnonymous()" class="d-flex align-items-center gap-2">
-                    <a th:href="@{/login}" class="btn-auth-signin">Sign In</a>
-                    <a th:href="@{/register}" class="btn btn-auth-register">Register</a>
-                </div>
-                <div sec:authorize="isAuthenticated()" class="d-flex align-items-center gap-2">
-                    <a th:href="@{/profile}" class="nav-icon-link text-decoration-none" title="Profile"><i class="fa-regular fa-user"></i></a>
-                    <form method="post" th:action="@{/logout}" class="m-0">
-                        <button type="submit" class="btn btn-link text-dark p-0 nav-icon-link" title="Đăng xuất"><i class="fa-solid fa-arrow-right-from-bracket"></i></button>
-                    </form>
-                </div>
-               
-                <!-- <a href="#" class="btn-auth-signin">Sign In</a>
-                <a href="#" class="btn btn-auth-register">Register</a> -->
-
-                <!-- Cart icon with orange badge count -->
-                <a href="#" class="nav-icon-link text-decoration-none position-relative ms-1" title="Giỏ hàng">
-                    <!-- Future: th:href="@{/cart}" -->
-                    <i class="fa-solid fa-bag-shopping"></i>
-                    <!-- Future: th:text="${cartSize}" -->
-                    <span class="badge-count-orange">2</span>
-                </a>
-            </div>
-        </div>
-    </div>
-</nav>
-
-<!-- WELCOME BAR (chỉ hiện khi đã đăng nhập) -->
-<div class="welcome-bar" sec:authorize="isAuthenticated()">
-    <span>Chào mừng <span th:text="${username}"></span> đã quay trở lại!</span>
-    <button class="close-welcome-btn" onclick="this.parentElement.style.display='none'" aria-label="Đóng">&times;</button>
-</div>
+<div th:replace="~{fragments/navbar :: navbar}"></div>
 
 <!-- ===================================================== -->
 <!-- HERO -->
@@ -402,7 +305,7 @@
 
                 <!-- DYNAMIC PRODUCT CARDS LOOP -->
                 <div class="col" th:each="product : ${products}">
-                    <div class="product-card">
+                    <div class="product-card" style="cursor: pointer;" th:onclick="'window.location.href=\'/product/' + ${product.productId} + '\';'">
                         <div class="card-image-wrap">
                             <!-- Status Badge: Dynamically rendered based on ProductStatus -->
                             <span th:if="${product.productStatus == 'AVAILABLE'}" class="card-status-badge avail">AVAILABLE</span>
@@ -418,7 +321,7 @@
                             Wishlist icon kept UI-only.
                             Reason: Wishlist interaction logic is not requested for this task.
                             -->
-                            <button class="card-btn-wishlist" title="Yêu thích"><i class="fa-regular fa-heart"></i></button>
+                            <button class="card-btn-wishlist" title="Yêu thích" onclick="event.stopPropagation();"><i class="fa-regular fa-heart"></i></button>
                             
                             <!-- Image URL binding with default fallback -->
                             <!--
@@ -426,8 +329,10 @@
                             Image fallback to a default Unsplash mockup image if product.firstImageUrl is empty.
                             Reason: Current ProductMedia does not provide usable image data for some items.
                             -->
-                            <img th:src="${product.firstImageUrl != null && !product.firstImageUrl.isEmpty() ? product.firstImageUrl : 'https://images.unsplash.com/photo-1599599810769-bcde5a160d32?auto=format&fit=crop&q=80&w=600'}" 
-                                 th:alt="${product.productName}" class="card-img-asset">
+                            <a th:href="@{'/product/' + ${product.productId}}" class="d-block text-decoration-none">
+                                <img th:src="${product.firstImageUrl != null && !product.firstImageUrl.isEmpty() ? product.firstImageUrl : 'https://images.unsplash.com/photo-1599599810769-bcde5a160d32?auto=format&fit=crop&q=80&w=600'}" 
+                                     th:alt="${product.productName}" class="card-img-asset">
+                            </a>
                         </div>
                         
                         <div class="card-content">
@@ -435,7 +340,9 @@
                             <span class="card-species-tag" th:text="${product.variety != null ? product.variety.varietyName : 'Bonsai'}">Sanh Nam Điền</span>
                             
                             <!-- Title binding -->
-                            <h3 class="card-title-serif" th:text="${product.productName}">Sanh Nam Điền Dáng Trực Cổ</h3>
+                            <a th:href="@{'/product/' + ${product.productId}}" class="text-decoration-none text-dark">
+                                <h3 class="card-title-serif" th:text="${product.productName}">Sanh Nam Điền Dáng Trực Cổ</h3>
+                            </a>
                             
                             <!-- Pedigree/Code binding -->
                             <p class="card-pedigree-code text-muted mb-1" style="font-size:0.7rem;" th:text="${'Mã: ' + product.productCode}">Mã: BSMS-SND-102</p>
@@ -474,11 +381,9 @@
                             
                             <div class="mt-2">
                                 <!-- Add to Cart / Disabled button based on status -->
-                                <button th:if="${product.productStatus == 'AVAILABLE'}" class="btn-card-cart-outline"><i class="fa-solid fa-cart-shopping"></i> Add to Cart</button>
-                                <button th:if="${product.productStatus == 'RESERVED'}" class="btn-card-disabled" disabled>Reserved</button>
-                                <button th:if="${product.productStatus == 'SOLD'}" class="btn-card-disabled" disabled>Sold</button>
-                                
-                                <a th:href="@{'/product/' + ${product.productId}}" class="card-view-details-link">View Details →</a>
+                                <button th:if="${product.productStatus == 'AVAILABLE'}" class="btn-card-cart-outline" onclick="event.stopPropagation();"><i class="fa-solid fa-cart-shopping"></i> Add to Cart</button>
+                                <button th:if="${product.productStatus == 'RESERVED'}" class="btn-card-disabled" disabled onclick="event.stopPropagation();">Reserved</button>
+                                <button th:if="${product.productStatus == 'SOLD'}" class="btn-card-disabled" disabled onclick="event.stopPropagation();">Sold</button>
                             </div>
                         </div>
                     </div>
@@ -545,230 +450,7 @@
     </div>
 </main>
 
-<!-- ===================================================== -->
-<!-- SHOWCASE "TUYỂN CHỌN / BỘ SƯU TẬP NỔI BẬT" SECTION -->
-<!-- ===================================================== -->
-<!-- <section class="showcase-bg-container">
-    <div class="container">
-        <div class="showcase-section-header">
-            <span class="showcase-sub">Tuyển Chọn</span>
-            <h2 class="showcase-main-title serif-text">Bộ sưu tập nổi bật</h2>
-        </div> -->
 
-        <!-- <div class="showcase-row-wrapper">
-            <div class="showcase-row-header">
-                <h3 class="showcase-row-title serif-text">Best Sellers</h3>
-                <a href="#" class="showcase-row-link-all">Xem tất cả</a>
-            </div>
-
-            <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-xl-4 g-3">
-                <div class="col">
-                    <div class="product-card">
-                        <div class="card-image-wrap">
-                            <span class="card-status-badge avail">AVAILABLE</span>
-                            <button class="card-btn-wishlist" title="Yêu thích"><i class="fa-regular fa-heart"></i></button>
-                            <img src="https://images.unsplash.com/photo-1599599810769-bcde5a160d32?auto=format&fit=crop&q=80&w=600" alt="Sanh Nam Điền Dáng Trực Cổ" class="card-img-asset">
-                        </div>
-                        <div class="card-content">
-                            <span class="card-species-tag">Sanh Nam Điền</span>
-                            <h3 class="card-title-serif">Sanh Nam Điền Dáng Trực Cổ</h3>
-                            <p class="card-pedigree-code text-muted mb-1" style="font-size:0.7rem;">Mã: BSMS-SND-102</p>
-                            <p class="card-dimensions-meta text-muted mb-2">Tuổi: 12 năm • Cao: 65cm • Thân: 15cm</p>
-                            <div class="card-price-rating-row">
-                                <span class="card-price-val">4.500.000 đ</span>
-                                <span class="card-rating-val">4.8 <i class="fa-solid fa-star"></i></span>
-                            </div>
-                            <div class="mt-2">
-                                <button class="btn-card-cart-outline"><i class="fa-solid fa-cart-shopping"></i> Add to Cart</button>
-                                <a href="#" class="card-view-details-link">View Details →</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col">
-                    <div class="product-card">
-                        <div class="card-image-wrap">
-                            <span class="card-status-badge avail">AVAILABLE</span>
-                            <button class="card-btn-wishlist" title="Yêu thích"><i class="fa-regular fa-heart"></i></button>
-                            <img src="https://images.unsplash.com/photo-1515150144380-bca9f1650ed9?auto=format&fit=crop&q=80&w=600" alt="Tùng La Hán Dáng Hoành" class="card-img-asset">
-                        </div>
-                        <div class="card-content">
-                            <span class="card-species-tag">Tùng La Hán</span>
-                            <h3 class="card-title-serif">Tùng La Hán Dáng Hoành</h3>
-                            <p class="card-pedigree-code text-muted mb-1" style="font-size:0.7rem;">Mã: BSMS-TLH-218</p>
-                            <p class="card-dimensions-meta text-muted mb-2">Tuổi: 18 năm • Cao: 80cm • Thân: 22cm</p>
-                            <div class="card-price-rating-row">
-                                <span class="card-price-val">8.900.000 đ</span>
-                                <span class="card-rating-val">4.9 <i class="fa-solid fa-star"></i></span>
-                            </div>
-                            <div class="mt-2">
-                                <button class="btn-card-cart-outline"><i class="fa-solid fa-cart-shopping"></i> Add to Cart</button>
-                                <a href="#" class="card-view-details-link">View Details →</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col">
-                    <div class="product-card">
-                        <div class="card-image-wrap">
-                            <span class="card-status-badge resv">RESERVED</span>
-                            <button class="card-btn-wishlist" title="Yêu thích"><i class="fa-regular fa-heart"></i></button>
-                            <img src="https://images.unsplash.com/photo-1502082553048-f009c37129b9?auto=format&fit=crop&q=80&w=600" alt="Linh Sam Dáng Huyền" class="card-img-asset">
-                        </div>
-                        <div class="card-content">
-                            <span class="card-species-tag">Linh Sam</span>
-                            <h3 class="card-title-serif">Linh Sam Dáng Huyền</h3>
-                            <p class="card-pedigree-code text-muted mb-1" style="font-size:0.7rem;">Mã: BSMS-LSM-077</p>
-                            <p class="card-dimensions-meta text-muted mb-2">Tuổi: 9 năm • Cao: 55cm • Thân: 11cm</p>
-                            <div class="card-price-rating-row">
-                                <span class="card-price-val">3.200.000 đ</span>
-                                <span class="card-rating-val">4.7 <i class="fa-solid fa-star"></i></span>
-                            </div>
-                            <div class="mt-2">
-                                <button class="btn-card-disabled" disabled>Reserved</button>
-                                <a href="#" class="card-view-details-link">View Details →</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col">
-                    <div class="product-card">
-                        <div class="card-image-wrap">
-                            <span class="card-status-badge avail">AVAILABLE</span>
-                            <button class="card-btn-wishlist" title="Yêu thích"><i class="fa-regular fa-heart"></i></button>
-                            <img src="https://images.unsplash.com/photo-1463936575829-25148e1db1b8?auto=format&fit=crop&q=80&w=600" alt="Mai Chiếu Thủy Bonsai Hoa" class="card-img-asset">
-                        </div>
-                        <div class="card-content">
-                            <span class="card-species-tag">Mai Chiếu Thủy</span>
-                            <h3 class="card-title-serif">Mai Chiếu Thủy Bonsai Hoa</h3>
-                            <p class="card-pedigree-code text-muted mb-1" style="font-size:0.7rem;">Mã: BSMS-MCT-145</p>
-                            <p class="card-dimensions-meta text-muted mb-2">Tuổi: 14 năm • Cao: 70cm • Thân: 18cm</p>
-                            <div class="card-price-rating-row">
-                                <span class="card-price-val">6.700.000 đ</span>
-                                <span class="card-rating-val">4.8 <i class="fa-solid fa-star"></i></span>
-                            </div>
-                            <div class="mt-2">
-                                <button class="btn-card-cart-outline"><i class="fa-solid fa-cart-shopping"></i> Add to Cart</button>
-                                <a href="#" class="card-view-details-link">View Details →</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div> -->
-
-        <!-- New Arrivals Grid -->
-        <!-- <div class="showcase-row-wrapper">
-            <div class="showcase-row-header">
-                <h3 class="showcase-row-title serif-text">New Arrivals</h3>
-                <a href="#" class="showcase-row-link-all">Xem tất cả</a>
-            </div> -->
-
-            <!-- 4 Column row for New Arrivals -->
-            <!-- <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-xl-4 g-3">
-                <div class="col">
-                    <div class="product-card">
-                        <div class="card-image-wrap">
-                            <span class="card-status-badge sld">SOLD</span>
-                            <button class="card-btn-wishlist" title="Yêu thích"><i class="fa-regular fa-heart"></i></button>
-                            <img src="https://images.unsplash.com/photo-1512428559087-560fa5ceab42?auto=format&fit=crop&q=80&w=600" alt="Sanh Quê Dáng Song Thụ" class="card-img-asset">
-                        </div>
-                        <div class="card-content">
-                            <span class="card-species-tag">Sanh Quê</span>
-                            <h3 class="card-title-serif">Sanh Quê Dáng Song Thụ</h3>
-                            <p class="card-pedigree-code text-muted mb-1" style="font-size:0.7rem;">Mã: BSMS-SQW-301</p>
-                            <p class="card-dimensions-meta text-muted mb-2">Tuổi: 20 năm • Cao: 95cm • Thân: 26cm</p>
-                            <div class="card-price-rating-row">
-                                <span class="card-price-val">12.500.000 đ</span>
-                                <span class="card-rating-val">5.0 <i class="fa-solid fa-star"></i></span>
-                            </div>
-                            <div class="mt-2">
-                                <button class="btn-card-disabled" disabled>Sold</button>
-                                <a href="#" class="card-view-details-link">View Details →</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col">
-                    <div class="product-card">
-                        <div class="card-image-wrap">
-                            <span class="card-status-badge avail">AVAILABLE</span>
-                            <button class="card-btn-wishlist" title="Yêu thích"><i class="fa-regular fa-heart"></i></button>
-                            <img src="https://images.unsplash.com/photo-1463936575829-25148e1db1b8?auto=format&fit=crop&q=80&w=600" alt="Tùng Cối Dáng Xiên" class="card-img-asset">
-                        </div>
-                        <div class="card-content">
-                            <span class="card-species-tag">Tùng Cối</span>
-                            <h3 class="card-title-serif">Tùng Cối Dáng Xiên</h3>
-                            <p class="card-pedigree-code text-muted mb-1" style="font-size:0.7rem;">Mã: BSMS-TGC-080</p>
-                            <p class="card-dimensions-meta text-muted mb-2">Tuổi: 11 năm • Cao: 60cm • Thân: 13cm</p>
-                            <div class="card-price-rating-row">
-                                <span class="card-price-val">3.900.000 đ</span>
-                                <span class="card-rating-val">4.6 <i class="fa-solid fa-star"></i></span>
-                            </div>
-                            <div class="mt-2">
-                                <button class="btn-card-cart-outline"><i class="fa-solid fa-cart-shopping"></i> Add to Cart</button>
-                                <a href="#" class="card-view-details-link">View Details →</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col">
-                    <div class="product-card">
-                        <div class="card-image-wrap">
-                            <span class="card-status-badge avail">AVAILABLE</span>
-                            <button class="card-btn-wishlist" title="Yêu thích"><i class="fa-regular fa-heart"></i></button>
-                            <img src="https://images.unsplash.com/photo-1515150144380-bca9f1650ed9?auto=format&fit=crop&q=80&w=600" alt="Sanh Hoành Bonsai Vườn" class="card-img-asset">
-                        </div>
-                        <div class="card-content">
-                            <span class="card-species-tag">Sanh Quê</span>
-                            <h3 class="card-title-serif">Sanh Hoành Bonsai Vườn</h3>
-                            <p class="card-pedigree-code text-muted mb-1" style="font-size:0.7rem;">Mã: BSMS-SNH-184</p>
-                            <p class="card-dimensions-meta text-muted mb-2">Tuổi: 15 năm • Cao: 75cm • Thân: 17cm</p>
-                            <div class="card-price-rating-row">
-                                <span class="card-price-val">5.800.000 đ</span>
-                                <span class="card-rating-val">4.7 <i class="fa-solid fa-star"></i></span>
-                            </div>
-                            <div class="mt-2">
-                                <button class="btn-card-cart-outline"><i class="fa-solid fa-cart-shopping"></i> Add to Cart</button>
-                                <a href="#" class="card-view-details-link">View Details →</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col">
-                    <div class="product-card">
-                        <div class="card-image-wrap">
-                            <span class="card-status-badge avail">AVAILABLE</span>
-                            <button class="card-btn-wishlist" title="Yêu thích"><i class="fa-regular fa-heart"></i></button>
-                            <img src="https://images.unsplash.com/photo-1416879595882-3373a0480b5b?auto=format&fit=crop&q=80&w=600" alt="Mini Bonsai Để Bàn" class="card-img-asset">
-                        </div>
-                        <div class="card-content">
-                            <span class="card-species-tag">Sanh Nam Điền</span>
-                            <h3 class="card-title-serif">Mini Bonsai Để Bàn</h3>
-                            <p class="card-pedigree-code text-muted mb-1" style="font-size:0.7rem;">Mã: BSMS-MNB-009</p>
-                            <p class="card-dimensions-meta text-muted mb-2">Tuổi: 4 năm • Cao: 25cm • Thân: 5cm</p>
-                            <div class="card-price-rating-row">
-                                <span class="card-price-val">950.000 đ</span>
-                                <span class="card-rating-val">4.5 <i class="fa-solid fa-star"></i></span>
-                            </div>
-                            <div class="mt-2">
-                                <button class="btn-card-cart-outline"><i class="fa-solid fa-cart-shopping"></i> Add to Cart</button>
-                                <a href="#" class="card-view-details-link">View Details →</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-            </div> -->
-        <!-- </div>
-    </div>
-</section> -->
 
 <!-- ===================================================== -->
 <!-- SERVICE FEATURES SECTION -->
@@ -811,55 +493,7 @@
 <!-- ===================================================== -->
 <!-- FOOTER -->
 <!-- ===================================================== -->
-<footer class="footer-dark">
-    <div class="container">
-        <div class="row g-5">
-            <!-- Brand Section -->
-            <div class="col-lg-4 col-md-6">
-                <div class="footer-logo-title">🌿 BSMS</div>
-                <p class="footer-desc-para">
-                    Nền tảng quản lý và giao dịch cây cảnh nghệ thuật — gìn giữ và phát huy di sản nghệ thuật bonsai Bắc Bộ Việt Nam.
-                </p>
-                <div class="footer-social-strip">
-                    <a href="#" class="footer-social-btn"><i class="fa-brands fa-facebook-f"></i></a>
-                    <a href="#" class="footer-social-btn"><i class="fa-brands fa-instagram"></i></a>
-                    <a href="#" class="footer-social-btn"><i class="fa-brands fa-youtube"></i></a>
-                    <a href="#" class="footer-social-btn"><i class="fa-brands fa-pinterest-p"></i></a>
-                </div>
-            </div>
-            
-            <!-- Company Links -->
-            <div class="col-lg-3 col-md-6 col-6">
-                <h5 class="footer-column-heading">Company</h5>
-                <ul class="footer-column-links">
-                    <li><a href="#">About Us</a></li>
-                    <li><a href="#">Contact</a></li>
-                    <li><a href="#">Terms of Service</a></li>
-                    <li><a href="#">Privacy Policy</a></li>
-                </ul>
-            </div>
-
-            <!-- Connect Info -->
-            <div class="col-lg-5 col-md-12 col-6">
-                <h5 class="footer-column-heading">Connect</h5>
-                <ul class="footer-connect-list">
-                    <li><i class="fa-solid fa-phone"></i>Hotline: 1900 6868</li>
-                    <li><i class="fa-solid fa-envelope"></i>Email: support@bsms.vn</li>
-                    <li class="text-secondary mt-3" style="font-size:0.75rem; color: rgba(255,255,255,0.4) !important;">Powered by VNPay & Crane Logistics Network</li>
-                </ul>
-            </div>
-        </div>
-
-        <!-- Copyright Row -->
-        <div class="footer-base-row">
-            <span>© 2026 BSMS — Bonsai Shop Management System. All rights reserved.</span>
-            <span>Powered by VNPay - Crane Logistics Network</span>
-        </div>
-    </div>
-</footer>
-
-<!-- Bootstrap Bundle JS -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<div th:replace="~{fragments/footer :: footer}"></div>
 
 <!-- Custom UI Logic Script -->
 <script>
