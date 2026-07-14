@@ -25,7 +25,8 @@ public class SecurityConfig {
                 return new BCryptPasswordEncoder();
         }
 
-        @Bean
+    @Bean
+
         public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
                 http
                                 .userDetailsService(customUserDetailsService)
@@ -40,6 +41,8 @@ public class SecurityConfig {
                                                                 "/forgot-password",
                                                                 "/verify-otp",
                                                                 "/resend-otp",
+                                                                "/bonsai-luxury",
+                                                                "/bonsai_luxury_detail/**",
                                                                 "/reset-password",
                                                                 "/verify-otp-to-reset-password",
                                                                 "/resend-otp-reset",
