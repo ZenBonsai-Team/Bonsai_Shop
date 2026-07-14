@@ -144,6 +144,15 @@
                           <span class="btn-text">View Detail</span>
                         </button>
 
+                        <button class="btn outline update-btn"
+                                th:data-id="${appointment.appointmentId}">
+                            <span class="btn-text">Update Appointment</span>
+                        </button>
+
+                        <button class="btn danger">
+                            Cancel
+                        </button>
+
                     </div>
                 </div>
             </article>
@@ -178,22 +187,66 @@
 
         <p><strong>Ghi chú:</strong> <span id="detailNote"></span></p>
 
-        <div class="modal-actions">
-
-            <button class="btn outline">
-                Update
-            </button>
-
-            <button class="btn danger">
-                Cancel
-            </button>
-
-        </div>
-
     </div>
 
 </div>
+<!-- MODAL UPDATE APPOINTMENT (Bonsai Luxury Exclusive) -->
+<div id="updateAppointmentModal" class="modal">
+    <div class="modal-content">
+        <span class="close-btn id-close-update">&times;</span>
+        <h2>Cập nhật Lịch Hẹn</h2>
 
+        <!-- Form gửi dữ liệu cập nhật lên Controller -->
+        <form id="updateAppointmentForm" method="post">
+
+            <input
+                    type="hidden"
+                    th:name="${_csrf.parameterName}"
+                    th:value="${_csrf.token}" />
+
+            <p><strong>Tên Bonsai:</strong> <span id="updateName"></span></p>
+            <p><strong>Mã cây:</strong> <span id="updateCode"></span></p>
+
+            <div class="form-group-luxury">
+                <label class="label-luxury">📅 Ngày thưởng lãm</label>
+                <input type="date"
+                       id="updateDate"
+                       name="appointmentDate"
+                       required
+                       class="input-luxury">
+            </div>
+
+            <div class="form-group-luxury">
+                <label class="label-luxury">🕒 Giờ tiếp đón</label>
+                <input type="time"
+                       id="updateTime"
+                       name="appointmentTime"
+                       required
+                       class="input-luxury">
+            </div>
+
+            <div class="form-group-luxury">
+                <label class="label-luxury">📝 Yêu cầu / Ghi chú riêng</label>
+                <textarea id="updateNote"
+                          name="note"
+                          rows="3"
+                          class="textarea-luxury"></textarea>
+            </div>
+
+            <div class="modal-actions">
+                <button type="button"
+                        class="btn outline id-close-update-btn">
+                    Hủy bỏ
+                </button>
+
+                <button type="submit"
+                        class="btn-apt-luxury type-view">
+                    Xác nhận cập nhật
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
 <footer id="contact" class="footer" role="contentinfo">
     <div class="container footer-inner">
         <div class="footer-col">

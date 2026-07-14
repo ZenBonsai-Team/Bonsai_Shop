@@ -111,7 +111,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const id = this.dataset.id;
             showToast("Đang tải chi tiết...", "info");
 
-            fetch(`/appointment/detail/${id}`)
+            fetch(`/appointments/detail/${id}`)
                 .then(response => response.json())
                 .then(data => {
                     // Cập nhật tên, mã, trạng thái, ghi chú[cite: 1]
@@ -182,6 +182,84 @@ document.addEventListener('DOMContentLoaded', () => {
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape' && modal && modal.classList.contains('active')) {
             closeModal();
+        }
+    });
+
+    /* ==========================================================================
+       6. UPDATE APPOINTMENT MODAL INTERACTION
+       ========================================================================== */
+    const updateModal = document.getElementById("updateAppointmentModal");
+    const updateForm = document.getElementById("updateAppointmentForm");
+    const updateButtons = document.querySelectorAll(".update-btn");
+    const closeUpdateElements = document.querySelectorAll(".id-close-update, .id-close-update-btn");
+
+    updateButtons.forEach(button => {
+        button.addEventListener("click", function () {
+            const id = this.dataset.id;
+            showToast("Đang tải dữ liệu chỉnh sửa...", "info");
+
+            fetch(`/appointments/detail/${id}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error("Không tìm thấy lịch hẹn");
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // 1. Điền thông tin tĩnh
+                    document.getElementById("updateName").textContent = data.productName;
+                    document.getElementById("updateCode").textContent = data.productCode;
+                    document.getElementById("updateNote").value = data.note ?? "";
+
+                    // 2. Cập nhật thuộc tính Action của Form động theo ID lịch hẹn
+                    if (updateForm) {
+                        updateForm.setAttribute("action", `/appointments/update/${id}`);
+                    }
+
+                    // 3. Xử lý tách chuỗi ISO ("2026-05-12T14:30:00") để gán vào input HTML mẫu
+                    if (data.appointmentDate) {
+                        const dateObj = new Date(data.appointmentDate);
+                        if (!isNaN(dateObj.getTime())) {
+                            const year = dateObj.getFullYear();
+                            const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+                            const day = String(dateObj.getDate()).padStart(2, '0');
+                            const hours = String(dateObj.getHours()).padStart(2, '0');
+                            const minutes = String(dateObj.getMinutes()).padStart(2, '0');
+
+                            // Gán giá trị vào đúng định dạng của thẻ <input type="date/time">
+                            document.getElementById("updateDate").value = `${year}-${month}-${day}`;
+                            document.getElementById("updateTime").value = `${hours}:${minutes}`;
+                        }
+                    }
+
+                    // 4. Hiển thị modal
+                    if (updateModal) {
+                        updateModal.classList.add('active');
+                    }
+                })
+                .catch(error => {
+                    console.error(error);
+                    showToast("Không thể tải thông tin chỉnh sửa!", "danger");
+                });
+        });
+    });
+
+// Hàm đóng Modal Update
+    const closeUpdateModal = () => {
+        if (updateModal) {
+            updateModal.classList.remove('active');
+        }
+    };
+
+// Lắng nghe sự kiện đóng từ các nút Hủy và dấu (X)
+    closeUpdateElements.forEach(el => {
+        el.addEventListener("click", closeUpdateModal);
+    });
+
+// Đóng khi bấm ra vùng trống bên ngoài
+    window.addEventListener("click", function (e) {
+        if (e.target === updateModal) {
+            closeUpdateModal();
         }
     });
 });

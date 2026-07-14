@@ -14,4 +14,7 @@ public interface ViewingAppointmentRepository extends JpaRepository<ViewingAppoi
     List<ViewingAppointment> findByCustomer(User customer);
 
     Optional<ViewingAppointment> findByAppointmentIdAndCustomer(Integer appointmentId, User customer);
+
+    boolean existsViewingAppointmentByAppointmentDateAndAppointmentIdNot(LocalDateTime appointmentDate, Integer appointmentId);
+
 }

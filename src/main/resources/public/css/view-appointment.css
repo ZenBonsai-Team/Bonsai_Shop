@@ -59,18 +59,18 @@ body {
     height: 100%;
 }
 
-/* 1. Brand Logo Block - Nằm ngang tinh tế */
+/* 1. Brand Logo Block - Chuẩn hóa màu Luxury đồng bộ */
 .brand a {
     text-decoration: none;
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
 }
 .logo-serif {
     font-family: var(--font-serif);
     font-size: 1.4rem;
     font-weight: 700;
-    color: #c5a059; /* Vàng kim */
+    color: var(--gold);
     letter-spacing: 2px;
     line-height: 1;
 }
@@ -78,12 +78,12 @@ body {
     font-family: var(--font-sans);
     font-size: 0.85rem;
     font-weight: 600;
-    color: #8E44AD; /* Màu tím huyền bí */
+    color: rgba(255, 255, 255, 0.8); /* Thay thế màu tím lỗi bằng màu trắng bạc luxury */
     letter-spacing: 1px;
     line-height: 1;
 }
 
-/* 2. Center Menu Navigation - Khoảng cách thoáng, phân tách rõ ràng */
+/* 2. Center Menu Navigation */
 .menu {
     display: flex;
     list-style: none;
@@ -208,7 +208,7 @@ body {
     border-color: var(--gold);
 }
 
-/* Khối tài khoản thành viên Premium (Được bo khung và cắt chữ dài) */
+/* Khối tài khoản thành viên Premium */
 .user-menu-premium {
     position: relative;
 }
@@ -250,7 +250,7 @@ body {
     max-width: 110px;
     white-space: nowrap;
     overflow: hidden;
-    text-overflow: ellipsis; /* Tạo dấu ... nếu tên quá dài */
+    text-overflow: ellipsis;
     font-family: var(--font-sans);
 }
 .chevron-icon {
@@ -259,7 +259,7 @@ body {
     transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Menu Dropdown đổ xuống từ khối tối màu */
+/* Menu Dropdown */
 .dropdown-premium {
     position: absolute;
     top: calc(100% + 8px);
@@ -336,7 +336,7 @@ body {
    MY APPOINTMENT PAGE CONTENT AREA
    ========================================================================== */
 .appointment-page {
-    padding-top: 150px; /* Khoảng trống an toàn dưới thanh Header */
+    padding-top: 150px;
     padding-bottom: 120px;
 }
 .appointment-hero {
@@ -591,49 +591,43 @@ body {
 .btn-discover-luxury:hover { background: var(--gold); color: var(--primary); }
 
 /* ==========================================================================
-   MODAL / POPUP SYSTEM DESIGN (Bonsai Luxury Exclusive)
+   MODAL / POPUP SYSTEM DESIGN (Chuẩn Hóa Giao Diện Độc Quyền)
    ========================================================================== */
 .modal {
-    display: none; /* Điều khiển ẩn/hiện động thông qua JavaScript */
+    display: none;
     position: fixed;
     top: 0; left: 0;
     width: 100%; height: 100%;
-    background-color: rgba(22, 24, 21, 0.65); /* Phông nền tối mờ sắc sảo */
-    z-index: 2000; /* Nằm trên toàn bộ Layout (Navbar, Toast, Main Content) */
-    backdrop-filter: blur(6px); /* Hiệu ứng Blur sương mờ cao cấp */
+    background-color: rgba(22, 24, 21, 0.5); /* Tối mờ nhẹ nghệ thuật */
+    z-index: 2000;
+    backdrop-filter: blur(8px); /* Tăng độ blur mượt mà mịn màng */
     opacity: 0;
     transition: opacity 0.4s ease;
 }
-
-/* Trạng thái được kích hoạt qua class điều khiển JS */
 .modal.active {
     display: flex;
     justify-content: center;
     align-items: center;
     opacity: 1;
 }
-
 .modal-content {
     background-color: #FFFFFF;
     width: 100%;
-    max-width: 540px; /* Độ rộng tiêu chuẩn cho khung chi tiết */
-    padding: 44px;
+    max-width: 560px;
+    padding: 40px;
     position: relative;
-    border: 1px solid rgba(197, 160, 89, 0.25); /* Đường viền chỉ vàng đặc trưng */
-    box-shadow: 0 30px 70px rgba(17, 34, 25, 0.18);
+    border: 1px solid rgba(197, 160, 89, 0.25);
+    box-shadow: 0 30px 70px rgba(17, 34, 25, 0.15);
     transform: translateY(-20px);
     transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
-
 .modal.active .modal-content {
     transform: translateY(0);
 }
-
-/* Nút Đóng Popup (X) */
 .close-btn {
     position: absolute;
-    top: 24px; right: 28px;
-    font-size: 1.6rem;
+    top: 24px; right: 24px;
+    font-size: 1.4rem;
     color: var(--muted);
     cursor: pointer;
     line-height: 1;
@@ -642,24 +636,22 @@ body {
 .close-btn:hover {
     color: var(--gold);
 }
-
-/* Tiêu đề Khung popup */
 .modal-content h2 {
     font-family: var(--font-serif);
     color: var(--primary);
-    font-size: 2rem;
+    font-size: 1.8rem;
     font-weight: 400;
-    margin-bottom: 32px;
+    margin-bottom: 28px;
     border-bottom: 1px solid rgba(22, 24, 21, 0.08);
     padding-bottom: 16px;
     letter-spacing: -0.5px;
 }
 
-/* Định dạng cấu trúc dòng tham số dữ liệu */
+/* Định dạng cấu trúc hiển thị tham số */
 .modal-content p {
     font-size: 0.95rem;
     color: var(--text-light);
-    margin-bottom: 18px;
+    margin-bottom: 16px;
     display: flex;
     align-items: baseline;
     gap: 12px;
@@ -667,7 +659,7 @@ body {
 .modal-content p strong {
     color: var(--primary);
     font-weight: 600;
-    min-width: 130px; /* Giữ lề trái nhãn đồng nhất thẳng hàng */
+    min-width: 130px;
     text-transform: uppercase;
     font-size: 0.72rem;
     letter-spacing: 1px;
@@ -677,24 +669,60 @@ body {
     font-weight: 500;
 }
 
-/* Xử lý hiển thị ghi chú */
-#detailNote {
-    font-style: italic;
-    color: var(--text-light);
-    line-height: 1.6;
+/* Chuẩn hóa hệ thống Input Form trong Modal Update/Chỉnh sửa */
+.form-group-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 18px;
+    margin-bottom: 18px;
+}
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.form-group.full-width {
+    grid-column: span 2;
+}
+.form-group label {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+.form-control {
+    width: 100%;
+    padding: 10px 14px;
+    font-family: var(--font-sans);
+    font-size: 0.9rem;
+    color: var(--text);
+    background-color: var(--bg);
+    border: 1px solid rgba(22, 24, 21, 0.1);
+    transition: all 0.3s ease;
+}
+.form-control:focus {
+    outline: none;
+    border-color: var(--gold);
+    background-color: #FFFFFF;
+    box-shadow: 0 4px 12px rgba(197, 160, 89, 0.05);
+}
+textarea.form-control {
+    resize: none;
+    min-height: 90px;
 }
 
-/* Block hành động chân Modal */
+/* Chân khối Modal điều khiển nút */
 .modal-actions {
     display: flex;
     justify-content: flex-end;
-    gap: 14px;
-    margin-top: 36px;
+    gap: 12px;
+    margin-top: 32px;
     border-top: 1px solid rgba(22, 24, 21, 0.08);
     padding-top: 24px;
 }
 .modal-actions .btn {
-    padding: 12px 24px;
+    padding: 11px 24px;
     font-family: var(--font-sans);
     font-size: 0.75rem;
     font-weight: 600;
@@ -712,6 +740,14 @@ body {
 .modal-actions .btn.outline:hover {
     border-color: var(--primary);
     background: rgba(17, 52, 37, 0.03);
+}
+.modal-actions .btn.primary {
+    background: var(--primary);
+    color: #FFFFFF;
+}
+.modal-actions .btn.primary:hover {
+    background: var(--gold);
+    color: var(--primary);
 }
 .modal-actions .btn.danger {
     background: transparent;
@@ -771,7 +807,7 @@ body {
     .nav-link { font-size: 0.8rem; }
 }
 @media (max-width: 768px) {
-    .menu { display: none; } /* Ẩn menu trên tablet nhỏ và mobile */
+    .menu { display: none; }
     .search-wrap { display: none; }
 }
 @media (max-width: 600px) {
@@ -780,9 +816,9 @@ body {
     .detail-item.full-width { grid-column: span 1; }
     .appointment-actions { flex-direction: column; }
 
-    /* Responsive cho cấu trúc modal trên thiết bị di động nhỏ */
+    /* Responsive cấu trúc Modal Mobile */
     .modal-content {
-        padding: 32px 24px;
+        padding: 32px 20px;
         width: 92%;
     }
     .modal-content p {
@@ -791,6 +827,13 @@ body {
     }
     .modal-content p strong {
         min-width: auto;
+    }
+    .form-group-grid {
+        grid-template-columns: 1fr;
+        gap: 14px;
+    }
+    .form-group.full-width {
+        grid-column: span 1;
     }
     .modal-actions {
         flex-direction: column;

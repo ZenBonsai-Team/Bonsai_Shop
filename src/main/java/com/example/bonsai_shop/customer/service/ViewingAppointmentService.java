@@ -10,7 +10,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.example.bonsai_shop.customer.dto.AppoimentDetailDTO;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Locale;
 
 @Service
 @RequiredArgsConstructor
@@ -59,4 +61,17 @@ public class ViewingAppointmentService {
            );
     }
 
+    public void updateViewingAppointment(Integer id, User customer, LocalDateTime appointmentDate, String note) {
+        ViewingAppointment appointment = viewingAppointmentRepository
+                .findByAppointmentIdAndCustomer(id,customer)
+                .orElseThrow(()->new RuntimeException("Không tìm thấy lịch hẹn"));
+        if (viewingAppointmentRepository.existsViewingAppointmentByAppointmentDateAndAppointmentIdNot(appointmentDate, id)) {
+            throw new RuntimeException("Khung giờ này đã được đặt");
+        }
+        appointment.setAppointmentDate(appointmentDate);
+        appointment.setNote(note);
+        appointment.setUpdatedAt(LocalDateTime.now());
+
+        viewingAppointmentRepository.save(appointment);
+    }
 }

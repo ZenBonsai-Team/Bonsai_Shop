@@ -93,7 +93,7 @@ public class ViewingAppointmentController {
     return "customer/view-appointment";
     }
 
-    @GetMapping("/appointment/detail/{id}")
+    @GetMapping("/appointments/detail/{id}")
     @ResponseBody
     public AppoimentDetailDTO viewingAppointmentdetail(@PathVariable Integer id,
                                                        Principal principal){
@@ -101,4 +101,28 @@ public class ViewingAppointmentController {
        return  viewingAppointmentService.findByIdAndCustomer(id, user);
 
     }
+
+    @PostMapping("/appointments/update/{id}")
+        public String updateAppointment(@PathVariable Integer id,
+                                        @RequestParam LocalDate appointmentDate,
+                                        @RequestParam String appointmentTime,
+                                        @RequestParam(required = false) String note,
+                                        Principal principal){
+
+        User user = userService.findByEmail(principal.getName());
+
+        LocalDateTime finalAppointmentDate = LocalDateTime.of(
+                appointmentDate,
+                LocalTime.parse(appointmentTime)
+        );
+        viewingAppointmentService.updateViewingAppointment(
+                id,
+                user,
+                finalAppointmentDate,
+                note
+        );
+
+        return "redirect:/appointments";
+    }
+
 }
