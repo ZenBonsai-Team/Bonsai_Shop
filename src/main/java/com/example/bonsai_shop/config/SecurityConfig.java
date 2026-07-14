@@ -41,6 +41,8 @@ public class SecurityConfig {
                                                                 "/forgot-password",
                                                                 "/verify-otp",
                                                                 "/resend-otp",
+                                                                "/bonsai-luxury",
+                                                                "/bonsai_luxury_detail/**",
                                                                 "/reset-password",
                                                                 "/verify-otp-to-reset-password",
                                                                 "/resend-otp-reset",
