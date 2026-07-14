@@ -112,12 +112,12 @@
     </section>
 
     <section class="actions publish-actions">
-        <a th:if="${!isSold}" class="btn secondary" th:href="@{/seller/products/{id}/media(id=${product.productId})}">Back to Media</a>
-        <a th:if="${!isSold}" class="btn secondary" th:href="@{/seller/products/{id}/edit(id=${product.productId})}">Edit Info</a>
-        <form th:if="${!isSold}" method="post" th:action="@{/seller/products/{id}/publish(id=${product.productId})}">
+        <a th:if="${isEditable}" class="btn secondary" th:href="@{/seller/products/{id}/media(id=${product.productId})}">Back to Media</a>
+        <a th:if="${isEditable}" class="btn secondary" th:href="@{/seller/products/{id}/edit(id=${product.productId})}">Edit Info</a>
+        <form th:if="${isEditable}" method="post" th:action="@{/seller/products/{id}/publish(id=${product.productId})}">
             <button type="submit">Publish</button>
         </form>
-        <form th:if="${!isSold}" method="post" th:action="@{/seller/products/{id}/hide(id=${product.productId})}">
+        <form th:if="${isHideable}" method="post" th:action="@{/seller/products/{id}/hide(id=${product.productId})}">
             <button type="submit" class="danger" onclick="return confirm('Ẩn sản phẩm này khỏi marketplace?')">Hide Product</button>
         </form>
     </section>

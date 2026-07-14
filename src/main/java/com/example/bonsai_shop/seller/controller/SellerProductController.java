@@ -82,8 +82,8 @@ public class SellerProductController {
                            Model model,
                            RedirectAttributes redirectAttributes) {
         Product product = sellerProductService.getMyProduct(userDetails.getUsername(), productId);
-        if (sellerProductService.isSold(product)) {
-            redirectAttributes.addFlashAttribute("error", "Sản phẩm đã bán không thể chỉnh sửa.");
+        if (!sellerProductService.isEditable(product)) {
+            redirectAttributes.addFlashAttribute("error", "Chỉ có thể sửa sản phẩm nháp hoặc đã ẩn.");
             return "redirect:/seller/products/" + productId + "/preview";
         }
         addProductFormData(model, product);
@@ -152,6 +152,7 @@ public class SellerProductController {
         model.addAttribute("product", product);
         model.addAttribute("mediaList", sellerProductService.getMedia(product));
         model.addAttribute("isSold", sellerProductService.isSold(product));
+        model.addAttribute("isEditable", sellerProductService.isEditable(product));
         return "seller/product-media";
     }
 
@@ -240,6 +241,8 @@ public class SellerProductController {
         model.addAttribute("imageCount", mediaList.stream().filter(media -> "IMAGE".equals(media.getMediaType())).count());
         model.addAttribute("videoCount", mediaList.stream().filter(media -> "VIDEO".equals(media.getMediaType())).count());
         model.addAttribute("isSold", sellerProductService.isSold(product));
+        model.addAttribute("isEditable", sellerProductService.isEditable(product));
+        model.addAttribute("isHideable", sellerProductService.isHideable(product));
         return "seller/product-preview";
     }
 
