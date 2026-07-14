@@ -280,3 +280,291 @@
     box-shadow: var(--shadow-subtle);
     border: 1px solid var(--border-color);
 }
+
+/* Seller portal aligned with moderator dashboard design */
+.dashboard-layout {
+    min-height: calc(100vh - 96px);
+    height: auto;
+    overflow-x: hidden;
+    overflow-y: visible;
+    background: #FAF8F5;
+}
+
+.dashboard-sidebar {
+    width: 280px;
+    flex: 0 0 280px;
+    min-height: calc(100vh - 96px);
+    height: auto;
+    background: #1C3322;
+    border-right: 1px solid rgba(250, 248, 245, 0.06);
+    box-shadow: 0 4px 20px rgba(28, 51, 34, 0.03);
+}
+
+.dashboard-sidebar.collapsed {
+    margin-left: -280px;
+}
+
+.dashboard-sidebar .sidebar-brand {
+    padding: 28px 24px;
+    border-bottom: 1px solid rgba(250, 248, 245, 0.06);
+    font-size: 1.35rem;
+}
+
+.dashboard-sidebar .sidebar-brand a {
+    color: #fff;
+}
+
+.dashboard-sidebar .sidebar-nav {
+    padding: 28px 18px;
+    gap: 8px;
+}
+
+.dashboard-sidebar a {
+    border-left: 3px solid transparent;
+    border-radius: 4px;
+    color: rgba(250, 248, 245, 0.72);
+    letter-spacing: 0.02em;
+    padding: 13px 18px;
+}
+
+.dashboard-sidebar a:hover {
+    background: rgba(250, 248, 245, 0.045);
+    color: #fff;
+}
+
+.dashboard-sidebar a.active {
+    background: rgba(250, 248, 245, 0.065);
+    border-left-color: #B8926A;
+    color: #fff;
+}
+
+.dashboard-sidebar .sidebar-footer {
+    padding: 24px;
+    border-top: 1px solid rgba(250, 248, 245, 0.06);
+}
+
+.btn-sidebar-logout {
+    background: transparent;
+    border: 1px solid rgba(250, 248, 245, 0.16);
+    border-radius: 4px;
+    color: rgba(250, 248, 245, 0.68);
+}
+
+.dashboard-main {
+    min-width: 0;
+    max-width: calc(100vw - 280px);
+    overflow: visible;
+    padding: 28px 36px;
+}
+
+.dashboard-header,
+.page-header {
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.dashboard-header h1,
+.page-header h1 {
+    color: #1C3322;
+    font-family: var(--font-sans);
+    font-size: 2rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+}
+
+.dashboard-header p,
+.page-header p {
+    color: #536257;
+    margin: 4px 0 0;
+}
+
+.seller-dashboard-kpis,
+.seller-kpis {
+    display: grid;
+    gap: 16px;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    margin-bottom: 20px;
+}
+
+.seller-dashboard-kpis .seller-kpi-card,
+.seller-kpis .card {
+    align-items: center;
+    background: #fff;
+    border: 1px solid #E8E4DD;
+    border-radius: 4px;
+    border-top: 3px solid #1C3322;
+    box-shadow: 0 4px 20px rgba(28, 51, 34, 0.03);
+    display: flex;
+    gap: 12px;
+    min-height: 96px;
+    min-width: 0;
+    padding: 14px 18px;
+}
+
+.seller-kpi-card:hover,
+.seller-kpis .card:hover,
+.seller-dashboard-card:hover,
+.portal-card:hover {
+    box-shadow: 0 12px 30px rgba(28, 51, 34, 0.06);
+    transform: translateY(-1px);
+}
+
+.seller-kpi-icon {
+    flex: 0 0 42px;
+    height: 42px;
+    width: 42px;
+    font-size: 1rem;
+}
+
+.seller-kpi-card span,
+.seller-kpis .card span {
+    color: #536257;
+    display: block;
+    font-size: 0.76rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.seller-kpi-card strong,
+.seller-kpis .card strong {
+    color: #1C3322;
+    display: block;
+    font-size: clamp(1.35rem, 2vw, 1.85rem);
+    font-weight: 700;
+    line-height: 1.05;
+    overflow-wrap: anywhere;
+}
+
+.seller-kpi-card small {
+    color: #536257;
+    display: block;
+    font-size: 0.78rem;
+    margin-top: 4px;
+}
+
+.seller-dashboard-grid {
+    display: grid;
+    gap: 20px;
+    grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.9fr);
+    margin-bottom: 24px;
+}
+
+.seller-dashboard-card,
+.portal-card {
+    background: #fff;
+    border: 1px solid #E8E4DD;
+    border-radius: 4px;
+    box-shadow: 0 4px 20px rgba(28, 51, 34, 0.03);
+    padding: 20px;
+    transition: all 0.35s ease;
+}
+
+.management-card,
+.portal-card {
+    overflow: hidden;
+}
+
+.product-toolbar,
+.toolbar-header {
+    border-bottom: 1px solid #E8E4DD;
+    gap: 16px;
+    margin: -20px -20px 16px;
+    padding: 16px 20px;
+}
+
+.product-toolbar input,
+.catalog-search,
+.search-input-wrapper input {
+    border: 1px solid #E8E4DD;
+    border-radius: 4px;
+    font-size: 0.86rem;
+    padding: 9px 12px;
+}
+
+.product-toolbar input:focus,
+.catalog-search:focus {
+    border-color: #1C3322;
+    box-shadow: 0 0 0 3px rgba(28, 51, 34, 0.08);
+    outline: none;
+}
+
+.filter-chip,
+.tab-btn {
+    border-radius: 4px;
+    font-size: 0.8rem;
+}
+
+.filter-chip.active,
+.tab-btn.active {
+    background: #1C3322;
+    color: #fff;
+}
+
+.compact-table,
+.product-table {
+    border-collapse: collapse;
+    font-size: 0.86rem;
+    width: 100%;
+}
+
+.compact-table th,
+.product-table th {
+    background: #F4F1EA;
+    border-bottom: 1px solid #E8E4DD;
+    color: #536257;
+    font-size: 0.76rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    padding: 11px 16px;
+    text-transform: uppercase;
+}
+
+.compact-table td,
+.product-table td {
+    border-bottom: 1px solid #E8E4DD;
+    color: #1E221F;
+    padding: 12px 16px;
+}
+
+.compact-table tbody tr:hover,
+.product-table tbody tr:hover {
+    background: rgba(28, 51, 34, 0.025);
+}
+
+.status-chip {
+    border-radius: 20px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    padding: 4px 10px;
+    text-transform: uppercase;
+}
+
+.btn,
+.btn-auth-register,
+.btn-create-product {
+    border-radius: 4px;
+}
+
+@media (max-width: 1200px) {
+    .seller-dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 900px) {
+    .dashboard-layout {
+        display: block;
+    }
+
+    .dashboard-sidebar,
+    .dashboard-main {
+        max-width: 100%;
+        width: 100%;
+    }
+
+    .dashboard-main {
+        padding: 20px;
+    }
+}
