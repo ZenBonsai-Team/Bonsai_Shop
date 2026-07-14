@@ -20,8 +20,10 @@ document.querySelectorAll('.form-group input').forEach(input => {
 });
 
 // Hiệu ứng nút login
-const btnLogin = document.querySelector('.btn-login');
-btnLogin.addEventListener('click', function() {
-    this.textContent = 'Đang đăng nhập...';
-    setTimeout(() => { this.textContent = 'Đăng nhập'; }, 2000);
-});
+const btnLogin = document.querySelector('.btn-signin');
+if (btnLogin) {
+    btnLogin.addEventListener('click', function() {
+        this.textContent = 'Đang đăng nhập...';
+        setTimeout(() => { this.textContent = 'Sign in →'; }, 2000);
+    });
+}

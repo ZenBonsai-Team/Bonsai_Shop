@@ -17,6 +17,12 @@ class BonsaiShopApplicationTests {
     @Autowired
     private DataSource dataSource;
 
+    @Autowired
+    private org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private com.example.bonsai_shop.customer.service.CustomUserDetailsService customUserDetailsService;
+
     @Test
     void contextLoads() {
         try (Connection conn = dataSource.getConnection();
@@ -33,6 +39,37 @@ class BonsaiShopApplicationTests {
                 }
             }
             System.out.println("Tables: " + tables);
+
+            // Check BCrypt hash matching
+            String targetHash = "$2a$10$STf1tU5lFcq6Zm4xgZRujuA7wsGd.6AK4nRH6FEL.ieVUQE8EWp3e";
+            String[] candidates = {"123456", "admin", "admin123", "password", "password123", "1", "123", "1234", "12345", "falcon", "DuongNKT", "0984634913"};
+            System.out.println("--- Password Hash Matching ---");
+            for (String cand : candidates) {
+                if (passwordEncoder.matches(cand, targetHash)) {
+                    System.out.println("FOUND MATCHING PASSWORD: " + cand);
+                }
+            }
+
+            // Simulate Security Authentication loading
+            System.out.println("--- Simulating UserDetailsService load ---");
+            String[] testEmails = {"admin@example.com", "nguyenkieutungduong@gmail.com", "duongnkthe186476@fpt.edu.vn"};
+            for (String email : testEmails) {
+                try {
+                    org.springframework.security.core.userdetails.UserDetails userDetails = 
+                            customUserDetailsService.loadUserByUsername(email);
+                    System.out.printf("Loaded user: %s, enabled: %b, credentialsNonExpired: %b, authorities: %s%n",
+                            userDetails.getUsername(),
+                            userDetails.isEnabled(),
+                            userDetails.isCredentialsNonExpired(),
+                            userDetails.getAuthorities());
+                    
+                    boolean pwMatches = passwordEncoder.matches("123456", userDetails.getPassword());
+                    System.out.printf("Password '123456' matches for %s: %b%n", email, pwMatches);
+                } catch (Exception e) {
+                    System.err.println("Failed to load or match for " + email + ": " + e.getMessage());
+                    e.printStackTrace();
+                }
+            }
 
             // 2. Query flyway_schema_history if exists
             if (tables.contains("flyway_schema_history")) {

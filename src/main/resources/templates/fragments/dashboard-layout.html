@@ -16,7 +16,7 @@
 <body>
     <div class="dashboard-layout">
         <!-- Reusable Dynamic Sidebar -->
-        <aside th:replace="~{fragments/sidebar :: sidebar}"></aside>
+        <aside th:replace="~{fragments/sidebar :: sidebar(${paramActivePage})}"></aside>
 
         <!-- Main Workspace Area -->
         <div class="dashboard-main">
