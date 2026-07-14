@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Preview & Publish</title>
+    <link rel="stylesheet" th:href="@{/css/seller.css}">
+</head>
+<body>
+<main class="container">
+    <header class="page-header">
+        <div>
+            <h1>Step 3: Preview & Publish</h1>
+            <p>Kiểm tra lần cuối trước khi đưa sản phẩm ra marketplace.</p>
+        </div>
+        <a class="btn secondary" th:href="@{/seller/products}">Back to My Products</a>
+    </header>
+
+    <div th:if="${success}" class="alert success" th:text="${success}"></div>
+    <div th:if="${error}" class="alert error" th:text="${error}"></div>
+    <div th:if="${isSold}" class="alert warning">Sản phẩm đã bán nên chỉ được xem lại thông tin.</div>
+
+    <section class="publish-preview-layout">
+        <div class="preview-media-panel">
+            <img class="preview-thumbnail"
+                 th:if="${thumbnail != null && thumbnail.mediaType == 'IMAGE'}"
+                 th:src="${thumbnail.mediaUrl}"
+                 alt="Thumbnail">
+            <video class="preview-thumbnail"
+                   th:if="${thumbnail != null && thumbnail.mediaType == 'VIDEO'}"
+                   th:src="${thumbnail.mediaUrl}"
+                   controls></video>
+            <div class="placeholder" th:if="${thumbnail == null}">No thumbnail</div>
+
+            <div class="preview-gallery">
+                <div class="preview-gallery-item" th:each="media : ${mediaList}">
+                    <img th:if="${media.mediaType == 'IMAGE'}" th:src="${media.mediaUrl}" alt="">
+                    <video th:if="${media.mediaType == 'VIDEO'}" th:src="${media.mediaUrl}"></video>
+                </div>
+            </div>
+        </div>
+
+        <aside class="product-summary-card">
+            <h2>Product Summary</h2>
+            <dl class="summary-list">
+                <dt>Name</dt>
+                <dd th:text="${product.productName}"></dd>
+
+                <dt>Code</dt>
+                <dd th:text="${product.productCode}"></dd>
+
+                <dt>Status</dt>
+                <dd th:text="${product.productStatus}"></dd>
+
+                <dt>Category</dt>
+                <dd th:text="${product.variety.category.categoryName}"></dd>
+
+                <dt>Variety</dt>
+                <dd th:text="${product.variety.varietyName}"></dd>
+
+                <dt>Segment</dt>
+                <dd th:text="${product.segment.segmentName}"></dd>
+
+                <dt>Tags</dt>
+                <dd>
+                    <span th:if="${#lists.isEmpty(tags)}">No tags</span>
+                    <span class="tag-pill" th:each="tag : ${tags}" th:text="${tag.tagName}"></span>
+                </dd>
+            </dl>
+
+            <h3>Price Visibility</h3>
+            <dl class="summary-list">
+                <dt>Visibility</dt>
+                <dd th:text="${product.isPublicPrice ? 'Public price' : 'Hidden price'}"></dd>
+
+                <dt>Price</dt>
+                <dd>
+                    <span th:if="${product.isPublicPrice}"
+                          th:text="${#numbers.formatDecimal(product.price, 0, 'POINT', 0, 'POINT') + ' VNĐ'}"></span>
+                    <span th:if="${!product.isPublicPrice}">Liên hệ</span>
+                </dd>
+            </dl>
+
+            <h3>Specifications</h3>
+            <dl class="summary-list">
+                <dt>Age</dt>
+                <dd th:text="${product.age != null ? product.age + ' năm' : 'N/A'}"></dd>
+
+                <dt>Height</dt>
+                <dd th:text="${product.height != null ? product.height + ' cm' : 'N/A'}"></dd>
+
+                <dt>Trunk Diameter</dt>
+                <dd th:text="${product.trunkDiameter != null ? product.trunkDiameter + ' cm' : 'N/A'}"></dd>
+
+                <dt>Style</dt>
+                <dd th:text="${product.style != null && !product.style.isBlank() ? product.style : 'N/A'}"></dd>
+            </dl>
+        </aside>
+    </section>
+
+    <section class="preview-section">
+        <h2>Description</h2>
+        <p th:text="${product.description != null && !product.description.isBlank() ? product.description : 'Chưa có mô tả.'}"></p>
+    </section>
+
+    <section class="preview-section">
+        <h2>Media</h2>
+        <p>
+            Images: <strong th:text="${imageCount}">0</strong>
+            |
+            Videos: <strong th:text="${videoCount}">0</strong>
+        </p>
+    </section>
+
+    <section class="actions publish-actions">
+        <a th:if="${!isSold}" class="btn secondary" th:href="@{/seller/products/{id}/media(id=${product.productId})}">Back to Media</a>
+        <a th:if="${!isSold}" class="btn secondary" th:href="@{/seller/products/{id}/edit(id=${product.productId})}">Edit Info</a>
+        <form th:if="${!isSold}" method="post" th:action="@{/seller/products/{id}/publish(id=${product.productId})}">
+            <button type="submit">Publish</button>
+        </form>
+        <form th:if="${!isSold}" method="post" th:action="@{/seller/products/{id}/hide(id=${product.productId})}">
+            <button type="submit" class="danger" onclick="return confirm('Ẩn sản phẩm này khỏi marketplace?')">Hide Product</button>
+        </form>
+    </section>
+</main>
+</body>
+</html>

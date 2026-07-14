@@ -1,1190 +1,13 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BSMS - Bonsai Marketplace</title>
-    
-    <!-- Fonts & Icons -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-    
-    <!-- Bootstrap 5 CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-
-    <!-- ===================================================== -->
-    <!-- STYLES -->
-    <!-- ===================================================== -->
-    <style>
-        /* --- DESIGN SYSTEM TOKENS & RESET --- */
-        :root {
-            --primary-color: #1C3322;       /* Deep Forest Green */
-            --primary-hover: #132417;
-            --accent-color: #B8926A;        /* Antique Gold */
-            --accent-hover: #9E7B56;
-            --bg-washi: #FAF8F5;            /* Soft Warm Off-white */
-            --bg-card: #FFFFFF;
-            --bg-beige: #F4F1EA;            /* Soft Warm Beige */
-            --text-dark: #1E221F;           /* Charcoal Pine */
-            --text-secondary: #536257;      /* Muted Forest Grey */
-            --border-color: #E8E4DD;        /* Subtle Warm Grey Border */
-            --border-light: rgba(28, 51, 34, 0.05);
-            --shadow-subtle: 0 4px 20px rgba(28, 51, 34, 0.03);
-            --shadow-hover: 0 12px 30px rgba(28, 51, 34, 0.06);
-            
-            --font-serif: 'Cormorant Garamond', serif;
-            --font-sans: 'Plus Jakarta Sans', sans-serif;
-            --transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        body {
-            font-family: var(--font-sans);
-            background-color: var(--bg-washi);
-            color: var(--text-dark);
-            -webkit-font-smoothing: antialiased;
-            overflow-x: hidden;
-        }
-
-        h1, h2, h3, h4, h5, h6, .serif-text {
-            font-family: var(--font-serif);
-            font-weight: 500;
-        }
-
-        /* --- NAVBAR STYLES --- */
-        .navbar-custom {
-            background-color: rgba(250, 248, 245, 0.9);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border-bottom: 1px solid var(--border-color);
-            padding: 16px 0;
-            z-index: 1050;
-            transition: var(--transition);
-        }
-        
-        .navbar-brand-custom {
-            display: flex;
-            align-items: center;
-            font-family: var(--font-sans);
-            font-weight: 700;
-            font-size: 1.35rem;
-            letter-spacing: 0.1em;
-            color: var(--primary-color) !important;
-            text-transform: uppercase;
-        }
-        
-        .nav-link-custom {
-            font-family: var(--font-sans);
-            font-size: 0.82rem;
-            font-weight: 500;
-            letter-spacing: 0.05em;
-            color: var(--text-secondary) !important;
-            padding: 6px 14px !important;
-            position: relative;
-            transition: var(--transition);
-        }
-        
-        .nav-link-custom:hover {
-            color: var(--primary-color) !important;
-        }
-        
-        .nav-link-custom.active {
-            color: var(--primary-color) !important;
-            font-weight: 600;
-        }
-        
-        .nav-link-custom.active::after {
-            content: '';
-            position: absolute;
-            bottom: -2px;
-            left: 14px;
-            right: 14px;
-            height: 2px;
-            background-color: var(--primary-color);
-        }
-
-        /* Search input inside navbar */
-        .nav-search-box {
-            position: relative;
-            width: 250px;
-        }
-
-        .nav-search-input {
-            width: 100%;
-            padding: 7px 12px 7px 34px;
-            font-size: 0.8rem;
-            border: 1px solid var(--border-color);
-            border-radius: 4px;
-            background-color: #FFFFFF;
-            color: var(--text-dark);
-            transition: var(--transition);
-        }
-
-        .nav-search-input:focus {
-            outline: none;
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 1px var(--primary-color);
-        }
-
-        .nav-search-icon {
-            position: absolute;
-            left: 12px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--text-secondary);
-            font-size: 0.8rem;
-        }
-
-        .nav-icon-link {
-            color: var(--text-dark);
-            font-size: 1.15rem;
-            position: relative;
-            transition: var(--transition);
-            padding: 6px;
-        }
-
-        .nav-icon-link:hover {
-            color: var(--accent-color);
-        }
-
-        .badge-count-orange {
-            position: absolute;
-            top: -2px;
-            right: -2px;
-            background-color: #D35400; /* Orange circle from reference image */
-            color: white;
-            font-size: 0.65rem;
-            font-weight: 600;
-            width: 15px;
-            height: 15px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .btn-auth-signin {
-            font-family: var(--font-sans);
-            font-size: 0.8rem;
-            font-weight: 500;
-            color: var(--text-dark);
-            text-decoration: none;
-            padding: 6px 12px;
-            transition: var(--transition);
-        }
-
-        .btn-auth-signin:hover {
-            color: var(--accent-color);
-        }
-
-        .btn-auth-register {
-            font-family: var(--font-sans);
-            font-size: 0.8rem;
-            font-weight: 600;
-            background-color: var(--primary-color);
-            color: white !important;
-            border: none;
-            padding: 7px 18px;
-            border-radius: 4px;
-            transition: var(--transition);
-            text-transform: none;
-        }
-
-        .btn-auth-register:hover {
-            background-color: var(--primary-hover);
-        }
-
-        /* --- HERO STYLES --- */
-        .hero-centered {
-            padding: 90px 0;
-            text-align: center;
-            background: linear-gradient(rgba(250, 248, 245, 0.88), rgba(250, 248, 245, 0.88)), 
-                        url('https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?auto=format&fit=crop&q=80&w=1600') no-repeat center center;
-            background-size: cover;
-            border-bottom: 1px solid var(--border-color);
-            position: relative;
-        }
-
-        .hero-pill-badge {
-            font-family: var(--font-sans);
-            font-size: 0.72rem;
-            font-weight: 500;
-            letter-spacing: 0.05em;
-            color: var(--text-dark);
-            background-color: rgba(28, 51, 34, 0.05);
-            border: 1px solid rgba(28, 51, 34, 0.08);
-            padding: 5px 16px;
-            border-radius: 50px;
-            display: inline-block;
-            margin-bottom: 20px;
-        }
-
-        .hero-main-title {
-            font-size: 3.4rem;
-            font-weight: 600;
-            line-height: 1.15;
-            color: var(--primary-color);
-            margin-bottom: 20px;
-            letter-spacing: -0.01em;
-        }
-
-        .hero-subtitle-desc {
-            font-size: 0.95rem;
-            line-height: 1.7;
-            color: var(--text-secondary);
-            max-width: 680px;
-            margin: 0 auto 30px;
-            font-weight: 400;
-        }
-
-        .btn-hero-solid {
-            background-color: var(--primary-color);
-            color: white;
-            font-family: var(--font-sans);
-            font-size: 0.82rem;
-            font-weight: 600;
-            padding: 11px 24px;
-            border-radius: 4px;
-            border: none;
-            transition: var(--transition);
-        }
-
-        .btn-hero-solid:hover {
-            background-color: var(--primary-hover);
-        }
-
-        .btn-hero-outline {
-            background-color: white;
-            color: var(--text-dark);
-            border: 1px solid var(--border-color);
-            font-family: var(--font-sans);
-            font-size: 0.82rem;
-            font-weight: 600;
-            padding: 11px 24px;
-            border-radius: 4px;
-            transition: var(--transition);
-            margin-left: 12px;
-        }
-
-        .btn-hero-outline:hover {
-            background-color: var(--bg-washi);
-            border-color: var(--text-secondary);
-        }
-
-        /* --- CATEGORY TABS --- */
-        .category-tabs-container {
-            display: flex;
-            justify-content: center;
-            gap: 12px;
-            margin-top: 40px;
-            margin-bottom: 25px;
-            flex-wrap: wrap;
-        }
-
-        .category-tab-pill {
-            font-family: var(--font-sans);
-            font-size: 0.8rem;
-            font-weight: 500;
-            color: var(--text-dark);
-            background-color: white;
-            border: 1px solid var(--border-color);
-            padding: 7px 20px;
-            border-radius: 50px;
-            text-decoration: none;
-            transition: var(--transition);
-        }
-
-        .category-tab-pill:hover {
-            color: var(--accent-color);
-            border-color: var(--accent-color);
-        }
-
-        .category-tab-pill.active {
-            background-color: var(--primary-color);
-            color: white !important;
-            border-color: var(--primary-color);
-        }
-
-        /* --- FILTER SIDEBAR STYLES --- */
-        .filter-panel {
-            background-color: #FFFFFF;
-            border: 1px solid var(--border-color);
-            padding: 24px;
-            transition: var(--transition);
-        }
-
-        .filter-panel-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            padding-bottom: 12px;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .filter-panel-title {
-            font-size: 1.05rem;
-            font-weight: 700;
-            color: var(--primary-color);
-            letter-spacing: 0.02em;
-        }
-
-        .filter-panel-clear-link {
-            font-size: 0.75rem;
-            font-weight: 500;
-            color: var(--text-secondary);
-            text-decoration: none;
-            transition: var(--transition);
-        }
-
-        .filter-panel-clear-link:hover {
-            color: var(--accent-color);
-        }
-
-        .filter-block {
-            margin-bottom: 20px;
-            border-bottom: 1px solid rgba(0,0,0,0.04);
-            padding-bottom: 16px;
-        }
-
-        .filter-block:last-child {
-            border-bottom: none;
-            padding-bottom: 0;
-        }
-
-        .filter-block-title {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 0.78rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-            color: var(--primary-color);
-            margin-bottom: 12px;
-            cursor: pointer;
-        }
-
-        .filter-block-title i {
-            font-size: 0.75rem;
-            color: var(--text-secondary);
-        }
-
-        /* Custom Checkboxes */
-        .checkbox-label {
-            display: block;
-            position: relative;
-            padding-left: 26px;
-            margin-bottom: 9px;
-            cursor: pointer;
-            font-size: 0.82rem;
-            color: var(--text-dark);
-            user-select: none;
-            transition: var(--transition);
-        }
-
-        .checkbox-label input {
-            position: absolute;
-            opacity: 0;
-            cursor: pointer;
-            height: 0;
-            width: 0;
-        }
-
-        .checkbox-checkmark {
-            position: absolute;
-            top: 2px;
-            left: 0;
-            height: 15px;
-            width: 15px;
-            border: 1px solid var(--border-color);
-            background-color: white;
-            border-radius: 2px;
-            transition: var(--transition);
-        }
-
-        .checkbox-label:hover input ~ .checkbox-checkmark {
-            border-color: var(--accent-color);
-        }
-
-        .checkbox-label input:checked ~ .checkbox-checkmark {
-            background-color: var(--primary-color);
-            border-color: var(--primary-color);
-        }
-
-        .checkbox-checkmark:after {
-            content: "";
-            position: absolute;
-            display: none;
-        }
-
-        .checkbox-label input:checked ~ .checkbox-checkmark:after {
-            display: block;
-        }
-
-        .checkbox-label .checkbox-checkmark:after {
-            left: 4px;
-            top: 1.5px;
-            width: 5px;
-            height: 8px;
-            border: solid white;
-            border-width: 0 1.5px 1.5px 0;
-            transform: rotate(45deg);
-        }
-
-        /* Available indicator check line */
-        .indicator-label-wrap {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 0.82rem;
-            font-weight: 500;
-            cursor: pointer;
-        }
-
-        .status-dot-green {
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            background-color: #2E7D32;
-            display: inline-block;
-        }
-
-        /* Custom Slider Range */
-        .range-slider-wrap {
-            padding: 5px 0;
-        }
-
-        .price-slider-input {
-            -webkit-appearance: none;
-            width: 100%;
-            height: 3px;
-            background: var(--border-color);
-            outline: none;
-            margin-bottom: 8px;
-        }
-
-        .price-slider-input::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            background: var(--primary-color);
-            cursor: pointer;
-            transition: var(--transition);
-        }
-
-        .price-slider-input::-webkit-slider-thumb:hover {
-            background: var(--accent-color);
-            transform: scale(1.2);
-        }
-
-        .range-vals {
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.72rem;
-            color: var(--text-secondary);
-            font-weight: 500;
-        }
-
-        .btn-filter-apply {
-            width: 100%;
-            background-color: var(--primary-color);
-            color: white;
-            font-family: var(--font-sans);
-            font-size: 0.8rem;
-            font-weight: 600;
-            letter-spacing: 0.05em;
-            padding: 11px;
-            border: none;
-            border-radius: 4px;
-            transition: var(--transition);
-            margin-top: 10px;
-        }
-
-        .btn-filter-apply:hover {
-            background-color: var(--primary-hover);
-        }
-
-        /* --- PRODUCT CARD STYLES (4-Columns Layout Match) --- */
-        .product-card {
-            background-color: #FFFFFF;
-            border: 1px solid var(--border-color);
-            border-radius: 0;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-            position: relative;
-            transition: var(--transition);
-        }
-
-        .product-card:hover {
-            box-shadow: var(--shadow-hover);
-            border-color: rgba(28, 51, 34, 0.12);
-        }
-
-        .card-image-wrap {
-            position: relative;
-            aspect-ratio: 1 / 1;
-            overflow: hidden;
-            background-color: var(--bg-washi);
-        }
-
-        .card-img-asset {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transition: var(--transition);
-        }
-
-        .product-card:hover .card-img-asset {
-            transform: scale(1.05);
-        }
-
-        .card-status-badge {
-            position: absolute;
-            top: 12px;
-            left: 12px;
-            background-color: #FFFFFF;
-            border: 1px solid var(--border-color);
-            padding: 4px 10px;
-            font-size: 0.65rem;
-            font-weight: 700;
-            letter-spacing: 0.08em;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            z-index: 3;
-            border-radius: 2px;
-        }
-
-        .card-status-badge::before {
-            content: '';
-            width: 5px;
-            height: 5px;
-            border-radius: 50%;
-            display: inline-block;
-        }
-
-        .card-status-badge.avail {
-            color: #2E7D32;
-        }
-        .card-status-badge.avail::before {
-            background-color: #2E7D32;
-        }
-
-        .card-status-badge.resv {
-            color: #D35400;
-        }
-        .card-status-badge.resv::before {
-            background-color: #D35400;
-        }
-
-        .card-status-badge.sld {
-            color: #C0392B;
-        }
-        .card-status-badge.sld::before {
-            background-color: #C0392B;
-        }
-
-        .card-btn-wishlist {
-            position: absolute;
-            top: 12px;
-            right: 12px;
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            background-color: #FFFFFF;
-            border: 1px solid var(--border-color);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--text-secondary);
-            cursor: pointer;
-            z-index: 3;
-            transition: var(--transition);
-        }
-
-        .card-btn-wishlist:hover {
-            color: #C0392B;
-            transform: scale(1.08);
-        }
-
-        .card-content {
-            padding: 16px;
-            display: flex;
-            flex-direction: column;
-            flex-grow: 1;
-        }
-
-        .card-species-tag {
-            font-size: 0.65rem;
-            font-weight: 600;
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
-            color: var(--accent-color);
-            margin-bottom: 4px;
-        }
-
-        .card-title-serif {
-            font-size: 1.15rem;
-            color: var(--primary-color);
-            font-weight: 600;
-            line-height: 1.25;
-            margin-bottom: 6px;
-            display: -webkit-box;
-            -webkit-line-clamp: 1;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
-
-        .card-pedigree-code {
-            font-size: 0.72rem;
-            font-family: var(--font-sans);
-            color: var(--text-secondary);
-            font-weight: 400;
-            margin-bottom: 6px;
-        }
-
-        .card-dimensions-meta {
-            font-size: 0.72rem;
-            color: var(--text-secondary);
-            font-weight: 300;
-            margin-bottom: 12px;
-        }
-
-        .card-price-rating-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 14px;
-            margin-top: auto;
-        }
-
-        .card-price-val {
-            font-size: 1.05rem;
-            font-weight: 700;
-            color: var(--primary-color);
-        }
-
-        .card-rating-val {
-            font-size: 0.75rem;
-            color: var(--text-secondary);
-            font-weight: 600;
-        }
-
-        .card-rating-val i {
-            color: var(--accent-color);
-            font-size: 0.7rem;
-        }
-
-        .btn-card-cart-outline {
-            width: 100%;
-            background-color: transparent;
-            border: 1px solid var(--border-color);
-            color: var(--primary-color);
-            font-family: var(--font-sans);
-            font-size: 0.75rem;
-            font-weight: 600;
-            padding: 9px 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            transition: var(--transition);
-        }
-
-        .btn-card-cart-outline:hover {
-            background-color: var(--primary-color);
-            color: white;
-            border-color: var(--primary-color);
-        }
-
-        .btn-card-disabled {
-            width: 100%;
-            background-color: #F5F5F5;
-            border: 1px solid var(--border-color);
-            color: #9E9E9E;
-            font-family: var(--font-sans);
-            font-size: 0.75rem;
-            font-weight: 600;
-            padding: 9px 0;
-            text-align: center;
-            cursor: not-allowed;
-        }
-
-        .card-view-details-link {
-            display: block;
-            text-align: center;
-            font-size: 0.72rem;
-            font-weight: 500;
-            color: var(--text-secondary);
-            text-decoration: none;
-            margin-top: 10px;
-            transition: var(--transition);
-        }
-
-        .card-view-details-link:hover {
-            color: var(--accent-color);
-            text-decoration: underline;
-        }
-
-        /* --- SHOWCASE "TUYỂN CHỌN / BỘ SƯU TẬP NỔI BẬT" SECTION --- */
-        .showcase-bg-container {
-            background-color: var(--bg-beige);
-            padding: 80px 0;
-            border-top: 1px solid var(--border-color);
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .showcase-section-header {
-            margin-bottom: 45px;
-            text-align: left;
-        }
-
-        .showcase-sub {
-            font-size: 0.75rem;
-            font-weight: 700;
-            letter-spacing: 0.15em;
-            color: var(--accent-color);
-            text-transform: uppercase;
-            margin-bottom: 10px;
-            display: block;
-        }
-
-        .showcase-main-title {
-            font-size: 2.4rem;
-            color: var(--primary-color);
-            font-weight: 500;
-        }
-
-        .showcase-row-wrapper {
-            margin-bottom: 60px;
-        }
-
-        .showcase-row-wrapper:last-child {
-            margin-bottom: 0;
-        }
-
-        .showcase-row-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: baseline;
-            margin-bottom: 22px;
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 8px;
-        }
-
-        .showcase-row-title {
-            font-size: 1.35rem;
-            color: var(--primary-color);
-            font-weight: 600;
-        }
-
-        .showcase-row-link-all {
-            font-size: 0.82rem;
-            font-weight: 500;
-            color: var(--text-secondary);
-            text-decoration: none;
-            transition: var(--transition);
-        }
-
-        .showcase-row-link-all:hover {
-            color: var(--accent-color);
-        }
-
-        /* --- PAGINATION STYLES --- */
-        .pagination-bar {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 6px;
-            margin-top: 45px;
-        }
-
-        .page-arrow {
-            width: 32px;
-            height: 32px;
-            border: 1px solid var(--border-color);
-            background-color: white;
-            color: var(--text-dark);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-decoration: none;
-            font-size: 0.75rem;
-            transition: var(--transition);
-        }
-
-        .page-arrow:hover {
-            border-color: var(--accent-color);
-            color: var(--accent-color);
-        }
-
-        .page-arrow.disabled {
-            color: var(--border-color);
-            pointer-events: none;
-            background-color: #FAFAFA;
-        }
-
-        .page-num {
-            width: 32px;
-            height: 32px;
-            border: 1px solid var(--border-color);
-            background-color: white;
-            color: var(--text-dark);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-decoration: none;
-            font-size: 0.8rem;
-            font-weight: 600;
-            transition: var(--transition);
-        }
-
-        .page-num:hover {
-            border-color: var(--accent-color);
-            color: var(--accent-color);
-        }
-
-        .page-num.active {
-            background-color: var(--primary-color);
-            border-color: var(--primary-color);
-            color: white;
-        }
-
-        /* --- SERVICE CARDS STYLES --- */
-        .service-features-section {
-            background-color: #FFFFFF;
-            padding: 60px 0;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .service-feature-card {
-            background-color: #FFFFFF;
-            border: 1px solid var(--border-color);
-            padding: 30px 20px;
-            text-align: center;
-            height: 100%;
-            transition: var(--transition);
-        }
-
-        .service-feature-card:hover {
-            transform: translateY(-4px);
-            box-shadow: var(--shadow-subtle);
-        }
-
-        .service-icon-circle {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background-color: rgba(28, 51, 34, 0.04);
-            color: var(--primary-color);
-            font-size: 1.35rem;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 18px;
-        }
-
-        .service-label-title {
-            font-size: 1rem;
-            font-weight: 600;
-            color: var(--primary-color);
-            margin-bottom: 10px;
-        }
-
-        .service-desc-text {
-            font-size: 0.78rem;
-            line-height: 1.6;
-            color: var(--text-secondary);
-            font-weight: 400;
-            margin-bottom: 0;
-        }
-
-        /* --- FOOTER STYLES --- */
-        .footer-dark {
-            background-color: #121E15;      /* Rich Dark Pine / Charcoal Green */
-            color: rgba(255, 255, 255, 0.7);
-            padding: 70px 0 25px;
-            font-family: var(--font-sans);
-        }
-
-        .footer-logo-title {
-            font-family: var(--font-sans);
-            font-size: 1.4rem;
-            font-weight: 700;
-            letter-spacing: 0.08em;
-            color: white;
-            margin-bottom: 18px;
-        }
-
-        .footer-desc-para {
-            font-size: 0.8rem;
-            line-height: 1.8;
-            margin-bottom: 22px;
-            max-width: 310px;
-        }
-
-        .footer-social-strip {
-            display: flex;
-            gap: 12px;
-        }
-
-        .footer-social-btn {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            background-color: rgba(255, 255, 255, 0.05);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            text-decoration: none;
-            font-size: 0.85rem;
-            transition: var(--transition);
-        }
-
-        .footer-social-btn:hover {
-            background-color: var(--accent-color);
-            color: white;
-            transform: translateY(-2px);
-        }
-
-        .footer-column-heading {
-            font-size: 0.72rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.12em;
-            color: white;
-            margin-bottom: 18px;
-        }
-
-        .footer-column-links {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-
-        .footer-column-links li {
-            margin-bottom: 10px;
-        }
-
-        .footer-column-links a {
-            color: rgba(255, 255, 255, 0.65);
-            text-decoration: none;
-            font-size: 0.8rem;
-            transition: var(--transition);
-        }
-
-        .footer-column-links a:hover {
-            color: var(--accent-color);
-            padding-left: 4px;
-        }
-
-        .footer-connect-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-            font-size: 0.8rem;
-        }
-
-        .footer-connect-list li {
-            margin-bottom: 10px;
-        }
-
-        .footer-connect-list i {
-            color: var(--accent-color);
-            margin-right: 8px;
-        }
-
-        .footer-base-row {
-            margin-top: 50px;
-            padding-top: 25px;
-            border-top: 1px solid rgba(255, 255, 255, 0.05);
-            font-size: 0.7rem;
-            color: rgba(255, 255, 255, 0.4);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 15px;
-        }
-
-        /* --- RESPONSIVE MEDIA QUERIES --- */
-        @media (max-width: 1199.98px) {
-            .nav-search-box {
-                width: 180px;
-            }
-        }
-
-        @media (max-width: 991.98px) {
-            .navbar-custom {
-                padding: 10px 0;
-            }
-            
-            .nav-link-custom.active::after {
-                display: none;
-            }
-
-            .hero-main-title {
-                font-size: 2.5rem;
-            }
-
-            .mobile-filter-bar {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-            }
-
-            /* Offcanvas filter side panel */
-            .filter-sidebar-col {
-                position: fixed;
-                top: 0;
-                left: -100%;
-                width: 300px;
-                height: 100%;
-                z-index: 1100;
-                background-color: #FFFFFF;
-                box-shadow: 8px 0 25px rgba(0,0,0,0.12);
-                overflow-y: auto;
-                transition: left 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-            }
-
-            .filter-sidebar-col.show {
-                left: 0;
-            }
-
-            .filter-panel {
-                border: none;
-                height: 100%;
-            }
-
-            .filter-overlay {
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background-color: rgba(0, 0, 0, 0.3);
-                backdrop-filter: blur(3px);
-                z-index: 1090;
-                display: none;
-            }
-
-            .filter-overlay.show {
-                display: block;
-            }
-
-            .close-filter-btn {
-                display: block !important;
-            }
-        }
-
-        @media (max-width: 575.98px) {
-            .hero-main-title {
-                font-size: 1.95rem;
-            }
-
-            .btn-hero-solid, .btn-hero-outline {
-                padding: 10px 18px;
-                font-size: 0.78rem;
-            }
-
-            .btn-hero-outline {
-                margin-left: 8px;
-            }
-
-            .footer-base-row {
-                flex-direction: column;
-                text-align: center;
-            }
-        }
-    </style>
-</head>
+<head th:replace="~{fragments/head :: head('BSMS - Bonsai Marketplace', '/css/marketplace.css')}"></head>
 <body>
 
 <!-- ===================================================== -->
-<!-- NAVBAR -->
+<!-- NAVBAR & WELCOME BAR -->
 <!-- ===================================================== -->
-<nav class="navbar navbar-expand-lg navbar-custom sticky-top">
-    <div class="container">
-        <!-- Brand Logo -->
-        <a class="navbar-brand navbar-brand-custom" href="#">
-            🌿 BSMS
-        </a>
-        
-        <!-- Toggle for Mobile -->
-        <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
-            <i class="fa-solid fa-bars fs-4 text-dark"></i>
-        </button>
-
-        <!-- Navigation Menu -->
-        <div class="collapse navbar-collapse" id="navbarContent">
-            <ul class="navbar-nav mx-auto mb-2 mb-lg-0">
-                <li class="nav-item">
-                    <!-- Future: th:href="@{/}" -->
-                    <a class="nav-link nav-link-custom" href="#">Home</a>
-                </li>
-                <li class="nav-item">
-                    <!-- Future: th:href="@{/marketplace}" -->
-                    <a class="nav-link nav-link-custom active" href="#">Bonsai Marketplace</a>
-                </li>
-                <li class="nav-item">
-                    <!-- Future: th:href="@{/showroom}" -->
-                    <a class="nav-link nav-link-custom" href="#">Community</a>
-                </li>
-                <li class="nav-item">
-                    <!-- Future: th:href="@{/vip}" -->
-                    <a class="nav-link nav-link-custom" href="#">VIP Elite Showroom</a>
-                </li>
-                <li class="nav-item">
-                    <!-- Future: th:href="@{/contact}" -->
-                    <a class="nav-link nav-link-custom" href="#">Contact</a>
-                </li>
-            </ul>
-
-            <!-- Search box in Navbar -->
-            <form action="/marketplace" method="get" class="d-flex align-items-center me-3">
-                <div class="nav-search-box">
-                    <i class="fa-solid fa-magnifying-glass nav-search-icon"></i>
-                    <input type="text" name="keyword" th:value="${keyword}" class="nav-search-input" placeholder="Search trees by name or product code...">
-                </div>
-            </form>
-
-            <!-- Auth & Cart -->
-            <div class="d-flex align-items-center gap-3">
-                <!-- User Login Area -->
-                <!-- Future:
-                <div sec:authorize="isAnonymous()" class="d-flex align-items-center gap-2">
-                    <a th:href="@{/login}" class="btn-auth-signin">Sign In</a>
-                    <a th:href="@{/register}" class="btn btn-auth-register">Register</a>
-                </div>
-                <div sec:authorize="isAuthenticated()" class="d-flex align-items-center gap-2">
-                    <a th:href="@{/profile}" class="nav-icon-link text-decoration-none" title="Profile"><i class="fa-regular fa-user"></i></a>
-                    <form method="post" th:action="@{/logout}" class="m-0">
-                        <button type="submit" class="btn btn-link text-dark p-0 nav-icon-link" title="Đăng xuất"><i class="fa-solid fa-arrow-right-from-bracket"></i></button>
-                    </form>
-                </div>
-                -->
-                <a href="#" class="btn-auth-signin">Sign In</a>
-                <a href="#" class="btn btn-auth-register">Register</a>
-
-                <!-- Cart icon with orange badge count -->
-                <a href="#" class="nav-icon-link text-decoration-none position-relative ms-1" title="Giỏ hàng">
-                    <!-- Future: th:href="@{/cart}" -->
-                    <i class="fa-solid fa-bag-shopping"></i>
-                    <!-- Future: th:text="${cartSize}" -->
-                    <span class="badge-count-orange">2</span>
-                </a>
-            </div>
-        </div>
-    </div>
-</nav>
+<div th:replace="~{fragments/navbar :: navbar}"></div>
 
 <!-- ===================================================== -->
 <!-- HERO -->
@@ -1277,9 +100,8 @@
                         <a href="/marketplace" class="filter-panel-clear-link">Xoá</a>
                     </div>
     
-                    <!-- Preserved search, sorting and min price state -->
+                    <!-- Preserved search and sorting state -->
                     <input type="hidden" name="keyword" th:value="${keyword}">
-                    <input type="hidden" name="minPrice" th:value="${minPrice != null ? minPrice : 500000}">
                     <input type="hidden" name="sort" id="filterSort" th:value="${sort}">
 
                     <!-- Species Checklist -->
@@ -1382,18 +204,64 @@
                         </div>
                     </div>
     
-                    <!-- Price Slider Range -->
+                    <!-- Price Filter -->
                     <div class="filter-block">
                         <div class="filter-block-title">
-                            Khoảng giá
+                            Khoảng giá (Price)
                             <i class="fa-solid fa-chevron-up"></i>
                         </div>
-                        <div class="filter-block-content range-slider-wrap">
-                            <input type="range" name="maxPrice" class="price-slider-input" min="500000" max="20000000" step="500000" id="priceRangeSlider" th:value="${maxPrice ?: 20000000}">
-                            <div class="range-vals">
-                                <span>500.000 đ</span>
-                                <span id="priceRangeMaxVal" style="color: var(--primary-color); font-weight:700;" th:text="${maxPrice != null ? #numbers.formatDecimal(maxPrice, 0, 'POINT', 0, 'POINT') + ' đ' : '20.000.000 đ'}">20.000.000 đ</span>
+                        <div class="filter-block-content">
+                            <!-- Manual input fields -->
+                            <div class="mb-2">
+                                <label class="form-label small text-secondary mb-1">Min Price</label>
+                                <input type="number" name="minPrice" th:value="${minPrice}" class="form-control form-control-sm" placeholder="Min Price" min="0" style="border-color: var(--border-color); border-radius: 4px; box-shadow: none;">
                             </div>
+                            <div class="mb-3">
+                                <label class="form-label small text-secondary mb-1">Max Price</label>
+                                <input type="number" name="maxPrice" th:value="${maxPrice}" class="form-control form-control-sm" placeholder="Max Price" min="0" style="border-color: var(--border-color); border-radius: 4px; box-shadow: none;">
+                            </div>
+
+                            <!-- Divider line -->
+                            <hr style="border-top: 1px solid var(--border-color); margin: 15px 0; opacity: 0.5;">
+
+                            <!-- Quick range section -->
+                            <div class="small text-secondary fw-bold mb-2">Quick Range</div>
+                            
+                            <label class="checkbox-label">
+                                Under 1M
+                                <input type="checkbox" name="priceRanges" value="under1M" th:checked="${priceRanges != null && priceRanges.contains('under1M')}">
+                                <span class="checkbox-checkmark"></span>
+                            </label>
+                            
+                            <label class="checkbox-label">
+                                1M – 5M
+                                <input type="checkbox" name="priceRanges" value="1Mto5M" th:checked="${priceRanges != null && priceRanges.contains('1Mto5M')}">
+                                <span class="checkbox-checkmark"></span>
+                            </label>
+                            
+                            <label class="checkbox-label">
+                                5M – 10M
+                                <input type="checkbox" name="priceRanges" value="5Mto10M" th:checked="${priceRanges != null && priceRanges.contains('5Mto10M')}">
+                                <span class="checkbox-checkmark"></span>
+                            </label>
+                            
+                            <label class="checkbox-label">
+                                10M – 30M
+                                <input type="checkbox" name="priceRanges" value="10Mto30M" th:checked="${priceRanges != null && priceRanges.contains('10Mto30M')}">
+                                <span class="checkbox-checkmark"></span>
+                            </label>
+                            
+                            <label class="checkbox-label">
+                                30M – 100M
+                                <input type="checkbox" name="priceRanges" value="30Mto100M" th:checked="${priceRanges != null && priceRanges.contains('30Mto100M')}">
+                                <span class="checkbox-checkmark"></span>
+                            </label>
+                            
+                            <label class="checkbox-label">
+                                Over 100M
+                                <input type="checkbox" name="priceRanges" value="over100M" th:checked="${priceRanges != null && priceRanges.contains('over100M')}">
+                                <span class="checkbox-checkmark"></span>
+                            </label>
                         </div>
                     </div>
     
@@ -1437,7 +305,7 @@
 
                 <!-- DYNAMIC PRODUCT CARDS LOOP -->
                 <div class="col" th:each="product : ${products}">
-                    <div class="product-card">
+                    <div class="product-card" style="cursor: pointer;" th:onclick="'window.location.href=\'/product/' + ${product.productId} + '\';'">
                         <div class="card-image-wrap">
                             <!-- Status Badge: Dynamically rendered based on ProductStatus -->
                             <span th:if="${product.productStatus == 'AVAILABLE'}" class="card-status-badge avail">AVAILABLE</span>
@@ -1453,7 +321,7 @@
                             Wishlist icon kept UI-only.
                             Reason: Wishlist interaction logic is not requested for this task.
                             -->
-                            <button class="card-btn-wishlist" title="Yêu thích"><i class="fa-regular fa-heart"></i></button>
+                            <button class="card-btn-wishlist" title="Yêu thích" onclick="event.stopPropagation();"><i class="fa-regular fa-heart"></i></button>
                             
                             <!-- Image URL binding with default fallback -->
                             <!--
@@ -1461,8 +329,10 @@
                             Image fallback to a default Unsplash mockup image if product.firstImageUrl is empty.
                             Reason: Current ProductMedia does not provide usable image data for some items.
                             -->
-                            <img th:src="${product.firstImageUrl != null && !product.firstImageUrl.isEmpty() ? product.firstImageUrl : 'https://images.unsplash.com/photo-1599599810769-bcde5a160d32?auto=format&fit=crop&q=80&w=600'}" 
-                                 th:alt="${product.productName}" class="card-img-asset">
+                            <a th:href="@{'/product/' + ${product.productId}}" class="d-block text-decoration-none">
+                                <img th:src="${product.firstImageUrl != null && !product.firstImageUrl.isEmpty() ? product.firstImageUrl : 'https://images.unsplash.com/photo-1599599810769-bcde5a160d32?auto=format&fit=crop&q=80&w=600'}" 
+                                     th:alt="${product.productName}" class="card-img-asset">
+                            </a>
                         </div>
                         
                         <div class="card-content">
@@ -1470,7 +340,9 @@
                             <span class="card-species-tag" th:text="${product.variety != null ? product.variety.varietyName : 'Bonsai'}">Sanh Nam Điền</span>
                             
                             <!-- Title binding -->
-                            <h3 class="card-title-serif" th:text="${product.productName}">Sanh Nam Điền Dáng Trực Cổ</h3>
+                            <a th:href="@{'/product/' + ${product.productId}}" class="text-decoration-none text-dark">
+                                <h3 class="card-title-serif" th:text="${product.productName}">Sanh Nam Điền Dáng Trực Cổ</h3>
+                            </a>
                             
                             <!-- Pedigree/Code binding -->
                             <p class="card-pedigree-code text-muted mb-1" style="font-size:0.7rem;" th:text="${'Mã: ' + product.productCode}">Mã: BSMS-SND-102</p>
@@ -1483,7 +355,10 @@
                             
                             <div class="card-price-rating-row">
                                 <!-- Price binding -->
-                                <span class="card-price-val" th:text="${#numbers.formatDecimal(product.price, 0, 'POINT', 0, 'POINT') + ' đ'}">4.500.000 đ</span>
+                                <span class="card-price-val"
+                                      th:if="${product.isPublicPrice}"
+                                      th:text="${#numbers.formatDecimal(product.price, 0, 'POINT', 0, 'POINT') + ' đ'}">4.500.000 đ</span>
+                                <span class="card-price-val" th:if="${!product.isPublicPrice}">Liên hệ</span>
                                 
                                 <!-- Rating binding with fallback -->
                                 <!--
@@ -1506,11 +381,9 @@
                             
                             <div class="mt-2">
                                 <!-- Add to Cart / Disabled button based on status -->
-                                <button th:if="${product.productStatus == 'AVAILABLE'}" class="btn-card-cart-outline"><i class="fa-solid fa-cart-shopping"></i> Add to Cart</button>
-                                <button th:if="${product.productStatus == 'RESERVED'}" class="btn-card-disabled" disabled>Reserved</button>
-                                <button th:if="${product.productStatus == 'SOLD'}" class="btn-card-disabled" disabled>Sold</button>
-                                
-                                <a th:href="@{'/product/' + ${product.productId}}" class="card-view-details-link">View Details →</a>
+                                <button th:if="${product.productStatus == 'AVAILABLE'}" class="btn-card-cart-outline" onclick="event.stopPropagation();"><i class="fa-solid fa-cart-shopping"></i> Add to Cart</button>
+                                <button th:if="${product.productStatus == 'RESERVED'}" class="btn-card-disabled" disabled onclick="event.stopPropagation();">Reserved</button>
+                                <button th:if="${product.productStatus == 'SOLD'}" class="btn-card-disabled" disabled onclick="event.stopPropagation();">Sold</button>
                             </div>
                         </div>
                     </div>
@@ -1577,244 +450,7 @@
     </div>
 </main>
 
-<!-- ===================================================== -->
-<!-- SHOWCASE "TUYỂN CHỌN / BỘ SƯU TẬP NỔI BẬT" SECTION -->
-<!-- ===================================================== -->
-<section class="showcase-bg-container">
-    <div class="container">
-        <!-- Showcase Main Title -->
-        <div class="showcase-section-header">
-            <span class="showcase-sub">Tuyển Chọn</span>
-            <h2 class="showcase-main-title serif-text">Bộ sưu tập nổi bật</h2>
-        </div>
 
-        <!-- Best Sellers Grid -->
-        <div class="showcase-row-wrapper">
-            <div class="showcase-row-header">
-                <h3 class="showcase-row-title serif-text">Best Sellers</h3>
-                <a href="#" class="showcase-row-link-all">Xem tất cả</a>
-            </div>
-
-            <!-- 4 Column row for Best Sellers -->
-            <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-xl-4 g-3">
-                
-                <!-- Best Sellers Card 1 -->
-                <div class="col">
-                    <div class="product-card">
-                        <div class="card-image-wrap">
-                            <span class="card-status-badge avail">AVAILABLE</span>
-                            <button class="card-btn-wishlist" title="Yêu thích"><i class="fa-regular fa-heart"></i></button>
-                            <img src="https://images.unsplash.com/photo-1599599810769-bcde5a160d32?auto=format&fit=crop&q=80&w=600" alt="Sanh Nam Điền Dáng Trực Cổ" class="card-img-asset">
-                        </div>
-                        <div class="card-content">
-                            <span class="card-species-tag">Sanh Nam Điền</span>
-                            <h3 class="card-title-serif">Sanh Nam Điền Dáng Trực Cổ</h3>
-                            <p class="card-pedigree-code text-muted mb-1" style="font-size:0.7rem;">Mã: BSMS-SND-102</p>
-                            <p class="card-dimensions-meta text-muted mb-2">Tuổi: 12 năm • Cao: 65cm • Thân: 15cm</p>
-                            <div class="card-price-rating-row">
-                                <span class="card-price-val">4.500.000 đ</span>
-                                <span class="card-rating-val">4.8 <i class="fa-solid fa-star"></i></span>
-                            </div>
-                            <div class="mt-2">
-                                <button class="btn-card-cart-outline"><i class="fa-solid fa-cart-shopping"></i> Add to Cart</button>
-                                <a href="#" class="card-view-details-link">View Details →</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Best Sellers Card 2 -->
-                <div class="col">
-                    <div class="product-card">
-                        <div class="card-image-wrap">
-                            <span class="card-status-badge avail">AVAILABLE</span>
-                            <button class="card-btn-wishlist" title="Yêu thích"><i class="fa-regular fa-heart"></i></button>
-                            <img src="https://images.unsplash.com/photo-1515150144380-bca9f1650ed9?auto=format&fit=crop&q=80&w=600" alt="Tùng La Hán Dáng Hoành" class="card-img-asset">
-                        </div>
-                        <div class="card-content">
-                            <span class="card-species-tag">Tùng La Hán</span>
-                            <h3 class="card-title-serif">Tùng La Hán Dáng Hoành</h3>
-                            <p class="card-pedigree-code text-muted mb-1" style="font-size:0.7rem;">Mã: BSMS-TLH-218</p>
-                            <p class="card-dimensions-meta text-muted mb-2">Tuổi: 18 năm • Cao: 80cm • Thân: 22cm</p>
-                            <div class="card-price-rating-row">
-                                <span class="card-price-val">8.900.000 đ</span>
-                                <span class="card-rating-val">4.9 <i class="fa-solid fa-star"></i></span>
-                            </div>
-                            <div class="mt-2">
-                                <button class="btn-card-cart-outline"><i class="fa-solid fa-cart-shopping"></i> Add to Cart</button>
-                                <a href="#" class="card-view-details-link">View Details →</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Best Sellers Card 3 -->
-                <div class="col">
-                    <div class="product-card">
-                        <div class="card-image-wrap">
-                            <span class="card-status-badge resv">RESERVED</span>
-                            <button class="card-btn-wishlist" title="Yêu thích"><i class="fa-regular fa-heart"></i></button>
-                            <img src="https://images.unsplash.com/photo-1502082553048-f009c37129b9?auto=format&fit=crop&q=80&w=600" alt="Linh Sam Dáng Huyền" class="card-img-asset">
-                        </div>
-                        <div class="card-content">
-                            <span class="card-species-tag">Linh Sam</span>
-                            <h3 class="card-title-serif">Linh Sam Dáng Huyền</h3>
-                            <p class="card-pedigree-code text-muted mb-1" style="font-size:0.7rem;">Mã: BSMS-LSM-077</p>
-                            <p class="card-dimensions-meta text-muted mb-2">Tuổi: 9 năm • Cao: 55cm • Thân: 11cm</p>
-                            <div class="card-price-rating-row">
-                                <span class="card-price-val">3.200.000 đ</span>
-                                <span class="card-rating-val">4.7 <i class="fa-solid fa-star"></i></span>
-                            </div>
-                            <div class="mt-2">
-                                <button class="btn-card-disabled" disabled>Reserved</button>
-                                <a href="#" class="card-view-details-link">View Details →</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Best Sellers Card 4 -->
-                <div class="col">
-                    <div class="product-card">
-                        <div class="card-image-wrap">
-                            <span class="card-status-badge avail">AVAILABLE</span>
-                            <button class="card-btn-wishlist" title="Yêu thích"><i class="fa-regular fa-heart"></i></button>
-                            <img src="https://images.unsplash.com/photo-1463936575829-25148e1db1b8?auto=format&fit=crop&q=80&w=600" alt="Mai Chiếu Thủy Bonsai Hoa" class="card-img-asset">
-                        </div>
-                        <div class="card-content">
-                            <span class="card-species-tag">Mai Chiếu Thủy</span>
-                            <h3 class="card-title-serif">Mai Chiếu Thủy Bonsai Hoa</h3>
-                            <p class="card-pedigree-code text-muted mb-1" style="font-size:0.7rem;">Mã: BSMS-MCT-145</p>
-                            <p class="card-dimensions-meta text-muted mb-2">Tuổi: 14 năm • Cao: 70cm • Thân: 18cm</p>
-                            <div class="card-price-rating-row">
-                                <span class="card-price-val">6.700.000 đ</span>
-                                <span class="card-rating-val">4.8 <i class="fa-solid fa-star"></i></span>
-                            </div>
-                            <div class="mt-2">
-                                <button class="btn-card-cart-outline"><i class="fa-solid fa-cart-shopping"></i> Add to Cart</button>
-                                <a href="#" class="card-view-details-link">View Details →</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-            </div>
-        </div>
-
-        <!-- New Arrivals Grid -->
-        <div class="showcase-row-wrapper">
-            <div class="showcase-row-header">
-                <h3 class="showcase-row-title serif-text">New Arrivals</h3>
-                <a href="#" class="showcase-row-link-all">Xem tất cả</a>
-            </div>
-
-            <!-- 4 Column row for New Arrivals -->
-            <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-xl-4 g-3">
-
-                <!-- New Arrivals Card 1 -->
-                <div class="col">
-                    <div class="product-card">
-                        <div class="card-image-wrap">
-                            <span class="card-status-badge sld">SOLD</span>
-                            <button class="card-btn-wishlist" title="Yêu thích"><i class="fa-regular fa-heart"></i></button>
-                            <img src="https://images.unsplash.com/photo-1512428559087-560fa5ceab42?auto=format&fit=crop&q=80&w=600" alt="Sanh Quê Dáng Song Thụ" class="card-img-asset">
-                        </div>
-                        <div class="card-content">
-                            <span class="card-species-tag">Sanh Quê</span>
-                            <h3 class="card-title-serif">Sanh Quê Dáng Song Thụ</h3>
-                            <p class="card-pedigree-code text-muted mb-1" style="font-size:0.7rem;">Mã: BSMS-SQW-301</p>
-                            <p class="card-dimensions-meta text-muted mb-2">Tuổi: 20 năm • Cao: 95cm • Thân: 26cm</p>
-                            <div class="card-price-rating-row">
-                                <span class="card-price-val">12.500.000 đ</span>
-                                <span class="card-rating-val">5.0 <i class="fa-solid fa-star"></i></span>
-                            </div>
-                            <div class="mt-2">
-                                <button class="btn-card-disabled" disabled>Sold</button>
-                                <a href="#" class="card-view-details-link">View Details →</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- New Arrivals Card 2 -->
-                <div class="col">
-                    <div class="product-card">
-                        <div class="card-image-wrap">
-                            <span class="card-status-badge avail">AVAILABLE</span>
-                            <button class="card-btn-wishlist" title="Yêu thích"><i class="fa-regular fa-heart"></i></button>
-                            <img src="https://images.unsplash.com/photo-1463936575829-25148e1db1b8?auto=format&fit=crop&q=80&w=600" alt="Tùng Cối Dáng Xiên" class="card-img-asset">
-                        </div>
-                        <div class="card-content">
-                            <span class="card-species-tag">Tùng Cối</span>
-                            <h3 class="card-title-serif">Tùng Cối Dáng Xiên</h3>
-                            <p class="card-pedigree-code text-muted mb-1" style="font-size:0.7rem;">Mã: BSMS-TGC-080</p>
-                            <p class="card-dimensions-meta text-muted mb-2">Tuổi: 11 năm • Cao: 60cm • Thân: 13cm</p>
-                            <div class="card-price-rating-row">
-                                <span class="card-price-val">3.900.000 đ</span>
-                                <span class="card-rating-val">4.6 <i class="fa-solid fa-star"></i></span>
-                            </div>
-                            <div class="mt-2">
-                                <button class="btn-card-cart-outline"><i class="fa-solid fa-cart-shopping"></i> Add to Cart</button>
-                                <a href="#" class="card-view-details-link">View Details →</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- New Arrivals Card 3 -->
-                <div class="col">
-                    <div class="product-card">
-                        <div class="card-image-wrap">
-                            <span class="card-status-badge avail">AVAILABLE</span>
-                            <button class="card-btn-wishlist" title="Yêu thích"><i class="fa-regular fa-heart"></i></button>
-                            <img src="https://images.unsplash.com/photo-1515150144380-bca9f1650ed9?auto=format&fit=crop&q=80&w=600" alt="Sanh Hoành Bonsai Vườn" class="card-img-asset">
-                        </div>
-                        <div class="card-content">
-                            <span class="card-species-tag">Sanh Quê</span>
-                            <h3 class="card-title-serif">Sanh Hoành Bonsai Vườn</h3>
-                            <p class="card-pedigree-code text-muted mb-1" style="font-size:0.7rem;">Mã: BSMS-SNH-184</p>
-                            <p class="card-dimensions-meta text-muted mb-2">Tuổi: 15 năm • Cao: 75cm • Thân: 17cm</p>
-                            <div class="card-price-rating-row">
-                                <span class="card-price-val">5.800.000 đ</span>
-                                <span class="card-rating-val">4.7 <i class="fa-solid fa-star"></i></span>
-                            </div>
-                            <div class="mt-2">
-                                <button class="btn-card-cart-outline"><i class="fa-solid fa-cart-shopping"></i> Add to Cart</button>
-                                <a href="#" class="card-view-details-link">View Details →</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- New Arrivals Card 4 -->
-                <div class="col">
-                    <div class="product-card">
-                        <div class="card-image-wrap">
-                            <span class="card-status-badge avail">AVAILABLE</span>
-                            <button class="card-btn-wishlist" title="Yêu thích"><i class="fa-regular fa-heart"></i></button>
-                            <img src="https://images.unsplash.com/photo-1416879595882-3373a0480b5b?auto=format&fit=crop&q=80&w=600" alt="Mini Bonsai Để Bàn" class="card-img-asset">
-                        </div>
-                        <div class="card-content">
-                            <span class="card-species-tag">Sanh Nam Điền</span>
-                            <h3 class="card-title-serif">Mini Bonsai Để Bàn</h3>
-                            <p class="card-pedigree-code text-muted mb-1" style="font-size:0.7rem;">Mã: BSMS-MNB-009</p>
-                            <p class="card-dimensions-meta text-muted mb-2">Tuổi: 4 năm • Cao: 25cm • Thân: 5cm</p>
-                            <div class="card-price-rating-row">
-                                <span class="card-price-val">950.000 đ</span>
-                                <span class="card-rating-val">4.5 <i class="fa-solid fa-star"></i></span>
-                            </div>
-                            <div class="mt-2">
-                                <button class="btn-card-cart-outline"><i class="fa-solid fa-cart-shopping"></i> Add to Cart</button>
-                                <a href="#" class="card-view-details-link">View Details →</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-            </div>
-        </div>
-    </div>
-</section>
 
 <!-- ===================================================== -->
 <!-- SERVICE FEATURES SECTION -->
@@ -1857,67 +493,10 @@
 <!-- ===================================================== -->
 <!-- FOOTER -->
 <!-- ===================================================== -->
-<footer class="footer-dark">
-    <div class="container">
-        <div class="row g-5">
-            <!-- Brand Section -->
-            <div class="col-lg-4 col-md-6">
-                <div class="footer-logo-title">🌿 BSMS</div>
-                <p class="footer-desc-para">
-                    Nền tảng quản lý và giao dịch cây cảnh nghệ thuật — gìn giữ và phát huy di sản nghệ thuật bonsai Bắc Bộ Việt Nam.
-                </p>
-                <div class="footer-social-strip">
-                    <a href="#" class="footer-social-btn"><i class="fa-brands fa-facebook-f"></i></a>
-                    <a href="#" class="footer-social-btn"><i class="fa-brands fa-instagram"></i></a>
-                    <a href="#" class="footer-social-btn"><i class="fa-brands fa-youtube"></i></a>
-                    <a href="#" class="footer-social-btn"><i class="fa-brands fa-pinterest-p"></i></a>
-                </div>
-            </div>
-            
-            <!-- Company Links -->
-            <div class="col-lg-3 col-md-6 col-6">
-                <h5 class="footer-column-heading">Company</h5>
-                <ul class="footer-column-links">
-                    <li><a href="#">About Us</a></li>
-                    <li><a href="#">Contact</a></li>
-                    <li><a href="#">Terms of Service</a></li>
-                    <li><a href="#">Privacy Policy</a></li>
-                </ul>
-            </div>
-
-            <!-- Connect Info -->
-            <div class="col-lg-5 col-md-12 col-6">
-                <h5 class="footer-column-heading">Connect</h5>
-                <ul class="footer-connect-list">
-                    <li><i class="fa-solid fa-phone"></i>Hotline: 1900 6868</li>
-                    <li><i class="fa-solid fa-envelope"></i>Email: support@bsms.vn</li>
-                    <li class="text-secondary mt-3" style="font-size:0.75rem; color: rgba(255,255,255,0.4) !important;">Powered by VNPay & Crane Logistics Network</li>
-                </ul>
-            </div>
-        </div>
-
-        <!-- Copyright Row -->
-        <div class="footer-base-row">
-            <span>© 2026 BSMS — Bonsai Shop Management System. All rights reserved.</span>
-            <span>Powered by VNPay - Crane Logistics Network</span>
-        </div>
-    </div>
-</footer>
-
-<!-- Bootstrap Bundle JS -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<div th:replace="~{fragments/footer :: footer}"></div>
 
 <!-- Custom UI Logic Script -->
 <script>
-    // Price range slider dynamic value update
-    const priceSlider = document.getElementById('priceRangeSlider');
-    const priceDisplayVal = document.getElementById('priceRangeMaxVal');
-    if (priceSlider && priceDisplayVal) {
-        priceSlider.addEventListener('input', (e) => {
-            const formattedVal = new Intl.NumberFormat('vi-VN').format(e.target.value);
-            priceDisplayVal.textContent = formattedVal + ' đ';
-        });
-    }
 
     // Sort select change handlers (Desktop and Mobile)
     const gridSortSelect = document.getElementById('gridSortSelect');
@@ -1961,6 +540,18 @@
 
     if (closeBtn) closeBtn.addEventListener('click', hideFilterDrawer);
     if (filterOverlay) filterOverlay.addEventListener('click', hideFilterDrawer);
+
+    // Accordion filter toggle logic
+    document.querySelectorAll('.filter-block-title').forEach(title => {
+        title.addEventListener('click', () => {
+            const block = title.closest('.filter-block');
+            if (block) {
+                block.classList.toggle('collapsed');
+            }
+        });
+    });
 </script>
 </body>
 </html>
+
+

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<body>
+<div th:fragment="sidebar(activeMenu)">
+    <!-- 
+      Chúng ta sẽ dùng một layout sidebar cố định bên trái (như hiện tại) nhưng màu sắc sẽ được 
+      đồng bộ với common.css / marketplace.css
+    -->
+    <aside class="dashboard-sidebar">
+        <div class="sidebar-brand">
+            <a th:href="@{/home}" class="d-flex align-items-center gap-2">
+                <img th:src="@{/images/logo.png}" alt="Logo" style="height: 50px; max-height: 50px; border-radius: 8px; border: 1px solid rgba(0,0,0,0.05); object-fit: contain;"> 
+                <span>BSMS Portal</span>
+            </a>
+        </div>
+        
+        <nav class="sidebar-nav">
+            <!-- ADMIN MENU -->
+            <div sec:authorize="hasRole('ADMIN')">
+                <div class="nav-section-title">Admin Controls</div>
+                <a th:classappend="${activeMenu == 'admin-dashboard'} ? 'active'" th:href="@{/admin}">
+                    <i class="fa-solid fa-gauge"></i> Dashboard
+                </a>
+                <a th:classappend="${activeMenu == 'admin-users'} ? 'active'" th:href="@{/admin/users}">
+                    <i class="fa-solid fa-users"></i> Quản lý người dùng
+                </a>
+            </div>
+
+            <!-- SELLER MENU -->
+            <div sec:authorize="hasRole('SELLER')">
+                <div class="nav-section-title">Seller Portal</div>
+                <a th:classappend="${activeMenu == 'seller-dashboard'} ? 'active'" th:href="@{/seller}">
+                    <i class="fa-solid fa-gauge"></i> Dashboard
+                </a>
+                <a th:classappend="${activeMenu == 'seller-products'} ? 'active'" th:href="@{/seller/products}">
+                    <i class="fa-solid fa-box"></i> My Products
+                </a>
+                <a th:classappend="${activeMenu == 'seller-catalog'} ? 'active'" th:href="@{/seller/catalog}">
+                    <i class="fa-solid fa-list"></i> Catalog
+                </a>
+                <a th:classappend="${activeMenu == 'seller-profile'} ? 'active'" th:href="@{/seller/profile}">
+                    <i class="fa-solid fa-user-tie"></i> My Profile
+                </a>
+                <a th:classappend="${activeMenu == 'seller-appointments'} ? 'active'" href="#">
+                    <i class="fa-solid fa-calendar-check"></i> Appointments
+                </a>
+            </div>
+        </nav>
+
+        <div class="sidebar-footer">
+            <form method="post" th:action="@{/logout}">
+                <button type="submit" class="btn-sidebar-logout">
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i> Đăng xuất
+                </button>
+            </form>
+        </div>
+    </aside>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var toggleBtn = document.getElementById('sidebarToggle');
+            var sidebar = document.querySelector('.dashboard-sidebar');
+            if(toggleBtn && sidebar) {
+                toggleBtn.addEventListener('click', function() {
+                    sidebar.classList.toggle('collapsed');
+                });
+            }
+        });
+    </script>
+</div>
+</body>
+</html>

@@ -28,6 +28,7 @@ public class HomeController {
             model.addAttribute("username", user.getUsername());
             model.addAttribute("email", user.getEmail());
         }
+        model.addAttribute("activePage", "home");
 
         return "home";
     }

@@ -45,6 +45,9 @@ public class User {
     @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL)
     private List<BonsaiOrder> orders;
 
+    @Column(name = "avatar_public_id")
+    private String avatarPublicId;
+
     @ManyToOne
     @JoinColumn(name = "RoleID", nullable = false)
     private Role role;

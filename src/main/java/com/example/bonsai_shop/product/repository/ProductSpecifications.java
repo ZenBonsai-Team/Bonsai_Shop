@@ -19,7 +19,8 @@ public class ProductSpecifications {
             BigDecimal maxPrice,
             List<String> ages,
             List<String> species,
-            List<String> styles) {
+            List<String> styles,
+            List<String> priceRanges) {
         return (Root<Product> root, CriteriaQuery<?> query, CriteriaBuilder cb) -> {
             List<Predicate> predicates = new ArrayList<>();
 
@@ -31,8 +32,8 @@ public class ProductSpecifications {
                 // root.fetch("com/example/bonsai_shop/seller", JoinType.INNER);
             }
 
-            // Baseline condition: isPublicPrice = true
-            predicates.add(cb.equal(root.get("isPublicPrice"), true));
+            // Customer marketplace must not expose seller-only product states.
+            predicates.add(cb.not(root.get("productStatus").in("DRAFT", "HIDDEN")));
 
             // keyword (matches product name or code)
             if (keyword != null && !keyword.trim().isEmpty()) {
@@ -43,11 +44,13 @@ public class ProductSpecifications {
                 ));
             }
 
-            // status & availableOnly
             if (Boolean.TRUE.equals(availableOnly)) {
                 predicates.add(cb.equal(root.get("productStatus"), "AVAILABLE"));
             } else if (status != null && !status.trim().isEmpty()) {
-                predicates.add(cb.equal(root.get("productStatus"), status));
+                String normalizedStatus = status.trim().toUpperCase();
+                if (!"DRAFT".equals(normalizedStatus) && !"HIDDEN".equals(normalizedStatus)) {
+                    predicates.add(cb.equal(root.get("productStatus"), normalizedStatus));
+                }
             }
 
             // segment (checks segmentId or segmentName)
@@ -72,11 +75,13 @@ public class ProductSpecifications {
 
             // minPrice
             if (minPrice != null) {
+                predicates.add(cb.equal(root.get("isPublicPrice"), true));
                 predicates.add(cb.ge(root.get("price"), minPrice));
             }
 
             // maxPrice
             if (maxPrice != null) {
+                predicates.add(cb.equal(root.get("isPublicPrice"), true));
                 predicates.add(cb.le(root.get("price"), maxPrice));
             }
 

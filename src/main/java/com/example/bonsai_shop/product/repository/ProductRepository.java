@@ -9,7 +9,16 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
+import java.util.Optional;
+
 public interface ProductRepository extends JpaRepository<Product, Integer>, JpaSpecificationExecutor<Product> {
+    List<Product> findBySellerUserIdOrderByCreatedAtDesc(Integer sellerId);
+    Optional<Product> findByProductIdAndSellerUserId(Integer productId, Integer sellerId);
+    boolean existsByProductCode(String productCode);
+    boolean existsByVarietyVarietyId(Integer varietyId);
+    boolean existsBySegmentSegmentId(Integer segmentId);
+
     @Query("""
         SELECT new com.example.bonsai_shop.product.dto.ProductCardDTO(
                 p.productId,
@@ -29,16 +38,15 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
         JOIN p.seller u
         LEFT JOIN p.productMedias m
         WHERE
-                p.isPublicPrice = true
-                AND p.productStatus = 'AVAILABLE'
+                p.productStatus = 'AVAILABLE'
                 AND (m.isThumbnail = true OR m IS NULL)
     """)
     Page<ProductCardDTO> findMarketplaceProducts(Pageable pageable);
 
-    @Query("SELECT p FROM Product p JOIN FETCH p.variety JOIN FETCH p.seller WHERE p.isPublicPrice = true")
+    @Query("SELECT p FROM Product p JOIN FETCH p.variety JOIN FETCH p.seller WHERE p.productStatus <> 'HIDDEN'")
     Page<Product> findAllActiveProducts(Pageable pageable);
 
-    @Query("SELECT p FROM Product p JOIN FETCH p.variety JOIN FETCH p.seller WHERE p.isPublicPrice = true AND p.productStatus = 'AVAILABLE'")
+    @Query("SELECT p FROM Product p JOIN FETCH p.variety JOIN FETCH p.seller WHERE p.productStatus = 'AVAILABLE'")
     Page<Product> findAvailableProductsOnly(Pageable pageable);
 
     //---------
@@ -95,5 +103,3 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
 """)
     ProductCardDTO findPremiumProductById(@Param("productId") Integer productId);
 }
-
-

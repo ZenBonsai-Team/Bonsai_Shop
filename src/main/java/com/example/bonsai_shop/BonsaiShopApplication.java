@@ -9,5 +9,4 @@ public class BonsaiShopApplication {
     public static void main(String[] args) {
         SpringApplication.run(BonsaiShopApplication.class, args);
     }
-
 }
