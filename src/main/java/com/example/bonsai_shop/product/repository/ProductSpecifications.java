@@ -27,7 +27,9 @@ public class ProductSpecifications {
             // Avoid fetch joins for count queries (used by Spring Data JPA pagination count query)
             if (query.getResultType() != Long.class && query.getResultType() != long.class) {
                 root.fetch("variety", JoinType.INNER);
-                root.fetch("seller", JoinType.INNER);
+                root.fetch("com/example/bonsai_shop/seller", JoinType.INNER);
+                //root.fetch("seller", JoinType.INNER);
+                // root.fetch("com/example/bonsai_shop/seller", JoinType.INNER);
             }
 
             // Customer marketplace must not expose seller-only product states.
