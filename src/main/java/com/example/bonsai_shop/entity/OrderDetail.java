@@ -6,7 +6,11 @@ import java.math.BigDecimal;
 
 @Entity
 @Table(name = "ORDER_DETAIL")
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class OrderDetail {
 
     @Id
@@ -16,7 +20,7 @@ public class OrderDetail {
 
     @ManyToOne
     @JoinColumn(name = "OrderID", nullable = false)
-    private BonsaiOrder order;
+    private Order order;
 
     @ManyToOne
     @JoinColumn(name = "ProductID", nullable = false)

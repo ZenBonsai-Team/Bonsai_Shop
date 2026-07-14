@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<body>
+<div th:fragment="admin_navbar">
+    <header class="admin-top-navbar">
+        <div class="admin-nav-left">
+            <button class="admin-nav-icon" id="sidebarToggle" title="Toggle Sidebar">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+            <div class="admin-search-box d-none d-md-flex">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" placeholder="Explore Stack...">
+            </div>
+        </div>
+        
+        <div class="admin-nav-right">
+            <button class="admin-nav-icon d-none d-lg-block" title="Mega Menu">Mega <i class="fa-solid fa-chevron-down ms-1" style="font-size: 0.8rem;"></i></button>
+            <button class="admin-nav-icon d-none d-lg-block" title="Fullscreen"><i class="fa-solid fa-expand"></i></button>
+            <button class="admin-nav-icon d-none d-lg-block" id="themeToggleBtn" title="Toggle Dark Mode"><i class="fa-solid fa-moon"></i></button>
+            <button class="admin-nav-icon d-none d-sm-block" title="Language">
+                <img src="https://flagcdn.com/w20/gb.png" alt="English" style="width: 20px; border-radius: 2px;">
+                <i class="fa-solid fa-chevron-down ms-1" style="font-size: 0.8rem;"></i>
+            </button>
+            
+            <button class="admin-nav-icon position-relative" title="Notifications">
+                <i class="fa-regular fa-bell"></i>
+                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.6rem; padding: 2px 5px;">5</span>
+            </button>
+            
+            <button class="admin-nav-icon position-relative" title="Messages">
+                <i class="fa-regular fa-envelope"></i>
+                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-warning text-dark" style="font-size: 0.6rem; padding: 2px 5px;">3</span>
+            </button>
+            
+            <div class="admin-nav-profile">
+                <img th:src="@{'https://ui-avatars.com/api/?name=' + ${#authentication.name} + '&background=0D8ABC&color=fff'}" alt="User Avatar">
+                <div class="d-none d-sm-block text-start">
+                    <span class="user-name" sec:authentication="name">John Doe</span>
+                </div>
+                <i class="fa-solid fa-chevron-down text-secondary" style="font-size: 0.8rem;"></i>
+            </div>
+        </div>
+    </header>
+    
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const themeToggleBtn = document.getElementById('themeToggleBtn');
+            if (themeToggleBtn) {
+                themeToggleBtn.addEventListener('click', function() {
+                    const htmlElement = document.documentElement;
+                    const currentTheme = htmlElement.getAttribute('data-bs-theme');
+                    const icon = this.querySelector('i');
+                    
+                    if (currentTheme === 'dark') {
+                        htmlElement.setAttribute('data-bs-theme', 'light');
+                        icon.classList.remove('fa-sun');
+                        icon.classList.add('fa-moon');
+                        localStorage.setItem('theme', 'light');
+                    } else {
+                        htmlElement.setAttribute('data-bs-theme', 'dark');
+                        icon.classList.remove('fa-moon');
+                        icon.classList.add('fa-sun');
+                        localStorage.setItem('theme', 'dark');
+                    }
+                });
+                
+                // Set initial theme based on localStorage
+                const savedTheme = localStorage.getItem('theme');
+                if (savedTheme === 'dark') {
+                    document.documentElement.setAttribute('data-bs-theme', 'dark');
+                    const icon = themeToggleBtn.querySelector('i');
+                    icon.classList.remove('fa-moon');
+                    icon.classList.add('fa-sun');
+                }
+            }
+        });
+    </script>
+</div>
+</body>
+</html>

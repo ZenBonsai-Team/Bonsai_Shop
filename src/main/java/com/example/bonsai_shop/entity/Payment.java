@@ -7,7 +7,11 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "PAYMENT")
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class Payment {
 
     @Id
@@ -17,7 +21,7 @@ public class Payment {
 
     @OneToOne
     @JoinColumn(name = "OrderID", nullable = false, unique = true)
-    private BonsaiOrder order;
+    private Order order;
 
     @Column(name = "PaymentMethod", length = 100)
     private String paymentMethod;

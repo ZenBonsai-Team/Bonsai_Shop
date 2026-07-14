@@ -5,7 +5,7 @@ import lombok.*;
 import java.util.List;
 
 @Entity
-@Table(name = "BUSINESS_ACTION")
+@Table(name = "BUSSINESS_ACTION")
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class BusinessAction {
 

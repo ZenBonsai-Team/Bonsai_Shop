@@ -1,0 +1,43 @@
+<!-- 
+  Reusable Header Component
+  Under: src/main/resources/templates/fragments/header.html
+-->
+<header th:fragment="header" class="dashboard-header" xmlns:th="http://www.thymeleaf.org">
+    <!-- Left Hand Side: Sidebar trigger (mobile) & Breadcrumbs -->
+    <div class="header-left">
+        <button class="sidebar-toggle-btn" aria-label="Toggle Sidebar"><i class="fa-solid fa-bars"></i></button>
+        
+        <!-- Breadcrumb Component -->
+        <div th:replace="~{fragments/breadcrumb :: breadcrumb}"></div>
+    </div>
+
+    <!-- Right Hand Side: Notifications & User Profile -->
+    <div class="header-right">
+        <!-- Notification Center -->
+        <button class="header-action-btn" aria-label="Notifications">
+            <span><i class="fa-solid fa-bell"></i></span>
+            <span class="badge-dot"></span>
+        </button>
+
+        <!-- User Info Panel -->
+        <!-- Fallbacks to placeholder details if not authenticated in Thymeleaf Spring Security -->
+        <div class="header-user-profile">
+            <img class="user-profile-avatar" 
+                 src="https://api.dicebear.com/7.x/adventurer/svg?seed=moderator"
+                 alt="User Avatar">
+            
+            <div class="user-profile-info">
+                <!-- If Spring Security is present, display authenticated name -->
+                <span class="user-profile-name" 
+                      th:text="${#authentication != null and #authentication.name != null ? #authentication.name : 'Order Moderator'}">
+                    Moderator User
+                </span>
+                
+                <span class="user-profile-role" 
+                      th:text="${role != null ? role : 'Moderator'}">
+                    Moderator
+                </span>
+            </div>
+        </div>
+    </div>
+</header>

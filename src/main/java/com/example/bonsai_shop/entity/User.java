@@ -7,7 +7,11 @@ import java.util.List;
 
 @Entity
 @Table(name = "USER")
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class User {
 
     @Id
@@ -43,7 +47,10 @@ public class User {
     private LocalDateTime createdAt = LocalDateTime.now();
 
     @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL)
-    private List<BonsaiOrder> orders;
+    private List<Order> orders;
+
+    @Column(name = "avatar_public_id")
+    private String avatarPublicId;
 
     @ManyToOne
     @JoinColumn(name = "RoleID", nullable = false)

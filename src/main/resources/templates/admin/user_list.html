@@ -1,18 +1,23 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <title>Quản lý người dùng - Bonsai Shop</title>
-    <link rel="stylesheet" th:href="@{/css/admin_user_list.css}"/>
-</head>
+<head th:replace="~{fragments/head :: head('Quản lý người dùng - Bonsai Shop', '/css/admin_user_list.css')}"></head>
 <body>
 
-<div class="admin-container">
+<div class="dashboard-layout">
+    <div th:replace="~{fragments/sidebar :: sidebar('admin-users')}"></div>
 
-    <div class="admin-header">
-        <h1>👥 Quản lý người dùng</h1>
-        <a th:href="@{/home}" class="btn-home">← Về trang chủ</a>
-    </div>
+    <main class="dashboard-main">
+        <!-- Admin Top Navbar -->
+        <div th:replace="~{fragments/admin_navbar :: admin_navbar}"></div>
+        
+        <div class="dashboard-content-wrapper">
+            <header class="dashboard-header">
+                <div>
+                    <h1 class="serif-text mb-0">👥 Quản lý người dùng</h1>
+                </div>
+            </header>
+
+            <section class="dashboard-content-box mt-4">
 
     <div th:if="${success}" th:text="${success}" class="alert alert-success"></div>
     <div th:if="${error}" th:text="${error}" class="alert alert-error"></div>
@@ -82,6 +87,9 @@
         </tbody>
     </table>
 
+        </section>
+        </div>
+    </main>
 </div>
 
 <script th:src="@{/js/admin_user_list.js}"></script>

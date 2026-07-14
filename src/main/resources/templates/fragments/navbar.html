@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<body>
+<div th:fragment="navbar">
+    <nav class="navbar navbar-expand-lg navbar-custom sticky-top">
+        <div class="container">
+            <!-- Brand Logo -->
+            <a class="navbar-brand navbar-brand-custom d-flex align-items-center gap-2" th:href="@{/home}">
+                <img th:src="@{/images/logo.png}" alt="Bonsai Shop Logo" style="height: 80px; max-height: 80px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); border: 1px solid rgba(0,0,0,0.05); margin-top: -12px; margin-bottom: -12px; object-fit: contain;">
+            </a>
+            
+            <!-- Toggle for Mobile -->
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
+                <i class="fa-solid fa-bars fs-4 text-dark"></i>
+            </button>
+
+            <!-- Navigation Menu -->
+            <div class="collapse navbar-collapse" id="navbarContent">
+                <ul class="navbar-nav mx-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link nav-link-custom" th:classappend="${activePage == 'home'} ? 'active' : ''" th:href="@{/home}">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link nav-link-custom" th:classappend="${activePage == 'marketplace'} ? 'active' : ''" th:href="@{/marketplace}">Bonsai Marketplace</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link nav-link-custom" th:classappend="${activePage == 'community'} ? 'active' : ''" th:href="@{/community}">Community</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link nav-link-custom" href="#">VIP Elite Showroom</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link nav-link-custom" href="#">Contact</a>
+                    </li>
+                </ul>
+
+                <!-- Auth & Cart -->
+                <div class="d-flex align-items-center gap-3">
+                    <div sec:authorize="isAnonymous()" class="d-flex align-items-center gap-2">
+                        <a th:href="@{/login}" class="btn-auth-signin">Sign In</a>
+                        <a th:href="@{/register}" class="btn btn-auth-register">Register</a>
+                    </div>
+                    <div sec:authorize="isAuthenticated()" class="d-flex align-items-center gap-2">
+                        <!-- Nút Dashboard cho Admin/Seller -->
+                        <a sec:authorize="hasRole('ADMIN')" th:unless="${hideAdminBtn}" th:href="@{/admin}" class="btn btn-outline-dark btn-sm rounded-pill px-3">
+                            <i class="fa-solid fa-gauge me-1"></i> Dashboard
+                        </a>
+                        <a sec:authorize="hasRole('SELLER')" th:unless="${hideSellerBtn}" th:href="@{/seller}" class="btn btn-outline-dark btn-sm rounded-pill px-3">
+                            <i class="fa-solid fa-store me-1"></i> Seller Portal
+                        </a>
+                        <a th:href="@{/profile}" class="nav-icon-link text-decoration-none" title="Profile"><i class="fa-regular fa-user"></i></a>
+                        <form method="post" th:action="@{/logout}" class="m-0" th:unless="${hideAdminBtn}">
+                            <button type="submit" class="btn btn-link text-dark p-0 nav-icon-link" title="Đăng xuất"><i class="fa-solid fa-arrow-right-from-bracket"></i></button>
+                        </form>
+                    </div>
+
+                    <!-- Cart icon -->
+                    <a href="#" class="nav-icon-link text-decoration-none position-relative ms-1" title="Giỏ hàng">
+                        <i class="fa-solid fa-bag-shopping"></i>
+                        <span class="badge-count-orange">2</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- WELCOME POPUP (chỉ hiện khi đã đăng nhập và lần đầu) -->
+    <div class="welcome-popup align-items-center" sec:authorize="isAuthenticated()" id="welcomePopup">
+        <div class="d-flex align-items-center gap-3">
+            <div class="welcome-icon-box">
+                <i class="fa-solid fa-leaf text-success fs-4"></i>
+            </div>
+            <div>
+                <strong class="d-block text-dark" style="font-size: 1.05rem;">Chào mừng quay trở lại!</strong>
+                <span class="text-secondary" style="font-size: 0.9rem;" sec:authentication="name"></span>
+            </div>
+        </div>
+        <button class="btn-close ms-4" onclick="this.parentElement.style.display='none'" aria-label="Đóng"></button>
+    </div>
+
+    <script sec:authorize="isAuthenticated()">
+        document.addEventListener("DOMContentLoaded", function() {
+            if (!sessionStorage.getItem('welcomeShown')) {
+                var wp = document.getElementById('welcomePopup');
+                if (wp) {
+                    wp.style.display = 'flex';
+                    // Trigger reflow for transition
+                    void wp.offsetWidth;
+                    wp.classList.add('show');
+                    
+                    setTimeout(() => { 
+                        wp.classList.remove('show'); 
+                        setTimeout(() => wp.style.display = 'none', 500);
+                    }, 4000);
+                    sessionStorage.setItem('welcomeShown', 'true');
+                }
+            }
+        });
+    </script>
+</div>
+</body>
+</html>

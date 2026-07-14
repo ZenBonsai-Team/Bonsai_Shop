@@ -1,0 +1,100 @@
+<!-- 
+  Reusable Dynamic Sidebar Component
+  Under: src/main/resources/templates/fragments/sidebar.html
+-->
+<aside th:fragment="sidebar(paramActivePage)" class="dashboard-sidebar" xmlns:th="http://www.thymeleaf.org">
+    <th:block th:with="
+        role=${role != null ? role : (paramActivePage != null && #strings.startsWith(paramActivePage, 'admin-') ? 'ADMIN' : (paramActivePage != null && #strings.startsWith(paramActivePage, 'seller-') ? 'SELLER' : null))},
+        activePage=${paramActivePage != null ? (#strings.contains(paramActivePage, '-') ? #strings.substringAfter(paramActivePage, '-') : paramActivePage) : (activePage != null ? activePage : null)}
+    ">
+        <!-- Brand Header -->
+        <div class="sidebar-brand">
+            <div class="logo-icon"><i class="fa-solid fa-leaf"></i></div>
+            <div class="brand-name">Bonsai Portal</div>
+        </div>
+
+        <!-- Navigation List (Conditionally rendered by role/authority) -->
+        <!-- TODO: Integrates with Spring Security sec:authorize tags if required in future -->
+        <nav class="sidebar-nav">
+            <!-- 1. ORDER MODERATOR MENU -->
+            <!-- Shown if role is MODERATOR or if role parameter is not specified (default) -->
+            <th:block th:if="${role == 'MODERATOR' or role == null}">
+                <a th:href="@{/moderator/orders}" 
+                   class="sidebar-nav-item" 
+                   th:classappend="${activePage == 'orders' ? 'active' : ''}">
+                    <span class="nav-icon"><i class="fa-solid fa-box"></i></span>
+                    <span>Order Dashboard</span>
+                </a>
+                <a href="#" class="sidebar-nav-item" 
+                   th:classappend="${activePage == 'claims' ? 'active' : ''}">
+                    <span class="nav-icon"><i class="fa-solid fa-triangle-exclamation"></i></span>
+                    <span>Claims Management</span>
+                </a>
+                <a href="#" class="sidebar-nav-item" 
+                   th:classappend="${activePage == 'profile' ? 'active' : ''}">
+                    <span class="nav-icon"><i class="fa-solid fa-user"></i></span>
+                    <span>Profile Settings</span>
+                </a>
+            </th:block>
+
+            <!-- 2. SELLER MENU -->
+            <th:block th:if="${role == 'SELLER'}">
+                <a th:href="@{/seller}" 
+                   class="sidebar-nav-item" 
+                   th:classappend="${activePage == 'dashboard' ? 'active' : ''}">
+                    <span class="nav-icon"><i class="fa-solid fa-gauge-high"></i></span>
+                    <span>Dashboard</span>
+                </a>
+                <a th:href="@{/seller/products}" 
+                   class="sidebar-nav-item" 
+                   th:classappend="${activePage == 'products' ? 'active' : ''}">
+                    <span class="nav-icon"><i class="fa-solid fa-seedling"></i></span>
+                    <span>My Products</span>
+                </a>
+                <a th:href="@{/seller/catalog}" 
+                   class="sidebar-nav-item" 
+                   th:classappend="${activePage == 'catalog' ? 'active' : ''}">
+                    <span class="nav-icon"><i class="fa-solid fa-book"></i></span>
+                    <span>Catalog</span>
+                </a>
+                <a th:href="@{/seller/profile}" 
+                   class="sidebar-nav-item" 
+                   th:classappend="${activePage == 'profile' ? 'active' : ''}">
+                    <span class="nav-icon"><i class="fa-solid fa-user"></i></span>
+                    <span>My Profile</span>
+                </a>
+            </th:block>
+
+            <!-- 3. ADMIN MENU -->
+            <th:block th:if="${role == 'ADMIN'}">
+                <a th:href="@{/admin/users}" 
+                   class="sidebar-nav-item" 
+                   th:classappend="${activePage == 'users' ? 'active' : ''}">
+                    <span class="nav-icon"><i class="fa-solid fa-users"></i></span>
+                    <span>User Directory</span>
+                </a>
+                <a href="#" class="sidebar-nav-item" 
+                   th:classappend="${activePage == 'all-orders' ? 'active' : ''}">
+                    <span class="nav-icon"><i class="fa-solid fa-box"></i></span>
+                    <span>All Orders</span>
+                </a>
+                <a href="#" class="sidebar-nav-item" 
+                   th:classappend="${activePage == 'system-config' ? 'active' : ''}">
+                    <span class="nav-icon"><i class="fa-solid fa-gear"></i></span>
+                    <span>System Configurations</span>
+                </a>
+            </th:block>
+        </nav>
+
+        <!-- Logout Action Footer -->
+        <div class="sidebar-footer">
+            <form method="post" th:action="@{/logout}">
+                <input th:if="${_csrf != null}" type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                <button type="submit" class="sidebar-logout-btn">
+                    <span class="logout-icon"><i class="fa-solid fa-right-from-bracket"></i></span>
+                    <span>Logout</span>
+                </button>
+            </form>
+        </div>
+    </th:block>
+</aside>
