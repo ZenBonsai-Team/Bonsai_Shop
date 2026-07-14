@@ -9,6 +9,7 @@
     --text-light: #60645f;    /* Chữ phụ xám */
     --muted: #8d928c;         /* Chữ mờ ghi */
     --bg: #fafafa;            /* Nền trang */
+    --danger: #C0392B;        /* Đỏ sang trọng */
     --font-serif: 'Playfair Display', serif;
     --font-sans: 'Inter', sans-serif;
     --container: 1200px;
@@ -59,7 +60,7 @@ body {
     height: 100%;
 }
 
-/* 1. Brand Logo Block - Chuẩn hóa màu Luxury đồng bộ */
+/* 1. Brand Logo Block */
 .brand a {
     text-decoration: none;
     display: flex;
@@ -78,7 +79,7 @@ body {
     font-family: var(--font-sans);
     font-size: 0.85rem;
     font-weight: 600;
-    color: rgba(255, 255, 255, 0.8); /* Thay thế màu tím lỗi bằng màu trắng bạc luxury */
+    color: rgba(255, 255, 255, 0.8);
     letter-spacing: 1px;
     line-height: 1;
 }
@@ -126,7 +127,6 @@ body {
     gap: 20px;
 }
 
-/* Ô tìm kiếm bo viền thanh lịch */
 .search-wrap {
     position: relative;
     display: flex;
@@ -153,15 +153,7 @@ body {
 .search-bar:focus {
     outline: none;
 }
-.search-btn {
-    background: transparent;
-    border: none;
-    cursor: pointer;
-    font-size: 0.9rem;
-    color: #FFFFFF;
-}
 
-/* Giỏ hàng Luxury */
 .icon-btn {
     background: transparent;
     border: none;
@@ -189,7 +181,6 @@ body {
     justify-content: center;
 }
 
-/* Nút Đăng nhập cho khách */
 .btn-login-premium {
     font-family: var(--font-sans);
     font-size: 0.75rem;
@@ -208,7 +199,6 @@ body {
     border-color: var(--gold);
 }
 
-/* Khối tài khoản thành viên Premium */
 .user-menu-premium {
     position: relative;
 }
@@ -259,7 +249,6 @@ body {
     transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Menu Dropdown */
 .dropdown-premium {
     position: absolute;
     top: calc(100% + 8px);
@@ -376,15 +365,14 @@ body {
     line-height: 1.6;
 }
 
-/* Appointment Layout Blocks */
+/* Layout Grid */
 .appointment-grid {
     display: flex;
     flex-direction: column;
     gap: 40px;
 }
 .appointment-card {
-    display: grid;
-    grid-template-columns: 320px 1fr;
+    display: block; /* Trải rộng full chiều ngang chuẩn khung xem triển lãm */
     background: #FFFFFF;
     border: 1px solid rgba(22, 24, 21, 0.05);
     box-shadow: 0 10px 40px rgba(17, 34, 25, 0.03);
@@ -397,26 +385,6 @@ body {
     border-color: rgba(197, 160, 89, 0.25);
 }
 
-.appointment-image-wrapper {
-    position: relative;
-    overflow: hidden;
-    background-color: var(--gold-light);
-}
-.appointment-image-wrapper img {
-    width: 100%; height: 100%;
-    object-fit: cover;
-    transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.appointment-card:hover .appointment-image-wrapper img {
-    transform: scale(1.06);
-}
-.image-overlay-gradient {
-    position: absolute;
-    top: 0; left: 0; width: 100%; height: 100%;
-    background: linear-gradient(to right, rgba(0,0,0,0.08), transparent);
-}
-
-/* Card Information Context */
 .appointment-content {
     padding: 40px;
     display: flex;
@@ -429,7 +397,7 @@ body {
     margin-bottom: 16px;
 }
 
-/* Trạng thái đổi màu động theo thuộc tính status */
+/* Status Tags */
 .appointment-status-tag {
     display: inline-block;
     padding: 6px 14px;
@@ -469,7 +437,7 @@ body {
     margin-bottom: 24px;
 }
 
-/* Details Parameter Grid */
+/* Detail Parameter Items */
 .appointment-details-list {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -506,14 +474,21 @@ body {
     line-height: 1.5;
 }
 
-/* Action Trigger System */
+/* ==========================================================================
+   BUTTONS SYSTEM (Đồng bộ, cân đối tuyệt đối)
+   ========================================================================== */
 .appointment-actions {
     display: flex;
     gap: 14px;
     margin-top: auto;
+    align-items: center;
 }
 .btn-apt-luxury {
-    padding: 12px 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 46px; /* Chuẩn hóa chiều cao bằng nhau cho mọi nút */
+    padding: 0 28px;
     font-family: var(--font-sans);
     font-size: 0.75rem;
     font-weight: 600;
@@ -524,6 +499,8 @@ body {
     cursor: pointer;
     transition: var(--transition);
 }
+
+/* 1. Nút Xem chi tiết (View Detail) */
 .btn-apt-luxury.type-view {
     background: var(--primary);
     color: #FFFFFF;
@@ -532,6 +509,8 @@ body {
     background: var(--gold);
     color: var(--primary);
 }
+
+/* 2. Nút Cập nhật (Update) */
 .btn-apt-luxury.type-edit {
     border-color: rgba(17, 52, 37, 0.2);
     color: var(--primary);
@@ -541,16 +520,27 @@ body {
     border-color: var(--primary);
     background: rgba(17, 52, 37, 0.03);
 }
+
+/* 3. Nút Hủy (Cancel) */
 .btn-apt-luxury.type-cancel {
     background: transparent;
-    color: #C0392B;
-    margin-left: auto;
+    color: var(--danger);
+    margin-left: auto; /* Đẩy nút Hủy sang lề phải của Card */
     border: 1px solid rgba(192, 57, 43, 0.15);
 }
 .btn-apt-luxury.type-cancel:hover {
-    background: #C0392B;
+    background: var(--danger);
     color: #FFFFFF;
-    border-color: #C0392B;
+    border-color: var(--danger);
+}
+
+/* 4. Nút Xác nhận hủy đỏ đậm trong Modal */
+.btn-apt-luxury.type-danger-confirm {
+    background: var(--danger);
+    color: #FFFFFF;
+}
+.btn-apt-luxury.type-danger-confirm:hover {
+    background: #962D22;
 }
 
 /* Empty View Block */
@@ -591,18 +581,18 @@ body {
 .btn-discover-luxury:hover { background: var(--gold); color: var(--primary); }
 
 /* ==========================================================================
-   MODAL / POPUP SYSTEM DESIGN (Chuẩn Hóa Giao Diện Độc Quyền)
+   MODAL POPUP SYSTEM DESIGN (Chuẩn Hóa Giao Diện Độc Quyền)
    ========================================================================== */
 .modal {
     display: none;
     position: fixed;
     top: 0; left: 0;
     width: 100%; height: 100%;
-    background-color: rgba(22, 24, 21, 0.5); /* Tối mờ nhẹ nghệ thuật */
+    background-color: rgba(15, 17, 16, 0.6); /* Nền mờ nghệ thuật sẫm màu */
     z-index: 2000;
-    backdrop-filter: blur(8px); /* Tăng độ blur mượt mà mịn màng */
+    backdrop-filter: blur(12px); /* Tăng nhẹ độ phủ Blur */
     opacity: 0;
-    transition: opacity 0.4s ease;
+    transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .modal.active {
     display: flex;
@@ -614,11 +604,11 @@ body {
     background-color: #FFFFFF;
     width: 100%;
     max-width: 560px;
-    padding: 40px;
+    padding: 44px;
     position: relative;
     border: 1px solid rgba(197, 160, 89, 0.25);
-    box-shadow: 0 30px 70px rgba(17, 34, 25, 0.15);
-    transform: translateY(-20px);
+    box-shadow: 0 30px 70px rgba(17, 34, 25, 0.2);
+    transform: translateY(-30px);
     transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .modal.active .modal-content {
@@ -647,7 +637,10 @@ body {
     letter-spacing: -0.5px;
 }
 
-/* Định dạng cấu trúc hiển thị tham số */
+/* Định dạng nội dung tĩnh */
+.modal-info-static, .modal-body-details {
+    margin-bottom: 24px;
+}
 .modal-content p {
     font-size: 0.95rem;
     color: var(--text-light);
@@ -669,31 +662,48 @@ body {
     font-weight: 500;
 }
 
-/* Chuẩn hóa hệ thống Input Form trong Modal Update/Chỉnh sửa */
-.form-group-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 18px;
-    margin-bottom: 18px;
+/* Căn lề bổ trợ cho Modal Hủy Hẹn */
+.text-center {
+    text-align: center;
 }
-.form-group {
+.text-center p {
+    display: block;
+}
+.cancel-warning-icon {
+    font-size: 2.5rem;
+    margin-bottom: 16px;
+}
+.cancel-message {
+    font-size: 1rem !important;
+    line-height: 1.6;
+    color: var(--text-light);
+    margin-bottom: 24px !important;
+}
+.highlight-gold {
+    color: var(--gold) !important;
+    font-size: 1.05rem;
+}
+.justify-center {
+    justify-content: center !important;
+}
+
+/* Chuẩn hóa hệ thống Input Form */
+.form-group-luxury {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 8px;
+    margin-bottom: 20px;
 }
-.form-group.full-width {
-    grid-column: span 2;
-}
-.form-group label {
+.form-group-luxury label {
     font-size: 0.72rem;
     text-transform: uppercase;
     color: var(--muted);
     font-weight: 600;
     letter-spacing: 0.5px;
 }
-.form-control {
+.input-luxury, .textarea-luxury {
     width: 100%;
-    padding: 10px 14px;
+    padding: 12px 16px;
     font-family: var(--font-sans);
     font-size: 0.9rem;
     color: var(--text);
@@ -701,18 +711,17 @@ body {
     border: 1px solid rgba(22, 24, 21, 0.1);
     transition: all 0.3s ease;
 }
-.form-control:focus {
+.input-luxury:focus, .textarea-luxury:focus {
     outline: none;
     border-color: var(--gold);
     background-color: #FFFFFF;
     box-shadow: 0 4px 12px rgba(197, 160, 89, 0.05);
 }
-textarea.form-control {
+.textarea-luxury {
     resize: none;
-    min-height: 90px;
 }
 
-/* Chân khối Modal điều khiển nút */
+/* Khối nút bấm cuối Modal */
 .modal-actions {
     display: flex;
     justify-content: flex-end;
@@ -720,44 +729,6 @@ textarea.form-control {
     margin-top: 32px;
     border-top: 1px solid rgba(22, 24, 21, 0.08);
     padding-top: 24px;
-}
-.modal-actions .btn {
-    padding: 11px 24px;
-    font-family: var(--font-sans);
-    font-size: 0.75rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 1.5px;
-    border: 1px solid transparent;
-    cursor: pointer;
-    transition: var(--transition);
-}
-.modal-actions .btn.outline {
-    border-color: rgba(17, 52, 37, 0.2);
-    color: var(--primary);
-    background: transparent;
-}
-.modal-actions .btn.outline:hover {
-    border-color: var(--primary);
-    background: rgba(17, 52, 37, 0.03);
-}
-.modal-actions .btn.primary {
-    background: var(--primary);
-    color: #FFFFFF;
-}
-.modal-actions .btn.primary:hover {
-    background: var(--gold);
-    color: var(--primary);
-}
-.modal-actions .btn.danger {
-    background: transparent;
-    color: #C0392B;
-    border: 1px solid rgba(192, 57, 43, 0.15);
-}
-.modal-actions .btn.danger:hover {
-    background: #C0392B;
-    color: #FFFFFF;
-    border-color: #C0392B;
 }
 
 /* ==========================================================================
@@ -797,8 +768,6 @@ textarea.form-control {
 @media (max-width: 992px) {
     .navbar { height: 80px; }
     .appointment-page { padding-top: 130px; }
-    .appointment-card { grid-template-columns: 1fr; }
-    .appointment-image-wrapper { height: 260px; }
     .btn-apt-luxury.type-cancel { margin-left: 0; }
     .footer-inner { grid-template-columns: 1fr; gap: 40px; }
 }
@@ -814,7 +783,8 @@ textarea.form-control {
     .appointment-title { font-size: 2.2rem; }
     .appointment-details-list { grid-template-columns: 1fr; gap: 16px; }
     .detail-item.full-width { grid-column: span 1; }
-    .appointment-actions { flex-direction: column; }
+    .appointment-actions { flex-direction: column; gap: 12px; }
+    .btn-apt-luxury { width: 100%; }
 
     /* Responsive cấu trúc Modal Mobile */
     .modal-content {
@@ -828,19 +798,8 @@ textarea.form-control {
     .modal-content p strong {
         min-width: auto;
     }
-    .form-group-grid {
-        grid-template-columns: 1fr;
-        gap: 14px;
-    }
-    .form-group.full-width {
-        grid-column: span 1;
-    }
     .modal-actions {
         flex-direction: column;
         gap: 12px;
-    }
-    .modal-actions .btn {
-        width: 100%;
-        text-align: center;
     }
 }

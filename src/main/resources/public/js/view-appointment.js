@@ -3,6 +3,19 @@
    ========================================================================== */
 document.addEventListener('DOMContentLoaded', () => {
 
+    /* ==========================================================================
+       BẮT THÔNG BÁO TỪ CONTROLLER TRẢ VỀ VÀ HIỂN THỊ QUA TOAST LUXURY
+       ========================================================================== */
+    const carrierSuccess = document.getElementById('carrier-success');
+    const carrierError = document.getElementById('carrier-error');
+
+    if (carrierSuccess && carrierSuccess.textContent.trim() !== "") {
+        showToast(carrierSuccess.textContent.trim(), 'success');
+    }
+    if (carrierError && carrierError.textContent.trim() !== "") {
+        showToast(carrierError.textContent.trim(), 'danger');
+    }
+
     /* 1. TỰ ĐỘNG CẬP NHẬT NĂM FOOTER */
     const yearEl = document.getElementById('year');
     if (yearEl) yearEl.textContent = new Date().getFullYear();
@@ -28,7 +41,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /* 3. HIỆU ỨNG TOAST NOTIFICATION CAO CẤP */
-    const showToast = (text, type = 'info') => {
+    function showToast(text, type = 'info') {
         const existing = document.querySelector('.luxury-toast');
         if (existing) existing.remove();
 
@@ -40,7 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
             position: 'fixed',
             bottom: '30px',
             right: '30px',
-            background: type === 'danger' ? '#C0392B' : '#113425',
+            background: type === 'danger' ? '#C0392B' : (type === 'success' ? '#113425' : '#1e221f'),
             color: '#FFFFFF',
             padding: '16px 32px',
             fontSize: '0.82rem',
@@ -66,44 +79,79 @@ document.addEventListener('DOMContentLoaded', () => {
             toast.style.transform = 'translateY(20px)';
             setTimeout(() => toast.remove(), 500);
         }, 4000);
+    }
+
+    /* 4. ĐIỀU KHIỂN MODAL HỦY LỊCH HẸN CAO CẤP */
+    const cancelModal = document.getElementById('cancelAppointmentModal');
+    const cancelForm = document.getElementById('cancelAppointmentForm');
+    const cancelProductNameSpan = document.getElementById('cancelProductName');
+    const triggerCancelButtons = document.querySelectorAll('.trigger-cancel-modal');
+    const closeCancelElements = document.querySelectorAll('.id-close-cancel, .id-close-cancel-btn');
+
+    const closeCancelModal = () => {
+        if (cancelModal) {
+            cancelModal.classList.remove('active');
+        }
     };
 
-    /* 4. SỰ KIỆN HỦY LỊCH HẸN VỚI HOẠT ẢNH MỀM (SOFT ERASE ANIMATION) */
-    const cancelButtons = document.querySelectorAll('.btn-apt-luxury.type-cancel');
+    triggerCancelButtons.forEach(button => {
+        button.addEventListener('click', function () {
+            const id = this.getAttribute('data-id');
+            const productName = this.getAttribute('data-product');
 
-    cancelButtons.forEach(button => {
-        button.addEventListener('click', function (e) {
-            e.preventDefault();
-
-            const appointmentId = this.getAttribute('data-id');
-            const cardElement = this.closest('.appointment-card');
-            const productName = cardElement ? cardElement.querySelector('.appointment-product-name').textContent : 'tác phẩm';
-
-            if (confirm(`Quý khách có chắc chắn muốn hủy yêu cầu thưởng lãm tác phẩm "${productName}"?`)) {
-                showToast(`Đang xử lý yêu cầu hủy...`, 'info');
-
-                if (cardElement) {
-                    cardElement.style.transform = 'scale(0.96) translateY(10px)';
-                    cardElement.style.opacity = '0';
-                    cardElement.style.transition = 'all 0.6s cubic-bezier(0.16, 1, 0.3, 1)';
-
-                    setTimeout(() => {
-                        cardElement.remove();
-                        showToast(`Đã hủy lịch hẹn xem: ${productName}`, 'danger');
-
-                        const remainingCards = document.querySelectorAll('.appointment-card');
-                        if (remainingCards.length === 0) {
-                            window.location.reload();
-                        }
-                    }, 600);
-                }
+            if (cancelProductNameSpan) {
+                cancelProductNameSpan.textContent = productName;
+            }
+            if (cancelForm) {
+                cancelForm.setAttribute('action', `/appointments/cancel/${id}`);
+            }
+            if (cancelModal) {
+                cancelModal.classList.add('active');
             }
         });
     });
 
-    /* 5. VIEW APPOINTMENT DETAIL (Sửa lỗi xử lý và định dạng Ngày/Giờ hiển thị) */
+    closeCancelElements.forEach(el => {
+        el.addEventListener('click', closeCancelModal);
+    });
+
+    // Xử lý gửi yêu cầu hủy lịch hẹn
+    if (cancelForm) {
+        cancelForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+            closeCancelModal();
+            showToast("Đang xử lý yêu cầu hủy...", "info");
+
+            const actionUrl = this.getAttribute('action');
+            const formData = new FormData(this);
+
+            fetch(actionUrl, {
+                method: 'POST',
+                body: formData
+            })
+                .then(response => {
+                    if (response.ok) {
+                        // Nếu Controller chuyển hướng (redirect), di chuyển trình duyệt đến URL đó
+                        // Việc này giúp Spring Boot mang theo FlashAttribute hiển thị Toast thông báo thành công
+                        if (response.redirected) {
+                            window.location.href = response.url;
+                        } else {
+                            window.location.reload();
+                        }
+                    } else {
+                        showToast("Có lỗi xảy ra khi hủy lịch hẹn!", "danger");
+                    }
+                })
+                .catch(error => {
+                    console.error(error);
+                    showToast("Lỗi kết nối hệ thống!", "danger");
+                });
+        });
+    }
+
+    /* 5. VIEW APPOINTMENT DETAIL[cite: 1] */
     const modal = document.getElementById("appointmentModal");
-    const closeBtn = document.querySelector(".close-btn");
+    const closeBtnElements = document.querySelectorAll(".close-btn, .close-modal-btn");
     const detailButtons = document.querySelectorAll(".view-detail-btn");
 
     detailButtons.forEach(button => {
@@ -114,42 +162,34 @@ document.addEventListener('DOMContentLoaded', () => {
             fetch(`/appointments/detail/${id}`)
                 .then(response => response.json())
                 .then(data => {
-                    // Cập nhật tên, mã, trạng thái, ghi chú[cite: 1]
+                    // Cập nhật thông tin chi tiết[cite: 1]
                     document.getElementById("detailName").textContent = data.productName;
                     document.getElementById("detailCode").textContent = data.productCode;
                     document.getElementById("detailStatus").textContent = data.status;
                     document.getElementById("detailNote").textContent = data.note ?? "Không có ghi chú riêng";
 
-                    // --- XỬ LÝ ĐỊNH DẠNG NGÀY GIỜ CHUẨN LUXURY ---
-                    // Nếu data.appointmentDate trả về chuỗi ISO (VD: "2026-05-12T14:30:00" hoặc định dạng tương tự)
                     if (data.appointmentDate) {
                         const dateObj = new Date(data.appointmentDate);
-
                         if (!isNaN(dateObj.getTime())) {
-                            // Định dạng Ngày: dd/MM/yyyy
                             const day = String(dateObj.getDate()).padStart(2, '0');
                             const month = String(dateObj.getMonth() + 1).padStart(2, '0');
                             const year = dateObj.getFullYear();
-
-                            // Định dạng Giờ: HH:mm
                             const hours = String(dateObj.getHours()).padStart(2, '0');
                             const minutes = String(dateObj.getMinutes()).padStart(2, '0');
 
                             document.getElementById("detailDate").textContent = `${day}/${month}/${year}`;
                             document.getElementById("detailTime").textContent = `${hours}:${minutes}`;
                         } else {
-                            // Backup trường hợp chuỗi không parse được bằng Date object, gán thô tự động
                             document.getElementById("detailDate").textContent = data.appointmentDate;
                             document.getElementById("detailTime").textContent = data.appointmentTime ?? "";
                         }
                     } else {
-                        document.getElementById("detailDate").textContent = data.appointmentDate ?? "";
-                        document.getElementById("detailTime").textContent = data.appointmentTime ?? "";
+                        document.getElementById("detailDate").textContent = "";
+                        document.getElementById("detailTime").textContent = "";
                     }
 
-                    // Kích hoạt hiển thị modal mượt mà qua class CSS[cite: 1]
                     if (modal) {
-                        modal.classList.add('active');
+                        modal.classList.add('active'); // Kích hoạt hiển thị[cite: 1]
                     }
                 })
                 .catch(error => {
@@ -159,30 +199,14 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Hàm đóng modal chuẩn hóa bằng cách loại bỏ class hoạt ảnh[cite: 1]
     const closeModal = () => {
         if (modal) {
             modal.classList.remove('active');
         }
     };
 
-    // Đóng khi click nút Close (X)[cite: 1]
-    if (closeBtn) {
-        closeBtn.addEventListener("click", closeModal);
-    }
-
-    // Đóng khi click ra vùng phông nền tối bên ngoài popup[cite: 1]
-    window.addEventListener("click", function (e) {
-        if (e.target === modal) {
-            closeModal();
-        }
-    });
-
-    // Hỗ trợ đóng nhanh bằng phím bấm ESC[cite: 1]
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && modal && modal.classList.contains('active')) {
-            closeModal();
-        }
+    closeBtnElements.forEach(btn => {
+        btn.addEventListener("click", closeModal);
     });
 
     /* ==========================================================================
@@ -200,23 +224,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
             fetch(`/appointments/detail/${id}`)
                 .then(response => {
-                    if (!response.ok) {
-                        throw new Error("Không tìm thấy lịch hẹn");
-                    }
+                    if (!response.ok) throw new Error("Không tìm thấy lịch hẹn");
                     return response.json();
                 })
                 .then(data => {
-                    // 1. Điền thông tin tĩnh
                     document.getElementById("updateName").textContent = data.productName;
                     document.getElementById("updateCode").textContent = data.productCode;
                     document.getElementById("updateNote").value = data.note ?? "";
 
-                    // 2. Cập nhật thuộc tính Action của Form động theo ID lịch hẹn
                     if (updateForm) {
                         updateForm.setAttribute("action", `/appointments/update/${id}`);
                     }
 
-                    // 3. Xử lý tách chuỗi ISO ("2026-05-12T14:30:00") để gán vào input HTML mẫu
                     if (data.appointmentDate) {
                         const dateObj = new Date(data.appointmentDate);
                         if (!isNaN(dateObj.getTime())) {
@@ -226,13 +245,11 @@ document.addEventListener('DOMContentLoaded', () => {
                             const hours = String(dateObj.getHours()).padStart(2, '0');
                             const minutes = String(dateObj.getMinutes()).padStart(2, '0');
 
-                            // Gán giá trị vào đúng định dạng của thẻ <input type="date/time">
                             document.getElementById("updateDate").value = `${year}-${month}-${day}`;
                             document.getElementById("updateTime").value = `${hours}:${minutes}`;
                         }
                     }
 
-                    // 4. Hiển thị modal
                     if (updateModal) {
                         updateModal.classList.add('active');
                     }
@@ -244,22 +261,29 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-// Hàm đóng Modal Update
     const closeUpdateModal = () => {
         if (updateModal) {
             updateModal.classList.remove('active');
         }
     };
 
-// Lắng nghe sự kiện đóng từ các nút Hủy và dấu (X)
     closeUpdateElements.forEach(el => {
         el.addEventListener("click", closeUpdateModal);
     });
 
-// Đóng khi bấm ra vùng trống bên ngoài
+    // Đóng modal khi click ra ngoài vùng phông nền tối[cite: 1]
     window.addEventListener("click", function (e) {
-        if (e.target === updateModal) {
+        if (e.target === modal) closeModal();
+        if (e.target === updateModal) closeUpdateModal();
+        if (e.target === cancelModal) closeCancelModal();
+    });
+
+    // Phím ESC đóng tất cả modal[cite: 1]
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            closeModal();
             closeUpdateModal();
+            closeCancelModal();
         }
     });
 });

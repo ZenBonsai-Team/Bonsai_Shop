@@ -12,7 +12,6 @@ import com.example.bonsai_shop.customer.dto.AppoimentDetailDTO;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Locale;
 
 @Service
 @RequiredArgsConstructor
@@ -72,6 +71,22 @@ public class ViewingAppointmentService {
         appointment.setNote(note);
         appointment.setUpdatedAt(LocalDateTime.now());
 
+        viewingAppointmentRepository.save(appointment);
+    }
+
+    @Transactional
+    public void cancelViewAppointment(Integer id, User user){
+        ViewingAppointment appointment = viewingAppointmentRepository
+                .findByAppointmentIdAndCustomer(id, user)
+                .orElseThrow(() -> new RuntimeException("Appointment not found"));
+
+        if ("CANCELLED".equals(appointment.getStatus())) {
+            throw new RuntimeException("Lịch hẹn đã được hủy.");
+        }
+        appointment.setStatus("CANCELLED");
+        Product product = appointment.getProduct();
+        product.setProductStatus("AVAILABLE");
+        productRepository.save(product);
         viewingAppointmentRepository.save(appointment);
     }
 }

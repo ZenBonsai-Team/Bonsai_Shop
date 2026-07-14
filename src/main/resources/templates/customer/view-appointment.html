@@ -138,21 +138,23 @@
 
                     <!-- Khu vực các nút bấm Premium Action -->
                     <div class="appointment-actions">
-                        <button
-                                class="btn-apt-luxury type-view view-detail-btn"
+                        <button class="btn-apt-luxury type-view view-detail-btn"
                                 th:data-id="${appointment.appointmentId}">
-                          <span class="btn-text">View Detail</span>
+                            <span class="btn-text">View Detail</span>
                         </button>
 
-                        <button class="btn outline update-btn"
+                        <button class="btn-apt-luxury type-edit update-btn"
                                 th:data-id="${appointment.appointmentId}">
                             <span class="btn-text">Update Appointment</span>
                         </button>
 
-                        <button class="btn danger">
+                        <!-- Đã tích hợp gọi Modal xác nhận cao cấp -->
+                        <button type="button"
+                                class="btn-apt-luxury type-cancel trigger-cancel-modal"
+                                th:data-id="${appointment.appointmentId}"
+                                th:data-product="${appointment.product.productName}">
                             Cancel
                         </button>
-
                     </div>
                 </div>
             </article>
@@ -167,86 +169,92 @@
         </div>
     </section>
 </main>
+
+<!-- MODAL XEM CHI TIẾT LỊCH HẸN -->
 <div id="appointmentModal" class="modal">
-
     <div class="modal-content">
-
         <span class="close-btn">&times;</span>
-
-        <h2>Appointment Detail</h2>
-
-        <p><strong>Tên Bonsai:</strong> <span id="detailName"></span></p>
-
-        <p><strong>Mã cây:</strong> <span id="detailCode"></span></p>
-
-        <p><strong>Ngày:</strong> <span id="detailDate"></span></p>
-
-        <p><strong>Giờ:</strong> <span id="detailTime"></span></p>
-
-        <p><strong>Trạng thái:</strong> <span id="detailStatus"></span></p>
-
-        <p><strong>Ghi chú:</strong> <span id="detailNote"></span></p>
-
+        <h2>Chi tiết lịch hẹn</h2>
+        <div class="modal-body-details">
+            <p><strong>Tên Bonsai:</strong> <span id="detailName"></span></p>
+            <p><strong>Mã cây:</strong> <span id="detailCode"></span></p>
+            <p><strong>Ngày:</strong> <span id="detailDate"></span></p>
+            <p><strong>Giờ:</strong> <span id="detailTime"></span></p>
+            <p><strong>Trạng thái:</strong> <span id="detailStatus"></span></p>
+            <p><strong>Ghi chú:</strong> <span id="detailNote"></span></p>
+        </div>
+        <div class="modal-actions">
+            <button type="button" class="btn-apt-luxury type-edit close-modal-btn">Đóng</button>
+        </div>
     </div>
-
 </div>
-<!-- MODAL UPDATE APPOINTMENT (Bonsai Luxury Exclusive) -->
+
+<!-- MODAL CẬP NHẬT LỊCH HẸN -->
 <div id="updateAppointmentModal" class="modal">
     <div class="modal-content">
         <span class="close-btn id-close-update">&times;</span>
         <h2>Cập nhật Lịch Hẹn</h2>
 
-        <!-- Form gửi dữ liệu cập nhật lên Controller -->
         <form id="updateAppointmentForm" method="post">
+            <input type="hidden"
+                   th:name="${_csrf.parameterName}"
+                   th:value="${_csrf.token}" />
 
-            <input
-                    type="hidden"
-                    th:name="${_csrf.parameterName}"
-                    th:value="${_csrf.token}" />
-
-            <p><strong>Tên Bonsai:</strong> <span id="updateName"></span></p>
-            <p><strong>Mã cây:</strong> <span id="updateCode"></span></p>
+            <div class="modal-info-static">
+                <p><strong>Tên Bonsai:</strong> <span id="updateName"></span></p>
+                <p><strong>Mã cây:</strong> <span id="updateCode"></span></p>
+            </div>
 
             <div class="form-group-luxury">
                 <label class="label-luxury">📅 Ngày thưởng lãm</label>
-                <input type="date"
-                       id="updateDate"
-                       name="appointmentDate"
-                       required
-                       class="input-luxury">
+                <input type="date" id="updateDate" name="appointmentDate" required class="input-luxury">
             </div>
 
             <div class="form-group-luxury">
                 <label class="label-luxury">🕒 Giờ tiếp đón</label>
-                <input type="time"
-                       id="updateTime"
-                       name="appointmentTime"
-                       required
-                       class="input-luxury">
+                <input type="time" id="updateTime" name="appointmentTime" required class="input-luxury">
             </div>
 
             <div class="form-group-luxury">
                 <label class="label-luxury">📝 Yêu cầu / Ghi chú riêng</label>
-                <textarea id="updateNote"
-                          name="note"
-                          rows="3"
-                          class="textarea-luxury"></textarea>
+                <textarea id="updateNote" name="note" rows="3" class="textarea-luxury"></textarea>
             </div>
 
             <div class="modal-actions">
-                <button type="button"
-                        class="btn outline id-close-update-btn">
+                <button type="button" class="btn-apt-luxury type-edit id-close-update-btn">
                     Hủy bỏ
                 </button>
-
-                <button type="submit"
-                        class="btn-apt-luxury type-view">
+                <button type="submit" class="btn-apt-luxury type-view">
                     Xác nhận cập nhật
                 </button>
             </div>
         </form>
     </div>
 </div>
+
+<!-- MODAL HỦY HẸN CAO CẤP (PREMIUM CANCEL CONFIRMATION) -->
+<div id="cancelAppointmentModal" class="modal">
+    <div class="modal-content text-center">
+        <span class="close-btn id-close-cancel">&times;</span>
+        <div class="cancel-warning-icon">⚠️</div>
+        <h2>Xác Nhận Hủy Lịch Hẹn</h2>
+        <p class="cancel-message">Quý khách có chắc chắn muốn hủy yêu cầu thưởng lãm tác phẩm <strong id="cancelProductName" class="highlight-gold">...</strong> tại Showroom Di Sản?</p>
+
+        <form id="cancelAppointmentForm" method="post" class="inline-form">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+            <div class="modal-actions justify-center">
+                <button type="button" class="btn-apt-luxury type-edit id-close-cancel-btn">
+                    Giữ lại lịch hẹn
+                </button>
+                <button type="submit" class="btn-apt-luxury type-danger-confirm">
+                    Xác nhận hủy hẹn
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <footer id="contact" class="footer" role="contentinfo">
     <div class="container footer-inner">
         <div class="footer-col">

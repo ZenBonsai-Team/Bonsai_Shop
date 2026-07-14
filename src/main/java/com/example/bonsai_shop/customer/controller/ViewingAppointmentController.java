@@ -107,6 +107,7 @@ public class ViewingAppointmentController {
                                         @RequestParam LocalDate appointmentDate,
                                         @RequestParam String appointmentTime,
                                         @RequestParam(required = false) String note,
+                                        RedirectAttributes redirectAttributes,
                                         Principal principal){
 
         User user = userService.findByEmail(principal.getName());
@@ -115,14 +116,39 @@ public class ViewingAppointmentController {
                 appointmentDate,
                 LocalTime.parse(appointmentTime)
         );
-        viewingAppointmentService.updateViewingAppointment(
-                id,
-                user,
-                finalAppointmentDate,
-                note
-        );
-
+        try {
+            viewingAppointmentService.updateViewingAppointment(
+                    id,
+                    user,
+                    finalAppointmentDate,
+                    note
+            );
+            redirectAttributes.addFlashAttribute("success",
+                    "Cập nhật lịch hẹn thành công.");
+        }catch(RuntimeException e){
+            redirectAttributes.addFlashAttribute("error",
+                    e.getMessage());
+        }
         return "redirect:/appointments";
     }
+   @PostMapping("/appointments/cancel/{id}")
+    public String cancelAppointment(@PathVariable Integer id,
+                                    Principal principal,
+                                    RedirectAttributes redirectAttributes){
+        User user = userService.findByEmail(principal.getName());
+        try{
+            viewingAppointmentService.cancelViewAppointment(id, user);
 
+            redirectAttributes.addFlashAttribute(
+                    "success",
+                    "Đã hủy lịch hẹn thành công."
+            );
+        }catch(RuntimeException e){
+            redirectAttributes.addFlashAttribute(
+                    "error",
+                    e.getMessage()
+            );
+        }
+        return "redirect:/appointments";
+   }
 }
