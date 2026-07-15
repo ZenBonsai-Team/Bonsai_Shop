@@ -44,10 +44,10 @@ public class SellerProductController {
                          @RequestParam Integer segmentId,
                          @RequestParam String productName,
                          @RequestParam(required = false) String description,
-                         @RequestParam(required = false) Integer age,
-                         @RequestParam(required = false) Float height,
-                         @RequestParam(required = false) Float trunkDiameter,
-                         @RequestParam(required = false) String style,
+                         @RequestParam Integer age,
+                         @RequestParam Float height,
+                         @RequestParam Float trunkDiameter,
+                         @RequestParam String style,
                          @RequestParam BigDecimal price,
                          @RequestParam(defaultValue = "false") Boolean isPublicPrice,
                          @RequestParam(required = false) List<Integer> tagIds,
@@ -97,10 +97,10 @@ public class SellerProductController {
                          @RequestParam Integer segmentId,
                          @RequestParam String productName,
                          @RequestParam(required = false) String description,
-                         @RequestParam(required = false) Integer age,
-                         @RequestParam(required = false) Float height,
-                         @RequestParam(required = false) Float trunkDiameter,
-                         @RequestParam(required = false) String style,
+                         @RequestParam Integer age,
+                         @RequestParam Float height,
+                         @RequestParam Float trunkDiameter,
+                         @RequestParam String style,
                          @RequestParam BigDecimal price,
                          @RequestParam(defaultValue = "false") Boolean isPublicPrice,
                          @RequestParam String productStatus,
@@ -256,7 +256,7 @@ public class SellerProductController {
             return "redirect:/seller/products";
         } catch (RuntimeException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
-            return "redirect:/seller/products/" + productId + "/preview";
+            return "redirect:/seller/products";
         }
     }
 
@@ -270,7 +270,7 @@ public class SellerProductController {
         } catch (RuntimeException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
-        return "redirect:/seller/products/" + productId + "/preview";
+        return "redirect:/seller/products";
     }
 
     private void addProductFormData(Model model, Product product) {

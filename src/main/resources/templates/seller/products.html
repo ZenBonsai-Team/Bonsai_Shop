@@ -67,10 +67,16 @@
                         <a th:if="${product.productStatus == 'DRAFT' || product.productStatus == 'HIDDEN'}" th:href="@{/seller/products/{id}/edit(id=${product.productId})}">Edit</a>
                         <a th:if="${product.productStatus == 'DRAFT' || product.productStatus == 'HIDDEN'}" th:href="@{/seller/products/{id}/media(id=${product.productId})}">Media</a>
                         <a th:href="@{/seller/products/{id}/preview(id=${product.productId})}">Preview</a>
+                        <form th:if="${product.productStatus == 'DRAFT' || product.productStatus == 'HIDDEN'}" method="post" th:action="@{/seller/products/{id}/publish(id=${product.productId})}">
+                            <button type="submit">Publish</button>
+                        </form>
+                        <form th:if="${product.productStatus == 'AVAILABLE'}" method="post" th:action="@{/seller/products/{id}/hide(id=${product.productId})}">
+                            <button type="submit" class="text-warning" onclick="return confirm('Ẩn sản phẩm này khỏi marketplace?')">Hide</button>
+                        </form>
                         <form th:if="${product.productStatus == 'DRAFT'}" method="post" th:action="@{/seller/products/{id}/delete(id=${product.productId})}">
                             <button type="submit" class="text-danger" onclick="return confirm('Xóa sản phẩm này?')">Delete</button>
                         </form>
-                        <span th:if="${product.productStatus != 'DRAFT' && product.productStatus != 'HIDDEN'}" class="muted-text">Locked</span>
+                        <span th:if="${product.productStatus != 'DRAFT' && product.productStatus != 'HIDDEN' && product.productStatus != 'AVAILABLE'}" class="muted-text">Locked</span>
                     </td>
                 </tr>
                 </tbody>

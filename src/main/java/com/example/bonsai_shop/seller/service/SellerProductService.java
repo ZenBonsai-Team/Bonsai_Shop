@@ -88,6 +88,8 @@ public class SellerProductService {
         ProductSegment segment = productSegmentRepository.findById(segmentId)
                 .orElseThrow(() -> new RuntimeException("Segment không tồn tại!"));
 
+        validateRequiredSpecifications(age, height, trunkDiameter, style);
+
         Product product = Product.builder()
                 .seller(seller)
                 .variety(variety)
@@ -134,6 +136,8 @@ public class SellerProductService {
                 .orElseThrow(() -> new RuntimeException("Variety không tồn tại!"));
         ProductSegment segment = productSegmentRepository.findById(segmentId)
                 .orElseThrow(() -> new RuntimeException("Segment không tồn tại!"));
+
+        validateRequiredSpecifications(age, height, trunkDiameter, style);
 
         product.setVariety(variety);
         product.setSegment(segment);
@@ -302,8 +306,23 @@ public class SellerProductService {
                 .map(tag -> ProductTag.builder()
                         .product(product)
                         .tag(tag)
-                        .build())
+                .build())
                 .forEach(productTagRepository::save);
+    }
+
+    private void validateRequiredSpecifications(Integer age, Float height, Float trunkDiameter, String style) {
+        if (age == null) {
+            throw new RuntimeException("Vui lòng nhập tuổi cây.");
+        }
+        if (height == null) {
+            throw new RuntimeException("Vui lòng nhập chiều cao cây.");
+        }
+        if (trunkDiameter == null) {
+            throw new RuntimeException("Vui lòng nhập đường kính thân cây.");
+        }
+        if (style == null || style.isBlank()) {
+            throw new RuntimeException("Vui lòng nhập style cây.");
+        }
     }
 
     public boolean isSold(Product product) {

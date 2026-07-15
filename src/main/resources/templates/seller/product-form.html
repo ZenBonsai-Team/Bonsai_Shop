@@ -96,26 +96,26 @@
         <div class="grid">
             <label>Tuổi
                 <span class="input-with-unit">
-                    <input type="number" name="age" min="0" th:value="${product != null ? product.age : ''}">
+                    <input type="number" name="age" min="0" required th:value="${product != null ? product.age : ''}">
                     <span>năm</span>
                 </span>
             </label>
             <label>Chiều cao
                 <span class="input-with-unit">
-                    <input type="number" step="0.01" name="height" min="0" th:value="${product != null ? product.height : ''}">
+                    <input type="number" step="0.01" name="height" min="0" required th:value="${product != null ? product.height : ''}">
                     <span>cm</span>
                 </span>
             </label>
             <label>Đường kính thân
                 <span class="input-with-unit">
-                    <input type="number" step="0.01" name="trunkDiameter" min="0" th:value="${product != null ? product.trunkDiameter : ''}">
+                    <input type="number" step="0.01" name="trunkDiameter" min="0" required th:value="${product != null ? product.trunkDiameter : ''}">
                     <span>cm</span>
                 </span>
             </label>
         </div>
 
         <label>Style
-            <input name="style" th:value="${product != null ? product.style : ''}">
+            <input name="style" required th:value="${product != null ? product.style : ''}">
         </label>
 
         <label>Giá

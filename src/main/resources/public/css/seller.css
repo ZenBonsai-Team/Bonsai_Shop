@@ -785,13 +785,23 @@ textarea {
     gap: 8px;
 }
 
+.table-actions form {
+    margin: 0;
+}
+
 .table-actions a,
 .table-actions button {
     background: #eef0e8;
+    border: 0;
     border-radius: 8px;
     color: #1f2d24;
     padding: 7px 10px;
     text-decoration: none;
+}
+
+.table-actions .text-warning {
+    background: #fff7e6;
+    color: #9a6700;
 }
 
 .table-actions .text-danger {
