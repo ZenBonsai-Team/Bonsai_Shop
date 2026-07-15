@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<body>
+<header th:fragment="topbar(pageTitle)" class="seller-topbar">
+    <div class="seller-breadcrumb">
+        <a th:href="@{/home}">Home</a>
+        <span>/</span>
+        <strong th:text="${pageTitle}">Seller Portal</strong>
+    </div>
+
+    <div class="seller-topbar-right">
+        <button type="button" class="seller-notification" aria-label="Notifications">
+            <i class="fa-solid fa-bell"></i>
+            <span></span>
+        </button>
+        <a th:href="@{/seller/profile}" class="seller-user-avatar" title="Seller Profile">
+            <img src="https://api.dicebear.com/7.x/adventurer/svg?seed=seller" alt="Seller avatar">
+        </a>
+        <div class="seller-user-meta">
+            <strong sec:authentication="name">seller@example.com</strong>
+            <span>SELLER</span>
+        </div>
+    </div>
+</header>
+</body>
+</html>

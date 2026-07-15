@@ -16,7 +16,7 @@ public interface OrderDetailRepository extends JpaRepository<OrderDetail, Intege
             WHERE od.product.seller.userId = :sellerId
               AND od.order.orderDate >= :startDate
               AND od.order.orderDate < :endDate
-              AND UPPER(COALESCE(od.order.orderStatus, '')) NOT IN ('CANCELLED', 'CANCELED', 'RETURNED', 'REFUNDED')
+              AND UPPER(COALESCE(od.order.orderStatus, '')) = 'COMPLETED'
             """)
     BigDecimal sumMonthlyRevenueBySeller(@Param("sellerId") Integer sellerId,
                                          @Param("startDate") LocalDateTime startDate,
@@ -28,7 +28,7 @@ public interface OrderDetailRepository extends JpaRepository<OrderDetail, Intege
             WHERE od.product.seller.userId = :sellerId
               AND od.order.orderDate >= :startDate
               AND od.order.orderDate < :endDate
-              AND UPPER(COALESCE(od.order.orderStatus, '')) NOT IN ('CANCELLED', 'CANCELED', 'RETURNED', 'REFUNDED')
+              AND UPPER(COALESCE(od.order.orderStatus, '')) = 'COMPLETED'
             """)
     long countMonthlySoldItemsBySeller(@Param("sellerId") Integer sellerId,
                                        @Param("startDate") LocalDateTime startDate,

@@ -9,8 +9,10 @@
     ">
         <!-- Brand Header -->
         <div class="sidebar-brand">
-            <div class="logo-icon"><i class="fa-solid fa-leaf"></i></div>
-            <div class="brand-name">Bonsai Portal</div>
+            <a th:href="@{/home}" class="sidebar-brand-link">
+                <span class="seller-brand-mark"><i class="fa-solid fa-leaf"></i></span>
+                <span class="seller-brand-text">BONSAI<br>PORTAL</span>
+            </a>
         </div>
 
         <!-- Navigation List (Conditionally rendered by role/authority) -->
@@ -51,6 +53,12 @@
                     <span class="nav-icon"><i class="fa-solid fa-seedling"></i></span>
                     <span>My Products</span>
                 </a>
+                <a th:href="@{/seller/appointments}"
+                   class="sidebar-nav-item"
+                   th:classappend="${activePage == 'appointments' ? 'active' : ''}">
+                    <span class="nav-icon"><i class="fa-solid fa-calendar-check"></i></span>
+                    <span>Appointment</span>
+                </a>
                 <a th:href="@{/seller/catalog}" 
                    class="sidebar-nav-item" 
                    th:classappend="${activePage == 'catalog' ? 'active' : ''}">
@@ -73,10 +81,8 @@
                     <span class="nav-icon"><i class="fa-solid fa-users"></i></span>
                     <span>User Directory</span>
                 </a>
-                <a href="#" class="sidebar-nav-item" 
-                   th:classappend="${activePage == 'all-orders' ? 'active' : ''}">
-                    <span class="nav-icon"><i class="fa-solid fa-box"></i></span>
-                    <span>All Orders</span>
+                <a th:classappend="${activeMenu == 'seller-profile'} ? 'active'" th:href="@{/seller/profile}">
+                    <i class="fa-solid fa-user"></i> Profile Settings
                 </a>
                 <a href="#" class="sidebar-nav-item" 
                    th:classappend="${activePage == 'system-config' ? 'active' : ''}">
