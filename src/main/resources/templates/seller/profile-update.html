@@ -15,12 +15,11 @@
     <link rel="stylesheet" th:href="@{/css/seller.css}">
 </head>
 <body>
-<div th:replace="~{fragments/navbar :: navbar}"></div>
-
 <div class="dashboard-layout">
     <div th:replace="~{fragments/sidebar :: sidebar('seller-profile')}"></div>
 
     <main class="dashboard-main">
+        <div th:replace="~{fragments/seller-topbar :: topbar('Edit Profile')}"></div>
         <header class="page-header">
             <div>
                 <h1>Edit Profile</h1>

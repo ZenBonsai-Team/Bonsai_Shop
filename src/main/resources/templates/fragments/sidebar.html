@@ -8,9 +8,9 @@
     -->
     <aside class="dashboard-sidebar">
         <div class="sidebar-brand">
-            <a th:href="@{/home}" class="d-flex align-items-center gap-2">
-                <img th:src="@{/images/logo.png}" alt="Logo" style="height: 50px; max-height: 50px; border-radius: 8px; border: 1px solid rgba(0,0,0,0.05); object-fit: contain;"> 
-                <span>BSMS Portal</span>
+            <a th:href="@{/home}" class="sidebar-brand-link">
+                <span class="seller-brand-mark"><i class="fa-solid fa-leaf"></i></span>
+                <span class="seller-brand-text">BONSAI<br>PORTAL</span>
             </a>
         </div>
         
@@ -19,7 +19,7 @@
             <div sec:authorize="hasRole('ADMIN')">
                 <div class="nav-section-title">Admin Controls</div>
                 <a th:classappend="${activeMenu == 'admin-dashboard'} ? 'active'" th:href="@{/admin}">
-                    <i class="fa-solid fa-gauge"></i> Dashboard
+                    <i class="fa-solid fa-box"></i> Dashboard
                 </a>
                 <a th:classappend="${activeMenu == 'admin-users'} ? 'active'" th:href="@{/admin/users}">
                     <i class="fa-solid fa-users"></i> Quản lý người dùng
@@ -39,7 +39,7 @@
                     <i class="fa-solid fa-list"></i> Catalog
                 </a>
                 <a th:classappend="${activeMenu == 'seller-profile'} ? 'active'" th:href="@{/seller/profile}">
-                    <i class="fa-solid fa-user-tie"></i> My Profile
+                    <i class="fa-solid fa-user"></i> Profile Settings
                 </a>
                 <a th:classappend="${activeMenu == 'seller-appointments'} ? 'active'" href="#">
                     <i class="fa-solid fa-calendar-check"></i> Appointments

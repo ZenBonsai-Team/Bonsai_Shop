@@ -2,12 +2,11 @@
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments/head :: head('Seller Dashboard', '/css/dashboard.css')}"></head>
 <body>
-<div th:replace="~{fragments/navbar :: navbar}"></div>
-
 <div class="dashboard-layout">
     <div th:replace="~{fragments/sidebar :: sidebar('seller-dashboard')}"></div>
 
     <main class="dashboard-main">
+        <div th:replace="~{fragments/seller-topbar :: topbar('Dashboard')}"></div>
         <header class="dashboard-header">
             <div>
                 <h1>Dashboard</h1>
