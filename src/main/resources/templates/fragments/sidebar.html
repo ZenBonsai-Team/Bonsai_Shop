@@ -53,6 +53,12 @@
                     <span class="nav-icon"><i class="fa-solid fa-seedling"></i></span>
                     <span>My Products</span>
                 </a>
+                <a th:href="@{/seller/appointments}"
+                   class="sidebar-nav-item"
+                   th:classappend="${activePage == 'appointments' ? 'active' : ''}">
+                    <span class="nav-icon"><i class="fa-solid fa-calendar-check"></i></span>
+                    <span>Appointment</span>
+                </a>
                 <a th:href="@{/seller/catalog}" 
                    class="sidebar-nav-item" 
                    th:classappend="${activePage == 'catalog' ? 'active' : ''}">
