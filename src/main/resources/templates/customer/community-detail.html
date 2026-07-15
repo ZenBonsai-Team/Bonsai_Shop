@@ -6,6 +6,10 @@
     <title th:text="${post.title} + ' - Cộng đồng Bonsai'">Chi tiết bài viết - BSMS</title>
     <link rel="icon" type="image/png" th:href="@{/images/logo.png}">
     
+    <!-- CSRF Meta Tags -->
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+    
     <!-- Fonts & Icons -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -25,23 +29,82 @@
 <div th:replace="~{fragments/navbar :: navbar}"></div>
 
 <!-- Detail Header -->
-<header class="post-detail-header">
+<header class="post-detail-header py-4" style="background-color: #FAFAFA; border-bottom: 1px solid #EAEAEA;">
     <div class="container">
-        <a th:href="@{/community}" class="btn btn-outline-dark btn-sm rounded-pill px-3 mb-4">
-            <i class="fa-solid fa-arrow-left me-1"></i> Quay lại Cộng đồng
-        </a>
-        <span class="post-detail-category" th:text="${post.category}">Nghệ thuật</span>
-        <h1 class="post-detail-title" th:text="${post.title}">Nghệ thuật Bonsai - Triết lý sống trong từng nhành cây</h1>
-        
-        <div class="post-detail-meta">
-            <img th:src="${post.authorAvatar != null ? post.authorAvatar : 'https://ui-avatars.com/api/?name=' + post.authorName}" alt="Avatar" class="author-avatar">
-            <div class="post-meta-info">
-                <span class="author-name" th:text="${post.authorName}">Nghệ nhân Nguyễn Văn Thành</span>
-                <span class="post-date-read" th:text="${#temporals.format(post.createdAt, 'dd/MM/yyyy') + ' • ' + post.readTime + ' phút đọc'}">28/06/2026 • 8 phút đọc</span>
+        <!-- Breadcrumb Navigation -->
+        <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb" style="font-size: 0.82rem; font-family: var(--font-sans);">
+                <li class="breadcrumb-item"><a th:href="@{/}" class="text-muted text-decoration-none">Trang chủ</a></li>
+                <li class="breadcrumb-item"><a th:href="@{/community}" class="text-muted text-decoration-none">Bài viết</a></li>
+                <li class="breadcrumb-item active text-dark" aria-current="page" th:text="${post.title}">Tiêu đề bài viết</li>
+            </ol>
+        </nav>
+
+        <div class="row align-items-start">
+            <!-- Left Side: Category, Title, Summary -->
+            <div class="col-lg-8">
+                <div class="d-flex align-items-center gap-2 mb-3">
+                    <span class="badge" style="background-color: rgba(26, 82, 53, 0.08); color: var(--accent-color, #1A5235); font-size: 0.8rem; font-weight: 600; padding: 6px 14px; border-radius: 30px;">
+                        <i class="fa-regular fa-compass me-1"></i> <span th:text="${post.category}">Chuyên mục</span>
+                    </span>
+                    <span class="text-muted small">•</span>
+                    <span class="text-muted small">
+                        <i class="fa-regular fa-calendar me-1"></i> <span th:text="${#temporals.format(post.createdAt, 'dd/MM/yyyy')}">16/06/2026</span>
+                    </span>
+                    <span class="text-muted small">•</span>
+                    <span class="text-muted small">
+                        <i class="fa-regular fa-clock me-1"></i> <span th:text="${post.readTime}">8</span> phút đọc
+                    </span>
+                </div>
+
+                <h1 class="serif-text display-6 fw-bold mb-3 text-dark" style="line-height: 1.25; font-size: 2.3rem;" th:text="${post.title}">
+                    Chọn Bonsai Cho Người Mới: Trong Nhà Hay Ngoài Trời?
+                </h1>
+
+                <p class="lead text-secondary mb-4" style="font-size: 1.02rem; line-height: 1.6; text-align: justify;" th:text="${post.summary != null && !post.summary.isEmpty() ? post.summary : 'Hướng dẫn chi tiết giúp bạn bắt đầu đam mê với bonsai một cách thuận lợi nhất.'}">
+                    Mô tả tóm tắt nội dung bài viết.
+                </p>
             </div>
-            <div class="post-stats ms-4">
-                <span><i class="fa-regular fa-thumbs-up"></i> <span th:text="${post.likesCount}">128</span> Thích</span>
-                <span><i class="fa-regular fa-comment"></i> <span th:text="${post.commentsCount}">3</span> Bình luận</span>
+
+            <!-- Right Side: Author Information Card -->
+            <div class="col-lg-4 mt-3 mt-lg-0">
+                <div class="author-info-card p-4 border rounded-3 bg-white shadow-sm" style="border-color: #EAEAEA !important;">
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <img th:src="${post.authorAvatar != null && !post.authorAvatar.isEmpty() ? post.authorAvatar : 'https://ui-avatars.com/api/?name=' + post.authorName}" alt="Avatar" class="rounded-circle border" style="width: 48px; height: 48px; object-fit: cover;">
+                        <div>
+                            <h5 class="mb-0 fw-bold text-dark" style="font-size: 0.95rem; font-family: var(--font-sans);" th:text="${post.authorName}">InBonsai Team</h5>
+                            <span class="text-muted small" style="font-size: 0.78rem;">Tác giả cộng đồng</span>
+                        </div>
+                    </div>
+
+                    <!-- Statistics table -->
+                    <div class="row text-center py-2 mb-3 border-top border-bottom" style="font-family: var(--font-sans); background-color: #FAFAFA; margin: 0 -12px;">
+                        <div class="col-4 border-end">
+                            <span class="d-block fw-bold text-dark" style="font-size: 1rem;" th:text="${post.readTime} + '\''">8'</span>
+                            <span class="text-muted" style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em;">phút đọc</span>
+                        </div>
+                        <div class="col-4 border-end">
+                            <span id="headerLikeText" class="d-block fw-bold text-dark" style="font-size: 1rem;" th:text="${post.likesCount}">0</span>
+                            <span class="text-muted" style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em;">lượt thích</span>
+                        </div>
+                        <div class="col-4">
+                            <span class="d-block fw-bold text-dark" style="font-size: 1rem;" th:text="${post.commentsCount}">0</span>
+                            <span class="text-muted" style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em;">bình luận</span>
+                        </div>
+                    </div>
+
+                    <!-- Author Action (Save / Bookmark) -->
+                    <button class="btn btn-outline-success w-100 rounded-pill py-2 btn-bookmark-action d-flex align-items-center justify-content-center gap-2" id="bookmarkBtn" th:classappend="${isBookmarked} ? 'bookmarked' : ''" style="font-size: 0.85rem; font-weight: 600; transition: all 0.2s;">
+                        <i class="fa-regular fa-bookmark"></i> <span>Lưu bài viết</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cover Image under Title Header container -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <img th:src="${post.imageUrl}" th:alt="${post.title}" class="post-detail-cover w-100 rounded-3 shadow-sm" style="max-height: 480px; object-fit: cover; border: 1px solid #EAEAEA;">
             </div>
         </div>
     </div>
@@ -49,72 +112,137 @@
 
 <!-- Main Article View -->
 <main class="container py-5">
-    <div class="row justify-content-center">
-        <article class="col-lg-8">
-            <!-- Cover image -->
-            <img th:src="${post.imageUrl}" th:alt="${post.title}" class="post-detail-cover">
-            
-            <!-- Article Body -->
-            <div class="post-detail-body">
-                <!-- If content is multiline, convert newlines to paragraph tags dynamically or display in pre-wrap -->
-                <p style="white-space: pre-wrap;" th:text="${post.content}">
-                    Nội dung bài viết...
-                </p>
+    <div class="row">
+        <!-- Floating Interaction Bar (Left) -->
+        <div class="col-lg-1 d-none d-lg-block">
+            <div class="sticky-interaction-bar">
+                <button class="interaction-btn btn-like-action" id="likeBtn" th:classappend="${isLiked} ? 'liked' : ''" title="Thích bài viết">
+                    <i th:class="${isLiked} ? 'fa-solid fa-thumbs-up' : 'fa-regular fa-thumbs-up'"></i>
+                    <span class="like-count-display d-block small mt-1" th:text="${post.likesCount}">0</span>
+                </button>
+                
+                <button class="interaction-btn btn-share-action" id="shareBtn" title="Chia sẻ liên kết">
+                    <i class="fa-regular fa-share-from-square"></i>
+                    <span class="d-block small mt-1">Chia sẻ</span>
+                </button>
+                
+                <button class="interaction-btn btn-bookmark-action" id="bookmarkBtn" th:classappend="${isBookmarked} ? 'bookmarked' : ''" title="Lưu bài viết">
+                    <i class="fa-regular fa-bookmark"></i>
+                    <span class="d-block small mt-1">Lưu</span>
+                </button>
             </div>
-            
+        </div>
+
+        <!-- Left: Post Content and Comments -->
+        <article class="col-lg-7">
+            <!-- Article Body (JS parsed dynamically) -->
+            <div class="post-detail-body mb-5">
+                <div id="postContent" th:data-raw-content="${post.content}" th:data-post-id="${post.postId}">
+                    <!-- Fallback if JS is disabled -->
+                    <p style="white-space: pre-wrap;" th:text="${post.content}">Nội dung bài viết...</p>
+                </div>
+            </div>
+
+            <!-- Toast alert for Copied Link -->
+            <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1100;">
+                <div id="copiedToast" class="toast align-items-center text-white bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+                    <div class="d-flex">
+                        <div class="toast-body">
+                            <i class="fa-solid fa-circle-check me-2"></i> Đã sao chép liên kết vào bộ nhớ tạm!
+                        </div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                    </div>
+                </div>
+            </div>
+
             <!-- Comments Section -->
             <div class="comments-section">
-                <h3 class="comments-title"><i class="fa-regular fa-comments"></i> Bình luận nổi bật</h3>
+                <h3 class="comments-title"><i class="fa-regular fa-comments"></i> Bình luận (<span th:text="${post.commentsCount}">0</span>)</h3>
                 
-                <!-- Mock Comments List -->
-                <div class="comment-item">
-                    <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=100" alt="Avatar" class="comment-avatar">
-                    <div class="comment-box">
-                        <div class="comment-author-row">
-                            <span class="comment-author-name">Hoàng Long</span>
-                            <span class="comment-date">2 giờ trước</span>
+                <!-- Dynamic Comments List -->
+                <div id="commentsList">
+                    <div th:each="c : ${comments}" class="comment-item">
+                        <img th:src="${c.authorAvatar != null && !c.authorAvatar.isEmpty() ? c.authorAvatar : 'https://ui-avatars.com/api/?name=' + c.authorName}" alt="Avatar" class="comment-avatar">
+                        <div class="comment-box">
+                            <div class="comment-author-row">
+                                <span class="comment-author-name" th:text="${c.authorName}">Hoàng Long</span>
+                                <span class="comment-date" th:text="${#temporals.format(c.createdAt, 'dd/MM/yyyy HH:mm')}">2 giờ trước</span>
+                            </div>
+                            <p class="comment-text" th:text="${c.content}">Nội dung bình luận.</p>
                         </div>
-                        <p class="comment-text">Bài viết rất ý nghĩa và sâu sắc ạ! Triết lý chơi cây của người Việt mình đúng thật là rèn chữ Nhẫn và giữ lòng thanh thản.</p>
                     </div>
                 </div>
-                
-                <div class="comment-item">
-                    <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=100" alt="Avatar" class="comment-avatar">
-                    <div class="comment-box">
-                        <div class="comment-author-row">
-                            <span class="comment-author-name">Khánh Huyền</span>
-                            <span class="comment-date">5 giờ trước</span>
-                        </div>
-                        <p class="comment-text">Bác Thành viết bài chia sẻ kỹ thuật đi kẽm uốn cây Tùng La Hán kỹ hơn được không ạ? Em rất thích dáng cây nhà bác.</p>
-                    </div>
+
+                <div id="noCommentsText" th:if="${#lists.isEmpty(comments)}" class="text-center py-4 text-muted" style="font-size: 0.9rem;">
+                    Chưa có bình luận nào. Hãy là người đầu tiên chia sẻ cảm nghĩ của bạn!
                 </div>
                 
-                <div class="comment-item">
-                    <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=100" alt="Avatar" class="comment-avatar">
-                    <div class="comment-box">
-                        <div class="comment-author-row">
-                            <span class="comment-author-name">Trần Hải</span>
-                            <span class="comment-date">1 ngày trước</span>
-                        </div>
-                        <p class="comment-text">Gốc cây trong ảnh bìa uốn đẹp quá, nét thân chi tiết nhìn rất có chiều sâu thời gian.</p>
+                <!-- Comment input box -->
+                <!-- Nếu chưa đăng nhập -->
+                <div class="comment-item mt-4" sec:authorize="isAnonymous()">
+                    <img src="https://ui-avatars.com/api/?name=Guest&background=random" alt="Avatar" class="comment-avatar">
+                    <div class="comment-box p-3 bg-light border text-center">
+                        <p class="mb-2 text-muted" style="font-size: 0.88rem;">Bạn cần đăng nhập để viết bình luận.</p>
+                        <a th:href="@{/login}" class="btn btn-sm btn-success px-4" style="font-size: 0.8rem; font-weight: 600;">Đăng nhập ngay</a>
                     </div>
                 </div>
-                
-                <!-- Comment input box (UI only) -->
-                <div class="comment-item mt-4">
-                    <img src="https://ui-avatars.com/api/?name=Guest&background=random" alt="Avatar" class="comment-avatar" sec:authorize="isAnonymous()">
-                    <img th:src="${currentUser.avatar != null && !currentUser.avatar.isEmpty() ? currentUser.avatar : 'https://ui-avatars.com/api/?name=' + currentUser.fullName}" alt="Avatar" class="comment-avatar" sec:authorize="isAuthenticated()">
+
+                <!-- Nếu đã đăng nhập -->
+                <div class="comment-item mt-4" sec:authorize="isAuthenticated()">
+                    <img th:src="${currentUser.avatar != null && !currentUser.avatar.isEmpty() ? currentUser.avatar : 'https://ui-avatars.com/api/?name=' + currentUser.fullName}" alt="Avatar" class="comment-avatar">
                     
-                    <div class="comment-box p-3 bg-white border">
-                        <textarea class="form-control border-0 p-0" rows="3" placeholder="Viết bình luận của bạn..." style="resize: none; outline: none; box-shadow: none; font-size: 0.88rem;"></textarea>
-                        <div class="d-flex justify-content-end mt-2">
-                            <button class="btn btn-sm btn-success px-4" onclick="alert('Bình luận của bạn đang được duyệt trước khi xuất bản!')">Gửi bình luận</button>
+                    <form id="commentForm" th:action="@{/community/post/{id}/comment(id=${post.postId})}" method="post" class="comment-box p-3 bg-white border w-100">
+                        <textarea id="commentContent" name="content" class="form-control border-0 p-0" rows="3" placeholder="Viết bình luận của bạn..." style="resize: none; outline: none; box-shadow: none; font-size: 0.88rem;" maxlength="500" required></textarea>
+                        <div class="d-flex justify-content-between align-items-center mt-2">
+                            <span id="charCounter" class="text-muted small">0 / 500</span>
+                            <button type="submit" class="btn btn-sm btn-success px-4" style="font-weight: 600;">Gửi bình luận</button>
                         </div>
-                    </div>
+                    </form>
                 </div>
             </div>
-            
         </article>
+
+        <!-- Right Side: Table of Contents & Progress & Related Posts -->
+        <aside class="col-lg-4 d-none d-lg-block">
+            <div class="detail-sidebar">
+                
+                <!-- Progress Card -->
+                <div class="progress-card">
+                    <div class="progress-info">
+                        <span>TIẾN ĐỘ ĐỌC</span>
+                        <span id="progressText">0%</span>
+                    </div>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar-fill" id="progressFill"></div>
+                    </div>
+                </div>
+
+                <!-- Table of Contents Card -->
+                <div class="toc-card" id="tocCard">
+                    <div class="toc-title">Mục lục</div>
+                    <ul class="toc-list" id="tocList">
+                        <!-- Filled dynamically by JS -->
+                    </ul>
+                </div>
+
+                <!-- Related Posts Card -->
+                <div class="related-posts-card" th:if="${!#lists.isEmpty(relatedPosts)}">
+                    <div class="toc-title">Bài viết tương tự</div>
+                    <div class="related-post-list">
+                        <div th:each="related : ${relatedPosts}" class="related-post-item">
+                            <img th:src="${related.imageUrl}" alt="Thumbnail" class="related-post-img">
+                            <div class="related-post-info">
+                                <h4 class="related-post-title">
+                                    <a th:href="@{/community/post/{id}(id=${related.postId})}" th:text="${related.title}">Tiêu đề bài viết</a>
+                                </h4>
+                                <span class="related-post-date small text-muted" th:text="${#temporals.format(related.createdAt, 'dd/MM/yyyy')}">12/05/2026</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </aside>
     </div>
 </main>
 
@@ -123,5 +251,417 @@
 
 <!-- Bootstrap Bundle JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Scripts -->
+<script th:inline="none">
+/*<![CDATA[*/
+    document.addEventListener('DOMContentLoaded', function() {
+        const contentEl = document.getElementById('postContent');
+        if (!contentEl) return;
+        
+        const rawContent = contentEl.getAttribute('data-raw-content');
+        if (!rawContent) return;
+
+        // Parse content dynamically (support Headings, Images, Videos, and basic text formatting)
+        const lines = rawContent.split('\n');
+        let parsedHtml = '';
+        let listActive = false;
+
+        lines.forEach(function(line) {
+            let trimmed = line.trim();
+            
+            if (trimmed === '') {
+                if (listActive) {
+                    parsedHtml += '</ul>';
+                    listActive = false;
+                }
+                parsedHtml += '<br/>';
+                return;
+            }
+
+            // Headers (## Heading 2)
+            if (trimmed.startsWith('## ')) {
+                if (listActive) {
+                    parsedHtml += '</ul>';
+                    listActive = false;
+                }
+                let titleText = trimmed.substring(3).trim();
+                let headingId = 'sec-' + titleText.toLowerCase()
+                    .replace(/[^a-z0-9\u00C0-\u1EF9\s]/g, '')
+                    .replace(/\s+/g, '-');
+                parsedHtml += `<h2 id="${headingId}" class="serif-text mt-5 mb-3 fw-bold" style="color: var(--primary-color); font-size: 1.8rem;">${titleText}</h2>`;
+                return;
+            }
+
+            // Subheaders (### Heading 3)
+            if (trimmed.startsWith('### ')) {
+                if (listActive) {
+                    parsedHtml += '</ul>';
+                    listActive = false;
+                }
+                let titleText = trimmed.substring(4).trim();
+                let headingId = 'sec-' + titleText.toLowerCase()
+                    .replace(/[^a-z0-9\u00C0-\u1EF9\s]/g, '')
+                    .replace(/\s+/g, '-');
+                parsedHtml += `<h3 id="${headingId}" class="serif-text mt-4 mb-2 fw-semibold" style="color: var(--accent-color); font-size: 1.4rem;">${titleText}</h3>`;
+                return;
+            }
+
+            // Lists (Bullet points - starting with * or -)
+            if (trimmed.startsWith('* ') || trimmed.startsWith('- ')) {
+                let itemText = trimmed.substring(2).trim();
+                if (!listActive) {
+                    parsedHtml += '<ul class="mb-3 ps-4">';
+                    listActive = true;
+                }
+                parsedHtml += `<li class="mb-2" style="font-size: 1.05rem; line-height: 1.6;">${parseInlineFormatting(itemText)}</li>`;
+                return;
+            }
+
+            // Embedded Video (YouTube Links)
+            let ytMatch = trimmed.match(/(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\s]+)/);
+            if (ytMatch) {
+                if (listActive) {
+                    parsedHtml += '</ul>';
+                    listActive = false;
+                }
+                let videoId = ytMatch[1];
+                parsedHtml += `
+                <div class="embed-responsive-16by9 my-4 shadow-sm border rounded">
+                    <iframe src="https://www.youtube.com/embed/${videoId}" allowfullscreen></iframe>
+                </div>`;
+                return;
+            }
+
+            // Embedded Images (Direct Image Link on its own line)
+            let imgMatch = trimmed.match(/https?:\/\/\S+\.(?:png|jpg|jpeg|gif|webp|svg)(?:\?\S+)?/i);
+            if (imgMatch) {
+                if (listActive) {
+                    parsedHtml += '</ul>';
+                    listActive = false;
+                }
+                let imgUrl = imgMatch[0];
+                parsedHtml += `
+                <div class="my-4">
+                    <img src="${imgUrl}" alt="Hình ảnh bài đăng" class="img-fluid rounded shadow-sm border w-100" style="max-height: 480px; object-fit: cover;" />
+                </div>`;
+                return;
+            }
+
+            // Normal text line
+            if (listActive) {
+                parsedHtml += '</ul>';
+                listActive = false;
+            }
+            parsedHtml += `<p class="lh-lg mb-3" style="font-size: 1.05rem; color: #333; text-align: justify;">${parseInlineFormatting(trimmed)}</p>`;
+        });
+
+        if (listActive) {
+            parsedHtml += '</ul>';
+        }
+
+        contentEl.innerHTML = parsedHtml;
+
+        // Parse bold and italics inside text lines
+        function parseInlineFormatting(text) {
+            let result = text;
+            // Markdown link format: [anchor](url)
+            result = result.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>');
+            // Bold **text**
+            result = result.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+            // Italic *text*
+            result = result.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+            return result;
+        }
+
+        // ===== TOC Generator =====
+        const NAVBAR_OFFSET = 80; // px offset for fixed navbar
+        const headings = contentEl.querySelectorAll('h2, h3');
+        const tocList = document.getElementById('tocList');
+        const tocCard = document.getElementById('tocCard');
+
+        // Helper: smooth scroll with navbar offset
+        function smoothScrollTo(targetEl) {
+            const top = targetEl.getBoundingClientRect().top + window.scrollY - NAVBAR_OFFSET;
+            window.scrollTo({ top: top, behavior: 'smooth' });
+        }
+
+        if (headings.length > 0) {
+            headings.forEach(function(heading, index) {
+                const li = document.createElement('li');
+                li.className = 'toc-item' + (heading.tagName === 'H3' ? ' toc-sub-item' : '');
+                li.setAttribute('data-heading-id', heading.id);
+
+                const a = document.createElement('a');
+                a.href = '#' + heading.id;
+                a.className = 'toc-link';
+
+                // Add number badge
+                const numSpan = document.createElement('span');
+                numSpan.className = 'toc-num';
+                numSpan.textContent = (index + 1);
+                a.appendChild(numSpan);
+
+                const textSpan = document.createElement('span');
+                textSpan.className = 'toc-text';
+                textSpan.textContent = heading.innerText;
+                a.appendChild(textSpan);
+
+                // Smooth scroll trigger with navbar offset + progress sync
+                a.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    smoothScrollTo(heading);
+
+                    // Immediately highlight clicked item
+                    tocList.querySelectorAll('.toc-item').forEach(i => i.classList.remove('active'));
+                    li.classList.add('active');
+                });
+
+                li.appendChild(a);
+                tocList.appendChild(li);
+            });
+        } else {
+            if (tocCard) {
+                tocCard.style.display = 'none';
+            }
+        }
+
+        // ===== Reading Progress & ScrollSpy =====
+        const progressFill = document.getElementById('progressFill');
+        const progressText = document.getElementById('progressText');
+
+        function updateScrollMetrics() {
+            // Reading Progress: based on article body bounds, NOT full page height
+            // 0% = top of article not yet visible, 100% = bottom of article is visible
+            const articleRect = contentEl.getBoundingClientRect();
+            const articleTop    = articleRect.top + window.scrollY;      // absolute top of article
+            const articleBottom = articleTop + contentEl.offsetHeight;    // absolute bottom of article
+            const viewportBottom = window.scrollY + window.innerHeight;  // current viewport bottom edge
+
+            // How much of the article has passed the viewport bottom?
+            const scrolledIntoArticle = viewportBottom - articleTop;
+            const rawPercent = scrolledIntoArticle / contentEl.offsetHeight * 100;
+            const progressPercent = Math.max(0, Math.min(100, Math.round(rawPercent)));
+
+            if (progressFill) progressFill.style.width = progressPercent + '%';
+            if (progressText) progressText.innerText = progressPercent + '%';
+
+
+            // ScrollSpy: find the active heading based on scroll position
+            let activeId = '';
+            headings.forEach(function(heading) {
+                const rect = heading.getBoundingClientRect();
+                if (rect.top <= NAVBAR_OFFSET + 20) {
+                    activeId = heading.id;
+                }
+            });
+
+            // Update TOC active state
+            if (tocList) {
+                const tocItems = tocList.querySelectorAll('.toc-item');
+                tocItems.forEach(function(item) {
+                    const headingId = item.getAttribute('data-heading-id');
+                    if (headingId === activeId) {
+                        item.classList.add('active');
+                        // Scroll TOC list to keep active item visible
+                        const itemTop = item.offsetTop;
+                        const listScrollTop = tocList.scrollTop;
+                        const listHeight = tocList.clientHeight;
+                        if (itemTop < listScrollTop || itemTop > listScrollTop + listHeight - 30) {
+                            tocList.scrollTo({ top: itemTop - 30, behavior: 'smooth' });
+                        }
+                    } else {
+                        item.classList.remove('active');
+                    }
+                });
+            }
+        }
+
+        window.addEventListener('scroll', updateScrollMetrics);
+        updateScrollMetrics(); // initial call
+
+        // ===== AJAX Like Toggle =====
+        const likeBtn = document.getElementById('likeBtn');
+        const headerLike = document.getElementById('headerLikeText');
+
+        function updateLikeUI(isLiked, likesCount) {
+            if (likeBtn) {
+                if (isLiked) {
+                    likeBtn.classList.add('liked');
+                    likeBtn.innerHTML = `<i class="fa-solid fa-thumbs-up"></i> <span class="like-count-display d-block small mt-1">${likesCount}</span>`;
+                } else {
+                    likeBtn.classList.remove('liked');
+                    likeBtn.innerHTML = `<i class="fa-regular fa-thumbs-up"></i> <span class="like-count-display d-block small mt-1">${likesCount}</span>`;
+                }
+            }
+            if (headerLike) headerLike.innerText = likesCount;
+        }
+        if (likeBtn) {
+            likeBtn.addEventListener('click', function() {
+                const postId = contentEl.getAttribute('data-post-id');
+                const token = document.querySelector('meta[name="_csrf"]')?.content;
+                const headerName = document.querySelector('meta[name="_csrf_header"]')?.content;
+
+                fetch(`/community/post/${postId}/like`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        [headerName]: token
+                    }
+                })
+                .then(res => {
+                    if (res.status === 401) {
+                        // Chưa đăng nhập
+                        if (confirm('Bạn cần đăng nhập để thích bài viết. Đăng nhập ngay?')) {
+                            window.location.href = '/login';
+                        }
+                        return null;
+                    }
+                    return res.json();
+                })
+                .then(data => {
+                    if (!data) return;
+
+                    if (data.success) {
+                        updateLikeUI(data.liked, data.likesCount);
+                    }
+                })
+                .catch(err => console.error('Error toggling like:', err));
+            });
+        }
+
+        
+        // ===== Share Link action =====
+        const shareBtn = document.getElementById('shareBtn');
+        const toastElement = document.getElementById('copiedToast');
+        
+        if (shareBtn) {
+            shareBtn.addEventListener('click', function() {
+                const pageUrl = window.location.href;
+                navigator.clipboard.writeText(pageUrl).then(() => {
+                    if (toastElement) {
+                        const toast = new bootstrap.Toast(toastElement);
+                        toast.show();
+                    } else {
+                        alert("Đã sao chép liên kết bài viết!");
+                    }
+                });
+            });
+        }
+
+        // ===== Bookmark button toggle action =====
+        const bookmarkBtn = document.getElementById('bookmarkBtn');
+        if (bookmarkBtn) {
+            bookmarkBtn.addEventListener('click', function() {
+                const isBookmarked = this.classList.contains('bookmarked');
+                if (isBookmarked) {
+                    this.classList.remove('bookmarked');
+                    this.innerHTML = '<i class="fa-regular fa-bookmark"></i> <span class="d-block small mt-1">Lưu</span>';
+                } else {
+                    this.classList.add('bookmarked');
+                    this.innerHTML = '<i class="fa-solid fa-bookmark text-success"></i> <span class="d-block small mt-1">Đã lưu</span>';
+                }
+            });
+        }
+
+        // ===== Comment Character Counter & AJAX Submission =====
+        const commentForm = document.getElementById('commentForm');
+        const commentInput = document.getElementById('commentContent');
+        const charCounter = document.getElementById('charCounter');
+        const commentsList = document.getElementById('commentsList');
+        const noCommentsText = document.getElementById('noCommentsText');
+        const commentsCountSpans = document.querySelectorAll('.comments-title span, .post-stats span:last-child span');
+
+        if (commentInput && charCounter) {
+            commentInput.addEventListener('input', function() {
+                const len = this.value.length;
+                charCounter.textContent = `${len} / 500`;
+                if (len >= 500) {
+                    charCounter.classList.add('text-danger');
+                } else {
+                    charCounter.classList.remove('text-danger');
+                }
+            });
+        }
+
+        if (commentForm && commentInput) {
+            commentForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const content = commentInput.value.trim();
+                if (!content) return;
+
+                const token = document.querySelector('meta[name="_csrf"]')?.content;
+                const headerName = document.querySelector('meta[name="_csrf_header"]')?.content;
+                const postId = contentEl.getAttribute('data-post-id');
+
+                fetch(`/community/post/${postId}/comment`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        [headerName]: token
+                    },
+                    body: JSON.stringify({ content: content })
+                })
+                .then(res => {
+                    if (res.status === 401) {
+                        alert('Bạn cần đăng nhập để viết bình luận.');
+                        window.location.href = '/login';
+                        return null;
+                    }
+                    return res.json();
+                })
+                .then(data => {
+                    if (!data) return;
+                    if (data.success) {
+                        // Clear input and reset counter
+                        commentInput.value = '';
+                        if (charCounter) charCounter.textContent = '0 / 500';
+
+                        // Hide placeholder text if first comment
+                        if (noCommentsText) {
+                            noCommentsText.style.display = 'none';
+                        }
+
+                        // Create and prepend new comment element
+                        const newComment = document.createElement('div');
+                        newComment.className = 'comment-item fade-in';
+                        newComment.style.opacity = '0';
+                        newComment.style.transition = 'opacity 0.5s ease';
+                        newComment.innerHTML = `
+                            <img src="${data.authorAvatar}" alt="Avatar" class="comment-avatar">
+                            <div class="comment-box">
+                                <div class="comment-author-row">
+                                    <span class="comment-author-name">${data.authorName}</span>
+                                    <span class="comment-date">${data.createdAt}</span>
+                                </div>
+                                <p class="comment-text">${data.content}</p>
+                            </div>
+                        `;
+
+                        if (commentsList) {
+                            commentsList.insertBefore(newComment, commentsList.firstChild);
+                            // Trigger fade-in animation
+                            setTimeout(() => {
+                                newComment.style.opacity = '1';
+                            }, 50);
+                        }
+
+                        // Update comments count displays
+                        if (commentsCountSpans) {
+                            commentsCountSpans.forEach(span => {
+                                span.textContent = data.commentsCount;
+                            });
+                        }
+                    } else {
+                        alert(data.message || 'Có lỗi xảy ra khi gửi bình luận.');
+                    }
+                })
+                .catch(err => console.error('Error submitting comment:', err));
+            });
+        }
+
+    });
+/*]]>*/
+</script>
 </body>
 </html>

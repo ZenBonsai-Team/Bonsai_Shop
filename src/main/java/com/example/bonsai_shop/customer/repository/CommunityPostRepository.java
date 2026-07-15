@@ -11,18 +11,22 @@ import java.util.List;
 public interface CommunityPostRepository extends JpaRepository<CommunityPost, Integer> {
     
     List<CommunityPost> findAllByOrderByCreatedAtDesc();
+
+    List<CommunityPost> findAllByStatusOrderByCreatedAtDesc(String status);
     
-    List<CommunityPost> findByCategoryOrderByCreatedAtDesc(String category);
+    List<CommunityPost> findByCategoryAndStatusOrderByCreatedAtDesc(String category, String status);
     
-    @Query("SELECT p FROM CommunityPost p WHERE " +
+    @Query("SELECT p FROM CommunityPost p WHERE p.status = 'APPROVED' AND " +
            "(LOWER(p.title) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
            "LOWER(p.content) LIKE LOWER(CONCAT('%', :query, '%'))) " +
            "ORDER BY p.createdAt DESC")
     List<CommunityPost> searchPosts(@Param("query") String query);
 
-    @Query("SELECT p FROM CommunityPost p WHERE p.category = :category AND " +
+    @Query("SELECT p FROM CommunityPost p WHERE p.status = 'APPROVED' AND p.category = :category AND " +
            "(LOWER(p.title) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
            "LOWER(p.content) LIKE LOWER(CONCAT('%', :query, '%'))) " +
            "ORDER BY p.createdAt DESC")
     List<CommunityPost> searchPostsByCategory(@Param("category") String category, @Param("query") String query);
+
+    List<CommunityPost> findTop3ByCategoryAndStatusAndPostIdNotOrderByCreatedAtDesc(String category, String status, Integer postId);
 }

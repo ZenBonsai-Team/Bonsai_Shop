@@ -81,6 +81,13 @@
                 <!-- Detailed content markdown -->
                 <div class="mb-4">
                     <label for="content" class="form-label form-label-custom">Nội dung chi tiết</label>
+                    <p class="text-muted small mt-1 mb-2" style="font-size: 0.78rem; line-height: 1.4;">
+                        <i class="fa-solid fa-circle-info me-1 text-success"></i> 
+                        <strong>Mẹo định dạng nội dung:</strong> 
+                        Để viết tiêu đề lớn, thêm <code>## Tên tiêu đề</code> ở đầu dòng. 
+                        Để chèn thêm ảnh, dán trực tiếp đường dẫn ảnh (ví dụ: <code>https://.../hinh.jpg</code>) ở một dòng riêng.
+                        Để chèn video, dán trực tiếp liên kết YouTube ở một dòng riêng.
+                    </p>
                     <textarea id="content" th:field="*{content}" class="form-control form-control-custom" rows="12" required placeholder="Viết chia sẻ chi tiết của bạn tại đây..."></textarea>
                 </div>
                 
