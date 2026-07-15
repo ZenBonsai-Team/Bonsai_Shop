@@ -28,11 +28,6 @@ public class SellerDashboardController {
 
     @GetMapping
     public String dashboard(@AuthenticationPrincipal UserDetails userDetails, Model model) {
-        boolean isAdminOrMod = userDetails.getAuthorities().stream()
-                .anyMatch(auth -> "ROLE_ADMIN".equals(auth.getAuthority())
-                        || "ROLE_MODERATOR".equals(auth.getAuthority())
-                        || "ROLE_ORDER_MODERATOR".equals(auth.getAuthority()));
-
         List<Product> products;
         long monthlySoldItems;
         BigDecimal monthlyRevenue;
@@ -40,24 +35,18 @@ public class SellerDashboardController {
         LocalDateTime monthStart = LocalDate.now().withDayOfMonth(1).atStartOfDay();
         LocalDateTime nextMonthStart = monthStart.plusMonths(1);
 
-        if (isAdminOrMod) {
-            products = sellerProductService.getAllProducts();
-            monthlySoldItems = orderDetailRepository.countMonthlySoldItems(monthStart, nextMonthStart);
-            monthlyRevenue = orderDetailRepository.sumMonthlyRevenue(monthStart, nextMonthStart);
-        } else {
-            products = sellerProductService.getMyProducts(userDetails.getUsername());
-            User seller = sellerProductService.getSeller(userDetails.getUsername());
-            monthlySoldItems = orderDetailRepository.countMonthlySoldItemsBySeller(
-                    seller.getUserId(),
-                    monthStart,
-                    nextMonthStart
-            );
-            monthlyRevenue = orderDetailRepository.sumMonthlyRevenueBySeller(
-                    seller.getUserId(),
-                    monthStart,
-                    nextMonthStart
-            );
-        }
+        products = sellerProductService.getMyProducts(userDetails.getUsername());
+        User seller = sellerProductService.getSeller(userDetails.getUsername());
+        monthlySoldItems = orderDetailRepository.countMonthlySoldItemsBySeller(
+                seller.getUserId(),
+                monthStart,
+                nextMonthStart
+        );
+        monthlyRevenue = orderDetailRepository.sumMonthlyRevenueBySeller(
+                seller.getUserId(),
+                monthStart,
+                nextMonthStart
+        );
 
         User sellerOrAdmin = sellerProductService.getSeller(userDetails.getUsername());
 
@@ -87,6 +76,14 @@ public class SellerDashboardController {
         model.addAttribute("hiddenPriceProducts", products.stream()
                 .filter(product -> !Boolean.TRUE.equals(product.getIsPublicPrice()))
                 .count());
+        
+        // Get up to 5 most recent products for the dynamic dashboard view
+        List<Product> recentProducts = products.stream()
+                .sorted((p1, p2) -> p2.getCreatedAt().compareTo(p1.getCreatedAt()))
+                .limit(5)
+                .collect(java.util.stream.Collectors.toList());
+        model.addAttribute("recentProducts", recentProducts);
+
         model.addAttribute("seller", sellerOrAdmin);
         return "seller/dashboard";
     }

@@ -5,6 +5,7 @@ import com.example.bonsai_shop.entity.User;
 import com.example.bonsai_shop.customer.repository.RoleRepository;
 import com.example.bonsai_shop.customer.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -12,7 +13,8 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.util.List;
 
 @Controller
-@RequestMapping("/moderator/users")
+@RequestMapping("/admin/users")
+@PreAuthorize("hasRole('ADMIN')")
 @RequiredArgsConstructor
 public class AdminUserController {
 
@@ -26,6 +28,8 @@ public class AdminUserController {
         List<Role> roles = roleRepository.findAll();
         model.addAttribute("users", users);
         model.addAttribute("roles", roles);
+        model.addAttribute("role", "ADMIN");
+        model.addAttribute("activeMenu", "admin-users");
         return "admin/user_list"; // templates/admin/user_list.html
     }
 
@@ -34,25 +38,25 @@ public class AdminUserController {
     public String changeRole(@RequestParam Integer userId,
                              @RequestParam Integer roleId,
                              RedirectAttributes redirectAttributes) {
-        try {
-            userService.changeUserRole(userId, roleId);
-            redirectAttributes.addFlashAttribute("success", "Đổi quyền thành công!");
-        } catch (RuntimeException e) {
-            redirectAttributes.addFlashAttribute("error", e.getMessage());
-        }
-        return "redirect:/moderator/users";
+         try {
+             userService.changeUserRole(userId, roleId);
+             redirectAttributes.addFlashAttribute("success", "Đổi quyền thành công!");
+         } catch (RuntimeException e) {
+             redirectAttributes.addFlashAttribute("error", e.getMessage());
+         }
+         return "redirect:/admin/users";
     }
 
     // ===== KHÓA/MỞ KHÓA TÀI KHOẢN =====
     @PostMapping("/toggle-status")
     public String toggleStatus(@RequestParam Integer userId,
                                RedirectAttributes redirectAttributes) {
-        try {
-            userService.toggleUserStatus(userId);
-            redirectAttributes.addFlashAttribute("success", "Cập nhật trạng thái thành công!");
-        } catch (RuntimeException e) {
-            redirectAttributes.addFlashAttribute("error", e.getMessage());
-        }
-        return "redirect:/moderator/users";
+         try {
+             userService.toggleUserStatus(userId);
+             redirectAttributes.addFlashAttribute("success", "Cập nhật trạng thái thành công!");
+         } catch (RuntimeException e) {
+             redirectAttributes.addFlashAttribute("error", e.getMessage());
+         }
+         return "redirect:/admin/users";
     }
 }

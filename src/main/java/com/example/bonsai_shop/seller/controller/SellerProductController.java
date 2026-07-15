@@ -28,16 +28,7 @@ public class SellerProductController {
 
     @GetMapping
     public String myProducts(@AuthenticationPrincipal UserDetails userDetails, Model model) {
-        boolean isAdminOrMod = userDetails.getAuthorities().stream()
-                .anyMatch(auth -> "ROLE_ADMIN".equals(auth.getAuthority())
-                        || "ROLE_MODERATOR".equals(auth.getAuthority())
-                        || "ROLE_ORDER_MODERATOR".equals(auth.getAuthority()));
-        List<Product> products;
-        if (isAdminOrMod) {
-            products = sellerProductService.getAllProducts();
-        } else {
-            products = sellerProductService.getMyProducts(userDetails.getUsername());
-        }
+        List<Product> products = sellerProductService.getMyProducts(userDetails.getUsername());
         model.addAttribute("products", products);
         return "seller/products";
     }

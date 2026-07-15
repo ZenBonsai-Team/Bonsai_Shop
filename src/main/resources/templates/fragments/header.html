@@ -21,7 +21,7 @@
 
         <!-- User Info Panel -->
         <!-- Fallbacks to placeholder details if not authenticated in Thymeleaf Spring Security -->
-        <div class="header-user-profile">
+        <a th:href="@{/profile}" class="header-user-profile text-decoration-none text-dark" title="Thông tin cá nhân">
             <img class="user-profile-avatar" 
                  src="https://api.dicebear.com/7.x/adventurer/svg?seed=moderator"
                  alt="User Avatar">
@@ -38,6 +38,6 @@
                     Moderator
                 </span>
             </div>
-        </div>
+        </a>
     </div>
 </header>

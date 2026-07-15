@@ -2,7 +2,12 @@
 <html xmlns:th="http://www.thymeleaf.org" lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Thông tin cá nhân - ZenBonsai</title>
+    <title>Thông tin cá nhân - Bonsai Shop</title>
+    <!-- Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" th:href="@{/css/profile.css}">
     <link rel="stylesheet"
           href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
@@ -13,9 +18,30 @@
 
     <!-- SIDEBAR -->
     <aside class="sidebar">
-        <a th:href="@{/home}" class="sidebar-logo">ZenBonsai</a>
+        <a th:href="@{/home}" class="sidebar-logo d-flex align-items-center gap-2 text-decoration-none">
+            <img th:src="@{/images/logo.png}" alt="Logo" style="width: 32px; height: 32px; object-fit: contain;">
+            <span style="font-size: 22px; font-weight: 700; color: #06210f; white-space: nowrap; font-family: 'Plus Jakarta Sans', sans-serif;">Bonsai Shop</span>
+        </a>
 
         <nav class="sidebar-menu">
+            <!-- Nút quay lại dashboard cho các vai trò đặc biệt -->
+            <a sec:authorize="hasRole('ADMIN')" th:href="@{/admin}" style="color: #2e7d32; font-weight: bold; background: #e8f5e9;">
+                <i class="fa-solid fa-gauge"></i>
+                Bảng điều khiển Admin
+            </a>
+            <a sec:authorize="hasRole('CONTENT_MODERATOR')" th:href="@{/moderator/community}" style="color: #2e7d32; font-weight: bold; background: #e8f5e9;">
+                <i class="fa-solid fa-gauge"></i>
+                Bảng điều khiển
+            </a>
+            <a sec:authorize="hasRole('MODERATOR')" th:href="@{/moderator/orders}" style="color: #2e7d32; font-weight: bold; background: #e8f5e9;">
+                <i class="fa-solid fa-gauge"></i>
+                Bảng điều khiển
+            </a>
+            <a sec:authorize="hasRole('SELLER')" th:href="@{/seller}" style="color: #2e7d32; font-weight: bold; background: #e8f5e9;">
+                <i class="fa-solid fa-store"></i>
+                Kênh Người bán
+            </a>
+
             <a class="active" th:href="@{/profile}">
                 <i class="fa-regular fa-user"></i>
                 Hồ sơ

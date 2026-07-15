@@ -42,10 +42,16 @@
                     </div>
                     <div sec:authorize="isAuthenticated()" class="d-flex align-items-center gap-2">
                         <!-- Nút Dashboard cho Admin/Moderator/Seller -->
-                        <a sec:authorize="hasAnyRole('ADMIN', 'MODERATOR')" th:unless="${hideAdminBtn}" th:href="@{/moderator}" class="btn btn-outline-dark btn-sm rounded-pill px-3">
+                        <a sec:authorize="hasRole('ADMIN')" th:href="@{/admin}" class="btn btn-outline-dark btn-sm rounded-pill px-3" style="font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 600;">
+                            <i class="fa-solid fa-gauge me-1"></i> Bảng điều khiển Admin
+                        </a>
+                        <a sec:authorize="hasRole('CONTENT_MODERATOR')" th:href="@{/moderator/community}" class="btn btn-outline-dark btn-sm rounded-pill px-3" style="font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 600;">
                             <i class="fa-solid fa-gauge me-1"></i> Bảng điều khiển
                         </a>
-                        <a sec:authorize="hasRole('SELLER')" th:unless="${hideSellerBtn}" th:href="@{/seller}" class="btn btn-outline-dark btn-sm rounded-pill px-3">
+                        <a sec:authorize="hasRole('MODERATOR')" th:href="@{/moderator/orders}" class="btn btn-outline-dark btn-sm rounded-pill px-3" style="font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 600;">
+                            <i class="fa-solid fa-gauge me-1"></i> Bảng điều khiển
+                        </a>
+                        <a sec:authorize="hasRole('SELLER')" th:href="@{/seller}" class="btn btn-outline-dark btn-sm rounded-pill px-3" style="font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 600;">
                             <i class="fa-solid fa-store me-1"></i> Kênh Người bán
                         </a>
                         <a th:href="@{/profile}" class="nav-icon-link text-decoration-none" title="Profile"><i class="fa-regular fa-user"></i></a>

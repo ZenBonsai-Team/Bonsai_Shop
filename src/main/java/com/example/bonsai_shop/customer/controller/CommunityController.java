@@ -23,10 +23,12 @@ import com.example.bonsai_shop.customer.repository.CommunityCommentRepository;
 import com.example.bonsai_shop.customer.repository.CommunityPostLikeRepository;
 import com.example.bonsai_shop.customer.repository.CommunityPostRepository;
 import com.example.bonsai_shop.customer.repository.UserRepository;
+import com.example.bonsai_shop.customer.repository.ModerationNotificationRepository;
 import com.example.bonsai_shop.entity.CommunityComment;
 import com.example.bonsai_shop.entity.CommunityPost;
 import com.example.bonsai_shop.entity.CommunityPostLike;
 import com.example.bonsai_shop.entity.User;
+import com.example.bonsai_shop.entity.ModerationNotification;
 
 import lombok.RequiredArgsConstructor;
 
@@ -39,6 +41,7 @@ public class CommunityController {
     private final UserRepository userRepository;
     private final CommunityCommentRepository commentRepository;
     private final CommunityPostLikeRepository likeRepository;
+    private final ModerationNotificationRepository notificationRepository;
 
     @GetMapping
     public String community(Model model,
@@ -66,6 +69,9 @@ public class CommunityController {
         if (userDetails != null) {
             userRepository.findByEmail(userDetails.getUsername()).ifPresent(user -> {
                 model.addAttribute("currentUser", user);
+                // Fetch notifications for current user
+                List<ModerationNotification> notifications = notificationRepository.findByTargetUsernameOrderByCreatedAtDesc(user.getFullName());
+                model.addAttribute("moderationNotifications", notifications);
             });
         }
 
@@ -84,10 +90,12 @@ public class CommunityController {
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy bài viết"));
 
         if (!"APPROVED".equals(post.getStatus())) {
-            // Check if user is Admin. Admins can see hidden posts
-            boolean isAdmin = userDetails != null && userDetails.getAuthorities().stream()
-                    .anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
-            if (!isAdmin) {
+            // Check if user is Admin or Moderator. Admins/Moderators can see hidden posts
+            boolean isAdminOrMod = userDetails != null && userDetails.getAuthorities().stream()
+                    .anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority())
+                            || "ROLE_MODERATOR".equals(a.getAuthority())
+                            || "ROLE_ORDER_MODERATOR".equals(a.getAuthority()));
+            if (!isAdminOrMod) {
                 throw new RuntimeException("Bài viết này đã bị ẩn bởi quản trị viên.");
             }
         }

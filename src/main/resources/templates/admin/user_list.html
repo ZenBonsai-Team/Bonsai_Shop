@@ -1,26 +1,23 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="vi">
-<head th:replace="~{fragments/head :: head('Quản lý người dùng - Bonsai Shop', '/css/admin_user_list.css')}"></head>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/dashboard-layout :: layout(~{::title}, ~{::#user-list-content}, ~{::styles}, ~{::scripts})}">
+<head>
+    <title>Quản lý người dùng - Bonsai Shop</title>
+    <th:block th:fragment="styles">
+        <link rel="stylesheet" th:href="@{/css/admin_user_list.css}">
+    </th:block>
+</head>
 <body>
 
-<div class="dashboard-layout">
-    <div th:replace="~{fragments/sidebar :: sidebar('moderator-users')}"></div>
-
-    <main class="dashboard-main">
-        <!-- Admin Top Navbar -->
-        <div th:replace="~{fragments/admin_navbar :: admin_navbar}"></div>
-        
-        <div class="dashboard-content-wrapper">
-            <header class="dashboard-header">
-                <div>
-                    <h1 class="serif-text mb-0">👥 Quản lý người dùng</h1>
-                </div>
-            </header>
-
-            <section class="dashboard-content-box mt-4">
-
+<div id="user-list-content" th:with="paramActivePage='users'">
     <div th:if="${success}" th:text="${success}" class="alert alert-success"></div>
     <div th:if="${error}" th:text="${error}" class="alert alert-error"></div>
+
+    <div class="dashboard-header mb-4">
+        <div>
+            <h1 class="serif-text mb-0">👥 Quản lý người dùng</h1>
+        </div>
+    </div>
 
     <!-- Ô TÌM KIẾM -->
     <div class="search-box">
@@ -52,7 +49,7 @@
             </td>
 
             <td>
-                <form method="post" th:action="@{/moderator/users/change-role}" style="display:flex;">
+                <form method="post" th:action="@{/admin/users/change-role}" style="display:flex;">
                     <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
                     <input type="hidden" name="userId" th:value="${user.userId}"/>
                     <select name="roleId" class="role-select">
@@ -67,7 +64,7 @@
             </td>
 
             <td>
-                <form method="post" th:action="@{/moderator/users/toggle-status}">
+                <form method="post" th:action="@{/admin/users/toggle-status}">
                     <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
                     <input type="hidden" name="userId" th:value="${user.userId}"/>
                     <button type="submit"
@@ -86,12 +83,10 @@
         </tr>
         </tbody>
     </table>
-
-        </section>
-        </div>
-    </main>
 </div>
 
-<script th:src="@{/js/admin_user_list.js}"></script>
+<th:block th:fragment="scripts">
+    <script th:src="@{/js/admin_user_list.js}"></script>
+</th:block>
 </body>
 </html>

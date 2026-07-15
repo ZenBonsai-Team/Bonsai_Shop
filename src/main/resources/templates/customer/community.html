@@ -75,6 +75,21 @@
     </div>
 </div>
 
+<!-- Notifications list for user from Admin -->
+<div th:if="${moderationNotifications != null and !moderationNotifications.empty}" class="container mt-4">
+    <div class="alert alert-warning border-0 shadow-sm p-4" style="border-radius: 16px; background-color: #fffde7; border-left: 5px solid #fbc02d; color: #574200;">
+        <h5 class="fw-bold text-dark mb-3"><i class="fa-solid fa-bell text-warning me-2"></i> Thông báo điều phối nội dung từ Ban quản trị</h5>
+        <ul class="list-unstyled mb-0 d-flex flex-column gap-2">
+            <li th:each="notif : ${moderationNotifications}" class="pb-2 border-bottom" style="border-color: rgba(0,0,0,0.05);">
+                <div class="d-flex justify-content-between align-items-start gap-3">
+                    <span th:text="${notif.message}">Nội dung thông báo</span>
+                    <span class="text-muted small text-nowrap" th:text="${#temporals.format(notif.createdAt, 'dd/MM/yyyy HH:mm')}">Ngày thông báo</span>
+                </div>
+            </li>
+        </ul>
+    </div>
+</div>
+
 <!-- Layout container -->
 <div class="container community-layout-row">
     <div class="row g-4">

@@ -7,13 +7,14 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 @Controller
-@RequestMapping("/moderator")
-@PreAuthorize("hasAnyRole('ADMIN', 'MODERATOR')")
+@RequestMapping("/admin")
+@PreAuthorize("hasRole('ADMIN')")
 public class AdminDashboardController {
 
     @GetMapping({"", "/", "/dashboard"})
     public String dashboard(Model model) {
-        // Có thể load các thống kê tổng quan ở đây (số user, số sản phẩm, doanh thu...)
+        model.addAttribute("role", "ADMIN");
+        model.addAttribute("activeMenu", "admin-dashboard");
         return "admin/dashboard";
     }
 }
