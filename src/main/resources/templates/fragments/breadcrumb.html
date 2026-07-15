@@ -1,0 +1,23 @@
+<!-- 
+  Reusable Breadcrumbs Navigation Component
+  Under: src/main/resources/templates/fragments/breadcrumb.html
+-->
+<div th:fragment="breadcrumb" class="breadcrumb-container" xmlns:th="http://www.thymeleaf.org">
+    <!-- Home Trail -->
+    <a th:href="@{/}" class="breadcrumb-item">Home</a>
+    <span class="breadcrumb-separator">/</span>
+
+    <!-- Optional Crumbs list loop -->
+    <th:block th:if="${crumbs != null}">
+        <th:block th:each="crumb, iter : ${crumbs}">
+            <a th:if="${!iter.last}" th:href="${crumb.value}" class="breadcrumb-item" th:text="${crumb.key}">Parent Link</a>
+            <span th:if="${!iter.last}" class="breadcrumb-separator">/</span>
+            <span th:if="${iter.last}" class="breadcrumb-item active" th:text="${crumb.key}">Active Page</span>
+        </th:block>
+    </th:block>
+
+    <!-- Default trail if no crumbs are specified -->
+    <th:block th:if="${crumbs == null}">
+        <span class="breadcrumb-item active" th:text="${activePageLabel != null ? activePageLabel : 'Order Management'}">Dashboard</span>
+    </th:block>
+</div>

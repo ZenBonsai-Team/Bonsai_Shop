@@ -1,0 +1,954 @@
+:root {
+    --bg-primary: #090d16;
+    --bg-secondary: rgba(17, 24, 39, 0.7);
+    --bg-card: rgba(30, 41, 59, 0.4);
+    --border-color: rgba(255, 255, 255, 0.08);
+    --text-primary: #f8fafc;
+    --text-secondary: #94a3b8;
+
+    --color-emerald: #10b981;
+    --color-emerald-glow: rgba(16, 185, 129, 0.2);
+    --color-emerald-dark: #065f46;
+
+    --color-amber: #f59e0b;
+    --color-amber-glow: rgba(245, 158, 11, 0.2);
+
+    --color-rose: #f43f5e;
+    --color-rose-glow: rgba(244, 63, 94, 0.2);
+
+    --color-sidebar: #0d121f;
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    min-height: 100vh;
+    overflow-x: hidden;
+    line-height: 1.5;
+}
+
+/* ==========================================================================
+   LAYOUT STRUCTURE
+   ========================================================================== */
+.dashboard {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* ==========================================================================
+   NAVBAR (SIDEBAR)
+   ========================================================================== */
+.navbar {
+    width: 260px;
+    background-color: var(--color-sidebar);
+    border-right: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    padding: 2rem 1.5rem;
+    position: fixed;
+    height: 100vh;
+    left: 0;
+    top: 0;
+    z-index: 100;
+}
+
+.navbar-logo {
+    margin-bottom: 3rem;
+}
+
+.navbar-logo h2 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: var(--text-primary);
+}
+
+.navbar-logo h2 span {
+    color: var(--color-emerald);
+}
+
+.navbar-logo p {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    margin-top: 0.2rem;
+}
+
+.navbar-menu {
+    flex-grow: 1;
+}
+
+.navbar-menu ul {
+    list-style: none;
+}
+
+.navbar-menu li {
+    margin-bottom: 0.8rem;
+}
+
+.navbar-menu a {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.85rem 1.25rem;
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 0.95rem;
+    font-weight: 500;
+    border-radius: 12px;
+    transition: var(--transition);
+}
+
+.navbar-menu a i {
+    font-size: 1.1rem;
+    transition: var(--transition);
+}
+
+.navbar-menu a:hover {
+    color: var(--text-primary);
+    background-color: rgba(255, 255, 255, 0.03);
+}
+
+.navbar-menu li.active a {
+    color: var(--text-primary);
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(6, 95, 70, 0.05) 100%);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    box-shadow: 0 0 15px rgba(16, 185, 129, 0.1);
+}
+
+.navbar-menu li.active a i {
+    color: var(--color-emerald);
+}
+
+.navbar-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-top: auto;
+    border-top: 1px solid var(--border-color);
+    padding-top: 1.5rem;
+}
+
+.navbar-actions button {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.notification-btn {
+    background-color: rgba(255, 255, 255, 0.03);
+    color: var(--text-secondary);
+}
+
+.notification-btn:hover {
+    color: var(--text-primary);
+    background-color: rgba(255, 255, 255, 0.06);
+}
+
+.profile-btn {
+    background-color: rgba(16, 185, 129, 0.05);
+    border-color: rgba(16, 185, 129, 0.1) !important;
+    color: var(--color-emerald);
+}
+
+.profile-btn:hover {
+    background-color: rgba(16, 185, 129, 0.1);
+    color: var(--text-primary);
+}
+
+.logout-btn {
+    background-color: rgba(244, 63, 94, 0.05);
+    color: var(--color-rose);
+}
+
+.logout-btn:hover {
+    background-color: var(--color-rose);
+    color: var(--text-primary);
+    box-shadow: 0 0 12px var(--color-rose-glow);
+}
+
+/* ==========================================================================
+   MAIN CONTENT
+   ========================================================================== */
+.main-content {
+    margin-left: 260px;
+    flex-grow: 1;
+    min-height: 100vh;
+    padding: 2.5rem 3rem;
+    background: radial-gradient(circle at top right, rgba(16, 185, 129, 0.03) 0%, transparent 40%),
+    radial-gradient(circle at bottom left, rgba(30, 41, 59, 0.2) 0%, transparent 50%);
+}
+
+.content {
+    max-width: 1400px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+/* ==========================================================================
+   SUMMARY CARD GRID
+   ========================================================================== */
+.summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1.5rem;
+}
+
+.summary-card {
+    background-color: var(--bg-card);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    transition: var(--transition);
+    box-shadow: var(--shadow-sm);
+}
+
+.summary-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(16, 185, 129, 0.2);
+    box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.3), 0 0 15px rgba(16, 185, 129, 0.03);
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.summary-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    background-color: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+}
+
+.summary-card:nth-child(1) .summary-icon {
+    color: var(--color-emerald);
+    background-color: rgba(16, 185, 129, 0.08);
+    border-color: rgba(16, 185, 129, 0.15);
+}
+
+.summary-card:nth-child(2) .summary-icon {
+    color: #3b82f6;
+    background-color: rgba(59, 130, 246, 0.08);
+    border-color: rgba(59, 130, 246, 0.15);
+}
+
+.summary-card:nth-child(3) .summary-icon {
+    color: var(--color-emerald);
+    background-color: rgba(16, 185, 129, 0.08);
+    border-color: rgba(16, 185, 129, 0.15);
+}
+
+.summary-card:nth-child(4) .summary-icon {
+    color: var(--color-amber);
+    background-color: rgba(245, 158, 11, 0.08);
+    border-color: rgba(245, 158, 11, 0.15);
+}
+
+.card-status {
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 0.25rem 0.6rem;
+    border-radius: 30px;
+    background-color: rgba(255, 255, 255, 0.04);
+    color: var(--text-secondary);
+}
+
+.summary-card:nth-child(1) .card-status {
+    background-color: rgba(16, 185, 129, 0.1);
+    color: var(--color-emerald);
+}
+
+.summary-card:nth-child(2) .card-status {
+    background-color: rgba(59, 130, 246, 0.1);
+    color: #3b82f6;
+}
+
+.summary-card:nth-child(3) .card-status {
+    background-color: rgba(16, 185, 129, 0.1);
+    color: var(--color-emerald);
+}
+
+.summary-card:nth-child(4) .card-status {
+    background-color: rgba(245, 158, 11, 0.1);
+    color: var(--color-amber);
+}
+
+.card-body h2 {
+    font-size: 2.2rem;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+    letter-spacing: -0.5px;
+}
+
+.card-body p {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    font-weight: 500;
+    letter-spacing: 1px;
+}
+
+/* ==========================================================================
+   SCHEDULE OVERVIEW (CALENDAR & TODAY SPLIT)
+   ========================================================================== */
+.schedule-overview {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr;
+    gap: 1.5rem;
+}
+
+@media (max-width: 1024px) {
+    .schedule-overview {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* CALENDAR PANEL */
+.calendar-panel {
+    background-color: var(--bg-card);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    padding: 1.75rem;
+    box-shadow: var(--shadow-md);
+}
+
+.calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.calendar-header h2 {
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+.calendar-navigation {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.current-month {
+    font-size: 0.95rem;
+    font-weight: 600;
+    min-width: 120px;
+    text-align: center;
+    color: var(--text-primary);
+}
+
+.calendar-btn {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.calendar-btn:hover {
+    background: rgba(16, 185, 129, 0.15);
+    border-color: var(--color-emerald);
+    color: var(--color-emerald);
+}
+
+.weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    text-align: center;
+    font-weight: 600;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-bottom: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 8px;
+}
+
+.calendar-day {
+    aspect-ratio: 1.2;
+    background: rgba(255, 255, 255, 0.01);
+    border: 1px solid transparent;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    position: relative;
+    transition: var(--transition);
+}
+
+.calendar-day:hover {
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--text-primary);
+    border-color: var(--border-color);
+}
+
+.calendar-day.empty {
+    background: transparent;
+    cursor: default;
+    pointer-events: none;
+}
+
+.calendar-day.current-month-day {
+    color: var(--text-primary);
+}
+
+.calendar-day.today {
+    border: 1px solid var(--color-emerald);
+    color: var(--color-emerald);
+    font-weight: 700;
+}
+
+.calendar-day.selected {
+    background: var(--color-emerald) !important;
+    color: var(--bg-primary) !important;
+    font-weight: 700;
+    box-shadow: 0 4px 12px var(--color-emerald-glow);
+}
+
+.calendar-day.selected .appointment-dot {
+    background: var(--bg-primary);
+}
+
+.appointment-dot {
+    width: 6px;
+    height: 6px;
+    background-color: var(--color-emerald);
+    border-radius: 50%;
+    position: absolute;
+    bottom: 8px;
+    box-shadow: 0 0 6px var(--color-emerald);
+}
+
+/* TODAY PANEL */
+.today-panel {
+    background-color: var(--bg-card);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    padding: 1.75rem;
+    box-shadow: var(--shadow-md);
+    display: flex;
+    flex-direction: column;
+}
+
+.today-panel h2 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 0.75rem;
+}
+
+.appointment-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    max-height: 320px;
+    overflow-y: auto;
+    padding-right: 0.25rem;
+}
+
+/* Custom scrollbar for appointments list */
+.appointment-list::-webkit-scrollbar {
+    width: 4px;
+}
+
+.appointment-list::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.appointment-list::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 10px;
+}
+
+.appointment-list::-webkit-scrollbar-thumb:hover {
+    background: var(--text-secondary);
+}
+
+.appointment-item {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: var(--transition);
+}
+
+.appointment-item:hover {
+    background: rgba(255, 255, 255, 0.04);
+    border-color: rgba(16, 185, 129, 0.2);
+}
+
+.item-left {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.item-title {
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.item-subtitle {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+.item-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.35rem;
+}
+
+.item-time {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--color-emerald);
+}
+
+.no-appointments {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    text-align: center;
+    padding: 2rem 0;
+    font-style: italic;
+}
+
+/* ==========================================================================
+   TOOLBAR (SEARCH & FILTERS)
+   ========================================================================== */
+.toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1.5rem;
+    margin-top: 1rem;
+}
+
+@media (max-width: 640px) {
+    .toolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+}
+
+.search-box {
+    position: relative;
+    flex-grow: 1;
+    max-width: 400px;
+}
+
+.search-box i {
+    position: absolute;
+    left: 1.25rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    pointer-events: none;
+}
+
+.search-box input {
+    width: 100%;
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    padding: 0.8rem 1rem 0.8rem 2.75rem;
+    border-radius: 12px;
+    font-size: 0.9rem;
+    transition: var(--transition);
+}
+
+.search-box input:focus {
+    outline: none;
+    border-color: var(--color-emerald);
+    box-shadow: 0 0 10px rgba(16, 185, 129, 0.15);
+    background-color: rgba(30, 41, 59, 0.6);
+}
+
+.toolbar-actions select {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    padding: 0.8rem 2.5rem 0.8rem 1.25rem;
+    border-radius: 12px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    outline: none;
+    transition: var(--transition);
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    background-size: 1.1rem;
+}
+
+.toolbar-actions select:focus {
+    border-color: var(--color-emerald);
+    box-shadow: 0 0 10px rgba(16, 185, 129, 0.15);
+}
+
+/* ==========================================================================
+   APPOINTMENTS TABLE
+   ========================================================================== */
+.appointment-table {
+    background-color: var(--bg-card);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: var(--shadow-md);
+}
+
+.appointment-table table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+.appointment-table th,
+.appointment-table td {
+    padding: 1.2rem 1.5rem;
+    font-size: 0.9rem;
+}
+
+.appointment-table th {
+    background-color: rgba(255, 255, 255, 0.02);
+    color: var(--text-secondary);
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 1px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.appointment-table td {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    color: var(--text-primary);
+}
+
+.appointment-table tr {
+    transition: var(--transition);
+}
+
+.appointment-table tr:hover {
+    background-color: rgba(255, 255, 255, 0.02);
+}
+
+.appointment-table tr:last-child td {
+    border-bottom: none;
+}
+
+/* Status Badges */
+.status-badge {
+    display: inline-block;
+    padding: 0.35rem 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border-radius: 30px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.status-badge.pending {
+    background-color: rgba(245, 158, 11, 0.08);
+    border: 1px solid rgba(245, 158, 11, 0.2);
+    color: var(--color-amber);
+    box-shadow: 0 0 10px rgba(245, 158, 11, 0.05);
+}
+
+.status-badge.approved {
+    background-color: rgba(16, 185, 129, 0.08);
+    border: 1px solid rgba(16, 185, 129, 0.2);
+    color: var(--color-emerald);
+    box-shadow: 0 0 10px rgba(16, 185, 129, 0.05);
+}
+
+.status-badge.cancelled {
+    background-color: rgba(244, 63, 94, 0.08);
+    border: 1px solid rgba(244, 63, 94, 0.2);
+    color: var(--color-rose);
+    box-shadow: 0 0 10px rgba(244, 63, 94, 0.05);
+}
+
+/* Action Buttons */
+.table-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.edit-btn {
+    background-color: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.edit-btn:hover {
+    background-color: rgba(16, 185, 129, 0.1);
+    color: var(--color-emerald);
+    border-color: var(--color-emerald);
+    transform: translateY(-2px);
+}
+
+/* ==========================================================================
+   MODAL DIALOG
+   ========================================================================== */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(9, 13, 22, 0.6);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    z-index: 1000;
+    transition: opacity 0.3s ease;
+}
+
+.modal.show {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.modal-content {
+    background-color: #0f172a;
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    width: 90%;
+    max-width: 480px;
+    padding: 2.25rem;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    transform: scale(0.9);
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.modal.show .modal-content {
+    transform: scale(1);
+}
+
+.modal-content h3 {
+    font-size: 1.3rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    color: var(--text-primary);
+}
+
+.appointment-info {
+    background-color: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.25rem;
+    margin-bottom: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+}
+
+.appointment-info p {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.appointment-info p strong {
+    color: var(--text-primary);
+    width: 80px;
+    display: inline-block;
+}
+
+.status-selection {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 2rem;
+}
+
+.status-selection label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+}
+
+.status-selection select {
+    background-color: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    padding: 0.85rem 1rem;
+    border-radius: 12px;
+    font-size: 0.95rem;
+    outline: none;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.status-selection select:focus {
+    border-color: var(--color-emerald);
+    box-shadow: 0 0 10px rgba(16, 185, 129, 0.15);
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+}
+
+.modal-actions button {
+    padding: 0.8rem 1.75rem;
+    border-radius: 12px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.save-btn {
+    background-color: var(--color-emerald);
+    color: var(--bg-primary);
+    border: none;
+    box-shadow: 0 4px 12px var(--color-emerald-glow);
+}
+
+.save-btn:hover {
+    background-color: #34d399;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(52, 211, 153, 0.3);
+}
+
+.close-btn {
+    background-color: rgba(255, 255, 255, 0.04);
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
+}
+
+.close-btn:hover {
+    background-color: rgba(255, 255, 255, 0.08);
+    color: var(--text-primary);
+}
+
+/* ==========================================================================
+   RESPONSIVE DESIGN ADAPTATIONS
+   ========================================================================== */
+@media (max-width: 768px) {
+    .navbar {
+        width: 70px;
+        padding: 1.5rem 0.5rem;
+        align-items: center;
+    }
+
+    .navbar-logo h2 {
+        font-size: 1.2rem;
+    }
+
+    .navbar-logo p,
+    .navbar-menu span,
+    .navbar-actions span,
+    .navbar-menu a {
+        font-size: 0;
+        padding: 0.85rem;
+        justify-content: center;
+    }
+
+    .navbar-logo h2 span {
+        display: none;
+    }
+
+    .navbar-menu a i {
+        font-size: 1.3rem;
+    }
+
+    .navbar-actions button {
+        padding: 0.85rem;
+        justify-content: center;
+    }
+
+    .navbar-actions button i {
+        font-size: 1.2rem;
+    }
+
+    /* Text removal for icon-only layout */
+    .navbar-actions {
+        font-size: 0;
+    }
+
+    .main-content {
+        margin-left: 70px;
+        padding: 1.5rem 1.5rem;
+    }
+}

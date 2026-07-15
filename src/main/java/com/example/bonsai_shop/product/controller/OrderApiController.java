@@ -1,17 +1,20 @@
 package com.example.bonsai_shop.product.controller;
 
 import com.example.bonsai_shop.config.VNPayConfig;
-import com.example.bonsai_shop.entity.BonsaiOrder;
+import com.example.bonsai_shop.entity.Order;
 import com.example.bonsai_shop.entity.OrderDetail;
 import com.example.bonsai_shop.entity.Product;
 import com.example.bonsai_shop.entity.User;
+import com.example.bonsai_shop.product.dto.OrderResponseDTO;
 import com.example.bonsai_shop.product.dto.PurchaseOrderRequestDTO;
 import com.example.bonsai_shop.product.repository.ProductRepository;
+import com.example.bonsai_shop.product.service.OrderService;
 import com.example.bonsai_shop.product.repository.OrderRepository;
 import com.example.bonsai_shop.customer.repository.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -25,6 +28,7 @@ import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/orders")
@@ -38,6 +42,116 @@ public class OrderApiController {
 
     @Autowired
     private OrderRepository orderRepository;
+
+    @Autowired
+    private OrderService orderService;
+
+    @GetMapping
+    public ResponseEntity<Map<String, Object>> getOrders(
+            @RequestParam(defaultValue = "") String search,
+            @RequestParam(defaultValue = "ALL") String status,
+            @RequestParam(defaultValue = "date_desc") String sort,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "5") int limit) {
+
+        Page<Order> orderPage = orderService.getFilteredOrders(search, status, sort, page, limit);
+
+        List<OrderResponseDTO> dtoList = orderPage.getContent().stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("orders", dtoList);
+        response.put("totalCount", orderPage.getTotalElements());
+        response.put("pages", orderPage.getTotalPages());
+        response.put("currentPage", page);
+
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * API Lấy thống kê số lượng đơn hàng theo các trạng thái (KPIs)
+     */
+    @GetMapping("/kpis")
+    public ResponseEntity<Map<String, Long>> getKPIs() {
+        return ResponseEntity.ok(orderService.getKPIs());
+    }
+
+    /**
+     * API Lấy chi tiết một đơn hàng theo mã đơn
+     */
+    @GetMapping("/{orderCode}")
+    public ResponseEntity<OrderResponseDTO> getOrderDetail(@PathVariable String orderCode) {
+        Order order = orderService.getOrderByCode(orderCode);
+        if (order == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(convertToDTO(order));
+    }
+
+    /**
+     * API Duyệt đơn hàng (Cập nhật phí cẩu, phí ship)
+     */
+    @PostMapping("/{orderCode}/verify")
+    public ResponseEntity<Map<String, Object>> verifyOrder(
+            @PathVariable String orderCode,
+            @RequestBody Map<String, Object> payload,
+            @AuthenticationPrincipal UserDetails currentUser) {
+
+        Map<String, Object> response = new HashMap<>();
+        if (currentUser == null) {
+            response.put("success", false);
+            response.put("message", "Chưa đăng nhập hệ thống.");
+            return ResponseEntity.status(401).body(response);
+        }
+
+        User moderator = userRepository.findByEmail(currentUser.getUsername()).orElse(null);
+        if (moderator == null) {
+            response.put("success", false);
+            response.put("message", "Người dùng không hợp lệ.");
+            return ResponseEntity.badRequest().body(response);
+        }
+
+        BigDecimal craneFee = new BigDecimal(payload.getOrDefault("craneFee", 0).toString());
+        BigDecimal shippingFee = new BigDecimal(payload.getOrDefault("shippingFee", 0).toString());
+
+        boolean success = orderService.verifyOrder(orderCode, craneFee, shippingFee, moderator);
+        response.put("success", success);
+        response.put("message", success ? "Duyệt đơn hàng thành công." : "Duyệt đơn hàng thất bại.");
+
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * API Từ chối duyệt đơn hàng (Có lý do)
+     */
+    @PostMapping("/{orderCode}/reject")
+    public ResponseEntity<Map<String, Object>> rejectOrder(
+            @PathVariable String orderCode,
+            @RequestBody Map<String, String> payload,
+            @AuthenticationPrincipal UserDetails currentUser) {
+
+        Map<String, Object> response = new HashMap<>();
+        if (currentUser == null) {
+            response.put("success", false);
+            response.put("message", "Chưa đăng nhập hệ thống.");
+            return ResponseEntity.status(401).body(response);
+        }
+
+        User moderator = userRepository.findByEmail(currentUser.getUsername()).orElse(null);
+        if (moderator == null) {
+            response.put("success", false);
+            response.put("message", "Người dùng không hợp lệ.");
+            return ResponseEntity.badRequest().body(response);
+        }
+
+        String reason = payload.getOrDefault("reason", "");
+        boolean success = orderService.rejectOrder(orderCode, reason, moderator);
+        response.put("success", success);
+        response.put("message", success ? "Từ chối duyệt đơn hàng thành công." : "Thao tác thất bại.");
+
+        return ResponseEntity.ok(response);
+    }
 
     @PostMapping("/checkout")
     @Transactional
@@ -72,7 +186,7 @@ public class OrderApiController {
 
         // 3. Khởi tạo BonsaiOrder
         String orderCode = "BSMS-" + VNPayConfig.getRandomNumber(6).toUpperCase();
-        BonsaiOrder order = BonsaiOrder.builder()
+        Order order = Order.builder()
                 .customer(customer)
                 .orderCode(orderCode)
                 .customerName(dto.getCustomerName())
@@ -103,11 +217,10 @@ public class OrderApiController {
 
         // 6. Xử lý phân nhánh Phương thức thanh toán
         if ("VNPAY".equalsIgnoreCase(dto.getPaymentMethod())) {
-            // Logic tạo URL thanh toán VNPay
-            String paymentUrl = buildVNPayUrl(request, orderCode, product.getPrice());
+            // Logic tạo URL thanh toán VNPay (Tạm thời không nhảy sang trang VNPay mà xử lý hiển thị thành công giống COD)
             response.put("success", true);
             response.put("paymentMethod", "VNPAY");
-            response.put("redirectUrl", paymentUrl);
+            response.put("orderCode", orderCode);
         } else {
             // Thanh toán COD thành công
             response.put("success", true);
@@ -170,5 +283,42 @@ public class OrderApiController {
         queryUrl += "&vnp_SecureHash=" + vnp_SecureHash;
 
         return VNPayConfig.vnp_PayUrl + "?" + queryUrl;
+    }
+
+    private OrderResponseDTO convertToDTO(Order order) {
+        OrderResponseDTO.ProductDTO prodcutDTO = null;
+        if (order.getOrderDetails() != null && !order.getOrderDetails().isEmpty()) {
+            OrderDetail detail = order.getOrderDetails().get(0);
+            Product prod = detail.getProduct();
+            if (prod != null) {
+                prodcutDTO = OrderResponseDTO.ProductDTO.builder()
+                        .id(prod.getProductId())
+                        .name(prod.getProductName())
+                        .image(prod.getFirstImageUrl())
+                        .price(prod.getPrice())
+                        .build();
+            }
+        }
+
+        // Lấy thông tin từ các thuộc tính trực tiếp của Order tránh NullPointerException
+        return OrderResponseDTO.builder()
+                .orderId(order.getOrderId())
+                .orderCode(order.getOrderCode())
+                .customer(OrderResponseDTO.CustomerDTO.builder()
+                        .name(order.getCustomerName())
+                        .email(order.getCustomerEmail())
+                        .phone(order.getCustomerPhone())
+                        .address(order.getShippingAddress()) // Bổ sung address cho Drawer
+                        .build())
+                .product(prodcutDTO)
+                .quantity(1) // Đảm bảo luôn có số lượng để không bị NaN giá trị
+                .totalAmount(order.getTotalAmount())
+                .depositAmount(order.getDepositAmount())
+                .orderDate(order.getOrderDate())
+                .orderStatus(order.getOrderStatus())
+                .craneFee(order.getCraneFee())
+                .shippingFee(order.getShippingFee())
+                .notes(order.getNotes())
+                .build();
     }
 }
