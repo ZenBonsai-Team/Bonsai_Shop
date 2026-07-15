@@ -1,81 +1,119 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="vi">
-<head th:replace="~{fragments/head :: head('BSMS - Vườn Bonsai Nghệ Thuật', '/css/home.css')}"></head>
+
+<head th:replace="~{fragments/head :: head('ZenBonsai - Trang Chủ', '/css/home.css')}"></head>
+
 <body>
 
-<!-- NAVBAR & WELCOME BAR -->
-<div th:replace="~{fragments/navbar :: navbar}"></div>
+<!-- HEADER GIỐNG MARKETPLACE -->
+<div th:replace="~{fragments/navbar :: navbar}" th:with="activePage='home'"></div>
 
-<!-- HERO SECTION -->
-<header class="hero-centered">
-    <div class="container">
-        <span class="hero-pill-badge">Di sản nghệ thuật Bắc Bộ</span>
-        <h1 class="hero-main-title serif-text">Vườn Cây Cảnh Nghệ Thuật<br>Đỉnh Cao</h1>
-        <p class="hero-subtitle-desc">
-            Nơi hội tụ tinh hoa đất trời và bàn tay tài hoa của các nghệ nhân. Chúng tôi tự hào lưu giữ những kiệt tác bonsai mang đậm dấu ấn thời gian, giá trị thẩm mỹ và tinh thần sâu sắc.
-        </p>
-        <div class="d-flex justify-content-center align-items-center gap-3">
-            <a th:href="@{/marketplace}" class="btn btn-hero-solid text-decoration-none">Khám phá Chợ Bonsai</a>
-            <a href="#" class="btn btn-hero-outline text-decoration-none">VIP Elite Showroom (Sắp ra mắt)</a>
-        </div>
+<section class="hero" id="heroSlider">
+    <button class="hero-arrow hero-arrow-left" type="button" onclick="prevHeroImage()">
+        <i class="fa-solid fa-chevron-left"></i>
+    </button>
+
+    <button class="hero-arrow hero-arrow-right" type="button" onclick="nextHeroImage()">
+        <i class="fa-solid fa-chevron-right"></i>
+    </button>
+
+    <div class="hero-content">
+        <p>NGHỆ THUẬT SỐNG XANH</p>
+        <h1>ZenBonsai</h1>
+        <span>Khám phá vẻ đẹp tĩnh tại trong từng dáng cây</span>
     </div>
-</header>
 
-<!-- GIOI THIEU VUON CAU & NGHỆ THUẬT BONSAI -->
-<section class="container py-5 mt-4">
-    <div class="row align-items-center mb-5">
-        <div class="col-lg-6">
-            <h2 class="serif-text mb-4" style="font-size: 2.5rem; color: var(--primary-color);">Tinh Hoa Nghệ Thuật Bonsai</h2>
-            <p class="text-secondary" style="line-height: 1.8;">
-                Chơi cây cảnh không chỉ là một thú vui tao nhã, mà còn là cả một nghệ thuật tu tâm dưỡng tính. Mỗi chậu bonsai tại vườn chúng tôi là một câu chuyện, một tác phẩm nghệ thuật sống động được tạo tác qua hàng chục năm.
-            </p>
-            <p class="text-secondary" style="line-height: 1.8;">
-                Uy tín của nhà vườn được xây dựng dựa trên sự tận tâm, minh bạch phả hệ của từng cây, và niềm đam mê vô tận với nghệ thuật cây cảnh Bắc Bộ. 
-            </p>
+    <a th:href="@{/marketplace}" class="scroll-down">
+        CUỘN ĐỂ KHÁM PHÁ
+        <span>⌄</span>
+    </a>
+</section>
+
+<section class="collection">
+    <div class="section-heading">
+        <div>
+            <p>DÀNH CHO NHÀ SƯU TẦM</p>
+            <h2>Bộ Sưu Tập Di Sản</h2>
         </div>
-        <div class="col-lg-6">
-            <img src="https://images.unsplash.com/photo-1512428559087-560fa5ceab42?auto=format&fit=crop&q=80&w=800" class="img-fluid rounded shadow" alt="Vườn Bonsai">
+        <a th:href="@{/marketplace}">Xem tất cả tác phẩm</a>
+    </div>
+
+    <div class="product-grid">
+        <div class="product-card">
+            <img src="/images/bonsai-1.png" alt="Bonsai">
+            <p>TUỔI: 45 NĂM</p>
+            <h3>Shimpaku Juniper 'Eternity'</h3>
+            <strong>125.000.000 ₫</strong>
+        </div>
+
+        <div class="product-card">
+            <img src="/images/bonsai-2.png" alt="Bonsai">
+            <p>TUỔI: 80 NĂM</p>
+            <h3>Kuro-Matsu Black Pine</h3>
+            <strong>480.000.000 ₫</strong>
+        </div>
+
+        <div class="product-card">
+            <img src="/images/bonsai-3.png" alt="Bonsai">
+            <p>TUỔI: 30 NĂM</p>
+            <h3>Satsuki Azalea 'Grace'</h3>
+            <strong>85.000.000 ₫</strong>
         </div>
     </div>
 </section>
 
-<!-- PHÂN KHÚC SẢN PHẨM -->
-<section style="background-color: #fcfbf9; padding: 80px 0;">
-    <div class="container">
-        <div class="text-center mb-5">
-            <h2 class="serif-text" style="font-size: 2.5rem; color: var(--primary-color);">Khám Phá Các Phân Khúc</h2>
-            <p class="text-secondary">Lựa chọn phù hợp với nhu cầu và đam mê của bạn</p>
-        </div>
-        <div class="row g-4">
-            <!-- Marketplace -->
-            <div class="col-md-6">
-                <div class="card border-0 shadow-sm h-100" style="border-radius: 12px; overflow: hidden;">
-                    <img src="https://images.unsplash.com/photo-1515150144380-bca9f1650ed9?auto=format&fit=crop&q=80&w=600" class="card-img-top" alt="Marketplace" style="height: 300px; object-fit: cover;">
-                    <div class="card-body p-5 text-center">
-                        <h3 class="serif-text mb-3">Marketplace (Đại trà)</h3>
-                        <p class="text-secondary mb-4">Các tác phẩm bonsai tầm trung, đa dạng về kiểu dáng và kích thước, được niêm yết giá công khai để bạn dễ dàng lựa chọn.</p>
-                        <a th:href="@{/marketplace}" class="btn btn-outline-dark rounded-pill px-4">Vào Chợ Bonsai</a>
-                    </div>
-                </div>
-            </div>
-            <!-- Showroom -->
-            <div class="col-md-6">
-                <div class="card border-0 shadow-sm h-100" style="background-color: var(--primary-color); color: white; border-radius: 12px; overflow: hidden;">
-                    <img src="https://images.unsplash.com/photo-1502082553048-f009c37129b9?auto=format&fit=crop&q=80&w=600" class="card-img-top" alt="Showroom" style="height: 300px; object-fit: cover; opacity: 0.9;">
-                    <div class="card-body p-5 text-center">
-                        <h3 class="serif-text mb-3">VIP Showroom (Cao cấp)</h3>
-                        <p class="mb-4" style="color: rgba(255,255,255,0.8);">Tuyển tập các kiệt tác cổ thụ, đồ tuổi lớn, giá trị thẩm mỹ và kinh tế cực cao. Không niêm yết giá công khai. Yêu cầu đặt lịch hẹn (Booking) xem trực tiếp.</p>
-                        <a href="#" class="btn btn-light rounded-pill px-4">Đặt Lịch Ngay</a>
-                    </div>
-                </div>
-            </div>
-        </div>
+<section class="about">
+    <div class="about-image"></div>
+
+    <div class="about-content">
+        <p>TRIẾT LÝ CỦA CHÚNG TÔI</p>
+        <h2>Tại sao là<br>ZenBonsai?</h2>
+        <h4>“Bonsai không chỉ là một cái cây, đó là một cuộc hành trình vượt thời gian.”</h4>
+        <span>
+            Tại ZenBonsai, chúng tôi không chỉ cung cấp những tác phẩm nghệ thuật sống.
+            Chúng tôi chia sẻ tri thức, kinh nghiệm và sự tận tâm trong từng dáng cây.
+        </span>
+        <a th:href="@{/marketplace}" class="outline-btn">Tìm hiểu thêm</a>
     </div>
 </section>
 
-<!-- FOOTER -->
+<section class="standard">
+    <div class="standard-img">
+        <img src="/images/tools.png" alt="Bonsai tools">
+    </div>
+
+    <div class="standard-info">
+        <h2>Tiêu chuẩn ZenBonsai</h2>
+
+        <div class="info-row">
+            <span>Nguồn gốc</span>
+            <strong>Vườn ươm Omiya, Nhật Bản</strong>
+        </div>
+
+        <div class="info-row">
+            <span>Chế tác</span>
+            <strong>Nghệ nhân cấp quốc gia</strong>
+        </div>
+
+        <div class="info-row">
+            <span>Dụng cụ</span>
+            <strong>Thép Masakuni rèn tay</strong>
+        </div>
+
+        <div class="info-row">
+            <span>Hậu mãi</span>
+            <strong>Bảo hành sinh trưởng 12 tháng</strong>
+        </div>
+
+        <blockquote>
+            “Một tác phẩm luôn đi kèm chứng nhận danh tính và bộ hướng dẫn chăm sóc chuyên biệt.”
+        </blockquote>
+    </div>
+</section>
+
 <div th:replace="~{fragments/footer :: footer}"></div>
 
+<script th:src="@{/js/home.js}"></script>
 </body>
 </html>

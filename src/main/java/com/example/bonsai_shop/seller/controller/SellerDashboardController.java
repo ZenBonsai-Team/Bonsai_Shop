@@ -12,6 +12,8 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -38,16 +40,22 @@ public class SellerDashboardController {
         model.addAttribute("soldProducts", products.stream()
                 .filter(product -> "SOLD".equals(product.getProductStatus()))
                 .count());
-        model.addAttribute("monthlySoldItems", orderDetailRepository.countMonthlySoldItemsBySeller(
+        long monthlySoldItems = orderDetailRepository.countMonthlySoldItemsBySeller(
                 seller.getUserId(),
                 monthStart,
                 nextMonthStart
-        ));
-        model.addAttribute("monthlyRevenue", orderDetailRepository.sumMonthlyRevenueBySeller(
+        );
+        BigDecimal monthlyRevenue = orderDetailRepository.sumMonthlyRevenueBySeller(
                 seller.getUserId(),
                 monthStart,
                 nextMonthStart
-        ));
+        );
+        BigDecimal averageOrderValue = monthlySoldItems == 0
+                ? BigDecimal.ZERO
+                : monthlyRevenue.divide(BigDecimal.valueOf(monthlySoldItems), 0, RoundingMode.HALF_UP);
+        model.addAttribute("monthlySoldItems", monthlySoldItems);
+        model.addAttribute("monthlyRevenue", monthlyRevenue);
+        model.addAttribute("averageOrderValue", averageOrderValue);
         model.addAttribute("draftProducts", products.stream()
                 .filter(product -> "DRAFT".equals(product.getProductStatus()))
                 .count());
@@ -60,7 +68,6 @@ public class SellerDashboardController {
         model.addAttribute("hiddenPriceProducts", products.stream()
                 .filter(product -> !Boolean.TRUE.equals(product.getIsPublicPrice()))
                 .count());
-        model.addAttribute("recentProducts", products.stream().limit(5).toList());
         model.addAttribute("seller", seller);
         return "seller/dashboard";
     }

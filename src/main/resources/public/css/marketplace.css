@@ -1,8 +1,112 @@
+/* WELCOME BAR */
+.welcome-bar {
+    position: relative;
+    background: #fefbec;
+    text-align: center;
+    padding: 12px 40px;
+    color: #001f11;
+    font-weight: bold;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.close-welcome-btn {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    color: #001f11;
+    opacity: 0.6;
+    transition: opacity 0.2s;
+    line-height: 1;
+    padding: 0;
+}
+
 .close-welcome-btn:hover {
     opacity: 1;
 }
 
+/* --- HERO STYLES --- */
+.hero-centered {
+    padding: 90px 0;
+    text-align: center;
+    background: linear-gradient(rgba(250, 248, 245, 0.88), rgba(250, 248, 245, 0.88)), 
+    url('/images/hero-banner-1.jpg') no-repeat center center;
+    background-size: cover;
+    border-bottom: 1px solid var(--border-color);
+    position: relative;
+}
 
+.hero-pill-badge {
+    font-family: var(--font-sans);
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    color: var(--text-dark);
+    background-color: rgba(0, 99, 25, 0.05);
+    border: 3px solid rgba(0, 60, 16, 0.175);
+    padding: 5px 16px;
+    border-radius: 50px;
+    display: inline-block;
+    margin-bottom: 20px;
+}
+
+        .hero-main-title {
+            font-size: 3.4rem;
+            font-weight: 600;
+            line-height: 1.15;
+            color: var(--primary-color);
+            margin-bottom: 20px;
+            letter-spacing: -0.01em;
+        }
+
+        .hero-subtitle-desc {
+            font-size: 0.95rem;
+            line-height: 1.7;
+            color: var(--text-secondary);
+            max-width: 680px;
+            margin: 0 auto 30px;
+            font-weight: 400;
+        }
+
+        .btn-hero-solid {
+            background-color: var(--primary-color);
+            color: white;
+            font-family: var(--font-sans);
+            font-size: 0.82rem;
+            font-weight: 600;
+            padding: 11px 24px;
+            border-radius: 4px;
+            border: none;
+            transition: var(--transition);
+        }
+
+        .btn-hero-solid:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .btn-hero-outline {
+            background-color: white;
+            color: var(--text-dark);
+            border: 1px solid var(--border-color);
+            font-family: var(--font-sans);
+            font-size: 0.82rem;
+            font-weight: 600;
+            padding: 11px 24px;
+            border-radius: 4px;
+            transition: var(--transition);
+            margin-left: 12px;
+        }
+
+        .btn-hero-outline:hover {
+            background-color: var(--bg-washi);
+            border-color: var(--text-secondary);
+        }
 
         /* --- CATEGORY TABS --- */
         .category-tabs-container {
@@ -38,11 +142,10 @@
             border-color: var(--primary-color);
         }
 
+        /* --- FILTER SIDEBAR STYLES --- */
         .filter-panel {
-            background-color: var(--bg-card, #FFFFFF);
+            background-color: #FFFFFF;
             border: 1px solid var(--border-color);
-            border-radius: 16px;
-            box-shadow: var(--shadow-subtle);
             padding: 24px;
             transition: var(--transition);
         }
@@ -420,8 +523,6 @@
 
             .filter-panel {
                 border: none;
-                border-radius: 0;
-                box-shadow: none;
                 height: 100%;
             }
 

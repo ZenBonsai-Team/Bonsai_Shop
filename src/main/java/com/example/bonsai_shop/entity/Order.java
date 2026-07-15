@@ -8,8 +8,12 @@ import java.util.List;
 
 @Entity
 @Table(name = "`ORDER`")
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
-public class BonsaiOrder {
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class Order {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -46,6 +50,15 @@ public class BonsaiOrder {
 
     @Column(name = "OrderStatus", length = 50)
     private String orderStatus = "PENDING";
+
+    @Column(name = "CraneFee", precision = 15, scale = 2)
+    private BigDecimal craneFee = BigDecimal.ZERO;
+
+    @Column(name = "ShippingFee", precision = 15, scale = 2)
+    private BigDecimal shippingFee = BigDecimal.ZERO;
+
+    @Column(name = "Notes", length = 500)
+    private String notes;
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
     private List<OrderDetail> orderDetails;

@@ -1,92 +1,183 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments/head :: head('Seller Dashboard', '/css/dashboard.css')}"></head>
 <body>
-<div th:replace="~{fragments/navbar :: navbar}"></div>
-
 <div class="dashboard-layout">
     <div th:replace="~{fragments/sidebar :: sidebar('seller-dashboard')}"></div>
 
     <main class="dashboard-main">
-        <header class="dashboard-header">
-            <div>
-                <h1>Dashboard</h1>
-                <p>Overview sản phẩm và hoạt động seller.</p>
-            </div>
-            <a class="btn" th:href="@{/seller/products/new}">Create Product</a>
-        </header>
+        <div th:replace="~{fragments/seller-topbar :: topbar('Dashboard')}"></div>
 
-        <section class="seller-kpis">
-            <div class="card">
-                <strong th:text="${totalProducts}">0</strong>
-                <span>Total Products</span>
+        <section class="seller-dashboard-content">
+            <div class="seller-dashboard-hero">
+                <div>
+                    <span class="seller-eyebrow">Seller Overview</span>
+                    <h1>Dashboard</h1>
+                    <p>Theo dõi nhanh tình trạng sản phẩm, doanh thu và các mục cần xử lý.</p>
+                </div>
+                <a class="btn" th:href="@{/seller/products/new}">
+                    <i class="fa-solid fa-plus"></i>
+                    Create Product
+                </a>
             </div>
-            <div class="card">
-                <strong th:text="${publishedProducts}">0</strong>
-                <span>Published</span>
-            </div>
-            <div class="card">
-                <strong th:text="${soldProducts}">0</strong>
-                <span>Sold Products</span>
-            </div>
-            <div class="card">
-                <strong th:text="${#numbers.formatDecimal(monthlyRevenue, 0, 'POINT', 0, 'POINT') + ' VNĐ'}">0 VNĐ</strong>
-                <span>Revenue This Month</span>
-            </div>
-            <div class="card">
-                <strong th:text="${monthlySoldItems}">0</strong>
-                <span>Sold This Month</span>
-            </div>
-            <div class="card">
-                <strong th:text="${draftProducts}">0</strong>
-                <span>Draft</span>
-            </div>
-            <div class="card">
-                <strong th:text="${hiddenProducts}">0</strong>
-                <span>Hidden</span>
-            </div>
-        </section>
 
-        <section class="portal-grid single-column">
-            <div class="portal-card">
-                <h2>Need Attention</h2>
-                <ul class="attention-list">
-                    <li><strong th:text="${draftProducts}">0</strong> draft products need publishing</li>
-                    <li><strong th:text="${missingDescriptionProducts}">0</strong> products missing description</li>
-                    <li><strong th:text="${hiddenPriceProducts}">0</strong> products hide price</li>
-                    <li><strong th:text="${hiddenProducts}">0</strong> hidden products are not visible to customers</li>
-                </ul>
-            </div>
-        </section>
+            <section class="seller-metric-grid">
+                <article class="seller-metric-card metric-total">
+                    <div class="metric-icon"><i class="fa-solid fa-boxes-stacked"></i></div>
+                    <div>
+                        <span>Total Products</span>
+                        <strong th:text="${totalProducts}">0</strong>
+                    </div>
+                </article>
+                <article class="seller-metric-card metric-published">
+                    <div class="metric-icon"><i class="fa-solid fa-store"></i></div>
+                    <div>
+                        <span>Published</span>
+                        <strong th:text="${publishedProducts}">0</strong>
+                    </div>
+                </article>
+                <article class="seller-metric-card metric-sold">
+                    <div class="metric-icon"><i class="fa-solid fa-seedling"></i></div>
+                    <div>
+                        <span>Sold Products</span>
+                        <strong th:text="${soldProducts}">0</strong>
+                    </div>
+                </article>
+                <article class="seller-metric-card metric-revenue">
+                    <div class="metric-icon"><i class="fa-solid fa-chart-line"></i></div>
+                    <div>
+                        <span>Revenue This Month</span>
+                        <strong th:text="${#numbers.formatDecimal(monthlyRevenue, 0, 'POINT', 0, 'POINT') + ' VNĐ'}">0 VNĐ</strong>
+                    </div>
+                </article>
+            </section>
 
-        <section class="portal-card">
-            <div class="section-header">
-                <h2>Recent Products</h2>
-                <a th:href="@{/seller/products}">View all</a>
-            </div>
-            <table class="compact-table">
-                <thead>
-                <tr>
-                    <th>Code</th>
-                    <th>Name</th>
-                    <th>Status</th>
-                    <th>Price</th>
-                    <th>Action</th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr th:each="product : ${recentProducts}">
-                    <td th:text="${product.productCode}"></td>
-                    <td th:text="${product.productName}"></td>
-                    <td><span class="status-chip" th:text="${product.productStatus}"></span></td>
-                    <td>
-                        <span th:if="${product.isPublicPrice}" th:text="${#numbers.formatDecimal(product.price, 0, 'POINT', 0, 'POINT') + ' VNĐ'}"></span>
-                        <span th:if="${!product.isPublicPrice}">Liên hệ</span>
-                    </td>
-                    <td><a th:href="@{/seller/products/{id}/preview(id=${product.productId})}">Preview</a></td>
-                </tr>
-                </tbody>
-            </table>
+            <section class="seller-dashboard-panel-grid">
+                <article class="seller-dashboard-panel seller-chart-panel">
+                    <div class="revenue-panel-heading">
+                        <h2>Revenue Overview</h2>
+                        <button type="button">This Month <i class="fa-solid fa-chevron-down"></i></button>
+                    </div>
+
+                    <div class="revenue-chart" aria-hidden="true">
+                        <div class="chart-grid">
+                            <span>3M</span>
+                            <span>2.5M</span>
+                            <span>2M</span>
+                            <span>1.5M</span>
+                            <span>1M</span>
+                            <span>500K</span>
+                            <span>0</span>
+                        </div>
+                        <svg viewBox="0 0 700 260" preserveAspectRatio="none">
+                            <defs>
+                                <linearGradient id="sellerRevenueFill" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="0%" stop-color="#2f7d46" stop-opacity="0.24"/>
+                                    <stop offset="100%" stop-color="#2f7d46" stop-opacity="0.02"/>
+                                </linearGradient>
+                            </defs>
+                            <path class="revenue-area" d="M20 222 L95 195 L170 190 L245 148 L320 144 L395 92 L470 108 L545 74 L620 58 L680 26 L680 238 L20 238 Z"/>
+                            <polyline class="revenue-line" points="20,222 95,195 170,190 245,148 320,144 395,92 470,108 545,74 620,58 680,26"/>
+                            <g class="revenue-points">
+                                <circle cx="20" cy="222" r="4"/>
+                                <circle cx="95" cy="195" r="4"/>
+                                <circle cx="170" cy="190" r="4"/>
+                                <circle cx="245" cy="148" r="4"/>
+                                <circle cx="320" cy="144" r="4"/>
+                                <circle cx="395" cy="92" r="4"/>
+                                <circle cx="470" cy="108" r="4"/>
+                                <circle cx="545" cy="74" r="4"/>
+                                <circle cx="620" cy="58" r="4"/>
+                                <circle cx="680" cy="26" r="4"/>
+                            </g>
+                        </svg>
+                        <div class="chart-dates">
+                            <span>01/07</span>
+                            <span>05/07</span>
+                            <span>10/07</span>
+                            <span>15/07</span>
+                            <span>20/07</span>
+                            <span>25/07</span>
+                            <span>31/07</span>
+                        </div>
+                    </div>
+
+                    <div class="revenue-summary-grid">
+                        <div class="revenue-summary-card">
+                            <span class="summary-icon"><i class="fa-solid fa-wallet"></i></span>
+                            <div>
+                                <small>Total Revenue</small>
+                                <strong th:text="${#numbers.formatDecimal(monthlyRevenue, 0, 'POINT', 0, 'POINT') + ' VNĐ'}">0 VNĐ</strong>
+                            </div>
+                        </div>
+                        <div class="revenue-summary-card">
+                            <span class="summary-icon"><i class="fa-solid fa-clipboard-list"></i></span>
+                            <div>
+                                <small>Total Orders</small>
+                                <strong th:text="${monthlySoldItems}">0</strong>
+                            </div>
+                        </div>
+                        <div class="revenue-summary-card">
+                            <span class="summary-icon"><i class="fa-solid fa-sack-dollar"></i></span>
+                            <div>
+                                <small>Avg. Order Value</small>
+                                <strong th:text="${#numbers.formatDecimal(averageOrderValue, 0, 'POINT', 0, 'POINT') + ' VNĐ'}">0 VNĐ</strong>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="seller-dashboard-panel seller-status-panel">
+                    <div class="panel-heading">
+                        <div>
+                            <span>Inventory</span>
+                            <h2>Product Status</h2>
+                        </div>
+                    </div>
+                    <div class="status-breakdown">
+                        <div>
+                            <span>Draft</span>
+                            <strong th:text="${draftProducts}">0</strong>
+                        </div>
+                        <div>
+                            <span>Hidden</span>
+                            <strong th:text="${hiddenProducts}">0</strong>
+                        </div>
+                        <div>
+                            <span>Sold</span>
+                            <strong th:text="${soldProducts}">0</strong>
+                        </div>
+                    </div>
+                </article>
+            </section>
+
+            <section class="seller-dashboard-panel seller-attention-panel">
+                <div class="panel-heading">
+                    <div>
+                        <span>Need Attention</span>
+                        <h2>Các mục cần xử lý</h2>
+                    </div>
+                    <a th:href="@{/seller/products}">View Products</a>
+                </div>
+                <div class="attention-cards">
+                    <div>
+                        <strong th:text="${draftProducts}">0</strong>
+                        <span>Draft products cần publish</span>
+                    </div>
+                    <div>
+                        <strong th:text="${missingDescriptionProducts}">0</strong>
+                        <span>Sản phẩm thiếu mô tả</span>
+                    </div>
+                    <div>
+                        <strong th:text="${hiddenPriceProducts}">0</strong>
+                        <span>Sản phẩm đang ẩn giá</span>
+                    </div>
+                    <div>
+                        <strong th:text="${hiddenProducts}">0</strong>
+                        <span>Sản phẩm đang bị hidden</span>
+                    </div>
+                </div>
+            </section>
         </section>
     </main>
 </div>

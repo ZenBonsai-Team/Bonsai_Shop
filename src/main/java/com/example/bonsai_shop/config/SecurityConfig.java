@@ -25,7 +25,8 @@ public class SecurityConfig {
                 return new BCryptPasswordEncoder();
         }
 
-        @Bean
+    @Bean
+
         public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
                 http
                                 .userDetailsService(customUserDetailsService)
@@ -40,6 +41,8 @@ public class SecurityConfig {
                                                                 "/forgot-password",
                                                                 "/verify-otp",
                                                                 "/resend-otp",
+                                                                "/bonsai-luxury",
+                                                                "/bonsai_luxury_detail/**",
                                                                 "/reset-password",
                                                                 "/verify-otp-to-reset-password",
                                                                 "/resend-otp-reset",
@@ -49,7 +52,11 @@ public class SecurityConfig {
                                                                 "/community/post/**", // ← cho phép xem bài viết chi tiết
                                                                 "/css/**", // ← cho phép CSS
                                                                 "/js/**", // ← cho phép JS
-                                                                "/images/**" // ← cho phép images
+                                                                "/images/**", // ← cho phép images
+                                                                "/moderator/**", // ← tạm thời cho phép để test
+                                                                "/api/orders", // ← tạm thời cho phép để test API chính
+                                                                "/api/orders/**", // ← tạm thời cho phép để test API con
+                                                                "/api/products/**" // ← cho phép lấy thông tin chi tiết sản phẩm
                                                 ).permitAll()
                                                 // Chỉ ADMIN mới vào được /admin/**
                                                 .requestMatchers("/admin/**").hasRole("ADMIN")
@@ -89,11 +96,17 @@ public class SecurityConfig {
                     .anyMatch(authority -> "ROLE_ADMIN".equals(authority.getAuthority()));
             boolean isSeller = authentication.getAuthorities().stream()
                     .anyMatch(authority -> "ROLE_SELLER".equals(authority.getAuthority()));
+            boolean isModerator = authentication.getAuthorities().stream()
+                    .anyMatch(authority -> "ROLE_MODERATOR".equals(authority.getAuthority())
+                            || "ROLE_ORDER_MODERATOR".equals(authority.getAuthority())
+                            || "ACTION_ORDER_VIEW_ALL".equals(authority.getAuthority()));
 
             if (isAdmin) {
                 response.sendRedirect("/admin");
             } else if (isSeller) {
                 response.sendRedirect("/seller");
+            } else if (isModerator) {
+                response.sendRedirect("/moderator/orders");
             } else {
                 response.sendRedirect("/home");
             }

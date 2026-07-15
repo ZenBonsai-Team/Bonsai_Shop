@@ -88,6 +88,8 @@ public class SellerProductService {
         ProductSegment segment = productSegmentRepository.findById(segmentId)
                 .orElseThrow(() -> new RuntimeException("Segment không tồn tại!"));
 
+        validateRequiredSpecifications(age, height, trunkDiameter, style);
+
         Product product = Product.builder()
                 .seller(seller)
                 .variety(variety)
@@ -114,7 +116,7 @@ public class SellerProductService {
     }
 
     @Transactional
-    public Product updateProduct(String sellerEmail,
+    public void updateProduct(String sellerEmail,
                                  Integer productId,
                                  Integer varietyId,
                                  Integer segmentId,
@@ -129,11 +131,13 @@ public class SellerProductService {
                                  String productStatus,
                                  List<Integer> tagIds) {
         Product product = getMyProduct(sellerEmail, productId);
-        ensureNotSold(product);
+        ensureEditable(product);
         Variety variety = varietyRepository.findById(varietyId)
                 .orElseThrow(() -> new RuntimeException("Variety không tồn tại!"));
         ProductSegment segment = productSegmentRepository.findById(segmentId)
                 .orElseThrow(() -> new RuntimeException("Segment không tồn tại!"));
+
+        validateRequiredSpecifications(age, height, trunkDiameter, style);
 
         product.setVariety(variety);
         product.setSegment(segment);
@@ -149,13 +153,12 @@ public class SellerProductService {
 
         Product savedProduct = productRepository.save(product);
         syncProductTags(savedProduct, tagIds);
-        return savedProduct;
     }
 
     @Transactional
     public void deleteProduct(String sellerEmail, Integer productId) {
         Product product = getMyProduct(sellerEmail, productId);
-        ensureNotSold(product);
+        ensureDraft(product);
         productMediaRepository.findByProductOrderByDisplayOrderAscMediaIdAsc(product)
                 .forEach(media -> mediaStorageService.deleteProductMedia(media.getMediaUrl()));
         productRepository.delete(product);
@@ -173,7 +176,7 @@ public class SellerProductService {
                          String caption,
                          Boolean isThumbnail) {
         Product product = getMyProduct(sellerEmail, productId);
-        ensureNotSold(product);
+        ensureEditable(product);
         String mediaUrl = mediaStorageService.storeProductMedia(file);
         String contentType = file.getContentType();
         String mediaType = contentType != null && contentType.startsWith("video/") ? "VIDEO" : "IMAGE";
@@ -203,7 +206,7 @@ public class SellerProductService {
     @Transactional
     public void setThumbnail(String sellerEmail, Integer productId, Integer mediaId) {
         Product product = getMyProduct(sellerEmail, productId);
-        ensureNotSold(product);
+        ensureEditable(product);
         ProductMedia selected = productMediaRepository.findByMediaIdAndProduct(mediaId, product)
                 .orElseThrow(() -> new RuntimeException("Media không tồn tại!"));
 
@@ -220,7 +223,7 @@ public class SellerProductService {
                                  List<Integer> mediaIds,
                                  List<Integer> displayOrders) {
         Product product = getMyProduct(sellerEmail, productId);
-        ensureNotSold(product);
+        ensureEditable(product);
         if (mediaIds == null || displayOrders == null || mediaIds.size() != displayOrders.size()) {
             throw new RuntimeException("Dữ liệu thứ tự media không hợp lệ!");
         }
@@ -236,7 +239,7 @@ public class SellerProductService {
     @Transactional
     public void deleteMedia(String sellerEmail, Integer productId, Integer mediaId) {
         Product product = getMyProduct(sellerEmail, productId);
-        ensureNotSold(product);
+        ensureEditable(product);
         ProductMedia media = productMediaRepository.findByMediaIdAndProduct(mediaId, product)
                 .orElseThrow(() -> new RuntimeException("Media không tồn tại!"));
 
@@ -247,7 +250,7 @@ public class SellerProductService {
     @Transactional
     public void publish(String sellerEmail, Integer productId) {
         Product product = getMyProduct(sellerEmail, productId);
-        ensureNotSold(product);
+        ensureEditable(product);
         if (productMediaRepository.findByProductOrderByDisplayOrderAscMediaIdAsc(product).isEmpty()) {
             throw new RuntimeException("Cần ít nhất một ảnh hoặc video trước khi publish!");
         }
@@ -258,7 +261,7 @@ public class SellerProductService {
     @Transactional
     public void hideProduct(String sellerEmail, Integer productId) {
         Product product = getMyProduct(sellerEmail, productId);
-        ensureNotSold(product);
+        ensureHideable(product);
         product.setProductStatus("HIDDEN");
         productRepository.save(product);
     }
@@ -303,17 +306,60 @@ public class SellerProductService {
                 .map(tag -> ProductTag.builder()
                         .product(product)
                         .tag(tag)
-                        .build())
+                .build())
                 .forEach(productTagRepository::save);
+    }
+
+    private void validateRequiredSpecifications(Integer age, Float height, Float trunkDiameter, String style) {
+        if (age == null) {
+            throw new RuntimeException("Vui lòng nhập tuổi cây.");
+        }
+        if (height == null) {
+            throw new RuntimeException("Vui lòng nhập chiều cao cây.");
+        }
+        if (trunkDiameter == null) {
+            throw new RuntimeException("Vui lòng nhập đường kính thân cây.");
+        }
+        if (style == null || style.isBlank()) {
+            throw new RuntimeException("Vui lòng nhập style cây.");
+        }
     }
 
     public boolean isSold(Product product) {
         return product != null && "SOLD".equalsIgnoreCase(product.getProductStatus());
     }
 
+    public boolean isEditable(Product product) {
+        return product != null
+                && ("DRAFT".equalsIgnoreCase(product.getProductStatus())
+                || "HIDDEN".equalsIgnoreCase(product.getProductStatus()));
+    }
+
+    public boolean isHideable(Product product) {
+        return product != null && "AVAILABLE".equalsIgnoreCase(product.getProductStatus());
+    }
+
     private void ensureNotSold(Product product) {
         if (isSold(product)) {
             throw new RuntimeException("Sản phẩm đã bán không thể chỉnh sửa.");
+        }
+    }
+
+    private void ensureEditable(Product product) {
+        if (!isEditable(product)) {
+            throw new RuntimeException("Chỉ có thể sửa sản phẩm nháp hoặc đã ẩn.");
+        }
+    }
+
+    private void ensureDraft(Product product) {
+        if (product == null || !"DRAFT".equalsIgnoreCase(product.getProductStatus())) {
+            throw new RuntimeException("Chỉ có thể xóa sản phẩm nháp.");
+        }
+    }
+
+    private void ensureHideable(Product product) {
+        if (!isHideable(product)) {
+            throw new RuntimeException("Chỉ có thể ẩn sản phẩm đang được bán.");
         }
     }
 
