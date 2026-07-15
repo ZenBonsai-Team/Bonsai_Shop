@@ -1,113 +1,31 @@
 // ==========================================================================
-// STATE MANAGEMENT & MOCK DATA GENERATOR
+// STATE MANAGEMENT & INITIALIZATION
 // ==========================================================================
-// Current date state
-let currentYear = 2026;
-let currentMonth = 6; // July (0-indexed, so 6 is July)
-let selectedDateStr = ""; // YYYY-MM-DD format
+let appointments = []; // Sẽ được lấy thực tế từ DOM (Thymeleaf)
+let currentMonth = new Date().getMonth();
+let currentYear = new Date().getFullYear();
+let selectedDateStr = "";
 let editingAppointmentId = null;
-// Mock list of appointments
-const appointments = [];
-// Helper functions for random items
-const randomItem = (arr) => arr[Math.floor(Math.random() * arr.length)];
-const padZero = (num) => String(num).padStart(2, '0');
-function generateMockData() {
-    const firstNames = ["Nguyễn", "Trần", "Lê", "Phạm", "Hoàng", "Huỳnh", "Phan", "Vũ", "Võ", "Đặng"];
-    const middleNames = ["Văn", "Thị", "Minh", "Hữu", "Khánh", "Anh", "Đức", "Hồng", "Tuấn", "Thanh"];
-    const lastNames = ["Anh", "Bình", "Cường", "Duy", "Hải", "Giang", "Hương", "Khánh", "Linh", "Minh", "Nam", "Phong", "Quỳnh", "Sơn", "Trang", "Vy"];
-    const bonsais = ["Tùng La Hán", "Mai Chiếu Thủy", "Sanh Nam Điền", "Đỗ Quyên Nhật Bản", "Nguyệt Quế Cổ Thụ", "Khế Kiểng Dáng Huyền", "Lộc Vừng Bonsai"];
 
-    // Generate exactly 128 appointments to match the dashboard statistics.
-    // We want 6 on "2026-07-08" (Today).
-    // Total: 128. Approved: 102. Pending: 26.
-    let approvedCount = 0;
-    let pendingCount = 0;
-
-    // 1. Generate 6 appointments for Today (July 8, 2026)
-    const todayStr = "2026-07-08";
-    const todayTimes = ["08:30", "09:00", "10:30", "14:00", "15:30", "16:00"];
-
-    for (let i = 0; i < 6; i++) {
-        // Let's make 4 approved and 2 pending on today
-        const status = i < 4 ? "APPROVED" : "PENDING";
-        if (status === "APPROVED") approvedCount++;
-        else pendingCount++;
-
-        appointments.push({
-            id: `AP${padZero(i + 1)}`,
-            client: `${randomItem(firstNames)} ${randomItem(middleNames)} ${randomItem(lastNames)}`,
-            bonsai: bonsais[i % bonsais.length],
-            date: todayStr,
-            time: todayTimes[i],
-            status: status
-        });
-    }
-
-    // 2. Generate remaining 122 appointments spread across June, July, and August 2026
-    let idCounter = 7;
-    const startNum = 128;
-
-    // Generate dates helper
-    const getRandDate = () => {
-        // Generate dates between June 1st (2026-06-01) and Aug 31st (2026-08-31)
-        const months = [5, 6, 7]; // June, July, August
-        const m = randomItem(months);
-        let d = Math.floor(Math.random() * 30) + 1;
-        if (m === 6 && d > 31) d = 31; // July has 31 days
-        if (m === 7 && d > 31) d = 31; // August has 31 days
-
-        const dateStr = `2026-${padZero(m + 1)}-${padZero(d)}`;
-        // Avoid adding more on July 8 to keep the "6 today" statistic clean
-        if (dateStr === todayStr) {
-            return "2026-07-09";
-        }
-        return dateStr;
-    };
-
-    while (idCounter <= startNum) {
-        // Distribute statuses to hit exactly 102 Approved and 26 Pending
-        let status = "APPROVED";
-        if (pendingCount < 26 && (approvedCount >= 102 || Math.random() < 0.2)) {
-            status = "PENDING";
-            pendingCount++;
-        } else {
-            approvedCount++;
-        }
-
-        const h = padZero(Math.floor(Math.random() * 9) + 8); // 08:00 - 16:00
-        const min = randomItem(["00", "15", "30", "45"]);
-
-        appointments.push({
-            id: `AP${String(idCounter).padStart(3, '0')}`,
-            client: `${randomItem(firstNames)} ${randomItem(middleNames)} ${randomItem(lastNames)}`,
-            bonsai: randomItem(bonsais),
-            date: getRandDate(),
-            time: `${h}:${min}`,
-            status: status
-        });
-        idCounter++;
-    }
-    // Sort appointments: Date descending, Time ascending
-    sortAppointments();
+// Helper to pad zero
+function padZero(num) {
+    return num < 10 ? `0${num}` : num;
 }
-function sortAppointments() {
-    appointments.sort((a, b) => {
-        if (a.date !== b.date) {
-            return b.date.localeCompare(a.date); // Latest date first
-        }
-        return a.time.localeCompare(b.time); // Earliest time first
-    });
-}
+
 // Convert YYYY-MM-DD -> DD/MM/YYYY
 function formatDateDisplay(dateStr) {
+    if (!dateStr) return "";
     const [year, month, day] = dateStr.split('-');
     return `${day}/${month}/${year}`;
 }
+
 // Convert DD/MM/YYYY -> YYYY-MM-DD
 function parseDateInput(displayStr) {
+    if (!displayStr) return "";
     const [day, month, year] = displayStr.split('/');
     return `${year}-${month}-${day}`;
 }
+
 // ==========================================================================
 // DOM ELEMENTS
 // ==========================================================================
@@ -136,27 +54,56 @@ const infoTime = document.getElementById("infoTime");
 const statusSelect = document.getElementById("statusSelect");
 const saveStatusBtn = document.getElementById("saveStatus");
 const closeModalBtn = document.getElementById("closeModal");
+
+// ==========================================================================
+// DATA EXTRACTION FROM DOM (THYMELEAF)
+// ==========================================================================
+function extractAppointmentsFromDOM() {
+    appointments = [];
+    const rows = appointmentTableBody.querySelectorAll("tr");
+
+    rows.forEach(row => {
+        const editBtn = row.querySelector(".edit-btn");
+        if (!editBtn) return; // Bỏ qua dòng trống / header phụ nếu có
+
+        const id = editBtn.getAttribute("data-id") || "";
+        const client = row.cells[1] ? row.cells[1].textContent.trim() : "";
+        const bonsai = row.cells[2] ? row.cells[2].textContent.trim() : "";
+
+        // Date text format: DD/MM/YYYY -> Convert to YYYY-MM-DD
+        const dateText = row.cells[3] ? row.cells[3].textContent.trim() : "";
+        const date = parseDateInput(dateText);
+
+        const time = row.cells[4] ? row.cells[4].textContent.trim() : "";
+        const status = row.cells[5] ? row.cells[5].textContent.trim().toUpperCase() : "PENDING";
+
+        appointments.push({ id, client, bonsai, date, time, status });
+    });
+}
+
 // ==========================================================================
 // COMPONENT RENDERERS
 // ==========================================================================
+
 // 1. Update Statistics
 function renderStats() {
     const total = appointments.length;
-    const todayStr = "2026-07-08";
+    // Lấy ngày hôm nay theo chuẩn YYYY-MM-DD của hệ thống
+    const todayStr = new Date().toISOString().split("T")[0];
+
     const today = appointments.filter(a => a.date === todayStr).length;
     const approved = appointments.filter(a => a.status === "APPROVED").length;
     const pending = appointments.filter(a => a.status === "PENDING").length;
-    const cancelled = appointments.filter(a => a.status === "CANCELLED").length;
 
     statTotal.textContent = total;
     statToday.textContent = today;
     statApproved.textContent = approved;
     statPending.textContent = pending;
 
-    // Percentage comparisons (pretend last week's baseline was 114)
-    totalPercent.textContent = `+${Math.round(((total - 114) / 114) * 100)}%`;
+    // Giả lập tỉ lệ tăng trưởng tổng quan
+    totalPercent.textContent = total > 0 ? `+${Math.round((total / 100) * 10)}%` : "0%";
 
-    // Percentage ratios
+    // Tính toán phần trăm tỉ lệ
     const activeAppointments = approved + pending;
     if (activeAppointments > 0) {
         approvedPercent.textContent = `${Math.round((approved / activeAppointments) * 100)}%`;
@@ -166,6 +113,7 @@ function renderStats() {
         pendingPercent.textContent = "0%";
     }
 }
+
 // 2. Render Calendar
 function renderCalendar() {
     const monthNames = [
@@ -176,24 +124,23 @@ function renderCalendar() {
     currentMonthSpan.textContent = `${monthNames[currentMonth]} ${currentYear}`;
     calendarGrid.innerHTML = "";
 
-    // First day of the month
+    // Ngày đầu tiên của tháng
     const firstDay = new Date(currentYear, currentMonth, 1);
-    // getDay() returns 0 for Sunday, 1 for Monday...
-    // We want Monday to be 0, Tuesday to be 1... Sunday to be 6
+    // Chuyển thứ sang định dạng Thứ 2 là 0 -> Chủ nhật là 6
     let startDayIdx = firstDay.getDay() - 1;
-    if (startDayIdx < 0) startDayIdx = 6; // Sunday becomes 6
+    if (startDayIdx < 0) startDayIdx = 6;
 
-    // Total days in the month
+    // Tổng số ngày trong tháng
     const totalDays = new Date(currentYear, currentMonth + 1, 0).getDate();
 
-    // Empty cells before the 1st
+    // Render các ô trống trước ngày mùng 1
     for (let i = 0; i < startDayIdx; i++) {
         const emptyCell = document.createElement("div");
         emptyCell.className = "calendar-day empty";
         calendarGrid.appendChild(emptyCell);
     }
 
-    // Create calendar days
+    // Render các ngày trong tháng
     for (let day = 1; day <= totalDays; day++) {
         const dayCell = document.createElement("div");
         dayCell.className = "calendar-day current-month-day";
@@ -201,17 +148,18 @@ function renderCalendar() {
 
         const dateStr = `${currentYear}-${padZero(currentMonth + 1)}-${padZero(day)}`;
 
-        // Mark today
-        if (dateStr === "2026-07-08") {
+        // Đánh dấu ngày hôm nay
+        const today = new Date().toISOString().split("T")[0];
+        if (dateStr === today) {
             dayCell.classList.add("today");
         }
 
-        // Highlight selected day
+        // Highlight ngày đang được chọn
         if (dateStr === selectedDateStr) {
             dayCell.classList.add("selected");
         }
 
-        // Check if there are appointments on this date
+        // Tạo dấu chấm xanh nếu có lịch hẹn vào ngày này
         const hasAppointments = appointments.some(a => a.date === dateStr);
         if (hasAppointments) {
             const dot = document.createElement("span");
@@ -219,15 +167,13 @@ function renderCalendar() {
             dayCell.appendChild(dot);
         }
 
-        // Add click event
+        // Sự kiện click chọn ngày
         dayCell.addEventListener("click", () => {
             if (selectedDateStr === dateStr) {
-                // Deselect if clicked again
                 selectedDateStr = "";
                 dayCell.classList.remove("selected");
                 todayPanelTitle.textContent = "Today's Appointments";
             } else {
-                // Select new date
                 document.querySelectorAll(".calendar-day").forEach(c => c.classList.remove("selected"));
                 selectedDateStr = dateStr;
                 dayCell.classList.add("selected");
@@ -240,12 +186,15 @@ function renderCalendar() {
         calendarGrid.appendChild(dayCell);
     }
 }
-// 3. Render Today's / Selected Date's Appointments List
+
+// 3. Render Panel Lịch Hẹn bên cạnh Calendar
 function renderDayPanel() {
     todayAppointmentsUl.innerHTML = "";
 
-    // Default to today (July 8, 2026) if no date is explicitly selected in state
-    const targetDate = selectedDateStr || "2026-07-08";
+    // Mặc định hiển thị lịch hôm nay nếu chưa chọn ngày cụ thể
+    const todayStr = new Date().toISOString().split("T")[0];
+    const targetDate = selectedDateStr || todayStr;
+
     const dayAppointments = appointments.filter(a => a.date === targetDate);
 
     if (dayAppointments.length === 0) {
@@ -256,7 +205,7 @@ function renderDayPanel() {
         return;
     }
 
-    // Sort chronological for display
+    // Sắp xếp thời gian tăng dần
     const sortedDayList = [...dayAppointments].sort((a, b) => a.time.localeCompare(b.time));
 
     sortedDayList.forEach(a => {
@@ -278,7 +227,7 @@ function renderDayPanel() {
             </div>
         `;
 
-        // Double click item to edit status
+        // Double click vào danh sách để đổi nhanh trạng thái
         li.addEventListener("dblclick", () => {
             openEditModal(a.id);
         });
@@ -286,24 +235,20 @@ function renderDayPanel() {
         todayAppointmentsUl.appendChild(li);
     });
 }
-// 4. Render Table
+
+// 4. Render & Đồng bộ lại Bảng Danh Sách dưới
 function renderTable() {
     appointmentTableBody.innerHTML = "";
 
     const searchText = searchInput.value.toLowerCase().trim();
     const filterVal = statusFilter.value;
 
-    // Filter the items
     const filtered = appointments.filter(a => {
-        // Search filter (ID, Client, Bonsai)
         const matchesSearch = a.id.toLowerCase().includes(searchText) ||
             a.client.toLowerCase().includes(searchText) ||
             a.bonsai.toLowerCase().includes(searchText);
 
-        // Status filter
         const matchesStatus = filterVal === "ALL" || a.status === filterVal;
-
-        // Calendar date selection filter
         const matchesDate = !selectedDateStr || a.date === selectedDateStr;
 
         return matchesSearch && matchesStatus && matchesDate;
@@ -335,18 +280,16 @@ function renderTable() {
             <td>${a.time}</td>
             <td><span class="status-badge ${badgeClass}">${a.status}</span></td>
             <td class="table-actions">
-                <button class="edit-btn" aria-label="Edit status of ${a.id}"><i class="fa-solid fa-pen"></i></button>
+                <button class="edit-btn" data-id="${a.id}" aria-label="Edit status of ${a.id}"><i class="fa-solid fa-pen"></i></button>
             </td>
         `;
 
-        // Open modal on clicking edit icon
         const editBtn = tr.querySelector(".edit-btn");
         editBtn.addEventListener("click", (e) => {
             e.stopPropagation();
             openEditModal(a.id);
         });
 
-        // Support double-clicking row to edit too
         tr.addEventListener("dblclick", () => {
             openEditModal(a.id);
         });
@@ -354,11 +297,12 @@ function renderTable() {
         appointmentTableBody.appendChild(tr);
     });
 }
+
 // ==========================================================================
 // MODAL INTERACTIONS
 // ==========================================================================
 function openEditModal(id) {
-    const appointment = appointments.find(a => a.id === id);
+    const appointment = appointments.find(a => a.id == id);
     if (!appointment) return;
 
     editingAppointmentId = id;
@@ -369,30 +313,27 @@ function openEditModal(id) {
     infoDate.textContent = formatDateDisplay(appointment.date);
     infoTime.textContent = appointment.time;
 
-    // Status can be APPROVED, PENDING, or CANCELLED.
-    // Note: Option value in select is APPROVED, PENDING, CANCELLED
     statusSelect.value = appointment.status;
-
     editModal.classList.add("show");
-
-    // Accessible focus management
     statusSelect.focus();
 }
+
 function closeEditModal() {
     editModal.classList.remove("show");
     editingAppointmentId = null;
 }
+
 function saveStatusChange() {
     if (!editingAppointmentId) return;
 
-    const appointment = appointments.find(a => a.id === editingAppointmentId);
+    const appointment = appointments.find(a => a.id == editingAppointmentId);
     if (appointment) {
         appointment.status = statusSelect.value;
 
-        // Re-sort if status change triggers statistics updates
-        sortAppointments();
+        // Gửi API Cập nhật trạng thái lên Server tại đây nếu cần thiết:
+        // fetch(`/api/appointments/${editingAppointmentId}/status`, { ... })
 
-        // Refresh UI components
+        // Làm mới UI
         renderStats();
         renderCalendar();
         renderDayPanel();
@@ -401,10 +342,10 @@ function saveStatusChange() {
 
     closeEditModal();
 }
+
 // ==========================================================================
 // EVENT LISTENERS & INITIALIZATION
 // ==========================================================================
-// Calendar month buttons
 prevMonthBtn.addEventListener("click", () => {
     currentMonth--;
     if (currentMonth < 0) {
@@ -413,6 +354,7 @@ prevMonthBtn.addEventListener("click", () => {
     }
     renderCalendar();
 });
+
 nextMonthBtn.addEventListener("click", () => {
     currentMonth++;
     if (currentMonth > 11) {
@@ -421,31 +363,30 @@ nextMonthBtn.addEventListener("click", () => {
     }
     renderCalendar();
 });
-// Search and filters
+
 searchInput.addEventListener("input", renderTable);
 statusFilter.addEventListener("change", renderTable);
-// Modal action buttons
 saveStatusBtn.addEventListener("click", saveStatusChange);
 closeModalBtn.addEventListener("click", closeEditModal);
-// Close modal when clicking outside of modal-content
+
 editModal.addEventListener("click", (e) => {
-    if (e.target === editModal) {
-        closeEditModal();
-    }
+    if (e.target === editModal) closeEditModal();
 });
-// Escape key to close modal
+
 document.addEventListener("keydown", (e) => {
     if (e.key === "Escape" && editModal.classList.contains("show")) {
         closeEditModal();
     }
 });
+
 // App Initialization
 function initApp() {
-    generateMockData();
+    extractAppointmentsFromDOM(); // Đọc dữ liệu thực tế từ Thymeleaf
     renderStats();
     renderCalendar();
     renderDayPanel();
-    renderTable();
+    renderTable(); // Vẽ lại bảng để gắn đúng Event Listener động
 }
-// Start the application
-initApp();
+
+// Chạy ứng dụng khi DOM tải xong
+document.addEventListener("DOMContentLoaded", initApp);
