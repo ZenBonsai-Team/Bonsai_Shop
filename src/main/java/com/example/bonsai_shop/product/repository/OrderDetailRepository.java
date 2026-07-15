@@ -33,4 +33,24 @@ public interface OrderDetailRepository extends JpaRepository<OrderDetail, Intege
     long countMonthlySoldItemsBySeller(@Param("sellerId") Integer sellerId,
                                        @Param("startDate") LocalDateTime startDate,
                                        @Param("endDate") LocalDateTime endDate);
+
+    @Query("""
+            SELECT COALESCE(SUM(od.priceAtPurchase), 0)
+            FROM OrderDetail od
+            WHERE od.order.orderDate >= :startDate
+              AND od.order.orderDate < :endDate
+              AND UPPER(COALESCE(od.order.orderStatus, '')) = 'COMPLETED'
+            """)
+    BigDecimal sumMonthlyRevenue(@Param("startDate") LocalDateTime startDate,
+                                 @Param("endDate") LocalDateTime endDate);
+
+    @Query("""
+            SELECT COUNT(od)
+            FROM OrderDetail od
+            WHERE od.order.orderDate >= :startDate
+              AND od.order.orderDate < :endDate
+              AND UPPER(COALESCE(od.order.orderStatus, '')) = 'COMPLETED'
+            """)
+    long countMonthlySoldItems(@Param("startDate") LocalDateTime startDate,
+                               @Param("endDate") LocalDateTime endDate);
 }

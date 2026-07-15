@@ -28,10 +28,38 @@ public class SellerDashboardController {
 
     @GetMapping
     public String dashboard(@AuthenticationPrincipal UserDetails userDetails, Model model) {
-        List<Product> products = sellerProductService.getMyProducts(userDetails.getUsername());
-        User seller = sellerProductService.getSeller(userDetails.getUsername());
+        boolean isAdminOrMod = userDetails.getAuthorities().stream()
+                .anyMatch(auth -> "ROLE_ADMIN".equals(auth.getAuthority())
+                        || "ROLE_MODERATOR".equals(auth.getAuthority())
+                        || "ROLE_ORDER_MODERATOR".equals(auth.getAuthority()));
+
+        List<Product> products;
+        long monthlySoldItems;
+        BigDecimal monthlyRevenue;
+
         LocalDateTime monthStart = LocalDate.now().withDayOfMonth(1).atStartOfDay();
         LocalDateTime nextMonthStart = monthStart.plusMonths(1);
+
+        if (isAdminOrMod) {
+            products = sellerProductService.getAllProducts();
+            monthlySoldItems = orderDetailRepository.countMonthlySoldItems(monthStart, nextMonthStart);
+            monthlyRevenue = orderDetailRepository.sumMonthlyRevenue(monthStart, nextMonthStart);
+        } else {
+            products = sellerProductService.getMyProducts(userDetails.getUsername());
+            User seller = sellerProductService.getSeller(userDetails.getUsername());
+            monthlySoldItems = orderDetailRepository.countMonthlySoldItemsBySeller(
+                    seller.getUserId(),
+                    monthStart,
+                    nextMonthStart
+            );
+            monthlyRevenue = orderDetailRepository.sumMonthlyRevenueBySeller(
+                    seller.getUserId(),
+                    monthStart,
+                    nextMonthStart
+            );
+        }
+
+        User sellerOrAdmin = sellerProductService.getSeller(userDetails.getUsername());
 
         model.addAttribute("totalProducts", products.size());
         model.addAttribute("publishedProducts", products.stream()
@@ -40,16 +68,7 @@ public class SellerDashboardController {
         model.addAttribute("soldProducts", products.stream()
                 .filter(product -> "SOLD".equals(product.getProductStatus()))
                 .count());
-        long monthlySoldItems = orderDetailRepository.countMonthlySoldItemsBySeller(
-                seller.getUserId(),
-                monthStart,
-                nextMonthStart
-        );
-        BigDecimal monthlyRevenue = orderDetailRepository.sumMonthlyRevenueBySeller(
-                seller.getUserId(),
-                monthStart,
-                nextMonthStart
-        );
+
         BigDecimal averageOrderValue = monthlySoldItems == 0
                 ? BigDecimal.ZERO
                 : monthlyRevenue.divide(BigDecimal.valueOf(monthlySoldItems), 0, RoundingMode.HALF_UP);
@@ -68,7 +87,7 @@ public class SellerDashboardController {
         model.addAttribute("hiddenPriceProducts", products.stream()
                 .filter(product -> !Boolean.TRUE.equals(product.getIsPublicPrice()))
                 .count());
-        model.addAttribute("seller", seller);
+        model.addAttribute("seller", sellerOrAdmin);
         return "seller/dashboard";
     }
 }

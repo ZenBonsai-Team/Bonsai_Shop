@@ -27,7 +27,7 @@
                         <a class="nav-link nav-link-custom" th:classappend="${activePage == 'community'} ? 'active' : ''" th:href="@{/community}">Community</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link nav-link-custom" href="#">VIP Elite Showroom</a>
+                        <a class="nav-link nav-link-custom" th:classappend="${activePage == 'luxury'} ? 'active' : ''" th:href="@{/bonsai-luxury}">VIP Elite Showroom</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link nav-link-custom" href="#">Contact</a>
@@ -37,16 +37,16 @@
                 <!-- Auth & Cart -->
                 <div class="d-flex align-items-center gap-3">
                     <div sec:authorize="isAnonymous()" class="d-flex align-items-center gap-2">
-                        <a th:href="@{/login}" class="btn-auth-signin">Sign In</a>
-                        <a th:href="@{/register}" class="btn btn-auth-register">Register</a>
+                        <a th:href="@{/login}" class="btn-auth-signin">Đăng nhập</a>
+                        <a th:href="@{/register}" class="btn btn-auth-register">Đăng ký</a>
                     </div>
                     <div sec:authorize="isAuthenticated()" class="d-flex align-items-center gap-2">
-                        <!-- Nút Dashboard cho Admin/Seller -->
-                        <a sec:authorize="hasRole('ADMIN')" th:unless="${hideAdminBtn}" th:href="@{/admin}" class="btn btn-outline-dark btn-sm rounded-pill px-3">
-                            <i class="fa-solid fa-gauge me-1"></i> Dashboard
+                        <!-- Nút Dashboard cho Admin/Moderator/Seller -->
+                        <a sec:authorize="hasAnyRole('ADMIN', 'MODERATOR')" th:unless="${hideAdminBtn}" th:href="@{/moderator}" class="btn btn-outline-dark btn-sm rounded-pill px-3">
+                            <i class="fa-solid fa-gauge me-1"></i> Bảng điều khiển
                         </a>
                         <a sec:authorize="hasRole('SELLER')" th:unless="${hideSellerBtn}" th:href="@{/seller}" class="btn btn-outline-dark btn-sm rounded-pill px-3">
-                            <i class="fa-solid fa-store me-1"></i> Seller Portal
+                            <i class="fa-solid fa-store me-1"></i> Kênh Người bán
                         </a>
                         <a th:href="@{/profile}" class="nav-icon-link text-decoration-none" title="Profile"><i class="fa-regular fa-user"></i></a>
                         <form method="post" th:action="@{/logout}" class="m-0" th:unless="${hideAdminBtn}">

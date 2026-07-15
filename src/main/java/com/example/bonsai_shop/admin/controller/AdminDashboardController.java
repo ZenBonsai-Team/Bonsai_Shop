@@ -7,8 +7,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 @Controller
-@RequestMapping("/admin")
-@PreAuthorize("hasRole('ADMIN')")
+@RequestMapping("/moderator")
+@PreAuthorize("hasAnyRole('ADMIN', 'MODERATOR')")
 public class AdminDashboardController {
 
     @GetMapping({"", "/", "/dashboard"})

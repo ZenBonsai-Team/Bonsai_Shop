@@ -58,8 +58,8 @@ public class SecurityConfig {
                                                                 "/api/orders/**", // ← tạm thời cho phép để test API con
                                                                 "/api/products/**" // ← cho phép lấy thông tin chi tiết sản phẩm
                                                 ).permitAll()
-                                                // Chỉ ADMIN mới vào được /admin/**
-                                                .requestMatchers("/admin/**").hasRole("ADMIN")
+                                                 // Chỉ ADMIN và MODERATOR mới vào được /admin/**
+                                                 .requestMatchers("/admin/**").hasAnyRole("ADMIN", "MODERATOR")
                                                 // Chặn theo Action cụ thể (permission-based)
                                                 .requestMatchers("/products/create", "/products/edit/**",
                                                                 "/prodcuts/delete/**")
@@ -101,12 +101,10 @@ public class SecurityConfig {
                             || "ROLE_ORDER_MODERATOR".equals(authority.getAuthority())
                             || "ACTION_ORDER_VIEW_ALL".equals(authority.getAuthority()));
 
-            if (isAdmin) {
-                response.sendRedirect("/admin");
+            if (isAdmin || isModerator) {
+                response.sendRedirect("/moderator");
             } else if (isSeller) {
                 response.sendRedirect("/seller");
-            } else if (isModerator) {
-                response.sendRedirect("/moderator/orders");
             } else {
                 response.sendRedirect("/home");
             }

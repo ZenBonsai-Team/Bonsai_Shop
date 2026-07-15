@@ -12,7 +12,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.util.List;
 
 @Controller
-@RequestMapping("/admin/users")
+@RequestMapping("/moderator/users")
 @RequiredArgsConstructor
 public class AdminUserController {
 
@@ -40,7 +40,7 @@ public class AdminUserController {
         } catch (RuntimeException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
-        return "redirect:/admin/users";
+        return "redirect:/moderator/users";
     }
 
     // ===== KHÓA/MỞ KHÓA TÀI KHOẢN =====
@@ -53,6 +53,6 @@ public class AdminUserController {
         } catch (RuntimeException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
-        return "redirect:/admin/users";
+        return "redirect:/moderator/users";
     }
 }

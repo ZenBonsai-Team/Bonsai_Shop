@@ -18,24 +18,60 @@
         <!-- Navigation List (Conditionally rendered by role/authority) -->
         <!-- TODO: Integrates with Spring Security sec:authorize tags if required in future -->
         <nav class="sidebar-nav">
-            <!-- 1. ORDER MODERATOR MENU -->
-            <!-- Shown if role is MODERATOR or if role parameter is not specified (default) -->
-            <th:block th:if="${role == 'MODERATOR' or role == null}">
+            <!-- 1. ORDER MODERATOR / ADMIN MENU -->
+            <!-- Shown if role is MODERATOR, ADMIN or if role parameter is not specified (default) -->
+            <th:block th:if="${role == 'MODERATOR' or role == 'ADMIN' or role == null}">
+                <a th:href="@{/moderator}" 
+                   class="sidebar-nav-item" 
+                   th:classappend="${activePage == 'dashboard' ? 'active' : ''}">
+                    <span class="nav-icon"><i class="fa-solid fa-gauge"></i></span>
+                    <span>Bảng điều khiển</span>
+                </a>
                 <a th:href="@{/moderator/orders}" 
                    class="sidebar-nav-item" 
                    th:classappend="${activePage == 'orders' ? 'active' : ''}">
                     <span class="nav-icon"><i class="fa-solid fa-box"></i></span>
-                    <span>Order Dashboard</span>
+                    <span>Quản lý đơn hàng</span>
                 </a>
                 <a href="#" class="sidebar-nav-item" 
                    th:classappend="${activePage == 'claims' ? 'active' : ''}">
                     <span class="nav-icon"><i class="fa-solid fa-triangle-exclamation"></i></span>
-                    <span>Claims Management</span>
+                    <span>Quản lý khiếu nại</span>
                 </a>
-                <a href="#" class="sidebar-nav-item" 
+                <a th:href="@{/moderator/users}" 
+                   class="sidebar-nav-item" 
+                   th:classappend="${activePage == 'users' ? 'active' : ''}">
+                    <span class="nav-icon"><i class="fa-solid fa-users"></i></span>
+                    <span>Quản lý người dùng</span>
+                </a>
+                <a th:href="@{/seller/products}" 
+                   class="sidebar-nav-item" 
+                   th:classappend="${activePage == 'products' ? 'active' : ''}">
+                    <span class="nav-icon"><i class="fa-solid fa-seedling"></i></span>
+                    <span>Quản lý sản phẩm</span>
+                </a>
+                <a th:href="@{/moderator/community}" 
+                   class="sidebar-nav-item" 
+                   th:classappend="${activePage == 'community' ? 'active' : ''}">
+                    <span class="nav-icon"><i class="fa-solid fa-comments"></i></span>
+                    <span>Quản lý bài viết</span>
+                </a>
+                <a th:href="@{/seller/catalog}" 
+                   class="sidebar-nav-item" 
+                   th:classappend="${activePage == 'catalog' ? 'active' : ''}">
+                    <span class="nav-icon"><i class="fa-solid fa-book"></i></span>
+                    <span>Quản lý Catalog</span>
+                </a>
+                <a th:href="@{/seller/profile}" 
+                   class="sidebar-nav-item" 
                    th:classappend="${activePage == 'profile' ? 'active' : ''}">
                     <span class="nav-icon"><i class="fa-solid fa-user"></i></span>
-                    <span>Profile Settings</span>
+                    <span>Thông tin tài khoản</span>
+                </a>
+                <a href="#" class="sidebar-nav-item" 
+                   th:classappend="${activePage == 'system-config' ? 'active' : ''}">
+                    <span class="nav-icon"><i class="fa-solid fa-gear"></i></span>
+                    <span>Cấu hình hệ thống</span>
                 </a>
             </th:block>
 
@@ -45,56 +81,25 @@
                    class="sidebar-nav-item" 
                    th:classappend="${activePage == 'dashboard' ? 'active' : ''}">
                     <span class="nav-icon"><i class="fa-solid fa-gauge-high"></i></span>
-                    <span>Dashboard</span>
+                    <span>Bảng điều khiển</span>
                 </a>
                 <a th:href="@{/seller/products}" 
                    class="sidebar-nav-item" 
                    th:classappend="${activePage == 'products' ? 'active' : ''}">
                     <span class="nav-icon"><i class="fa-solid fa-seedling"></i></span>
-                    <span>My Products</span>
+                    <span>Sản phẩm của tôi</span>
                 </a>
                 <a th:href="@{/seller/catalog}" 
                    class="sidebar-nav-item" 
                    th:classappend="${activePage == 'catalog' ? 'active' : ''}">
                     <span class="nav-icon"><i class="fa-solid fa-book"></i></span>
-                    <span>Catalog</span>
+                    <span>Danh mục sản phẩm</span>
                 </a>
                 <a th:href="@{/seller/profile}" 
                    class="sidebar-nav-item" 
                    th:classappend="${activePage == 'profile' ? 'active' : ''}">
                     <span class="nav-icon"><i class="fa-solid fa-user"></i></span>
-                    <span>My Profile</span>
-                </a>
-            </th:block>
-
-            <!-- 3. ADMIN MENU -->
-            <th:block th:if="${role == 'ADMIN'}">
-                <a th:href="@{/admin}" 
-                   class="sidebar-nav-item" 
-                   th:classappend="${activePage == 'dashboard' ? 'active' : ''}">
-                    <span class="nav-icon"><i class="fa-solid fa-gauge"></i></span>
-                    <span>Dashboard</span>
-                </a>
-                <a th:href="@{/admin/users}" 
-                   class="sidebar-nav-item" 
-                   th:classappend="${activePage == 'users' ? 'active' : ''}">
-                    <span class="nav-icon"><i class="fa-solid fa-users"></i></span>
-                    <span>Quản lý người dùng</span>
-                </a>
-                <a th:href="@{/admin/community}" 
-                   class="sidebar-nav-item" 
-                   th:classappend="${activePage == 'community' ? 'active' : ''}">
-                    <span class="nav-icon"><i class="fa-solid fa-comments"></i></span>
-                    <span>Quản lý Cộng đồng</span>
-                </a>
-                <a th:classappend="${activeMenu == 'seller-profile'} ? 'active'" th:href="@{/seller/profile}" class="sidebar-nav-item">
-                    <span class="nav-icon"><i class="fa-solid fa-user"></i></span>
-                    <span>Profile Settings</span>
-                </a>
-                <a href="#" class="sidebar-nav-item" 
-                   th:classappend="${activePage == 'system-config' ? 'active' : ''}">
-                    <span class="nav-icon"><i class="fa-solid fa-gear"></i></span>
-                    <span>System Configurations</span>
+                    <span>Thông tin cá nhân</span>
                 </a>
             </th:block>
         </nav>
@@ -105,7 +110,7 @@
                 <input th:if="${_csrf != null}" type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
                 <button type="submit" class="sidebar-logout-btn">
                     <span class="logout-icon"><i class="fa-solid fa-right-from-bracket"></i></span>
-                    <span>Logout</span>
+                    <span>Đăng xuất</span>
                 </button>
             </form>
         </div>

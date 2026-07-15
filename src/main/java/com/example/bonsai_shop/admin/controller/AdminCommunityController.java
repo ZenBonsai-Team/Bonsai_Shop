@@ -14,8 +14,8 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.util.List;
 
 @Controller
-@RequestMapping("/admin/community")
-@PreAuthorize("hasRole('ADMIN')")
+@RequestMapping("/moderator/community")
+@PreAuthorize("hasAnyRole('ADMIN', 'MODERATOR')")
 @RequiredArgsConstructor
 public class AdminCommunityController {
 
@@ -52,7 +52,7 @@ public class AdminCommunityController {
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Lỗi: " + e.getMessage());
         }
-        return "redirect:/admin/community?tab=posts";
+        return "redirect:/moderator/community?tab=posts";
     }
 
     @PostMapping("/posts/{id}/delete")
@@ -63,7 +63,7 @@ public class AdminCommunityController {
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Lỗi: " + e.getMessage());
         }
-        return "redirect:/admin/community?tab=posts";
+        return "redirect:/moderator/community?tab=posts";
     }
 
     @PostMapping("/comments/{id}/delete")
@@ -84,6 +84,6 @@ public class AdminCommunityController {
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Lỗi: " + e.getMessage());
         }
-        return "redirect:/admin/community?tab=comments";
+        return "redirect:/moderator/community?tab=comments";
     }
 }
