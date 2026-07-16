@@ -38,7 +38,7 @@ public class UserService {
         }
 
         // Lấy role mặc định
-        Role role = roleRepository.findByRoleName("ROLE_USER")
+        Role role = roleRepository.findByRoleName("ROLE_CUSTOMER")
                 .orElseThrow(() -> new RuntimeException("Role không tồn tại!"));
 
         // Lưu user với status PENDING

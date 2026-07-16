@@ -39,15 +39,23 @@ public class CommunityPost {
     @Column(name = "ImageUrl", length = 1000)
     private String imageUrl;
 
+    @Builder.Default
     @Column(name = "CreatedAt")
     private LocalDateTime createdAt = LocalDateTime.now();
 
+    @Builder.Default
     @Column(name = "ReadTime")
     private Integer readTime = 5;
 
+    @Builder.Default
     @Column(name = "LikesCount")
     private Integer likesCount = 0;
 
+    @Builder.Default
     @Column(name = "CommentsCount")
     private Integer commentsCount = 0;
+
+    @Builder.Default
+    @Column(name = "Status")
+    private String status = "APPROVED";
 }

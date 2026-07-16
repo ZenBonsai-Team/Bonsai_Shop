@@ -8,12 +8,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 @Controller
 @RequestMapping("/admin")
-@PreAuthorize("hasRole('ADMIN')")
+@PreAuthorize("hasRole('OWNER')")
 public class AdminDashboardController {
 
     @GetMapping({"", "/", "/dashboard"})
     public String dashboard(Model model) {
-        // Có thể load các thống kê tổng quan ở đây (số user, số sản phẩm, doanh thu...)
+        model.addAttribute("role", "OWNER");
+        model.addAttribute("activeMenu", "admin-dashboard");
         return "admin/dashboard";
     }
 }

@@ -25,6 +25,10 @@ public class Product {
     private User seller;
 
     @ManyToOne
+    @JoinColumn(name = "ArtisanID")
+    private ArtisanProfile artisan;
+
+    @ManyToOne
     @JoinColumn(name = "VarietyID", nullable = false)
     private Variety variety;
 

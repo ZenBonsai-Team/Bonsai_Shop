@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="vi">
 <head>
@@ -26,79 +26,7 @@
 <!-- ===================================================== -->
 <!-- NAVBAR -->
 <!-- ===================================================== -->
-<nav class="navbar navbar-expand-lg navbar-custom sticky-top">
-    <div class="container">
-        <!-- Brand Logo -->
-        <a class="navbar-brand navbar-brand-custom" th:href="@{/home}">
-            🌿 BSMS
-        </a>
-        
-        <!-- Toggle for Mobile -->
-        <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
-            <i class="fa-solid fa-bars fs-4 text-dark"></i>
-        </button>
-
-        <!-- Navigation Menu -->
-        <div class="collapse navbar-collapse" id="navbarContent">
-            <ul class="navbar-nav mx-auto mb-2 mb-lg-0">
-                <li class="nav-item">
-                    <a class="nav-link nav-link-custom" th:href="@{/home}">Home</a>
-                </li>
-                <li class="nav-item">
-                    <!-- Future: th:href="@{/marketplace}" -->
-                    <a class="nav-link nav-link-custom active" href="#">Bonsai Marketplace</a>
-                </li>
-                <li class="nav-item">
-                    <!-- Future: th:href="@{/showroom}" -->
-                    <a class="nav-link nav-link-custom" href="#">Community</a>
-                </li>
-                <li class="nav-item">
-                    <!-- Future: th:href="@{/vip}" -->
-                    <a class="nav-link nav-link-custom" href="#">VIP Elite Showroom</a>
-                </li>
-                <li class="nav-item">
-                    <!-- Future: th:href="@{/contact}" -->
-                    <a class="nav-link nav-link-custom" href="#">Contact</a>
-                </li>
-            </ul>
-
-            <!-- Search box in Navbar -->
-            <!-- <form action="/marketplace" method="get" class="d-flex align-items-center me-3">
-                <div class="nav-search-box">
-                    <i class="fa-solid fa-magnifying-glass nav-search-icon"></i>
-                    <input type="text" name="keyword" th:value="${keyword}" class="nav-search-input" placeholder="Search trees by name or product code...">
-                </div>
-            </form> -->
-
-            <!-- Auth & Cart -->
-            <div class="d-flex align-items-center gap-3">
-                <!-- User Login Area -->
-                <!-- Future: -->
-                <div sec:authorize="isAnonymous()" class="d-flex align-items-center gap-2">
-                    <a th:href="@{/login}" class="btn-auth-signin">Sign In</a>
-                    <a th:href="@{/register}" class="btn btn-auth-register">Register</a>
-                </div>
-                <div sec:authorize="isAuthenticated()" class="d-flex align-items-center gap-2">
-                    <a th:href="@{/profile}" class="nav-icon-link text-decoration-none" title="Profile"><i class="fa-regular fa-user"></i></a>
-                    <form method="post" th:action="@{/logout}" class="m-0">
-                        <button type="submit" class="btn btn-link text-dark p-0 nav-icon-link" title="Đăng xuất"><i class="fa-solid fa-arrow-right-from-bracket"></i></button>
-                    </form>
-                </div>
-               
-                <!-- <a href="#" class="btn-auth-signin">Sign In</a>
-                <a href="#" class="btn btn-auth-register">Register</a> -->
-
-                <!-- Cart icon with orange badge count -->
-                <a href="#" class="nav-icon-link text-decoration-none position-relative ms-1" title="Giỏ hàng">
-                    <!-- Future: th:href="@{/cart}" -->
-                    <i class="fa-solid fa-bag-shopping"></i>
-                    <!-- Future: th:text="${cartSize}" -->
-                    <span class="badge-count-orange">2</span>
-                </a>
-            </div>
-        </div>
-    </div>
-</nav>
+<div th:replace="~{fragments/navbar :: navbar}" th:with="activePage='marketplace'"></div>
 
 <!-- WELCOME BAR (chỉ hiện khi đã đăng nhập) -->
 <div class="welcome-bar" sec:authorize="isAuthenticated()">

@@ -21,7 +21,7 @@
 
         <!-- User Info Panel -->
         <!-- Fallbacks to placeholder details if not authenticated in Thymeleaf Spring Security -->
-        <div class="header-user-profile">
+        <a th:href="@{/profile}" class="header-user-profile text-decoration-none text-dark" title="Thông tin cá nhân">
             <img class="user-profile-avatar" 
                  src="https://api.dicebear.com/7.x/adventurer/svg?seed=moderator"
                  alt="User Avatar">
@@ -33,11 +33,12 @@
                     Moderator User
                 </span>
                 
-                <span class="user-profile-role" 
-                      th:text="${role != null ? role : 'Moderator'}">
-                    Moderator
-                </span>
+                <span class="user-profile-role" sec:authorize="hasRole('OWNER')">Chủ cửa hàng</span>
+                <span class="user-profile-role" sec:authorize="hasRole('ARTISAN')">Nghệ nhân</span>
+                <span class="user-profile-role" sec:authorize="hasRole('CONTENT_MODERATOR')">Kiểm duyệt nội dung</span>
+                <span class="user-profile-role" sec:authorize="hasRole('MODERATOR')">Kiểm duyệt đơn</span>
+                <span class="user-profile-role" sec:authorize="hasRole('CUSTOMER')">Khách hàng</span>
             </div>
-        </div>
+        </a>
     </div>
 </header>
