@@ -343,25 +343,19 @@ function closeEditModal() {
 }
 
 function saveStatusChange() {
+
     if (!editingAppointmentId) return;
 
-    const appointment = appointments.find(a => a.id == editingAppointmentId);
-    if (appointment) {
-        appointment.status = statusSelect.value;
+    const form = document.getElementById("updateStatusForm");
 
-        // Gửi API Cập nhật trạng thái lên Server tại đây nếu cần thiết:
-        // fetch(`/api/appointments/${editingAppointmentId}/status`, { ... })
+    form.action =
+        `/seller/schedule/update/${editingAppointmentId}/status`;
 
-        // Làm mới UI
-        renderStats();
-        renderCalendar();
-        renderDayPanel();
-        renderTable();
-    }
+    document.getElementById("statusInput").value =
+        statusSelect.value;
 
-    closeEditModal();
+    form.submit();
 }
-
 // ==========================================================================
 // EVENT LISTENERS & INITIALIZATION
 // ==========================================================================

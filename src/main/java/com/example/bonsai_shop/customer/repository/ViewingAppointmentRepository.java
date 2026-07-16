@@ -42,4 +42,15 @@ ORDER BY a.appointmentDate DESC
 """)
     List<SellerAppointmentDTO> findAllAppointmentsBySeller(
             @Param("seller") User seller);
+
+    @Query("""
+SELECT a
+FROM ViewingAppointment a
+JOIN a.product p
+WHERE a.appointmentId = :appointmentId
+AND p.seller = :seller
+""")
+    Optional<ViewingAppointment> findByAppointmentIdAndSeller(
+            @Param("appointmentId") Integer appointmentId,
+            @Param("seller") User seller);
 }

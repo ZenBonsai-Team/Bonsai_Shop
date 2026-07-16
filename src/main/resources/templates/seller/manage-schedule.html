@@ -199,8 +199,27 @@
             <p id="statusMessage" class="status-message"></p>
         </div>
         <div class="modal-actions">
-            <button id="saveStatus" class="save-btn">Save</button>
-            <button id="closeModal" class="close-btn">Close</button>
+            <form id="updateStatusForm" method="post">
+                <input type="hidden"
+                       name="_csrf"
+                       th:value="${_csrf.token}">
+
+                <input type="hidden"
+                       id="statusInput"
+                       name="status">
+
+                <div class="modal-actions">
+                    <button id="saveStatus" type="button" class="save-btn">
+                        Save
+                    </button>
+
+                    <button type="button"
+                            id="closeModal"
+                            class="close-btn">
+                        Close
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
