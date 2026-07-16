@@ -36,8 +36,9 @@ public class CustomUserDetailsService implements UserDetailsService {
         boolean enabled = "ACTIVE".equals(status);
         boolean accountNonLocked = !"LOCKED".equals(status);
 
+        String normRole = normalizeRoleName(user.getRole().getRoleName());
         SimpleGrantedAuthority roleAuthority =
-                new SimpleGrantedAuthority(normalizeRoleName(user.getRole().getRoleName()));
+                new SimpleGrantedAuthority(normRole);
 
         List<SimpleGrantedAuthority> actionAuthorities = roleActionRepository
                 .findByRoleRoleIdAndIsEnabledTrue(user.getRole().getRoleId())
@@ -47,8 +48,16 @@ public class CustomUserDetailsService implements UserDetailsService {
                         "ACTION_" + roleAction.getAction().getActionCode()))
                 .toList();
 
+        List<SimpleGrantedAuthority> mappedAuthorities = new java.util.ArrayList<>();
+        mappedAuthorities.add(roleAuthority);
+        if ("ROLE_OWNER".equals(normRole)) {
+            mappedAuthorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
+        } else if ("ROLE_ARTISAN".equals(normRole)) {
+            mappedAuthorities.add(new SimpleGrantedAuthority("ROLE_SELLER"));
+        }
+
         List<SimpleGrantedAuthority> allAuthorities = Stream
-                .concat(Stream.of(roleAuthority), actionAuthorities.stream())
+                .concat(mappedAuthorities.stream(), actionAuthorities.stream())
                 .toList();
 
         return new org.springframework.security.core.userdetails.User(

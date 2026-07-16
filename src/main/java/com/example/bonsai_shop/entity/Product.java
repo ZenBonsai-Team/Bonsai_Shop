@@ -8,7 +8,11 @@ import java.util.List;
 
 @Entity
 @Table(name = "PRODUCT")
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class Product {
 
     @Id
@@ -17,8 +21,12 @@ public class Product {
     private Integer productId;
 
     @ManyToOne
-    @JoinColumn(name = "SellerID")
+    @JoinColumn(name = "CreatedByID")
     private User seller;
+
+    @ManyToOne
+    @JoinColumn(name = "ArtisanID")
+    private ArtisanProfile artisan;
 
     @ManyToOne
     @JoinColumn(name = "VarietyID", nullable = false)

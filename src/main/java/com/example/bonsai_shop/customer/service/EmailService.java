@@ -26,7 +26,7 @@ public class EmailService {
     public void sendOtpResetPassword(String toEmail, String otpCode) {
         SimpleMailMessage message = new SimpleMailMessage();
         message.setTo(toEmail);
-        message.setSubject("🌿 Bonsai Shop - Mã OTP dùng để đăng nhập");
+        message.setSubject("🌿 Bonsai Shop - Mã OTP dùng để đổi lại mật khẩu");
         message.setText(
                 "Xin chào!\n\n" +
                         "Mã OTP để đặt lại mật khẩu của bạn là: " + otpCode + "\n\n" +

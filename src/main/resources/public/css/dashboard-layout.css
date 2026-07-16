@@ -181,14 +181,18 @@ h1, h2, h3, h4, h5, h6, .brand-name, .section-title {
 
 /* Header Styling */
 .dashboard-header {
-    height: 80px;
-    background: var(--bg-card);
+    height: 64px;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     border-bottom: 1px solid var(--border-color);
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 0 40px;
     box-shadow: var(--shadow-subtle);
+    position: sticky;
+    top: 0;
     z-index: 90;
 }
 

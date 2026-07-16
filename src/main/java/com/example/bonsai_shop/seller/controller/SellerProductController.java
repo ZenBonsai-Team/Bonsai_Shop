@@ -28,7 +28,8 @@ public class SellerProductController {
 
     @GetMapping
     public String myProducts(@AuthenticationPrincipal UserDetails userDetails, Model model) {
-        model.addAttribute("products", sellerProductService.getMyProducts(userDetails.getUsername()));
+        List<Product> products = sellerProductService.getMyProducts(userDetails.getUsername());
+        model.addAttribute("products", products);
         return "seller/products";
     }
 

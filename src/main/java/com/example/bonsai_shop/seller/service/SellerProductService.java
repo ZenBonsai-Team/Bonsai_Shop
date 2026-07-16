@@ -58,6 +58,10 @@ public class SellerProductService {
         return productRepository.findBySellerUserIdOrderByCreatedAtDesc(sellerId);
     }
 
+    public List<Product> getAllProducts() {
+        return productRepository.findAll();
+    }
+
     public Product getMyProduct(String sellerEmail, Integer productId) {
         Integer sellerId = getSellerId(sellerEmail);
         return productRepository.findByProductIdAndSellerUserId(productId, sellerId)
