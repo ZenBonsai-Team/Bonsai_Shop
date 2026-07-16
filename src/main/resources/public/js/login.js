@@ -27,3 +27,7 @@ if (btnLogin) {
         setTimeout(() => { this.textContent = 'Sign in →'; }, 2000);
     });
 }
+
+if (window.location.search.includes("logout" && "error")) {
+    window.history.replaceState({}, document.title, window.location.pathname);
+}
