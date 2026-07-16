@@ -8,9 +8,9 @@
     ">
         <!-- Brand Header -->
         <div class="sidebar-brand">
-            <a th:href="@{/home}" class="sidebar-brand-link">
-                <span class="seller-brand-mark"><i class="fa-solid fa-leaf"></i></span>
-                <span class="seller-brand-text">BONSAI<br>PORTAL</span>
+            <a th:href="@{/home}" class="sidebar-brand-link d-flex align-items-center gap-2 text-decoration-none">
+                <img th:src="@{/images/logo.png}" alt="Logo" style="width: 32px; height: 32px; object-fit: contain;">
+                <span class="seller-brand-text" style="font-size: 18px; font-weight: 700; color: #ffffff; font-family: 'Plus Jakarta Sans', sans-serif; white-space: nowrap; line-height: 1.2; letter-spacing: 0.5px;">Bonsai Shop</span>
             </a>
         </div>
 
@@ -93,12 +93,6 @@
                    th:classappend="${activePage == 'catalog' ? 'active' : ''}">
                     <span class="nav-icon"><i class="fa-solid fa-book"></i></span>
                     <span>Danh mục sản phẩm</span>
-                </a>
-                <a th:href="@{/seller/profile}" 
-                   class="sidebar-nav-item" 
-                   th:classappend="${activePage == 'profile' ? 'active' : ''}">
-                    <span class="nav-icon"><i class="fa-solid fa-user"></i></span>
-                    <span>Hồ sơ của tôi</span>
                 </a>
             </th:block>
         </nav>
