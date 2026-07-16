@@ -16,7 +16,7 @@ public class AuthController {
     // ===== TRANG LOGIN =====
     @GetMapping("/login")
     public String loginPage(
-            @RequestParam(required = false) String error,
+            @RequestParam(required = false) String error, String logout,
             Model model) {
 
         if (error != null) {
@@ -25,9 +25,12 @@ public class AuthController {
                     "Sai tài khoản, mật khẩu hoặc tài khoản chưa kích hoạt");
         }
 
+        if(logout != null){
+            model.addAttribute("success",  "Đăng xuất thành công!");
+        }
+
         return "/customer/login";
     }
-
 
     // ===== TRANG REGISTER =====
     @GetMapping("/register")
