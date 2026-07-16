@@ -952,3 +952,9 @@ body {
         padding: 1.5rem 1.5rem;
     }
 }
+.status-message{
+    margin-top:10px;
+    color:#d32f2f;
+    font-size:0.9rem;
+    font-weight:600;
+}

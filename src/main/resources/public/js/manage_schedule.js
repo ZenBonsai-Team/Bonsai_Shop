@@ -54,6 +54,9 @@ const infoTime = document.getElementById("infoTime");
 const statusSelect = document.getElementById("statusSelect");
 const saveStatusBtn = document.getElementById("saveStatus");
 const closeModalBtn = document.getElementById("closeModal");
+const infoPhone = document.getElementById("infoPhone");
+const infoEmail = document.getElementById("infoEmail");
+const infoNote = document.getElementById("infoNote");
 
 // ==========================================================================
 // DATA EXTRACTION FROM DOM (THYMELEAF)
@@ -67,6 +70,9 @@ function extractAppointmentsFromDOM() {
         if (!editBtn) return; // Bỏ qua dòng trống / header phụ nếu có
 
         const id = editBtn.getAttribute("data-id") || "";
+        const phone = editBtn.getAttribute("data-phone") || "";
+        const email = editBtn.getAttribute("data-email") || "";
+        const note = editBtn.getAttribute("data-note") || "";
         const client = row.cells[1] ? row.cells[1].textContent.trim() : "";
         const bonsai = row.cells[2] ? row.cells[2].textContent.trim() : "";
 
@@ -77,7 +83,7 @@ function extractAppointmentsFromDOM() {
         const time = row.cells[4] ? row.cells[4].textContent.trim() : "";
         const status = row.cells[5] ? row.cells[5].textContent.trim().toUpperCase() : "PENDING";
 
-        appointments.push({ id, client, bonsai, date, time, status });
+        appointments.push({ id, client, phone, email,bonsai, date, time, status,note });
     });
 }
 
@@ -304,6 +310,16 @@ function renderTable() {
 function openEditModal(id) {
     const appointment = appointments.find(a => a.id == id);
     if (!appointment) return;
+    const statusMessage =
+        document.getElementById("statusMessage");
+    if(appointment.status === "CANCELLED"){
+        statusSelect.disabled = true;
+        saveStatusBtn.disabled = true;
+        statusMessage.textContent = "This appointment has been cancelled and its status cannot be changed.";
+    }else {
+        statusSelect.disabled = false;
+        saveStatusBtn.disabled = false;
+    }
 
     editingAppointmentId = id;
 
@@ -312,6 +328,9 @@ function openEditModal(id) {
     infoBonsai.textContent = appointment.bonsai;
     infoDate.textContent = formatDateDisplay(appointment.date);
     infoTime.textContent = appointment.time;
+    infoPhone.textContent = appointment.phone;
+    infoEmail.textContent = appointment.email;
+    infoNote.textContent = appointment.note;
 
     statusSelect.value = appointment.status;
     editModal.classList.add("show");
