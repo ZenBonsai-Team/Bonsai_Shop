@@ -8,12 +8,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 @Controller
 @RequestMapping("/admin")
-@PreAuthorize("hasRole('ADMIN')")
+@PreAuthorize("hasRole('OWNER')")
 public class AdminDashboardController {
 
     @GetMapping({"", "/", "/dashboard"})
     public String dashboard(Model model) {
-        model.addAttribute("role", "ADMIN");
+        model.addAttribute("role", "OWNER");
         model.addAttribute("activeMenu", "admin-dashboard");
         return "admin/dashboard";
     }

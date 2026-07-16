@@ -92,9 +92,9 @@ public class CommunityController {
         if (!"APPROVED".equals(post.getStatus())) {
             // Check if user is Admin or Moderator. Admins/Moderators can see hidden posts
             boolean isAdminOrMod = userDetails != null && userDetails.getAuthorities().stream()
-                    .anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority())
-                            || "ROLE_MODERATOR".equals(a.getAuthority())
-                            || "ROLE_ORDER_MODERATOR".equals(a.getAuthority()));
+                    .anyMatch(a -> "ROLE_OWNER".equals(a.getAuthority())
+                            || "ROLE_CONTENT_MODERATOR".equals(a.getAuthority())
+                            || "ROLE_MODERATOR".equals(a.getAuthority()));
             if (!isAdminOrMod) {
                 throw new RuntimeException("Bài viết này đã bị ẩn bởi quản trị viên.");
             }

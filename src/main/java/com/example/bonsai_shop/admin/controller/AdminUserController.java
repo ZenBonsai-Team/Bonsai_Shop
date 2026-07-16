@@ -14,7 +14,7 @@ import java.util.List;
 
 @Controller
 @RequestMapping("/admin/users")
-@PreAuthorize("hasRole('ADMIN')")
+@PreAuthorize("hasRole('OWNER')")
 @RequiredArgsConstructor
 public class AdminUserController {
 
@@ -28,7 +28,7 @@ public class AdminUserController {
         List<Role> roles = roleRepository.findAll();
         model.addAttribute("users", users);
         model.addAttribute("roles", roles);
-        model.addAttribute("role", "ADMIN");
+        model.addAttribute("role", "OWNER");
         model.addAttribute("activeMenu", "admin-users");
         return "admin/user_list"; // templates/admin/user_list.html
     }

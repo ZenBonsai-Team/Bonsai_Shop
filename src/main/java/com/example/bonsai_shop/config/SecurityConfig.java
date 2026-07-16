@@ -57,14 +57,14 @@ public class SecurityConfig {
                                                                 "/api/orders/**", // ← tạm thời cho phép để test API con
                                                                 "/api/products/**" // ← cho phép lấy thông tin chi tiết sản phẩm
                                                 ).permitAll()
-                                                 // Chỉ ADMIN mới vào được /admin/**
-                                                 .requestMatchers("/admin/**").hasRole("ADMIN")
+                                                 // Chỉ OWNER mới vào được /admin/**
+                                                 .requestMatchers("/admin/**").hasRole("OWNER")
                                                  // Chỉ CONTENT_MODERATOR mới vào được /moderator/community/**
                                                  .requestMatchers("/moderator/community/**").hasRole("CONTENT_MODERATOR")
                                                  // Chỉ MODERATOR mới vào được /moderator/**
                                                  .requestMatchers("/moderator/**").hasRole("MODERATOR")
-                                                 // Chỉ SELLER mới vào được /seller/**
-                                                 .requestMatchers("/seller/**").hasRole("SELLER")
+                                                 // Chỉ ARTISAN mới vào được /seller/**
+                                                 .requestMatchers("/seller/**").hasRole("ARTISAN")
                                                 // Chặn theo Action cụ thể (permission-based)
                                                 .requestMatchers("/products/create", "/products/edit/**",
                                                                 "/prodcuts/delete/**")
@@ -97,24 +97,23 @@ public class SecurityConfig {
     @Bean
     public AuthenticationSuccessHandler roleBasedSuccessHandler() {
         return (request, response, authentication) -> {
-            boolean isAdmin = authentication.getAuthorities().stream()
-                    .anyMatch(authority -> "ROLE_ADMIN".equals(authority.getAuthority()));
-            boolean isSeller = authentication.getAuthorities().stream()
-                    .anyMatch(authority -> "ROLE_SELLER".equals(authority.getAuthority()));
+            boolean isOwner = authentication.getAuthorities().stream()
+                    .anyMatch(authority -> "ROLE_OWNER".equals(authority.getAuthority()));
+            boolean isArtisan = authentication.getAuthorities().stream()
+                    .anyMatch(authority -> "ROLE_ARTISAN".equals(authority.getAuthority()));
             boolean isContentModerator = authentication.getAuthorities().stream()
                     .anyMatch(authority -> "ROLE_CONTENT_MODERATOR".equals(authority.getAuthority()));
             boolean isModerator = authentication.getAuthorities().stream()
                     .anyMatch(authority -> "ROLE_MODERATOR".equals(authority.getAuthority())
-                            || "ROLE_ORDER_MODERATOR".equals(authority.getAuthority())
                             || "ACTION_ORDER_VIEW_ALL".equals(authority.getAuthority()));
 
-            if (isAdmin) {
+            if (isOwner) {
                 response.sendRedirect("/admin");
             } else if (isContentModerator) {
                 response.sendRedirect("/moderator/community");
             } else if (isModerator) {
                 response.sendRedirect("/moderator/orders");
-            } else if (isSeller) {
+            } else if (isArtisan) {
                 response.sendRedirect("/seller");
             } else {
                 response.sendRedirect("/home");

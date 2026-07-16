@@ -24,7 +24,7 @@ public class SellerProfileController {
     public String profile(@AuthenticationPrincipal UserDetails userDetails, Model model) {
         User seller = userService.getCurrentUserProfile(userDetails.getUsername());
         model.addAttribute("seller", seller);
-        model.addAttribute("role", "SELLER");
+        model.addAttribute("role", "ARTISAN");
         model.addAttribute("activeMenu", "seller-profile");
         return "seller/profile";
     }
@@ -33,7 +33,7 @@ public class SellerProfileController {
     public String updateProfile(@AuthenticationPrincipal UserDetails userDetails, Model model) {
         User seller = userService.getCurrentUserProfile(userDetails.getUsername());
         model.addAttribute("seller", seller);
-        model.addAttribute("role", "SELLER");
+        model.addAttribute("role", "ARTISAN");
         model.addAttribute("activeMenu", "seller-profile");
         return "seller/profile-update";
     }
@@ -53,7 +53,7 @@ public class SellerProfileController {
         } catch (RuntimeException e) {
             User seller = userService.getCurrentUserProfile(email);
             model.addAttribute("seller", seller);
-            model.addAttribute("role", "SELLER");
+            model.addAttribute("role", "ARTISAN");
             model.addAttribute("activeMenu", "seller-profile");
             model.addAttribute("error", e.getMessage());
             return "seller/profile-update";
@@ -62,7 +62,7 @@ public class SellerProfileController {
 
     @GetMapping("/change-password")
     public String changePasswordPage(Model model) {
-        model.addAttribute("role", "SELLER");
+        model.addAttribute("role", "ARTISAN");
         model.addAttribute("activeMenu", "seller-profile");
         return "seller/change-password";
     }
@@ -73,7 +73,7 @@ public class SellerProfileController {
                                  @RequestParam String newPassword,
                                  @RequestParam String confirmPassword,
                                  Model model) {
-        model.addAttribute("role", "SELLER");
+        model.addAttribute("role", "ARTISAN");
         model.addAttribute("activeMenu", "seller-profile");
         try {
             userService.changePassword(

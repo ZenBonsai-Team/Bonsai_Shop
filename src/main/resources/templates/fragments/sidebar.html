@@ -19,7 +19,7 @@
         <!-- TODO: Integrates with Spring Security sec:authorize tags if required in future -->
         <nav class="sidebar-nav">
             <!-- 1. ADMIN MENU -->
-            <th:block sec:authorize="hasRole('ADMIN')">
+            <th:block sec:authorize="hasRole('OWNER')">
                 <a th:href="@{/admin}" 
                    class="sidebar-nav-item" 
                    th:classappend="${activePage == 'dashboard' ? 'active' : ''}">
@@ -71,7 +71,7 @@
             </th:block>
 
             <!-- 2. SELLER MENU -->
-            <th:block sec:authorize="hasRole('SELLER')">
+            <th:block sec:authorize="hasRole('ARTISAN')">
                 <a th:href="@{/seller}" 
                    class="sidebar-nav-item" 
                     th:classappend="${activePage == 'dashboard' or activePage == 'seller-dashboard' ? 'active' : ''}">
