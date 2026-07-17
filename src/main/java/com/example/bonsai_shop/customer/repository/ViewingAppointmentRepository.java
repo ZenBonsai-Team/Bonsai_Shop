@@ -14,7 +14,13 @@ import java.util.Optional;
 
 public interface ViewingAppointmentRepository extends JpaRepository<ViewingAppointment,Integer>{
 
-    boolean existsViewingAppointmentByAppointmentDate(LocalDateTime appointmentDate);
+    @Query("""
+SELECT COUNT(v) > 0
+FROM ViewingAppointment v
+WHERE v.appointmentDate = :appointmentDate
+AND v.status IN ('PENDING','APPROVED')
+""")
+    boolean existsActiveAppointment(LocalDateTime appointmentDate);
 
     List<ViewingAppointment> findByCustomer(User customer);
 

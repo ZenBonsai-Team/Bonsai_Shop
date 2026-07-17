@@ -239,4 +239,13 @@ public class UserService {
         userRepository.save(user);
     }
 
+    public void checkProfileEmailAndPhone(User user) {
+        if(user.getPhone() == null || user.getPhone().isBlank()) {
+            throw new RuntimeException("Vui lòng cập nhật số điện thoại trước khi đặt lịch");
+        }
+        if(user.getEmail() == null || user.getEmail().isBlank()) {
+            throw new RuntimeException("Vui lòng cập nhật email trước khi đặt lịch");
+        }
+    }
+
 }

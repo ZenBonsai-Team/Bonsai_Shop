@@ -71,7 +71,7 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
     JOIN p.variety v
     JOIN p.seller u
     LEFT JOIN p.productMedias m
-    WHERE p.segment.segmentId = 2
+    WHERE p.segment.segmentId = 3
       AND p.isPublicPrice = false
       AND (m.isThumbnail = true OR m IS NULL)
 """)
@@ -96,7 +96,7 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
     JOIN p.variety v
     JOIN p.seller u
     LEFT JOIN p.productMedias m
-    WHERE p.segment.segmentId = 2
+    WHERE p.segment.segmentId = 3
       AND p.isPublicPrice = false
       AND p.productId = :productId
       AND (m.isThumbnail = true OR m IS NULL)

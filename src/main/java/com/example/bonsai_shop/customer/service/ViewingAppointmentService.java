@@ -1,5 +1,6 @@
 package com.example.bonsai_shop.customer.service;
 
+import com.example.bonsai_shop.customer.repository.UserRepository;
 import com.example.bonsai_shop.customer.repository.ViewingAppointmentRepository;
 import com.example.bonsai_shop.entity.Product;
 import com.example.bonsai_shop.entity.User;
@@ -19,14 +20,16 @@ public class ViewingAppointmentService {
 
     private final ViewingAppointmentRepository viewingAppointmentRepository;
     private final ProductRepository productRepository;
+    private final UserService  userService ;
 
     @Transactional
     public void createViewingAppointment(ViewingAppointment viewingAppointment) {
-        if (viewingAppointmentRepository
-                .existsViewingAppointmentByAppointmentDate(viewingAppointment.getAppointmentDate())){
+
+        if (viewingAppointmentRepository.existsActiveAppointment(
+                viewingAppointment.getAppointmentDate())){
             throw new RuntimeException("Khung giờ này đã có lịch hẹn!");
         }
-        viewingAppointmentRepository.save(viewingAppointment);
+        userService.checkProfileEmailAndPhone(viewingAppointment.getCustomer());
 
         Product product = viewingAppointment.getProduct();
         if ("RESERVED".equals(product.getProductStatus())) {
@@ -64,9 +67,14 @@ public class ViewingAppointmentService {
         ViewingAppointment appointment = viewingAppointmentRepository
                 .findByAppointmentIdAndCustomer(id,customer)
                 .orElseThrow(()->new RuntimeException("Không tìm thấy lịch hẹn"));
+
         if (viewingAppointmentRepository.existsViewingAppointmentByAppointmentDateAndAppointmentIdNot(appointmentDate, id)) {
             throw new RuntimeException("Khung giờ này đã được đặt");
         }
+        if(!appointment.getStatus().equals("PENDING")){
+            throw new RuntimeException("Không thể chỉnh sửa lịch sau khi đã xác nhận");
+        }
+
         appointment.setAppointmentDate(appointmentDate);
         appointment.setNote(note);
         appointment.setUpdatedAt(LocalDateTime.now());
@@ -83,6 +91,11 @@ public class ViewingAppointmentService {
         if ("CANCELLED".equals(appointment.getStatus())) {
             throw new RuntimeException("Lịch hẹn đã được hủy.");
         }
+
+        if(!appointment.getStatus().equals("PENDING")){
+            throw new RuntimeException("Không thể hủy lịch sau khi đã xác nhận");
+        }
+
         appointment.setStatus("CANCELLED");
         Product product = appointment.getProduct();
         product.setProductStatus("AVAILABLE");
