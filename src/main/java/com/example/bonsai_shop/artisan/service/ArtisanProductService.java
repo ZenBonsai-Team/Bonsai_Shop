@@ -1,6 +1,7 @@
-package com.example.bonsai_shop.seller.service;
+package com.example.bonsai_shop.artisan.service;
 
 import com.example.bonsai_shop.customer.repository.UserRepository;
+import com.example.bonsai_shop.entity.ArtisanProfile;
 import com.example.bonsai_shop.entity.Category;
 import com.example.bonsai_shop.entity.Product;
 import com.example.bonsai_shop.entity.ProductMedia;
@@ -9,6 +10,7 @@ import com.example.bonsai_shop.entity.ProductTag;
 import com.example.bonsai_shop.entity.Tag;
 import com.example.bonsai_shop.entity.User;
 import com.example.bonsai_shop.entity.Variety;
+import com.example.bonsai_shop.product.repository.ArtisanProfileRepository;
 import com.example.bonsai_shop.product.repository.CategoryRepository;
 import com.example.bonsai_shop.product.repository.ProductMediaRepository;
 import com.example.bonsai_shop.product.repository.ProductRepository;
@@ -32,7 +34,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-public class SellerProductService {
+public class ArtisanProductService {
 
     private static final SecureRandom RANDOM = new SecureRandom();
     private static final String CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -46,34 +48,41 @@ public class SellerProductService {
     private final TagRepository tagRepository;
     private final VarietyRepository varietyRepository;
     private final UserRepository userRepository;
-    private final SellerMediaStorageService mediaStorageService;
+    private final ArtisanProfileRepository artisanProfileRepository;
+    private final ArtisanMediaStorageService mediaStorageService;
 
-    public User getSeller(String email) {
+    public User getArtisanUser(String email) {
         return userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy seller!"));
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy artisan!"));
     }
 
-    public List<Product> getMyProducts(String sellerEmail) {
-        Integer sellerId = getSellerId(sellerEmail);
-        return productRepository.findBySellerUserIdOrderByCreatedAtDesc(sellerId);
+    public ArtisanProfile getArtisanProfile(String email) {
+        User artisanUser = getArtisanUser(email);
+        return artisanProfileRepository.findByUserId(artisanUser.getUserId())
+                .orElseThrow(() -> new RuntimeException("Tài khoản artisan chưa có hồ sơ artisan_profile!"));
+    }
+
+    public List<Product> getMyProducts(String artisanEmail) {
+        Integer artisanUserId = getArtisanUserId(artisanEmail);
+        return productRepository.findByArtisanUserIdOrderByCreatedAtDesc(artisanUserId);
     }
 
     public List<Product> getAllProducts() {
         return productRepository.findAll();
     }
 
-    public Product getMyProduct(String sellerEmail, Integer productId) {
-        Integer sellerId = getSellerId(sellerEmail);
-        return productRepository.findByProductIdAndSellerUserId(productId, sellerId)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm thuộc seller này!"));
+    public Product getMyProduct(String artisanEmail, Integer productId) {
+        Integer artisanUserId = getArtisanUserId(artisanEmail);
+        return productRepository.findByProductIdAndArtisanUserId(productId, artisanUserId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm thuộc artisan này!"));
     }
 
-    private Integer getSellerId(String sellerEmail) {
-        return getSeller(sellerEmail).getUserId();
+    private Integer getArtisanUserId(String artisanEmail) {
+        return getArtisanUser(artisanEmail).getUserId();
     }
 
     @Transactional
-    public Product createProduct(String sellerEmail,
+    public Product createProduct(String artisanEmail,
                                  Integer varietyId,
                                  Integer segmentId,
                                  String productName,
@@ -86,7 +95,8 @@ public class SellerProductService {
                                  Boolean isPublicPrice,
                                  String productStatus,
                                  List<Integer> tagIds) {
-        User seller = getSeller(sellerEmail);
+        User artisanUser = getArtisanUser(artisanEmail);
+        ArtisanProfile artisanProfile = getArtisanProfile(artisanEmail);
         Variety variety = varietyRepository.findById(varietyId)
                 .orElseThrow(() -> new RuntimeException("Variety không tồn tại!"));
         ProductSegment segment = productSegmentRepository.findById(segmentId)
@@ -95,7 +105,8 @@ public class SellerProductService {
         validateRequiredSpecifications(age, height, trunkDiameter, style);
 
         Product product = Product.builder()
-                .seller(seller)
+                .seller(artisanUser)
+                .artisan(artisanProfile)
                 .variety(variety)
                 .segment(segment)
                 .productCode(createTemporaryProductCode())
@@ -120,7 +131,7 @@ public class SellerProductService {
     }
 
     @Transactional
-    public void updateProduct(String sellerEmail,
+    public void updateProduct(String artisanEmail,
                                  Integer productId,
                                  Integer varietyId,
                                  Integer segmentId,
@@ -134,7 +145,7 @@ public class SellerProductService {
                                  Boolean isPublicPrice,
                                  String productStatus,
                                  List<Integer> tagIds) {
-        Product product = getMyProduct(sellerEmail, productId);
+        Product product = getMyProduct(artisanEmail, productId);
         ensureEditable(product);
         Variety variety = varietyRepository.findById(varietyId)
                 .orElseThrow(() -> new RuntimeException("Variety không tồn tại!"));
@@ -160,8 +171,8 @@ public class SellerProductService {
     }
 
     @Transactional
-    public void deleteProduct(String sellerEmail, Integer productId) {
-        Product product = getMyProduct(sellerEmail, productId);
+    public void deleteProduct(String artisanEmail, Integer productId) {
+        Product product = getMyProduct(artisanEmail, productId);
         ensureDraft(product);
         productMediaRepository.findByProductOrderByDisplayOrderAscMediaIdAsc(product)
                 .forEach(media -> mediaStorageService.deleteProductMedia(media.getMediaUrl()));
@@ -173,13 +184,13 @@ public class SellerProductService {
     }
 
     @Transactional
-    public void addMedia(String sellerEmail,
+    public void addMedia(String artisanEmail,
                          Integer productId,
                          MultipartFile file,
                          String slotType,
                          String caption,
                          Boolean isThumbnail) {
-        Product product = getMyProduct(sellerEmail, productId);
+        Product product = getMyProduct(artisanEmail, productId);
         ensureEditable(product);
         String mediaUrl = mediaStorageService.storeProductMedia(file);
         String contentType = file.getContentType();
@@ -208,8 +219,8 @@ public class SellerProductService {
     }
 
     @Transactional
-    public void setThumbnail(String sellerEmail, Integer productId, Integer mediaId) {
-        Product product = getMyProduct(sellerEmail, productId);
+    public void setThumbnail(String artisanEmail, Integer productId, Integer mediaId) {
+        Product product = getMyProduct(artisanEmail, productId);
         ensureEditable(product);
         ProductMedia selected = productMediaRepository.findByMediaIdAndProduct(mediaId, product)
                 .orElseThrow(() -> new RuntimeException("Media không tồn tại!"));
@@ -222,11 +233,11 @@ public class SellerProductService {
     }
 
     @Transactional
-    public void updateMediaOrder(String sellerEmail,
+    public void updateMediaOrder(String artisanEmail,
                                  Integer productId,
                                  List<Integer> mediaIds,
                                  List<Integer> displayOrders) {
-        Product product = getMyProduct(sellerEmail, productId);
+        Product product = getMyProduct(artisanEmail, productId);
         ensureEditable(product);
         if (mediaIds == null || displayOrders == null || mediaIds.size() != displayOrders.size()) {
             throw new RuntimeException("Dữ liệu thứ tự media không hợp lệ!");
@@ -241,8 +252,8 @@ public class SellerProductService {
     }
 
     @Transactional
-    public void deleteMedia(String sellerEmail, Integer productId, Integer mediaId) {
-        Product product = getMyProduct(sellerEmail, productId);
+    public void deleteMedia(String artisanEmail, Integer productId, Integer mediaId) {
+        Product product = getMyProduct(artisanEmail, productId);
         ensureEditable(product);
         ProductMedia media = productMediaRepository.findByMediaIdAndProduct(mediaId, product)
                 .orElseThrow(() -> new RuntimeException("Media không tồn tại!"));
@@ -252,8 +263,8 @@ public class SellerProductService {
     }
 
     @Transactional
-    public void publish(String sellerEmail, Integer productId) {
-        Product product = getMyProduct(sellerEmail, productId);
+    public void publish(String artisanEmail, Integer productId) {
+        Product product = getMyProduct(artisanEmail, productId);
         ensureEditable(product);
         ensurePublishReady(product);
         product.setProductStatus("AVAILABLE");
@@ -261,8 +272,8 @@ public class SellerProductService {
     }
 
     @Transactional
-    public void hideProduct(String sellerEmail, Integer productId) {
-        Product product = getMyProduct(sellerEmail, productId);
+    public void hideProduct(String artisanEmail, Integer productId) {
+        Product product = getMyProduct(artisanEmail, productId);
         ensureHideable(product);
         product.setProductStatus("HIDDEN");
         productRepository.save(product);

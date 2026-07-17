@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Edit Seller Profile</title>
+    <title>Edit Artisan Profile</title>
     <link rel="icon" type="image/png" th:href="@{/images/logo.png}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -24,7 +24,7 @@
         <header class="page-header">
             <div>
                 <h1>Edit Profile</h1>
-                <p>Cập nhật thông tin tài khoản seller.</p>
+                <p>Cập nhật thông tin tài khoản artisan.</p>
             </div>
             <a class="btn secondary" th:href="@{/seller/profile}">Back to My Profile</a>
         </header>
@@ -39,8 +39,8 @@
                         <span th:if="${seller.avatar == null}" th:text="${#strings.substring(seller.fullName, 0, 1)}">S</span>
                     </div>
                     <div>
-                        <h2 th:text="${seller.fullName}">Seller Name</h2>
-                        <p th:text="${seller.email}">seller@example.com</p>
+                        <h2 th:text="${seller.fullName}">Artisan Name</h2>
+                        <p th:text="${seller.email}">artisan@example.com</p>
                         <label class="avatar-upload">
                             Avatar
                             <input type="file" name="avatarFile" accept="image/*">

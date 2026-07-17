@@ -1,4 +1,4 @@
-package com.example.bonsai_shop.seller.controller;
+package com.example.bonsai_shop.artisan.controller;
 
 import com.example.bonsai_shop.customer.service.UserService;
 import com.example.bonsai_shop.entity.User;
@@ -16,14 +16,14 @@ import org.springframework.web.multipart.MultipartFile;
 @Controller
 @RequestMapping("/seller/profile")
 @RequiredArgsConstructor
-public class SellerProfileController {
+public class ArtisanProfileController {
 
     private final UserService userService;
 
     @GetMapping
     public String profile(@AuthenticationPrincipal UserDetails userDetails, Model model) {
-        User seller = userService.getCurrentUserProfile(userDetails.getUsername());
-        model.addAttribute("seller", seller);
+        User artisan = userService.getCurrentUserProfile(userDetails.getUsername());
+        model.addAttribute("seller", artisan);
         model.addAttribute("role", "ARTISAN");
         model.addAttribute("activeMenu", "seller-profile");
         return "seller/profile";
@@ -31,8 +31,8 @@ public class SellerProfileController {
 
     @GetMapping("/update")
     public String updateProfile(@AuthenticationPrincipal UserDetails userDetails, Model model) {
-        User seller = userService.getCurrentUserProfile(userDetails.getUsername());
-        model.addAttribute("seller", seller);
+        User artisan = userService.getCurrentUserProfile(userDetails.getUsername());
+        model.addAttribute("seller", artisan);
         model.addAttribute("role", "ARTISAN");
         model.addAttribute("activeMenu", "seller-profile");
         return "seller/profile-update";
@@ -51,8 +51,8 @@ public class SellerProfileController {
             userService.updateUserProfile(email, fullName, username, phone, address, avatarFile);
             return "redirect:/seller/profile";
         } catch (RuntimeException e) {
-            User seller = userService.getCurrentUserProfile(email);
-            model.addAttribute("seller", seller);
+            User artisan = userService.getCurrentUserProfile(email);
+            model.addAttribute("seller", artisan);
             model.addAttribute("role", "ARTISAN");
             model.addAttribute("activeMenu", "seller-profile");
             model.addAttribute("error", e.getMessage());

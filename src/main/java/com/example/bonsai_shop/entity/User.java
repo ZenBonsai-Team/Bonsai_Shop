@@ -66,5 +66,5 @@ public class User {
     private Cart cart;
 
     @OneToMany(mappedBy = "seller", cascade = CascadeType.ALL)
-    private List<Product> productsSold;
+    private List<Product> createdProducts;
 }

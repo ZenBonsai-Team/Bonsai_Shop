@@ -1,4 +1,4 @@
-package com.example.bonsai_shop.seller.service;
+package com.example.bonsai_shop.artisan.service;
 
 import com.example.bonsai_shop.entity.Category;
 import com.example.bonsai_shop.entity.ProductSegment;
@@ -18,7 +18,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class SellerCatalogService {
+public class ArtisanCatalogService {
 
     private final CategoryRepository categoryRepository;
     private final VarietyRepository varietyRepository;
