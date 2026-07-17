@@ -11,7 +11,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" th:href="@{/css/common.css}">
-    <link rel="stylesheet" th:href="@{/css/dashboard-layout.css}">
     <link rel="stylesheet" th:href="@{/css/dashboard.css}">
     <link rel="stylesheet" th:href="@{/css/seller.css}">
 </head>
@@ -20,7 +19,7 @@
     <div th:replace="~{fragments/sidebar :: sidebar('seller-products')}"></div>
 
     <main class="dashboard-main">
-        <header th:replace="~{fragments/header :: header}"></header>
+        <div th:replace="~{fragments/seller-topbar :: topbar('Media Upload')}"></div>
     <header class="page-header">
         <div>
             <h1>Step 2: Media Upload</h1>
@@ -75,16 +74,21 @@
 
     <section class="media-grid">
         <article class="media-card" th:each="media : ${mediaList}">
-            <img th:if="${media.mediaType == 'IMAGE'}" th:src="${media.mediaUrl}" alt="">
-            <video th:if="${media.mediaType == 'VIDEO'}" controls th:src="${media.mediaUrl}"></video>
-            <strong th:text="${media.isThumbnail ? 'Thumbnail' : media.mediaType}"></strong>
-            <span th:if="${media.slotType != null}" th:text="${'Shot: ' + media.slotType}"></span>
-            <span th:if="${media.slotType == null}">Video</span>
-            <span th:text="${media.caption}"></span>
-            <label>Display order
-                <input type="hidden" name="mediaIds" th:value="${media.mediaId}" form="mediaOrderForm">
-                <input type="number" name="displayOrders" min="0" th:value="${media.displayOrder}" th:disabled="${!isEditable}" form="mediaOrderForm">
-            </label>
+            <div class="media-preview-frame">
+                <img th:if="${media.mediaType == 'IMAGE'}" th:src="${media.mediaUrl}" alt="">
+                <video th:if="${media.mediaType == 'VIDEO'}" controls th:src="${media.mediaUrl}"></video>
+                <span th:if="${media.isThumbnail}" class="media-badge">Thumbnail</span>
+            </div>
+            <div class="media-card-body">
+                <strong th:text="${media.mediaType}"></strong>
+                <span th:if="${media.slotType != null}" th:text="${'Shot: ' + media.slotType}"></span>
+                <span th:if="${media.slotType == null}">Video</span>
+                <span th:if="${media.caption != null && !media.caption.isBlank()}" th:text="${media.caption}"></span>
+                <label>Display order
+                    <input type="hidden" name="mediaIds" th:value="${media.mediaId}" form="mediaOrderForm">
+                    <input type="number" name="displayOrders" min="0" th:value="${media.displayOrder}" th:disabled="${!isEditable}" form="mediaOrderForm">
+                </label>
+            </div>
             <div class="actions" th:if="${isEditable}">
                 <form method="post" th:action="@{/seller/products/{productId}/media/{mediaId}/thumbnail(productId=${product.productId},mediaId=${media.mediaId})}">
                     <button type="submit">Set thumbnail</button>

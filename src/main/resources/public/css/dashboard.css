@@ -92,7 +92,8 @@
     border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.btn-sidebar-logout {
+.btn-sidebar-logout,
+.sidebar-logout-btn {
     width: 100%;
     display: flex;
     align-items: center;
@@ -108,7 +109,8 @@
     font-weight: 500;
 }
 
-.btn-sidebar-logout:hover {
+.btn-sidebar-logout:hover,
+.sidebar-logout-btn:hover {
     background-color: #b02a37;
     border-color: #b02a37;
 }
@@ -676,20 +678,34 @@ body:has(.seller-topbar) .dashboard-sidebar .sidebar-footer {
     padding: 24px 20px;
 }
 
-body:has(.seller-topbar) .btn-sidebar-logout {
+body:has(.seller-topbar) .btn-sidebar-logout,
+body:has(.seller-topbar) .sidebar-logout-btn {
+    align-items: center;
     background: transparent;
     border: 1px solid rgba(250,248,245,0.18);
     border-radius: 4px;
     color: rgba(250,248,245,0.72);
+    display: flex;
     font-weight: 800;
+    gap: 12px;
+    justify-content: flex-start;
     letter-spacing: 0.02em;
     padding: 14px 16px;
+    width: 100%;
 }
 
-body:has(.seller-topbar) .btn-sidebar-logout:hover {
+body:has(.seller-topbar) .btn-sidebar-logout:hover,
+body:has(.seller-topbar) .sidebar-logout-btn:hover {
     background: rgba(255,82,82,0.08);
     border-color: #ff5252;
     color: #ff6b6b;
+}
+
+body:has(.seller-topbar) .sidebar-logout-btn .logout-icon {
+    align-items: center;
+    display: inline-flex;
+    justify-content: center;
+    width: 22px;
 }
 
 body:has(.seller-topbar) .dashboard-main {
@@ -1398,6 +1414,40 @@ body:has(.seller-topbar) .seller-dashboard-hero {
 
 .attention-cards {
     grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.seller-attention-panel .attention-cards {
+    align-items: stretch;
+}
+
+.seller-attention-panel .attention-cards div {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 10px;
+    justify-content: center;
+    min-height: 118px;
+    padding: 20px;
+}
+
+.seller-attention-panel .attention-cards strong {
+    align-items: center;
+    background: #EEF7F0;
+    border-radius: 14px;
+    color: #1C3322;
+    display: flex;
+    font-size: 1.85rem;
+    height: 48px;
+    justify-content: center;
+    line-height: 1;
+    min-width: 54px;
+    padding: 0 14px;
+}
+
+.seller-attention-panel .attention-cards span {
+    color: #4f5d54;
+    font-size: 0.92rem;
+    font-weight: 800;
+    line-height: 1.35;
 }
 
 @media (max-width: 1180px) {

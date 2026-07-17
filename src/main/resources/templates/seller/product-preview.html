@@ -86,12 +86,11 @@
                     <dt>Chế độ</dt>
                     <dd th:text="${product.isPublicPrice ? 'Công khai giá' : 'Ẩn giá'}"></dd>
 
-                    <dt>Giá</dt>
-                    <dd>
-                        <span th:if="${product.isPublicPrice}"
-                              th:text="${#numbers.formatDecimal(product.price, 0, 'POINT', 0, 'POINT') + ' VNĐ'}"></span>
-                        <span th:if="${!product.isPublicPrice}">Liên hệ</span>
-                    </dd>
+                <dt>Giá</dt>
+                <dd>
+                    <span th:text="${#numbers.formatDecimal(product.price, 0, 'POINT', 0, 'POINT') + ' VNĐ'}"></span>
+                    <span th:if="${!product.isPublicPrice}" class="muted-text">(ẩn với khách)</span>
+                </dd>
                 </dl>
 
                 <h3>Thông số cây</h3>

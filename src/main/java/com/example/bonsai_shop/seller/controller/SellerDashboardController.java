@@ -70,6 +70,9 @@ public class SellerDashboardController {
         model.addAttribute("hiddenProducts", products.stream()
                 .filter(product -> "HIDDEN".equals(product.getProductStatus()))
                 .count());
+        model.addAttribute("reservedProducts", products.stream()
+                .filter(product -> "RESERVED".equals(product.getProductStatus()))
+                .count());
         model.addAttribute("missingDescriptionProducts", products.stream()
                 .filter(product -> product.getDescription() == null || product.getDescription().isBlank())
                 .count());

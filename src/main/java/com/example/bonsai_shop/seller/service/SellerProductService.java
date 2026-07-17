@@ -255,9 +255,7 @@ public class SellerProductService {
     public void publish(String sellerEmail, Integer productId) {
         Product product = getMyProduct(sellerEmail, productId);
         ensureEditable(product);
-        if (productMediaRepository.findByProductOrderByDisplayOrderAscMediaIdAsc(product).isEmpty()) {
-            throw new RuntimeException("Cần ít nhất một ảnh hoặc video trước khi publish!");
-        }
+        ensurePublishReady(product);
         product.setProductStatus("AVAILABLE");
         productRepository.save(product);
     }
@@ -314,6 +312,30 @@ public class SellerProductService {
                 .forEach(productTagRepository::save);
     }
 
+    private void ensurePublishReady(Product product) {
+        if (product.getProductName() == null || product.getProductName().isBlank()) {
+            throw new RuntimeException("Vui lòng nhập tên sản phẩm trước khi publish.");
+        }
+        if (product.getVariety() == null) {
+            throw new RuntimeException("Vui lòng chọn variety trước khi publish.");
+        }
+        if (product.getSegment() == null) {
+            throw new RuntimeException("Vui lòng chọn segment trước khi publish.");
+        }
+        validateRequiredSpecifications(
+                product.getAge(),
+                product.getHeight(),
+                product.getTrunkDiameter(),
+                product.getStyle()
+        );
+        if (product.getPrice() == null || product.getPrice().compareTo(BigDecimal.ZERO) <= 0) {
+            throw new RuntimeException("Vui lòng nhập giá sản phẩm hợp lệ trước khi publish.");
+        }
+        if (productMediaRepository.findByProductOrderByDisplayOrderAscMediaIdAsc(product).isEmpty()) {
+            throw new RuntimeException("Cần ít nhất một ảnh hoặc video trước khi publish.");
+        }
+    }
+
     private void validateRequiredSpecifications(Integer age, Float height, Float trunkDiameter, String style) {
         if (age == null) {
             throw new RuntimeException("Vui lòng nhập tuổi cây.");
@@ -328,7 +350,6 @@ public class SellerProductService {
             throw new RuntimeException("Vui lòng nhập style cây.");
         }
     }
-
     public boolean isSold(Product product) {
         return product != null && "SOLD".equalsIgnoreCase(product.getProductStatus());
     }
