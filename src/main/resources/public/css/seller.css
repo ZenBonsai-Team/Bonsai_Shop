@@ -839,6 +839,26 @@ textarea {
     width: 58px;
 }
 
+.product-preview-link {
+    display: inline-flex;
+}
+
+.product-preview-link:hover .product-table-thumb {
+    border-color: #B8926A;
+    box-shadow: 0 6px 16px rgba(28, 51, 34, 0.14);
+}
+
+.product-name-link {
+    color: #1C3322;
+    font-weight: 800;
+    text-decoration: none;
+}
+
+.product-name-link:hover {
+    color: #B8926A;
+    text-decoration: underline;
+}
+
 .table-actions {
     align-items: center;
     display: flex;

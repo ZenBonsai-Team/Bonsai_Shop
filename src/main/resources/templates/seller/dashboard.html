@@ -73,8 +73,10 @@
                     <tbody>
                     <tr th:each="prod : ${recentProducts}">
                         <td>
-                            <img th:src="${prod.getFirstImageUrl() != null ? prod.getFirstImageUrl() : '/images/default-bonsai.png'}"
-                                 alt="Product Image" class="rounded" style="width: 50px; height: 35px; object-fit: cover; border: 1px solid #eee;">
+                            <a class="product-preview-link" th:href="@{/seller/products/{id}/preview(id=${prod.productId})}">
+                                <img th:src="${prod.getFirstImageUrl() != null ? prod.getFirstImageUrl() : '/images/default-bonsai.png'}"
+                                     alt="Product Image" class="rounded" style="width: 50px; height: 35px; object-fit: cover; border: 1px solid #eee;">
+                            </a>
                         </td>
                         <td th:text="${prod.productCode}" class="text-secondary fw-semibold">SP001</td>
                         <td th:text="${prod.productName}" class="fw-bold text-dark">Bonsai Name</td>

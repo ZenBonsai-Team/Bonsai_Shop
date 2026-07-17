@@ -59,12 +59,18 @@
                 <tr th:each="product : ${products}"
                     th:attr="data-status=${product.productStatus},data-search-text=${product.productCode + ' ' + product.productName}">
                     <td>
-                        <img class="product-table-thumb"
-                             th:src="${product.getFirstImageUrl() != null ? product.getFirstImageUrl() : '/images/default-bonsai.png'}"
-                             alt="Ảnh sản phẩm">
+                        <a class="product-preview-link" th:href="@{/seller/products/{id}/preview(id=${product.productId})}">
+                            <img class="product-table-thumb"
+                                 th:src="${product.getFirstImageUrl() != null ? product.getFirstImageUrl() : '/images/default-bonsai.png'}"
+                                 alt="Ảnh sản phẩm">
+                        </a>
                     </td>
                     <td th:text="${product.productCode}"></td>
-                    <td th:text="${product.productName}"></td>
+                    <td>
+                        <a class="product-name-link"
+                           th:href="@{/seller/products/{id}/preview(id=${product.productId})}"
+                           th:text="${product.productName}"></a>
+                    </td>
                     <td>
                         <span th:text="${#numbers.formatDecimal(product.price, 0, 'POINT', 0, 'POINT') + ' VNĐ'}"></span>
                         <span th:if="${!product.isPublicPrice}" class="muted-text">(ẩn với khách hàng)</span>
@@ -78,8 +84,8 @@
                         <span th:if="${product.productStatus != 'AVAILABLE' && product.productStatus != 'DRAFT' && product.productStatus != 'HIDDEN' && product.productStatus != 'RESERVED' && product.productStatus != 'SOLD'}" class="badge bg-light text-dark px-2 py-1 rounded-pill small" th:text="${product.productStatus}"></span>
                     </td>
                     <td class="table-actions">
-                        <a th:if="${product.productStatus == 'DRAFT' || product.productStatus == 'HIDDEN'}" th:href="@{/seller/products/{id}/edit(id=${product.productId})}">Sửa</a>
-                        <a th:if="${product.productStatus == 'DRAFT' || product.productStatus == 'HIDDEN'}" th:href="@{/seller/products/{id}/media(id=${product.productId})}">Media</a>
+                        <a th:if="${product.productStatus == 'DRAFT' || product.productStatus == 'HIDDEN'}" th:href="@{/seller/products/{id}/edit(id=${product.productId})}">Sửa info</a>
+                        <a th:if="${product.productStatus == 'DRAFT' || product.productStatus == 'HIDDEN'}" th:href="@{/seller/products/{id}/media(id=${product.productId})}">Sửa media</a>
                         <a th:href="@{/seller/products/{id}/preview(id=${product.productId})}">Xem trước</a>
                         <form th:if="${product.productStatus == 'DRAFT' || product.productStatus == 'HIDDEN'}" method="post" th:action="@{/seller/products/{id}/publish(id=${product.productId})}">
                             <button type="button"
