@@ -22,7 +22,7 @@ public class Product {
 
     @ManyToOne
     @JoinColumn(name = "CreatedByID")
-    private User seller;
+    private User createdBy;
 
     @ManyToOne
     @JoinColumn(name = "ArtisanID")

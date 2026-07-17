@@ -16,7 +16,7 @@
 </head>
 <body>
 <div class="dashboard-layout">
-    <div th:replace="~{fragments/sidebar :: sidebar('seller-profile')}"></div>
+    <div th:replace="~{fragments/sidebar :: sidebar('artisan-profile')}"></div>
 
     <main class="dashboard-main">
         <header th:replace="~{fragments/header :: header}"></header>
@@ -27,7 +27,7 @@
                     <h1 class="serif-text mb-1">Thông tin cá nhân</h1>
                     <p class="text-secondary mb-0">Quản lý và cập nhật thông tin nhà vườn của bạn.</p>
                 </div>
-                <a class="btn btn-outline-secondary" th:href="@{/seller}">Quay lại Bảng điều khiển</a>
+                <a class="btn btn-outline-secondary" th:href="@{/artisan}">Quay lại Bảng điều khiển</a>
             </header>
 
             <!-- Alert messages -->
@@ -37,9 +37,9 @@
             <!-- Profile Info Block (Styled exactly like customer/profile.html) -->
             <section class="profile-top rounded border-0 shadow-sm p-4 bg-white mb-4" style="border-radius: 16px;">
                 <div class="avatar-box">
-                    <img th:if="${seller.avatar != null}" th:src="${seller.avatar}" alt="avatar">
-                    <span th:unless="${seller.avatar != null}"
-                          th:text="${#strings.substring(seller.fullName, 0, 1)}">
+                    <img th:if="${artisan.avatar != null}" th:src="${artisan.avatar}" alt="avatar">
+                    <span th:unless="${artisan.avatar != null}"
+                          th:text="${#strings.substring(artisan.fullName, 0, 1)}">
                         S
                     </span>
                 </div>
@@ -49,7 +49,7 @@
                         <i class="fa-regular fa-user"></i>
                         <div>
                             <span>Họ và tên</span>
-                            <strong th:text="${seller.fullName}">Bonsai Garden</strong>
+                            <strong th:text="${artisan.fullName}">Bonsai Garden</strong>
                         </div>
                     </div>
 
@@ -57,7 +57,7 @@
                         <i class="fa-regular fa-envelope"></i>
                         <div>
                             <span>Email</span>
-                            <strong th:text="${seller.email}">artisan@example.com</strong>
+                            <strong th:text="${artisan.email}">artisan@example.com</strong>
                         </div>
                     </div>
 
@@ -65,7 +65,7 @@
                         <i class="fa-solid fa-phone"></i>
                         <div>
                             <span>Số điện thoại</span>
-                            <strong th:text="${seller.phone != null ? seller.phone : 'Chưa cập nhật'}">Chưa cập nhật</strong>
+                            <strong th:text="${artisan.phone != null ? artisan.phone : 'Chưa cập nhật'}">Chưa cập nhật</strong>
                         </div>
                     </div>
 
@@ -73,7 +73,7 @@
                         <i class="fa-solid fa-location-dot"></i>
                         <div>
                             <span>Địa chỉ</span>
-                            <strong th:text="${seller.address != null ? seller.address : 'Chưa cập nhật'}">Chưa cập nhật</strong>
+                            <strong th:text="${artisan.address != null ? artisan.address : 'Chưa cập nhật'}">Chưa cập nhật</strong>
                         </div>
                     </div>
 
@@ -81,7 +81,7 @@
                         <i class="fa-regular fa-calendar"></i>
                         <div>
                             <span>Ngày tham gia</span>
-                            <strong th:text="${#temporals.format(seller.createdAt, 'dd/MM/yyyy')}">01/01/2025</strong>
+                            <strong th:text="${#temporals.format(artisan.createdAt, 'dd/MM/yyyy')}">01/01/2025</strong>
                         </div>
                     </div>
 
@@ -89,16 +89,16 @@
                         <i class="fa-solid fa-circle-check"></i>
                         <div>
                             <span>Trạng thái</span>
-                            <strong th:text="${seller.status}">ACTIVE</strong>
+                            <strong th:text="${artisan.status}">ACTIVE</strong>
                         </div>
                     </div>
                 </div>
 
                 <div class="d-flex flex-column gap-2 ms-auto" style="min-width: 180px;">
-                    <a th:href="@{/seller/profile/update}" class="edit-btn text-decoration-none rounded text-center">
+                    <a th:href="@{/artisan/profile/update}" class="edit-btn text-decoration-none rounded text-center">
                         Chỉnh sửa hồ sơ
                     </a>
-                    <a th:href="@{/seller/profile/change-password}" class="edit-btn text-decoration-none rounded text-center text-secondary border-secondary bg-transparent">
+                    <a th:href="@{/artisan/profile/change-password}" class="edit-btn text-decoration-none rounded text-center text-secondary border-secondary bg-transparent">
                         Đổi mật khẩu
                     </a>
                 </div>

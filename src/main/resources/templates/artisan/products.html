@@ -12,20 +12,20 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" th:href="@{/css/common.css}">
     <link rel="stylesheet" th:href="@{/css/dashboard.css}">
-    <link rel="stylesheet" th:href="@{/css/seller.css}">
+    <link rel="stylesheet" th:href="@{/css/artisan.css}">
 </head>
 <body>
 <div class="dashboard-layout">
-    <div th:replace="~{fragments/sidebar :: sidebar('seller-products')}"></div>
+    <div th:replace="~{fragments/sidebar :: sidebar('artisan-products')}"></div>
 
     <main class="dashboard-main">
-        <div th:replace="~{fragments/seller-topbar :: topbar('Sản phẩm của tôi')}"></div>
+        <div th:replace="~{fragments/artisan-topbar :: topbar('Sản phẩm của tôi')}"></div>
         <header class="page-header">
             <div>
                 <h1>Sản phẩm của tôi</h1>
                 <p>Quản lý sản phẩm thuộc artisan đang đăng nhập.</p>
             </div>
-            <a class="btn" th:href="@{/seller/products/new}">Tạo sản phẩm mới</a>
+            <a class="btn" th:href="@{/artisan/products/new}">Tạo sản phẩm mới</a>
         </header>
 
         <div th:if="${success}" class="alert success" th:text="${success}"></div>
@@ -59,7 +59,7 @@
                 <tr th:each="product : ${products}"
                     th:attr="data-status=${product.productStatus},data-search-text=${product.productCode + ' ' + product.productName}">
                     <td>
-                        <a class="product-preview-link" th:href="@{/seller/products/{id}/preview(id=${product.productId})}">
+                        <a class="product-preview-link" th:href="@{/artisan/products/{id}/preview(id=${product.productId})}">
                             <img class="product-table-thumb"
                                  th:src="${product.getFirstImageUrl() != null ? product.getFirstImageUrl() : '/images/default-bonsai.png'}"
                                  alt="Ảnh sản phẩm">
@@ -68,7 +68,7 @@
                     <td th:text="${product.productCode}"></td>
                     <td>
                         <a class="product-name-link"
-                           th:href="@{/seller/products/{id}/preview(id=${product.productId})}"
+                           th:href="@{/artisan/products/{id}/preview(id=${product.productId})}"
                            th:text="${product.productName}"></a>
                     </td>
                     <td>
@@ -84,17 +84,17 @@
                         <span th:if="${product.productStatus != 'AVAILABLE' && product.productStatus != 'DRAFT' && product.productStatus != 'HIDDEN' && product.productStatus != 'RESERVED' && product.productStatus != 'SOLD'}" class="badge bg-light text-dark px-2 py-1 rounded-pill small" th:text="${product.productStatus}"></span>
                     </td>
                     <td class="table-actions">
-                        <a th:if="${product.productStatus == 'DRAFT' || product.productStatus == 'HIDDEN'}" th:href="@{/seller/products/{id}/edit(id=${product.productId})}">Sửa info</a>
-                        <a th:if="${product.productStatus == 'DRAFT' || product.productStatus == 'HIDDEN'}" th:href="@{/seller/products/{id}/media(id=${product.productId})}">Sửa media</a>
-                        <a th:href="@{/seller/products/{id}/preview(id=${product.productId})}">Xem trước</a>
-                        <form th:if="${product.productStatus == 'DRAFT' || product.productStatus == 'HIDDEN'}" method="post" th:action="@{/seller/products/{id}/publish(id=${product.productId})}">
+                        <a th:if="${product.productStatus == 'DRAFT' || product.productStatus == 'HIDDEN'}" th:href="@{/artisan/products/{id}/edit(id=${product.productId})}">Sửa info</a>
+                        <a th:if="${product.productStatus == 'DRAFT' || product.productStatus == 'HIDDEN'}" th:href="@{/artisan/products/{id}/media(id=${product.productId})}">Sửa media</a>
+                        <a th:href="@{/artisan/products/{id}/preview(id=${product.productId})}">Xem trước</a>
+                        <form th:if="${product.productStatus == 'DRAFT' || product.productStatus == 'HIDDEN'}" method="post" th:action="@{/artisan/products/{id}/publish(id=${product.productId})}">
                             <button type="button"
                                     data-open-publish-modal
                                     th:attr="data-product-name=${product.productName}">
                                 Đăng bán
                             </button>
                         </form>
-                        <form th:if="${product.productStatus == 'AVAILABLE'}" method="post" th:action="@{/seller/products/{id}/hide(id=${product.productId})}">
+                        <form th:if="${product.productStatus == 'AVAILABLE'}" method="post" th:action="@{/artisan/products/{id}/hide(id=${product.productId})}">
                             <button type="button"
                                     class="text-warning"
                                     data-open-hide-modal
@@ -102,7 +102,7 @@
                                 Ẩn
                             </button>
                         </form>
-                        <form th:if="${product.productStatus == 'DRAFT'}" method="post" th:action="@{/seller/products/{id}/delete(id=${product.productId})}">
+                        <form th:if="${product.productStatus == 'DRAFT'}" method="post" th:action="@{/artisan/products/{id}/delete(id=${product.productId})}">
                             <button type="button"
                                     class="text-danger"
                                     data-open-delete-modal
@@ -119,17 +119,17 @@
     </main>
 </div>
 
-<div id="sellerPublishModal" class="seller-action-modal-backdrop hidden">
-    <div class="seller-action-modal" role="dialog" aria-modal="true" aria-labelledby="sellerPublishModalTitle">
+<div id="artisanPublishModal" class="artisan-action-modal-backdrop hidden">
+    <div class="artisan-action-modal" role="dialog" aria-modal="true" aria-labelledby="artisanPublishModalTitle">
         <header>
-            <h2 id="sellerPublishModalTitle">Xác nhận publish sản phẩm</h2>
-            <button type="button" class="seller-action-modal-close" aria-label="Đóng">×</button>
+            <h2 id="artisanPublishModalTitle">Xác nhận publish sản phẩm</h2>
+            <button type="button" class="artisan-action-modal-close" aria-label="Đóng">×</button>
         </header>
-        <div class="seller-action-modal-body">
-            <p class="seller-action-target">
-                Sản phẩm: <strong id="sellerPublishProductName">-</strong>
+        <div class="artisan-action-modal-body">
+            <p class="artisan-action-target">
+                Sản phẩm: <strong id="artisanPublishProductName">-</strong>
             </p>
-            <div class="seller-action-warning">
+            <div class="artisan-action-warning">
                 <i class="fa-solid fa-triangle-exclamation"></i>
                 <div>
                     <strong>Kiểm tra trước khi publish</strong>
@@ -144,17 +144,17 @@
     </div>
 </div>
 
-<div id="sellerHideModal" class="seller-action-modal-backdrop hidden">
-    <div class="seller-action-modal" role="dialog" aria-modal="true" aria-labelledby="sellerHideModalTitle">
+<div id="artisanHideModal" class="artisan-action-modal-backdrop hidden">
+    <div class="artisan-action-modal" role="dialog" aria-modal="true" aria-labelledby="artisanHideModalTitle">
         <header>
-            <h2 id="sellerHideModalTitle">Xác nhận ẩn sản phẩm</h2>
-            <button type="button" class="seller-action-modal-close" aria-label="Đóng">×</button>
+            <h2 id="artisanHideModalTitle">Xác nhận ẩn sản phẩm</h2>
+            <button type="button" class="artisan-action-modal-close" aria-label="Đóng">×</button>
         </header>
-        <div class="seller-action-modal-body">
-            <p class="seller-action-target">
-                Sản phẩm: <strong id="sellerHideProductName">-</strong>
+        <div class="artisan-action-modal-body">
+            <p class="artisan-action-target">
+                Sản phẩm: <strong id="artisanHideProductName">-</strong>
             </p>
-            <div class="seller-action-warning">
+            <div class="artisan-action-warning">
                 <i class="fa-solid fa-eye-slash"></i>
                 <div>
                     <strong>Ẩn khỏi marketplace</strong>
@@ -169,17 +169,17 @@
     </div>
 </div>
 
-<div id="sellerDeleteModal" class="seller-delete-modal-backdrop hidden">
-    <div class="seller-delete-modal" role="dialog" aria-modal="true" aria-labelledby="sellerDeleteModalTitle">
+<div id="artisanDeleteModal" class="artisan-delete-modal-backdrop hidden">
+    <div class="artisan-delete-modal" role="dialog" aria-modal="true" aria-labelledby="artisanDeleteModalTitle">
         <header>
-            <h2 id="sellerDeleteModalTitle">Xác nhận xóa sản phẩm</h2>
-            <button type="button" class="seller-delete-modal-close" aria-label="Đóng">×</button>
+            <h2 id="artisanDeleteModalTitle">Xác nhận xóa sản phẩm</h2>
+            <button type="button" class="artisan-delete-modal-close" aria-label="Đóng">×</button>
         </header>
-        <div class="seller-delete-modal-body">
-            <p class="seller-delete-target">
-                Sản phẩm: <strong id="sellerDeleteProductName">-</strong>
+        <div class="artisan-delete-modal-body">
+            <p class="artisan-delete-target">
+                Sản phẩm: <strong id="artisanDeleteProductName">-</strong>
             </p>
-            <p class="seller-delete-message">
+            <p class="artisan-delete-message">
                 Bạn chắc chắn muốn xóa sản phẩm nháp này? Thao tác này không thể hoàn tác.
             </p>
         </div>
@@ -215,94 +215,94 @@
 
     productSearch.addEventListener('input', applyProductFilters);
 
-    const sellerPublishModal = document.getElementById('sellerPublishModal');
-    const sellerPublishProductName = document.getElementById('sellerPublishProductName');
+    const artisanPublishModal = document.getElementById('artisanPublishModal');
+    const artisanPublishProductName = document.getElementById('artisanPublishProductName');
     let pendingPublishForm = null;
 
-    function closeSellerPublishModal() {
-        sellerPublishModal.classList.add('hidden');
+    function closeArtisanPublishModal() {
+        artisanPublishModal.classList.add('hidden');
         pendingPublishForm = null;
     }
 
     document.querySelectorAll('[data-open-publish-modal]').forEach((button) => {
         button.addEventListener('click', () => {
             pendingPublishForm = button.closest('form');
-            sellerPublishProductName.textContent = button.dataset.productName || '-';
-            sellerPublishModal.classList.remove('hidden');
+            artisanPublishProductName.textContent = button.dataset.productName || '-';
+            artisanPublishModal.classList.remove('hidden');
         });
     });
 
-    sellerPublishModal.querySelector('.seller-action-modal-close').addEventListener('click', closeSellerPublishModal);
-    sellerPublishModal.querySelector('.btn-modal-cancel').addEventListener('click', closeSellerPublishModal);
-    sellerPublishModal.addEventListener('click', (event) => {
-        if (event.target === sellerPublishModal) {
-            closeSellerPublishModal();
+    artisanPublishModal.querySelector('.artisan-action-modal-close').addEventListener('click', closeArtisanPublishModal);
+    artisanPublishModal.querySelector('.btn-modal-cancel').addEventListener('click', closeArtisanPublishModal);
+    artisanPublishModal.addEventListener('click', (event) => {
+        if (event.target === artisanPublishModal) {
+            closeArtisanPublishModal();
         }
     });
 
-    sellerPublishModal.querySelector('.btn-modal-confirm').addEventListener('click', () => {
+    artisanPublishModal.querySelector('.btn-modal-confirm').addEventListener('click', () => {
         if (pendingPublishForm) {
             pendingPublishForm.submit();
         }
     });
 
-    const sellerHideModal = document.getElementById('sellerHideModal');
-    const sellerHideProductName = document.getElementById('sellerHideProductName');
+    const artisanHideModal = document.getElementById('artisanHideModal');
+    const artisanHideProductName = document.getElementById('artisanHideProductName');
     let pendingHideForm = null;
 
-    function closeSellerHideModal() {
-        sellerHideModal.classList.add('hidden');
+    function closeArtisanHideModal() {
+        artisanHideModal.classList.add('hidden');
         pendingHideForm = null;
     }
 
     document.querySelectorAll('[data-open-hide-modal]').forEach((button) => {
         button.addEventListener('click', () => {
             pendingHideForm = button.closest('form');
-            sellerHideProductName.textContent = button.dataset.productName || '-';
-            sellerHideModal.classList.remove('hidden');
+            artisanHideProductName.textContent = button.dataset.productName || '-';
+            artisanHideModal.classList.remove('hidden');
         });
     });
 
-    sellerHideModal.querySelector('.seller-action-modal-close').addEventListener('click', closeSellerHideModal);
-    sellerHideModal.querySelector('.btn-modal-cancel').addEventListener('click', closeSellerHideModal);
-    sellerHideModal.addEventListener('click', (event) => {
-        if (event.target === sellerHideModal) {
-            closeSellerHideModal();
+    artisanHideModal.querySelector('.artisan-action-modal-close').addEventListener('click', closeArtisanHideModal);
+    artisanHideModal.querySelector('.btn-modal-cancel').addEventListener('click', closeArtisanHideModal);
+    artisanHideModal.addEventListener('click', (event) => {
+        if (event.target === artisanHideModal) {
+            closeArtisanHideModal();
         }
     });
 
-    sellerHideModal.querySelector('.btn-modal-confirm').addEventListener('click', () => {
+    artisanHideModal.querySelector('.btn-modal-confirm').addEventListener('click', () => {
         if (pendingHideForm) {
             pendingHideForm.submit();
         }
     });
 
-    const sellerDeleteModal = document.getElementById('sellerDeleteModal');
-    const sellerDeleteProductName = document.getElementById('sellerDeleteProductName');
+    const artisanDeleteModal = document.getElementById('artisanDeleteModal');
+    const artisanDeleteProductName = document.getElementById('artisanDeleteProductName');
     let pendingDeleteForm = null;
 
-    function closeSellerDeleteModal() {
-        sellerDeleteModal.classList.add('hidden');
+    function closeArtisanDeleteModal() {
+        artisanDeleteModal.classList.add('hidden');
         pendingDeleteForm = null;
     }
 
     document.querySelectorAll('[data-open-delete-modal]').forEach((button) => {
         button.addEventListener('click', () => {
             pendingDeleteForm = button.closest('form');
-            sellerDeleteProductName.textContent = button.dataset.productName || '-';
-            sellerDeleteModal.classList.remove('hidden');
+            artisanDeleteProductName.textContent = button.dataset.productName || '-';
+            artisanDeleteModal.classList.remove('hidden');
         });
     });
 
-    sellerDeleteModal.querySelector('.seller-delete-modal-close').addEventListener('click', closeSellerDeleteModal);
-    sellerDeleteModal.querySelector('.btn-modal-cancel').addEventListener('click', closeSellerDeleteModal);
-    sellerDeleteModal.addEventListener('click', (event) => {
-        if (event.target === sellerDeleteModal) {
-            closeSellerDeleteModal();
+    artisanDeleteModal.querySelector('.artisan-delete-modal-close').addEventListener('click', closeArtisanDeleteModal);
+    artisanDeleteModal.querySelector('.btn-modal-cancel').addEventListener('click', closeArtisanDeleteModal);
+    artisanDeleteModal.addEventListener('click', (event) => {
+        if (event.target === artisanDeleteModal) {
+            closeArtisanDeleteModal();
         }
     });
 
-    sellerDeleteModal.querySelector('.btn-modal-confirm').addEventListener('click', () => {
+    artisanDeleteModal.querySelector('.btn-modal-confirm').addEventListener('click', () => {
         if (pendingDeleteForm) {
             pendingDeleteForm.submit();
         }

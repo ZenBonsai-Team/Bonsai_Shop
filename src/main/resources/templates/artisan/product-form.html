@@ -13,11 +13,11 @@
     <link rel="stylesheet" th:href="@{/css/common.css}">
     <link rel="stylesheet" th:href="@{/css/dashboard-layout.css}">
     <link rel="stylesheet" th:href="@{/css/dashboard.css}">
-    <link rel="stylesheet" th:href="@{/css/seller.css}">
+    <link rel="stylesheet" th:href="@{/css/artisan.css}">
 </head>
 <body>
 <div class="dashboard-layout">
-    <div th:replace="~{fragments/sidebar :: sidebar('seller-products')}"></div>
+    <div th:replace="~{fragments/sidebar :: sidebar('artisan-products')}"></div>
 
     <main class="dashboard-main">
         <header th:replace="~{fragments/header :: header}"></header>
@@ -27,15 +27,15 @@
             <p>Thông tin cơ bản của cây bonsai.</p>
         </div>
         <div class="actions">
-            <a class="btn secondary" th:href="@{/seller/catalog}">Manage Catalog</a>
-            <a class="btn secondary" th:href="@{/seller/products}">Back to My Products</a>
+            <a class="btn secondary" th:href="@{/artisan/catalog}">Manage Catalog</a>
+            <a class="btn secondary" th:href="@{/artisan/products}">Back to My Products</a>
         </div>
     </header>
 
     <div th:if="${error}" class="alert error" th:text="${error}"></div>
 
     <form class="form-card" method="post"
-          th:action="${product == null} ? @{/seller/products} : @{/seller/products/{id}(id=${product.productId})}">
+          th:action="${product == null} ? @{/artisan/products} : @{/artisan/products/{id}(id=${product.productId})}">
         <label th:if="${product != null}">Mã sản phẩm
             <input readonly th:value="${product.productCode}">
         </label>

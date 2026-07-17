@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{fragments/dashboard-layout :: layout(~{::title}, ~{::#seller-dashboard-content}, ~{::styles}, ~{})}">
+      th:replace="~{fragments/dashboard-layout :: layout(~{::title}, ~{::#artisan-dashboard-content}, ~{::styles}, ~{})}">
 <head>
     <title>Artisan Dashboard</title>
     <th:block th:fragment="styles">
@@ -9,41 +9,41 @@
 </head>
 <body>
 
-<div id="seller-dashboard-content" th:with="paramActivePage='dashboard'">
+<div id="artisan-dashboard-content" th:with="paramActivePage='dashboard'">
     <header class="dashboard-header-title d-flex justify-content-between align-items-center mb-4">
         <div>
-            <span class="seller-eyebrow text-muted" style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px;">Artisan Overview</span>
+            <span class="artisan-eyebrow text-muted" style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px;">Artisan Overview</span>
             <h1 class="serif-text mb-1">Dashboard</h1>
             <p class="text-secondary mb-0">Theo dõi nhanh tình trạng sản phẩm, doanh thu và các mục cần xử lý.</p>
         </div>
-        <a class="btn btn-success rounded-pill px-4" th:href="@{/seller/products/new}">
+        <a class="btn btn-success rounded-pill px-4" th:href="@{/artisan/products/new}">
             <i class="fa-solid fa-plus me-1"></i> Tạo sản phẩm
         </a>
     </header>
 
-    <section class="seller-metric-grid">
-        <article class="seller-metric-card metric-total">
+    <section class="artisan-metric-grid">
+        <article class="artisan-metric-card metric-total">
             <div class="metric-icon"><i class="fa-solid fa-boxes-stacked"></i></div>
             <div>
                 <span>Tổng sản phẩm</span>
                 <strong th:text="${totalProducts}">0</strong>
             </div>
         </article>
-        <article class="seller-metric-card metric-published">
+        <article class="artisan-metric-card metric-published">
             <div class="metric-icon"><i class="fa-solid fa-store"></i></div>
             <div>
                 <span>Đang bán</span>
                 <strong th:text="${publishedProducts}">0</strong>
             </div>
         </article>
-        <article class="seller-metric-card metric-sold">
+        <article class="artisan-metric-card metric-sold">
             <div class="metric-icon"><i class="fa-solid fa-seedling"></i></div>
             <div>
                 <span>Đã bán</span>
                 <strong th:text="${soldProducts}">0</strong>
             </div>
         </article>
-        <article class="seller-metric-card metric-revenue">
+        <article class="artisan-metric-card metric-revenue">
             <div class="metric-icon"><i class="fa-solid fa-chart-line"></i></div>
             <div>
                 <span>Doanh thu tháng này</span>
@@ -52,11 +52,11 @@
         </article>
     </section>
 
-    <section class="seller-dashboard-panel-grid">
-        <article class="seller-dashboard-panel seller-chart-panel">
+    <section class="artisan-dashboard-panel-grid">
+        <article class="artisan-dashboard-panel artisan-chart-panel">
             <div class="revenue-panel-heading">
                 <h2>Sản phẩm đăng gần đây</h2>
-                <a th:href="@{/seller/products}" class="text-decoration-none fw-bold text-success small">Xem tất cả <i class="fa-solid fa-arrow-right ms-1"></i></a>
+                <a th:href="@{/artisan/products}" class="text-decoration-none fw-bold text-success small">Xem tất cả <i class="fa-solid fa-arrow-right ms-1"></i></a>
             </div>
 
             <div class="table-responsive mb-4">
@@ -73,7 +73,7 @@
                     <tbody>
                     <tr th:each="prod : ${recentProducts}">
                         <td>
-                            <a class="product-preview-link" th:href="@{/seller/products/{id}/preview(id=${prod.productId})}">
+                            <a class="product-preview-link" th:href="@{/artisan/products/{id}/preview(id=${prod.productId})}">
                                 <img th:src="${prod.getFirstImageUrl() != null ? prod.getFirstImageUrl() : '/images/default-bonsai.png'}"
                                      alt="Product Image" class="rounded" style="width: 50px; height: 35px; object-fit: cover; border: 1px solid #eee;">
                             </a>
@@ -124,7 +124,7 @@
             </div>
         </article>
 
-        <article class="seller-dashboard-panel seller-status-panel">
+        <article class="artisan-dashboard-panel artisan-status-panel">
             <div class="panel-heading">
                 <div>
                     <span>Tồn kho</span>
@@ -152,13 +152,13 @@
         </article>
     </section>
 
-    <section class="seller-dashboard-panel seller-attention-panel mt-4">
+    <section class="artisan-dashboard-panel artisan-attention-panel mt-4">
         <div class="panel-heading">
             <div>
                 <span>Cần chú ý</span>
                 <h2>Các mục cần xử lý</h2>
             </div>
-            <a th:href="@{/seller/products}">View Products</a>
+            <a th:href="@{/artisan/products}">View Products</a>
         </div>
         <div class="attention-cards">
             <div>

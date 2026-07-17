@@ -30,7 +30,7 @@ public class ProductSpecifications {
                 root.fetch("artisan", JoinType.INNER);
             }
 
-            // Customer marketplace must not expose seller-only product states.
+            // Customer marketplace must not expose artisan-only product states.
             predicates.add(cb.not(root.get("productStatus").in("DRAFT", "HIDDEN")));
 
             // keyword (matches product name or code)

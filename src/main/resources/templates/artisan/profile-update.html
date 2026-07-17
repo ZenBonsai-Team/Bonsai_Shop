@@ -13,11 +13,11 @@
     <link rel="stylesheet" th:href="@{/css/common.css}">
     <link rel="stylesheet" th:href="@{/css/dashboard-layout.css}">
     <link rel="stylesheet" th:href="@{/css/dashboard.css}">
-    <link rel="stylesheet" th:href="@{/css/seller.css}">
+    <link rel="stylesheet" th:href="@{/css/artisan.css}">
 </head>
 <body>
 <div class="dashboard-layout">
-    <div th:replace="~{fragments/sidebar :: sidebar('seller-profile')}"></div>
+    <div th:replace="~{fragments/sidebar :: sidebar('artisan-profile')}"></div>
 
     <main class="dashboard-main">
         <header th:replace="~{fragments/header :: header}"></header>
@@ -26,21 +26,21 @@
                 <h1>Edit Profile</h1>
                 <p>Cập nhật thông tin tài khoản artisan.</p>
             </div>
-            <a class="btn secondary" th:href="@{/seller/profile}">Back to My Profile</a>
+            <a class="btn secondary" th:href="@{/artisan/profile}">Back to My Profile</a>
         </header>
 
         <div th:if="${error}" class="alert error" th:text="${error}"></div>
 
-        <section class="seller-profile-card">
-            <form class="seller-profile-form" method="post" th:action="@{/seller/profile/update}" enctype="multipart/form-data">
-                <div class="seller-profile-header">
-                    <div class="seller-profile-avatar">
-                        <img th:if="${seller.avatar != null}" th:src="${seller.avatar}" alt="avatar">
-                        <span th:if="${seller.avatar == null}" th:text="${#strings.substring(seller.fullName, 0, 1)}">S</span>
+        <section class="artisan-profile-card">
+            <form class="artisan-profile-form" method="post" th:action="@{/artisan/profile/update}" enctype="multipart/form-data">
+                <div class="artisan-profile-header">
+                    <div class="artisan-profile-avatar">
+                        <img th:if="${artisan.avatar != null}" th:src="${artisan.avatar}" alt="avatar">
+                        <span th:if="${artisan.avatar == null}" th:text="${#strings.substring(artisan.fullName, 0, 1)}">S</span>
                     </div>
                     <div>
-                        <h2 th:text="${seller.fullName}">Artisan Name</h2>
-                        <p th:text="${seller.email}">artisan@example.com</p>
+                        <h2 th:text="${artisan.fullName}">Artisan Name</h2>
+                        <p th:text="${artisan.email}">artisan@example.com</p>
                         <label class="avatar-upload">
                             Avatar
                             <input type="file" name="avatarFile" accept="image/*">
@@ -48,47 +48,47 @@
                     </div>
                 </div>
 
-                <div class="seller-profile-fields">
+                <div class="artisan-profile-fields">
                     <label class="profile-row">
                         <span>👤</span>
                         <div>
                             <small>Họ và tên</small>
-                            <input name="fullName" required th:value="${seller.fullName}">
+                            <input name="fullName" required th:value="${artisan.fullName}">
                         </div>
                     </label>
                     <label class="profile-row">
                         <span>🆔</span>
                         <div>
                             <small>Tên đăng nhập</small>
-                            <input name="username" th:value="${seller.username}" placeholder="Chưa cập nhật">
+                            <input name="username" th:value="${artisan.username}" placeholder="Chưa cập nhật">
                         </div>
                     </label>
                     <label class="profile-row">
                         <span>📧</span>
                         <div>
                             <small>Email không thể thay đổi</small>
-                            <input th:value="${seller.email}" disabled>
+                            <input th:value="${artisan.email}" disabled>
                         </div>
                     </label>
                     <label class="profile-row">
                         <span>📱</span>
                         <div>
                             <small>Số điện thoại</small>
-                            <input name="phone" th:value="${seller.phone}" placeholder="Chưa cập nhật">
+                            <input name="phone" th:value="${artisan.phone}" placeholder="Chưa cập nhật">
                         </div>
                     </label>
                     <label class="profile-row">
                         <span>🏠</span>
                         <div>
                             <small>Địa chỉ</small>
-                            <input name="address" th:value="${seller.address}" placeholder="Chưa cập nhật">
+                            <input name="address" th:value="${artisan.address}" placeholder="Chưa cập nhật">
                         </div>
                     </label>
                 </div>
 
-                <div class="actions seller-profile-actions">
+                <div class="actions artisan-profile-actions">
                     <button type="submit">Save Changes</button>
-                    <a class="btn secondary" th:href="@{/seller/profile}">Cancel</a>
+                    <a class="btn secondary" th:href="@{/artisan/profile}">Cancel</a>
                 </div>
             </form>
         </section>

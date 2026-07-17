@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
 @Controller
-@RequestMapping("/seller/profile")
+@RequestMapping("/artisan/profile")
 @RequiredArgsConstructor
 public class ArtisanProfileController {
 
@@ -23,19 +23,19 @@ public class ArtisanProfileController {
     @GetMapping
     public String profile(@AuthenticationPrincipal UserDetails userDetails, Model model) {
         User artisan = userService.getCurrentUserProfile(userDetails.getUsername());
-        model.addAttribute("seller", artisan);
+        model.addAttribute("artisan", artisan);
         model.addAttribute("role", "ARTISAN");
-        model.addAttribute("activeMenu", "seller-profile");
-        return "seller/profile";
+        model.addAttribute("activeMenu", "artisan-profile");
+        return "artisan/profile";
     }
 
     @GetMapping("/update")
     public String updateProfile(@AuthenticationPrincipal UserDetails userDetails, Model model) {
         User artisan = userService.getCurrentUserProfile(userDetails.getUsername());
-        model.addAttribute("seller", artisan);
+        model.addAttribute("artisan", artisan);
         model.addAttribute("role", "ARTISAN");
-        model.addAttribute("activeMenu", "seller-profile");
-        return "seller/profile-update";
+        model.addAttribute("activeMenu", "artisan-profile");
+        return "artisan/profile-update";
     }
 
     @PostMapping("/update")
@@ -49,22 +49,22 @@ public class ArtisanProfileController {
         String email = userDetails.getUsername();
         try {
             userService.updateUserProfile(email, fullName, username, phone, address, avatarFile);
-            return "redirect:/seller/profile";
+            return "redirect:/artisan/profile";
         } catch (RuntimeException e) {
             User artisan = userService.getCurrentUserProfile(email);
-            model.addAttribute("seller", artisan);
+            model.addAttribute("artisan", artisan);
             model.addAttribute("role", "ARTISAN");
-            model.addAttribute("activeMenu", "seller-profile");
+            model.addAttribute("activeMenu", "artisan-profile");
             model.addAttribute("error", e.getMessage());
-            return "seller/profile-update";
+            return "artisan/profile-update";
         }
     }
 
     @GetMapping("/change-password")
     public String changePasswordPage(Model model) {
         model.addAttribute("role", "ARTISAN");
-        model.addAttribute("activeMenu", "seller-profile");
-        return "seller/change-password";
+        model.addAttribute("activeMenu", "artisan-profile");
+        return "artisan/change-password";
     }
 
     @PostMapping("/change-password")
@@ -74,7 +74,7 @@ public class ArtisanProfileController {
                                  @RequestParam String confirmPassword,
                                  Model model) {
         model.addAttribute("role", "ARTISAN");
-        model.addAttribute("activeMenu", "seller-profile");
+        model.addAttribute("activeMenu", "artisan-profile");
         try {
             userService.changePassword(
                     userDetails.getUsername(),
@@ -87,6 +87,6 @@ public class ArtisanProfileController {
             model.addAttribute("error", e.getMessage());
         }
 
-        return "seller/change-password";
+        return "artisan/change-password";
     }
 }

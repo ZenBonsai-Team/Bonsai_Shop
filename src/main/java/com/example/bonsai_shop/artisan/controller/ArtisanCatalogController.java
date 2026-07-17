@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
-@RequestMapping("/seller/catalog")
+@RequestMapping("/artisan/catalog")
 @RequiredArgsConstructor
 public class ArtisanCatalogController {
 
@@ -21,7 +21,7 @@ public class ArtisanCatalogController {
     @GetMapping
     public String catalog(Model model) {
         addCatalogData(model);
-        return "seller/catalog";
+        return "artisan/catalog";
     }
 
     @PostMapping("/categories")
@@ -34,7 +34,7 @@ public class ArtisanCatalogController {
         } catch (RuntimeException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
-        return "redirect:/seller/catalog";
+        return "redirect:/artisan/catalog";
     }
 
     @PostMapping("/categories/{categoryId}")
@@ -48,7 +48,7 @@ public class ArtisanCatalogController {
         } catch (RuntimeException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
-        return "redirect:/seller/catalog";
+        return "redirect:/artisan/catalog";
     }
 
     @PostMapping("/categories/{categoryId}/delete")
@@ -60,7 +60,7 @@ public class ArtisanCatalogController {
         } catch (RuntimeException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
-        return "redirect:/seller/catalog";
+        return "redirect:/artisan/catalog";
     }
 
     @PostMapping("/varieties")
@@ -74,7 +74,7 @@ public class ArtisanCatalogController {
         } catch (RuntimeException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
-        return "redirect:/seller/catalog";
+        return "redirect:/artisan/catalog";
     }
 
     @PostMapping("/varieties/{varietyId}")
@@ -89,7 +89,7 @@ public class ArtisanCatalogController {
         } catch (RuntimeException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
-        return "redirect:/seller/catalog";
+        return "redirect:/artisan/catalog";
     }
 
     @PostMapping("/varieties/{varietyId}/delete")
@@ -101,7 +101,7 @@ public class ArtisanCatalogController {
         } catch (RuntimeException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
-        return "redirect:/seller/catalog";
+        return "redirect:/artisan/catalog";
     }
 
     @PostMapping("/segments")
@@ -113,7 +113,7 @@ public class ArtisanCatalogController {
         } catch (RuntimeException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
-        return "redirect:/seller/catalog";
+        return "redirect:/artisan/catalog";
     }
 
     @PostMapping("/segments/{segmentId}")
@@ -126,7 +126,7 @@ public class ArtisanCatalogController {
         } catch (RuntimeException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
-        return "redirect:/seller/catalog";
+        return "redirect:/artisan/catalog";
     }
 
     @PostMapping("/segments/{segmentId}/delete")
@@ -138,7 +138,7 @@ public class ArtisanCatalogController {
         } catch (RuntimeException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
-        return "redirect:/seller/catalog";
+        return "redirect:/artisan/catalog";
     }
 
     @PostMapping("/tags")
@@ -150,7 +150,7 @@ public class ArtisanCatalogController {
         } catch (RuntimeException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
-        return "redirect:/seller/catalog";
+        return "redirect:/artisan/catalog";
     }
 
     @PostMapping("/tags/{tagId}")
@@ -163,7 +163,7 @@ public class ArtisanCatalogController {
         } catch (RuntimeException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
-        return "redirect:/seller/catalog";
+        return "redirect:/artisan/catalog";
     }
 
     @PostMapping("/tags/{tagId}/delete")
@@ -175,7 +175,7 @@ public class ArtisanCatalogController {
         } catch (RuntimeException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
-        return "redirect:/seller/catalog";
+        return "redirect:/artisan/catalog";
     }
 
     private void addCatalogData(Model model) {

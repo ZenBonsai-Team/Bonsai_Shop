@@ -19,7 +19,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Controller
-@RequestMapping("/seller")
+@RequestMapping("/artisan")
 @RequiredArgsConstructor
 public class ArtisanDashboardController {
 
@@ -87,7 +87,7 @@ public class ArtisanDashboardController {
                 .collect(java.util.stream.Collectors.toList());
         model.addAttribute("recentProducts", recentProducts);
 
-        model.addAttribute("seller", artisanOrAdmin);
-        return "seller/dashboard";
+        model.addAttribute("artisan", artisanOrAdmin);
+        return "artisan/dashboard";
     }
 }
