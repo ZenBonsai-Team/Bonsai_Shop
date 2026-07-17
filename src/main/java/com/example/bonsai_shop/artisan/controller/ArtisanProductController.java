@@ -1,8 +1,8 @@
-package com.example.bonsai_shop.seller.controller;
+package com.example.bonsai_shop.artisan.controller;
 
 import com.example.bonsai_shop.entity.Product;
 import com.example.bonsai_shop.entity.ProductMedia;
-import com.example.bonsai_shop.seller.service.SellerProductService;
+import com.example.bonsai_shop.artisan.service.ArtisanProductService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -22,13 +22,13 @@ import java.util.List;
 @Controller
 @RequestMapping("/seller/products")
 @RequiredArgsConstructor
-public class SellerProductController {
+public class ArtisanProductController {
 
-    private final SellerProductService sellerProductService;
+    private final ArtisanProductService artisanProductService;
 
     @GetMapping
     public String myProducts(@AuthenticationPrincipal UserDetails userDetails, Model model) {
-        List<Product> products = sellerProductService.getMyProducts(userDetails.getUsername());
+        List<Product> products = artisanProductService.getMyProducts(userDetails.getUsername());
         model.addAttribute("products", products);
         return "seller/products";
     }
@@ -54,7 +54,7 @@ public class SellerProductController {
                          @RequestParam(required = false) List<Integer> tagIds,
                          RedirectAttributes redirectAttributes) {
         try {
-            Product product = sellerProductService.createProduct(
+            Product product = artisanProductService.createProduct(
                     userDetails.getUsername(),
                     varietyId,
                     segmentId,
@@ -82,8 +82,8 @@ public class SellerProductController {
                            @PathVariable Integer productId,
                            Model model,
                            RedirectAttributes redirectAttributes) {
-        Product product = sellerProductService.getMyProduct(userDetails.getUsername(), productId);
-        if (!sellerProductService.isEditable(product)) {
+        Product product = artisanProductService.getMyProduct(userDetails.getUsername(), productId);
+        if (!artisanProductService.isEditable(product)) {
             redirectAttributes.addFlashAttribute("error", "Chỉ có thể sửa sản phẩm nháp hoặc đã ẩn.");
             return "redirect:/seller/products/" + productId + "/preview";
         }
@@ -108,7 +108,7 @@ public class SellerProductController {
                          @RequestParam(required = false) List<Integer> tagIds,
                          RedirectAttributes redirectAttributes) {
         try {
-            sellerProductService.updateProduct(
+            artisanProductService.updateProduct(
                     userDetails.getUsername(),
                     productId,
                     varietyId,
@@ -137,7 +137,7 @@ public class SellerProductController {
                          @PathVariable Integer productId,
                          RedirectAttributes redirectAttributes) {
         try {
-            sellerProductService.deleteProduct(userDetails.getUsername(), productId);
+            artisanProductService.deleteProduct(userDetails.getUsername(), productId);
             redirectAttributes.addFlashAttribute("success", "Đã xóa sản phẩm.");
         } catch (RuntimeException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
@@ -149,11 +149,11 @@ public class SellerProductController {
     public String mediaForm(@AuthenticationPrincipal UserDetails userDetails,
                             @PathVariable Integer productId,
                             Model model) {
-        Product product = sellerProductService.getMyProduct(userDetails.getUsername(), productId);
+        Product product = artisanProductService.getMyProduct(userDetails.getUsername(), productId);
         model.addAttribute("product", product);
-        model.addAttribute("mediaList", sellerProductService.getMedia(product));
-        model.addAttribute("isSold", sellerProductService.isSold(product));
-        model.addAttribute("isEditable", sellerProductService.isEditable(product));
+        model.addAttribute("mediaList", artisanProductService.getMedia(product));
+        model.addAttribute("isSold", artisanProductService.isSold(product));
+        model.addAttribute("isEditable", artisanProductService.isEditable(product));
         return "seller/product-media";
     }
 
@@ -166,7 +166,7 @@ public class SellerProductController {
                            @RequestParam(defaultValue = "false") Boolean isThumbnail,
                            RedirectAttributes redirectAttributes) {
         try {
-            sellerProductService.addMedia(
+            artisanProductService.addMedia(
                     userDetails.getUsername(),
                     productId,
                     file,
@@ -187,7 +187,7 @@ public class SellerProductController {
                                @PathVariable Integer mediaId,
                                RedirectAttributes redirectAttributes) {
         try {
-            sellerProductService.setThumbnail(userDetails.getUsername(), productId, mediaId);
+            artisanProductService.setThumbnail(userDetails.getUsername(), productId, mediaId);
             redirectAttributes.addFlashAttribute("success", "Đã đặt thumbnail.");
         } catch (RuntimeException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
@@ -202,7 +202,7 @@ public class SellerProductController {
                                    @RequestParam(required = false) List<Integer> displayOrders,
                                    RedirectAttributes redirectAttributes) {
         try {
-            sellerProductService.updateMediaOrder(userDetails.getUsername(), productId, mediaIds, displayOrders);
+            artisanProductService.updateMediaOrder(userDetails.getUsername(), productId, mediaIds, displayOrders);
             redirectAttributes.addFlashAttribute("success", "Đã cập nhật thứ tự media.");
         } catch (RuntimeException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
@@ -216,7 +216,7 @@ public class SellerProductController {
                               @PathVariable Integer mediaId,
                               RedirectAttributes redirectAttributes) {
         try {
-            sellerProductService.deleteMedia(userDetails.getUsername(), productId, mediaId);
+            artisanProductService.deleteMedia(userDetails.getUsername(), productId, mediaId);
             redirectAttributes.addFlashAttribute("success", "Đã xóa media.");
         } catch (RuntimeException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
@@ -228,8 +228,8 @@ public class SellerProductController {
     public String preview(@AuthenticationPrincipal UserDetails userDetails,
                           @PathVariable Integer productId,
                           Model model) {
-        Product product = sellerProductService.getMyProduct(userDetails.getUsername(), productId);
-        List<ProductMedia> mediaList = sellerProductService.getMedia(product);
+        Product product = artisanProductService.getMyProduct(userDetails.getUsername(), productId);
+        List<ProductMedia> mediaList = artisanProductService.getMedia(product);
         ProductMedia thumbnail = mediaList.stream()
                 .filter(media -> Boolean.TRUE.equals(media.getIsThumbnail()))
                 .findFirst()
@@ -238,12 +238,12 @@ public class SellerProductController {
         model.addAttribute("product", product);
         model.addAttribute("mediaList", mediaList);
         model.addAttribute("thumbnail", thumbnail);
-        model.addAttribute("tags", sellerProductService.getProductTags(product));
+        model.addAttribute("tags", artisanProductService.getProductTags(product));
         model.addAttribute("imageCount", mediaList.stream().filter(media -> "IMAGE".equals(media.getMediaType())).count());
         model.addAttribute("videoCount", mediaList.stream().filter(media -> "VIDEO".equals(media.getMediaType())).count());
-        model.addAttribute("isSold", sellerProductService.isSold(product));
-        model.addAttribute("isEditable", sellerProductService.isEditable(product));
-        model.addAttribute("isHideable", sellerProductService.isHideable(product));
+        model.addAttribute("isSold", artisanProductService.isSold(product));
+        model.addAttribute("isEditable", artisanProductService.isEditable(product));
+        model.addAttribute("isHideable", artisanProductService.isHideable(product));
         return "seller/product-preview";
     }
 
@@ -252,7 +252,7 @@ public class SellerProductController {
                           @PathVariable Integer productId,
                           RedirectAttributes redirectAttributes) {
         try {
-            sellerProductService.publish(userDetails.getUsername(), productId);
+            artisanProductService.publish(userDetails.getUsername(), productId);
             redirectAttributes.addFlashAttribute("success", "Đã publish sản phẩm.");
             return "redirect:/seller/products";
         } catch (RuntimeException e) {
@@ -266,7 +266,7 @@ public class SellerProductController {
                        @PathVariable Integer productId,
                        RedirectAttributes redirectAttributes) {
         try {
-            sellerProductService.hideProduct(userDetails.getUsername(), productId);
+            artisanProductService.hideProduct(userDetails.getUsername(), productId);
             redirectAttributes.addFlashAttribute("success", "Đã ẩn sản phẩm khỏi marketplace.");
         } catch (RuntimeException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
@@ -276,11 +276,11 @@ public class SellerProductController {
 
     private void addProductFormData(Model model, Product product) {
         model.addAttribute("product", product);
-        model.addAttribute("categories", sellerProductService.getCategories());
-        model.addAttribute("varieties", sellerProductService.getVarieties());
-        model.addAttribute("segments", sellerProductService.getSegments());
-        model.addAttribute("tags", sellerProductService.getTags());
+        model.addAttribute("categories", artisanProductService.getCategories());
+        model.addAttribute("varieties", artisanProductService.getVarieties());
+        model.addAttribute("segments", artisanProductService.getSegments());
+        model.addAttribute("tags", artisanProductService.getTags());
         model.addAttribute("selectedCategoryId", product == null ? null : product.getVariety().getCategory().getCategoryId());
-        model.addAttribute("selectedTagIds", product == null ? List.of() : sellerProductService.getSelectedTagIds(product));
+        model.addAttribute("selectedTagIds", product == null ? List.of() : artisanProductService.getSelectedTagIds(product));
     }
 }

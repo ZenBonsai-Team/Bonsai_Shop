@@ -1,9 +1,9 @@
-package com.example.bonsai_shop.seller.controller;
+package com.example.bonsai_shop.artisan.controller;
 
 import com.example.bonsai_shop.entity.Product;
 import com.example.bonsai_shop.entity.User;
 import com.example.bonsai_shop.product.repository.OrderDetailRepository;
-import com.example.bonsai_shop.seller.service.SellerProductService;
+import com.example.bonsai_shop.artisan.service.ArtisanProductService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -21,9 +21,9 @@ import java.util.List;
 @Controller
 @RequestMapping("/seller")
 @RequiredArgsConstructor
-public class SellerDashboardController {
+public class ArtisanDashboardController {
 
-    private final SellerProductService sellerProductService;
+    private final ArtisanProductService artisanProductService;
     private final OrderDetailRepository orderDetailRepository;
 
     @GetMapping
@@ -35,20 +35,20 @@ public class SellerDashboardController {
         LocalDateTime monthStart = LocalDate.now().withDayOfMonth(1).atStartOfDay();
         LocalDateTime nextMonthStart = monthStart.plusMonths(1);
 
-        products = sellerProductService.getMyProducts(userDetails.getUsername());
-        User seller = sellerProductService.getSeller(userDetails.getUsername());
-        monthlySoldItems = orderDetailRepository.countMonthlySoldItemsBySeller(
-                seller.getUserId(),
+        products = artisanProductService.getMyProducts(userDetails.getUsername());
+        User artisanUser = artisanProductService.getArtisanUser(userDetails.getUsername());
+        monthlySoldItems = orderDetailRepository.countMonthlySoldItemsByArtisan(
+                artisanUser.getUserId(),
                 monthStart,
                 nextMonthStart
         );
-        monthlyRevenue = orderDetailRepository.sumMonthlyRevenueBySeller(
-                seller.getUserId(),
+        monthlyRevenue = orderDetailRepository.sumMonthlyRevenueByArtisan(
+                artisanUser.getUserId(),
                 monthStart,
                 nextMonthStart
         );
 
-        User sellerOrAdmin = sellerProductService.getSeller(userDetails.getUsername());
+        User artisanOrAdmin = artisanProductService.getArtisanUser(userDetails.getUsername());
 
         model.addAttribute("totalProducts", products.size());
         model.addAttribute("publishedProducts", products.stream()
@@ -70,6 +70,9 @@ public class SellerDashboardController {
         model.addAttribute("hiddenProducts", products.stream()
                 .filter(product -> "HIDDEN".equals(product.getProductStatus()))
                 .count());
+        model.addAttribute("reservedProducts", products.stream()
+                .filter(product -> "RESERVED".equals(product.getProductStatus()))
+                .count());
         model.addAttribute("missingDescriptionProducts", products.stream()
                 .filter(product -> product.getDescription() == null || product.getDescription().isBlank())
                 .count());
@@ -84,7 +87,7 @@ public class SellerDashboardController {
                 .collect(java.util.stream.Collectors.toList());
         model.addAttribute("recentProducts", recentProducts);
 
-        model.addAttribute("seller", sellerOrAdmin);
+        model.addAttribute("seller", artisanOrAdmin);
         return "seller/dashboard";
     }
 }
