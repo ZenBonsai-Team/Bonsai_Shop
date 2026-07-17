@@ -10,7 +10,7 @@
         <div class="sidebar-brand">
             <a th:href="@{/home}" class="sidebar-brand-link d-flex align-items-center gap-2 text-decoration-none">
                 <img th:src="@{/images/logo.png}" alt="Logo" style="width: 32px; height: 32px; object-fit: contain;">
-                <span class="seller-brand-text" style="font-size: 18px; font-weight: 700; color: #ffffff; font-family: 'Plus Jakarta Sans', sans-serif; white-space: nowrap; line-height: 1.2; letter-spacing: 0.5px;">Bonsai Shop</span>
+                <span class="artisan-brand-text" style="font-size: 18px; font-weight: 700; color: #ffffff; font-family: 'Plus Jakarta Sans', sans-serif; white-space: nowrap; line-height: 1.2; letter-spacing: 0.5px;">Bonsai Shop</span>
             </a>
         </div>
 
@@ -68,27 +68,27 @@
                 </a>
             </th:block>
 
-            <!-- 4. ARTISAN (SELLER) MENU -->
+            <!-- 4. ARTISAN MENU -->
             <th:block sec:authorize="hasRole('ARTISAN')">
-                <a th:href="@{/seller}" 
+                <a th:href="@{/artisan}" 
                    class="sidebar-nav-item" 
-                   th:classappend="${activePage == 'dashboard' or activePage == 'seller-dashboard' ? 'active' : ''}">
+                   th:classappend="${activePage == 'dashboard' or activePage == 'artisan-dashboard' ? 'active' : ''}">
                     <span class="nav-icon"><i class="fa-solid fa-gauge-high"></i></span>
                     <span>Bảng điều khiển</span>
                 </a>
-                <a th:href="@{/seller/products}" 
+                <a th:href="@{/artisan/products}" 
                    class="sidebar-nav-item" 
-                   th:classappend="${activePage == 'products' or activePage == 'seller-products' ? 'active' : ''}">
+                   th:classappend="${activePage == 'products' or activePage == 'artisan-products' ? 'active' : ''}">
                     <span class="nav-icon"><i class="fa-solid fa-seedling"></i></span>
                     <span>Sản phẩm của tôi</span>
                 </a>
-                <a th:href="@{/seller/appointments}" 
+                <a th:href="@{/artisan/appointments}" 
                    class="sidebar-nav-item" 
                    th:classappend="${activePage == 'appointments' ? 'active' : ''}">
                     <span class="nav-icon"><i class="fa-solid fa-calendar-check"></i></span>
                     <span>Lịch hẹn</span>
                 </a>
-                <a th:href="@{/seller/catalog}" 
+                <a th:href="@{/artisan/catalog}" 
                    class="sidebar-nav-item" 
                    th:classappend="${activePage == 'catalog' ? 'active' : ''}">
                     <span class="nav-icon"><i class="fa-solid fa-book"></i></span>

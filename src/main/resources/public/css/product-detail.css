@@ -245,7 +245,7 @@
         }
 
         /* --- SELLER SUMMARY ROW --- */
-        .seller-summary-box {
+        .artisan-summary-box {
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -255,7 +255,7 @@
             border-radius: 4px;
             margin-bottom: 24px;
         }
-        .seller-avatar-wrap {
+        .artisan-avatar-wrap {
             width: 40px;
             height: 40px;
             border-radius: 50%;
@@ -263,25 +263,25 @@
             border: 1px solid var(--border-color);
             margin-right: 12px;
         }
-        .seller-avatar-wrap img {
+        .artisan-avatar-wrap img {
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
-        .seller-summary-info {
+        .artisan-summary-info {
             flex-grow: 1;
         }
-        .seller-summary-name {
+        .artisan-summary-name {
             font-size: 0.85rem;
             font-weight: 700;
             color: var(--primary-color);
             margin-bottom: 2px;
         }
-        .seller-summary-meta {
+        .artisan-summary-meta {
             font-size: 0.72rem;
             color: var(--text-secondary);
         }
-        .seller-summary-rating {
+        .artisan-summary-rating {
             font-size: 0.8rem;
             color: var(--accent-color);
             font-weight: 700;
@@ -486,7 +486,7 @@
         }
 
         /* --- SELLER PROFILE BANNER --- */
-        .seller-profile-banner {
+        .artisan-profile-banner {
             border: 1px solid var(--border-color);
             background-color: #FFFFFF;
             padding: 32px;
@@ -498,24 +498,24 @@
             flex-wrap: wrap;
             gap: 20px;
         }
-        .seller-profile-left {
+        .artisan-profile-left {
             display: flex;
             align-items: center;
             gap: 20px;
         }
-        .seller-large-avatar {
+        .artisan-large-avatar {
             width: 64px;
             height: 64px;
             border-radius: 50%;
             overflow: hidden;
             border: 1px solid var(--border-color);
         }
-        .seller-large-avatar img {
+        .artisan-large-avatar img {
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
-        .seller-badge-gold {
+        .artisan-badge-gold {
             font-size: 0.65rem;
             font-weight: 700;
             letter-spacing: 0.08em;
@@ -524,18 +524,18 @@
             margin-bottom: 2px;
             display: block;
         }
-        .seller-large-name {
+        .artisan-large-name {
             font-size: 1.15rem;
             font-weight: 700;
             color: var(--primary-color);
             margin-bottom: 4px;
         }
-        .seller-large-location {
+        .artisan-large-location {
             font-size: 0.78rem;
             color: var(--text-secondary);
             margin-bottom: 6px;
         }
-        .seller-large-stats {
+        .artisan-large-stats {
             font-size: 0.75rem;
             color: var(--text-secondary);
             display: flex;
@@ -593,7 +593,7 @@
                 font-size: 1.85rem;
                 margin-top: 15px;
             }
-            .seller-profile-banner {
+            .artisan-profile-banner {
                 padding: 24px;
             }
             .specs-side-header {
@@ -608,7 +608,7 @@
             }
         }
         @media (max-width: 575.98px) {
-            .seller-profile-banner {
+            .artisan-profile-banner {
                 flex-direction: column;
                 align-items: flex-start;
             }

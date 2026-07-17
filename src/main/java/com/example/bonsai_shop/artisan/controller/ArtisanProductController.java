@@ -20,7 +20,7 @@ import java.math.BigDecimal;
 import java.util.List;
 
 @Controller
-@RequestMapping("/seller/products")
+@RequestMapping("/artisan/products")
 @RequiredArgsConstructor
 public class ArtisanProductController {
 
@@ -30,13 +30,13 @@ public class ArtisanProductController {
     public String myProducts(@AuthenticationPrincipal UserDetails userDetails, Model model) {
         List<Product> products = artisanProductService.getMyProducts(userDetails.getUsername());
         model.addAttribute("products", products);
-        return "seller/products";
+        return "artisan/products";
     }
 
     @GetMapping("/new")
     public String createForm(Model model) {
         addProductFormData(model, null);
-        return "seller/product-form";
+        return "artisan/product-form";
     }
 
     @PostMapping
@@ -70,10 +70,10 @@ public class ArtisanProductController {
                     tagIds
             );
             redirectAttributes.addFlashAttribute("success", "Đã lưu thông tin cây. Tiếp tục upload media.");
-            return "redirect:/seller/products/" + product.getProductId() + "/media";
+            return "redirect:/artisan/products/" + product.getProductId() + "/media";
         } catch (RuntimeException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
-            return "redirect:/seller/products/new";
+            return "redirect:/artisan/products/new";
         }
     }
 
@@ -85,10 +85,10 @@ public class ArtisanProductController {
         Product product = artisanProductService.getMyProduct(userDetails.getUsername(), productId);
         if (!artisanProductService.isEditable(product)) {
             redirectAttributes.addFlashAttribute("error", "Chỉ có thể sửa sản phẩm nháp hoặc đã ẩn.");
-            return "redirect:/seller/products/" + productId + "/preview";
+            return "redirect:/artisan/products/" + productId + "/preview";
         }
         addProductFormData(model, product);
-        return "seller/product-form";
+        return "artisan/product-form";
     }
 
     @PostMapping("/{productId}")
@@ -125,10 +125,10 @@ public class ArtisanProductController {
                     tagIds
             );
             redirectAttributes.addFlashAttribute("success", "Đã cập nhật sản phẩm.");
-            return "redirect:/seller/products/" + productId + "/preview";
+            return "redirect:/artisan/products/" + productId + "/preview";
         } catch (RuntimeException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
-            return "redirect:/seller/products/" + productId + "/edit";
+            return "redirect:/artisan/products/" + productId + "/edit";
         }
     }
 
@@ -142,7 +142,7 @@ public class ArtisanProductController {
         } catch (RuntimeException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
-        return "redirect:/seller/products";
+        return "redirect:/artisan/products";
     }
 
     @GetMapping("/{productId}/media")
@@ -154,7 +154,7 @@ public class ArtisanProductController {
         model.addAttribute("mediaList", artisanProductService.getMedia(product));
         model.addAttribute("isSold", artisanProductService.isSold(product));
         model.addAttribute("isEditable", artisanProductService.isEditable(product));
-        return "seller/product-media";
+        return "artisan/product-media";
     }
 
     @PostMapping("/{productId}/media")
@@ -178,7 +178,7 @@ public class ArtisanProductController {
         } catch (RuntimeException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
-        return "redirect:/seller/products/" + productId + "/media";
+        return "redirect:/artisan/products/" + productId + "/media";
     }
 
     @PostMapping("/{productId}/media/{mediaId}/thumbnail")
@@ -192,7 +192,7 @@ public class ArtisanProductController {
         } catch (RuntimeException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
-        return "redirect:/seller/products/" + productId + "/media";
+        return "redirect:/artisan/products/" + productId + "/media";
     }
 
     @PostMapping("/{productId}/media/order")
@@ -207,7 +207,7 @@ public class ArtisanProductController {
         } catch (RuntimeException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
-        return "redirect:/seller/products/" + productId + "/media";
+        return "redirect:/artisan/products/" + productId + "/media";
     }
 
     @PostMapping("/{productId}/media/{mediaId}/delete")
@@ -221,7 +221,7 @@ public class ArtisanProductController {
         } catch (RuntimeException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
-        return "redirect:/seller/products/" + productId + "/media";
+        return "redirect:/artisan/products/" + productId + "/media";
     }
 
     @GetMapping("/{productId}/preview")
@@ -244,7 +244,7 @@ public class ArtisanProductController {
         model.addAttribute("isSold", artisanProductService.isSold(product));
         model.addAttribute("isEditable", artisanProductService.isEditable(product));
         model.addAttribute("isHideable", artisanProductService.isHideable(product));
-        return "seller/product-preview";
+        return "artisan/product-preview";
     }
 
     @PostMapping("/{productId}/publish")
@@ -254,10 +254,10 @@ public class ArtisanProductController {
         try {
             artisanProductService.publish(userDetails.getUsername(), productId);
             redirectAttributes.addFlashAttribute("success", "Đã publish sản phẩm.");
-            return "redirect:/seller/products";
+            return "redirect:/artisan/products";
         } catch (RuntimeException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
-            return "redirect:/seller/products";
+            return "redirect:/artisan/products";
         }
     }
 
@@ -271,7 +271,7 @@ public class ArtisanProductController {
         } catch (RuntimeException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
-        return "redirect:/seller/products";
+        return "redirect:/artisan/products";
     }
 
     private void addProductFormData(Model model, Product product) {

@@ -13,11 +13,11 @@
     <link rel="stylesheet" th:href="@{/css/common.css}">
     <link rel="stylesheet" th:href="@{/css/dashboard-layout.css}">
     <link rel="stylesheet" th:href="@{/css/dashboard.css}">
-    <link rel="stylesheet" th:href="@{/css/seller.css}">
+    <link rel="stylesheet" th:href="@{/css/artisan.css}">
 </head>
 <body>
 <div class="dashboard-layout">
-    <div th:replace="~{fragments/sidebar :: sidebar('seller-products')}"></div>
+    <div th:replace="~{fragments/sidebar :: sidebar('artisan-products')}"></div>
 
     <main class="dashboard-main">
         <header th:replace="~{fragments/header :: header}"></header>
@@ -26,7 +26,7 @@
                 <h1>Preview sản phẩm</h1>
                 <p>Kiểm tra lại thông tin sản phẩm trước khi quản lý trên marketplace.</p>
             </div>
-            <a class="btn secondary" th:href="@{/seller/products}">Quay lại My Products</a>
+            <a class="btn secondary" th:href="@{/artisan/products}">Quay lại My Products</a>
         </header>
 
         <div th:if="${success}" class="alert success" th:text="${success}"></div>
@@ -125,8 +125,8 @@
         </section>
 
         <section class="actions publish-actions">
-            <a th:if="${isEditable}" class="btn secondary" th:href="@{/seller/products/{id}/media(id=${product.productId})}">Quay lại Media</a>
-            <a th:if="${isEditable}" class="btn secondary" th:href="@{/seller/products/{id}/edit(id=${product.productId})}">Sửa thông tin</a>
+            <a th:if="${isEditable}" class="btn secondary" th:href="@{/artisan/products/{id}/media(id=${product.productId})}">Quay lại Media</a>
+            <a th:if="${isEditable}" class="btn secondary" th:href="@{/artisan/products/{id}/edit(id=${product.productId})}">Sửa thông tin</a>
         </section>
     </main>
 </div>

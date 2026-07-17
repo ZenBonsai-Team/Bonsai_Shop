@@ -105,7 +105,7 @@ public class ArtisanProductService {
         validateRequiredSpecifications(age, height, trunkDiameter, style);
 
         Product product = Product.builder()
-                .seller(artisanUser)
+                .createdBy(artisanUser)
                 .artisan(artisanProfile)
                 .variety(variety)
                 .segment(segment)

@@ -659,13 +659,13 @@ textarea {
     padding: 10px 12px;
 }
 
-.seller-portal {
+.artisan-portal {
     display: grid;
     grid-template-columns: 260px 1fr;
     min-height: 100vh;
 }
 
-.seller-sidebar {
+.artisan-sidebar {
     background: #1f2d24;
     color: white;
     display: flex;
@@ -677,7 +677,7 @@ textarea {
     height: 100vh;
 }
 
-.seller-sidebar h2 {
+.artisan-sidebar h2 {
     margin: 0;
 }
 
@@ -717,12 +717,12 @@ textarea {
     word-break: break-word;
 }
 
-.seller-sidebar nav {
+.artisan-sidebar nav {
     display: grid;
     gap: 8px;
 }
 
-.seller-sidebar a,
+.artisan-sidebar a,
 .sidebar-logout {
     background: transparent;
     border-radius: 10px;
@@ -732,8 +732,8 @@ textarea {
     text-decoration: none;
 }
 
-.seller-sidebar a.active,
-.seller-sidebar a:hover,
+.artisan-sidebar a.active,
+.artisan-sidebar a:hover,
 .sidebar-logout:hover {
     background: #2d6a4f;
 }
@@ -746,7 +746,7 @@ textarea {
     padding: 32px;
 }
 
-.seller-kpis {
+.artisan-kpis {
     display: grid;
     gap: 16px;
     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -890,8 +890,8 @@ textarea {
     color: #b02a37;
 }
 
-.seller-delete-modal-backdrop,
-.seller-action-modal-backdrop {
+.artisan-delete-modal-backdrop,
+.artisan-action-modal-backdrop {
     align-items: center;
     background: rgba(22, 24, 24, 0.58);
     display: flex;
@@ -902,13 +902,13 @@ textarea {
     z-index: 3000;
 }
 
-.seller-delete-modal-backdrop.hidden,
-.seller-action-modal-backdrop.hidden {
+.artisan-delete-modal-backdrop.hidden,
+.artisan-action-modal-backdrop.hidden {
     display: none;
 }
 
-.seller-delete-modal,
-.seller-action-modal {
+.artisan-delete-modal,
+.artisan-action-modal {
     background: #fff;
     border-radius: 16px;
     box-shadow: 0 24px 70px rgba(0, 0, 0, 0.28);
@@ -917,8 +917,8 @@ textarea {
     width: min(520px, 100%);
 }
 
-.seller-delete-modal header,
-.seller-action-modal header {
+.artisan-delete-modal header,
+.artisan-action-modal header {
     align-items: center;
     background: #F3EFE7;
     border-bottom: 1px solid #E8E4DD;
@@ -927,16 +927,16 @@ textarea {
     padding: 18px 22px;
 }
 
-.seller-delete-modal h2,
-.seller-action-modal h2 {
+.artisan-delete-modal h2,
+.artisan-action-modal h2 {
     color: #1C3322;
     font-size: 1.22rem;
     font-weight: 850;
     margin: 0;
 }
 
-.seller-delete-modal-close,
-.seller-action-modal-close {
+.artisan-delete-modal-close,
+.artisan-action-modal-close {
     background: transparent;
     border: 0;
     color: #77736a;
@@ -944,13 +944,13 @@ textarea {
     line-height: 1;
 }
 
-.seller-delete-modal-body,
-.seller-action-modal-body {
+.artisan-delete-modal-body,
+.artisan-action-modal-body {
     padding: 24px;
 }
 
-.seller-delete-target,
-.seller-action-target {
+.artisan-delete-target,
+.artisan-action-target {
     background: #FAF8F5;
     border: 1px solid #EFE9DF;
     border-radius: 10px;
@@ -959,15 +959,15 @@ textarea {
     padding: 12px 14px;
 }
 
-.seller-delete-message {
+.artisan-delete-message {
     color: #4f5d54;
     font-weight: 700;
     line-height: 1.6;
     margin: 0;
 }
 
-.seller-delete-modal footer,
-.seller-action-modal footer {
+.artisan-delete-modal footer,
+.artisan-action-modal footer {
     background: #F8F9FA;
     border-top: 1px solid #ECECEC;
     display: flex;
@@ -976,10 +976,10 @@ textarea {
     padding: 18px 22px;
 }
 
-.seller-delete-modal .btn-modal-cancel,
-.seller-delete-modal .btn-modal-confirm,
-.seller-action-modal .btn-modal-cancel,
-.seller-action-modal .btn-modal-confirm {
+.artisan-delete-modal .btn-modal-cancel,
+.artisan-delete-modal .btn-modal-confirm,
+.artisan-action-modal .btn-modal-cancel,
+.artisan-action-modal .btn-modal-confirm {
     border: 0;
     border-radius: 999px;
     color: #fff;
@@ -987,21 +987,21 @@ textarea {
     padding: 11px 24px;
 }
 
-.seller-delete-modal .btn-modal-cancel,
-.seller-action-modal .btn-modal-cancel {
+.artisan-delete-modal .btn-modal-cancel,
+.artisan-action-modal .btn-modal-cancel {
     background: #737B84;
 }
 
-.seller-delete-modal .btn-modal-confirm,
-.seller-action-modal .btn-modal-confirm {
+.artisan-delete-modal .btn-modal-confirm,
+.artisan-action-modal .btn-modal-confirm {
     background: #E83246;
 }
 
-.seller-action-modal .btn-modal-confirm {
+.artisan-action-modal .btn-modal-confirm {
     background: #2d6a4f;
 }
 
-.seller-action-warning {
+.artisan-action-warning {
     align-items: flex-start;
     background: #FFF7E6;
     border: 1px solid #F4D49B;
@@ -1012,19 +1012,19 @@ textarea {
     padding: 14px;
 }
 
-.seller-action-warning i {
+.artisan-action-warning i {
     color: #B66A00;
     font-size: 1.2rem;
     margin-top: 2px;
 }
 
-.seller-action-warning strong {
+.artisan-action-warning strong {
     color: #5a3b00;
     display: block;
     margin-bottom: 4px;
 }
 
-.seller-action-warning p {
+.artisan-action-warning p {
     margin: 0;
 }
 
@@ -1060,7 +1060,7 @@ textarea {
     text-decoration: none;
 }
 
-.seller-profile-card {
+.artisan-profile-card {
     background: white;
     border-radius: 18px;
     box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
@@ -1069,7 +1069,7 @@ textarea {
     overflow: hidden;
 }
 
-.seller-profile-header {
+.artisan-profile-header {
     align-items: center;
     background: linear-gradient(135deg, #2d6a4f, #1f2d24);
     color: white;
@@ -1078,19 +1078,19 @@ textarea {
     padding: 28px;
 }
 
-.seller-profile-header h2,
-.seller-profile-header p {
+.artisan-profile-header h2,
+.artisan-profile-header p {
     margin: 0 0 6px;
 }
 
-.seller-profile-avatar,
-.seller-profile-avatar img {
+.artisan-profile-avatar,
+.artisan-profile-avatar img {
     border-radius: 50%;
     height: 96px;
     width: 96px;
 }
 
-.seller-profile-avatar {
+.artisan-profile-avatar {
     align-items: center;
     background: #d8f3dc;
     color: #1f2d24;
@@ -1101,11 +1101,11 @@ textarea {
     justify-content: center;
 }
 
-.seller-profile-avatar img {
+.artisan-profile-avatar img {
     object-fit: cover;
 }
 
-.seller-profile-fields {
+.artisan-profile-fields {
     display: grid;
     gap: 12px;
     padding: 24px;
@@ -1132,13 +1132,13 @@ textarea {
     margin-bottom: 4px;
 }
 
-.seller-profile-actions {
+.artisan-profile-actions {
     border-top: 1px solid #e6e8df;
     padding: 20px 24px 24px;
 }
 
-.seller-profile-form input[type="text"],
-.seller-profile-form input:not([type]) {
+.artisan-profile-form input[type="text"],
+.artisan-profile-form input:not([type]) {
     width: 100%;
 }
 
