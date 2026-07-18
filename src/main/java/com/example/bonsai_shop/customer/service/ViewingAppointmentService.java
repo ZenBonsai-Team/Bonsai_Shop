@@ -1,15 +1,15 @@
 package com.example.bonsai_shop.customer.service;
 
-import com.example.bonsai_shop.customer.repository.UserRepository;
 import com.example.bonsai_shop.customer.repository.ViewingAppointmentRepository;
 import com.example.bonsai_shop.entity.Product;
 import com.example.bonsai_shop.entity.User;
 import com.example.bonsai_shop.entity.ViewingAppointment;
+import com.example.bonsai_shop.notification.service.NotificationService;
 import com.example.bonsai_shop.product.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import com.example.bonsai_shop.customer.dto.AppoimentDetailDTO;
+import com.example.bonsai_shop.customer.dto.AppointmentDetailDTO;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -21,6 +21,7 @@ public class ViewingAppointmentService {
     private final ViewingAppointmentRepository viewingAppointmentRepository;
     private final ProductRepository productRepository;
     private final UserService  userService ;
+    private final NotificationService notificationService;
 
     @Transactional
     public void createViewingAppointment(ViewingAppointment viewingAppointment) {
@@ -41,7 +42,16 @@ public class ViewingAppointmentService {
         }
 
         viewingAppointmentRepository.save(viewingAppointment);
-
+        notificationService.createNotification(viewingAppointment.getCustomer().getUsername(),
+                "Lịch đặt xem cây"+ viewingAppointment.getProduct().getProductName()
+                        + " đã được tạo thành công ");
+        notificationService.createNotification(viewingAppointment.getProduct().getSeller().getUsername(),
+                "Khách hàng: "+ viewingAppointment.getCustomer().getUsername()
+                        + " đã đặt lịch xem cây "
+                        +viewingAppointment.getProduct().getProductName()
+                        + " Theo lịch vào lúc " + viewingAppointment.getAppointmentDate()
+                        + "Ngày tạo: " + viewingAppointment.getCreatedAt()
+                );
         product.setProductStatus("RESERVED");
         productRepository.save(product);
     }
@@ -50,10 +60,10 @@ public class ViewingAppointmentService {
         return viewingAppointmentRepository.findByCustomer(customer);
     }
 
-    public AppoimentDetailDTO findByIdAndCustomer(Integer appointmentId, User customer){
+    public AppointmentDetailDTO findByIdAndCustomer(Integer appointmentId, User customer){
            ViewingAppointment appointment = viewingAppointmentRepository.findByAppointmentIdAndCustomer(appointmentId,customer)
                    .orElseThrow(() -> new RuntimeException("Không tìm thấy lịch hẹn!"));
-           return new AppoimentDetailDTO(
+           return new AppointmentDetailDTO(
                    appointment.getAppointmentId(),
                    appointment.getProduct().getProductName(),
                    appointment.getProduct().getProductCode(),
@@ -63,6 +73,7 @@ public class ViewingAppointmentService {
            );
     }
 
+    @Transactional
     public void updateViewingAppointment(Integer id, User customer, LocalDateTime appointmentDate, String note) {
         ViewingAppointment appointment = viewingAppointmentRepository
                 .findByAppointmentIdAndCustomer(id,customer)
@@ -80,13 +91,25 @@ public class ViewingAppointmentService {
         appointment.setUpdatedAt(LocalDateTime.now());
 
         viewingAppointmentRepository.save(appointment);
+
+        notificationService.createNotification(customer.getUsername(),
+                "Lịch đặt xem cây "+ appointment.getProduct().getProductName()
+                        + " đã được thay đổi thành công "
+                        + " Vào lúc " + appointment.getAppointmentDate()
+                        + " Ngày thay đổi: " + appointment.getUpdatedAt());
+        notificationService.createNotification(appointment.getProduct().getSeller().getUsername(),
+                "Khách hàng: "+ customer.getUsername()
+                        + " đã thay đổi lịch xem cây "
+                        +appointment.getProduct().getProductName()
+                        + " vào lúc " + appointment.getAppointmentDate()
+                        + " - Ngày thay đổi: " + appointment.getUpdatedAt());
     }
 
     @Transactional
     public void cancelViewAppointment(Integer id, User user){
         ViewingAppointment appointment = viewingAppointmentRepository
                 .findByAppointmentIdAndCustomer(id, user)
-                .orElseThrow(() -> new RuntimeException("Appointment not found"));
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy lịch hẹn"));
 
         if ("CANCELLED".equals(appointment.getStatus())) {
             throw new RuntimeException("Lịch hẹn đã được hủy.");
@@ -97,9 +120,19 @@ public class ViewingAppointmentService {
         }
 
         appointment.setStatus("CANCELLED");
+        appointment.setUpdatedAt(LocalDateTime.now());
         Product product = appointment.getProduct();
         product.setProductStatus("AVAILABLE");
         productRepository.save(product);
         viewingAppointmentRepository.save(appointment);
+
+        notificationService.createNotification(user.getUsername(),
+                "Lịch đặt xem cây "+ appointment.getProduct().getProductName()
+                        + " đã hủy thành công " + " vào lúc " + appointment.getUpdatedAt());
+
+        notificationService.createNotification(product.getSeller().getUsername(),
+                "Lịch đặt xem cây " +appointment.getProduct().getProductName()
+                        + " của khách hàng " + user.getUsername()
+                        + " đã hủy vào lúc " + appointment.getUpdatedAt());
     }
 }

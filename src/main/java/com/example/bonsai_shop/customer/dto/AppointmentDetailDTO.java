@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class AppoimentDetailDTO {
+public class AppointmentDetailDTO {
 
     private Integer appointmentId;
 
