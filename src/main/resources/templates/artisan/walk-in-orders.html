@@ -39,7 +39,7 @@
                 </div>
             </div>
 
-            <form method="post" th:action="@{/artisan/walk-in-orders}" class="artisan-profile-fields walk-in-order-form">
+            <form id="walkInCreateForm" method="post" th:action="@{/artisan/walk-in-orders}" class="artisan-profile-fields walk-in-order-form">
                 <div class="walk-in-product-picker">
                     <label>
                         <span>Sản phẩm</span>
@@ -180,7 +180,7 @@
                     </thead>
                     <tbody>
                     <tr th:each="order : ${orders.content}">
-                        <td class="col-code" th:text="${order.orderCode}">WIN-00000000</td>
+                        <td class="col-code" th:text="${order.orderCode}">BSMS-517407</td>
                         <td>
                             <strong th:text="${order.customerName}">Walk-in customer</strong>
                             <small class="d-block text-muted" th:text="${order.customerPhone}">SĐT</small>
@@ -246,7 +246,7 @@
             <div class="drawer-header">
                 <div class="drawer-title">
                     <span>Chi Tiết Đơn Hàng</span>
-                    <span class="col-code" id="drawerOrderCode">WIN-XXXXX</span>
+                    <span class="col-code" id="drawerOrderCode">BSMS-XXXXX</span>
                 </div>
                 <button class="drawer-close-btn" id="btnWalkInDrawerClose" type="button">&times;</button>
             </div>
@@ -424,6 +424,56 @@
     </div>
 </div>
 
+<div id="walkInPaymentConfirmModal" class="artisan-action-modal-backdrop hidden">
+    <div class="artisan-action-modal" role="dialog" aria-modal="true" aria-labelledby="walkInPaymentConfirmTitle">
+        <header>
+            <h2 id="walkInPaymentConfirmTitle">Xác nhận đã nhận tiền</h2>
+            <button type="button" class="artisan-action-modal-close" aria-label="Đóng">×</button>
+        </header>
+        <div class="artisan-action-modal-body">
+            <p class="artisan-action-target">
+                Order: <strong id="walkInPaymentConfirmCode">-</strong>
+            </p>
+            <div class="artisan-action-warning">
+                <i class="fa-solid fa-circle-check"></i>
+                <div>
+                    <strong>Order sẽ được hoàn tất</strong>
+                    <p>Payment sẽ chuyển sang SUCCESS, order chuyển sang COMPLETED và sản phẩm sẽ được đánh dấu SOLD.</p>
+                </div>
+            </div>
+        </div>
+        <footer>
+            <button type="button" class="btn-modal-cancel">Quay lại</button>
+            <button type="button" class="btn-modal-confirm">Xác nhận tiền</button>
+        </footer>
+    </div>
+</div>
+
+<div id="walkInCreateConfirmModal" class="artisan-action-modal-backdrop hidden">
+    <div class="artisan-action-modal" role="dialog" aria-modal="true" aria-labelledby="walkInCreateConfirmTitle">
+        <header>
+            <h2 id="walkInCreateConfirmTitle">Xác nhận tạo walk-in order</h2>
+            <button type="button" class="artisan-action-modal-close" aria-label="Đóng">×</button>
+        </header>
+        <div class="artisan-action-modal-body">
+            <p class="artisan-action-target">
+                Sản phẩm: <strong id="walkInCreateConfirmProduct">-</strong>
+            </p>
+            <div class="artisan-action-warning">
+                <i class="fa-solid fa-cash-register"></i>
+                <div>
+                    <strong>Order sẽ được tạo và sản phẩm sẽ được reserve</strong>
+                    <p>Sản phẩm sẽ chuyển từ AVAILABLE sang RESERVED để tránh khách khác đặt mua trong lúc chờ nhận tiền.</p>
+                </div>
+            </div>
+        </div>
+        <footer>
+            <button type="button" class="btn-modal-cancel">Quay lại</button>
+            <button type="button" class="btn-modal-confirm">Tạo order</button>
+        </footer>
+    </div>
+</div>
+
 <script>
 (function () {
     const pendingStatus = 'PENDING_PAYMENT';
@@ -432,8 +482,21 @@
     const backdrop = document.getElementById('walkInDrawerBackdrop');
     const panel = document.getElementById('walkInDrawerPanel');
     const closeButton = document.getElementById('btnWalkInDrawerClose');
+    const createForm = document.getElementById('walkInCreateForm');
+    const createConfirmModal = document.getElementById('walkInCreateConfirmModal');
+    const createConfirmProduct = document.getElementById('walkInCreateConfirmProduct');
+    const createConfirmClose = createConfirmModal.querySelector('.artisan-action-modal-close');
+    const createConfirmCancel = createConfirmModal.querySelector('.btn-modal-cancel');
+    const createConfirmSubmit = createConfirmModal.querySelector('.btn-modal-confirm');
+    let allowCreateSubmit = false;
     const footer = document.getElementById('walkInDrawerFooter');
     const confirmForm = document.getElementById('walkInConfirmForm');
+    const paymentConfirmModal = document.getElementById('walkInPaymentConfirmModal');
+    const paymentConfirmCode = document.getElementById('walkInPaymentConfirmCode');
+    const paymentConfirmClose = paymentConfirmModal.querySelector('.artisan-action-modal-close');
+    const paymentConfirmCancel = paymentConfirmModal.querySelector('.btn-modal-cancel');
+    const paymentConfirmSubmit = paymentConfirmModal.querySelector('.btn-modal-confirm');
+    let allowPaymentSubmit = false;
     const cancelButton = document.getElementById('walkInCancelButton');
     const cancelForm = document.getElementById('walkInCancelForm');
     const cancelReasonInput = document.getElementById('walkInCancelReason');
@@ -579,7 +642,40 @@
         }
     });
 
+    createForm.addEventListener('submit', function (event) {
+        if (event.defaultPrevented || allowCreateSubmit) {
+            return;
+        }
+        if (!productIdInput.value) {
+            event.preventDefault();
+            productSearch.focus();
+            return;
+        }
+        event.preventDefault();
+        feeInputs.forEach(syncFeeInput);
+        createConfirmProduct.textContent = `${selectedCode.textContent || '-'} - ${selectedName.textContent || '-'}`;
+        createConfirmModal.classList.remove('hidden');
+    });
+
+    function closeCreateConfirmModal() {
+        createConfirmModal.classList.add('hidden');
+    }
+
+    createConfirmClose.addEventListener('click', closeCreateConfirmModal);
+    createConfirmCancel.addEventListener('click', closeCreateConfirmModal);
+    createConfirmModal.addEventListener('click', function (event) {
+        if (event.target === createConfirmModal) {
+            closeCreateConfirmModal();
+        }
+    });
+
+    createConfirmSubmit.addEventListener('click', function () {
+        allowCreateSubmit = true;
+        createForm.submit();
+    });
+
     changeProductButton.addEventListener('click', () => {
+        allowCreateSubmit = false;
         productIdInput.value = '';
         selectedProduct.classList.add('hidden');
         productSearch.classList.remove('hidden');
@@ -623,7 +719,9 @@
         editForm.classList.add('hidden');
         cancelForm.style.display = 'none';
         cancelReasonInput.value = '';
+        allowPaymentSubmit = false;
         allowCancelSubmit = false;
+        paymentConfirmModal.classList.add('hidden');
         cancelConfirmModal.classList.add('hidden');
         footer.style.display = data.orderStatus === pendingStatus ? 'flex' : 'none';
         editButton.hidden = data.orderStatus !== pendingStatus;
@@ -634,6 +732,7 @@
     }
 
     function closeDrawer() {
+        paymentConfirmModal.classList.add('hidden');
         cancelConfirmModal.classList.add('hidden');
         backdrop.classList.remove('show');
         panel.classList.remove('show');
@@ -647,9 +746,28 @@
     });
 
     confirmForm.addEventListener('submit', function (event) {
-        if (!confirm('Xác nhận artisan đã nhận đủ tiền? Order sẽ COMPLETED và sản phẩm sẽ SOLD.')) {
+        if (!allowPaymentSubmit) {
             event.preventDefault();
+            paymentConfirmCode.textContent = fields.code.textContent || '-';
+            paymentConfirmModal.classList.remove('hidden');
         }
+    });
+
+    function closePaymentConfirmModal() {
+        paymentConfirmModal.classList.add('hidden');
+    }
+
+    paymentConfirmClose.addEventListener('click', closePaymentConfirmModal);
+    paymentConfirmCancel.addEventListener('click', closePaymentConfirmModal);
+    paymentConfirmModal.addEventListener('click', function (event) {
+        if (event.target === paymentConfirmModal) {
+            closePaymentConfirmModal();
+        }
+    });
+
+    paymentConfirmSubmit.addEventListener('click', function () {
+        allowPaymentSubmit = true;
+        confirmForm.submit();
     });
 
     editButton.addEventListener('click', function () {

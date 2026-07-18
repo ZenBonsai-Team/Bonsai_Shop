@@ -18,10 +18,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.ThreadLocalRandom;
 
 @Service
 @RequiredArgsConstructor
@@ -37,9 +37,6 @@ public class ArtisanWalkInOrderService {
     public static final String PRODUCT_SOLD = "SOLD";
     public static final String PAYMENT_METHOD_CASH = "CASH";
     public static final String PAYMENT_METHOD_VNPAY = "VNPAY";
-
-    private static final SecureRandom RANDOM = new SecureRandom();
-    private static final String CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 
     private final ArtisanProductService artisanProductService;
     private final ProductRepository productRepository;
@@ -292,17 +289,13 @@ public class ArtisanWalkInOrderService {
     private String generateOrderCode() {
         String orderCode;
         do {
-            orderCode = "WIN-" + randomSuffix();
+            orderCode = "BSMS-" + randomSixDigits();
         } while (orderRepository.findByOrderCode(orderCode).isPresent());
         return orderCode;
     }
 
-    private String randomSuffix() {
-        StringBuilder suffix = new StringBuilder();
-        for (int i = 0; i < 8; i++) {
-            suffix.append(CODE_ALPHABET.charAt(RANDOM.nextInt(CODE_ALPHABET.length())));
-        }
-        return suffix.toString();
+    private String randomSixDigits() {
+        return String.valueOf(ThreadLocalRandom.current().nextInt(100000, 1000000));
     }
 
     private String requireText(String value, String message) {
