@@ -24,7 +24,8 @@ public class ProductSpecifications {
         return (Root<Product> root, CriteriaQuery<?> query, CriteriaBuilder cb) -> {
             List<Predicate> predicates = new ArrayList<>();
 
-            // Avoid fetch joins for count queries (used by Spring Data JPA pagination count query)
+            // Avoid fetch joins for count queries (used by Spring Data JPA pagination count
+            // query)
             if (query.getResultType() != Long.class && query.getResultType() != long.class) {
                 root.fetch("variety", JoinType.INNER);
                 root.fetch("seller", JoinType.INNER);
@@ -33,13 +34,14 @@ public class ProductSpecifications {
             // Customer marketplace must not expose seller-only product states.
             predicates.add(cb.not(root.get("productStatus").in("DRAFT", "HIDDEN")));
 
+            predicates.add(cb.equal(root.get("isPublicPrice"), true));
+
             // keyword (matches product name or code)
             if (keyword != null && !keyword.trim().isEmpty()) {
                 String pattern = "%" + keyword.trim().toLowerCase() + "%";
                 predicates.add(cb.or(
                         cb.like(cb.lower(root.get("productName")), pattern),
-                        cb.like(cb.lower(root.get("productCode")), pattern)
-                ));
+                        cb.like(cb.lower(root.get("productCode")), pattern)));
             }
 
             if (Boolean.TRUE.equals(availableOnly)) {
@@ -73,13 +75,11 @@ public class ProductSpecifications {
 
             // minPrice
             if (minPrice != null) {
-                predicates.add(cb.equal(root.get("isPublicPrice"), true));
                 predicates.add(cb.ge(root.get("price"), minPrice));
             }
 
             // maxPrice
             if (maxPrice != null) {
-                predicates.add(cb.equal(root.get("isPublicPrice"), true));
                 predicates.add(cb.le(root.get("price"), maxPrice));
             }
 
