@@ -21,7 +21,7 @@ public class PreniumbonsaiController {
            ,Model model) {
        Page<ProductCardDTO> product = productService.getPreniumProducts(PageRequest.of(page, 12));
        model.addAttribute("product", product);
-       return "/product/bonsai-luxury";
+       return "product/bonsai-luxury";
    }
 
    @GetMapping("/bonsai_luxury_detail/{productId}")
@@ -31,6 +31,6 @@ public class PreniumbonsaiController {
       ProductCardDTO product =
               productService.getPreniumProductsById(productId);
    model.addAttribute("product", product);
-   return "/product/bonsai_luxury_detail";
+   return "product/bonsai_luxury_detail";
    }
 }

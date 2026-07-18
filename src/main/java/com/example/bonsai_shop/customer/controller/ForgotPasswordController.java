@@ -15,7 +15,7 @@ public class ForgotPasswordController {
     // ===== BƯỚC 1: Nhập email =====
     @GetMapping("/forgot-password")
     public String forgotPasswordPage() {
-        return "/customer/forgot-password";
+        return "customer/forgot-password";
     }
 
     @PostMapping("/forgot-password")
@@ -24,10 +24,10 @@ public class ForgotPasswordController {
             userService.sendOtpResetPassword(email);
             model.addAttribute("email", email);
             model.addAttribute("success", "Mã OTP đã được gửi đến " + email);
-            return "/customer/verify-otp-reset-password";
+            return "customer/verify-otp-reset-password";
         } catch (RuntimeException e) {
             model.addAttribute("error", e.getMessage());
-            return "/customer/forgot-password";
+            return "customer/forgot-password";
         }
     }
 
@@ -40,11 +40,11 @@ public class ForgotPasswordController {
         try {
             userService.verifyOtp(email, otpCode);
             model.addAttribute("email", email);
-            return "/customer/reset-password";
+            return "customer/reset-password";
         } catch (RuntimeException e) {
             model.addAttribute("email", email);
             model.addAttribute("error", e.getMessage());
-            return "/customer/verify-otp-reset-password";
+            return "customer/verify-otp-reset-password";
         }
     }
     @PostMapping("/resend-otp-reset")
@@ -53,11 +53,11 @@ public class ForgotPasswordController {
             userService.sendOtp(email);
             model.addAttribute("email", email);
             model.addAttribute("success", "Mã OTP mới đã được gửi đến " + email);
-            return "/customer/verify-otp-reset-password";
+            return "customer/verify-otp-reset-password";
         } catch (RuntimeException e) {
             model.addAttribute("email", email);
             model.addAttribute("error", e.getMessage());
-            return "/customer/verify-otp-reset-password";
+            return "customer/verify-otp-reset-password";
         }
     }
 
@@ -70,16 +70,16 @@ public class ForgotPasswordController {
         if (!newPassword.equals(confirmPassword)) {
             model.addAttribute("email", email);
             model.addAttribute("error", "Mật khẩu xác nhận không khớp!");
-            return "/customer/reset-password";
+            return "customer/reset-password";
         }
         try {
             userService.resetPassword(email, newPassword);
             model.addAttribute("success", "Đặt lại mật khẩu thành công! Vui lòng đăng nhập.");
-            return "/customer/login";
+            return "customer/login";
         } catch (RuntimeException e) {
             model.addAttribute("email", email);
             model.addAttribute("error", e.getMessage());
-            return "/customer/reset-password";
+            return "customer/reset-password";
         }
     }
 }
