@@ -41,7 +41,7 @@
                         <a th:href="@{/register}" class="btn btn-auth-register">Đăng ký</a>
                     </div>
                     <div sec:authorize="isAuthenticated()" class="d-flex align-items-center gap-2">
-                        <!-- Nút Dashboard cho Admin/Moderator/Seller -->
+                        <!-- Nút Dashboard cho Admin/Moderator/Artisan -->
                         <a sec:authorize="hasRole('OWNER')" th:href="@{/admin}" class="btn btn-outline-dark btn-sm rounded-pill px-3" style="font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 600;">
                             <i class="fa-solid fa-gauge me-1"></i> Bảng điều khiển Chủ cửa hàng
                         </a>
@@ -51,7 +51,7 @@
                         <a sec:authorize="hasRole('MODERATOR')" th:href="@{/moderator/orders}" class="btn btn-outline-dark btn-sm rounded-pill px-3" style="font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 600;">
                             <i class="fa-solid fa-gauge me-1"></i> Bảng điều khiển
                         </a>
-                        <a sec:authorize="hasRole('ARTISAN')" th:href="@{/seller}" class="btn btn-outline-dark btn-sm rounded-pill px-3" style="font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 600;">
+                        <a sec:authorize="hasRole('ARTISAN')" th:href="@{/artisan}" class="btn btn-outline-dark btn-sm rounded-pill px-3" style="font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 600;">
                             <i class="fa-solid fa-store me-1"></i> Kênh Nghệ nhân / Người bán
                         </a>
                         <a th:href="@{/profile}" class="nav-icon-link text-decoration-none" title="Profile"><i class="fa-regular fa-user"></i></a>

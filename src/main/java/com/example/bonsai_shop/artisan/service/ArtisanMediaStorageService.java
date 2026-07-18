@@ -1,4 +1,4 @@
-package com.example.bonsai_shop.seller.service;
+package com.example.bonsai_shop.artisan.service;
 
 import com.example.bonsai_shop.data.common.CloudinaryFolder;
 import com.example.bonsai_shop.data.dto.CloudinaryUploadResponse;
@@ -9,7 +9,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 @Service
 @RequiredArgsConstructor
-public class SellerMediaStorageService {
+public class ArtisanMediaStorageService {
 
     private final CloudinaryStorageService cloudinaryStorageService;
 

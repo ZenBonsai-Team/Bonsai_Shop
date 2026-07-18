@@ -27,7 +27,7 @@ public class ProductCardDTO {
 
     private BigDecimal price;
 
-    private String sellerName;
+    private String artisanName;
 
     private String status;
 

@@ -1,4 +1,4 @@
-package com.example.bonsai_shop.seller.controller;
+package com.example.bonsai_shop.artisan.controller;
 
 import com.example.bonsai_shop.customer.service.UserService;
 import com.example.bonsai_shop.entity.User;
@@ -14,28 +14,28 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
 @Controller
-@RequestMapping("/seller/profile")
+@RequestMapping("/artisan/profile")
 @RequiredArgsConstructor
-public class SellerProfileController {
+public class ArtisanProfileController {
 
     private final UserService userService;
 
     @GetMapping
     public String profile(@AuthenticationPrincipal UserDetails userDetails, Model model) {
-        User seller = userService.getCurrentUserProfile(userDetails.getUsername());
-        model.addAttribute("seller", seller);
+        User artisan = userService.getCurrentUserProfile(userDetails.getUsername());
+        model.addAttribute("artisan", artisan);
         model.addAttribute("role", "ARTISAN");
-        model.addAttribute("activeMenu", "seller-profile");
-        return "seller/profile";
+        model.addAttribute("activeMenu", "artisan-profile");
+        return "artisan/profile";
     }
 
     @GetMapping("/update")
     public String updateProfile(@AuthenticationPrincipal UserDetails userDetails, Model model) {
-        User seller = userService.getCurrentUserProfile(userDetails.getUsername());
-        model.addAttribute("seller", seller);
+        User artisan = userService.getCurrentUserProfile(userDetails.getUsername());
+        model.addAttribute("artisan", artisan);
         model.addAttribute("role", "ARTISAN");
-        model.addAttribute("activeMenu", "seller-profile");
-        return "seller/profile-update";
+        model.addAttribute("activeMenu", "artisan-profile");
+        return "artisan/profile-update";
     }
 
     @PostMapping("/update")
@@ -49,22 +49,22 @@ public class SellerProfileController {
         String email = userDetails.getUsername();
         try {
             userService.updateUserProfile(email, fullName, username, phone, address, avatarFile);
-            return "redirect:/seller/profile";
+            return "redirect:/artisan/profile";
         } catch (RuntimeException e) {
-            User seller = userService.getCurrentUserProfile(email);
-            model.addAttribute("seller", seller);
+            User artisan = userService.getCurrentUserProfile(email);
+            model.addAttribute("artisan", artisan);
             model.addAttribute("role", "ARTISAN");
-            model.addAttribute("activeMenu", "seller-profile");
+            model.addAttribute("activeMenu", "artisan-profile");
             model.addAttribute("error", e.getMessage());
-            return "seller/profile-update";
+            return "artisan/profile-update";
         }
     }
 
     @GetMapping("/change-password")
     public String changePasswordPage(Model model) {
         model.addAttribute("role", "ARTISAN");
-        model.addAttribute("activeMenu", "seller-profile");
-        return "seller/change-password";
+        model.addAttribute("activeMenu", "artisan-profile");
+        return "artisan/change-password";
     }
 
     @PostMapping("/change-password")
@@ -74,7 +74,7 @@ public class SellerProfileController {
                                  @RequestParam String confirmPassword,
                                  Model model) {
         model.addAttribute("role", "ARTISAN");
-        model.addAttribute("activeMenu", "seller-profile");
+        model.addAttribute("activeMenu", "artisan-profile");
         try {
             userService.changePassword(
                     userDetails.getUsername(),
@@ -87,6 +87,6 @@ public class SellerProfileController {
             model.addAttribute("error", e.getMessage());
         }
 
-        return "seller/change-password";
+        return "artisan/change-password";
     }
 }

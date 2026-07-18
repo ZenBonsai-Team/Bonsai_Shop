@@ -13,11 +13,11 @@
     <link rel="stylesheet" th:href="@{/css/common.css}">
     <link rel="stylesheet" th:href="@{/css/dashboard-layout.css}">
     <link rel="stylesheet" th:href="@{/css/dashboard.css}">
-    <link rel="stylesheet" th:href="@{/css/seller.css}">
+    <link rel="stylesheet" th:href="@{/css/artisan.css}">
 </head>
 <body>
 <div class="dashboard-layout">
-    <div th:replace="~{fragments/sidebar :: sidebar('seller-catalog')}"></div>
+    <div th:replace="~{fragments/sidebar :: sidebar('artisan-catalog')}"></div>
 
     <main class="dashboard-main">
         <header th:replace="~{fragments/header :: header}"></header>
@@ -26,7 +26,7 @@
             <h1>Taxonomy Management</h1>
             <p>Quản lý Category, Variety, Segment và Tag dùng khi tạo sản phẩm.</p>
         </div>
-        <a class="btn secondary" th:href="@{/seller/products/new}">Create Product</a>
+        <a class="btn secondary" th:href="@{/artisan/products/new}">Create Product</a>
     </header>
 
     <div th:if="${success}" class="alert success" th:text="${success}"></div>
@@ -56,10 +56,10 @@
                                 class="btn small"
                                 data-open-modal="category-modal"
                                 data-mode="edit"
-                                th:attr="data-action=@{/seller/catalog/categories/{id}(id=${category.categoryId})},data-name=${category.categoryName},data-description=${category.description}">
+                                th:attr="data-action=@{/artisan/catalog/categories/{id}(id=${category.categoryId})},data-name=${category.categoryName},data-description=${category.description}">
                             Edit
                         </button>
-                        <form method="post" th:action="@{/seller/catalog/categories/{id}/delete(id=${category.categoryId})}">
+                        <form method="post" th:action="@{/artisan/catalog/categories/{id}/delete(id=${category.categoryId})}">
                             <button type="submit" class="text-danger" onclick="return confirm('Xóa category này?')">Delete</button>
                         </form>
                     </div>
@@ -97,10 +97,10 @@
                                 class="btn small"
                                 data-open-modal="variety-modal"
                                 data-mode="edit"
-                                th:attr="data-action=@{/seller/catalog/varieties/{id}(id=${variety.varietyId})},data-category-id=${variety.category.categoryId},data-name=${variety.varietyName},data-description=${variety.description}">
+                                th:attr="data-action=@{/artisan/catalog/varieties/{id}(id=${variety.varietyId})},data-category-id=${variety.category.categoryId},data-name=${variety.varietyName},data-description=${variety.description}">
                             Edit
                         </button>
-                        <form method="post" th:action="@{/seller/catalog/varieties/{id}/delete(id=${variety.varietyId})}">
+                        <form method="post" th:action="@{/artisan/catalog/varieties/{id}/delete(id=${variety.varietyId})}">
                             <button type="submit" class="text-danger" onclick="return confirm('Xóa variety này?')">Delete</button>
                         </form>
                     </td>
@@ -133,10 +133,10 @@
                                 class="btn small"
                                 data-open-modal="segment-modal"
                                 data-mode="edit"
-                                th:attr="data-action=@{/seller/catalog/segments/{id}(id=${segment.segmentId})},data-name=${segment.segmentName}">
+                                th:attr="data-action=@{/artisan/catalog/segments/{id}(id=${segment.segmentId})},data-name=${segment.segmentName}">
                             Edit
                         </button>
-                        <form method="post" th:action="@{/seller/catalog/segments/{id}/delete(id=${segment.segmentId})}">
+                        <form method="post" th:action="@{/artisan/catalog/segments/{id}/delete(id=${segment.segmentId})}">
                             <button type="submit" class="text-danger" onclick="return confirm('Xóa segment này?')">Delete</button>
                         </form>
                     </td>
@@ -167,10 +167,10 @@
                                 class="btn small"
                                 data-open-modal="tag-modal"
                                 data-mode="edit"
-                                th:attr="data-action=@{/seller/catalog/tags/{id}(id=${tag.tagId})},data-name=${tag.tagName}">
+                                th:attr="data-action=@{/artisan/catalog/tags/{id}(id=${tag.tagId})},data-name=${tag.tagName}">
                             Edit
                         </button>
-                        <form method="post" th:action="@{/seller/catalog/tags/{id}/delete(id=${tag.tagId})}">
+                        <form method="post" th:action="@{/artisan/catalog/tags/{id}/delete(id=${tag.tagId})}">
                             <button type="submit" class="text-danger" onclick="return confirm('Xóa tag này?')">Delete</button>
                         </form>
                     </td>
@@ -184,7 +184,7 @@
 </div>
 
 <div id="category-modal" class="modal-backdrop hidden">
-    <form class="modal-card" method="post" th:action="@{/seller/catalog/categories}" data-create-action="/seller/catalog/categories">
+    <form class="modal-card" method="post" th:action="@{/artisan/catalog/categories}" data-create-action="/artisan/catalog/categories">
         <header>
             <h2 data-modal-title>Create Category</h2>
             <button type="button" class="modal-close">×</button>
@@ -200,7 +200,7 @@
 </div>
 
 <div id="variety-modal" class="modal-backdrop hidden">
-    <form class="modal-card" method="post" th:action="@{/seller/catalog/varieties}" data-create-action="/seller/catalog/varieties">
+    <form class="modal-card" method="post" th:action="@{/artisan/catalog/varieties}" data-create-action="/artisan/catalog/varieties">
         <header>
             <h2 data-modal-title>Create Variety</h2>
             <button type="button" class="modal-close">×</button>
@@ -222,7 +222,7 @@
 </div>
 
 <div id="segment-modal" class="modal-backdrop hidden">
-    <form class="modal-card" method="post" th:action="@{/seller/catalog/segments}" data-create-action="/seller/catalog/segments">
+    <form class="modal-card" method="post" th:action="@{/artisan/catalog/segments}" data-create-action="/artisan/catalog/segments">
         <header>
             <h2 data-modal-title>Create Segment</h2>
             <button type="button" class="modal-close">×</button>
@@ -235,7 +235,7 @@
 </div>
 
 <div id="tag-modal" class="modal-backdrop hidden">
-    <form class="modal-card" method="post" th:action="@{/seller/catalog/tags}" data-create-action="/seller/catalog/tags">
+    <form class="modal-card" method="post" th:action="@{/artisan/catalog/tags}" data-create-action="/artisan/catalog/tags">
         <header>
             <h2 data-modal-title>Create Tag</h2>
             <button type="button" class="modal-close">×</button>
