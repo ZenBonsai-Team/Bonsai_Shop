@@ -83,6 +83,41 @@ public class ProductSpecifications {
                 predicates.add(cb.le(root.get("price"), maxPrice));
             }
 
+            if (priceRanges != null && !priceRanges.isEmpty()) {
+                List<Predicate> pricePredicates = new ArrayList<>();
+                for (String range : priceRanges) {
+                    if (range != null) {
+                        switch (range) {
+                            case "under1M":
+                                pricePredicates.add(cb.lessThan(root.get("price"), new BigDecimal(1000000)));
+                                break;
+                            case "1Mto5M":
+                                pricePredicates.add(cb.between(root.get("price"), new BigDecimal(1000000),
+                                        new BigDecimal(5000000)));
+                                break;
+                            case "5Mto10M":
+                                pricePredicates.add(cb.between(root.get("price"), new BigDecimal(5000000),
+                                        new BigDecimal(10000000)));
+                                break;
+                            case "10Mto30M":
+                                pricePredicates.add(cb.between(root.get("price"), new BigDecimal(10000000),
+                                        new BigDecimal(30000000)));
+                                break;
+                            case "30Mto100M":
+                                pricePredicates.add(cb.between(root.get("price"), new BigDecimal(30000000),
+                                        new BigDecimal(100000000)));
+                                break;
+                            case "over100M":
+                                pricePredicates.add(cb.greaterThan(root.get("price"), new BigDecimal(100000000)));
+                                break;
+                        }
+                    }
+                }
+                if (!pricePredicates.isEmpty()) {
+                    predicates.add(cb.or(pricePredicates.toArray(new Predicate[0])));
+                }
+            }
+
             // ages (multiple checkboxes: OR logic between selected ranges)
             if (ages != null && !ages.isEmpty()) {
                 List<Predicate> agePredicates = new ArrayList<>();
@@ -109,15 +144,13 @@ public class ProductSpecifications {
                 }
             }
 
-            // species (variety name checklist)
             if (species != null && !species.isEmpty()) {
                 predicates.add(root.get("variety").get("varietyName").in(species));
             }
 
-            // styles (style checklist)
-            if (styles != null && !styles.isEmpty()) {
-                predicates.add(root.get("style").in(styles));
-            }
+            // if (styles != null && !styles.isEmpty()) {
+            // predicates.add(root.get("style").in(styles));
+            // }
 
             return cb.and(predicates.toArray(new Predicate[0]));
         };
