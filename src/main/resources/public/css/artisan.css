@@ -755,7 +755,7 @@ textarea {
     cursor: pointer;
     display: grid;
     gap: 6px;
-    grid-template-columns: 90px 1fr auto;
+    grid-template-columns: minmax(150px, auto) 1fr auto;
     padding: 12px 14px;
     text-align: left;
 }
@@ -772,6 +772,10 @@ textarea {
     color: #1c3322;
     font-weight: 800;
     letter-spacing: 0.08em;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .walk-in-option-name {
@@ -839,6 +843,136 @@ textarea {
     font-size: 1.05rem;
 }
 
+.walk-in-edit-form {
+    background: #f8faf5;
+    border: 1px solid #e6e8df;
+    border-radius: 14px;
+    display: grid;
+    gap: 14px;
+    margin-top: 16px;
+    padding: 16px;
+}
+
+.walk-in-edit-form.hidden {
+    display: none;
+}
+
+.walk-in-edit-grid {
+    display: grid;
+    gap: 12px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.walk-in-edit-grid label {
+    display: grid;
+    gap: 6px;
+}
+
+.walk-in-edit-grid label > span:first-child {
+    color: #1c3322;
+    font-size: 0.82rem;
+    font-weight: 700;
+}
+
+.walk-in-edit-grid input,
+.walk-in-edit-grid select,
+.walk-in-edit-grid textarea {
+    background: #fff;
+    min-height: 40px;
+    width: 100%;
+}
+
+.walk-in-edit-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+}
+
+.walk-in-notes-box {
+    background: #fcfcfc;
+    border: 1px solid #f0f0f0;
+    border-radius: 4px;
+    color: var(--text-muted);
+    font-size: 13px;
+    font-style: italic;
+    padding: 8px;
+    white-space: pre-line;
+}
+
+#walkInDrawerPanel {
+    right: 0 !important;
+    pointer-events: none;
+    transform: translateX(calc(100% + 2px));
+    transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    visibility: hidden;
+}
+
+#walkInDrawerPanel.show {
+    pointer-events: auto;
+    transform: translateX(0);
+    visibility: visible;
+}
+
+.walk-in-status-section {
+    display: grid;
+    gap: 12px;
+}
+
+.walk-in-status-row {
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
+}
+
+.walk-in-edit-link {
+    align-items: center;
+    background: #fff;
+    border: 1px dashed #9aa99a;
+    border-radius: 8px;
+    color: #1c3322;
+    display: inline-flex;
+    font-size: 0.84rem;
+    font-weight: 800;
+    gap: 8px;
+    justify-content: center;
+    letter-spacing: 0.03em;
+    min-height: 38px;
+    padding: 9px 12px;
+    text-transform: uppercase;
+    transition: var(--transition);
+    width: 100%;
+}
+
+.walk-in-edit-link:hover {
+    background: #f5f8f4;
+    border-color: #1c3322;
+}
+
+.walk-in-drawer-footer {
+    align-items: stretch;
+    display: flex;
+    gap: 16px;
+}
+
+#walkInCancelButton,
+#walkInConfirmForm {
+    flex: 1 1 0;
+    margin: 0;
+    min-width: 0;
+}
+
+#walkInConfirmForm .btn-block,
+#walkInCancelButton {
+    align-items: center;
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    min-height: 52px;
+    padding: 13px 12px;
+    white-space: nowrap;
+    width: 100%;
+}
+
 @media (max-width: 1180px) {
     .walk-in-order-form {
         grid-template-columns: 1fr;
@@ -846,7 +980,8 @@ textarea {
 }
 
 @media (max-width: 720px) {
-    .walk-in-customer-grid {
+    .walk-in-customer-grid,
+    .walk-in-edit-grid {
         grid-template-columns: 1fr;
     }
 }

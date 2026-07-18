@@ -39,6 +39,7 @@ public class ArtisanWalkInOrderController {
         model.addAttribute("selectedStatus", status);
         model.addAttribute("pendingPaymentStatus", ArtisanWalkInOrderService.STATUS_PENDING_PAYMENT);
         model.addAttribute("completedStatus", ArtisanWalkInOrderService.STATUS_COMPLETED);
+        model.addAttribute("cancelledStatus", ArtisanWalkInOrderService.STATUS_CANCELLED);
         return "artisan/walk-in-orders";
     }
 
@@ -81,6 +82,52 @@ public class ArtisanWalkInOrderController {
         try {
             Order order = walkInOrderService.confirmPayment(userDetails.getUsername(), orderId);
             redirectAttributes.addFlashAttribute("success", "Đã xác nhận nhận tiền, hoàn tất order " + order.getOrderCode() + " và chuyển sản phẩm sang SOLD.");
+        } catch (RuntimeException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/artisan/walk-in-orders";
+    }
+
+    @PostMapping("/{orderId}/cancel")
+    public String cancel(@AuthenticationPrincipal UserDetails userDetails,
+                         @PathVariable Integer orderId,
+                         @RequestParam(required = false) String reason,
+                         RedirectAttributes redirectAttributes) {
+        try {
+            Order order = walkInOrderService.cancelWalkInOrder(userDetails.getUsername(), orderId, reason);
+            redirectAttributes.addFlashAttribute("success", "Đã hủy walk-in order " + order.getOrderCode() + " và mở bán lại sản phẩm.");
+        } catch (RuntimeException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/artisan/walk-in-orders";
+    }
+
+    @PostMapping("/{orderId}/update")
+    public String update(@AuthenticationPrincipal UserDetails userDetails,
+                         @PathVariable Integer orderId,
+                         @RequestParam String customerName,
+                         @RequestParam String customerPhone,
+                         @RequestParam String shippingAddress,
+                         @RequestParam(defaultValue = ArtisanWalkInOrderService.PAYMENT_METHOD_CASH) String paymentMethod,
+                         @RequestParam(defaultValue = "0") BigDecimal craneFee,
+                         @RequestParam(defaultValue = "0") BigDecimal shippingFee,
+                         @RequestParam(required = false) String customerEmail,
+                         @RequestParam(required = false) String notes,
+                         RedirectAttributes redirectAttributes) {
+        try {
+            Order order = walkInOrderService.updateWalkInOrder(
+                    userDetails.getUsername(),
+                    orderId,
+                    customerName,
+                    customerPhone,
+                    shippingAddress,
+                    paymentMethod,
+                    craneFee,
+                    shippingFee,
+                    customerEmail,
+                    notes
+            );
+            redirectAttributes.addFlashAttribute("success", "Đã cập nhật walk-in order " + order.getOrderCode() + ".");
         } catch (RuntimeException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }

@@ -29,6 +29,7 @@ public class ArtisanWalkInOrderService {
 
     public static final String STATUS_PENDING_PAYMENT = "PENDING_PAYMENT";
     public static final String STATUS_COMPLETED = "COMPLETED";
+    public static final String STATUS_CANCELLED = "CANCELLED";
     public static final String ORDER_TYPE_WALK_IN = "WALK_IN";
     public static final String ORDER_TYPE_ONLINE = "ONLINE";
     public static final String PRODUCT_AVAILABLE = "AVAILABLE";
@@ -131,6 +132,101 @@ public class ArtisanWalkInOrderService {
     }
 
     @Transactional
+    public Order cancelWalkInOrder(String artisanEmail, Integer orderId, String reason) {
+        User artisanUser = artisanProductService.getArtisanUser(artisanEmail);
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy walk-in order."));
+
+        Product product = getSingleProduct(order);
+        if (product.getArtisan() == null || !artisanUser.getUserId().equals(product.getArtisan().getUserId())) {
+            throw new RuntimeException("Order không thuộc artisan này.");
+        }
+        if (!ORDER_TYPE_WALK_IN.equalsIgnoreCase(order.getOrderType())) {
+            throw new RuntimeException("Chỉ được hủy walk-in order.");
+        }
+        if (!STATUS_PENDING_PAYMENT.equalsIgnoreCase(order.getOrderStatus())) {
+            throw new RuntimeException("Chỉ được hủy order đang chờ nhận tiền.");
+        }
+
+        String oldStatus = order.getOrderStatus();
+        order.setOrderStatus(STATUS_CANCELLED);
+        order.setNotes(appendCancelReason(order.getNotes(), reason));
+
+        Payment payment = order.getPayment();
+        if (payment != null) {
+            payment.setPaymentStatus(STATUS_CANCELLED);
+            paymentRepository.save(payment);
+        }
+
+        product.setProductStatus(PRODUCT_AVAILABLE);
+        productRepository.save(product);
+
+        Order savedOrder = orderRepository.save(order);
+        log(savedOrder, artisanUser, "WALK_IN_CANCEL", oldStatus, STATUS_CANCELLED);
+        return savedOrder;
+    }
+
+    @Transactional
+    public Order updateWalkInOrder(String artisanEmail,
+                                   Integer orderId,
+                                   String customerName,
+                                   String customerPhone,
+                                   String shippingAddress,
+                                   String paymentMethod,
+                                   BigDecimal craneFee,
+                                   BigDecimal shippingFee,
+                                   String customerEmail,
+                                   String notes) {
+        User artisanUser = artisanProductService.getArtisanUser(artisanEmail);
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy walk-in order."));
+
+        Product product = getSingleProduct(order);
+        if (product.getArtisan() == null || !artisanUser.getUserId().equals(product.getArtisan().getUserId())) {
+            throw new RuntimeException("Order không thuộc artisan này.");
+        }
+        if (!ORDER_TYPE_WALK_IN.equalsIgnoreCase(order.getOrderType())) {
+            throw new RuntimeException("Chỉ được cập nhật walk-in order.");
+        }
+        if (!STATUS_PENDING_PAYMENT.equalsIgnoreCase(order.getOrderStatus())) {
+            throw new RuntimeException("Chỉ được cập nhật order đang chờ nhận tiền.");
+        }
+
+        BigDecimal normalizedCraneFee = nonNegative(craneFee, "Phí cẩu không được âm.");
+        BigDecimal normalizedShippingFee = nonNegative(shippingFee, "Phí vận chuyển không được âm.");
+        String normalizedPaymentMethod = normalizePaymentMethod(paymentMethod);
+        BigDecimal totalAmount = getBasePrice(order, product)
+                .add(normalizedCraneFee)
+                .add(normalizedShippingFee);
+
+        order.setCustomerName(requireText(customerName, "Vui lòng nhập tên khách walk-in."));
+        order.setCustomerPhone(requireText(customerPhone, "Vui lòng nhập số điện thoại khách walk-in."));
+        order.setShippingAddress(requireText(shippingAddress, "Vui lòng nhập địa chỉ giao/nhận cây."));
+        order.setCustomerEmail(blankToNull(customerEmail));
+        order.setCraneFee(normalizedCraneFee);
+        order.setShippingFee(normalizedShippingFee);
+        order.setTotalAmount(totalAmount);
+        order.setNotes(blankToNull(notes));
+
+        Payment payment = order.getPayment();
+        if (payment == null) {
+            payment = Payment.builder()
+                    .order(order)
+                    .paymentStatus("PENDING")
+                    .paymentType("WALK_IN")
+                    .build();
+        }
+        payment.setPaymentMethod(normalizedPaymentMethod);
+        payment.setAmount(totalAmount);
+        paymentRepository.save(payment);
+        order.setPayment(payment);
+
+        Order savedOrder = orderRepository.save(order);
+        log(savedOrder, artisanUser, "WALK_IN_UPDATE", STATUS_PENDING_PAYMENT, STATUS_PENDING_PAYMENT);
+        return savedOrder;
+    }
+
+    @Transactional
     public Order confirmPayment(String artisanEmail, Integer orderId) {
         User artisanUser = artisanProductService.getArtisanUser(artisanEmail);
         Order order = orderRepository.findById(orderId)
@@ -174,6 +270,14 @@ public class ArtisanWalkInOrderService {
         return order.getOrderDetails().get(0).getProduct();
     }
 
+    private BigDecimal getBasePrice(Order order, Product product) {
+        OrderDetail detail = order.getOrderDetails().get(0);
+        if (detail.getPriceAtPurchase() != null) {
+            return detail.getPriceAtPurchase();
+        }
+        return product.getPrice() == null ? BigDecimal.ZERO : product.getPrice();
+    }
+
     private void log(Order order, User actionBy, String actionType, String fromStatus, String toStatus) {
         orderLogRepository.save(OrderLog.builder()
                 .order(order)
@@ -210,6 +314,16 @@ public class ArtisanWalkInOrderService {
 
     private String blankToNull(String value) {
         return value == null || value.isBlank() ? null : value.trim();
+    }
+
+    private String appendCancelReason(String currentNotes, String reason) {
+        String normalizedReason = blankToNull(reason);
+        if (normalizedReason == null) {
+            normalizedReason = "Khách đổi ý không mua.";
+        }
+        String cancelNote = "Lý do hủy: " + normalizedReason;
+        String normalizedCurrentNotes = blankToNull(currentNotes);
+        return normalizedCurrentNotes == null ? cancelNote : normalizedCurrentNotes + "\n" + cancelNote;
     }
 
     private BigDecimal nonNegative(BigDecimal value, String message) {
