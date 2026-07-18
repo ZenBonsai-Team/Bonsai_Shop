@@ -14,6 +14,7 @@ import java.util.Optional;
 
 public interface ProductRepository extends JpaRepository<Product, Integer>, JpaSpecificationExecutor<Product> {
     List<Product> findByArtisanUserIdOrderByCreatedAtDesc(Integer artisanUserId);
+    List<Product> findByArtisanUserIdAndProductStatusOrderByCreatedAtDesc(Integer artisanUserId, String productStatus);
     Optional<Product> findByProductIdAndArtisanUserId(Integer productId, Integer artisanUserId);
     boolean existsByProductCode(String productCode);
     boolean existsByVarietyVarietyId(Integer varietyId);

@@ -197,6 +197,7 @@ public class OrderApiController {
                 .totalAmount(product.getPrice())
                 .depositAmount(BigDecimal.ZERO)
                 .orderStatus("PENDING")
+                .orderType("ONLINE")
                 .build();
 
         // 4. Thiết lập chi tiết đơn hàng (OrderDetail)
@@ -316,6 +317,7 @@ public class OrderApiController {
                 .depositAmount(order.getDepositAmount())
                 .orderDate(order.getOrderDate())
                 .orderStatus(order.getOrderStatus())
+                .orderType(order.getOrderType())
                 .craneFee(order.getCraneFee())
                 .shippingFee(order.getShippingFee())
                 .notes(order.getNotes())
