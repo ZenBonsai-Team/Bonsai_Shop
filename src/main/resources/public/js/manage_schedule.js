@@ -52,13 +52,13 @@ function extractAppointmentsFromDOM() {
     appointments = [];
     const rows = appointmentTableBody.querySelectorAll("tr");
     rows.forEach(row => {
-        const editBtn = row.querySelector(".edit-btn");
-        if (!editBtn) return;
+        if (row.cells.length < 6) return; // Bỏ qua dòng thông báo trống hoặc dòng lỗi
 
-        const id = editBtn.getAttribute("data-id") || "";
-        const phone = editBtn.getAttribute("data-phone") || "";
-        const email = editBtn.getAttribute("data-email") || "";
-        const note = editBtn.getAttribute("data-note") || "";
+        const id = row.getAttribute("data-id") || "";
+        const phone = row.getAttribute("data-phone") || "";
+        const email = row.getAttribute("data-email") || "";
+        const note = row.getAttribute("data-note") || "";
+
         const client = row.cells[1] ? row.cells[1].textContent.trim() : "";
         const bonsai = row.cells[2] ? row.cells[2].textContent.trim() : "";
         const dateText = row.cells[3] ? row.cells[3].textContent.trim() : "";
@@ -193,6 +193,26 @@ function renderTable() {
 
     filtered.forEach(a => {
         const tr = document.createElement("tr");
+
+        // Cần giữ thuộc tính data trên tr để khi vẽ lại hàm extract không bị mất data
+        tr.setAttribute("data-id", a.id);
+        tr.setAttribute("data-phone", a.phone);
+        tr.setAttribute("data-email", a.email);
+        tr.setAttribute("data-note", a.note);
+
+        let actionHtml = "";
+        if (a.status === "PENDING") {
+            actionHtml = `<button class="sch-edit-btn edit-btn" data-id="${a.id}"><i class="fa-solid fa-pen-to-square"></i></button>`;
+        } else if (a.status === "APPROVED") {
+            actionHtml = `<button type="button" class="btn btn-success btn-complete" data-id="${a.id}">Complete</button>`;
+        } else if (a.status === "COMPLETED") {
+            actionHtml = `<span class="badge bg-success">Completed</span>`;
+        } else if (a.status === "REJECTED") {
+            actionHtml = `<span class="badge bg-danger">Rejected</span>`;
+        } else if (a.status === "CANCELLED") {
+            actionHtml = `<span class="badge bg-secondary">Cancelled</span>`;
+        }
+
         tr.innerHTML = `
             <td><strong>${a.id}</strong></td>
             <td>${a.client}</td>
@@ -201,11 +221,29 @@ function renderTable() {
             <td>${a.time}</td>
             <td><span class="status-badge ${a.status.toLowerCase()}">${a.status}</span></td>
             <td class="table-actions">
-                <button class="edit-btn" data-id="${a.id}"><i class="fa-solid fa-pen"></i></button>
+                ${actionHtml}
             </td>
         `;
-        tr.querySelector(".edit-btn").addEventListener("click", (e) => { e.stopPropagation(); openEditModal(a.id); });
-        tr.addEventListener("dblclick", () => openEditModal(a.id));
+
+        // Sự kiện nút sửa (PENDING)
+        const editBtn = tr.querySelector(".edit-btn");
+        if (editBtn) {
+            editBtn.addEventListener("click", (e) => { e.stopPropagation(); openEditModal(a.id); });
+        }
+
+        // Sự kiện nút Complete (APPROVED)
+        const completeBtn = tr.querySelector(".btn-complete");
+        if (completeBtn) {
+            completeBtn.addEventListener("click", (e) => {
+                e.stopPropagation();
+                submitCompleteForm(a.id);
+            });
+        }
+
+        tr.addEventListener("dblclick", () => {
+            if (a.status === "PENDING") openEditModal(a.id);
+        });
+
         appointmentTableBody.appendChild(tr);
     });
 }
@@ -286,3 +324,11 @@ function initApp() {
     renderTable();
 }
 document.addEventListener("DOMContentLoaded", initApp);
+function submitCompleteForm(id) {
+    if (!id) return;
+    if (confirm(`Bạn có chắc chắn muốn hoàn thành (Complete) lịch hẹn mã #${id} này không?`)) {
+        const form = document.getElementById("globalCompleteForm");
+        form.action = `/artisan/appointments/check/${id}`;
+        form.submit();
+    }
+}

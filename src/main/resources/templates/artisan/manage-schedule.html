@@ -745,30 +745,49 @@
                                 </tr>
                             </thead>
                             <tbody id="appointmentTableBody">
-                                <tr th:each="appointment : ${appointments}">
-                                    <td><strong th:text="${appointment.appointmentId}">1</strong></td>
-                                    <td th:text="${appointment.customerName}">Nguyễn Văn A</td>
-                                    <td>
-                                        <span th:text="${appointment.productCode}">BS-001</span> -
-                                        <span th:text="${appointment.productName}">Bonsai Tùng</span>
-                                    </td>
-                                    <td th:text="${#temporals.format(appointment.appointmentDate,'dd/MM/yyyy')}">
-                                        19/07/2026</td>
-                                    <td th:text="${#temporals.format(appointment.appointmentDate,'HH:mm')}">14:00</td>
-                                    <td>
-                                        <span class="status-badge"
-                                            th:classappend="${#strings.toLowerCase(appointment.status)}"
-                                            th:text="${appointment.status}">PENDING</span>
-                                    </td>
-                                    <td>
-                                        <button class="sch-edit-btn edit-btn" th:data-id="${appointment.appointmentId}"
-                                            th:data-phone="${appointment.customerPhone}"
-                                            th:data-email="${appointment.customerEmail}"
-                                            th:data-note="${appointment.note}" aria-label="Chỉnh sửa">
-                                            <i class="fa-solid fa-pen-to-square"></i>
-                                        </button>
-                                    </td>
-                                </tr>
+                            <tr th:each="appointment : ${appointments}"
+                                th:data-id="${appointment.appointmentId}"
+                                th:data-phone="${appointment.customerPhone}"
+                                th:data-email="${appointment.customerEmail}"
+                                th:data-note="${appointment.note}"> <!-- Đưa data-* lên đây -->
+
+                                <td><strong th:text="${appointment.appointmentId}">1</strong></td>
+                                <td th:text="${appointment.customerName}">Nguyễn Văn A</td>
+                                <td>
+                                    <span th:text="${appointment.productCode}">BS-001</span> -
+                                    <span th:text="${appointment.productName}">Bonsai Tùng</span>
+                                </td>
+                                <td th:text="${#temporals.format(appointment.appointmentDate,'dd/MM/yyyy')}">19/07/2026</td>
+                                <td th:text="${#temporals.format(appointment.appointmentDate,'HH:mm')}">14:00</td>
+                                <td>
+            <span class="status-badge"
+                  th:classappend="${#strings.toLowerCase(appointment.status)}"
+                  th:text="${appointment.status}">PENDING</span>
+                                </td>
+                                <td class="table-actions">
+                                    <!-- PENDING -->
+                                    <button th:if="${appointment.status == 'PENDING'}"
+                                            class="sch-edit-btn edit-btn"
+                                            th:data-id="${appointment.appointmentId}">
+                                        <i class="fa-solid fa-pen-to-square"></i>
+                                    </button>
+
+                                    <!-- APPROVED (Đổi từ thẻ <form> cũ sang nút bấm gọi JS) -->
+                                    <button th:if="${appointment.status == 'APPROVED'}"
+                                            type="button"
+                                            class="btn btn-success"
+                                            th:onclick="'submitCompleteForm(' + ${appointment.appointmentId} + ')'">
+                                        Complete
+                                    </button>
+
+                                    <!-- COMPLETED -->
+                                    <span th:if="${appointment.status == 'COMPLETED'}" class="badge bg-success">Completed</span>
+                                    <!-- REJECTED -->
+                                    <span th:if="${appointment.status == 'REJECTED'}" class="badge bg-danger">Rejected</span>
+                                    <!-- CANCELLED -->
+                                    <span th:if="${appointment.status == 'CANCELLED'}" class="badge bg-secondary">Cancelled</span>
+                                </td>
+                            </tr>
                             </tbody>
                         </table>
                     </div>
@@ -830,7 +849,6 @@
                 <div class="sch-status-area">
                     <label for="statusSelect">Cập nhật trạng thái</label>
                     <select id="statusSelect">
-                        <option value="PENDING">PENDING</option>
                         <option value="APPROVED">APPROVED</option>
                         <option value="REJECTED">REJECTED</option>
                     </select>
@@ -861,6 +879,11 @@
             </form>
         </div>
     </div>
+
+    <!-- Form ẩn dùng chung để gửi yêu cầu Complete đơn bằng JS -->
+    <form id="globalCompleteForm" method="post" style="display: none;">
+        <input type="hidden" name="_csrf" th:value="${_csrf?.token}">
+    </form>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script th:src="@{/js/manage_schedule.js}"></script>

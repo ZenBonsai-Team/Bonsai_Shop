@@ -51,7 +51,18 @@ public class ArtisanAppointmentService {
         }
 
     }
+    public void checkAppointment(Integer appointmentId, User artisan) {
+        ViewingAppointment appointment =
+                viewingAppointmentRepository.findByAppointmentIdAndArtisan(appointmentId,artisan)
+                        .orElseThrow(() ->
+                                new RuntimeException("Không có lịch "));
 
+        if(!appointment.getStatus().equalsIgnoreCase("APPROVED")) {
+            throw new RuntimeException("Không thể chỉnh sửa lịch khi đang ở trạng thái " + appointment.getStatus());
+        }
+        appointment.setStatus("COMPLETED");
+        viewingAppointmentRepository.save(appointment);
+    }
 
 
 }

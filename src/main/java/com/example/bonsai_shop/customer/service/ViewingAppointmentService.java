@@ -43,9 +43,6 @@ public class ViewingAppointmentService {
 
         viewingAppointmentRepository.save(viewingAppointment);
 
-        product.setProductStatus("RESERVED");
-        productRepository.save(product);
-
         notificationService.createNotification(viewingAppointment.getCustomer(),
                 "Lịch đặt xem cây"+ viewingAppointment.getProduct().getProductName()
                         + " đã được tạo thành công ");
@@ -124,12 +121,10 @@ public class ViewingAppointmentService {
         appointment.setStatus("CANCELLED");
         appointment.setUpdatedAt(LocalDateTime.now());
         Product product = appointment.getProduct();
-        product.setProductStatus("AVAILABLE");
-        productRepository.save(product);
         viewingAppointmentRepository.save(appointment);
 
         notificationService.createNotification(user,
-                "Lịch đặt xem cây "+ appointment.getProduct().getProductName()
+                "Lịch đặt xem cây "+ product.getProductName()
                         + " đã hủy thành công " + " vào lúc " + appointment.getUpdatedAt());
 
         notificationService.createNotification(product.getCreatedBy(),

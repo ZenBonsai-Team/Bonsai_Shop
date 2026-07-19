@@ -1,7 +1,5 @@
 package com.example.bonsai_shop.artisan.controller;
 
-
-import com.example.bonsai_shop.customer.service.ViewingAppointmentService;
 import com.example.bonsai_shop.notification.service.NotificationService;
 import org.springframework.security.core.Authentication;
 import org.springframework.ui.Model;
@@ -70,4 +68,32 @@ public class ArtisanAppointmentController {
         }
         return "redirect:/artisan/appointments";
     }
+
+    @PostMapping("artisan/appointments/check/{appointmentId}")
+    public String checkAppointmentStatus(
+             @PathVariable Integer appointmentId
+            ,Authentication authentication
+            ,RedirectAttributes redirectAttributes
+    ){
+           String email = authentication.getName();
+           User artisan = userService.findByEmail(email);
+
+           try{
+               artisanAppointmentService.checkAppointment(
+                       appointmentId,
+                       artisan
+               );
+
+               redirectAttributes.addFlashAttribute(
+                       "success",
+                       "Appointment completed successfully."
+               );
+
+
+           }catch(Exception e){
+               redirectAttributes.addFlashAttribute("error",e.getMessage());
+           }
+           return "redirect:/artisan/appointments";
+    }
+
 }
