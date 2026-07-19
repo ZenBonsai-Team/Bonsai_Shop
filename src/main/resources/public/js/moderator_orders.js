@@ -152,11 +152,13 @@ function renderTable(orders) {
                 <span class="cust-phone">${escapeHtml(order.customer.phone)}</span>
             </td>
             <td class="col-product">
+                ${order.product ? `
                 <span class="prod-name-link" 
                       style="cursor: pointer; font-weight: 600; text-decoration: underline; color: var(--primary-color);" 
                       onclick="event.stopPropagation(); openProductDetailDrawer(${order.product.id})">
                     ${escapeHtml(order.product.name)}
                 </span>
+                ` : '<span class="text-muted">Không có sản phẩm</span>'}
             </td>
             <td class="col-price">${formatVND(order.totalAmount)}</td>
             <td>${formatDate(order.orderDate)}</td>

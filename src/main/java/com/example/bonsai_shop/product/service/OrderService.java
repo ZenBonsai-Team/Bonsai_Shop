@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -17,6 +18,8 @@ import com.example.bonsai_shop.entity.OrderHandling;
 import com.example.bonsai_shop.entity.OrderLog;
 import com.example.bonsai_shop.entity.Product;
 import com.example.bonsai_shop.entity.User;
+import com.example.bonsai_shop.product.event.OrderRejectedEvent;
+import com.example.bonsai_shop.product.event.OrderVerifiedEvent;
 import com.example.bonsai_shop.product.repository.OrderHandlingRepository;
 import com.example.bonsai_shop.product.repository.OrderLogRepository;
 import com.example.bonsai_shop.product.repository.OrderRepository;
@@ -32,6 +35,7 @@ public class OrderService {
     private final ProductRepository productRepository;
     private final OrderLogRepository orderLogRepository;
     private final OrderHandlingRepository orderHandlingRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public Page<Order> getFilteredOrders(String search, String status, String sort, int page, int limit) {
@@ -105,7 +109,12 @@ public class OrderService {
                 .handledAt(LocalDateTime.now())
                 .isActive(true)
                 .build();
+
         orderHandlingRepository.save(handling);
+
+        // Phát sự kiện (Khởi tạo các collection Lazy để luồng Async không bị lỗi LazyInitializationException)
+        initializeOrderDetails(order);
+        eventPublisher.publishEvent(new OrderVerifiedEvent(order));
 
         return true;
     }
@@ -150,8 +159,22 @@ public class OrderService {
                 .handledAt(LocalDateTime.now())
                 .isActive(true)
                 .build();
+
         orderHandlingRepository.save(handling);
+        // Phát sự kiện (Khởi tạo các collection Lazy để luồng Async không bị lỗi LazyInitializationException)
+        initializeOrderDetails(order);
+        eventPublisher.publishEvent(new OrderRejectedEvent(order, reason));
 
         return true;
+    }
+
+    private void initializeOrderDetails(Order order) {
+        if (order.getOrderDetails() != null) {
+            order.getOrderDetails().forEach(detail -> {
+                if (detail.getProduct() != null) {
+                    detail.getProduct().getProductName(); // Kích hoạt tải thông tin sản phẩm
+                }
+            });
+        }
     }
 }
