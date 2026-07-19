@@ -1,4 +1,4 @@
-package com.example.bonsai_shop.seller.dto;
+package com.example.bonsai_shop.artisan.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class SellerAppointmentDTO {
+public class ArtisanAppointmentDTO {
 
     private Integer appointmentId;
     private LocalDateTime appointmentDate;

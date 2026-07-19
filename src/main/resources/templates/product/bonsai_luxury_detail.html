@@ -49,6 +49,23 @@
                 <span class="cart-count" aria-hidden="true">0</span>
             </button>
 
+            <!-- Notifications (chỉ hiện khi đã đăng nhập) -->
+            <div sec:authorize="isAuthenticated()" class="notification-wrap" id="notificationWrap">
+                <button class="icon-btn notification-bell-btn" id="notificationBellBtn" aria-label="Thông báo">
+                    <span class="bell-emoji">🔔</span>
+                    <span class="notification-count" id="notificationCount">0</span>
+                </button>
+                <div class="notification-dropdown" id="notificationDropdown">
+                    <div class="notification-dropdown-header">
+                        <span>Thông báo của bạn</span>
+                        <button id="markAllReadBtn" class="mark-all-read-btn">Đọc tất cả</button>
+                    </div>
+                    <ul class="notification-list" id="notificationList">
+                        <li class="notification-empty">Không có thông báo mới</li>
+                    </ul>
+                </div>
+            </div>
+
             <!-- GUEST ACTIONS -->
             <div sec:authorize="!isAuthenticated()" id="guest-menu" class="guest-actions">
                 <a href="/login" class="btn-login-premium">Đăng nhập</a>
@@ -252,7 +269,6 @@
         </form>
     </div>
 </div>
-
 <script th:src="@{/js/bonsai_luxury_detail.js}"></script>
 </body>
 </html>

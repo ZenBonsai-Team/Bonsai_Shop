@@ -1,34 +1,22 @@
-// ==========================================================================
-// STATE MANAGEMENT & INITIALIZATION
-// ==========================================================================
-let appointments = []; // Sẽ được lấy thực tế từ DOM (Thymeleaf)
+let appointments = [];
 let currentMonth = new Date().getMonth();
 let currentYear = new Date().getFullYear();
 let selectedDateStr = "";
 let editingAppointmentId = null;
 
-// Helper to pad zero
-function padZero(num) {
-    return num < 10 ? `0${num}` : num;
-}
-
-// Convert YYYY-MM-DD -> DD/MM/YYYY
+function padZero(num) { return num < 10 ? `0${num}` : num; }
 function formatDateDisplay(dateStr) {
     if (!dateStr) return "";
     const [year, month, day] = dateStr.split('-');
     return `${day}/${month}/${year}`;
 }
-
-// Convert DD/MM/YYYY -> YYYY-MM-DD
 function parseDateInput(displayStr) {
     if (!displayStr) return "";
     const [day, month, year] = displayStr.split('/');
     return `${year}-${month}-${day}`;
 }
 
-// ==========================================================================
 // DOM ELEMENTS
-// ==========================================================================
 const statTotal = document.getElementById("statTotal");
 const statToday = document.getElementById("statToday");
 const statApproved = document.getElementById("statApproved");
@@ -57,17 +45,15 @@ const closeModalBtn = document.getElementById("closeModal");
 const infoPhone = document.getElementById("infoPhone");
 const infoEmail = document.getElementById("infoEmail");
 const infoNote = document.getElementById("infoNote");
+const notificationBtn = document.getElementById("notificationBtn");
+const notificationPopup = document.getElementById("notificationPopup");
 
-// ==========================================================================
-// DATA EXTRACTION FROM DOM (THYMELEAF)
-// ==========================================================================
 function extractAppointmentsFromDOM() {
     appointments = [];
     const rows = appointmentTableBody.querySelectorAll("tr");
-
     rows.forEach(row => {
         const editBtn = row.querySelector(".edit-btn");
-        if (!editBtn) return; // Bỏ qua dòng trống / header phụ nếu có
+        if (!editBtn) return;
 
         const id = editBtn.getAttribute("data-id") || "";
         const phone = editBtn.getAttribute("data-phone") || "";
@@ -75,28 +61,18 @@ function extractAppointmentsFromDOM() {
         const note = editBtn.getAttribute("data-note") || "";
         const client = row.cells[1] ? row.cells[1].textContent.trim() : "";
         const bonsai = row.cells[2] ? row.cells[2].textContent.trim() : "";
-
-        // Date text format: DD/MM/YYYY -> Convert to YYYY-MM-DD
         const dateText = row.cells[3] ? row.cells[3].textContent.trim() : "";
         const date = parseDateInput(dateText);
-
         const time = row.cells[4] ? row.cells[4].textContent.trim() : "";
         const status = row.cells[5] ? row.cells[5].textContent.trim().toUpperCase() : "PENDING";
 
-        appointments.push({ id, client, phone, email,bonsai, date, time, status,note });
+        appointments.push({ id, client, phone, email, bonsai, date, time, status, note });
     });
 }
 
-// ==========================================================================
-// COMPONENT RENDERERS
-// ==========================================================================
-
-// 1. Update Statistics
 function renderStats() {
     const total = appointments.length;
-    // Lấy ngày hôm nay theo chuẩn YYYY-MM-DD của hệ thống
     const todayStr = new Date().toISOString().split("T")[0];
-
     const today = appointments.filter(a => a.date === todayStr).length;
     const approved = appointments.filter(a => a.status === "APPROVED").length;
     const pending = appointments.filter(a => a.status === "PENDING").length;
@@ -106,10 +82,7 @@ function renderStats() {
     statApproved.textContent = approved;
     statPending.textContent = pending;
 
-    // Giả lập tỉ lệ tăng trưởng tổng quan
     totalPercent.textContent = total > 0 ? `+${Math.round((total / 100) * 10)}%` : "0%";
-
-    // Tính toán phần trăm tỉ lệ
     const activeAppointments = approved + pending;
     if (activeAppointments > 0) {
         approvedPercent.textContent = `${Math.round((approved / activeAppointments) * 100)}%`;
@@ -120,60 +93,37 @@ function renderStats() {
     }
 }
 
-// 2. Render Calendar
 function renderCalendar() {
-    const monthNames = [
-        "January", "February", "March", "April", "May", "June",
-        "July", "August", "September", "October", "November", "December"
-    ];
-
+    const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
     currentMonthSpan.textContent = `${monthNames[currentMonth]} ${currentYear}`;
     calendarGrid.innerHTML = "";
 
-    // Ngày đầu tiên của tháng
     const firstDay = new Date(currentYear, currentMonth, 1);
-    // Chuyển thứ sang định dạng Thứ 2 là 0 -> Chủ nhật là 6
     let startDayIdx = firstDay.getDay() - 1;
     if (startDayIdx < 0) startDayIdx = 6;
-
-    // Tổng số ngày trong tháng
     const totalDays = new Date(currentYear, currentMonth + 1, 0).getDate();
 
-    // Render các ô trống trước ngày mùng 1
     for (let i = 0; i < startDayIdx; i++) {
         const emptyCell = document.createElement("div");
         emptyCell.className = "calendar-day empty";
         calendarGrid.appendChild(emptyCell);
     }
 
-    // Render các ngày trong tháng
     for (let day = 1; day <= totalDays; day++) {
         const dayCell = document.createElement("div");
         dayCell.className = "calendar-day current-month-day";
         dayCell.textContent = day;
-
         const dateStr = `${currentYear}-${padZero(currentMonth + 1)}-${padZero(day)}`;
 
-        // Đánh dấu ngày hôm nay
-        const today = new Date().toISOString().split("T")[0];
-        if (dateStr === today) {
-            dayCell.classList.add("today");
-        }
+        if (dateStr === new Date().toISOString().split("T")[0]) dayCell.classList.add("today");
+        if (dateStr === selectedDateStr) dayCell.classList.add("selected");
 
-        // Highlight ngày đang được chọn
-        if (dateStr === selectedDateStr) {
-            dayCell.classList.add("selected");
-        }
-
-        // Tạo dấu chấm xanh nếu có lịch hẹn vào ngày này
-        const hasAppointments = appointments.some(a => a.date === dateStr);
-        if (hasAppointments) {
+        if (appointments.some(a => a.date === dateStr)) {
             const dot = document.createElement("span");
             dot.className = "appointment-dot";
             dayCell.appendChild(dot);
         }
 
-        // Sự kiện click chọn ngày
         dayCell.addEventListener("click", () => {
             if (selectedDateStr === dateStr) {
                 selectedDateStr = "";
@@ -188,40 +138,27 @@ function renderCalendar() {
             renderDayPanel();
             renderTable();
         });
-
         calendarGrid.appendChild(dayCell);
     }
 }
 
-// 3. Render Panel Lịch Hẹn bên cạnh Calendar
 function renderDayPanel() {
     todayAppointmentsUl.innerHTML = "";
-
-    // Mặc định hiển thị lịch hôm nay nếu chưa chọn ngày cụ thể
     const todayStr = new Date().toISOString().split("T")[0];
     const targetDate = selectedDateStr || todayStr;
-
     const dayAppointments = appointments.filter(a => a.date === targetDate);
 
     if (dayAppointments.length === 0) {
         const li = document.createElement("li");
         li.className = "no-appointments";
-        li.textContent = "No appointments scheduled for this day.";
+        li.textContent = "No appointments scheduled.";
         todayAppointmentsUl.appendChild(li);
         return;
     }
 
-    // Sắp xếp thời gian tăng dần
-    const sortedDayList = [...dayAppointments].sort((a, b) => a.time.localeCompare(b.time));
-
-    sortedDayList.forEach(a => {
+    [...dayAppointments].sort((a, b) => a.time.localeCompare(b.time)).forEach(a => {
         const li = document.createElement("li");
         li.className = "appointment-item";
-
-        let badgeClass = "pending";
-        if (a.status === "APPROVED") badgeClass = "approved";
-        if (a.status === "CANCELLED") badgeClass = "cancelled";
-
         li.innerHTML = `
             <div class="item-left">
                 <span class="item-title">${a.client}</span>
@@ -229,100 +166,68 @@ function renderDayPanel() {
             </div>
             <div class="item-right">
                 <span class="item-time"><i class="fa-regular fa-clock"></i> ${a.time}</span>
-                <span class="status-badge ${badgeClass}">${a.status}</span>
+                <span class="status-badge ${a.status.toLowerCase()}">${a.status}</span>
             </div>
         `;
-
-        // Double click vào danh sách để đổi nhanh trạng thái
-        li.addEventListener("dblclick", () => {
-            openEditModal(a.id);
-        });
-
+        li.addEventListener("dblclick", () => openEditModal(a.id));
         todayAppointmentsUl.appendChild(li);
     });
 }
 
-// 4. Render & Đồng bộ lại Bảng Danh Sách dưới
 function renderTable() {
     appointmentTableBody.innerHTML = "";
-
     const searchText = searchInput.value.toLowerCase().trim();
     const filterVal = statusFilter.value;
 
     const filtered = appointments.filter(a => {
-        const matchesSearch = a.id.toLowerCase().includes(searchText) ||
-            a.client.toLowerCase().includes(searchText) ||
-            a.bonsai.toLowerCase().includes(searchText);
-
+        const matchesSearch = a.id.toLowerCase().includes(searchText) || a.client.toLowerCase().includes(searchText) || a.bonsai.toLowerCase().includes(searchText);
         const matchesStatus = filterVal === "ALL" || a.status === filterVal;
         const matchesDate = !selectedDateStr || a.date === selectedDateStr;
-
         return matchesSearch && matchesStatus && matchesDate;
     });
 
     if (filtered.length === 0) {
-        appointmentTableBody.innerHTML = `
-            <tr>
-                <td colspan="7" style="text-align: center; color: var(--text-secondary); font-style: italic; padding: 3rem 0;">
-                    No appointments found matching your filters.
-                </td>
-            </tr>
-        `;
+        appointmentTableBody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-secondary); padding: 3rem 0;">No matching records found.</td></tr>`;
         return;
     }
 
     filtered.forEach(a => {
         const tr = document.createElement("tr");
-
-        let badgeClass = "pending";
-        if (a.status === "APPROVED") badgeClass = "approved";
-        if (a.status === "CANCELLED") badgeClass = "cancelled";
-
         tr.innerHTML = `
             <td><strong>${a.id}</strong></td>
             <td>${a.client}</td>
             <td>${a.bonsai}</td>
             <td>${formatDateDisplay(a.date)}</td>
             <td>${a.time}</td>
-            <td><span class="status-badge ${badgeClass}">${a.status}</span></td>
+            <td><span class="status-badge ${a.status.toLowerCase()}">${a.status}</span></td>
             <td class="table-actions">
-                <button class="edit-btn" data-id="${a.id}" aria-label="Edit status of ${a.id}"><i class="fa-solid fa-pen"></i></button>
+                <button class="edit-btn" data-id="${a.id}"><i class="fa-solid fa-pen"></i></button>
             </td>
         `;
-
-        const editBtn = tr.querySelector(".edit-btn");
-        editBtn.addEventListener("click", (e) => {
-            e.stopPropagation();
-            openEditModal(a.id);
-        });
-
-        tr.addEventListener("dblclick", () => {
-            openEditModal(a.id);
-        });
-
+        tr.querySelector(".edit-btn").addEventListener("click", (e) => { e.stopPropagation(); openEditModal(a.id); });
+        tr.addEventListener("dblclick", () => openEditModal(a.id));
         appointmentTableBody.appendChild(tr);
     });
 }
 
-// ==========================================================================
-// MODAL INTERACTIONS
-// ==========================================================================
 function openEditModal(id) {
     const appointment = appointments.find(a => a.id == id);
     if (!appointment) return;
-    const statusMessage =
-        document.getElementById("statusMessage");
-    if(appointment.status === "CANCELLED"){
+    const statusMessage = document.getElementById("statusMessage");
+    const rejectReasonGroup = document.getElementById("rejectReasonGroup");
+    document.getElementById("rejectReason").value = "";
+
+    if (appointment.status !== "PENDING") {
         statusSelect.disabled = true;
         saveStatusBtn.disabled = true;
-        statusMessage.textContent = "This appointment has been cancelled and its status cannot be changed.";
-    }else {
+        statusMessage.textContent = `This appointment has already been processed (${appointment.status}).`;
+    } else {
         statusSelect.disabled = false;
         saveStatusBtn.disabled = false;
+        statusMessage.textContent = "";
     }
 
     editingAppointmentId = id;
-
     infoId.textContent = appointment.id;
     infoClient.textContent = appointment.client;
     infoBonsai.textContent = appointment.bonsai;
@@ -331,75 +236,53 @@ function openEditModal(id) {
     infoPhone.textContent = appointment.phone;
     infoEmail.textContent = appointment.email;
     infoNote.textContent = appointment.note;
-
     statusSelect.value = appointment.status;
+
+    rejectReasonGroup.style.display = statusSelect.value === "REJECTED" ? "block" : "none";
     editModal.classList.add("show");
-    statusSelect.focus();
 }
 
-function closeEditModal() {
-    editModal.classList.remove("show");
-    editingAppointmentId = null;
-}
+function closeEditModal() { editModal.classList.remove("show"); editingAppointmentId = null; }
 
 function saveStatusChange() {
-
     if (!editingAppointmentId) return;
-
     const form = document.getElementById("updateStatusForm");
-
-    form.action =
-        `/seller/schedule/update/${editingAppointmentId}/status`;
-
-    document.getElementById("statusInput").value =
-        statusSelect.value;
-
+    form.action = `/artisan/appointments/update/${editingAppointmentId}/status`;
+    document.getElementById("statusInput").value = statusSelect.value;
+    document.getElementById("messageInput").value = statusSelect.value === "REJECTED" ? document.getElementById("rejectReason").value : "";
     form.submit();
 }
-// ==========================================================================
-// EVENT LISTENERS & INITIALIZATION
-// ==========================================================================
-prevMonthBtn.addEventListener("click", () => {
-    currentMonth--;
-    if (currentMonth < 0) {
-        currentMonth = 11;
-        currentYear--;
-    }
-    renderCalendar();
-});
 
-nextMonthBtn.addEventListener("click", () => {
-    currentMonth++;
-    if (currentMonth > 11) {
-        currentMonth = 0;
-        currentYear++;
-    }
-    renderCalendar();
-});
+// BỔ SUNG: Xử lý bật tắt Popup thông báo toàn hệ thống
+if(notificationBtn) {
+    notificationBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        notificationPopup.classList.toggle("show");
+    });
+    document.addEventListener("click", (e) => {
+        if (!notificationPopup.contains(e.target) && e.target !== notificationBtn) {
+            notificationPopup.classList.remove("show");
+        }
+    });
+}
 
+prevMonthBtn.addEventListener("click", () => { currentMonth--; if (currentMonth < 0) { currentMonth = 11; currentYear--; } renderCalendar(); });
+nextMonthBtn.addEventListener("click", () => { currentMonth++; if (currentMonth > 11) { currentMonth = 0; currentYear++; } renderCalendar(); });
+statusSelect.addEventListener("change", () => {
+    document.getElementById("rejectReasonGroup").style.display = statusSelect.value === "REJECTED" ? "block" : "none";
+});
 searchInput.addEventListener("input", renderTable);
 statusFilter.addEventListener("change", renderTable);
 saveStatusBtn.addEventListener("click", saveStatusChange);
 closeModalBtn.addEventListener("click", closeEditModal);
+editModal.addEventListener("click", (e) => { if (e.target === editModal) closeEditModal(); });
+document.addEventListener("keydown", (e) => { if (e.key === "Escape" && editModal.classList.contains("show")) closeEditModal(); });
 
-editModal.addEventListener("click", (e) => {
-    if (e.target === editModal) closeEditModal();
-});
-
-document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && editModal.classList.contains("show")) {
-        closeEditModal();
-    }
-});
-
-// App Initialization
 function initApp() {
-    extractAppointmentsFromDOM(); // Đọc dữ liệu thực tế từ Thymeleaf
+    extractAppointmentsFromDOM();
     renderStats();
     renderCalendar();
     renderDayPanel();
-    renderTable(); // Vẽ lại bảng để gắn đúng Event Listener động
+    renderTable();
 }
-
-// Chạy ứng dụng khi DOM tải xong
 document.addEventListener("DOMContentLoaded", initApp);
