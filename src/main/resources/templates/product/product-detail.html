@@ -192,46 +192,51 @@
 
             <!-- Buying and Add to Cart Action buttons -->
             <div class="mt-4">
-                <div class="action-flex-row">
-                    <!-- Buy Now Button -->
-                    <button type="button" 
-                        class="btn-buy-vnpay" 
-                        th:if="${product.productStatus == 'AVAILABLE'}"
-                        th:data-id="${product.productId}"
-                        th:data-name="${product.productName}"
-                        th:data-code="${product.productCode}"
-                        th:data-price="${#numbers.formatDecimal(product.price, 0, 'POINT', 0, 'POINT') + ' đ'}"
-                        th:data-img="${product.firstImageUrl}"
-                        th:data-segment="${product.segment != null ? product.segment.segmentName : 'Popular'}"
-                        onclick="openCheckoutModal(
-                            this.getAttribute('data-id'), 
-                            this.getAttribute('data-name'), 
-                            this.getAttribute('data-code'), 
-                            this.getAttribute('data-price'), 
-                            this.getAttribute('data-img'), 
-                            this.getAttribute('data-segment')
-                        )">
-                    Gửi yêu cầu mua
-                    </button>
+                <div sec:authorize="hasAnyRole('OWNER', 'ARTISAN', 'MODERATOR', 'CONTENT_MODERATOR')" class="alert alert-info py-2 px-3 small border-0 rounded-3 shadow-sm mb-3">
+                    <i class="fa-solid fa-circle-info me-1"></i> Bạn đang đăng nhập với tài khoản Quản trị / Nhà vườn / Kiểm duyệt. Tài khoản này chỉ có quyền xem thông tin sản phẩm và không thể đặt mua.
+                </div>
+                <div sec:authorize="!hasAnyRole('OWNER', 'ARTISAN', 'MODERATOR', 'CONTENT_MODERATOR')">
+                    <div class="action-flex-row">
+                        <!-- Buy Now Button -->
+                        <button type="button" 
+                            class="btn-buy-vnpay" 
+                            th:if="${product.productStatus == 'AVAILABLE'}"
+                            th:data-id="${product.productId}"
+                            th:data-name="${product.productName}"
+                            th:data-code="${product.productCode}"
+                            th:data-price="${#numbers.formatDecimal(product.price, 0, 'POINT', 0, 'POINT') + ' đ'}"
+                            th:data-img="${product.firstImageUrl}"
+                            th:data-segment="${product.segment != null ? product.segment.segmentName : 'Popular'}"
+                            onclick="openCheckoutModal(
+                                this.getAttribute('data-id'), 
+                                this.getAttribute('data-name'), 
+                                this.getAttribute('data-code'), 
+                                this.getAttribute('data-price'), 
+                                this.getAttribute('data-img'), 
+                                this.getAttribute('data-segment')
+                            )">
+                        Gửi yêu cầu mua
+                        </button>
 
-                    <button class="btn-card-disabled" style="width: 100%; padding: 14px 0;" disabled th:if="${product.productStatus == 'RESERVED'}"><i class="fa-solid fa-lock"></i> Reserved</button>
-                    <button class="btn-card-disabled" style="width: 100%; padding: 14px 0;" disabled th:if="${product.productStatus == 'SOLD'}"><i class="fa-solid fa-ban"></i> Sold</button>
-                    
-                    <!-- Wishlist Button -->
-                    <button class="btn-action-square" title="Yêu thích">
-                        <i class="fa-regular fa-heart"></i>
-                    </button>
-                    
-                    <!-- Share Button -->
-                    <button class="btn-action-square" title="Chia sẻ">
-                        <i class="fa-solid fa-share-nodes"></i>
+                        <button class="btn-card-disabled" style="width: 100%; padding: 14px 0;" disabled th:if="${product.productStatus == 'RESERVED'}"><i class="fa-solid fa-lock"></i> Reserved</button>
+                        <button class="btn-card-disabled" style="width: 100%; padding: 14px 0;" disabled th:if="${product.productStatus == 'SOLD'}"><i class="fa-solid fa-ban"></i> Sold</button>
+                        
+                        <!-- Wishlist Button -->
+                        <button class="btn-action-square" title="Yêu thích">
+                            <i class="fa-regular fa-heart"></i>
+                        </button>
+                        
+                        <!-- Share Button -->
+                        <button class="btn-action-square" title="Chia sẻ">
+                            <i class="fa-solid fa-share-nodes"></i>
+                        </button>
+                    </div>
+
+                    <!-- Add to Cart Outline -->
+                    <button class="btn-add-cart-outline" th:if="${product.productStatus == 'AVAILABLE'}">
+                        <i class="fa-solid fa-cart-shopping"></i> Add to Cart
                     </button>
                 </div>
-
-                <!-- Add to Cart Outline -->
-                <button class="btn-add-cart-outline" th:if="${product.productStatus == 'AVAILABLE'}">
-                    <i class="fa-solid fa-cart-shopping"></i> Add to Cart
-                </button>
 
                 <!-- Small Policy Guarantees -->
                 <div class="guarantees-row">

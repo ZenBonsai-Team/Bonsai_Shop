@@ -39,6 +39,16 @@ public class ViewingAppointmentController {
         // Lấy khách hàng
         User user = userService.findByEmail(principal.getName());
 
+        if (user != null && user.getRole() != null) {
+            String roleName = user.getRole().getRoleName();
+            if ("ROLE_OWNER".equals(roleName) || "ROLE_ARTISAN".equals(roleName) 
+                    || "ROLE_MODERATOR".equals(roleName) || "ROLE_CONTENT_MODERATOR".equals(roleName)
+                    || "ROLE_ADMIN".equals(roleName) || "ROLE_SELLER".equals(roleName)) {
+                redirectAttributes.addFlashAttribute("error", "Tài khoản quản trị / nhà vườn / kiểm duyệt viên không được phép đặt lịch hẹn xem cây!");
+                return "redirect:/bonsai_luxury_detail/" + productId;
+            }
+        }
+
         // Lấy sản phẩm
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm!"));

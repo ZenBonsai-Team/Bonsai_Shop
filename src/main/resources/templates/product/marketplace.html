@@ -402,7 +402,7 @@
                             
                             <div class="mt-2">
                                 <!-- Add to Cart / Disabled button based on status -->
-                                <button th:if="${product.productStatus == 'AVAILABLE'}" class="btn-card-cart-outline"><i class="fa-solid fa-cart-shopping"></i> Add to Cart</button>
+                                <button sec:authorize="!hasAnyRole('OWNER', 'ARTISAN', 'MODERATOR', 'CONTENT_MODERATOR')" th:if="${product.productStatus == 'AVAILABLE'}" class="btn-card-cart-outline"><i class="fa-solid fa-cart-shopping"></i> Add to Cart</button>
                                 <button th:if="${product.productStatus == 'RESERVED'}" class="btn-card-disabled" disabled>Reserved</button>
                                 <button th:if="${product.productStatus == 'SOLD'}" class="btn-card-disabled" disabled>Sold</button>
                                 
