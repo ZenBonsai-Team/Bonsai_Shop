@@ -22,7 +22,7 @@ public class HomeController {
 
     @GetMapping("/home")
     public String home(Model model,
-                       @AuthenticationPrincipal UserDetails userDetails) {
+            @AuthenticationPrincipal UserDetails userDetails) {
 
         if (userDetails != null) {
             String email = userDetails.getUsername();
