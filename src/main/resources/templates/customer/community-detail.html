@@ -94,8 +94,8 @@
                     </div>
 
                     <!-- Author Action (Save / Bookmark) -->
-                    <button class="btn btn-outline-success w-100 rounded-pill py-2 btn-bookmark-action d-flex align-items-center justify-content-center gap-2" id="bookmarkBtn" th:classappend="${isBookmarked} ? 'bookmarked' : ''" style="font-size: 0.85rem; font-weight: 600; transition: all 0.2s;">
-                        <i class="fa-regular fa-bookmark"></i> <span>Lưu bài viết</span>
+                    <button class="btn btn-outline-success w-100 rounded-pill py-2 btn-bookmark-action d-flex align-items-center justify-content-center gap-2" id="bookmarkBtnHeader" th:classappend="${isBookmarked} ? 'bookmarked btn-success text-white' : ''" style="font-size: 0.85rem; font-weight: 600; transition: all 0.2s;">
+                        <i th:class="${isBookmarked} ? 'fa-solid fa-bookmark' : 'fa-regular fa-bookmark'"></i> <span th:text="${isBookmarked} ? 'Đã lưu bài viết' : 'Lưu bài viết'">Lưu bài viết</span>
                     </button>
                 </div>
             </div>
@@ -127,8 +127,8 @@
                 </button>
                 
                 <button class="interaction-btn btn-bookmark-action" id="bookmarkBtn" th:classappend="${isBookmarked} ? 'bookmarked' : ''" title="Lưu bài viết">
-                    <i class="fa-regular fa-bookmark"></i>
-                    <span class="d-block small mt-1">Lưu</span>
+                    <i th:class="${isBookmarked} ? 'fa-solid fa-bookmark text-success' : 'fa-regular fa-bookmark'"></i>
+                    <span class="d-block small mt-1" th:text="${isBookmarked} ? 'Đã lưu' : 'Lưu'">Lưu</span>
                 </button>
             </div>
         </div>
@@ -164,9 +164,14 @@
                     <div th:each="c : ${comments}" class="comment-item">
                         <img th:src="${c.authorAvatar != null && !c.authorAvatar.isEmpty() ? c.authorAvatar : 'https://ui-avatars.com/api/?name=' + c.authorName}" alt="Avatar" class="comment-avatar">
                         <div class="comment-box">
-                            <div class="comment-author-row">
-                                <span class="comment-author-name" th:text="${c.authorName}">Hoàng Long</span>
-                                <span class="comment-date" th:text="${#temporals.format(c.createdAt, 'dd/MM/yyyy HH:mm')}">2 giờ trước</span>
+                            <div class="comment-author-row align-items-center">
+                                <span class="comment-author-name fw-bold" th:text="${c.authorName}">Hoàng Long</span>
+                                <span th:if="${(c.userId != null and post.authorId != null and c.userId == post.authorId) or (c.authorName == post.authorName)}" 
+                                      class="badge bg-success-subtle text-success border border-success-subtle rounded-pill ms-2 px-2 py-1" 
+                                      style="font-size: 0.68rem; font-weight: 600;">
+                                    <i class="fa-solid fa-feather me-1"></i> Tác giả
+                                </span>
+                                <span class="comment-date ms-auto" th:text="${#temporals.format(c.createdAt, 'dd/MM/yyyy HH:mm')}">2 giờ trước</span>
                             </div>
                             <p class="comment-text" th:text="${c.content}">Nội dung bình luận.</p>
                         </div>
@@ -549,20 +554,59 @@
             });
         }
 
-        // ===== Bookmark button toggle action =====
-        const bookmarkBtn = document.getElementById('bookmarkBtn');
-        if (bookmarkBtn) {
-            bookmarkBtn.addEventListener('click', function() {
-                const isBookmarked = this.classList.contains('bookmarked');
-                if (isBookmarked) {
-                    this.classList.remove('bookmarked');
-                    this.innerHTML = '<i class="fa-regular fa-bookmark"></i> <span class="d-block small mt-1">Lưu</span>';
-                } else {
-                    this.classList.add('bookmarked');
-                    this.innerHTML = '<i class="fa-solid fa-bookmark text-success"></i> <span class="d-block small mt-1">Đã lưu</span>';
-                }
+        // ===== Bookmark button toggle action (AJAX API) =====
+        const bookmarkBtns = document.querySelectorAll('.btn-bookmark-action');
+        bookmarkBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                const token = document.querySelector('meta[name="_csrf"]')?.content;
+                const headerName = document.querySelector('meta[name="_csrf_header"]')?.content;
+                const postId = contentEl ? contentEl.getAttribute('data-post-id') : null;
+                if (!postId) return;
+
+                fetch(`/community/post/${postId}/bookmark`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        [headerName]: token
+                    }
+                })
+                .then(res => {
+                    if (res.status === 401) {
+                        alert('Bạn cần đăng nhập để lưu bài viết.');
+                        window.location.href = '/login';
+                        return null;
+                    }
+                    return res.json();
+                })
+                .then(data => {
+                    if (!data) return;
+                    if (data.success) {
+                        bookmarkBtns.forEach(b => {
+                            const isHeaderBtn = b.id === 'bookmarkBtnHeader';
+                            if (data.bookmarked) {
+                                b.classList.add('bookmarked');
+                                if (isHeaderBtn) {
+                                    b.classList.add('btn-success', 'text-white');
+                                    b.innerHTML = '<i class="fa-solid fa-bookmark"></i> <span>Đã lưu bài viết</span>';
+                                } else {
+                                    b.innerHTML = '<i class="fa-solid fa-bookmark text-success"></i> <span class="d-block small mt-1">Đã lưu</span>';
+                                }
+                            } else {
+                                b.classList.remove('bookmarked', 'btn-success', 'text-white');
+                                if (isHeaderBtn) {
+                                    b.innerHTML = '<i class="fa-regular fa-bookmark"></i> <span>Lưu bài viết</span>';
+                                } else {
+                                    b.innerHTML = '<i class="fa-regular fa-bookmark"></i> <span class="d-block small mt-1">Lưu</span>';
+                                }
+                            }
+                        });
+                    } else {
+                        alert(data.message || 'Có lỗi xảy ra khi lưu bài viết.');
+                    }
+                })
+                .catch(err => console.error('Error toggling bookmark:', err));
             });
-        }
+        });
 
         // ===== Comment Character Counter & AJAX Submission =====
         const commentForm = document.getElementById('commentForm');
@@ -622,6 +666,10 @@
                             noCommentsText.style.display = 'none';
                         }
 
+                        // Author badge HTML if author commented
+                        const authorBadgeHtml = data.isAuthor ? 
+                            '<span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill ms-2 px-2 py-1" style="font-size: 0.68rem; font-weight: 600;"><i class="fa-solid fa-feather me-1"></i> Tác giả</span>' : '';
+
                         // Create and prepend new comment element
                         const newComment = document.createElement('div');
                         newComment.className = 'comment-item fade-in';
@@ -630,9 +678,10 @@
                         newComment.innerHTML = `
                             <img src="${data.authorAvatar}" alt="Avatar" class="comment-avatar">
                             <div class="comment-box">
-                                <div class="comment-author-row">
-                                    <span class="comment-author-name">${data.authorName}</span>
-                                    <span class="comment-date">${data.createdAt}</span>
+                                <div class="comment-author-row align-items-center">
+                                    <span class="comment-author-name fw-bold">${data.authorName}</span>
+                                    ${authorBadgeHtml}
+                                    <span class="comment-date ms-auto">${data.createdAt}</span>
                                 </div>
                                 <p class="comment-text">${data.content}</p>
                             </div>

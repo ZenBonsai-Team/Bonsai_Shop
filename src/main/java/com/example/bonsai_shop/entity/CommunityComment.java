@@ -21,6 +21,9 @@ public class CommunityComment {
     @Column(name = "PostID", nullable = false)
     private Integer postId;
 
+    @Column(name = "UserID")
+    private Integer userId;
+
     @Column(name = "AuthorName", nullable = false, length = 255)
     private String authorName;
 

@@ -33,4 +33,8 @@ public interface CommunityPostRepository extends JpaRepository<CommunityPost, In
     List<CommunityPost> searchPostsByCategory(@Param("category") String category, @Param("query") String query);
 
     List<CommunityPost> findTop3ByCategoryAndStatusAndPostIdNotOrderByCreatedAtDesc(String category, String status, Integer postId);
+
+    List<CommunityPost> findByAuthorIdOrderByCreatedAtDesc(Integer authorId);
+
+    List<CommunityPost> findByAuthorIdAndCategoryOrderByCreatedAtDesc(Integer authorId, String category);
 }

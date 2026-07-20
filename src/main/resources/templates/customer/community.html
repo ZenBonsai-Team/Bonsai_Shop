@@ -56,6 +56,12 @@
             <a th:href="@{/community(category='Tất cả', search=${searchQuery})}" 
                th:classappend="${selectedCategory == 'Tất cả'} ? 'active' : ''"
                class="community-tab-btn">Tất cả</a>
+            <a th:href="@{/community(category='Hành trình Bonsai', search=${searchQuery})}" 
+               th:classappend="${selectedCategory == 'Hành trình Bonsai'} ? 'active' : ''"
+               class="community-tab-btn"><i class="fa-solid fa-seedling me-1 text-success"></i> Hành trình Bonsai</a>
+            <a sec:authorize="isAuthenticated()" th:href="@{/community(category='Đã lưu', search=${searchQuery})}" 
+               th:classappend="${selectedCategory == 'Đã lưu'} ? 'active' : ''"
+               class="community-tab-btn"><i class="fa-regular fa-bookmark me-1 text-primary"></i> Đã lưu</a>
             <a th:href="@{/community(category='Kỹ thuật', search=${searchQuery})}" 
                th:classappend="${selectedCategory == 'Kỹ thuật'} ? 'active' : ''"
                class="community-tab-btn">Kỹ thuật</a>
@@ -144,9 +150,11 @@
                 <p class="text-secondary" style="font-size: 0.88rem; line-height: 1.6;">
                     Bonsai Journal là không gian chia sẻ tri thức của những người yêu cây cảnh Việt Nam. Mọi đóng góp đều được duyệt trước khi xuất bản nhằm giữ gìn chất lượng thông tin tốt nhất.
                 </p>
-                <a th:href="@{/community/create}" class="btn-widget-action mt-2">
-                    <i class="fa-solid fa-plus"></i> Gửi bài viết của bạn
-                </a>
+                <div class="pt-2 border-top mt-3">
+                    <span class="text-success small fw-semibold">
+                        <i class="fa-solid fa-shield-halved me-1"></i> Nội quy & Hướng dẫn chia sẻ
+                    </span>
+                </div>
             </div>
             
             <!-- Real YouTube Embed to make the page pop -->

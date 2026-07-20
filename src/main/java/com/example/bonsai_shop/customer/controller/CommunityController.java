@@ -30,6 +30,15 @@ import com.example.bonsai_shop.entity.CommunityPostLike;
 import com.example.bonsai_shop.entity.User;
 import com.example.bonsai_shop.entity.ModerationNotification;
 
+import com.example.bonsai_shop.customer.service.FileStorageService;
+import com.example.bonsai_shop.data.common.CloudinaryFolder;
+import com.example.bonsai_shop.data.dto.CloudinaryUploadResponse;
+import com.example.bonsai_shop.data.service.CloudinaryStorageService;
+import org.springframework.web.multipart.MultipartFile;
+
+import com.example.bonsai_shop.customer.repository.CommunityPostBookmarkRepository;
+import com.example.bonsai_shop.entity.CommunityPostBookmark;
+
 import lombok.RequiredArgsConstructor;
 
 @Controller
@@ -42,6 +51,9 @@ public class CommunityController {
     private final CommunityCommentRepository commentRepository;
     private final CommunityPostLikeRepository likeRepository;
     private final ModerationNotificationRepository notificationRepository;
+    private final CloudinaryStorageService cloudinaryStorageService;
+    private final FileStorageService fileStorageService;
+    private final CommunityPostBookmarkRepository bookmarkRepository;
 
     @GetMapping
     public String community(Model model,
@@ -49,9 +61,22 @@ public class CommunityController {
             @RequestParam(value = "search", required = false) String search,
             @AuthenticationPrincipal UserDetails userDetails) {
 
-        List<CommunityPost> posts;
+        List<CommunityPost> posts = new java.util.ArrayList<>();
 
-        if (category != null && !category.trim().isEmpty() && !category.equals("Tất cả")) {
+        if (category != null && category.trim().equals("Đã lưu")) {
+            if (userDetails != null) {
+                User user = userRepository.findByEmail(userDetails.getUsername()).orElse(null);
+                if (user != null) {
+                    List<CommunityPostBookmark> bookmarks = bookmarkRepository.findByUserIdOrderByCreatedAtDesc(user.getUserId());
+                    List<Integer> postIds = bookmarks.stream().map(CommunityPostBookmark::getPostId).collect(java.util.stream.Collectors.toList());
+                    if (!postIds.isEmpty()) {
+                        posts = postRepository.findAllById(postIds).stream()
+                                .filter(p -> "APPROVED".equals(p.getStatus()))
+                                .collect(java.util.stream.Collectors.toList());
+                    }
+                }
+            }
+        } else if (category != null && !category.trim().isEmpty() && !category.equals("Tất cả")) {
             if (search != null && !search.trim().isEmpty()) {
                 posts = postRepository.searchPostsByCategory(category, search);
             } else {
@@ -109,15 +134,23 @@ public class CommunityController {
         // Lấy bình luận thực tế
         List<CommunityComment> comments = commentRepository.findByPostIdOrderByCreatedAtDesc(id);
 
+        // Đồng bộ số lượng bình luận thực tế trong DB với post.commentsCount
+        if (post.getCommentsCount() == null || post.getCommentsCount() != comments.size()) {
+            post.setCommentsCount(comments.size());
+            postRepository.save(post);
+        }
+
         // Lấy 3 bài viết tương tự cùng danh mục
         List<CommunityPost> relatedPosts = postRepository.findTop3ByCategoryAndStatusAndPostIdNotOrderByCreatedAtDesc(
                 post.getCategory(), "APPROVED", id);
-        // Kiểm tra xem user hiện tại đã like chưa
+        // Kiểm tra xem user hiện tại đã like / bookmark chưa
         boolean isLiked = false;
+        boolean isBookmarked = false;
         if (userDetails != null) {
             User user = userRepository.findByEmail(userDetails.getUsername()).orElse(null);
             if (user != null) {
                 isLiked = likeRepository.findByPostIdAndUserId(id, user.getUserId()).isPresent();
+                isBookmarked = bookmarkRepository.existsByPostIdAndUserId(id, user.getUserId());
             }
         }
 
@@ -125,6 +158,7 @@ public class CommunityController {
         model.addAttribute("comments", comments);
         model.addAttribute("relatedPosts", relatedPosts);
         model.addAttribute("isLiked", isLiked);
+        model.addAttribute("isBookmarked", isBookmarked);
         model.addAttribute("activePage", "community");
         return "customer/community-detail";
     }
@@ -172,7 +206,9 @@ public class CommunityController {
     }
 
     @GetMapping("/create")
-    public String showCreateForm(Model model, @AuthenticationPrincipal UserDetails userDetails) {
+    public String showCreateForm(Model model, 
+                                 @RequestParam(required = false) String category,
+                                 @AuthenticationPrincipal UserDetails userDetails) {
         if (userDetails == null) {
             return "redirect:/login";
         }
@@ -181,13 +217,18 @@ public class CommunityController {
             model.addAttribute("currentUser", user);
         });
 
-        model.addAttribute("post", new CommunityPost());
+        CommunityPost newPost = new CommunityPost();
+        if (category != null && !category.trim().isEmpty()) {
+            newPost.setCategory(category.trim());
+        }
+        model.addAttribute("post", newPost);
         model.addAttribute("activePage", "community");
         return "customer/community-create";
     }
 
     @PostMapping("/create")
     public String createPost(@ModelAttribute("post") CommunityPost post,
+            @RequestParam(value = "imageFile", required = false) MultipartFile imageFile,
             @AuthenticationPrincipal UserDetails userDetails) {
         if (userDetails == null) {
             return "redirect:/login";
@@ -196,7 +237,25 @@ public class CommunityController {
         User user = userRepository.findByEmail(userDetails.getUsername())
                 .orElseThrow(() -> new RuntimeException("Người dùng chưa được xác thực"));
 
+        // Process uploaded image file if provided
+        if (imageFile != null && !imageFile.isEmpty()) {
+            try {
+                CloudinaryUploadResponse response = cloudinaryStorageService.uploadImage(imageFile, CloudinaryFolder.COMMUNITY);
+                if (response != null && response.getUrl() != null) {
+                    post.setImageUrl(response.getUrl());
+                }
+            } catch (Exception e) {
+                try {
+                    String localUrl = fileStorageService.storeAvatar(imageFile);
+                    post.setImageUrl(localUrl);
+                } catch (Exception ex) {
+                    // Ignore, fallback to entered URL or default
+                }
+            }
+        }
+
         // Set author info from logged in user
+        post.setAuthorId(user.getUserId());
         post.setAuthorName(
                 user.getFullName() != null && !user.getFullName().isEmpty() ? user.getFullName() : user.getUsername());
 
@@ -271,6 +330,7 @@ public class CommunityController {
 
         CommunityComment comment = CommunityComment.builder()
                 .postId(id)
+                .userId(user.getUserId())
                 .authorName(authorName)
                 .authorAvatar(avatar)
                 .content(content.trim())
@@ -283,16 +343,54 @@ public class CommunityController {
         post.setCommentsCount(post.getCommentsCount() + 1);
         postRepository.save(post);
 
+        boolean isAuthor = (post.getAuthorId() != null && post.getAuthorId().equals(user.getUserId()))
+                || (post.getAuthorName() != null && post.getAuthorName().equalsIgnoreCase(authorName));
+
         response.put("success", true);
         response.put("commentsCount", post.getCommentsCount());
         response.put("authorName", authorName);
         response.put("authorAvatar", avatar);
         response.put("content", comment.getContent());
+        response.put("isAuthor", isAuthor);
         
         // Định dạng ngày hiển thị thân thiện
         java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
         response.put("createdAt", comment.getCreatedAt().format(formatter));
 
+        return ResponseEntity.ok(response);
+    }
+
+    // ===== LƯU BÀI VIẾT / BỎ LƯU BÀI VIẾT (TOGGLE - AJAX API) =====
+    @PostMapping("/post/{id}/bookmark")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> bookmarkPost(
+            @PathVariable("id") Integer id,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        Map<String, Object> response = new HashMap<>();
+        if (userDetails == null) {
+            response.put("success", false);
+            response.put("message", "Bạn cần đăng nhập để lưu bài viết.");
+            return ResponseEntity.status(401).body(response);
+        }
+        User user = userRepository.findByEmail(userDetails.getUsername())
+                .orElseThrow(() -> new RuntimeException("Người dùng không tồn tại"));
+
+        var existingBookmark = bookmarkRepository.findByPostIdAndUserId(id, user.getUserId());
+        boolean isBookmarked;
+        if (existingBookmark.isPresent()) {
+            bookmarkRepository.delete(existingBookmark.get());
+            isBookmarked = false;
+        } else {
+            bookmarkRepository.save(CommunityPostBookmark.builder()
+                    .postId(id)
+                    .userId(user.getUserId())
+                    .build());
+            isBookmarked = true;
+        }
+
+        response.put("success", true);
+        response.put("bookmarked", isBookmarked);
+        response.put("message", isBookmarked ? "Đã lưu bài viết thành công!" : "Đã bỏ lưu bài viết!");
         return ResponseEntity.ok(response);
     }
 }

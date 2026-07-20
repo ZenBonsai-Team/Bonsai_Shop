@@ -12,11 +12,21 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.example.bonsai_shop.customer.repository.CommunityPostRepository;
+import com.example.bonsai_shop.entity.CommunityPost;
+import java.util.List;
+
+import com.example.bonsai_shop.customer.repository.CommunityPostBookmarkRepository;
+import com.example.bonsai_shop.entity.CommunityPostBookmark;
+import java.util.stream.Collectors;
+
 @Controller
 @RequiredArgsConstructor
 public class ProfileController {
 
     private final UserService userService;
+    private final CommunityPostRepository communityPostRepository;
+    private final CommunityPostBookmarkRepository bookmarkRepository;
 
     @GetMapping("/profile")
     public String viewProfile(@AuthenticationPrincipal UserDetails userDetails, Model model) {
@@ -26,7 +36,16 @@ public class ProfileController {
         // Lấy thông tin đầy đủ từ database
         User user = userService.getCurrentUserProfile(email);
 
+        List<CommunityPost> myBonsaiPosts = communityPostRepository.findByAuthorIdOrderByCreatedAtDesc(user.getUserId());
+
+        // Lấy các bài viết đã lưu (saved / bookmarked)
+        List<CommunityPostBookmark> bookmarks = bookmarkRepository.findByUserIdOrderByCreatedAtDesc(user.getUserId());
+        List<Integer> savedPostIds = bookmarks.stream().map(CommunityPostBookmark::getPostId).collect(Collectors.toList());
+        List<CommunityPost> savedPosts = savedPostIds.isEmpty() ? List.of() : communityPostRepository.findAllById(savedPostIds);
+
         model.addAttribute("user", user);
+        model.addAttribute("myBonsaiPosts", myBonsaiPosts);
+        model.addAttribute("savedPosts", savedPosts);
         return "customer/profile"; // templates/customer/profile.html
     }
 

@@ -18,6 +18,9 @@ public class CommunityPost {
     @Column(name = "PostID")
     private Integer postId;
 
+    @Column(name = "AuthorID")
+    private Integer authorId;
+
     @Column(name = "Title", nullable = false, length = 255)
     private String title;
 
