@@ -69,13 +69,13 @@
             <!-- Right Side: Author Information Card -->
             <div class="col-lg-4 mt-3 mt-lg-0">
                 <div class="author-info-card p-4 border rounded-3 bg-white shadow-sm" style="border-color: #EAEAEA !important;">
-                    <div class="d-flex align-items-center gap-3 mb-3">
+                    <a th:href="${post.authorId != null ? '/community/author/' + post.authorId : '/community?search=' + post.authorName}" class="d-flex align-items-center gap-3 mb-3 text-decoration-none">
                         <img th:src="${post.authorAvatar != null && !post.authorAvatar.isEmpty() ? post.authorAvatar : 'https://ui-avatars.com/api/?name=' + post.authorName}" alt="Avatar" class="rounded-circle border" style="width: 48px; height: 48px; object-fit: cover;">
                         <div>
                             <h5 class="mb-0 fw-bold text-dark" style="font-size: 0.95rem; font-family: var(--font-sans);" th:text="${post.authorName}">InBonsai Team</h5>
-                            <span class="text-muted small" style="font-size: 0.78rem;">Tác giả cộng đồng</span>
+                            <span class="text-muted small" style="font-size: 0.78rem;">Tác giả bài viết • Xem hồ sơ <i class="fa-solid fa-angle-right small"></i></span>
                         </div>
-                    </div>
+                    </a>
 
                     <!-- Statistics table -->
                     <div class="row text-center py-2 mb-3 border-top border-bottom" style="font-family: var(--font-sans); background-color: #FAFAFA; margin: 0 -12px;">

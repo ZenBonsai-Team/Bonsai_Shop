@@ -12,6 +12,8 @@ public interface CommunityPostLikeRepository extends JpaRepository<CommunityPost
     /** Check if a specific user has already liked a post */
     Optional<CommunityPostLike> findByPostIdAndUserId(Integer postId, Integer userId);
 
+    java.util.List<CommunityPostLike> findByUserId(Integer userId);
+
     /** Count total likes for a post */
     long countByPostId(Integer postId);
 }

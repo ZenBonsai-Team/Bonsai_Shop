@@ -90,6 +90,9 @@ public class CommunityController {
             }
         }
 
+        java.util.Set<Integer> likedPostIds = new java.util.HashSet<>();
+        java.util.Set<Integer> bookmarkedPostIds = new java.util.HashSet<>();
+
         // Add info to check if user is logged in (for UI controls)
         if (userDetails != null) {
             userRepository.findByEmail(userDetails.getUsername()).ifPresent(user -> {
@@ -97,8 +100,23 @@ public class CommunityController {
                 // Fetch notifications for current user
                 List<ModerationNotification> notifications = notificationRepository.findByTargetUsernameOrderByCreatedAtDesc(user.getFullName());
                 model.addAttribute("moderationNotifications", notifications);
+
+                // Fetch user's liked and bookmarked post IDs for instant feed UI state
+                likeRepository.findByUserId(user.getUserId()).forEach(l -> likedPostIds.add(l.getPostId()));
+                bookmarkRepository.findByUserIdOrderByCreatedAtDesc(user.getUserId()).forEach(b -> bookmarkedPostIds.add(b.getPostId()));
             });
         }
+
+        // Fetch dynamic Artisans from DB for Featured Artisans Widget (RoleID = 3 is ROLE_ARTISAN)
+        // Ordered by total approved posts and sum of likes dynamically
+        List<User> featuredArtisans = userRepository.findFeaturedArtisans();
+        if (featuredArtisans.isEmpty()) {
+            featuredArtisans = userRepository.findByRoleRoleId(3);
+        }
+        model.addAttribute("featuredArtisans", featuredArtisans);
+
+        model.addAttribute("likedPostIds", likedPostIds);
+        model.addAttribute("bookmarkedPostIds", bookmarkedPostIds);
 
         model.addAttribute("posts", posts);
         model.addAttribute("selectedCategory", category != null ? category : "Tất cả");
@@ -106,6 +124,68 @@ public class CommunityController {
         model.addAttribute("activePage", "community");
 
         return "customer/community";
+    }
+
+    // ===== TRANG HỒ SƠ TÁC GIẢ BÀI VIẾT (PUBLIC AUTHOR PROFILE) =====
+    @GetMapping("/author/{identifier}")
+    public String viewAuthorProfile(@PathVariable("identifier") String identifier, Model model,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        User author = null;
+        Integer authorId = null;
+        String authorName = identifier;
+
+        // 1. Try parsing as integer user ID first
+        try {
+            authorId = Integer.parseInt(identifier);
+            author = userRepository.findById(authorId).orElse(null);
+            if (author != null) {
+                authorName = author.getFullName();
+            }
+        } catch (NumberFormatException e) {
+            // Identifier is a string name
+        }
+
+        // 2. If not found by ID, try searching by full name in user list
+        if (author == null) {
+            List<User> allUsers = userRepository.findAll();
+            for (User u : allUsers) {
+                if (u.getFullName() != null && (u.getFullName().equalsIgnoreCase(identifier) || u.getEmail().equalsIgnoreCase(identifier))) {
+                    author = u;
+                    authorId = u.getUserId();
+                    authorName = u.getFullName();
+                    break;
+                }
+            }
+        }
+
+        // 3. If still no User entity found, fallback to virtual author object
+        if (author == null) {
+            author = new User();
+            author.setUserId(authorId != null ? authorId : 0);
+            author.setFullName(authorName);
+            author.setAddress("Việt Nam");
+            author.setAvatar("https://ui-avatars.com/api/?name=" + java.net.URLEncoder.encode(authorName, java.nio.charset.StandardCharsets.UTF_8));
+        }
+
+        // 4. Fetch posts by authorId or by authorName
+        List<CommunityPost> authorPosts = new java.util.ArrayList<>();
+        if (authorId != null && authorId > 0) {
+            authorPosts = postRepository.findByAuthorIdOrderByCreatedAtDesc(authorId);
+        }
+        if (authorPosts.isEmpty() && authorName != null) {
+            authorPosts = postRepository.findByAuthorNameOrderByCreatedAtDesc(authorName);
+        }
+
+        if (userDetails != null) {
+            userRepository.findByEmail(userDetails.getUsername()).ifPresent(user -> {
+                model.addAttribute("currentUser", user);
+            });
+        }
+
+        model.addAttribute("author", author);
+        model.addAttribute("authorPosts", authorPosts);
+        model.addAttribute("activePage", "community");
+        return "customer/author-profile";
     }
 
     @GetMapping("/post/{id}")
