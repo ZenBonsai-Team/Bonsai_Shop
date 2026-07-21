@@ -31,3 +31,6 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# Bảo mật - không push lên GitHub
+src/main/resources/application-local.properties

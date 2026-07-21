@@ -156,3 +156,9 @@ tbody tr:hover {
 }
 .btn-lock { background: #e74c3c; }
 .btn-unlock { background: #27ae60; }
+
+.owner-protected {
+    color: #777;
+    font-size: 12px;
+    font-weight: 600;
+}

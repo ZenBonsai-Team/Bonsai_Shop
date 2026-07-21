@@ -1,4 +1,4 @@
-package com.example.bonsai_shop.admin.controller;
+package com.example.bonsai_shop.owner.controller;
 
 import com.example.bonsai_shop.entity.User;
 import org.springframework.security.access.prepost.PreAuthorize;

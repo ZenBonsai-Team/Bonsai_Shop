@@ -1,5 +1,6 @@
 package com.example.bonsai_shop.config;
 
+import com.example.bonsai_shop.customer.service.CustomOAuth2UserService;
 import com.example.bonsai_shop.customer.service.CustomUserDetailsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -19,6 +20,7 @@ import org.springframework.security.web.authentication.AuthenticationSuccessHand
 public class SecurityConfig {
 
         private final CustomUserDetailsService customUserDetailsService;
+        private final CustomOAuth2UserService customOAuth2UserService;
 
         @Bean
         public PasswordEncoder passwordEncoder() {
@@ -57,8 +59,8 @@ public class SecurityConfig {
                                                                 "/api/orders/**", // ← tạm thời cho phép để test API con
                                                                 "/api/products/**" // ← cho phép lấy thông tin chi tiết sản phẩm
                                                 ).permitAll()
-                                                 // Chỉ OWNER mới vào được /admin/**
-                                                 .requestMatchers("/admin/**").hasRole("OWNER")
+                                                 // Chỉ OWNER mới vào được /owner/**
+                                                 .requestMatchers("/owner/**").hasRole("OWNER")
                                                  // Chỉ CONTENT_MODERATOR mới vào được /moderator/community/**
                                                  .requestMatchers("/moderator/community/**").hasRole("CONTENT_MODERATOR")
                                                  // Chỉ MODERATOR mới vào được /moderator/**
@@ -83,6 +85,14 @@ public class SecurityConfig {
                                                 .successHandler(roleBasedSuccessHandler())
                                                 .failureUrl("/login?error") // login sai về trang này
                                                 .permitAll())
+                                .oauth2Login(oauth2 -> oauth2
+                                                .loginPage("/login")               // dùng chung trang login
+                                                .successHandler(roleBasedSuccessHandler())
+                                                .failureUrl("/login?error")
+                                                .userInfoEndpoint(userInfo -> userInfo
+                                                .userService(customOAuth2UserService)
+                                )
+                        )
                                 .logout(logout -> logout
                                                 .logoutUrl("/logout")
                                                 .logoutSuccessUrl("/login?logout")
@@ -108,7 +118,7 @@ public class SecurityConfig {
                             || "ACTION_ORDER_VIEW_ALL".equals(authority.getAuthority()));
 
             if (isOwner) {
-                response.sendRedirect("/admin");
+                response.sendRedirect("/owner");
             } else if (isContentModerator) {
                 response.sendRedirect("/moderator/community");
             } else if (isModerator) {

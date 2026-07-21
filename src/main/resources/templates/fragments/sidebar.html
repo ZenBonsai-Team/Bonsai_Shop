@@ -18,13 +18,13 @@
         <nav class="sidebar-nav">
             <!-- 1. OWNER (ADMIN) MENU -->
             <th:block sec:authorize="hasRole('OWNER')">
-                <a th:href="@{/admin}" 
+                <a th:href="@{/owner}"
                    class="sidebar-nav-item" 
                    th:classappend="${activePage == 'dashboard' ? 'active' : ''}">
                     <span class="nav-icon"><i class="fa-solid fa-gauge"></i></span>
                     <span>Bảng điều khiển</span>
                 </a>
-                <a th:href="@{/admin/users}" 
+                <a th:href="@{/owner/users}"
                    class="sidebar-nav-item" 
                    th:classappend="${activePage == 'users' ? 'active' : ''}">
                     <span class="nav-icon"><i class="fa-solid fa-users"></i></span>
