@@ -88,7 +88,8 @@ public class AdminCommunityController {
         model.addAttribute("commentCurrentPage", commentPage);
         model.addAttribute("commentTotalPages", commentsPage.getTotalPages());
 
-        return "admin/community_management";
+        return "owner/community_management";
+
     }
 
     @PostMapping("/comments/{id}/approve")
