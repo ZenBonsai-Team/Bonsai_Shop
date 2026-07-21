@@ -9,809 +9,263 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
-        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap"
-        rel="stylesheet">
+            href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap"
+            rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" th:href="@{/css/common.css}">
     <link rel="stylesheet" th:href="@{/css/dashboard-layout.css}">
     <link rel="stylesheet" th:href="@{/css/artisan.css}">
-    <style>
-        /* =========================================================
-           Phần style bổ sung chỉ dành cho trang Manage Schedule
-           (dùng tên class có tiền tố "sch-" để không xung đột)
-           ========================================================= */
-
-        /* --- Thẻ KPI (4 ô thống kê) --- */
-        .sch-kpi-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 16px;
-            margin-bottom: 24px;
-        }
-
-        @media (max-width: 900px) {
-            .sch-kpi-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-
-        @media (max-width: 520px) {
-            .sch-kpi-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        .sch-kpi-card {
-            background: #fff;
-            border-radius: 14px;
-            padding: 18px 20px;
-            box-shadow: 0 4px 16px rgba(28, 51, 34, .06);
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            border: 1px solid #E8E4DD;
-        }
-
-        .sch-kpi-top {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .sch-kpi-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.1rem;
-        }
-
-        .sch-kpi-icon.green {
-            background: #d1fae5;
-            color: #065f46;
-        }
-
-        .sch-kpi-icon.blue {
-            background: #dbeafe;
-            color: #1d4ed8;
-        }
-
-        .sch-kpi-icon.amber {
-            background: #fef3c7;
-            color: #92400e;
-        }
-
-        .sch-kpi-icon.rose {
-            background: #ffe4e6;
-            color: #9f1239;
-        }
-
-        .sch-kpi-badge {
-            font-size: .72rem;
-            font-weight: 700;
-            padding: 3px 10px;
-            border-radius: 999px;
-        }
-
-        .sch-kpi-badge.green {
-            background: #d1fae5;
-            color: #065f46;
-        }
-
-        .sch-kpi-badge.blue {
-            background: #dbeafe;
-            color: #1d4ed8;
-        }
-
-        .sch-kpi-badge.amber {
-            background: #fef3c7;
-            color: #92400e;
-        }
-
-        .sch-kpi-val {
-            font-size: 2rem;
-            font-weight: 700;
-            color: #1C3322;
-            margin: 0;
-            line-height: 1;
-        }
-
-        .sch-kpi-label {
-            font-size: .82rem;
-            color: #536257;
-            margin: 4px 0 0;
-        }
-
-        /* --- Overview (Calendar + Day panel) --- */
-        .sch-overview {
-            display: grid;
-            grid-template-columns: 1fr 320px;
-            gap: 20px;
-            margin-bottom: 24px;
-        }
-
-        @media (max-width: 860px) {
-            .sch-overview {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        /* Calendar */
-        .sch-calendar-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 14px;
-        }
-
-        .sch-calendar-header h3 {
-            font-size: .95rem;
-            font-weight: 700;
-            color: #1C3322;
-            margin: 0;
-        }
-
-        .sch-nav-group {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .sch-nav-btn {
-            border: 1px solid #E8E4DD;
-            background: #FAF8F5;
-            color: #536257;
-            border-radius: 8px;
-            width: 30px;
-            height: 30px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all .2s;
-            font-size: .8rem;
-            padding: 0;
-        }
-
-        .sch-nav-btn:hover {
-            background: #1C3322;
-            color: #fff;
-            border-color: #1C3322;
-        }
-
-        .current-month {
-            font-size: .85rem;
-            font-weight: 700;
-            color: #1C3322;
-            min-width: 126px;
-            text-align: center;
-        }
-
-        .weekdays {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            text-align: center;
-            font-size: .7rem;
-            font-weight: 700;
-            color: #B8926A;
-            letter-spacing: .5px;
-            text-transform: uppercase;
-            margin-bottom: 8px;
-        }
-
-        .calendar-grid {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 3px;
-        }
-
-        /* Day panel */
-        .appointment-list {
-            list-style: none;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        /* --- Toolbar --- */
-        .sch-toolbar {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-            margin-bottom: 0;
-            flex-wrap: wrap;
-            padding: 16px 18px 14px;
-        }
-
-        .sch-search {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            border: 1px solid #E8E4DD;
-            border-radius: 8px;
-            padding: 8px 12px;
-            flex: 1;
-            min-width: 200px;
-            background: #FAF8F5;
-        }
-
-        .sch-search i {
-            color: #B8926A;
-            font-size: .9rem;
-        }
-
-        .sch-search input {
-            border: none;
-            outline: none;
-            background: transparent;
-            font-size: .86rem;
-            width: 100%;
-            color: #1E221F;
-            font-family: inherit;
-            padding: 0;
-        }
-
-        .sch-select {
-            border: 1px solid #E8E4DD;
-            border-radius: 8px;
-            padding: 8px 12px;
-            font-size: .86rem;
-            color: #1E221F;
-            background: #FAF8F5;
-            outline: none;
-            cursor: pointer;
-            font-family: inherit;
-        }
-
-        .sch-select:focus {
-            border-color: #1C3322;
-        }
-
-        /* --- Bảng lịch hẹn --- */
-        .sch-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        .sch-table thead {
-            background: #F4F1EA;
-        }
-
-        .sch-table th {
-            padding: 11px 16px;
-            font-size: .75rem;
-            font-weight: 700;
-            color: #536257;
-            text-transform: uppercase;
-            letter-spacing: .5px;
-            border-bottom: 1px solid #E8E4DD;
-            text-align: left;
-        }
-
-        .sch-table td {
-            padding: 12px 16px;
-            font-size: .86rem;
-            color: #1E221F;
-            border-bottom: 1px solid #F4F1EA;
-            vertical-align: middle;
-        }
-
-        .sch-table tbody tr:last-child td {
-            border-bottom: none;
-        }
-
-        .sch-table tbody tr:hover td {
-            background: #FAF8F5;
-        }
-
-        /* Status badge */
-        .status-badge {
-            display: inline-block;
-            padding: 3px 10px;
-            border-radius: 999px;
-            font-size: .73rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: .4px;
-        }
-
-        .status-badge.pending {
-            background: #fef3c7;
-            color: #92400e;
-        }
-
-        .status-badge.approved {
-            background: #d1fae5;
-            color: #065f46;
-        }
-
-        .status-badge.rejected {
-            background: #fee2e2;
-            color: #991b1b;
-        }
-
-        .status-badge.cancelled {
-            background: #f3f4f6;
-            color: #6b7280;
-        }
-
-        /* Edit button */
-        .sch-edit-btn {
-            width: 32px;
-            height: 32px;
-            border: 1px solid #E8E4DD;
-            border-radius: 8px;
-            background: #FAF8F5;
-            color: #1C3322;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all .18s;
-            padding: 0;
-            font-size: .85rem;
-        }
-
-        .sch-edit-btn:hover {
-            background: #1C3322;
-            color: #fff;
-            border-color: #1C3322;
-        }
-
-        /* =========================================================
-           Modal cập nhật trạng thái – theo style artisan-action-modal
-           ========================================================= */
-        .sch-modal-backdrop {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(22, 24, 24, .58);
-            z-index: 3000;
-            align-items: center;
-            justify-content: center;
-            padding: 24px;
-        }
-
-        .sch-modal-backdrop.show {
-            display: flex;
-        }
-
-        .sch-modal {
-            background: #fff;
-            border-radius: 16px;
-            box-shadow: 0 24px 70px rgba(0, 0, 0, .28);
-            width: min(540px, 100%);
-            overflow: hidden;
-        }
-
-        .sch-modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: #F3EFE7;
-            border-bottom: 1px solid #E8E4DD;
-            padding: 18px 22px;
-        }
-
-        .sch-modal-header h2 {
-            font-size: 1.05rem;
-            font-weight: 800;
-            color: #1C3322;
-            margin: 0;
-        }
-
-        .sch-modal-close {
-            background: transparent;
-            border: none;
-            color: #77736a;
-            font-size: 1.6rem;
-            line-height: 1;
-            cursor: pointer;
-            padding: 0;
-        }
-
-        .sch-modal-close:hover {
-            color: #1C3322;
-        }
-
-        .sch-modal-body {
-            padding: 22px;
-        }
-
-        /* Info grid 2 cột */
-        .sch-info-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px 20px;
-            background: #FAF8F5;
-            border: 1px solid #EFE9DF;
-            border-radius: 12px;
-            padding: 16px;
-            margin-bottom: 20px;
-        }
-
-        .sch-info-row {
-            display: flex;
-            flex-direction: column;
-            gap: 3px;
-        }
-
-        .sch-info-row label {
-            font-size: .7rem;
-            color: #B8926A;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: .5px;
-        }
-
-        .sch-info-row span {
-            font-size: .88rem;
-            color: #1C3322;
-            font-weight: 600;
-        }
-
-        .sch-info-full {
-            grid-column: 1 / -1;
-        }
-
-        /* Status select area */
-        .sch-status-area {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .sch-status-area>label {
-            font-size: .84rem;
-            font-weight: 700;
-            color: #1E221F;
-        }
-
-        .sch-status-area select,
-        .sch-status-area textarea {
-            width: 100%;
-            border: 1px solid #E8E4DD;
-            border-radius: 8px;
-            padding: 9px 12px;
-            font-size: .86rem;
-            font-family: inherit;
-            color: #1E221F;
-            outline: none;
-            background: #FAF8F5;
-        }
-
-        .sch-status-area select:focus,
-        .sch-status-area textarea:focus {
-            border-color: #1C3322;
-        }
-
-        .sch-status-area textarea {
-            resize: vertical;
-        }
-
-        .sch-status-msg {
-            display: none;
-            font-size: .82rem;
-            color: #92400e;
-            background: #fef3c7;
-            border: 1px solid #F4D49B;
-            border-radius: 8px;
-            padding: 9px 12px;
-        }
-
-        .sch-status-msg.visible {
-            display: block;
-        }
-
-        .sch-modal-footer {
-            display: flex;
-            gap: 12px;
-            justify-content: flex-end;
-            background: #F8F9FA;
-            border-top: 1px solid #E8E4DD;
-            padding: 16px 22px;
-        }
-    </style>
+    <link rel="stylesheet" th:href="@{/css/manage_schedule.css}">
 </head>
 
 <body>
-    <div class="dashboard-layout">
-        <div th:replace="~{fragments/sidebar :: sidebar('artisan-appointments')}"></div>
+<div class="dashboard-layout">
+    <div th:replace="~{fragments/sidebar :: sidebar('artisan-appointments')}"></div>
 
-        <main class="dashboard-main">
-            <header th:replace="~{fragments/header :: header}"></header>
+    <main class="dashboard-main">
+        <header th:replace="~{fragments/header :: header}"></header>
 
-            <div class="dashboard-content">
+        <div class="dashboard-content">
+            <header class="page-header">
+                <div>
+                    <h1>Quản lý lịch hẹn</h1>
+                    <p>Theo dõi và cập nhật trạng thái các lịch hẹn xem bonsai từ khách hàng.</p>
+                </div>
+            </header>
 
-                <!-- ===== Page header ===== -->
-                <header class="page-header">
+            <div th:if="${success}" class="alert success" th:text="${success}"></div>
+            <div th:if="${error}" class="alert error" th:text="${error}"></div>
+
+            <section class="sch-kpi-grid">
+                <article class="sch-kpi-card">
+                    <div class="sch-kpi-top">
+                        <div class="sch-kpi-icon green"><i class="fa-solid fa-calendar-days"></i></div>
+                        <span class="sch-kpi-badge green" id="totalPercent">0%</span>
+                    </div>
                     <div>
-                        <h1>Quản lý lịch hẹn</h1>
-                        <p>Theo dõi và cập nhật trạng thái các lịch hẹn xem bonsai từ khách hàng.</p>
+                        <p class="sch-kpi-val" id="statTotal">0</p>
+                        <p class="sch-kpi-label">Tổng lịch hẹn</p>
                     </div>
-                </header>
+                </article>
 
-                <!-- Alert -->
-                <div th:if="${success}" class="alert success" th:text="${success}"></div>
-                <div th:if="${error}" class="alert error" th:text="${error}"></div>
+                <article class="sch-kpi-card">
+                    <div class="sch-kpi-top">
+                        <div class="sch-kpi-icon blue"><i class="fa-solid fa-clock"></i></div>
+                        <span class="sch-kpi-badge blue">Hôm nay</span>
+                    </div>
+                    <div>
+                        <p class="sch-kpi-val" id="statToday">0</p>
+                        <p class="sch-kpi-label">Lịch hẹn hôm nay</p>
+                    </div>
+                </article>
 
-                <!-- ===== 4 KPI cards ===== -->
-                <section class="sch-kpi-grid">
-                    <article class="sch-kpi-card">
-                        <div class="sch-kpi-top">
-                            <div class="sch-kpi-icon green"><i class="fa-solid fa-calendar-days"></i></div>
-                            <span class="sch-kpi-badge green" id="totalPercent">+0%</span>
-                        </div>
-                        <div>
-                            <p class="sch-kpi-val" id="statTotal">0</p>
-                            <p class="sch-kpi-label">Tổng lịch hẹn</p>
-                        </div>
-                    </article>
-                    <article class="sch-kpi-card">
-                        <div class="sch-kpi-top">
-                            <div class="sch-kpi-icon blue"><i class="fa-solid fa-clock"></i></div>
-                            <span class="sch-kpi-badge blue">Hôm nay</span>
-                        </div>
-                        <div>
-                            <p class="sch-kpi-val" id="statToday">0</p>
-                            <p class="sch-kpi-label">Lịch hẹn hôm nay</p>
-                        </div>
-                    </article>
-                    <article class="sch-kpi-card">
-                        <div class="sch-kpi-top">
-                            <div class="sch-kpi-icon green"><i class="fa-solid fa-circle-check"></i></div>
-                            <span class="sch-kpi-badge green" id="approvedPercent">0%</span>
-                        </div>
-                        <div>
-                            <p class="sch-kpi-val" id="statApproved">0</p>
-                            <p class="sch-kpi-label">Đã duyệt</p>
-                        </div>
-                    </article>
-                    <article class="sch-kpi-card">
-                        <div class="sch-kpi-top">
-                            <div class="sch-kpi-icon amber"><i class="fa-solid fa-hourglass-half"></i></div>
-                            <span class="sch-kpi-badge amber" id="pendingPercent">0%</span>
-                        </div>
-                        <div>
-                            <p class="sch-kpi-val" id="statPending">0</p>
-                            <p class="sch-kpi-label">Chờ duyệt</p>
-                        </div>
-                    </article>
-                </section>
+                <article class="sch-kpi-card">
+                    <div class="sch-kpi-top">
+                        <div class="sch-kpi-icon green"><i class="fa-solid fa-circle-check"></i></div>
+                        <span class="sch-kpi-badge green" id="approvedPercent">0%</span>
+                    </div>
+                    <div>
+                        <p class="sch-kpi-val" id="statApproved">0</p>
+                        <p class="sch-kpi-label">Đã duyệt</p>
+                    </div>
+                </article>
 
-                <!-- ===== Calendar + Day panel ===== -->
-                <div class="sch-overview">
-                    <!-- Calendar -->
-                    <article class="portal-card">
-                        <div class="sch-calendar-header">
-                            <h3><i class="fa-regular fa-calendar me-2" style="color:#B8926A;"></i>Lịch</h3>
-                            <div class="sch-nav-group">
-                                <button id="prevMonth" class="sch-nav-btn" aria-label="Tháng trước">
-                                    <i class="fa-solid fa-chevron-left"></i>
-                                </button>
-                                <span class="current-month"></span>
-                                <button id="nextMonth" class="sch-nav-btn" aria-label="Tháng sau">
-                                    <i class="fa-solid fa-chevron-right"></i>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="weekdays">
-                            <span>T2</span><span>T3</span><span>T4</span><span>T5</span><span>T6</span><span>T7</span><span>CN</span>
-                        </div>
-                        <div class="calendar-grid"></div>
-                    </article>
+                <article class="sch-kpi-card">
+                    <div class="sch-kpi-top">
+                        <div class="sch-kpi-icon amber"><i class="fa-solid fa-hourglass-half"></i></div>
+                        <span class="sch-kpi-badge amber" id="pendingPercent">0%</span>
+                    </div>
+                    <div>
+                        <p class="sch-kpi-val" id="statPending">0</p>
+                        <p class="sch-kpi-label">Chờ duyệt</p>
+                    </div>
+                </article>
+            </section>
 
-                    <!-- Day panel -->
-                    <article class="portal-card">
-                        <h3 id="todayPanelTitle"
-                            style="font-size:.95rem;font-weight:700;color:#1C3322;margin:0 0 14px;">
-                            Lịch hẹn hôm nay
-                        </h3>
-                        <ul class="appointment-list" id="todayAppointments"></ul>
-                    </article>
-                </div>
-
-                <!-- ===== Table card ===== -->
-                <section class="portal-card" style="padding: 0; overflow: hidden;">
-                    <!-- Toolbar -->
-                    <div class="sch-toolbar">
-                        <div class="sch-search">
-                            <i class="fa-solid fa-magnifying-glass"></i>
-                            <input type="text" id="searchInput" placeholder="Tìm theo tên, mã bonsai..."
-                                aria-label="Tìm kiếm">
+            <div class="sch-overview">
+                <article class="portal-card">
+                    <div class="sch-calendar-header">
+                        <h3><i class="fa-regular fa-calendar me-2 sch-title-icon"></i>Lịch</h3>
+                        <div class="sch-nav-group">
+                            <button id="prevMonth" class="sch-nav-btn" type="button" aria-label="Tháng trước">
+                                <i class="fa-solid fa-chevron-left"></i>
+                            </button>
+                            <span class="current-month"></span>
+                            <button id="nextMonth" class="sch-nav-btn" type="button" aria-label="Tháng sau">
+                                <i class="fa-solid fa-chevron-right"></i>
+                            </button>
                         </div>
-                        <select id="statusFilter" class="sch-select" aria-label="Lọc trạng thái">
-                            <option value="ALL">Tất cả trạng thái</option>
-                            <option value="PENDING">PENDING</option>
-                            <option value="APPROVED">APPROVED</option>
-                            <option value="REJECTED">REJECTED</option>
-                            <option value="CANCELLED">CANCELLED</option>
-                        </select>
                     </div>
 
-                    <!-- Table -->
-                    <div style="overflow-x: auto;">
-                        <table class="sch-table">
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Khách hàng</th>
-                                    <th>Bonsai</th>
-                                    <th>Ngày</th>
-                                    <th>Giờ</th>
-                                    <th>Trạng thái</th>
-                                    <th>Hành động</th>
-                                </tr>
-                            </thead>
-                            <tbody id="appointmentTableBody">
-                            <tr th:each="appointment : ${appointments}"
-                                th:data-id="${appointment.appointmentId}"
-                                th:data-phone="${appointment.customerPhone}"
-                                th:data-email="${appointment.customerEmail}"
-                                th:data-note="${appointment.note}"> <!-- Đưa data-* lên đây -->
-
-                                <td><strong th:text="${appointment.appointmentId}">1</strong></td>
-                                <td th:text="${appointment.customerName}">Nguyễn Văn A</td>
-                                <td>
-                                    <span th:text="${appointment.productCode}">BS-001</span> -
-                                    <span th:text="${appointment.productName}">Bonsai Tùng</span>
-                                </td>
-                                <td th:text="${#temporals.format(appointment.appointmentDate,'dd/MM/yyyy')}">19/07/2026</td>
-                                <td th:text="${#temporals.format(appointment.appointmentDate,'HH:mm')}">14:00</td>
-                                <td>
-            <span class="status-badge"
-                  th:classappend="${#strings.toLowerCase(appointment.status)}"
-                  th:text="${appointment.status}">PENDING</span>
-                                </td>
-                                <td class="table-actions">
-                                    <!-- PENDING -->
-                                    <button th:if="${appointment.status == 'PENDING'}"
-                                            class="sch-edit-btn edit-btn"
-                                            th:data-id="${appointment.appointmentId}">
-                                        <i class="fa-solid fa-pen-to-square"></i>
-                                    </button>
-
-                                    <!-- APPROVED (Đổi từ thẻ <form> cũ sang nút bấm gọi JS) -->
-                                    <button th:if="${appointment.status == 'APPROVED'}"
-                                            type="button"
-                                            class="btn btn-success"
-                                            th:onclick="'submitCompleteForm(' + ${appointment.appointmentId} + ')'">
-                                        Complete
-                                    </button>
-
-                                    <!-- COMPLETED -->
-                                    <span th:if="${appointment.status == 'COMPLETED'}" class="badge bg-success">Completed</span>
-                                    <!-- REJECTED -->
-                                    <span th:if="${appointment.status == 'REJECTED'}" class="badge bg-danger">Rejected</span>
-                                    <!-- CANCELLED -->
-                                    <span th:if="${appointment.status == 'CANCELLED'}" class="badge bg-secondary">Cancelled</span>
-                                </td>
-                            </tr>
-                            </tbody>
-                        </table>
+                    <div class="weekdays" aria-hidden="true">
+                        <span>T2</span><span>T3</span><span>T4</span><span>T5</span><span>T6</span><span>T7</span><span>CN</span>
                     </div>
-                </section>
+                    <div class="calendar-grid"></div>
+                </article>
 
-            </div><!-- /.dashboard-content -->
-        </main>
-    </div><!-- /.dashboard-layout -->
-
-    <!-- ===== Modal cập nhật trạng thái ===== -->
-    <div id="editModal" class="sch-modal-backdrop">
-        <div class="sch-modal">
-
-            <!-- Header -->
-            <div class="sch-modal-header">
-                <h2><i class="fa-solid fa-calendar-pen me-2"></i>Cập nhật trạng thái lịch hẹn</h2>
-                <button type="button" id="closeModal" class="sch-modal-close" aria-label="Đóng">×</button>
+                <article class="portal-card">
+                    <h3 id="todayPanelTitle" class="sch-day-title">Lịch hẹn hôm nay</h3>
+                    <ul class="appointment-list" id="todayAppointments"></ul>
+                </article>
             </div>
 
-            <!-- Body -->
-            <div class="sch-modal-body">
-                <!-- Thông tin lịch hẹn -->
-                <div class="sch-info-grid">
-                    <div class="sch-info-row">
-                        <label>ID</label>
-                        <span id="infoId">—</span>
+            <section class="portal-card sch-table-card">
+                <div class="sch-toolbar">
+                    <div class="sch-search">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" id="searchInput" placeholder="Tìm theo tên, mã bonsai..."
+                               aria-label="Tìm kiếm">
                     </div>
-                    <div class="sch-info-row">
-                        <label>Giờ hẹn</label>
-                        <span id="infoTime">—</span>
-                    </div>
-                    <div class="sch-info-row">
-                        <label>Khách hàng</label>
-                        <span id="infoClient">—</span>
-                    </div>
-                    <div class="sch-info-row">
-                        <label>Ngày hẹn</label>
-                        <span id="infoDate">—</span>
-                    </div>
-                    <div class="sch-info-row">
-                        <label>Số điện thoại</label>
-                        <span id="infoPhone">—</span>
-                    </div>
-                    <div class="sch-info-row">
-                        <label>Email</label>
-                        <span id="infoEmail">—</span>
-                    </div>
-                    <div class="sch-info-row sch-info-full">
-                        <label>Bonsai</label>
-                        <span id="infoBonsai">—</span>
-                    </div>
-                    <div class="sch-info-row sch-info-full">
-                        <label>Ghi chú</label>
-                        <span id="infoNote">—</span>
-                    </div>
-                </div>
-
-                <!-- Chọn trạng thái -->
-                <div class="sch-status-area">
-                    <label for="statusSelect">Cập nhật trạng thái</label>
-                    <select id="statusSelect">
+                    <select id="statusFilter" class="sch-select" aria-label="Lọc trạng thái">
+                        <option value="ALL">Tất cả trạng thái</option>
+                        <option value="PENDING">PENDING</option>
                         <option value="APPROVED">APPROVED</option>
+                        <option value="COMPLETED">COMPLETED</option>
                         <option value="REJECTED">REJECTED</option>
+                        <option value="CANCELLED">CANCELLED</option>
                     </select>
+                </div>
 
-                    <div id="rejectReasonGroup" style="display:none;">
-                        <label for="rejectReason"
-                            style="font-size:.82rem;font-weight:700;color:#1E221F;display:block;margin-bottom:6px;">Lý
-                            do từ chối</label>
-                        <textarea id="rejectReason" rows="3" placeholder="Nhập lý do từ chối..."></textarea>
-                    </div>
+                <div class="sch-table-scroll">
+                    <table class="sch-table">
+                        <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Khách hàng</th>
+                            <th>Bonsai</th>
+                            <th>Ngày</th>
+                            <th>Giờ</th>
+                            <th>Trạng thái</th>
+                            <th>Hành động</th>
+                        </tr>
+                        </thead>
+                        <tbody id="appointmentTableBody">
+                        <tr th:each="appointment : ${appointments}"
+                            th:data-id="${appointment.appointmentId}"
+                            th:data-phone="${appointment.customerPhone}"
+                            th:data-email="${appointment.customerEmail}"
+                            th:data-note="${appointment.note}">
+                            <td><strong th:text="${appointment.appointmentId}">1</strong></td>
+                            <td th:text="${appointment.customerName}">Nguyễn Văn A</td>
+                            <td>
+                                <span th:text="${appointment.productCode}">BS-001</span> -
+                                <span th:text="${appointment.productName}">Bonsai Tùng</span>
+                            </td>
+                            <td th:text="${#temporals.format(appointment.appointmentDate,'dd/MM/yyyy')}">19/07/2026</td>
+                            <td th:text="${#temporals.format(appointment.appointmentDate,'HH:mm')}">14:00</td>
+                            <td>
+                                <span class="status-badge"
+                                      th:classappend="${#strings.toLowerCase(appointment.status)}"
+                                      th:text="${appointment.status}">PENDING</span>
+                            </td>
+                            <td class="table-actions">
+                                <button th:if="${appointment.status == 'PENDING'}"
+                                        type="button"
+                                        class="sch-edit-btn edit-btn"
+                                        th:data-id="${appointment.appointmentId}"
+                                        aria-label="Cập nhật lịch hẹn">
+                                    <i class="fa-solid fa-pen-to-square"></i>
+                                </button>
+                                <button th:if="${appointment.status == 'APPROVED'}"
+                                        type="button"
+                                        class="btn btn-success btn-complete"
+                                        th:data-id="${appointment.appointmentId}">
+                                    Complete
+                                </button>
+                                <span th:if="${appointment.status == 'COMPLETED'}" class="badge bg-success">Completed</span>
+                                <span th:if="${appointment.status == 'REJECTED'}" class="badge bg-danger">Rejected</span>
+                                <span th:if="${appointment.status == 'CANCELLED'}" class="badge bg-secondary">Cancelled</span>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+    </main>
+</div>
 
-                    <p id="statusMessage" class="sch-status-msg"></p>
+<div id="editModal" class="sch-modal-backdrop">
+    <div class="sch-modal">
+        <div class="sch-modal-header">
+            <h2><i class="fa-solid fa-calendar-pen me-2"></i>Cập nhật trạng thái lịch hẹn</h2>
+            <button type="button" id="closeModal" class="sch-modal-close" aria-label="Đóng">&times;</button>
+        </div>
+
+        <div class="sch-modal-body">
+            <div class="sch-info-grid">
+                <div class="sch-info-row">
+                    <label>ID</label>
+                    <span id="infoId">-</span>
+                </div>
+                <div class="sch-info-row">
+                    <label>Giờ hẹn</label>
+                    <span id="infoTime">-</span>
+                </div>
+                <div class="sch-info-row">
+                    <label>Khách hàng</label>
+                    <span id="infoClient">-</span>
+                </div>
+                <div class="sch-info-row">
+                    <label>Ngày hẹn</label>
+                    <span id="infoDate">-</span>
+                </div>
+                <div class="sch-info-row">
+                    <label>Số điện thoại</label>
+                    <span id="infoPhone">-</span>
+                </div>
+                <div class="sch-info-row">
+                    <label>Email</label>
+                    <span id="infoEmail">-</span>
+                </div>
+                <div class="sch-info-row sch-info-full">
+                    <label>Bonsai</label>
+                    <span id="infoBonsai">-</span>
+                </div>
+                <div class="sch-info-row sch-info-full">
+                    <label>Ghi chú</label>
+                    <span id="infoNote">-</span>
                 </div>
             </div>
 
-            <!-- Footer form -->
-            <form id="updateStatusForm" method="post">
-                <input type="hidden" name="_csrf" th:value="${_csrf?.token}">
-                <input type="hidden" id="statusInput" name="status">
-                <input type="hidden" id="messageInput" name="message">
+            <div class="sch-status-area">
+                <label for="statusSelect">Cập nhật trạng thái</label>
+                <select id="statusSelect">
+                    <option value="APPROVED">APPROVED</option>
+                    <option value="REJECTED">REJECTED</option>
+                </select>
 
-                <div class="sch-modal-footer">
-                    <button type="button" id="closeModalFooter" class="btn-modal-cancel">Hủy</button>
-                    <button id="saveStatus" type="button" class="btn-modal-confirm">
-                        <i class="fa-solid fa-floppy-disk me-1"></i>Lưu thay đổi
-                    </button>
+                <div id="rejectReasonGroup" class="sch-hidden">
+                    <label for="rejectReason" class="sch-reject-label">Lý do từ chối</label>
+                    <textarea id="rejectReason" rows="3" placeholder="Nhập lý do từ chối..."></textarea>
                 </div>
-            </form>
+
+                <p id="statusMessage" class="sch-status-msg"></p>
+            </div>
         </div>
+
+        <form id="updateStatusForm" method="post">
+            <input type="hidden" name="_csrf" th:value="${_csrf?.token}">
+            <input type="hidden" id="statusInput" name="status">
+            <input type="hidden" id="messageInput" name="message">
+
+            <div class="sch-modal-footer">
+                <button type="button" id="closeModalFooter" class="btn-modal-cancel">Hủy</button>
+                <button id="saveStatus" type="button" class="btn-modal-confirm">
+                    <i class="fa-solid fa-floppy-disk me-1"></i>Lưu thay đổi
+                </button>
+            </div>
+        </form>
     </div>
+</div>
 
-    <!-- Form ẩn dùng chung để gửi yêu cầu Complete đơn bằng JS -->
-    <form id="globalCompleteForm" method="post" style="display: none;">
-        <input type="hidden" name="_csrf" th:value="${_csrf?.token}">
-    </form>
+<form id="globalCompleteForm" method="post" class="sch-hidden">
+    <input type="hidden" name="_csrf" th:value="${_csrf?.token}">
+</form>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script th:src="@{/js/manage_schedule.js}"></script>
-    <script>
-        // Nút Hủy ở footer modal
-        document.getElementById('closeModalFooter').addEventListener('click', () => {
-            document.getElementById('editModal').classList.remove('show');
-        });
-
-        // Đồng bộ class hiển thị statusMessage với class mới "sch-status-msg"
-        const _origOpen = window.openEditModal;
-        // manage_schedule.js tự quản lý statusMessage – chỉ cần thêm/xóa class 'visible'
-        const statusMsgEl = document.getElementById('statusMessage');
-        if (statusMsgEl) {
-            const observer = new MutationObserver(() => {
-                if (statusMsgEl.textContent.trim()) {
-                    statusMsgEl.classList.add('visible');
-                } else {
-                    statusMsgEl.classList.remove('visible');
-                }
-            });
-            observer.observe(statusMsgEl, { childList: true, characterData: true, subtree: true });
-        }
-    </script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script th:src="@{/js/manage_schedule.js}"></script>
 </body>
 
 </html>

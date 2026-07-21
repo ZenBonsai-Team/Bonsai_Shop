@@ -83,7 +83,6 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
     JOIN p.artisan a
     LEFT JOIN p.productMedias m
     WHERE p.segment.segmentId = 3
-      AND p.isPublicPrice = false
       AND (m.isThumbnail = true OR m IS NULL)
 """)
     Page<ProductCardDTO> findPremiumProducts(Pageable pageable);
@@ -108,7 +107,6 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
     JOIN p.artisan a
     LEFT JOIN p.productMedias m
     WHERE p.segment.segmentId = 3
-      AND p.isPublicPrice = false
       AND p.productId = :productId
       AND (m.isThumbnail = true OR m IS NULL)
 """)
