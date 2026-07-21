@@ -64,7 +64,7 @@ public class ProfileController {
         model.addAttribute("myBonsaiPosts", myBonsaiPosts);
         model.addAttribute("savedPosts", savedPosts);
         return "customer/profile"; // templates/customer/profile.html
-        return "customer/profile";
+
     }
 
     @GetMapping("/profile/update")
