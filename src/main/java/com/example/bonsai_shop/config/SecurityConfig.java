@@ -64,8 +64,8 @@ public class SecurityConfig {
                                                  .requestMatchers("/moderator/community/**").hasRole("CONTENT_MODERATOR")
                                                  // Chỉ MODERATOR mới vào được /moderator/**
                                                  .requestMatchers("/moderator/**").hasRole("MODERATOR")
-                                                 // Chỉ ARTISAN mới vào được /seller/**
-                                                 .requestMatchers("/seller/**").hasRole("ARTISAN")
+                                                 // Chỉ ARTISAN mới vào được /artisan/**
+                                                 .requestMatchers("/artisan/**").hasRole("ARTISAN")
                                                 // Chặn theo Action cụ thể (permission-based)
                                                 .requestMatchers("/products/create", "/products/edit/**",
                                                                 "/prodcuts/delete/**")
@@ -115,7 +115,7 @@ public class SecurityConfig {
             } else if (isModerator) {
                 response.sendRedirect("/moderator/orders");
             } else if (isArtisan) {
-                response.sendRedirect("/seller");
+                response.sendRedirect("/artisan");
             } else {
                 response.sendRedirect("/home");
             }

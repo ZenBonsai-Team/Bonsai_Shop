@@ -16,12 +16,12 @@
     <th:block th:if="${crumbs == null}">
         <span class="breadcrumb-item active" 
               th:text="${activePageLabel != null ? activePageLabel : 
-                       (paramActivePage == 'moderator-dashboard' or paramActivePage == 'seller-dashboard' or paramActivePage == 'dashboard' or paramActivePage == 'admin-dashboard' ? 'Bảng điều khiển' : 
+                       (paramActivePage == 'moderator-dashboard' or paramActivePage == 'artisan-dashboard' or paramActivePage == 'dashboard' or paramActivePage == 'admin-dashboard' ? 'Bảng điều khiển' : 
                        (paramActivePage == 'moderator-orders' or paramActivePage == 'orders' ? 'Quản lý đơn hàng' : 
                        (paramActivePage == 'moderator-users' or paramActivePage == 'users' or paramActivePage == 'admin-users' ? 'Quản lý người dùng' : 
                        (paramActivePage == 'moderator-community' or paramActivePage == 'community' ? 'Quản lý bài viết' : 
-                       (paramActivePage == 'seller-products' or paramActivePage == 'products' ? 'Sản phẩm của tôi' : 
-                       (paramActivePage == 'seller-catalog' or paramActivePage == 'catalog' ? 'Danh mục sản phẩm' : 
-                       (paramActivePage == 'seller-profile' or paramActivePage == 'profile' or paramActivePage == 'seller-profile' ? 'Thông tin cá nhân' : 'Bảng điều khiển')))))))}">Bảng điều khiển</span>
+                       (paramActivePage == 'artisan-products' or paramActivePage == 'products' ? 'Sản phẩm của tôi' : 
+                       (paramActivePage == 'artisan-catalog' or paramActivePage == 'catalog' ? 'Danh mục sản phẩm' : 
+                       (paramActivePage == 'artisan-profile' or paramActivePage == 'profile' or paramActivePage == 'artisan-profile' ? 'Thông tin cá nhân' : 'Bảng điều khiển')))))))}">Bảng điều khiển</span>
     </th:block>
 </div>

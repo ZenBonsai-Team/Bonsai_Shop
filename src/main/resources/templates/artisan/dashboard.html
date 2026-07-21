@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/dashboard-layout :: layout(~{::title}, ~{::#artisan-dashboard-content}, ~{::styles}, ~{})}">
+<head>
+    <title>Artisan Dashboard</title>
+    <th:block th:fragment="styles">
+        <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+    </th:block>
+</head>
+<body>
+
+<div id="artisan-dashboard-content" th:with="paramActivePage='dashboard'">
+    <header class="dashboard-header-title d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <span class="artisan-eyebrow text-muted" style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px;">Artisan Overview</span>
+            <h1 class="serif-text mb-1">Dashboard</h1>
+            <p class="text-secondary mb-0">Theo dõi nhanh tình trạng sản phẩm, doanh thu và các mục cần xử lý.</p>
+        </div>
+        <a class="btn btn-success rounded-pill px-4" th:href="@{/artisan/products/new}">
+            <i class="fa-solid fa-plus me-1"></i> Tạo sản phẩm
+        </a>
+    </header>
+
+    <section class="artisan-metric-grid">
+        <article class="artisan-metric-card metric-total">
+            <div class="metric-icon"><i class="fa-solid fa-boxes-stacked"></i></div>
+            <div>
+                <span>Tổng sản phẩm</span>
+                <strong th:text="${totalProducts}">0</strong>
+            </div>
+        </article>
+        <article class="artisan-metric-card metric-published">
+            <div class="metric-icon"><i class="fa-solid fa-store"></i></div>
+            <div>
+                <span>Đang bán</span>
+                <strong th:text="${publishedProducts}">0</strong>
+            </div>
+        </article>
+        <article class="artisan-metric-card metric-sold">
+            <div class="metric-icon"><i class="fa-solid fa-seedling"></i></div>
+            <div>
+                <span>Đã bán</span>
+                <strong th:text="${soldProducts}">0</strong>
+            </div>
+        </article>
+        <article class="artisan-metric-card metric-revenue">
+            <div class="metric-icon"><i class="fa-solid fa-chart-line"></i></div>
+            <div>
+                <span>Doanh thu tháng này</span>
+                <strong th:text="${#numbers.formatDecimal(monthlyRevenue, 0, 'POINT', 0, 'POINT') + ' VNĐ'}">0 VNĐ</strong>
+            </div>
+        </article>
+    </section>
+
+    <section class="artisan-dashboard-panel-grid">
+        <article class="artisan-dashboard-panel artisan-chart-panel">
+            <div class="revenue-panel-heading">
+                <h2>Sản phẩm đăng gần đây</h2>
+                <a th:href="@{/artisan/products}" class="text-decoration-none fw-bold text-success small">Xem tất cả <i class="fa-solid fa-arrow-right ms-1"></i></a>
+            </div>
+
+            <div class="table-responsive mb-4">
+                <table class="table table-hover align-middle">
+                    <thead>
+                    <tr class="text-secondary small">
+                        <th>Hình ảnh</th>
+                        <th>Mã SP</th>
+                        <th>Tên sản phẩm</th>
+                        <th>Giá bán</th>
+                        <th>Trạng thái</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="prod : ${recentProducts}">
+                        <td>
+                            <a class="product-preview-link" th:href="@{/artisan/products/{id}/preview(id=${prod.productId})}">
+                                <img th:src="${prod.getFirstImageUrl() != null ? prod.getFirstImageUrl() : '/images/default-bonsai.png'}"
+                                     alt="Product Image" class="rounded" style="width: 50px; height: 35px; object-fit: cover; border: 1px solid #eee;">
+                            </a>
+                        </td>
+                        <td th:text="${prod.productCode}" class="text-secondary fw-semibold">SP001</td>
+                        <td th:text="${prod.productName}" class="fw-bold text-dark">Bonsai Name</td>
+                        <td>
+                            <span th:text="${#numbers.formatDecimal(prod.price, 0, 'POINT', 0, 'POINT') + ' đ'}" class="text-success fw-bold">1.000.000 đ</span>
+                            <span th:unless="${prod.isPublicPrice}" class="text-muted small">(ẩn với khách hàng)</span>
+                        </td>
+                        <td>
+                            <span th:if="${prod.productStatus == 'AVAILABLE'}" class="badge bg-success-subtle text-success px-2 py-1 rounded-pill small">Đang bán</span>
+                            <span th:if="${prod.productStatus == 'SOLD'}" class="badge bg-secondary-subtle text-secondary px-2 py-1 rounded-pill small">Đã bán</span>
+                            <span th:if="${prod.productStatus == 'HIDDEN'}" class="badge bg-danger-subtle text-danger px-2 py-1 rounded-pill small">Đang ẩn</span>
+                            <span th:if="${prod.productStatus == 'RESERVED'}" class="badge bg-info-subtle text-info px-2 py-1 rounded-pill small">Đã được đặt</span>
+                            <span th:if="${prod.productStatus == 'DRAFT'}" class="badge bg-warning-subtle text-warning px-2 py-1 rounded-pill small">Bản nháp</span>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(recentProducts)}">
+                        <td colspan="5" class="text-center py-4 text-muted small">Bạn chưa đăng sản phẩm nào.</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="revenue-summary-grid">
+                <div class="revenue-summary-card">
+                    <span class="summary-icon"><i class="fa-solid fa-wallet"></i></span>
+                    <div>
+                        <small>Tổng doanh thu</small>
+                        <strong th:text="${#numbers.formatDecimal(monthlyRevenue, 0, 'POINT', 0, 'POINT') + ' VNĐ'}">0 VNĐ</strong>
+                    </div>
+                </div>
+                <div class="revenue-summary-card">
+                    <span class="summary-icon"><i class="fa-solid fa-clipboard-list"></i></span>
+                    <div>
+                        <small>Tổng đơn hàng</small>
+                        <strong th:text="${monthlySoldItems}">0</strong>
+                    </div>
+                </div>
+                <div class="revenue-summary-card">
+                    <span class="summary-icon"><i class="fa-solid fa-sack-dollar"></i></span>
+                    <div>
+                        <small>Giá trị đơn TB</small>
+                        <strong th:text="${#numbers.formatDecimal(averageOrderValue, 0, 'POINT', 0, 'POINT') + ' VNĐ'}">0 VNĐ</strong>
+                    </div>
+                </div>
+            </div>
+        </article>
+
+        <article class="artisan-dashboard-panel artisan-status-panel">
+            <div class="panel-heading">
+                <div>
+                    <span>Tồn kho</span>
+                    <h2>Trạng thái sản phẩm</h2>
+                </div>
+            </div>
+            <div class="status-breakdown">
+                <div>
+                    <span>Bản nháp</span>
+                    <strong th:text="${draftProducts}">0</strong>
+                </div>
+                <div>
+                    <span>Đang ẩn</span>
+                    <strong th:text="${hiddenProducts}">0</strong>
+                </div>
+                <div>
+                    <span>Đã được đặt</span>
+                    <strong th:text="${reservedProducts}">0</strong>
+                </div>
+                <div>
+                    <span>Đã bán</span>
+                    <strong th:text="${soldProducts}">0</strong>
+                </div>
+            </div>
+        </article>
+    </section>
+
+    <section class="artisan-dashboard-panel artisan-attention-panel mt-4">
+        <div class="panel-heading">
+            <div>
+                <span>Cần chú ý</span>
+                <h2>Các mục cần xử lý</h2>
+            </div>
+            <a th:href="@{/artisan/products}">View Products</a>
+        </div>
+        <div class="attention-cards">
+            <div>
+                <strong th:text="${draftProducts}">0</strong>
+                <span>Sản phẩm nháp cần publish</span>
+            </div>
+            <div>
+                <strong th:text="${missingDescriptionProducts}">0</strong>
+                <span>Sản phẩm thiếu mô tả</span>
+            </div>
+            <div>
+                <strong th:text="${hiddenPriceProducts}">0</strong>
+                <span>Sản phẩm đang ẩn giá</span>
+            </div>
+            <div>
+                <strong th:text="${hiddenProducts}">0</strong>
+                <span>Sản phẩm đang bị ẩn</span>
+            </div>
+        </div>
+    </section>
+</div>
+
+</body>
+</html>
