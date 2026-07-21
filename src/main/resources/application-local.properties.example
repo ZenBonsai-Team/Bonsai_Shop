@@ -5,6 +5,7 @@ spring.datasource.url=jdbc:mysql://localhost:3306/bonsai_shop?useSSL=false&serve
 spring.datasource.username=
 spring.datasource.password=
 
+
 # MAIL
 spring.mail.username=
 spring.mail.password=
