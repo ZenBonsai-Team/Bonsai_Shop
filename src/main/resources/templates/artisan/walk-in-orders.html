@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Walk-in Orders</title>
+    <link rel="icon" type="image/png" th:href="@{/images/logo.png}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+    <link rel="stylesheet" th:href="@{/css/dashboard-layout.css}">
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+    <link rel="stylesheet" th:href="@{/css/moderator-orders.css}">
+    <link rel="stylesheet" th:href="@{/css/artisan.css}">
+</head>
+<body>
+<div class="dashboard-layout">
+    <div th:replace="~{fragments/sidebar :: sidebar('artisan-walk-in-orders')}"></div>
+
+    <main class="dashboard-main">
+        <div th:replace="~{fragments/artisan-topbar :: topbar('Walk-in Orders')}"></div>
+
+        <header class="page-header">
+            <div>
+                <h1>Walk-in Orders</h1>
+                <p>Artisan tạo đơn khách mua trực tiếp tại vườn, reserve cây, xác nhận nhận tiền và hoàn tất.</p>
+            </div>
+            <a class="btn secondary" th:href="@{/artisan/products}">My Products</a>
+        </header>
+
+        <div th:if="${success}" class="alert success" th:text="${success}"></div>
+        <div th:if="${error}" class="alert error" th:text="${error}"></div>
+
+        <section class="portal-card mb-4">
+            <div class="taxonomy-toolbar">
+                <div>
+                    <h2>Tạo Walk-in Order</h2>
+                    <p>Chỉ hiển thị sản phẩm đang AVAILABLE thuộc artisan hiện tại.</p>
+                </div>
+            </div>
+
+            <form id="walkInCreateForm" method="post" th:action="@{/artisan/walk-in-orders}" class="artisan-profile-fields walk-in-order-form">
+                <div class="walk-in-product-picker">
+                    <label>
+                        <span>Sản phẩm</span>
+                        <input id="walkInProductSearch" type="text" placeholder="🔍 Tìm theo mã hoặc tên cây..." autocomplete="off">
+                    </label>
+                    <input id="walkInProductId" type="hidden" name="productId" required>
+
+                    <div class="walk-in-product-results" id="walkInProductResults">
+                        <button type="button"
+                                class="walk-in-product-option"
+                                th:each="product : ${availableProducts}"
+                                th:attr="data-product-id=${product.productId},
+                                         data-search-text=${#strings.toLowerCase(product.productCode + ' ' + product.productName)},
+                                         data-code=${product.productCode},
+                                         data-name=${product.productName},
+                                         data-segment=${product.segment != null ? product.segment.segmentName : 'N/A'},
+                                         data-price=${product.price},
+                                         data-image=${product.firstImageUrl != null ? product.firstImageUrl : ''}">
+                            <span class="walk-in-option-code" th:text="${product.productCode}">E-010</span>
+                            <span class="walk-in-option-name" th:text="${product.productName}">Tùng Kim Cương Dáng Huyền</span>
+                            <span class="walk-in-option-price" th:text="${#numbers.formatDecimal(product.price, 0, 'COMMA', 0, 'POINT') + 'đ'}">135.000.000đ</span>
+                        </button>
+                    </div>
+
+                    <div class="walk-in-selected-product hidden" id="walkInSelectedProduct">
+                        <div class="walk-in-selected-title">✓ Đã chọn</div>
+                        <div class="walk-in-selected-body">
+                            <img id="walkInSelectedImage" src="" alt="Thumbnail">
+                            <div class="walk-in-selected-info">
+                                <strong id="walkInSelectedCode">E-010</strong>
+                                <span id="walkInSelectedName">Tùng Kim Cương Dáng Huyền</span>
+                                <small id="walkInSelectedSegment">Premium</small>
+                                <b id="walkInSelectedPrice">135.000.000đ</b>
+                            </div>
+                            <button type="button" class="btn small secondary" id="walkInChangeProduct">Đổi sản phẩm</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="walk-in-customer-grid">
+                    <label>
+                        <span>Tên khách</span>
+                        <input name="customerName" required placeholder="Khách walk-in">
+                    </label>
+
+                    <label>
+                        <span>Số điện thoại</span>
+                        <input name="customerPhone" required placeholder="Bắt buộc">
+                    </label>
+
+                    <label class="walk-in-field-wide">
+                        <span>Địa chỉ giao/nhận cây</span>
+                        <input name="shippingAddress" required placeholder="Bắt buộc, ví dụ: nhận tại vườn hoặc địa chỉ giao sau">
+                    </label>
+
+                    <label>
+                        <span>Email</span>
+                        <input name="customerEmail" type="email" placeholder="Không bắt buộc">
+                    </label>
+
+                    <label>
+                        <span>Phương thức thanh toán</span>
+                        <select name="paymentMethod" required>
+                            <option value="CASH" selected>Tiền mặt tại vườn</option>
+                            <option value="VNPAY">VNPAY</option>
+                        </select>
+                    </label>
+
+                    <label>
+                        <span>Phí cẩu</span>
+                        <span class="input-with-unit walk-in-fee-field">
+                            <input id="craneFeeDisplay" type="text" inputmode="numeric" data-price="0">
+                            <input id="craneFeeValue" type="hidden" name="craneFee" value="0">
+                            <span>VNĐ</span>
+                        </span>
+                    </label>
+
+                    <label>
+                        <span>Phí vận chuyển</span>
+                        <span class="input-with-unit walk-in-fee-field">
+                            <input id="shippingFeeDisplay" type="text" inputmode="numeric" data-price="0">
+                            <input id="shippingFeeValue" type="hidden" name="shippingFee" value="0">
+                            <span>VNĐ</span>
+                        </span>
+                    </label>
+
+                    <label class="walk-in-field-wide">
+                        <span>Ghi chú</span>
+                        <textarea name="notes" rows="3" placeholder="Ví dụ: Khách thanh toán tiền mặt tại vườn"></textarea>
+                    </label>
+
+                    <div class="actions walk-in-form-actions">
+                        <button class="btn" type="submit" th:disabled="${#lists.isEmpty(availableProducts)}">
+                            Tạo order & reserve sản phẩm
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </section>
+
+        <section class="management-card">
+            <div class="toolbar-header">
+                <div class="toolbar-search-row">
+                    <div>
+                        <h2 class="mb-1">Danh sách Walk-in Orders</h2>
+                        <p class="text-muted mb-0">Luồng: PENDING_PAYMENT → Payment SUCCESS → COMPLETED → Product SOLD.</p>
+                    </div>
+                </div>
+
+                <div class="filter-tabs">
+                    <a class="tab-btn text-decoration-none"
+                       th:classappend="${selectedStatus == 'ALL'} ? ' active'"
+                       th:href="@{/artisan/walk-in-orders(status='ALL')}">Tất cả</a>
+                    <a class="tab-btn text-decoration-none"
+                       th:classappend="${selectedStatus == pendingPaymentStatus} ? ' active'"
+                       th:href="@{/artisan/walk-in-orders(status=${pendingPaymentStatus})}">Chờ nhận tiền</a>
+                    <a class="tab-btn text-decoration-none"
+                       th:classappend="${selectedStatus == completedStatus} ? ' active'"
+                       th:href="@{/artisan/walk-in-orders(status=${completedStatus})}">Hoàn tất</a>
+                    <a class="tab-btn text-decoration-none"
+                       th:classappend="${selectedStatus == cancelledStatus} ? ' active'"
+                       th:href="@{/artisan/walk-in-orders(status=${cancelledStatus})}">Đã hủy</a>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table class="orders-table">
+                    <thead>
+                    <tr>
+                        <th>Mã đơn hàng</th>
+                        <th>Khách hàng</th>
+                        <th>Sản phẩm cây cảnh</th>
+                        <th class="col-price">Tổng tiền</th>
+                        <th>Ngày tạo</th>
+                        <th>Trạng thái</th>
+                        <th style="width: 160px;">Thao tác</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="order : ${orders.content}">
+                        <td class="col-code" th:text="${order.orderCode}">BSMS-517407</td>
+                        <td>
+                            <strong th:text="${order.customerName}">Walk-in customer</strong>
+                            <small class="d-block text-muted" th:text="${order.customerPhone}">SĐT</small>
+                        </td>
+                        <td th:text="${!#lists.isEmpty(order.orderDetails) ? order.orderDetails[0].product.productName : '-'}">Product</td>
+                        <td class="col-price" th:text="${#numbers.formatDecimal(order.totalAmount, 0, 'COMMA', 0, 'POINT') + 'đ'}">0đ</td>
+                        <td th:text="${#temporals.format(order.orderDate, 'dd/MM/yyyy HH:mm')}">18/07/2026</td>
+                        <td>
+                            <span th:if="${order.orderStatus == pendingPaymentStatus}" class="status-badge pending">Chờ nhận tiền</span>
+                            <span th:if="${order.orderStatus == completedStatus}" class="status-badge approved">Hoàn tất</span>
+                            <span th:if="${order.orderStatus == cancelledStatus}" class="status-badge cancelled">Đã hủy</span>
+                            <span th:if="${order.orderStatus != pendingPaymentStatus && order.orderStatus != completedStatus && order.orderStatus != cancelledStatus}" class="status-badge cancelled" th:text="${order.orderStatus}"></span>
+                        </td>
+                        <td>
+                            <button type="button"
+                                    class="btn-mini btn-mini-confirm js-open-walkin-drawer"
+                                    th:data-order-status="${order.orderStatus}"
+                                    th:data-order-code="${order.orderCode}"
+                                    th:data-customer-name="${order.customerName}"
+                                    th:data-customer-phone="${order.customerPhone}"
+                                    th:data-customer-email="${order.customerEmail != null ? order.customerEmail : '-'}"
+                                    th:data-shipping-address="${order.shippingAddress}"
+                                    th:data-product-name="${!#lists.isEmpty(order.orderDetails) ? order.orderDetails[0].product.productName : '-'}"
+                                    th:data-product-price="${!#lists.isEmpty(order.orderDetails) ? order.orderDetails[0].priceAtPurchase : 0}"
+                                    th:data-product-image="${(!#lists.isEmpty(order.orderDetails) && order.orderDetails[0].product.firstImageUrl != null) ? order.orderDetails[0].product.firstImageUrl : ''}"
+                                    th:data-crane-fee="${order.craneFee}"
+                                    th:data-shipping-fee="${order.shippingFee}"
+                                    th:data-payment-method="${order.payment != null ? order.payment.paymentMethod : 'CASH'}"
+                                    th:data-edit-customer-email="${order.customerEmail != null ? order.customerEmail : ''}"
+                                    th:data-edit-notes="${order.notes != null ? order.notes : ''}"
+                                    th:data-total-amount="${order.totalAmount}"
+                                    th:data-deposit-amount="${order.depositAmount}"
+                                    th:data-notes="${order.notes != null ? order.notes : 'Không có ghi chú thêm.'}"
+                                    th:data-confirm-url="@{/artisan/walk-in-orders/{id}/confirm-payment(id=${order.orderId})}"
+                                    th:data-update-url="@{/artisan/walk-in-orders/{id}/update(id=${order.orderId})}"
+                                    th:data-cancel-url="@{/artisan/walk-in-orders/{id}/cancel(id=${order.orderId})}">
+                                Chi tiết
+                            </button>
+                        </td>
+                    </tr>
+                    <tr th:if="${orders.totalElements == 0}">
+                        <td colspan="7" class="empty-state">
+                            <div class="empty-state-icon"><i class="fa-solid fa-cash-register"></i></div>
+                            <div class="empty-state-title">Chưa có walk-in order.</div>
+                            <div class="empty-state-desc">Tạo đơn mới khi khách mua trực tiếp tại vườn.</div>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="pagination-footer" th:if="${orders.totalPages > 1}">
+                <div class="pagination-info" th:text="${'Hiển thị trang ' + (orders.number + 1) + ' / ' + orders.totalPages}"></div>
+                <div class="pagination-controls">
+                    <a class="page-btn" th:if="${orders.hasPrevious()}" th:href="@{/artisan/walk-in-orders(status=${selectedStatus},page=${orders.number - 1})}">Trước</a>
+                    <a class="page-btn" th:if="${orders.hasNext()}" th:href="@{/artisan/walk-in-orders(status=${selectedStatus},page=${orders.number + 1})}">Sau</a>
+                </div>
+            </div>
+        </section>
+
+        <div class="drawer-backdrop" id="walkInDrawerBackdrop"></div>
+        <div class="drawer-panel" id="walkInDrawerPanel">
+            <div class="drawer-header">
+                <div class="drawer-title">
+                    <span>Chi Tiết Đơn Hàng</span>
+                    <span class="col-code" id="drawerOrderCode">BSMS-XXXXX</span>
+                </div>
+                <button class="drawer-close-btn" id="btnWalkInDrawerClose" type="button">&times;</button>
+            </div>
+
+            <div class="drawer-body">
+                <div class="drawer-section walk-in-status-section">
+                    <div class="walk-in-status-row">
+                        <span class="detail-label">Trạng thái:</span>
+                        <span id="drawerStatusBadge" class="status-badge pending">PENDING_PAYMENT</span>
+                    </div>
+                    <button class="walk-in-edit-link" id="walkInEditButton" type="button">
+                        <i class="fa-solid fa-pen"></i> Chỉnh sửa thông tin order
+                    </button>
+                </div>
+
+                <div class="drawer-section">
+                    <h4 class="section-title">Khách hàng mua tại vườn</h4>
+                    <div class="detail-grid">
+                        <span class="detail-label">Họ tên:</span>
+                        <span class="detail-value" id="drawerCustName">-</span>
+                        <span class="detail-label">Điện thoại:</span>
+                        <span class="detail-value" id="drawerCustPhone">-</span>
+                        <span class="detail-label">Email:</span>
+                        <span class="detail-value" id="drawerCustEmail">-</span>
+                        <span class="detail-label">Địa chỉ:</span>
+                        <span class="detail-value" id="drawerCustAddress">-</span>
+                        <span class="detail-label">Thanh toán:</span>
+                        <span class="detail-value" id="drawerPaymentMethod">CASH</span>
+                    </div>
+                </div>
+
+                <div class="drawer-section">
+                    <h4 class="section-title">Thông tin tác phẩm Bonsai</h4>
+                    <div class="product-card-info">
+                        <img src="" id="drawerProdImg" class="product-card-img" alt="Bonsai Image">
+                        <div class="product-card-details">
+                            <span class="product-card-name" id="drawerProdName">Bonsai Name</span>
+                            <span class="product-card-price" id="drawerProdPrice">0 VND</span>
+                            <span style="font-size:12px; color:var(--text-muted);">Số lượng đặt: <strong>1</strong></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="drawer-section">
+                    <h4 class="section-title">Ghi chú từ khách hàng</h4>
+                    <p class="walk-in-notes-box" id="drawerNotes">
+                        Không có ghi chú thêm.
+                    </p>
+                </div>
+
+                <div class="drawer-section">
+                    <h4 class="section-title">Phí Vận Chuyển & Cẩu Cây</h4>
+                    <p style="font-size:12px; color:var(--text-muted); margin-bottom:8px;">Walk-in order đã chốt phụ phí khi artisan tạo đơn.</p>
+                    <div class="fees-form-group">
+                        <div class="input-field-group">
+                            <label>Phí xe cẩu</label>
+                            <input type="text" id="drawerCraneFee" disabled>
+                        </div>
+                        <div class="input-field-group">
+                            <label>Phí vận chuyển</label>
+                            <input type="text" id="drawerShippingFee" disabled>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="drawer-section summary-container">
+                    <div class="detail-grid">
+                        <span class="detail-label">Giá gốc Bonsai:</span>
+                        <span class="detail-value" id="drawerBasePrice">0 VND</span>
+                        <span class="detail-label">Đặt cọc trước:</span>
+                        <span class="detail-value" id="drawerDeposit">0 VND</span>
+                        <span class="detail-label" style="color:var(--primary-color); font-weight:700; font-size:15px;">TỔNG THANH TOÁN:</span>
+                        <span class="detail-value" style="color:var(--primary-color); font-weight:700; font-size:15px;" id="drawerFinalTotal">0 VND</span>
+                    </div>
+                </div>
+
+                <form id="walkInEditForm" class="walk-in-edit-form hidden" method="post">
+                    <input th:if="${_csrf != null}" type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                    <h4 class="section-title">Chỉnh sửa thông tin order</h4>
+                    <div class="walk-in-edit-grid">
+                        <label>
+                            <span>Tên khách</span>
+                            <input id="editCustomerName" name="customerName" required>
+                        </label>
+                        <label>
+                            <span>Số điện thoại</span>
+                            <input id="editCustomerPhone" name="customerPhone" required>
+                        </label>
+                        <label class="walk-in-field-wide">
+                            <span>Địa chỉ giao/nhận cây</span>
+                            <input id="editShippingAddress" name="shippingAddress" required>
+                        </label>
+                        <label>
+                            <span>Email</span>
+                            <input id="editCustomerEmail" name="customerEmail" type="email">
+                        </label>
+                        <label>
+                            <span>Phương thức thanh toán</span>
+                            <select id="editPaymentMethod" name="paymentMethod" required>
+                                <option value="CASH">Tiền mặt tại vườn</option>
+                                <option value="VNPAY">VNPAY</option>
+                            </select>
+                        </label>
+                        <label>
+                            <span>Phí cẩu</span>
+                            <span class="input-with-unit walk-in-fee-field">
+                                <input id="editCraneFeeDisplay" type="text" inputmode="numeric">
+                                <input id="editCraneFeeValue" type="hidden" name="craneFee" value="0">
+                                <span>VNĐ</span>
+                            </span>
+                        </label>
+                        <label>
+                            <span>Phí vận chuyển</span>
+                            <span class="input-with-unit walk-in-fee-field">
+                                <input id="editShippingFeeDisplay" type="text" inputmode="numeric">
+                                <input id="editShippingFeeValue" type="hidden" name="shippingFee" value="0">
+                                <span>VNĐ</span>
+                            </span>
+                        </label>
+                        <label class="walk-in-field-wide">
+                            <span>Ghi chú</span>
+                            <textarea id="editNotes" name="notes" rows="3"></textarea>
+                        </label>
+                    </div>
+                    <div class="walk-in-edit-actions">
+                        <button class="btn small" type="submit">Lưu chỉnh sửa</button>
+                        <button class="btn small secondary" id="walkInCancelEditButton" type="button">Hủy</button>
+                    </div>
+                </form>
+
+                <form id="walkInCancelForm" class="reject-reason-box walk-in-cancel-box" method="post">
+                    <input th:if="${_csrf != null}" type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                    <label for="walkInCancelReason">Nhập lý do hủy walk-in order:</label>
+                    <textarea id="walkInCancelReason" name="reason" rows="3" placeholder="Ví dụ: Khách đổi ý không mua, hẹn xem lại cây khác..."></textarea>
+                    <div class="reject-action-row">
+                        <button class="btn-mini btn-mini-cancel" id="walkInCancelReasonClose" type="button">Hủy</button>
+                        <button class="btn-mini btn-mini-confirm" type="submit">Xác nhận hủy</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="drawer-footer walk-in-drawer-footer" id="walkInDrawerFooter">
+                <button class="btn-block btn-reject" id="walkInCancelButton" type="button"><i class="fa-solid fa-ban"></i> Hủy order</button>
+                <form id="walkInConfirmForm" method="post">
+                    <input th:if="${_csrf != null}" type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                    <button class="btn-block btn-verify" type="submit"><i class="fa-solid fa-circle-check"></i> Xác nhận tiền</button>
+                </form>
+            </div>
+        </div>
+    </main>
+</div>
+
+<div id="walkInCancelConfirmModal" class="artisan-action-modal-backdrop hidden">
+    <div class="artisan-action-modal" role="dialog" aria-modal="true" aria-labelledby="walkInCancelConfirmTitle">
+        <header>
+            <h2 id="walkInCancelConfirmTitle">Xác nhận hủy walk-in order</h2>
+            <button type="button" class="artisan-action-modal-close" aria-label="Đóng">×</button>
+        </header>
+        <div class="artisan-action-modal-body">
+            <p class="artisan-action-target">
+                Order: <strong id="walkInCancelConfirmCode">-</strong>
+            </p>
+            <div class="artisan-action-warning">
+                <i class="fa-solid fa-ban"></i>
+                <div>
+                    <strong>Sản phẩm sẽ được mở bán lại</strong>
+                    <p>Order sẽ chuyển sang CANCELLED, payment sẽ bị hủy và cây đang RESERVED sẽ quay lại AVAILABLE.</p>
+                </div>
+            </div>
+        </div>
+        <footer>
+            <button type="button" class="btn-modal-cancel">Quay lại</button>
+            <button type="button" class="btn-modal-confirm">Hủy order</button>
+        </footer>
+    </div>
+</div>
+
+<div id="walkInPaymentConfirmModal" class="artisan-action-modal-backdrop hidden">
+    <div class="artisan-action-modal" role="dialog" aria-modal="true" aria-labelledby="walkInPaymentConfirmTitle">
+        <header>
+            <h2 id="walkInPaymentConfirmTitle">Xác nhận đã nhận tiền</h2>
+            <button type="button" class="artisan-action-modal-close" aria-label="Đóng">×</button>
+        </header>
+        <div class="artisan-action-modal-body">
+            <p class="artisan-action-target">
+                Order: <strong id="walkInPaymentConfirmCode">-</strong>
+            </p>
+            <div class="artisan-action-warning">
+                <i class="fa-solid fa-circle-check"></i>
+                <div>
+                    <strong>Order sẽ được hoàn tất</strong>
+                    <p>Payment sẽ chuyển sang SUCCESS, order chuyển sang COMPLETED và sản phẩm sẽ được đánh dấu SOLD.</p>
+                </div>
+            </div>
+        </div>
+        <footer>
+            <button type="button" class="btn-modal-cancel">Quay lại</button>
+            <button type="button" class="btn-modal-confirm">Xác nhận tiền</button>
+        </footer>
+    </div>
+</div>
+
+<div id="walkInCreateConfirmModal" class="artisan-action-modal-backdrop hidden">
+    <div class="artisan-action-modal" role="dialog" aria-modal="true" aria-labelledby="walkInCreateConfirmTitle">
+        <header>
+            <h2 id="walkInCreateConfirmTitle">Xác nhận tạo walk-in order</h2>
+            <button type="button" class="artisan-action-modal-close" aria-label="Đóng">×</button>
+        </header>
+        <div class="artisan-action-modal-body">
+            <p class="artisan-action-target">
+                Sản phẩm: <strong id="walkInCreateConfirmProduct">-</strong>
+            </p>
+            <div class="artisan-action-warning">
+                <i class="fa-solid fa-cash-register"></i>
+                <div>
+                    <strong>Order sẽ được tạo và sản phẩm sẽ được reserve</strong>
+                    <p>Sản phẩm sẽ chuyển từ AVAILABLE sang RESERVED để tránh khách khác đặt mua trong lúc chờ nhận tiền.</p>
+                </div>
+            </div>
+        </div>
+        <footer>
+            <button type="button" class="btn-modal-cancel">Quay lại</button>
+            <button type="button" class="btn-modal-confirm">Tạo order</button>
+        </footer>
+    </div>
+</div>
+
+<script>
+(function () {
+    const pendingStatus = 'PENDING_PAYMENT';
+    const fallbackImage = 'https://picsum.photos/200/200?random=walkin';
+    const productFallbackImage = 'https://images.unsplash.com/photo-1599599810769-bcde5a160d32?auto=format&fit=crop&q=80&w=300';
+    const backdrop = document.getElementById('walkInDrawerBackdrop');
+    const panel = document.getElementById('walkInDrawerPanel');
+    const closeButton = document.getElementById('btnWalkInDrawerClose');
+    const createForm = document.getElementById('walkInCreateForm');
+    const createConfirmModal = document.getElementById('walkInCreateConfirmModal');
+    const createConfirmProduct = document.getElementById('walkInCreateConfirmProduct');
+    const createConfirmClose = createConfirmModal.querySelector('.artisan-action-modal-close');
+    const createConfirmCancel = createConfirmModal.querySelector('.btn-modal-cancel');
+    const createConfirmSubmit = createConfirmModal.querySelector('.btn-modal-confirm');
+    let allowCreateSubmit = false;
+    const footer = document.getElementById('walkInDrawerFooter');
+    const confirmForm = document.getElementById('walkInConfirmForm');
+    const paymentConfirmModal = document.getElementById('walkInPaymentConfirmModal');
+    const paymentConfirmCode = document.getElementById('walkInPaymentConfirmCode');
+    const paymentConfirmClose = paymentConfirmModal.querySelector('.artisan-action-modal-close');
+    const paymentConfirmCancel = paymentConfirmModal.querySelector('.btn-modal-cancel');
+    const paymentConfirmSubmit = paymentConfirmModal.querySelector('.btn-modal-confirm');
+    let allowPaymentSubmit = false;
+    const cancelButton = document.getElementById('walkInCancelButton');
+    const cancelForm = document.getElementById('walkInCancelForm');
+    const cancelReasonInput = document.getElementById('walkInCancelReason');
+    const cancelReasonClose = document.getElementById('walkInCancelReasonClose');
+    const cancelConfirmModal = document.getElementById('walkInCancelConfirmModal');
+    const cancelConfirmCode = document.getElementById('walkInCancelConfirmCode');
+    const cancelConfirmClose = cancelConfirmModal.querySelector('.artisan-action-modal-close');
+    const cancelConfirmCancel = cancelConfirmModal.querySelector('.btn-modal-cancel');
+    const cancelConfirmSubmit = cancelConfirmModal.querySelector('.btn-modal-confirm');
+    let allowCancelSubmit = false;
+    const editButton = document.getElementById('walkInEditButton');
+    const editForm = document.getElementById('walkInEditForm');
+    const cancelEditButton = document.getElementById('walkInCancelEditButton');
+    const editFields = {
+        customerName: document.getElementById('editCustomerName'),
+        customerPhone: document.getElementById('editCustomerPhone'),
+        shippingAddress: document.getElementById('editShippingAddress'),
+        customerEmail: document.getElementById('editCustomerEmail'),
+        paymentMethod: document.getElementById('editPaymentMethod'),
+        notes: document.getElementById('editNotes')
+    };
+    const feeInputs = [
+        {
+            display: document.getElementById('craneFeeDisplay'),
+            value: document.getElementById('craneFeeValue')
+        },
+        {
+            display: document.getElementById('shippingFeeDisplay'),
+            value: document.getElementById('shippingFeeValue')
+        }
+    ];
+    const editFeeInputs = [
+        {
+            display: document.getElementById('editCraneFeeDisplay'),
+            value: document.getElementById('editCraneFeeValue')
+        },
+        {
+            display: document.getElementById('editShippingFeeDisplay'),
+            value: document.getElementById('editShippingFeeValue')
+        }
+    ];
+    const fields = {
+        code: document.getElementById('drawerOrderCode'),
+        status: document.getElementById('drawerStatusBadge'),
+        customerName: document.getElementById('drawerCustName'),
+        customerPhone: document.getElementById('drawerCustPhone'),
+        customerEmail: document.getElementById('drawerCustEmail'),
+        customerAddress: document.getElementById('drawerCustAddress'),
+        paymentMethod: document.getElementById('drawerPaymentMethod'),
+        productImage: document.getElementById('drawerProdImg'),
+        productName: document.getElementById('drawerProdName'),
+        productPrice: document.getElementById('drawerProdPrice'),
+        notes: document.getElementById('drawerNotes'),
+        craneFee: document.getElementById('drawerCraneFee'),
+        shippingFee: document.getElementById('drawerShippingFee'),
+        basePrice: document.getElementById('drawerBasePrice'),
+        deposit: document.getElementById('drawerDeposit'),
+        finalTotal: document.getElementById('drawerFinalTotal')
+    };
+
+    function formatVnd(value) {
+        return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(Number(value || 0));
+    }
+
+    function normalizePrice(value) {
+        const trimmedValue = String(value || '').trim();
+        if (/^\d+[,.]\d{1,2}$/.test(trimmedValue)) {
+            return trimmedValue.replace(/[,.]\d{1,2}$/, '');
+        }
+        return trimmedValue.replace(/[^\d]/g, '');
+    }
+
+    function formatInputVnd(value) {
+        const normalizedValue = normalizePrice(value);
+        return normalizedValue ? Number(normalizedValue).toLocaleString('vi-VN') : '';
+    }
+
+    function syncFeeInput(feeInput) {
+        const normalizedValue = normalizePrice(feeInput.display.value);
+        feeInput.value.value = normalizedValue || '0';
+        feeInput.display.value = formatInputVnd(normalizedValue);
+    }
+
+    function setFeeInput(feeInput, value) {
+        feeInput.value.value = normalizePrice(value) || '0';
+        feeInput.display.value = formatInputVnd(value);
+    }
+
+    [...feeInputs, ...editFeeInputs].forEach(feeInput => {
+        feeInput.display.value = formatInputVnd(feeInput.display.dataset.price || feeInput.value.value);
+        feeInput.value.value = normalizePrice(feeInput.display.dataset.price || feeInput.value.value) || '0';
+        feeInput.display.addEventListener('input', () => syncFeeInput(feeInput));
+        feeInput.display.form.addEventListener('submit', () => syncFeeInput(feeInput));
+    });
+
+    const productSearch = document.getElementById('walkInProductSearch');
+    const productIdInput = document.getElementById('walkInProductId');
+    const productResults = document.getElementById('walkInProductResults');
+    const selectedProduct = document.getElementById('walkInSelectedProduct');
+    const selectedImage = document.getElementById('walkInSelectedImage');
+    const selectedCode = document.getElementById('walkInSelectedCode');
+    const selectedName = document.getElementById('walkInSelectedName');
+    const selectedSegment = document.getElementById('walkInSelectedSegment');
+    const selectedPrice = document.getElementById('walkInSelectedPrice');
+    const changeProductButton = document.getElementById('walkInChangeProduct');
+    const productOptions = [...document.querySelectorAll('.walk-in-product-option')];
+
+    function selectProduct(option) {
+        const data = option.dataset;
+        productIdInput.value = data.productId;
+        selectedImage.src = data.image || productFallbackImage;
+        selectedImage.onerror = function () { selectedImage.src = productFallbackImage; };
+        selectedCode.textContent = data.code || '-';
+        selectedName.textContent = data.name || '-';
+        selectedSegment.textContent = data.segment || 'N/A';
+        selectedPrice.textContent = formatInputVnd(data.price) + 'đ';
+        selectedProduct.classList.remove('hidden');
+        productResults.classList.add('hidden');
+        productSearch.classList.add('hidden');
+    }
+
+    function filterProducts() {
+        const keyword = productSearch.value.trim().toLowerCase();
+        let visibleCount = 0;
+        productOptions.forEach(option => {
+            const visible = !keyword || option.dataset.searchText.includes(keyword);
+            option.hidden = !visible;
+            if (visible) visibleCount += 1;
+        });
+        productResults.classList.toggle('hidden', visibleCount === 0);
+    }
+
+    productOptions.forEach(option => {
+        option.addEventListener('click', () => selectProduct(option));
+    });
+
+    productSearch.addEventListener('input', filterProducts);
+    productSearch.addEventListener('focus', filterProducts);
+    productSearch.form.addEventListener('submit', (event) => {
+        if (!productIdInput.value) {
+            event.preventDefault();
+            productSearch.focus();
+        }
+    });
+
+    createForm.addEventListener('submit', function (event) {
+        if (event.defaultPrevented || allowCreateSubmit) {
+            return;
+        }
+        if (!productIdInput.value) {
+            event.preventDefault();
+            productSearch.focus();
+            return;
+        }
+        event.preventDefault();
+        feeInputs.forEach(syncFeeInput);
+        createConfirmProduct.textContent = `${selectedCode.textContent || '-'} - ${selectedName.textContent || '-'}`;
+        createConfirmModal.classList.remove('hidden');
+    });
+
+    function closeCreateConfirmModal() {
+        createConfirmModal.classList.add('hidden');
+    }
+
+    createConfirmClose.addEventListener('click', closeCreateConfirmModal);
+    createConfirmCancel.addEventListener('click', closeCreateConfirmModal);
+    createConfirmModal.addEventListener('click', function (event) {
+        if (event.target === createConfirmModal) {
+            closeCreateConfirmModal();
+        }
+    });
+
+    createConfirmSubmit.addEventListener('click', function () {
+        allowCreateSubmit = true;
+        createForm.submit();
+    });
+
+    changeProductButton.addEventListener('click', () => {
+        allowCreateSubmit = false;
+        productIdInput.value = '';
+        selectedProduct.classList.add('hidden');
+        productSearch.classList.remove('hidden');
+        productResults.classList.remove('hidden');
+        productSearch.focus();
+        filterProducts();
+    });
+    filterProducts();
+
+    function openDrawer(button) {
+        const data = button.dataset;
+        fields.code.textContent = data.orderCode || '-';
+        fields.status.textContent = data.orderStatus || '-';
+        fields.status.className = data.orderStatus === pendingStatus ? 'status-badge pending' : 'status-badge approved';
+        fields.customerName.textContent = data.customerName || '-';
+        fields.customerPhone.textContent = data.customerPhone || '-';
+        fields.customerEmail.textContent = data.customerEmail || '-';
+        fields.customerAddress.textContent = data.shippingAddress || '-';
+        fields.paymentMethod.textContent = data.paymentMethod || 'CASH';
+        fields.productName.textContent = data.productName || '-';
+        fields.productPrice.textContent = formatVnd(data.productPrice);
+        fields.productImage.src = data.productImage || fallbackImage;
+        fields.productImage.onerror = function () { fields.productImage.src = fallbackImage; };
+        fields.notes.textContent = data.notes || 'Không có ghi chú thêm.';
+        fields.craneFee.value = formatVnd(data.craneFee);
+        fields.shippingFee.value = formatVnd(data.shippingFee);
+        fields.basePrice.textContent = formatVnd(data.productPrice);
+        fields.deposit.textContent = formatVnd(data.depositAmount);
+        fields.finalTotal.textContent = formatVnd(data.totalAmount);
+        confirmForm.action = data.confirmUrl || '#';
+        cancelForm.action = data.cancelUrl || '#';
+        editForm.action = data.updateUrl || '#';
+        editFields.customerName.value = data.customerName || '';
+        editFields.customerPhone.value = data.customerPhone || '';
+        editFields.shippingAddress.value = data.shippingAddress || '';
+        editFields.customerEmail.value = data.editCustomerEmail || '';
+        editFields.paymentMethod.value = data.paymentMethod || 'CASH';
+        editFields.notes.value = data.editNotes || '';
+        setFeeInput(editFeeInputs[0], data.craneFee);
+        setFeeInput(editFeeInputs[1], data.shippingFee);
+        editForm.classList.add('hidden');
+        cancelForm.style.display = 'none';
+        cancelReasonInput.value = '';
+        allowPaymentSubmit = false;
+        allowCancelSubmit = false;
+        paymentConfirmModal.classList.add('hidden');
+        cancelConfirmModal.classList.add('hidden');
+        footer.style.display = data.orderStatus === pendingStatus ? 'flex' : 'none';
+        editButton.hidden = data.orderStatus !== pendingStatus;
+        cancelButton.hidden = data.orderStatus !== pendingStatus;
+        confirmForm.hidden = data.orderStatus !== pendingStatus;
+        backdrop.classList.add('show');
+        panel.classList.add('show');
+    }
+
+    function closeDrawer() {
+        paymentConfirmModal.classList.add('hidden');
+        cancelConfirmModal.classList.add('hidden');
+        backdrop.classList.remove('show');
+        panel.classList.remove('show');
+    }
+
+    document.querySelectorAll('.js-open-walkin-drawer').forEach(button => {
+        button.addEventListener('click', function (event) {
+            event.stopPropagation();
+            openDrawer(button);
+        });
+    });
+
+    confirmForm.addEventListener('submit', function (event) {
+        if (!allowPaymentSubmit) {
+            event.preventDefault();
+            paymentConfirmCode.textContent = fields.code.textContent || '-';
+            paymentConfirmModal.classList.remove('hidden');
+        }
+    });
+
+    function closePaymentConfirmModal() {
+        paymentConfirmModal.classList.add('hidden');
+    }
+
+    paymentConfirmClose.addEventListener('click', closePaymentConfirmModal);
+    paymentConfirmCancel.addEventListener('click', closePaymentConfirmModal);
+    paymentConfirmModal.addEventListener('click', function (event) {
+        if (event.target === paymentConfirmModal) {
+            closePaymentConfirmModal();
+        }
+    });
+
+    paymentConfirmSubmit.addEventListener('click', function () {
+        allowPaymentSubmit = true;
+        confirmForm.submit();
+    });
+
+    editButton.addEventListener('click', function () {
+        cancelForm.style.display = 'none';
+        editForm.classList.remove('hidden');
+        editFields.customerName.focus();
+    });
+
+    cancelEditButton.addEventListener('click', function () {
+        editForm.classList.add('hidden');
+    });
+
+    editForm.addEventListener('submit', function () {
+        editFeeInputs.forEach(syncFeeInput);
+    });
+
+    cancelButton.addEventListener('click', function () {
+        editForm.classList.add('hidden');
+        cancelForm.style.display = 'flex';
+        cancelReasonInput.focus();
+    });
+
+    cancelReasonClose.addEventListener('click', function () {
+        cancelForm.style.display = 'none';
+        cancelReasonInput.value = '';
+    });
+
+    cancelForm.addEventListener('submit', function (event) {
+        if (!allowCancelSubmit) {
+            event.preventDefault();
+            cancelConfirmCode.textContent = fields.code.textContent || '-';
+            cancelConfirmModal.classList.remove('hidden');
+        }
+    });
+
+    function closeCancelConfirmModal() {
+        cancelConfirmModal.classList.add('hidden');
+    }
+
+    cancelConfirmClose.addEventListener('click', closeCancelConfirmModal);
+    cancelConfirmCancel.addEventListener('click', closeCancelConfirmModal);
+    cancelConfirmModal.addEventListener('click', function (event) {
+        if (event.target === cancelConfirmModal) {
+            closeCancelConfirmModal();
+        }
+    });
+
+    cancelConfirmSubmit.addEventListener('click', function () {
+        allowCancelSubmit = true;
+        cancelForm.submit();
+    });
+
+    closeButton.addEventListener('click', closeDrawer);
+    backdrop.addEventListener('click', closeDrawer);
+})();
+</script>
+</body>
+</html>

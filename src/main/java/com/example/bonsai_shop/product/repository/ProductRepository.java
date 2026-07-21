@@ -6,6 +6,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -14,10 +15,20 @@ import java.util.Optional;
 
 public interface ProductRepository extends JpaRepository<Product, Integer>, JpaSpecificationExecutor<Product> {
     List<Product> findByArtisanUserIdOrderByCreatedAtDesc(Integer artisanUserId);
+    List<Product> findByArtisanUserIdAndProductStatusOrderByCreatedAtDesc(Integer artisanUserId, String productStatus);
     Optional<Product> findByProductIdAndArtisanUserId(Integer productId, Integer artisanUserId);
     boolean existsByProductCode(String productCode);
     boolean existsByVarietyVarietyId(Integer varietyId);
     boolean existsBySegmentSegmentId(Integer segmentId);
+
+    @Modifying
+    @Query("""
+        UPDATE Product p
+        SET p.productStatus = 'RESERVED'
+        WHERE p.productId = :productId
+          AND p.productStatus = 'AVAILABLE'
+    """)
+    int reserveIfAvailable(@Param("productId") Integer productId);
 
     @Query("""
         SELECT new com.example.bonsai_shop.product.dto.ProductCardDTO(

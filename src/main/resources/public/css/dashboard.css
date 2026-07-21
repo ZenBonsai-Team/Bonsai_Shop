@@ -1135,6 +1135,11 @@ body:has(.artisan-topbar) .artisan-dashboard-hero {
     padding: 22px;
 }
 
+.artisan-metric-card > div:last-child,
+.revenue-summary-card > div:last-child {
+    min-width: 0;
+}
+
 .metric-icon {
     align-items: center;
     border-radius: 18px;
@@ -1180,6 +1185,14 @@ body:has(.artisan-topbar) .artisan-dashboard-hero {
     font-size: 1.75rem;
     font-weight: 900;
     line-height: 1.1;
+}
+
+.artisan-metric-card .money-value {
+    font-size: clamp(1.1rem, 1.8vw, 1.55rem);
+    letter-spacing: -0.04em;
+    line-height: 1.18;
+    overflow-wrap: anywhere;
+    word-break: break-word;
 }
 
 .artisan-dashboard-panel-grid {
@@ -1373,7 +1386,14 @@ body:has(.artisan-topbar) .artisan-dashboard-hero {
     display: block;
     font-size: 1rem;
     font-weight: 900;
-    white-space: nowrap;
+}
+
+.revenue-summary-card .money-value {
+    font-size: clamp(0.82rem, 1.1vw, 0.95rem);
+    letter-spacing: -0.03em;
+    line-height: 1.2;
+    overflow-wrap: anywhere;
+    word-break: break-word;
 }
 
 .status-breakdown,

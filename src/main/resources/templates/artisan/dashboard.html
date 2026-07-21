@@ -47,7 +47,7 @@
             <div class="metric-icon"><i class="fa-solid fa-chart-line"></i></div>
             <div>
                 <span>Doanh thu tháng này</span>
-                <strong th:text="${#numbers.formatDecimal(monthlyRevenue, 0, 'POINT', 0, 'POINT') + ' VNĐ'}">0 VNĐ</strong>
+                <strong class="money-value" th:text="${#numbers.formatDecimal(monthlyRevenue, 0, 'POINT', 0, 'POINT') + ' VNĐ'}">0 VNĐ</strong>
             </div>
         </article>
     </section>
@@ -104,7 +104,7 @@
                     <span class="summary-icon"><i class="fa-solid fa-wallet"></i></span>
                     <div>
                         <small>Tổng doanh thu</small>
-                        <strong th:text="${#numbers.formatDecimal(monthlyRevenue, 0, 'POINT', 0, 'POINT') + ' VNĐ'}">0 VNĐ</strong>
+                        <strong class="money-value" th:text="${#numbers.formatDecimal(monthlyRevenue, 0, 'POINT', 0, 'POINT') + ' VNĐ'}">0 VNĐ</strong>
                     </div>
                 </div>
                 <div class="revenue-summary-card">
@@ -118,7 +118,7 @@
                     <span class="summary-icon"><i class="fa-solid fa-sack-dollar"></i></span>
                     <div>
                         <small>Giá trị đơn TB</small>
-                        <strong th:text="${#numbers.formatDecimal(averageOrderValue, 0, 'POINT', 0, 'POINT') + ' VNĐ'}">0 VNĐ</strong>
+                        <strong class="money-value" th:text="${#numbers.formatDecimal(averageOrderValue, 0, 'POINT', 0, 'POINT') + ' VNĐ'}">0 VNĐ</strong>
                     </div>
                 </div>
             </div>
