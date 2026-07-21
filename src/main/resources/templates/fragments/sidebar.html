@@ -82,7 +82,12 @@
                     <span class="nav-icon"><i class="fa-solid fa-seedling"></i></span>
                     <span>Sản phẩm của tôi</span>
                 </a>
-                <a th:href="@{/artisan/appointments}" 
+                <a th:href="@{/artisan/walk-in-orders}" 
+                   class="sidebar-nav-item" 
+                   th:classappend="${activePage == 'walk-in-orders' or activePage == 'artisan-walk-in-orders' ? 'active' : ''}">
+                    <span class="nav-icon"><i class="fa-solid fa-cash-register"></i></span>
+                    <span>Walk-in Orders</span>
+                </a>                <a th:href="@{/artisan/appointments}" 
                    class="sidebar-nav-item" 
                    th:classappend="${activePage == 'appointments' ? 'active' : ''}">
                     <span class="nav-icon"><i class="fa-solid fa-calendar-check"></i></span>

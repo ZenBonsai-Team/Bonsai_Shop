@@ -659,6 +659,333 @@ textarea {
     padding: 10px 12px;
 }
 
+.walk-in-fee-field {
+    align-items: stretch;
+    background: #fff;
+}
+
+.walk-in-fee-field input {
+    box-shadow: none;
+    min-height: 44px;
+    outline: none;
+}
+
+.walk-in-fee-field > span {
+    align-items: center;
+    display: flex;
+}
+
+.walk-in-fee-field:focus-within {
+    border-color: #6f826f;
+    box-shadow: 0 0 0 3px rgba(28, 51, 34, 0.08);
+}
+
+.walk-in-product-picker {
+    border-bottom: 1px solid #e6e8df;
+    display: grid;
+    gap: 14px;
+    padding-bottom: 18px;
+}
+
+.walk-in-order-form {
+    align-items: start;
+    gap: 22px;
+    grid-template-columns: minmax(320px, 0.95fr) minmax(420px, 1.25fr);
+}
+
+.walk-in-order-form > label,
+.walk-in-customer-grid > label {
+    align-self: start;
+}
+
+.walk-in-customer-grid {
+    display: grid;
+    gap: 14px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.walk-in-customer-grid label {
+    gap: 7px;
+}
+
+.walk-in-customer-grid label > span:first-child,
+.walk-in-product-picker label > span:first-child {
+    color: #1c3322;
+    font-size: 0.86rem;
+    font-weight: 700;
+}
+
+.walk-in-customer-grid input,
+.walk-in-customer-grid select,
+.walk-in-customer-grid textarea,
+.walk-in-product-picker input {
+    min-height: 42px;
+    width: 100%;
+}
+
+.walk-in-field-wide,
+.walk-in-form-actions {
+    grid-column: 1 / -1;
+}
+
+.walk-in-form-actions {
+    justify-content: flex-start;
+    margin-top: 2px;
+}
+
+.walk-in-product-results {
+    border: 1px solid #e6e8df;
+    border-radius: 12px;
+    display: grid;
+    max-height: 260px;
+    overflow-y: auto;
+}
+
+.walk-in-product-results.hidden,
+.walk-in-selected-product.hidden,
+#walkInProductSearch.hidden {
+    display: none;
+}
+
+.walk-in-product-option {
+    align-items: center;
+    background: #fff;
+    border: 0;
+    border-bottom: 1px solid #eef0e8;
+    cursor: pointer;
+    display: grid;
+    gap: 6px;
+    grid-template-columns: minmax(150px, auto) 1fr auto;
+    padding: 12px 14px;
+    text-align: left;
+}
+
+.walk-in-product-option:last-child {
+    border-bottom: 0;
+}
+
+.walk-in-product-option:hover {
+    background: #f7faf8;
+}
+
+.walk-in-option-code {
+    color: #1c3322;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.walk-in-option-name {
+    font-weight: 600;
+}
+
+.walk-in-option-price {
+    color: #b8926a;
+    font-weight: 800;
+}
+
+.walk-in-selected-product {
+    border-bottom: 1px solid #e6e8df;
+    border-top: 1px solid #e6e8df;
+    display: grid;
+    gap: 12px;
+    padding: 16px 0;
+}
+
+.walk-in-selected-title {
+    color: #2b7a4c;
+    font-weight: 800;
+}
+
+.walk-in-selected-body {
+    align-items: center;
+    display: grid;
+    gap: 16px;
+    grid-template-columns: 96px 1fr auto;
+}
+
+.walk-in-selected-body img {
+    background: #f1f3ed;
+    border: 1px solid #e6e8df;
+    border-radius: 12px;
+    height: 96px;
+    object-fit: cover;
+    width: 96px;
+}
+
+.walk-in-selected-info {
+    display: grid;
+    gap: 4px;
+}
+
+.walk-in-selected-info strong {
+    color: #1c3322;
+    font-size: 0.85rem;
+    letter-spacing: 0.08em;
+}
+
+.walk-in-selected-info span {
+    color: #1c3322;
+    font-size: 1.05rem;
+    font-weight: 800;
+}
+
+.walk-in-selected-info small {
+    color: #6c757d;
+    font-weight: 700;
+}
+
+.walk-in-selected-info b {
+    color: #b8926a;
+    font-size: 1.05rem;
+}
+
+.walk-in-edit-form {
+    background: #f8faf5;
+    border: 1px solid #e6e8df;
+    border-radius: 14px;
+    display: grid;
+    gap: 14px;
+    margin-top: 16px;
+    padding: 16px;
+}
+
+.walk-in-edit-form.hidden {
+    display: none;
+}
+
+.walk-in-edit-grid {
+    display: grid;
+    gap: 12px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.walk-in-edit-grid label {
+    display: grid;
+    gap: 6px;
+}
+
+.walk-in-edit-grid label > span:first-child {
+    color: #1c3322;
+    font-size: 0.82rem;
+    font-weight: 700;
+}
+
+.walk-in-edit-grid input,
+.walk-in-edit-grid select,
+.walk-in-edit-grid textarea {
+    background: #fff;
+    min-height: 40px;
+    width: 100%;
+}
+
+.walk-in-edit-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+}
+
+.walk-in-notes-box {
+    background: #fcfcfc;
+    border: 1px solid #f0f0f0;
+    border-radius: 4px;
+    color: var(--text-muted);
+    font-size: 13px;
+    font-style: italic;
+    padding: 8px;
+    white-space: pre-line;
+}
+
+#walkInDrawerPanel {
+    right: 0 !important;
+    pointer-events: none;
+    transform: translateX(calc(100% + 2px));
+    transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    visibility: hidden;
+}
+
+#walkInDrawerPanel.show {
+    pointer-events: auto;
+    transform: translateX(0);
+    visibility: visible;
+}
+
+.walk-in-status-section {
+    display: grid;
+    gap: 12px;
+}
+
+.walk-in-status-row {
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
+}
+
+.walk-in-edit-link {
+    align-items: center;
+    background: #fff;
+    border: 1px dashed #9aa99a;
+    border-radius: 8px;
+    color: #1c3322;
+    display: inline-flex;
+    font-size: 0.84rem;
+    font-weight: 800;
+    gap: 8px;
+    justify-content: center;
+    letter-spacing: 0.03em;
+    min-height: 38px;
+    padding: 9px 12px;
+    text-transform: uppercase;
+    transition: var(--transition);
+    width: 100%;
+}
+
+.walk-in-edit-link:hover {
+    background: #f5f8f4;
+    border-color: #1c3322;
+}
+
+.walk-in-drawer-footer {
+    align-items: stretch;
+    display: flex;
+    gap: 16px;
+}
+
+#walkInCancelButton,
+#walkInConfirmForm {
+    flex: 1 1 0;
+    margin: 0;
+    min-width: 0;
+}
+
+#walkInConfirmForm .btn-block,
+#walkInCancelButton {
+    align-items: center;
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    min-height: 52px;
+    padding: 13px 12px;
+    white-space: nowrap;
+    width: 100%;
+}
+
+@media (max-width: 1180px) {
+    .walk-in-order-form {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 720px) {
+    .walk-in-customer-grid,
+    .walk-in-edit-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
 .artisan-portal {
     display: grid;
     grid-template-columns: 260px 1fr;

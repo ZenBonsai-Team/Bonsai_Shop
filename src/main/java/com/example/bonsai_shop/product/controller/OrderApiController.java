@@ -206,6 +206,7 @@ public class OrderApiController {
                 .totalAmount(product.getPrice())
                 .depositAmount(BigDecimal.ZERO)
                 .orderStatus("PENDING")
+                .orderType("ONLINE")
                 .build();
 
         // 4. Thiết lập chi tiết đơn hàng (OrderDetail)
@@ -216,10 +217,14 @@ public class OrderApiController {
                 .build();
         order.setOrderDetails(Collections.singletonList(detail));
 
-        // 5. Cập nhật trạng thái sản phẩm thành RESERVED để tránh người khác đặt mua
-        // trùng
+        // 5. Reserve sản phẩm bằng atomic update để tránh đặt trùng với walk-in/online order khác.
+        int reserved = productRepository.reserveIfAvailable(product.getProductId());
+        if (reserved == 0) {
+            response.put("success", false);
+            response.put("message", "Tác phẩm này đã được bán hoặc đã có khách đặt trước!");
+            return ResponseEntity.badRequest().body(response);
+        }
         product.setProductStatus("RESERVED");
-        productRepository.save(product);
 
         // Lưu đơn hàng vào cơ sở dữ liệu
         orderRepository.save(order);
@@ -325,6 +330,7 @@ public class OrderApiController {
                 .depositAmount(order.getDepositAmount())
                 .orderDate(order.getOrderDate())
                 .orderStatus(order.getOrderStatus())
+                .orderType(order.getOrderType())
                 .craneFee(order.getCraneFee())
                 .shippingFee(order.getShippingFee())
                 .notes(order.getNotes())
