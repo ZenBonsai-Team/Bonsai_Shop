@@ -54,6 +54,7 @@ public class CommunityController {
     private final CloudinaryStorageService cloudinaryStorageService;
     private final FileStorageService fileStorageService;
     private final CommunityPostBookmarkRepository bookmarkRepository;
+    private final com.example.bonsai_shop.customer.service.ProfanityFilterService profanityFilterService;
 
     @GetMapping
     public String community(Model model,
@@ -350,7 +351,34 @@ public class CommunityController {
         post.setCreatedAt(LocalDateTime.now());
         post.setLikesCount(0);
         post.setCommentsCount(0);
-        post.setStatus("APPROVED");
+
+        boolean isFlagged = profanityFilterService.containsProfanity(post.getTitle()) || profanityFilterService.containsProfanity(post.getContent());
+        if (isFlagged) {
+            post.setTitle(profanityFilterService.maskProfanity(post.getTitle()));
+            post.setContent(profanityFilterService.maskProfanity(post.getContent()));
+            post.setStatus("FLAGGED");
+            
+            // 1. Thông báo cảnh báo cho Tác giả
+            notificationRepository.save(ModerationNotification.builder()
+                    .targetUsername(user.getEmail())
+                    .message("⚠️ Bài viết '" + post.getTitle() + "' của bạn nghi vấn chứa từ ngữ vi phạm và đã chuyển vào Hàng chờ kiểm duyệt.")
+                    .isRead(false)
+                    .createdAt(LocalDateTime.now())
+                    .build());
+
+            // 2. Gửi thông báo cảnh báo chỉ cho các tài khoản CONTENT_MODERATOR
+            List<User> moderators = userRepository.findByRoleRoleNameIn(List.of("ROLE_CONTENT_MODERATOR", "CONTENT_MODERATOR"));
+            for (User mod : moderators) {
+                notificationRepository.save(ModerationNotification.builder()
+                        .targetUsername(mod.getEmail())
+                        .message("🚨 Bài viết mới từ " + (user.getFullName() != null ? user.getFullName() : user.getUsername()) + " nghi vấn chứa từ ngữ vi phạm cần kiểm duyệt.")
+                        .isRead(false)
+                        .createdAt(LocalDateTime.now())
+                        .build());
+            }
+        } else {
+            post.setStatus("APPROVED");
+        }
 
         if (post.getReadTime() == null || post.getReadTime() <= 0) {
             post.setReadTime(5); // default
@@ -408,16 +436,53 @@ public class CommunityController {
 
         String authorName = user.getFullName() != null && !user.getFullName().isEmpty() ? user.getFullName() : user.getUsername();
 
+        boolean isFlagged = profanityFilterService.containsProfanity(content);
+        String maskedContent = profanityFilterService.maskProfanity(content.trim());
+
         CommunityComment comment = CommunityComment.builder()
                 .postId(id)
                 .userId(user.getUserId())
                 .authorName(authorName)
                 .authorAvatar(avatar)
-                .content(content.trim())
+                .content(maskedContent)
+                .status(isFlagged ? "FLAGGED" : "APPROVED")
                 .createdAt(LocalDateTime.now())
                 .build();
 
         commentRepository.save(comment);
+
+        if (isFlagged) {
+            // 1. Thông báo cảnh báo cho người viết bình luận
+            notificationRepository.save(ModerationNotification.builder()
+                    .targetUsername(user.getEmail())
+                    .message("⚠️ Bình luận của bạn trên bài viết #" + id + " nghi vấn chứa từ ngữ vi phạm và đã chuyển vào Hàng chờ kiểm duyệt.")
+                    .isRead(false)
+                    .createdAt(LocalDateTime.now())
+                    .build());
+
+            // 2. Gửi thông báo cảnh báo chỉ cho các tài khoản CONTENT_MODERATOR
+            List<User> moderators = userRepository.findByRoleRoleNameIn(List.of("ROLE_CONTENT_MODERATOR", "CONTENT_MODERATOR"));
+            for (User mod : moderators) {
+                notificationRepository.save(ModerationNotification.builder()
+                        .targetUsername(mod.getEmail())
+                        .message("🚨 Bình luận mới từ " + authorName + " trên bài viết #" + id + " nghi vấn chứa từ ngữ vi phạm cần bạn kiểm duyệt.")
+                        .isRead(false)
+                        .createdAt(LocalDateTime.now())
+                        .build());
+            }
+        } else {
+            // Nếu bình luận hợp lệ, gửi thông báo cho Tác giả bài viết (nếu người cmt không phải là tác giả)
+            if (post.getAuthorId() != null && !post.getAuthorId().equals(user.getUserId())) {
+                userRepository.findById(post.getAuthorId()).ifPresent(author -> {
+                    notificationRepository.save(ModerationNotification.builder()
+                            .targetUsername(author.getEmail())
+                            .message("💬 " + authorName + " đã bình luận về bài viết #" + id + " của bạn.")
+                            .isRead(false)
+                            .createdAt(LocalDateTime.now())
+                            .build());
+                });
+            }
+        }
 
         // Cập nhật số lượng bình luận trên Post
         post.setCommentsCount(post.getCommentsCount() + 1);

@@ -25,10 +25,10 @@ public class SecurityConfig {
                 return new BCryptPasswordEncoder();
         }
 
-    @Bean
-
+        @Bean
         public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
                 http
+                                .csrf(csrf -> csrf.ignoringRequestMatchers("/api/notifications/**", "/community/**"))
                                 .userDetailsService(customUserDetailsService)
                                 .authorizeHttpRequests(auth -> auth
                                                 // Trang công khai
@@ -56,7 +56,8 @@ public class SecurityConfig {
                                                                 "/images/**", // ← cho phép images
                                                                 "/api/orders", // ← tạm thời cho phép để test API chính
                                                                 "/api/orders/**", // ← tạm thời cho phép để test API con
-                                                                "/api/products/**" // ← cho phép lấy thông tin chi tiết sản phẩm
+                                                                "/api/products/**", // ← cho phép lấy thông tin chi tiết sản phẩm
+                                                                "/api/notifications/**" // ← cho phép lấy thông tin thông báo nút chuông
                                                 ).permitAll()
                                                  // Chỉ OWNER mới vào được /admin/**
                                                  .requestMatchers("/admin/**").hasRole("OWNER")

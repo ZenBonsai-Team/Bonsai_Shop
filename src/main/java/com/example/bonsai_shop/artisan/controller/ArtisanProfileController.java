@@ -49,6 +49,8 @@ public class ArtisanProfileController {
         String email = userDetails.getUsername();
         try {
             userService.updateUserProfile(email, fullName, username, phone, address, avatarFile);
+            User artisan = userService.getCurrentUserProfile(email);
+            com.example.bonsai_shop.config.SecurityUtils.updateSecurityContext(artisan);
             return "redirect:/artisan/profile";
         } catch (RuntimeException e) {
             User artisan = userService.getCurrentUserProfile(email);

@@ -9,16 +9,112 @@
     </div>
 
     <div class="artisan-topbar-right">
-        <button type="button" class="artisan-notification" aria-label="Notifications">
-            <i class="fa-solid fa-bell"></i>
-            <span></span>
-        </button>
+        <!-- Notification Center -->
+        <div class="position-relative notification-dropdown-wrapper me-2">
+            <button class="header-action-btn position-relative border-0 bg-transparent" aria-label="Notifications" id="artisanBellNotificationBtn" onclick="toggleArtisanNotificationMenu()" style="cursor: pointer; font-size: 1.1rem;">
+                <i class="fa-solid fa-bell text-secondary"></i>
+                <span id="artisanBellBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none" style="font-size: 0.65rem; padding: 2px 5px;">0</span>
+            </button>
+            <div id="artisanBellDropdownMenu" class="dropdown-menu dropdown-menu-end shadow-lg p-0 border-0 d-none position-absolute mt-2" style="width: 320px; max-height: 400px; overflow-y: auto; right: 0; z-index: 1050; border-radius: 12px; background: #ffffff;">
+                <div class="p-3 border-bottom d-flex justify-content-between align-items-center bg-light" style="border-top-left-radius: 12px; border-top-right-radius: 12px;">
+                    <strong class="text-dark" style="font-size: 0.95rem;">Thông báo hệ thống</strong>
+                    <button type="button" class="btn btn-link p-0 text-decoration-none small text-success" onclick="markAllArtisanNotificationsRead()" style="font-size: 0.8rem;">Đã đọc tất cả</button>
+                </div>
+                <div id="artisanBellNotificationList" class="list-group list-group-flush">
+                    <div class="text-center py-4 text-muted small">Đang tải thông báo...</div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            function loadArtisanNotifications() {
+                fetch('/api/notifications')
+                    .then(res => res.json())
+                    .then(data => {
+                        const badge = document.getElementById('artisanBellBadge');
+                        const list = document.getElementById('artisanBellNotificationList');
+                        if (!badge || !list) return;
+
+                        if (data.unreadCount > 0) {
+                            badge.innerText = data.unreadCount;
+                            badge.classList.remove('d-none');
+                        } else {
+                            badge.classList.add('d-none');
+                        }
+
+                        if (!data.notifications || data.notifications.length === 0) {
+                            list.innerHTML = '<div class="text-center py-4 text-muted small"><i class="fa-regular fa-bell-slash me-1"></i> Chưa có thông báo mới.</div>';
+                            return;
+                        }
+
+                        let html = '';
+                        data.notifications.forEach(item => {
+                            const bgClass = item.isRead ? 'bg-white' : 'bg-light font-weight-bold';
+                            const icon = item.isRead ? 'fa-regular fa-envelope-open text-secondary' : 'fa-solid fa-bell text-warning';
+                            const safeMessage = item.message.replace(/'/g, "\\'");
+                            html += `
+                                <div class="list-group-item list-group-item-action ${bgClass} p-3 border-bottom" 
+                                     style="font-size: 0.85rem; cursor: pointer;"
+                                     onclick="handleArtisanNotificationClick(${item.notificationId}, '${safeMessage}')">
+                                    <div class="d-flex gap-2 align-items-start">
+                                        <i class="${icon} mt-1"></i>
+                                        <div class="flex-grow-1">
+                                            <p class="mb-1 text-dark" style="line-height: 1.4;">${item.message}</p>
+                                            <span class="text-muted" style="font-size: 0.75rem;">${item.createdAt ? new Date(item.createdAt).toLocaleString('vi-VN') : ''}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                        list.innerHTML = html;
+                    }).catch(err => console.error(err));
+            }
+
+            function handleArtisanNotificationClick(notificationId, message) {
+                fetch('/api/notifications/' + notificationId + '/read', { method: 'POST' })
+                    .then(res => res.json())
+                    .then(() => {
+                        loadArtisanNotifications();
+                        const match = message.match(/#(\d+)/);
+                        if (match && match[1]) {
+                            window.location.href = '/community/post/' + match[1];
+                        }
+                    }).catch(() => {
+                        loadArtisanNotifications();
+                    });
+            }
+
+            function toggleArtisanNotificationMenu() {
+                const menu = document.getElementById('artisanBellDropdownMenu');
+                if (!menu) return;
+                if (menu.classList.contains('d-none')) {
+                    menu.classList.remove('d-none');
+                    loadArtisanNotifications();
+                } else {
+                    menu.classList.add('d-none');
+                }
+            }
+
+            function markAllArtisanNotificationsRead() {
+                fetch('/api/notifications/mark-read', { method: 'POST' })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            loadArtisanNotifications();
+                        }
+                    }).catch(err => console.error(err));
+            }
+
+            document.addEventListener('DOMContentLoaded', function() {
+                loadArtisanNotifications();
+            });
+        </script>
         <a th:href="@{/artisan/profile}" class="artisan-user-avatar" title="Artisan Profile">
-            <img src="https://api.dicebear.com/7.x/adventurer/svg?seed=artisan" alt="Artisan avatar">
+            <img th:src="${#authentication.principal != null and #authentication.principal.avatar != null and !#authentication.principal.avatar.trim().isEmpty() ? #authentication.principal.avatar : ('https://ui-avatars.com/api/?name=' + (#authentication.principal != null and #authentication.principal.fullName != null ? #authentication.principal.fullName : #authentication.name) + '&background=2E7D32&color=fff')}" alt="Artisan avatar" style="object-fit: cover; width: 36px; height: 36px; border-radius: 50%;">
         </a>
         <div class="artisan-user-meta">
-            <strong sec:authentication="name">artisan@example.com</strong>
-            <span>ARTISAN</span>
+            <strong th:text="${#authentication.principal != null and #authentication.principal.fullName != null ? #authentication.principal.fullName : #authentication.name}">Nghệ nhân</strong>
+            <span th:text="${#authentication.principal != null and #authentication.principal.roleName != null ? #authentication.principal.roleName : 'ARTISAN'}">ARTISAN</span>
         </div>
     </div>
 </header>

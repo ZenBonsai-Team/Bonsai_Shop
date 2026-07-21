@@ -12,6 +12,7 @@ public interface UserRepository extends JpaRepository<User, Integer> {
     boolean existsByEmail(String email);
     List<User> findByStatus(String status);
     List<User> findByRoleRoleId(Integer roleId);
+    List<User> findByRoleRoleNameIn(List<String> roleNames);
 
     @org.springframework.data.jpa.repository.Query(value = 
         "SELECT u.* FROM USER u " +

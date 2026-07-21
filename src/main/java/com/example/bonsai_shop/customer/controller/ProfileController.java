@@ -69,6 +69,7 @@ public class ProfileController {
         try {
             userService.updateUserProfile(email, fullName, username, phone, address, avatarFile);
             User user = userService.getCurrentUserProfile(email);
+            com.example.bonsai_shop.config.SecurityUtils.updateSecurityContext(user);
             model.addAttribute("user", user);
             model.addAttribute("success", "Cập nhật thông tin thành công!");
         } catch (RuntimeException e) {

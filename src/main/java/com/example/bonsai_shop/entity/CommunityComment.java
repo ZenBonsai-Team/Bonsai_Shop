@@ -34,6 +34,13 @@ public class CommunityComment {
     private String content;
 
     @Builder.Default
+    @Column(name = "Status", length = 50)
+    private String status = "APPROVED";
+
+    @Column(name = "ModerationReason", length = 500)
+    private String moderationReason;
+
+    @Builder.Default
     @Column(name = "CreatedAt")
     private LocalDateTime createdAt = LocalDateTime.now();
 }
