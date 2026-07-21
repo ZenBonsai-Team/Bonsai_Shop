@@ -121,8 +121,11 @@ public class ArtisanWalkInOrderService {
                 .build();
         order.setPayment(payment);
 
+        int reserved = productRepository.reserveIfAvailable(product.getProductId());
+        if (reserved == 0) {
+            throw new RuntimeException("Sản phẩm đã được đặt hoặc không còn khả dụng.");
+        }
         product.setProductStatus(PRODUCT_RESERVED);
-        productRepository.save(product);
         Order savedOrder = orderRepository.save(order);
         log(savedOrder, artisanUser, "WALK_IN_CREATE", null, STATUS_PENDING_PAYMENT);
         return savedOrder;

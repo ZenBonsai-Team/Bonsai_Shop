@@ -208,10 +208,14 @@ public class OrderApiController {
                 .build();
         order.setOrderDetails(Collections.singletonList(detail));
 
-        // 5. Cập nhật trạng thái sản phẩm thành RESERVED để tránh người khác đặt mua
-        // trùng
+        // 5. Reserve sản phẩm bằng atomic update để tránh đặt trùng với walk-in/online order khác.
+        int reserved = productRepository.reserveIfAvailable(product.getProductId());
+        if (reserved == 0) {
+            response.put("success", false);
+            response.put("message", "Tác phẩm này đã được bán hoặc đã có khách đặt trước!");
+            return ResponseEntity.badRequest().body(response);
+        }
         product.setProductStatus("RESERVED");
-        productRepository.save(product);
 
         // Lưu đơn hàng vào cơ sở dữ liệu
         orderRepository.save(order);
