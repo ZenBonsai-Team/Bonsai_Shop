@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', function () {
     const searchInput = document.getElementById('searchEmail');
-    const tableRows = document.querySelectorAll('#userTableBody tr');
+    const tableRows = document.querySelectorAll('#userTableBody tr[data-email]');
     const noResultRow = document.getElementById('noResultRow');
 
     searchInput.addEventListener('input', function () {

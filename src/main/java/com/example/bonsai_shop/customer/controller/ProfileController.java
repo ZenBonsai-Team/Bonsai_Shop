@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 
 import com.example.bonsai_shop.customer.repository.CommunityPostRepository;
 import com.example.bonsai_shop.entity.CommunityPost;
@@ -27,13 +28,29 @@ public class ProfileController {
     private final UserService userService;
     private final CommunityPostRepository communityPostRepository;
     private final CommunityPostBookmarkRepository bookmarkRepository;
+    private String extractEmail(Object principal) {
+        if (principal instanceof UserDetails userDetails) {
+            return userDetails.getUsername();
+        } else if (principal instanceof OAuth2User oAuth2User) {
+            return  oAuth2User.getAttribute("email");
+        }
+        return null;
+    }
 
     @GetMapping("/profile")
-    public String viewProfile(@AuthenticationPrincipal UserDetails userDetails, Model model) {
-        // Lấy email của người đang đăng nhập
-        String email = userDetails.getUsername();
+    public String viewProfile(@AuthenticationPrincipal Object principal, Model model) {
+        String email;
 
-        // Lấy thông tin đầy đủ từ database
+        if (principal instanceof UserDetails userDetails) {
+            // Đăng nhập bằng email/password
+            email = userDetails.getUsername();
+        } else if (principal instanceof OAuth2User oAuth2User) {
+            // Đăng nhập bằng Google
+            email =  oAuth2User.getAttribute("email");
+        } else {
+            return "redirect:/login";
+        }
+
         User user = userService.getCurrentUserProfile(email);
 
         List<CommunityPost> myBonsaiPosts = communityPostRepository.findByAuthorIdOrderByCreatedAtDesc(user.getUserId());
@@ -47,25 +64,30 @@ public class ProfileController {
         model.addAttribute("myBonsaiPosts", myBonsaiPosts);
         model.addAttribute("savedPosts", savedPosts);
         return "customer/profile"; // templates/customer/profile.html
+        return "customer/profile";
     }
 
     @GetMapping("/profile/update")
-    public String updateProfile(@AuthenticationPrincipal UserDetails userDetails, Model model) {
-            String email = userDetails.getUsername();
+    public String updateProfile(@AuthenticationPrincipal  Object principal, Model model) {
+            String email = extractEmail(principal);
+            if (email == null) return "redirect:/login";
+
             User user = userService.getCurrentUserProfile(email);
             model.addAttribute("user", user);
-            return "customer/profile_update";
+           return "customer/profile_update";
     }
 
     @PostMapping("/profile/update")
-    public String updateProfile(@AuthenticationPrincipal UserDetails userDetails,
+    public String updateProfile(@AuthenticationPrincipal Object principal,
                                 @RequestParam(required = false) String fullName,
                                 @RequestParam(required = false) String username,
                                 @RequestParam(required = false) String phone,
                                 @RequestParam(required = false) String address,
                                 @RequestParam(value = "avatarFile", required = false) MultipartFile avatarFile,
                                 Model model) {
-        String email = userDetails.getUsername();
+        String email = extractEmail(principal);
+        if (email == null) return "redirect:/login";
+
         try {
             userService.updateUserProfile(email, fullName, username, phone, address, avatarFile);
             User user = userService.getCurrentUserProfile(email);
@@ -77,8 +99,9 @@ public class ProfileController {
             model.addAttribute("user", user);
             model.addAttribute("error", e.getMessage());
         }
-        return "customer/profile";
+        return "customer/profile_update";
     }
+
 
 
 }

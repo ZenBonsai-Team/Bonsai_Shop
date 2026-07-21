@@ -28,6 +28,9 @@ if (btnLogin) {
     });
 }
 
-if (window.location.search.includes("logout" && "error")) {
+if (window.location.search.includes("logout")) {
+    window.history.replaceState({}, document.title, window.location.pathname);
+}
+if (window.location.search.includes("error")) {
     window.history.replaceState({}, document.title, window.location.pathname);
 }
