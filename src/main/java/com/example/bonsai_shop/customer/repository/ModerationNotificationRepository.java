@@ -6,4 +6,6 @@ import java.util.List;
 
 public interface ModerationNotificationRepository extends JpaRepository<ModerationNotification, Integer> {
     List<ModerationNotification> findByTargetUsernameOrderByCreatedAtDesc(String targetUsername);
+    List<ModerationNotification> findTop10ByTargetUsernameOrderByCreatedAtDesc(String targetUsername);
+    long countByTargetUsernameAndIsReadFalse(String targetUsername);
 }

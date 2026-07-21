@@ -33,9 +33,9 @@
             </button>
             
             <div class="admin-nav-profile">
-                <img th:src="@{'https://ui-avatars.com/api/?name=' + ${#authentication.name} + '&background=0D8ABC&color=fff'}" alt="User Avatar">
+                <img th:src="${#authentication.principal != null and #authentication.principal.avatar != null and !#authentication.principal.avatar.trim().isEmpty() ? #authentication.principal.avatar : ('https://ui-avatars.com/api/?name=' + (#authentication.principal != null and #authentication.principal.fullName != null ? #authentication.principal.fullName : #authentication.name) + '&background=0D8ABC&color=fff')}" alt="User Avatar" style="object-fit: cover; width: 36px; height: 36px; border-radius: 50%;">
                 <div class="d-none d-sm-block text-start">
-                    <span class="user-name" sec:authentication="name">John Doe</span>
+                    <span class="user-name" th:text="${#authentication.principal != null and #authentication.principal.fullName != null ? #authentication.principal.fullName : #authentication.name}">Admin</span>
                 </div>
                 <i class="fa-solid fa-chevron-down text-secondary" style="font-size: 0.8rem;"></i>
             </div>

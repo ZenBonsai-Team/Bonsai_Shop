@@ -30,6 +30,15 @@ import com.example.bonsai_shop.entity.CommunityPostLike;
 import com.example.bonsai_shop.entity.User;
 import com.example.bonsai_shop.entity.ModerationNotification;
 
+import com.example.bonsai_shop.customer.service.FileStorageService;
+import com.example.bonsai_shop.data.common.CloudinaryFolder;
+import com.example.bonsai_shop.data.dto.CloudinaryUploadResponse;
+import com.example.bonsai_shop.data.service.CloudinaryStorageService;
+import org.springframework.web.multipart.MultipartFile;
+
+import com.example.bonsai_shop.customer.repository.CommunityPostBookmarkRepository;
+import com.example.bonsai_shop.entity.CommunityPostBookmark;
+
 import lombok.RequiredArgsConstructor;
 
 @Controller
@@ -42,6 +51,10 @@ public class CommunityController {
     private final CommunityCommentRepository commentRepository;
     private final CommunityPostLikeRepository likeRepository;
     private final ModerationNotificationRepository notificationRepository;
+    private final CloudinaryStorageService cloudinaryStorageService;
+    private final FileStorageService fileStorageService;
+    private final CommunityPostBookmarkRepository bookmarkRepository;
+    private final com.example.bonsai_shop.customer.service.ProfanityFilterService profanityFilterService;
 
     @GetMapping
     public String community(Model model,
@@ -49,9 +62,22 @@ public class CommunityController {
             @RequestParam(value = "search", required = false) String search,
             @AuthenticationPrincipal UserDetails userDetails) {
 
-        List<CommunityPost> posts;
+        List<CommunityPost> posts = new java.util.ArrayList<>();
 
-        if (category != null && !category.trim().isEmpty() && !category.equals("Tất cả")) {
+        if (category != null && category.trim().equals("Đã lưu")) {
+            if (userDetails != null) {
+                User user = userRepository.findByEmail(userDetails.getUsername()).orElse(null);
+                if (user != null) {
+                    List<CommunityPostBookmark> bookmarks = bookmarkRepository.findByUserIdOrderByCreatedAtDesc(user.getUserId());
+                    List<Integer> postIds = bookmarks.stream().map(CommunityPostBookmark::getPostId).collect(java.util.stream.Collectors.toList());
+                    if (!postIds.isEmpty()) {
+                        posts = postRepository.findAllById(postIds).stream()
+                                .filter(p -> "APPROVED".equals(p.getStatus()))
+                                .collect(java.util.stream.Collectors.toList());
+                    }
+                }
+            }
+        } else if (category != null && !category.trim().isEmpty() && !category.equals("Tất cả")) {
             if (search != null && !search.trim().isEmpty()) {
                 posts = postRepository.searchPostsByCategory(category, search);
             } else {
@@ -65,6 +91,9 @@ public class CommunityController {
             }
         }
 
+        java.util.Set<Integer> likedPostIds = new java.util.HashSet<>();
+        java.util.Set<Integer> bookmarkedPostIds = new java.util.HashSet<>();
+
         // Add info to check if user is logged in (for UI controls)
         if (userDetails != null) {
             userRepository.findByEmail(userDetails.getUsername()).ifPresent(user -> {
@@ -72,8 +101,23 @@ public class CommunityController {
                 // Fetch notifications for current user
                 List<ModerationNotification> notifications = notificationRepository.findByTargetUsernameOrderByCreatedAtDesc(user.getFullName());
                 model.addAttribute("moderationNotifications", notifications);
+
+                // Fetch user's liked and bookmarked post IDs for instant feed UI state
+                likeRepository.findByUserId(user.getUserId()).forEach(l -> likedPostIds.add(l.getPostId()));
+                bookmarkRepository.findByUserIdOrderByCreatedAtDesc(user.getUserId()).forEach(b -> bookmarkedPostIds.add(b.getPostId()));
             });
         }
+
+        // Fetch dynamic Artisans from DB for Featured Artisans Widget (RoleID = 3 is ROLE_ARTISAN)
+        // Ordered by total approved posts and sum of likes dynamically
+        List<User> featuredArtisans = userRepository.findFeaturedArtisans();
+        if (featuredArtisans.isEmpty()) {
+            featuredArtisans = userRepository.findByRoleRoleId(3);
+        }
+        model.addAttribute("featuredArtisans", featuredArtisans);
+
+        model.addAttribute("likedPostIds", likedPostIds);
+        model.addAttribute("bookmarkedPostIds", bookmarkedPostIds);
 
         model.addAttribute("posts", posts);
         model.addAttribute("selectedCategory", category != null ? category : "Tất cả");
@@ -81,6 +125,68 @@ public class CommunityController {
         model.addAttribute("activePage", "community");
 
         return "customer/community";
+    }
+
+    // ===== TRANG HỒ SƠ TÁC GIẢ BÀI VIẾT (PUBLIC AUTHOR PROFILE) =====
+    @GetMapping("/author/{identifier}")
+    public String viewAuthorProfile(@PathVariable("identifier") String identifier, Model model,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        User author = null;
+        Integer authorId = null;
+        String authorName = identifier;
+
+        // 1. Try parsing as integer user ID first
+        try {
+            authorId = Integer.parseInt(identifier);
+            author = userRepository.findById(authorId).orElse(null);
+            if (author != null) {
+                authorName = author.getFullName();
+            }
+        } catch (NumberFormatException e) {
+            // Identifier is a string name
+        }
+
+        // 2. If not found by ID, try searching by full name in user list
+        if (author == null) {
+            List<User> allUsers = userRepository.findAll();
+            for (User u : allUsers) {
+                if (u.getFullName() != null && (u.getFullName().equalsIgnoreCase(identifier) || u.getEmail().equalsIgnoreCase(identifier))) {
+                    author = u;
+                    authorId = u.getUserId();
+                    authorName = u.getFullName();
+                    break;
+                }
+            }
+        }
+
+        // 3. If still no User entity found, fallback to virtual author object
+        if (author == null) {
+            author = new User();
+            author.setUserId(authorId != null ? authorId : 0);
+            author.setFullName(authorName);
+            author.setAddress("Việt Nam");
+            author.setAvatar("https://ui-avatars.com/api/?name=" + java.net.URLEncoder.encode(authorName, java.nio.charset.StandardCharsets.UTF_8));
+        }
+
+        // 4. Fetch posts by authorId or by authorName
+        List<CommunityPost> authorPosts = new java.util.ArrayList<>();
+        if (authorId != null && authorId > 0) {
+            authorPosts = postRepository.findByAuthorIdOrderByCreatedAtDesc(authorId);
+        }
+        if (authorPosts.isEmpty() && authorName != null) {
+            authorPosts = postRepository.findByAuthorNameOrderByCreatedAtDesc(authorName);
+        }
+
+        if (userDetails != null) {
+            userRepository.findByEmail(userDetails.getUsername()).ifPresent(user -> {
+                model.addAttribute("currentUser", user);
+            });
+        }
+
+        model.addAttribute("author", author);
+        model.addAttribute("authorPosts", authorPosts);
+        model.addAttribute("activePage", "community");
+        return "customer/author-profile";
     }
 
     @GetMapping("/post/{id}")
@@ -109,15 +215,23 @@ public class CommunityController {
         // Lấy bình luận thực tế
         List<CommunityComment> comments = commentRepository.findByPostIdOrderByCreatedAtDesc(id);
 
+        // Đồng bộ số lượng bình luận thực tế trong DB với post.commentsCount
+        if (post.getCommentsCount() == null || post.getCommentsCount() != comments.size()) {
+            post.setCommentsCount(comments.size());
+            postRepository.save(post);
+        }
+
         // Lấy 3 bài viết tương tự cùng danh mục
         List<CommunityPost> relatedPosts = postRepository.findTop3ByCategoryAndStatusAndPostIdNotOrderByCreatedAtDesc(
                 post.getCategory(), "APPROVED", id);
-        // Kiểm tra xem user hiện tại đã like chưa
+        // Kiểm tra xem user hiện tại đã like / bookmark chưa
         boolean isLiked = false;
+        boolean isBookmarked = false;
         if (userDetails != null) {
             User user = userRepository.findByEmail(userDetails.getUsername()).orElse(null);
             if (user != null) {
                 isLiked = likeRepository.findByPostIdAndUserId(id, user.getUserId()).isPresent();
+                isBookmarked = bookmarkRepository.existsByPostIdAndUserId(id, user.getUserId());
             }
         }
 
@@ -125,6 +239,7 @@ public class CommunityController {
         model.addAttribute("comments", comments);
         model.addAttribute("relatedPosts", relatedPosts);
         model.addAttribute("isLiked", isLiked);
+        model.addAttribute("isBookmarked", isBookmarked);
         model.addAttribute("activePage", "community");
         return "customer/community-detail";
     }
@@ -172,7 +287,9 @@ public class CommunityController {
     }
 
     @GetMapping("/create")
-    public String showCreateForm(Model model, @AuthenticationPrincipal UserDetails userDetails) {
+    public String showCreateForm(Model model, 
+                                 @RequestParam(required = false) String category,
+                                 @AuthenticationPrincipal UserDetails userDetails) {
         if (userDetails == null) {
             return "redirect:/login";
         }
@@ -181,13 +298,18 @@ public class CommunityController {
             model.addAttribute("currentUser", user);
         });
 
-        model.addAttribute("post", new CommunityPost());
+        CommunityPost newPost = new CommunityPost();
+        if (category != null && !category.trim().isEmpty()) {
+            newPost.setCategory(category.trim());
+        }
+        model.addAttribute("post", newPost);
         model.addAttribute("activePage", "community");
         return "customer/community-create";
     }
 
     @PostMapping("/create")
     public String createPost(@ModelAttribute("post") CommunityPost post,
+            @RequestParam(value = "imageFile", required = false) MultipartFile imageFile,
             @AuthenticationPrincipal UserDetails userDetails) {
         if (userDetails == null) {
             return "redirect:/login";
@@ -196,7 +318,25 @@ public class CommunityController {
         User user = userRepository.findByEmail(userDetails.getUsername())
                 .orElseThrow(() -> new RuntimeException("Người dùng chưa được xác thực"));
 
+        // Process uploaded image file if provided
+        if (imageFile != null && !imageFile.isEmpty()) {
+            try {
+                CloudinaryUploadResponse response = cloudinaryStorageService.uploadImage(imageFile, CloudinaryFolder.COMMUNITY);
+                if (response != null && response.getUrl() != null) {
+                    post.setImageUrl(response.getUrl());
+                }
+            } catch (Exception e) {
+                try {
+                    String localUrl = fileStorageService.storeAvatar(imageFile);
+                    post.setImageUrl(localUrl);
+                } catch (Exception ex) {
+                    // Ignore, fallback to entered URL or default
+                }
+            }
+        }
+
         // Set author info from logged in user
+        post.setAuthorId(user.getUserId());
         post.setAuthorName(
                 user.getFullName() != null && !user.getFullName().isEmpty() ? user.getFullName() : user.getUsername());
 
@@ -211,7 +351,34 @@ public class CommunityController {
         post.setCreatedAt(LocalDateTime.now());
         post.setLikesCount(0);
         post.setCommentsCount(0);
-        post.setStatus("APPROVED");
+
+        boolean isFlagged = profanityFilterService.containsProfanity(post.getTitle()) || profanityFilterService.containsProfanity(post.getContent());
+        if (isFlagged) {
+            post.setTitle(profanityFilterService.maskProfanity(post.getTitle()));
+            post.setContent(profanityFilterService.maskProfanity(post.getContent()));
+            post.setStatus("FLAGGED");
+            
+            // 1. Thông báo cảnh báo cho Tác giả
+            notificationRepository.save(ModerationNotification.builder()
+                    .targetUsername(user.getEmail())
+                    .message("⚠️ Bài viết '" + post.getTitle() + "' của bạn nghi vấn chứa từ ngữ vi phạm và đã chuyển vào Hàng chờ kiểm duyệt.")
+                    .isRead(false)
+                    .createdAt(LocalDateTime.now())
+                    .build());
+
+            // 2. Gửi thông báo cảnh báo chỉ cho các tài khoản CONTENT_MODERATOR
+            List<User> moderators = userRepository.findByRoleRoleNameIn(List.of("ROLE_CONTENT_MODERATOR", "CONTENT_MODERATOR"));
+            for (User mod : moderators) {
+                notificationRepository.save(ModerationNotification.builder()
+                        .targetUsername(mod.getEmail())
+                        .message("🚨 Bài viết mới từ " + (user.getFullName() != null ? user.getFullName() : user.getUsername()) + " nghi vấn chứa từ ngữ vi phạm cần kiểm duyệt.")
+                        .isRead(false)
+                        .createdAt(LocalDateTime.now())
+                        .build());
+            }
+        } else {
+            post.setStatus("APPROVED");
+        }
 
         if (post.getReadTime() == null || post.getReadTime() <= 0) {
             post.setReadTime(5); // default
@@ -269,30 +436,106 @@ public class CommunityController {
 
         String authorName = user.getFullName() != null && !user.getFullName().isEmpty() ? user.getFullName() : user.getUsername();
 
+        boolean isFlagged = profanityFilterService.containsProfanity(content);
+        String maskedContent = profanityFilterService.maskProfanity(content.trim());
+
         CommunityComment comment = CommunityComment.builder()
                 .postId(id)
+                .userId(user.getUserId())
                 .authorName(authorName)
                 .authorAvatar(avatar)
-                .content(content.trim())
+                .content(maskedContent)
+                .status(isFlagged ? "FLAGGED" : "APPROVED")
                 .createdAt(LocalDateTime.now())
                 .build();
 
         commentRepository.save(comment);
 
+        if (isFlagged) {
+            // 1. Thông báo cảnh báo cho người viết bình luận
+            notificationRepository.save(ModerationNotification.builder()
+                    .targetUsername(user.getEmail())
+                    .message("⚠️ Bình luận của bạn trên bài viết #" + id + " nghi vấn chứa từ ngữ vi phạm và đã chuyển vào Hàng chờ kiểm duyệt.")
+                    .isRead(false)
+                    .createdAt(LocalDateTime.now())
+                    .build());
+
+            // 2. Gửi thông báo cảnh báo chỉ cho các tài khoản CONTENT_MODERATOR
+            List<User> moderators = userRepository.findByRoleRoleNameIn(List.of("ROLE_CONTENT_MODERATOR", "CONTENT_MODERATOR"));
+            for (User mod : moderators) {
+                notificationRepository.save(ModerationNotification.builder()
+                        .targetUsername(mod.getEmail())
+                        .message("🚨 Bình luận mới từ " + authorName + " trên bài viết #" + id + " nghi vấn chứa từ ngữ vi phạm cần bạn kiểm duyệt.")
+                        .isRead(false)
+                        .createdAt(LocalDateTime.now())
+                        .build());
+            }
+        } else {
+            // Nếu bình luận hợp lệ, gửi thông báo cho Tác giả bài viết (nếu người cmt không phải là tác giả)
+            if (post.getAuthorId() != null && !post.getAuthorId().equals(user.getUserId())) {
+                userRepository.findById(post.getAuthorId()).ifPresent(author -> {
+                    notificationRepository.save(ModerationNotification.builder()
+                            .targetUsername(author.getEmail())
+                            .message("💬 " + authorName + " đã bình luận về bài viết #" + id + " của bạn.")
+                            .isRead(false)
+                            .createdAt(LocalDateTime.now())
+                            .build());
+                });
+            }
+        }
+
         // Cập nhật số lượng bình luận trên Post
         post.setCommentsCount(post.getCommentsCount() + 1);
         postRepository.save(post);
+
+        boolean isAuthor = (post.getAuthorId() != null && post.getAuthorId().equals(user.getUserId()))
+                || (post.getAuthorName() != null && post.getAuthorName().equalsIgnoreCase(authorName));
 
         response.put("success", true);
         response.put("commentsCount", post.getCommentsCount());
         response.put("authorName", authorName);
         response.put("authorAvatar", avatar);
         response.put("content", comment.getContent());
+        response.put("isAuthor", isAuthor);
         
         // Định dạng ngày hiển thị thân thiện
         java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
         response.put("createdAt", comment.getCreatedAt().format(formatter));
 
+        return ResponseEntity.ok(response);
+    }
+
+    // ===== LƯU BÀI VIẾT / BỎ LƯU BÀI VIẾT (TOGGLE - AJAX API) =====
+    @PostMapping("/post/{id}/bookmark")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> bookmarkPost(
+            @PathVariable("id") Integer id,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        Map<String, Object> response = new HashMap<>();
+        if (userDetails == null) {
+            response.put("success", false);
+            response.put("message", "Bạn cần đăng nhập để lưu bài viết.");
+            return ResponseEntity.status(401).body(response);
+        }
+        User user = userRepository.findByEmail(userDetails.getUsername())
+                .orElseThrow(() -> new RuntimeException("Người dùng không tồn tại"));
+
+        var existingBookmark = bookmarkRepository.findByPostIdAndUserId(id, user.getUserId());
+        boolean isBookmarked;
+        if (existingBookmark.isPresent()) {
+            bookmarkRepository.delete(existingBookmark.get());
+            isBookmarked = false;
+        } else {
+            bookmarkRepository.save(CommunityPostBookmark.builder()
+                    .postId(id)
+                    .userId(user.getUserId())
+                    .build());
+            isBookmarked = true;
+        }
+
+        response.put("success", true);
+        response.put("bookmarked", isBookmarked);
+        response.put("message", isBookmarked ? "Đã lưu bài viết thành công!" : "Đã bỏ lưu bài viết!");
         return ResponseEntity.ok(response);
     }
 }

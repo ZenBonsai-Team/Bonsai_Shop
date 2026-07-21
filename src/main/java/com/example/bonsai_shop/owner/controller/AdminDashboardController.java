@@ -1,4 +1,4 @@
-package com.example.bonsai_shop.admin.controller;
+package com.example.bonsai_shop.owner.controller;
 
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 @Controller
-@RequestMapping("/admin")
+@RequestMapping("/owner")
 @PreAuthorize("hasRole('OWNER')")
 public class AdminDashboardController {
 
@@ -15,6 +15,6 @@ public class AdminDashboardController {
     public String dashboard(Model model) {
         model.addAttribute("role", "OWNER");
         model.addAttribute("activeMenu", "admin-dashboard");
-        return "admin/dashboard";
+        return "owner/dashboard";
     }
 }

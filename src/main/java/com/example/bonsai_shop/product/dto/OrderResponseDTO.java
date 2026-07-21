@@ -22,6 +22,7 @@ public class OrderResponseDTO {
     private BigDecimal depositAmount;
     private LocalDateTime orderDate;
     private String orderStatus;
+    private String orderType;
     private BigDecimal craneFee;
     private BigDecimal shippingFee;
     private String notes;

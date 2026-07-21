@@ -1,4 +1,4 @@
-package com.example.bonsai_shop.admin.controller;
+package com.example.bonsai_shop.owner.controller;
 
 import com.example.bonsai_shop.customer.repository.CommunityPostRepository;
 import com.example.bonsai_shop.customer.repository.CommunityCommentRepository;
@@ -33,14 +33,39 @@ public class AdminCommunityController {
     @GetMapping
     public String index(Model model,
                         @RequestParam(value = "tab", defaultValue = "posts") String activeTab,
+                        @RequestParam(value = "search", required = false) String search,
+                        @RequestParam(value = "status", required = false) String status,
                         @RequestParam(value = "postPage", defaultValue = "0") int postPage,
                         @RequestParam(value = "commentPage", defaultValue = "0") int commentPage) {
         
         Pageable postPageable = PageRequest.of(postPage, 10);
-        Page<CommunityPost> postsPage = postRepository.findAllByOrderByCreatedAtDesc(postPageable);
+        Page<CommunityPost> postsPage;
+        
+        boolean hasSearch = search != null && !search.trim().isEmpty();
+        boolean hasStatus = status != null && !status.trim().isEmpty() && !"ALL".equalsIgnoreCase(status);
+
+        if (hasSearch && hasStatus) {
+            postsPage = postRepository.findByStatusAndTitleContainingIgnoreCaseOrAuthorNameContainingIgnoreCaseOrderByCreatedAtDesc(status, search.trim(), search.trim(), postPageable);
+        } else if (hasSearch) {
+            postsPage = postRepository.findByTitleContainingIgnoreCaseOrAuthorNameContainingIgnoreCaseOrderByCreatedAtDesc(search.trim(), search.trim(), postPageable);
+        } else if (hasStatus) {
+            postsPage = postRepository.findByStatusOrderByCreatedAtDesc(status, postPageable);
+        } else {
+            postsPage = postRepository.findAllByOrderByCreatedAtDesc(postPageable);
+        }
         
         Pageable commentPageable = PageRequest.of(commentPage, 10);
-        Page<CommunityComment> commentsPage = commentRepository.findAllByOrderByCreatedAtDesc(commentPageable);
+        Page<CommunityComment> commentsPage;
+
+        if (hasSearch && hasStatus) {
+            commentsPage = commentRepository.findByStatusAndContentContainingIgnoreCaseOrAuthorNameContainingIgnoreCaseOrderByCreatedAtDesc(status, search.trim(), search.trim(), commentPageable);
+        } else if (hasSearch) {
+            commentsPage = commentRepository.findByContentContainingIgnoreCaseOrAuthorNameContainingIgnoreCaseOrderByCreatedAtDesc(search.trim(), search.trim(), commentPageable);
+        } else if (hasStatus) {
+            commentsPage = commentRepository.findByStatusOrderByCreatedAtDesc(status, commentPageable);
+        } else {
+            commentsPage = commentRepository.findAllByOrderByCreatedAtDesc(commentPageable);
+        }
 
         // Load all posts for lookup (for comments image + title)
         List<CommunityPost> allPosts = postRepository.findAll();
@@ -51,6 +76,8 @@ public class AdminCommunityController {
         model.addAttribute("comments", commentsPage.getContent());
         model.addAttribute("postsMap", postsMap);
         model.addAttribute("activeTab", activeTab);
+        model.addAttribute("search", search != null ? search.trim() : "");
+        model.addAttribute("statusFilter", status != null ? status.toUpperCase() : "ALL");
         model.addAttribute("role", "CONTENT MODERATOR");
         model.addAttribute("activeMenu", activeTab);
         model.addAttribute("paramActivePage", activeTab);
@@ -62,6 +89,21 @@ public class AdminCommunityController {
         model.addAttribute("commentTotalPages", commentsPage.getTotalPages());
 
         return "admin/community_management";
+    }
+
+    @PostMapping("/comments/{id}/approve")
+    public String approveComment(@PathVariable("id") Integer id,
+                                RedirectAttributes redirectAttributes) {
+        try {
+            CommunityComment comment = commentRepository.findById(id)
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy bình luận"));
+            comment.setStatus("APPROVED");
+            commentRepository.save(comment);
+            redirectAttributes.addFlashAttribute("success", "Đã duyệt bình luận thành công!");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Lỗi: " + e.getMessage());
+        }
+        return "redirect:/moderator/community?tab=comments";
     }
 
     @PostMapping("/posts/{id}/toggle-status")

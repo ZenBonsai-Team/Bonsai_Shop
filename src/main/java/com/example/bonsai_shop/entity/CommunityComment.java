@@ -21,6 +21,9 @@ public class CommunityComment {
     @Column(name = "PostID", nullable = false)
     private Integer postId;
 
+    @Column(name = "UserID")
+    private Integer userId;
+
     @Column(name = "AuthorName", nullable = false, length = 255)
     private String authorName;
 
@@ -29,6 +32,13 @@ public class CommunityComment {
 
     @Column(name = "Content", nullable = false, columnDefinition = "TEXT")
     private String content;
+
+    @Builder.Default
+    @Column(name = "Status", length = 50)
+    private String status = "APPROVED";
+
+    @Column(name = "ModerationReason", length = 500)
+    private String moderationReason;
 
     @Builder.Default
     @Column(name = "CreatedAt")

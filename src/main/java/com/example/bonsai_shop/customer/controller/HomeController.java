@@ -15,9 +15,14 @@ public class HomeController {
 
     private final UserRepository userRepository;
 
+    @GetMapping("/")
+    public String index() {
+        return "redirect:/home";
+    }
+
     @GetMapping("/home")
     public String home(Model model,
-                       @AuthenticationPrincipal UserDetails userDetails) {
+            @AuthenticationPrincipal UserDetails userDetails) {
 
         if (userDetails != null) {
             String email = userDetails.getUsername();

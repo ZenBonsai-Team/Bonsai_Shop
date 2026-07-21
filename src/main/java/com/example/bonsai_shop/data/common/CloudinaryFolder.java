@@ -10,7 +10,8 @@ public enum CloudinaryFolder {
     AVATAR("bonsai_shop/avatars"),
     PRODUCT_IMAGE("bonsai_shop/products/images"),
     PRODUCT_VIDEO("bonsai_shop/products/videos"),
-    BANNER("bonsai_shop/banners");
+    BANNER("bonsai_shop/banners"),
+    COMMUNITY("bonsai_shop/community");
 
     private final String path;
 }
