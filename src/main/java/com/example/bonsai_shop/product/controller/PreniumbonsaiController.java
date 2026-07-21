@@ -16,20 +16,20 @@ public class PreniumbonsaiController {
    private final ProductService productService;
 
    @GetMapping("/bonsai-luxury")
-    public String prenium(
+    public String premium(
             @RequestParam(defaultValue = "0") int page
            ,Model model) {
-       Page<ProductCardDTO> product = productService.getPreniumProducts(PageRequest.of(page, 12));
+       Page<ProductCardDTO> product = productService.getPremiumProducts(PageRequest.of(page, 12));
        model.addAttribute("product", product);
        return "/product/bonsai-luxury";
    }
 
    @GetMapping("/bonsai_luxury_detail/{productId}")
-   public String preniumDetail(
+   public String premiumDetail(
            @PathVariable Integer productId
            , Model model) {
       ProductCardDTO product =
-              productService.getPreniumProductsById(productId);
+              productService.getPremiumProductsById(productId);
    model.addAttribute("product", product);
    return "/product/bonsai_luxury_detail";
    }

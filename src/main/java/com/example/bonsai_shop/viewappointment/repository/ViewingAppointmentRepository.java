@@ -1,5 +1,6 @@
 package com.example.bonsai_shop.viewappointment.repository;
 
+import com.example.bonsai_shop.entity.Product;
 import com.example.bonsai_shop.entity.User;
 import com.example.bonsai_shop.entity.ViewingAppointment;
 import com.example.bonsai_shop.artisan.dto.ArtisanAppointmentDTO;
@@ -9,25 +10,33 @@ import org.springframework.data.repository.query.Param;
 
 
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
 public interface ViewingAppointmentRepository extends JpaRepository<ViewingAppointment,Integer>{
 
     @Query("""
-SELECT COUNT(v) > 0
-FROM ViewingAppointment v
-WHERE v.appointmentDate = :appointmentDate
-AND v.status IN ('PENDING','APPROVED')
+SELECT COUNT(a)
+FROM ViewingAppointment a
+WHERE a.customer = :customer
+AND a.status IN ('PENDING','APPROVED')
 """)
-    boolean existsActiveAppointment(LocalDateTime appointmentDate);
+    long countActiveAppointmentByCustomer(
+            @Param("customer") User customer);
 
+    @Query("""
+SELECT COUNT(a)
+FROM ViewingAppointment a
+WHERE a.product = :product
+AND a.status IN ('PENDING','APPROVED')
+""")
+    long countAppointmentByProduct(
+            @Param("product") Product product
+    );
     List<ViewingAppointment> findByCustomer(User customer);
 
     Optional<ViewingAppointment> findByAppointmentIdAndCustomer(Integer appointmentId, User customer);
 
-    boolean existsViewingAppointmentByAppointmentDateAndAppointmentIdNot(LocalDateTime appointmentDate, Integer appointmentId);
 
     @Query("""
 SELECT new com.example.bonsai_shop.artisan.dto.ArtisanAppointmentDTO(

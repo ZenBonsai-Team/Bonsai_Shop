@@ -8,6 +8,11 @@
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>Bonsai Luxury — Chi tiết tác phẩm</title>
     <meta name="description" content="Chi tiết tác phẩm Bonsai cao cấp tại Bonsai Luxury. Đặt lịch xem và yêu cầu tư vấn.">
+
+    <!-- 👇 THÊM 2 DÒNG NÀY VÀO ĐÂY 👇 -->
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+    <!-- Link CSS -->
     <link rel="stylesheet" href="../../public/css/bonsai_luxury_detail.css" th:href="@{/css/bonsai_luxury_detail.css}">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
 </head>
@@ -21,8 +26,8 @@
             <span class="logo-serif">BON</span><span class="logo-sans">SAI</span>
         </a>
 
-        <button class="hamburger" aria-label="Mở menu" aria-expanded="false" aria-controls="mainNav">
-            <span class="hamburger-box"><span class="hamburger-inner"></span></span>
+        <button class="hamburger" id="mobileMenuBtn" aria-label="Mở menu" aria-expanded="false" aria-controls="mainNav">
+            <span class="hamburger-icon">☰</span>
         </button>
 
         <nav id="mainNav" class="main-nav" role="navigation" aria-label="Điều hướng chính">
@@ -40,7 +45,7 @@
             <div class="search-wrap" aria-hidden="false">
                 <label for="siteSearch" class="visually-hidden">Tìm kiếm</label>
                 <input id="siteSearch" class="search-input" type="search" placeholder="Tìm Bonsai, chậu..." aria-label="Tìm kiếm Bonsai">
-                <button class="search-clear" aria-label="Xóa tìm kiếm" hidden>✕</button>
+                <button class="search-clear" id="searchClearBtn" aria-label="Xóa tìm kiếm">✕</button>
             </div>
 
             <!-- Cart -->
@@ -49,11 +54,14 @@
                 <span class="cart-count" aria-hidden="true">0</span>
             </button>
 
-            <!-- Notifications (chỉ hiện khi đã đăng nhập) -->
+            <!-- Notifications -->
             <div sec:authorize="isAuthenticated()" class="notification-wrap" id="notificationWrap">
                 <button class="icon-btn notification-bell-btn" id="notificationBellBtn" aria-label="Thông báo">
                     <span class="bell-emoji">🔔</span>
-                    <span class="notification-count" id="notificationCount">0</span>
+                    <span class="notification-count"
+                          id="notificationCount"
+                          style="display:none;">
+    0               </span>
                 </button>
                 <div class="notification-dropdown" id="notificationDropdown">
                     <div class="notification-dropdown-header">
@@ -61,7 +69,9 @@
                         <button id="markAllReadBtn" class="mark-all-read-btn">Đọc tất cả</button>
                     </div>
                     <ul class="notification-list" id="notificationList">
-                        <li class="notification-empty">Không có thông báo mới</li>
+                        <li class="notification-empty">
+                            Không có thông báo.
+                        </li>
                     </ul>
                 </div>
             </div>
@@ -76,7 +86,7 @@
             <div sec:authorize="isAuthenticated()" id="user-menu" class="user-menu-premium">
                 <button class="user-btn-premium" aria-haspopup="true" aria-expanded="false">
                     <div class="avatar-wrapper">
-                        <img src="" class="avatar" alt="User Avatar" th:alt="${#authentication.name}">
+                        <img src="https://ui-avatars.com/api/?name=User&background=C5A059&color=fff" class="avatar" alt="User Avatar" th:alt="${#authentication.name}">
                         <span class="status-indicator"></span>
                     </div>
                     <span class="username-text" sec:authentication="name">Khách quý</span>
@@ -116,32 +126,30 @@
 <!-- MAIN PRODUCT DETAIL CONTAINER -->
 <main class="container product-detail" id="productDetail" aria-labelledby="productTitle">
     <div class="product-hero">
-        <!-- Gallery Media Container -->
         <div class="hero-media">
             <img id="mainImage"
-                 th:src="${product.thumbnailUrl != null ? product.thumbnailUrl : 'https://images.unsplash.com/photo-1599599810769-bcde5a160d32?auto=format&fit=crop&q=80&w=1200'}"
-                 th:alt="${product.productName != null ? product.productName : 'Bonsai Luxury'}"
+                 th:src="${product != null && product.thumbnailUrl != null ? product.thumbnailUrl : 'https://images.unsplash.com/photo-1599599810769-bcde5a160d32?auto=format&fit=crop&q=80&w=1200'}"
+                 th:alt="${product != null && product.productName != null ? product.productName : 'Bonsai Luxury'}"
                  loading="lazy">
 
             <div class="thumbs" aria-hidden="false">
-                <button class="thumb active" type="button" th:attr="data-src=${product.thumbnailUrl != null ? product.thumbnailUrl : 'https://images.unsplash.com/photo-1599599810769-bcde5a160d32?auto=format&fit=crop&q=80&w=1200'}">
-                    <img th:src="${product.thumbnailUrl != null ? product.thumbnailUrl : 'https://images.unsplash.com/photo-1599599810769-bcde5a160d32?auto=format&fit=crop&q=80&w=300'}" th:alt="${product.productName}">
+                <button class="thumb active" type="button" th:attr="data-src=${product != null ? product.thumbnailUrl : 'https://images.unsplash.com/photo-1599599810769-bcde5a160d32?auto=format&fit=crop&q=80&w=1200'}">
+                    <img th:src="${product != null ? product.thumbnailUrl : 'https://images.unsplash.com/photo-1599599810769-bcde5a160d32?auto=format&fit=crop&q=80&w=300'}" alt="Thumb 1">
                 </button>
-                <button class="thumb" type="button" th:attr="data-src=${product.thumbnailUrl != null ? product.thumbnailUrl : 'https://images.unsplash.com/photo-1599599810769-bcde5a160d32?auto=format&fit=crop&q=80&w=1200'}">
-                    <img th:src="${product.thumbnailUrl != null ? product.thumbnailUrl : 'https://images.unsplash.com/photo-1599599810769-bcde5a160d32?auto=format&fit=crop&q=80&w=300'}" th:alt="${product.productName}">
+                <button class="thumb" type="button" data-src="https://images.unsplash.com/photo-1613143521251-512c0192e276?auto=format&fit=crop&q=80&w=1200">
+                    <img src="https://images.unsplash.com/photo-1613143521251-512c0192e276?auto=format&fit=crop&q=80&w=300" alt="Thumb 2">
                 </button>
-                <button class="thumb" type="button" th:attr="data-src=${product.thumbnailUrl != null ? product.thumbnailUrl : 'https://images.unsplash.com/photo-1599599810769-bcde5a160d32?auto=format&fit=crop&q=80&w=1200'}">
-                    <img th:src="${product.thumbnailUrl != null ? product.thumbnailUrl : 'https://images.unsplash.com/photo-1599599810769-bcde5a160d32?auto=format&fit=crop&q=80&w=300'}" th:alt="${product.productName}">
+                <button class="thumb" type="button" data-src="https://images.unsplash.com/photo-1620188527376-7848bc8f7c9b?auto=format&fit=crop&q=80&w=1200">
+                    <img src="https://images.unsplash.com/photo-1620188527376-7848bc8f7c9b?auto=format&fit=crop&q=80&w=300" alt="Thumb 3">
                 </button>
             </div>
         </div>
 
-        <!-- Information Showcase Panel -->
         <div class="product-info">
             <span class="hanko-seal" aria-hidden="true">共生</span>
-            <p class="product-kicker">Bonsai Luxury · <span th:text="${product.productCode != null ? product.productCode : 'N/A'}">BL-120</span></p>
-            <h1 id="productTitle" class="product-title" th:text="${product.productName != null ? product.productName : 'Tên tác phẩm'}">Tùng La Hán</h1>
-            <p class="product-sub"><span th:text="${product.age != null ? product.age : 'N/A'}">120</span> năm tuổi — tác phẩm độc bản cho không gian riêng.</p>
+            <p class="product-kicker">Bonsai Luxury · <span th:text="${product != null && product.productCode != null ? product.productCode : 'BL-120'}">BL-120</span></p>
+            <h1 id="productTitle" class="product-title" th:text="${product != null && product.productName != null ? product.productName : 'Tùng La Hán Tuyệt Tác'}">Tùng La Hán Tuyệt Tác</h1>
+            <p class="product-sub"><span th:text="${product != null && product.age != null ? product.age : '120'}">120</span> năm tuổi — tác phẩm độc bản cho không gian riêng.</p>
 
             <div class="product-meta">
                 <span class="price">Giá theo yêu cầu</span>
@@ -155,25 +163,25 @@
             </div>
 
             <div class="product-ctas">
-                <button class="btn primary schedule-btn" type="button" th:data-id="${product.productId}">Đặt lịch xem</button>
+                <button class="btn primary schedule-btn" type="button" th:data-id="${product != null ? product.productId : '1'}">Đặt lịch xem ngay</button>
             </div>
 
             <ul class="product-highlights">
                 <li><strong>Xuất xứ:</strong> Xưởng Bonsai Luxury</li>
-                <li><strong>Trạng thái:</strong> <span th:text="${product.status != null ? product.status : 'AVAILABLE'}">AVAILABLE</span></li>
+                <li><strong>Trạng thái:</strong> <span th:text="${product != null && product.status != null ? product.status : 'AVAILABLE'}">AVAILABLE</span></li>
             </ul>
 
             <dl class="certificate-panel" aria-label="Hồ sơ nhanh">
-                <div><dt>Mã tác phẩm</dt><dd th:text="${product.productCode != null ? product.productCode : 'N/A'}"></dd></div>
-                <div><dt>Loại cây</dt><dd th:text="${product.varietyName != null ? product.varietyName : 'Bonsai'}"></dd></div>
-                <div><dt>Chiều cao</dt><dd><span th:text="${product.height != null ? product.height : 'N/A'}"></span> cm</dd></div>
-                <div><dt>Đường kính thân</dt><dd><span th:text="${product.trunkDiameter != null ? product.trunkDiameter : 'N/A'}"></span> cm</dd></div>
-                <div><dt>Nghệ nhân</dt><dd th:text="${product.artisanName != null ? product.artisanName : 'Xưởng Bonsai Luxury'}"></dd></div>
+                <div><dt>Mã tác phẩm</dt><dd th:text="${product != null && product.productCode != null ? product.productCode : 'BL-120'}">BL-120</dd></div>
+                <div><dt>Loại cây</dt><dd th:text="${product != null && product.varietyName != null ? product.varietyName : 'Tùng La Hán'}">Tùng La Hán</dd></div>
+                <div><dt>Chiều cao</dt><dd><span th:text="${product != null && product.height != null ? product.height : '85'}">85</span> cm</dd></div>
+                <div><dt>Đường kính thân</dt><dd><span th:text="${product != null && product.trunkDiameter != null ? product.trunkDiameter : '15'}">15</span> cm</dd></div>
+                <div><dt>Nghệ nhân</dt><dd th:text="${product != null && product.artisanName != null ? product.artisanName : 'Nghệ nhân Bonsai Luxury'}">Nghệ nhân Bonsai Luxury</dd></div>
             </dl>
         </div>
     </div>
 
-    <!-- Editorial Narrative & Sections -->
+    <!-- Sections... -->
     <section class="product-description" aria-labelledby="descTitle">
         <p class="section-kicker">Nguồn gốc</p>
         <h2 id="descTitle" class="section-title">Câu chuyện tác phẩm</h2>
@@ -188,7 +196,7 @@
         <p class="section-kicker">Hồ sơ tác phẩm</p>
         <h2 id="profileTitle" class="section-title">Hồ sơ bàn giao</h2>
         <div class="profile-grid">
-            <article><span>01</span><h3>Thẩm định dáng và chất thân</h3><p>Ghi nhận dáng cây, điểm nhìn chính, tuổi ước tính và hiện trạng sinh trưởng trước khi bàn giao.</p></article>
+            <article><span>01</span><h3>Thẩm định dáng và thân</h3><p>Ghi nhận dáng cây, điểm nhìn chính, tuổi ước tính và hiện trạng sinh trưởng trước khi bàn giao.</p></article>
             <article><span>02</span><h3>Lịch chăm sóc riêng</h3><p>Đề xuất tưới, xoay sáng, cắt tỉa và bón dưỡng theo điều kiện trưng bày thực tế.</p></article>
             <article><span>03</span><h3>Bảo dưỡng sau sở hữu</h3><p>Đội ngũ kỹ thuật theo dõi định kỳ, hỗ trợ phục hồi và tinh chỉnh tán khi cần.</p></article>
         </div>
@@ -208,20 +216,19 @@
     <section class="product-gallery" aria-labelledby="galleryTitle">
         <h2 id="galleryTitle" class="section-title">Hình ảnh chi tiết</h2>
         <div class="gallery-grid">
-            <button class="gallery-item" type="button" th:attr="data-src=${product.thumbnailUrl}">
-                <img th:src="${product.thumbnailUrl != null ? product.thumbnailUrl : 'https://images.unsplash.com/photo-1599599810769-bcde5a160d32?auto=format&fit=crop&q=80&w=400'}" alt="Bonsai detail view 1">
+            <button class="gallery-item" type="button" data-src="https://images.unsplash.com/photo-1599599810769-bcde5a160d32?auto=format&fit=crop&q=80&w=1200">
+                <img src="https://images.unsplash.com/photo-1599599810769-bcde5a160d32?auto=format&fit=crop&q=80&w=400" alt="Bonsai detail 1">
             </button>
-            <button class="gallery-item" type="button" th:attr="data-src=${product.thumbnailUrl}">
-                <img th:src="${product.thumbnailUrl != null ? product.thumbnailUrl : 'https://images.unsplash.com/photo-1599599810769-bcde5a160d32?auto=format&fit=crop&q=80&w=400'}" alt="Bonsai detail view 2">
+            <button class="gallery-item" type="button" data-src="https://images.unsplash.com/photo-1613143521251-512c0192e276?auto=format&fit=crop&q=80&w=1200">
+                <img src="https://images.unsplash.com/photo-1613143521251-512c0192e276?auto=format&fit=crop&q=80&w=400" alt="Bonsai detail 2">
             </button>
-            <button class="gallery-item" type="button" th:attr="data-src=${product.thumbnailUrl}">
-                <img th:src="${product.thumbnailUrl != null ? product.thumbnailUrl : 'https://images.unsplash.com/photo-1599599810769-bcde5a160d32?auto=format&fit=crop&q=80&w=400'}" alt="Bonsai detail view 3">
+            <button class="gallery-item" type="button" data-src="https://images.unsplash.com/photo-1620188527376-7848bc8f7c9b?auto=format&fit=crop&q=80&w=1200">
+                <img src="https://images.unsplash.com/photo-1620188527376-7848bc8f7c9b?auto=format&fit=crop&q=80&w=400" alt="Bonsai detail 3">
             </button>
         </div>
     </section>
 </main>
 
-<!-- FOOTER -->
 <footer class="footer">
     <div class="container footer-inner">
         <div>
@@ -234,7 +241,6 @@
     </div>
 </footer>
 
-<!-- Lightbox Modal Target -->
 <div id="overlayRoot" aria-hidden="true"></div>
 
 <!-- PREMIUM BOOKING MODAL -->
@@ -259,7 +265,7 @@
                 </div>
                 <div class="form-group full-width">
                     <label for="note">Lời nhắn</label>
-                    <textarea id="note" name="note" rows="3"></textarea>
+                    <textarea id="note" name="note" rows="3" placeholder="Yêu cầu đặc biệt..."></textarea>
                 </div>
             </div>
             <div class="form-actions">
@@ -269,6 +275,8 @@
         </form>
     </div>
 </div>
-<script th:src="@{/js/bonsai_luxury_detail.js}"></script>
+
+<!-- Link JS -->
+<script src="../../public/js/bonsai_luxury_detail.js" th:src="@{/js/bonsai_luxury_detail.js}"></script>
 </body>
 </html>

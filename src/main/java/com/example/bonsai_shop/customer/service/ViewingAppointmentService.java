@@ -5,7 +5,6 @@ import com.example.bonsai_shop.entity.Product;
 import com.example.bonsai_shop.entity.User;
 import com.example.bonsai_shop.entity.ViewingAppointment;
 import com.example.bonsai_shop.notification.service.NotificationService;
-import com.example.bonsai_shop.product.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,32 +18,37 @@ import java.util.List;
 public class ViewingAppointmentService {
 
     private final ViewingAppointmentRepository viewingAppointmentRepository;
-    private final ProductRepository productRepository;
     private final UserService  userService ;
     private final NotificationService notificationService;
 
     @Transactional
     public void createViewingAppointment(ViewingAppointment viewingAppointment) {
 
-        if (viewingAppointmentRepository.existsActiveAppointment(
-                viewingAppointment.getAppointmentDate())){
-            throw new RuntimeException("Khung giờ này đã có lịch hẹn!");
+        if (viewingAppointmentRepository.countActiveAppointmentByCustomer(
+                viewingAppointment.getCustomer()) > 0) {
+            throw new RuntimeException(
+                    "Bạn đã có lịch hẹn."
+            );
         }
+
         userService.checkProfileEmailAndPhone(viewingAppointment.getCustomer());
 
         Product product = viewingAppointment.getProduct();
         if ("RESERVED".equals(product.getProductStatus())) {
-            throw new RuntimeException("Sản phẩm đã có lịch hẹn!");
+            throw new RuntimeException("Sản phẩm hiện đang được giữ chỗ!");
         }
 
         if ("SOLD".equals(product.getProductStatus())) {
             throw new RuntimeException("Sản phẩm đã được bán!");
         }
-
+        long totalAppointment = viewingAppointmentRepository.countAppointmentByProduct(product);
+        if (totalAppointment >= 10) {
+            throw new RuntimeException("Cây bonsai này đã đủ số lượng khách đặt lịch xem.");
+        }
         viewingAppointmentRepository.save(viewingAppointment);
 
         notificationService.createNotification(viewingAppointment.getCustomer(),
-                "Lịch đặt xem cây"+ viewingAppointment.getProduct().getProductName()
+                "Lịch đặt xem cây "+ viewingAppointment.getProduct().getProductName()
                         + " đã được tạo thành công ");
         notificationService.createNotification(viewingAppointment.getProduct().getCreatedBy(),
                 "Khách hàng: "+ viewingAppointment.getCustomer().getUsername()
@@ -78,9 +82,7 @@ public class ViewingAppointmentService {
                 .findByAppointmentIdAndCustomer(id,customer)
                 .orElseThrow(()->new RuntimeException("Không tìm thấy lịch hẹn"));
 
-        if (viewingAppointmentRepository.existsViewingAppointmentByAppointmentDateAndAppointmentIdNot(appointmentDate, id)) {
-            throw new RuntimeException("Khung giờ này đã được đặt");
-        }
+
         if(!appointment.getStatus().equals("PENDING")){
             throw new RuntimeException("Không thể chỉnh sửa lịch sau khi đã xác nhận");
         }

@@ -95,7 +95,7 @@ public class ViewingAppointmentController {
 
     @GetMapping("/appointments/detail/{id}")
     @ResponseBody
-    public AppointmentDetailDTO viewingAppointmentdetail(@PathVariable Integer id,
+    public AppointmentDetailDTO viewingAppointmentDetail(@PathVariable Integer id,
                                                          Principal principal){
         User user = userService.findByEmail(principal.getName());
        return  viewingAppointmentService.findByIdAndCustomer(id, user);

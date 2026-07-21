@@ -30,24 +30,35 @@ public class NotificationService {
         return notificationRepository.findByTargetUsernameOrderByCreatedAtDesc(targetUsername);
     }
 
-    public List<ModerationNotification> getAllNotificationsUnread(String targetUsername) {
-        return notificationRepository.findByTargetUsernameAndIsReadFalseOrderByCreatedAtDesc(targetUsername);
-    }
-
     public long countUnreadNotification(String targetUsername) {
         return notificationRepository.countByTargetUsernameAndIsReadFalse(targetUsername);
     }
 
-    public void markAsRead(Integer notificationId) {
-        notificationRepository.findById(notificationId).ifPresent(n -> {
-            n.setIsRead(true);
-            notificationRepository.save(n);
-        });
+    public void markAsRead(Integer id, String username) {
+
+        ModerationNotification notification =
+                notificationRepository.findById(id)
+                        .orElseThrow(() -> new RuntimeException("Không tìm thấy thông báo"));
+
+        if (!notification.getTargetUsername().equals(username)) {
+            throw new RuntimeException("Bạn không có quyền.");
+        }
+
+        notification.setIsRead(true);
+
+        notificationRepository.save(notification);
     }
 
     public void markAllAsRead(String targetUsername) {
-        List<ModerationNotification> unread = notificationRepository.findByTargetUsernameAndIsReadFalseOrderByCreatedAtDesc(targetUsername);
-        unread.forEach(n -> n.setIsRead(true));
+
+        List<ModerationNotification> unread =
+                notificationRepository
+                        .findByTargetUsernameAndIsReadFalseOrderByCreatedAtDesc(targetUsername);
+
+        if (unread.isEmpty()) {
+            return;
+        }
+        unread.forEach(notification -> notification.setIsRead(true));
         notificationRepository.saveAll(unread);
     }
 }
