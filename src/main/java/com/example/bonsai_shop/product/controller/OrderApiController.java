@@ -46,13 +46,31 @@ public class OrderApiController {
     @Autowired
     private OrderService orderService;
 
+    @GetMapping("/pool")
+    public ResponseEntity<Map<String, Object>> getPoolOrders(
+            @RequestParam(defaultValue = "") String search,
+            @RequestParam(defaultValue = "date_desc") String sort,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "8") int limit) {
+        Page<Order> orderPage = orderService.getPoolOrders(search, sort, page, limit);
+        List<OrderResponseDTO> dtoList = orderPage.getContent().stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+        Map<String, Object> response = new HashMap<>();
+        response.put("orders", dtoList);
+        response.put("totalCount", orderPage.getTotalElements());
+        response.put("pages", orderPage.getTotalPages());
+        response.put("currentPage", page);
+        return ResponseEntity.ok(response);
+    }
+
     @GetMapping
     public ResponseEntity<Map<String, Object>> getOrders(
             @RequestParam(defaultValue = "") String search,
             @RequestParam(defaultValue = "ALL") String status,
             @RequestParam(defaultValue = "date_desc") String sort,
             @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "5") int limit) {
+            @RequestParam(defaultValue = "8") int limit) {
 
         Page<Order> orderPage = orderService.getFilteredOrders(search, status, sort, page, limit);
 
@@ -67,6 +85,114 @@ public class OrderApiController {
         response.put("currentPage", page);
 
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/my")
+    public ResponseEntity<Map<String, Object>> getMyOrders(
+            @RequestParam(defaultValue = "") String search,
+            @RequestParam(defaultValue = "ALL") String status,
+            @RequestParam(defaultValue = "date_desc") String sort,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "8") int limit,
+            @AuthenticationPrincipal UserDetails currentUser) {
+
+        if (currentUser == null) {
+            return ResponseEntity.status(401).build();
+        }
+        User moderator = userRepository.findByEmail(currentUser.getUsername()).orElse(null);
+        if (moderator == null) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        Page<Order> orderPage = orderService.getMyOrders(moderator.getUserId(), search, status, sort, page, limit);
+        List<OrderResponseDTO> dtoList = orderPage.getContent().stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("orders", dtoList);
+        response.put("totalCount", orderPage.getTotalElements());
+        response.put("pages", orderPage.getTotalPages());
+        response.put("currentPage", page);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/my-stats")
+    public ResponseEntity<Map<String, Long>> getMyStats(
+            @AuthenticationPrincipal UserDetails currentUser) {
+        if (currentUser == null) {
+            return ResponseEntity.status(401).build();
+        }
+        User moderator = userRepository.findByEmail(currentUser.getUsername()).orElse(null);
+        if (moderator == null) {
+            return ResponseEntity.badRequest().build();
+        }
+        return ResponseEntity.ok(orderService.getModeratorPersonalKPIs(moderator.getUserId()));
+    }
+
+    @PostMapping("/{orderCode}/claim")
+    public ResponseEntity<Map<String, Object>> claimOrder(
+            @PathVariable String orderCode,
+            @AuthenticationPrincipal UserDetails currentUser) {
+
+        Map<String, Object> response = new HashMap<>();
+        if (currentUser == null) {
+            response.put("success", false);
+            response.put("message", "Chưa đăng nhập.");
+            return ResponseEntity.status(401).body(response);
+        }
+        User moderator = userRepository.findByEmail(currentUser.getUsername()).orElse(null);
+        if (moderator == null) {
+            response.put("success", false);
+            response.put("message", "Người dùng không hợp lệ.");
+            return ResponseEntity.badRequest().body(response);
+        }
+
+        try {
+            boolean success = orderService.claimOrder(orderCode, moderator);
+            response.put("success", success);
+            response.put("message", "Nhận đơn hàng thành công.");
+            return ResponseEntity.ok(response);
+        } catch (IllegalStateException e) {
+            response.put("success", false);
+            response.put("message", e.getMessage());
+            return ResponseEntity.status(409).body(response);
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", "Lỗi máy chủ khi xử lý: " + e.getMessage());
+            return ResponseEntity.internalServerError().body(response);
+        }
+    }
+
+    @PostMapping("/{orderCode}/unclaim")
+    public ResponseEntity<Map<String, Object>> unclaimOrder(
+            @PathVariable String orderCode,
+            @AuthenticationPrincipal UserDetails currentUser) {
+
+        Map<String, Object> response = new HashMap<>();
+        if (currentUser == null) {
+            response.put("success", false);
+            response.put("message", "Chưa đăng nhập.");
+            return ResponseEntity.status(401).body(response);
+        }
+        User moderator = userRepository.findByEmail(currentUser.getUsername()).orElse(null);
+        if (moderator == null) {
+            response.put("success", false);
+            response.put("message", "Người dùng không hợp lệ.");
+            return ResponseEntity.badRequest().body(response);
+        }
+
+        try {
+            boolean success = orderService.unclaimOrder(orderCode, moderator);
+            response.put("success", success);
+            response.put("message", "Đã trả đơn hàng về Pool thành công.");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
     }
 
     /**
@@ -146,11 +272,20 @@ public class OrderApiController {
         }
 
         String reason = payload.getOrDefault("reason", "");
-        boolean success = orderService.rejectOrder(orderCode, reason, moderator);
-        response.put("success", success);
-        response.put("message", success ? "Từ chối duyệt đơn hàng thành công." : "Thao tác thất bại.");
-
-        return ResponseEntity.ok(response);
+        try {
+            boolean success = orderService.rejectOrder(orderCode, reason, moderator);
+            response.put("success", success);
+            response.put("message", success ? "Từ chối duyệt đơn hàng thành công." : "Thao tác thất bại.");
+            return ResponseEntity.ok(response);
+        } catch (SecurityException e) {
+            response.put("success", false);
+            response.put("message", e.getMessage());
+            return ResponseEntity.status(403).body(response);
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", "Lỗi xử lý từ chối: " + e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
     }
 
     @PostMapping("/checkout")
@@ -217,7 +352,8 @@ public class OrderApiController {
 
         // 6. Xử lý phân nhánh Phương thức thanh toán
         if ("VNPAY".equalsIgnoreCase(dto.getPaymentMethod())) {
-            // Logic tạo URL thanh toán VNPay (Tạm thời không nhảy sang trang VNPay mà xử lý hiển thị thành công giống COD)
+            // Logic tạo URL thanh toán VNPay (Tạm thời không nhảy sang trang VNPay mà xử lý
+            // hiển thị thành công giống COD)
             response.put("success", true);
             response.put("paymentMethod", "VNPAY");
             response.put("orderCode", orderCode);
@@ -286,12 +422,12 @@ public class OrderApiController {
     }
 
     private OrderResponseDTO convertToDTO(Order order) {
-        OrderResponseDTO.ProductDTO prodcutDTO = null;
+        OrderResponseDTO.ProductDTO productDTO = null;
         if (order.getOrderDetails() != null && !order.getOrderDetails().isEmpty()) {
             OrderDetail detail = order.getOrderDetails().get(0);
             Product prod = detail.getProduct();
             if (prod != null) {
-                prodcutDTO = OrderResponseDTO.ProductDTO.builder()
+                productDTO = OrderResponseDTO.ProductDTO.builder()
                         .id(prod.getProductId())
                         .name(prod.getProductName())
                         .image(prod.getFirstImageUrl())
@@ -300,7 +436,20 @@ public class OrderApiController {
             }
         }
 
-        // Lấy thông tin từ các thuộc tính trực tiếp của Order tránh NullPointerException
+        List<OrderResponseDTO.OrderHandlingDTO> handlingHistory = null;
+        if (order.getOrderId() != null) {
+            handlingHistory = orderService.getOrderHandlingHistory(order.getOrderId()).stream()
+                    .map(h -> OrderResponseDTO.OrderHandlingDTO.builder()
+                            .handlingId(h.getOrderHandlingId())
+                            .moderatorUsername(h.getModerator() != null ? h.getModerator().getUsername() : "N/A")
+                            .moderatorFullName(h.getModerator() != null ? h.getModerator().getFullName() : "N/A")
+                            .handledAt(h.getHandledAt())
+                            .releasedAt(h.getReleasedAt())
+                            .isActive(h.getIsActive())
+                            .build())
+                    .collect(Collectors.toList());
+        }
+
         return OrderResponseDTO.builder()
                 .orderId(order.getOrderId())
                 .orderCode(order.getOrderCode())
@@ -308,10 +457,10 @@ public class OrderApiController {
                         .name(order.getCustomerName())
                         .email(order.getCustomerEmail())
                         .phone(order.getCustomerPhone())
-                        .address(order.getShippingAddress()) // Bổ sung address cho Drawer
+                        .address(order.getShippingAddress())
                         .build())
-                .product(prodcutDTO)
-                .quantity(1) // Đảm bảo luôn có số lượng để không bị NaN giá trị
+                .product(productDTO)
+                .quantity(1)
                 .totalAmount(order.getTotalAmount())
                 .depositAmount(order.getDepositAmount())
                 .orderDate(order.getOrderDate())
@@ -319,6 +468,10 @@ public class OrderApiController {
                 .craneFee(order.getCraneFee())
                 .shippingFee(order.getShippingFee())
                 .notes(order.getNotes())
+                .assignedToUsername(order.getAssignedTo() != null ? order.getAssignedTo().getUsername() : null)
+                .assignedToFullName(order.getAssignedTo() != null ? order.getAssignedTo().getFullName() : null)
+                .assignedAt(order.getAssignedAt())
+                .handlingHistory(handlingHistory)
                 .build();
     }
 }

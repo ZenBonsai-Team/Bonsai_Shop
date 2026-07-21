@@ -2,6 +2,7 @@ package com.example.bonsai_shop.product.dto;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -26,6 +27,18 @@ public class OrderResponseDTO {
     private BigDecimal shippingFee;
     private String notes;
 
+    /*
+     * --- THÔNG TIN PHÂN BỔ & TIMELINE ---
+     * AI ĐỘNG VÀO LÀ CHÓ
+     * 
+     * Dùng để hiện thị cho bên Order Moderator
+     * Check lịch sử orderHandling, xem người xử lý cuối cùng
+     */
+    private String assignedToUsername;
+    private String assignedToFullName;
+    private LocalDateTime assignedAt;
+    private List<OrderHandlingDTO> handlingHistory;
+
     @Data
     @Builder
     @NoArgsConstructor
@@ -47,4 +60,18 @@ public class OrderResponseDTO {
         private String image;
         private BigDecimal price;
     }
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class OrderHandlingDTO {
+        private Integer handlingId;
+        private String moderatorUsername;
+        private String moderatorFullName;
+        private LocalDateTime handledAt;
+        private LocalDateTime releasedAt;
+        private Boolean isActive;
+    }
+
 }

@@ -60,6 +60,17 @@ public class Order {
     @Column(name = "Notes", length = 500)
     private String notes;
 
+    @ManyToOne
+    @JoinColumn(name = "assigned_to")
+    private User assignedTo;
+
+    @Column(name = "assigned_at")
+    private LocalDateTime assignedAt;
+
+    @Version
+    @Column(name = "version")
+    private Integer version = 0;
+
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
     private List<OrderDetail> orderDetails;
 
