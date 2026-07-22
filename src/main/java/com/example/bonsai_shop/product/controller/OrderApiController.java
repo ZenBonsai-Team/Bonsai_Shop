@@ -371,12 +371,10 @@ public class OrderApiController {
                 throw new IllegalStateException("Tác phẩm '" + prod.getProductName() + "' đã được bán hoặc giữ chỗ!");
             }
             prod.setProductStatus("RESERVED");
-
             return OrderDetail.builder()
                     .order(order)
                     .product(prod)
                     .priceAtPurchase(prod.getPrice())
-                    .quantity(1)
                     .build();
         }).collect(Collectors.toList());
 

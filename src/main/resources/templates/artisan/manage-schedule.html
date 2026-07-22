@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý lịch hẹn | Artisan Portal</title>
+    <link rel="icon" type="image/png" th:href="@{/images/logo.png}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+            href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap"
+            rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+    <link rel="stylesheet" th:href="@{/css/dashboard-layout.css}">
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+    <link rel="stylesheet" th:href="@{/css/artisan.css}">
+    <link rel="stylesheet" th:href="@{/css/manage_schedule.css}">
+</head>
+
+<body>
+<div class="dashboard-layout">
+    <div th:replace="~{fragments/sidebar :: sidebar('artisan-appointments')}"></div>
+
+    <main class="dashboard-main">
+        <div th:replace="~{fragments/artisan-topbar :: topbar('Quản lý lịch hẹn')}"></div>
+            <header class="page-header">
+                <div>
+                    <h1>Quản lý lịch hẹn</h1>
+                    <p>Theo dõi và cập nhật trạng thái các lịch hẹn xem bonsai từ khách hàng.</p>
+                </div>
+            </header>
+
+            <div th:if="${success}" class="alert success" th:text="${success}"></div>
+            <div th:if="${error}" class="alert error" th:text="${error}"></div>
+
+            <section class="sch-kpi-grid">
+                <article class="sch-kpi-card">
+                    <div class="sch-kpi-top">
+                        <div class="sch-kpi-icon green"><i class="fa-solid fa-calendar-days"></i></div>
+                        <span class="sch-kpi-badge green" id="totalPercent">0%</span>
+                    </div>
+                    <div>
+                        <p class="sch-kpi-val" id="statTotal">0</p>
+                        <p class="sch-kpi-label">Tổng lịch hẹn</p>
+                    </div>
+                </article>
+
+                <article class="sch-kpi-card">
+                    <div class="sch-kpi-top">
+                        <div class="sch-kpi-icon blue"><i class="fa-solid fa-clock"></i></div>
+                        <span class="sch-kpi-badge blue">Hôm nay</span>
+                    </div>
+                    <div>
+                        <p class="sch-kpi-val" id="statToday">0</p>
+                        <p class="sch-kpi-label">Lịch hẹn hôm nay</p>
+                    </div>
+                </article>
+
+                <article class="sch-kpi-card">
+                    <div class="sch-kpi-top">
+                        <div class="sch-kpi-icon green"><i class="fa-solid fa-circle-check"></i></div>
+                        <span class="sch-kpi-badge green" id="approvedPercent">0</span>
+                    </div>
+                    <div>
+                        <p class="sch-kpi-val" id="statApproved">0</p>
+                        <p class="sch-kpi-label">Đã duyệt</p>
+                    </div>
+                </article>
+
+                <article class="sch-kpi-card">
+                    <div class="sch-kpi-top">
+                        <div class="sch-kpi-icon amber"><i class="fa-solid fa-hourglass-half"></i></div>
+                        <span class="sch-kpi-badge amber" id="pendingPercent">0</span>
+                    </div>
+                    <div>
+                        <p class="sch-kpi-val" id="statPending">0</p>
+                        <p class="sch-kpi-label">Chờ duyệt</p>
+                    </div>
+                </article>
+
+                <article class="sch-kpi-card">
+                    <div class="sch-kpi-top">
+                        <div class="sch-kpi-icon rose"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                        <span class="sch-kpi-badge rose" id="overduePercent">0</span>
+                    </div>
+                    <div>
+                        <p class="sch-kpi-val" id="statOverdue">0</p>
+                        <p class="sch-kpi-label">Quá hạn xử lý</p>
+                    </div>
+                </article>
+            </section>
+
+            <section class="portal-card sch-reminder-panel" aria-label="Nhắc việc cần xử lý">
+                <div class="sch-reminder-head">
+                    <div>
+                        <p class="sch-reminder-kicker">Nhắc lịch</p>
+                        <h2><i class="fa-solid fa-bell me-2"></i>Lịch đang chờ xử lý</h2>
+                    </div>
+                    <span id="reminderCount" class="sch-reminder-count">0 lịch chờ</span>
+                </div>
+                <ul id="pendingReminders" class="sch-reminder-list"></ul>
+            </section>
+
+            <div class="sch-overview">
+                <article class="portal-card">
+                    <div class="sch-calendar-header">
+                        <h3><i class="fa-regular fa-calendar me-2 sch-title-icon"></i>Lịch</h3>
+                        <div class="sch-nav-group">
+                            <button id="prevMonth" class="sch-nav-btn" type="button" aria-label="Tháng trước">
+                                <i class="fa-solid fa-chevron-left"></i>
+                            </button>
+                            <span class="current-month"></span>
+                            <button id="nextMonth" class="sch-nav-btn" type="button" aria-label="Tháng sau">
+                                <i class="fa-solid fa-chevron-right"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="weekdays" aria-hidden="true">
+                        <span>T2</span><span>T3</span><span>T4</span><span>T5</span><span>T6</span><span>T7</span><span>CN</span>
+                    </div>
+                    <div class="calendar-grid"></div>
+                </article>
+
+                <article class="portal-card">
+                    <h3 id="todayPanelTitle" class="sch-day-title">Lịch hẹn hôm nay</h3>
+                    <ul class="appointment-list" id="todayAppointments"></ul>
+                </article>
+            </div>
+
+            <div id="appointmentData" class="sch-hidden" aria-hidden="true">
+                <div th:each="appointment : ${appointments}"
+                     class="appointment-data-row"
+                     th:data-id="${appointment.appointmentId}"
+                     th:data-phone="${appointment.customerPhone}"
+                     th:data-email="${appointment.customerEmail}"
+                     th:data-note="${appointment.note}"
+                     th:data-appointment-at="${#temporals.format(appointment.appointmentDate,'yyyy-MM-dd''T''HH:mm')}"
+                     th:data-client="${appointment.customerName}"
+                     th:data-bonsai="${appointment.productCode + ' - ' + appointment.productName}"
+                     th:data-date="${#temporals.format(appointment.appointmentDate,'dd/MM/yyyy')}"
+                     th:data-time="${#temporals.format(appointment.appointmentDate,'HH:mm')}"
+                     th:data-status="${appointment.status}">
+                </div>
+            </div>
+    </main>
+</div>
+
+<div id="editModal" class="sch-modal-backdrop">
+    <div class="sch-modal">
+        <div class="sch-modal-header">
+            <h2><i class="fa-solid fa-calendar-pen me-2"></i>Cập nhật trạng thái lịch hẹn</h2>
+            <button type="button" id="closeModal" class="sch-modal-close" aria-label="Đóng">&times;</button>
+        </div>
+
+        <div class="sch-modal-body">
+            <div class="sch-info-grid">
+                <div class="sch-info-row">
+                    <label>ID</label>
+                    <span id="infoId">-</span>
+                </div>
+                <div class="sch-info-row">
+                    <label>Giờ hẹn</label>
+                    <span id="infoTime">-</span>
+                </div>
+                <div class="sch-info-row">
+                    <label>Khách hàng</label>
+                    <span id="infoClient">-</span>
+                </div>
+                <div class="sch-info-row">
+                    <label>Ngày hẹn</label>
+                    <span id="infoDate">-</span>
+                </div>
+                <div class="sch-info-row">
+                    <label>Số điện thoại</label>
+                    <span id="infoPhone">-</span>
+                </div>
+                <div class="sch-info-row">
+                    <label>Email</label>
+                    <span id="infoEmail">-</span>
+                </div>
+                <div class="sch-info-row sch-info-full">
+                    <label>Bonsai</label>
+                    <span id="infoBonsai">-</span>
+                </div>
+                <div class="sch-info-row sch-info-full">
+                    <label>Ghi chú</label>
+                    <span id="infoNote">-</span>
+                </div>
+            </div>
+
+            <div class="sch-status-area">
+                <label id="statusSelectLabel" for="statusSelect">Cập nhật trạng thái</label>
+                <select id="statusSelect">
+                    <option value="APPROVED">APPROVED</option>
+                    <option value="REJECTED">REJECTED</option>
+                </select>
+
+                <div id="rejectReasonGroup" class="sch-hidden">
+                    <label for="rejectReason" class="sch-reject-label">Lý do từ chối <span aria-hidden="true">*</span></label>
+                    <textarea id="rejectReason" rows="3" placeholder="Nhập lý do từ chối để khách hiểu và đặt lại lịch phù hợp hơn..."></textarea>
+                </div>
+
+                <p id="statusMessage" class="sch-status-msg"></p>
+            </div>
+        </div>
+
+        <form id="updateStatusForm" method="post">
+            <input type="hidden" name="_csrf" th:value="${_csrf?.token}">
+            <input type="hidden" id="statusInput" name="status">
+            <input type="hidden" id="messageInput" name="message">
+
+            <div class="sch-modal-footer">
+                <button type="button" id="closeModalFooter" class="btn-modal-cancel">Hủy</button>
+                <button id="saveStatus" type="button" class="btn-modal-confirm">
+                    <i class="fa-solid fa-floppy-disk me-1"></i>Lưu thay đổi
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<form id="globalCompleteForm" method="post" class="sch-hidden">
+    <input type="hidden" name="_csrf" th:value="${_csrf?.token}">
+</form>
+
+<form id="globalOverdueForm" method="post" class="sch-hidden">
+    <input type="hidden" name="_csrf" th:value="${_csrf?.token}">
+</form>
+
+<div id="confirmCompleteModal" class="sch-confirm-backdrop" aria-hidden="true">
+    <div class="sch-confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="confirmCompleteTitle">
+        <div class="sch-confirm-icon">
+            <i class="fa-solid fa-circle-check"></i>
+        </div>
+        <div class="sch-confirm-content">
+            <p class="sch-confirm-kicker">Xác nhận hoàn thành</p>
+            <h2 id="confirmCompleteTitle">Hoàn thành lịch hẹn?</h2>
+            <p id="confirmCompleteMessage">Lịch hẹn này sẽ được chuyển sang trạng thái COMPLETED.</p>
+        </div>
+        <div class="sch-confirm-actions">
+            <button type="button" id="cancelCompleteConfirm" class="btn-modal-cancel">Hủy</button>
+            <button type="button" id="acceptCompleteConfirm" class="btn-modal-confirm">
+                <i class="fa-solid fa-check me-1"></i>Xác nhận
+            </button>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script th:src="@{/js/manage_schedule.js}"></script>
+</body>
+
+</html>

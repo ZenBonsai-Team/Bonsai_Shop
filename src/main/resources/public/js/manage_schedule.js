@@ -1,451 +1,768 @@
-// ==========================================================================
-// STATE MANAGEMENT & MOCK DATA GENERATOR
-// ==========================================================================
-// Current date state
-let currentYear = 2026;
-let currentMonth = 6; // July (0-indexed, so 6 is July)
-let selectedDateStr = ""; // YYYY-MM-DD format
-let editingAppointmentId = null;
-// Mock list of appointments
-const appointments = [];
-// Helper functions for random items
-const randomItem = (arr) => arr[Math.floor(Math.random() * arr.length)];
-const padZero = (num) => String(num).padStart(2, '0');
-function generateMockData() {
-    const firstNames = ["Nguyễn", "Trần", "Lê", "Phạm", "Hoàng", "Huỳnh", "Phan", "Vũ", "Võ", "Đặng"];
-    const middleNames = ["Văn", "Thị", "Minh", "Hữu", "Khánh", "Anh", "Đức", "Hồng", "Tuấn", "Thanh"];
-    const lastNames = ["Anh", "Bình", "Cường", "Duy", "Hải", "Giang", "Hương", "Khánh", "Linh", "Minh", "Nam", "Phong", "Quỳnh", "Sơn", "Trang", "Vy"];
-    const bonsais = ["Tùng La Hán", "Mai Chiếu Thủy", "Sanh Nam Điền", "Đỗ Quyên Nhật Bản", "Nguyệt Quế Cổ Thụ", "Khế Kiểng Dáng Huyền", "Lộc Vừng Bonsai"];
-
-    // Generate exactly 128 appointments to match the dashboard statistics.
-    // We want 6 on "2026-07-08" (Today).
-    // Total: 128. Approved: 102. Pending: 26.
-    let approvedCount = 0;
-    let pendingCount = 0;
-
-    // 1. Generate 6 appointments for Today (July 8, 2026)
-    const todayStr = "2026-07-08";
-    const todayTimes = ["08:30", "09:00", "10:30", "14:00", "15:30", "16:00"];
-
-    for (let i = 0; i < 6; i++) {
-        // Let's make 4 approved and 2 pending on today
-        const status = i < 4 ? "APPROVED" : "PENDING";
-        if (status === "APPROVED") approvedCount++;
-        else pendingCount++;
-
-        appointments.push({
-            id: `AP${padZero(i + 1)}`,
-            client: `${randomItem(firstNames)} ${randomItem(middleNames)} ${randomItem(lastNames)}`,
-            bonsai: bonsais[i % bonsais.length],
-            date: todayStr,
-            time: todayTimes[i],
-            status: status
-        });
-    }
-
-    // 2. Generate remaining 122 appointments spread across June, July, and August 2026
-    let idCounter = 7;
-    const startNum = 128;
-
-    // Generate dates helper
-    const getRandDate = () => {
-        // Generate dates between June 1st (2026-06-01) and Aug 31st (2026-08-31)
-        const months = [5, 6, 7]; // June, July, August
-        const m = randomItem(months);
-        let d = Math.floor(Math.random() * 30) + 1;
-        if (m === 6 && d > 31) d = 31; // July has 31 days
-        if (m === 7 && d > 31) d = 31; // August has 31 days
-
-        const dateStr = `2026-${padZero(m + 1)}-${padZero(d)}`;
-        // Avoid adding more on July 8 to keep the "6 today" statistic clean
-        if (dateStr === todayStr) {
-            return "2026-07-09";
-        }
-        return dateStr;
+document.addEventListener("DOMContentLoaded", () => {
+    const state = {
+        appointments: [],
+        currentMonth: new Date().getMonth(),
+        currentYear: new Date().getFullYear(),
+        selectedDate: "",
+        editingAppointmentId: null,
+        completingAppointmentId: null,
+        completeSubmitMode: ""
     };
 
-    while (idCounter <= startNum) {
-        // Distribute statuses to hit exactly 102 Approved and 26 Pending
-        let status = "APPROVED";
-        if (pendingCount < 26 && (approvedCount >= 102 || Math.random() < 0.2)) {
-            status = "PENDING";
-            pendingCount++;
-        } else {
-            approvedCount++;
-        }
-
-        const h = padZero(Math.floor(Math.random() * 9) + 8); // 08:00 - 16:00
-        const min = randomItem(["00", "15", "30", "45"]);
-
-        appointments.push({
-            id: `AP${String(idCounter).padStart(3, '0')}`,
-            client: `${randomItem(firstNames)} ${randomItem(middleNames)} ${randomItem(lastNames)}`,
-            bonsai: randomItem(bonsais),
-            date: getRandDate(),
-            time: `${h}:${min}`,
-            status: status
-        });
-        idCounter++;
-    }
-    // Sort appointments: Date descending, Time ascending
-    sortAppointments();
-}
-function sortAppointments() {
-    appointments.sort((a, b) => {
-        if (a.date !== b.date) {
-            return b.date.localeCompare(a.date); // Latest date first
-        }
-        return a.time.localeCompare(b.time); // Earliest time first
-    });
-}
-// Convert YYYY-MM-DD -> DD/MM/YYYY
-function formatDateDisplay(dateStr) {
-    const [year, month, day] = dateStr.split('-');
-    return `${day}/${month}/${year}`;
-}
-// Convert DD/MM/YYYY -> YYYY-MM-DD
-function parseDateInput(displayStr) {
-    const [day, month, year] = displayStr.split('/');
-    return `${year}-${month}-${day}`;
-}
-// ==========================================================================
-// DOM ELEMENTS
-// ==========================================================================
-const statTotal = document.getElementById("statTotal");
-const statToday = document.getElementById("statToday");
-const statApproved = document.getElementById("statApproved");
-const statPending = document.getElementById("statPending");
-const totalPercent = document.getElementById("totalPercent");
-const approvedPercent = document.getElementById("approvedPercent");
-const pendingPercent = document.getElementById("pendingPercent");
-const currentMonthSpan = document.querySelector(".current-month");
-const prevMonthBtn = document.getElementById("prevMonth");
-const nextMonthBtn = document.getElementById("nextMonth");
-const calendarGrid = document.querySelector(".calendar-grid");
-const todayAppointmentsUl = document.getElementById("todayAppointments");
-const todayPanelTitle = document.getElementById("todayPanelTitle");
-const searchInput = document.getElementById("searchInput");
-const statusFilter = document.getElementById("statusFilter");
-const appointmentTableBody = document.getElementById("appointmentTableBody");
-const editModal = document.getElementById("editModal");
-const infoId = document.getElementById("infoId");
-const infoClient = document.getElementById("infoClient");
-const infoBonsai = document.getElementById("infoBonsai");
-const infoDate = document.getElementById("infoDate");
-const infoTime = document.getElementById("infoTime");
-const statusSelect = document.getElementById("statusSelect");
-const saveStatusBtn = document.getElementById("saveStatus");
-const closeModalBtn = document.getElementById("closeModal");
-// ==========================================================================
-// COMPONENT RENDERERS
-// ==========================================================================
-// 1. Update Statistics
-function renderStats() {
-    const total = appointments.length;
-    const todayStr = "2026-07-08";
-    const today = appointments.filter(a => a.date === todayStr).length;
-    const approved = appointments.filter(a => a.status === "APPROVED").length;
-    const pending = appointments.filter(a => a.status === "PENDING").length;
-    const cancelled = appointments.filter(a => a.status === "CANCELLED").length;
-
-    statTotal.textContent = total;
-    statToday.textContent = today;
-    statApproved.textContent = approved;
-    statPending.textContent = pending;
-
-    // Percentage comparisons (pretend last week's baseline was 114)
-    totalPercent.textContent = `+${Math.round(((total - 114) / 114) * 100)}%`;
-
-    // Percentage ratios
-    const activeAppointments = approved + pending;
-    if (activeAppointments > 0) {
-        approvedPercent.textContent = `${Math.round((approved / activeAppointments) * 100)}%`;
-        pendingPercent.textContent = `${Math.round((pending / activeAppointments) * 100)}%`;
-    } else {
-        approvedPercent.textContent = "0%";
-        pendingPercent.textContent = "0%";
-    }
-}
-// 2. Render Calendar
-function renderCalendar() {
     const monthNames = [
-        "January", "February", "March", "April", "May", "June",
-        "July", "August", "September", "October", "November", "December"
+        "Tháng 1", "Tháng 2", "Tháng 3", "Tháng 4", "Tháng 5", "Tháng 6",
+        "Tháng 7", "Tháng 8", "Tháng 9", "Tháng 10", "Tháng 11", "Tháng 12"
     ];
 
-    currentMonthSpan.textContent = `${monthNames[currentMonth]} ${currentYear}`;
-    calendarGrid.innerHTML = "";
+    const elements = {
+        statTotal: document.getElementById("statTotal"),
+        statToday: document.getElementById("statToday"),
+        statApproved: document.getElementById("statApproved"),
+        statPending: document.getElementById("statPending"),
+        statOverdue: document.getElementById("statOverdue"),
+        totalPercent: document.getElementById("totalPercent"),
+        approvedPercent: document.getElementById("approvedPercent"),
+        pendingPercent: document.getElementById("pendingPercent"),
+        overduePercent: document.getElementById("overduePercent"),
+        reminderCount: document.getElementById("reminderCount"),
+        pendingReminders: document.getElementById("pendingReminders"),
+        currentMonth: document.querySelector(".current-month"),
+        prevMonth: document.getElementById("prevMonth"),
+        nextMonth: document.getElementById("nextMonth"),
+        calendarGrid: document.querySelector(".calendar-grid"),
+        todayAppointments: document.getElementById("todayAppointments"),
+        todayPanelTitle: document.getElementById("todayPanelTitle"),
+        appointmentData: document.getElementById("appointmentData"),
+        editModal: document.getElementById("editModal"),
+        closeModal: document.getElementById("closeModal"),
+        closeModalFooter: document.getElementById("closeModalFooter"),
+        saveStatus: document.getElementById("saveStatus"),
+        statusArea: document.querySelector(".sch-status-area"),
+        statusSelectLabel: document.getElementById("statusSelectLabel"),
+        statusSelect: document.getElementById("statusSelect"),
+        rejectReason: document.getElementById("rejectReason"),
+        rejectReasonGroup: document.getElementById("rejectReasonGroup"),
+        statusMessage: document.getElementById("statusMessage"),
+        updateStatusForm: document.getElementById("updateStatusForm"),
+        completeForm: document.getElementById("globalCompleteForm"),
+        overdueForm: document.getElementById("globalOverdueForm"),
+        confirmCompleteModal: document.getElementById("confirmCompleteModal"),
+        confirmCompleteMessage: document.getElementById("confirmCompleteMessage"),
+        cancelCompleteConfirm: document.getElementById("cancelCompleteConfirm"),
+        acceptCompleteConfirm: document.getElementById("acceptCompleteConfirm"),
+        statusInput: document.getElementById("statusInput"),
+        messageInput: document.getElementById("messageInput"),
+        infoId: document.getElementById("infoId"),
+        infoClient: document.getElementById("infoClient"),
+        infoBonsai: document.getElementById("infoBonsai"),
+        infoDate: document.getElementById("infoDate"),
+        infoTime: document.getElementById("infoTime"),
+        infoPhone: document.getElementById("infoPhone"),
+        infoEmail: document.getElementById("infoEmail"),
+        infoNote: document.getElementById("infoNote"),
+        notificationBtn: document.getElementById("notificationBtn"),
+        notificationPopup: document.getElementById("notificationPopup")
+    };
 
-    // First day of the month
-    const firstDay = new Date(currentYear, currentMonth, 1);
-    // getDay() returns 0 for Sunday, 1 for Monday...
-    // We want Monday to be 0, Tuesday to be 1... Sunday to be 6
-    let startDayIdx = firstDay.getDay() - 1;
-    if (startDayIdx < 0) startDayIdx = 6; // Sunday becomes 6
-
-    // Total days in the month
-    const totalDays = new Date(currentYear, currentMonth + 1, 0).getDate();
-
-    // Empty cells before the 1st
-    for (let i = 0; i < startDayIdx; i++) {
-        const emptyCell = document.createElement("div");
-        emptyCell.className = "calendar-day empty";
-        calendarGrid.appendChild(emptyCell);
+    function padZero(value) {
+        return value < 10 ? `0${value}` : String(value);
     }
 
-    // Create calendar days
-    for (let day = 1; day <= totalDays; day++) {
-        const dayCell = document.createElement("div");
-        dayCell.className = "calendar-day current-month-day";
-        dayCell.textContent = day;
+    function getLocalDateString(date = new Date()) {
+        return `${date.getFullYear()}-${padZero(date.getMonth() + 1)}-${padZero(date.getDate())}`;
+    }
 
-        const dateStr = `${currentYear}-${padZero(currentMonth + 1)}-${padZero(day)}`;
+    function formatDateDisplay(dateString) {
+        if (!dateString) return "";
+        const [year, month, day] = dateString.split("-");
+        return `${day}/${month}/${year}`;
+    }
 
-        // Mark today
-        if (dateStr === "2026-07-08") {
-            dayCell.classList.add("today");
+    function parseDateInput(displayString) {
+        if (!displayString) return "";
+        const [day, month, year] = displayString.split("/");
+        return `${year}-${month}-${day}`;
+    }
+
+    function parseAppointmentDateTime(appointment) {
+        const dateTimeValue = appointment.appointmentAt || `${appointment.date}T${appointment.time}`;
+        const dateTimeMatch = dateTimeValue.trim().match(/^(\d{4})-(\d{2})-(\d{2})(?:T|\s)(\d{2}):(\d{2})/);
+        const parsedDate = dateTimeMatch
+                ? new Date(
+                        Number(dateTimeMatch[1]),
+                        Number(dateTimeMatch[2]) - 1,
+                        Number(dateTimeMatch[3]),
+                        Number(dateTimeMatch[4]),
+                        Number(dateTimeMatch[5])
+                )
+                : new Date(dateTimeValue);
+        return Number.isNaN(parsedDate.getTime()) ? null : parsedDate;
+    }
+
+    function parseAppointmentDecisionDeadline(appointment) {
+        if (!appointment.date) return null;
+        const [year, month, day] = appointment.date.split("-").map(Number);
+        const deadline = new Date(year, month - 1, day, 0, 0, 0, 0);
+        return Number.isNaN(deadline.getTime()) ? null : deadline;
+    }
+
+    function isOverduePending(appointment) {
+        if (appointment.status !== "PENDING") return false;
+        const decisionDeadline = parseAppointmentDecisionDeadline(appointment);
+        return decisionDeadline ? decisionDeadline.getTime() <= Date.now() : false;
+    }
+
+    function getEffectiveStatus(appointment) {
+        return isOverduePending(appointment) ? "OVERDUE" : appointment.status;
+    }
+
+    function getMinutesUntilAppointment(appointment) {
+        const decisionDeadline = parseAppointmentDecisionDeadline(appointment);
+        return decisionDeadline ? Math.ceil((decisionDeadline.getTime() - Date.now()) / 60000) : null;
+    }
+
+    function getReminderLevel(minutesUntil) {
+        if (minutesUntil === null) {
+            return {
+                className: "neutral",
+                label: "Cần kiểm tra",
+                priority: 4
+            };
         }
 
-        // Highlight selected day
-        if (dateStr === selectedDateStr) {
-            dayCell.classList.add("selected");
+        if (minutesUntil <= 30) {
+            return {
+                className: "urgent",
+                label: "Cần xử lý ngay",
+                priority: 1
+            };
         }
 
-        // Check if there are appointments on this date
-        const hasAppointments = appointments.some(a => a.date === dateStr);
-        if (hasAppointments) {
-            const dot = document.createElement("span");
-            dot.className = "appointment-dot";
-            dayCell.appendChild(dot);
+        if (minutesUntil <= 120) {
+            return {
+                className: "soon",
+                label: "Sắp đến giờ hẹn",
+                priority: 2
+            };
         }
 
-        // Add click event
-        dayCell.addEventListener("click", () => {
-            if (selectedDateStr === dateStr) {
-                // Deselect if clicked again
-                selectedDateStr = "";
-                dayCell.classList.remove("selected");
-                todayPanelTitle.textContent = "Today's Appointments";
-            } else {
-                // Select new date
-                document.querySelectorAll(".calendar-day").forEach(c => c.classList.remove("selected"));
-                selectedDateStr = dateStr;
-                dayCell.classList.add("selected");
-                todayPanelTitle.textContent = `Appointments on ${formatDateDisplay(dateStr)}`;
+        if (minutesUntil <= 1440) {
+            return {
+                className: "today",
+                label: "Trong 24 giờ",
+                priority: 3
+            };
+        }
+
+        return {
+            className: "neutral",
+            label: "Chờ duyệt",
+            priority: 4
+        };
+    }
+
+    function formatTimeUntil(minutesUntil) {
+        if (minutesUntil === null) return "Chưa xác định thời gian";
+        if (minutesUntil <= 0) return "Đã tới giờ hẹn";
+        if (minutesUntil < 60) return `Còn ${minutesUntil} phút`;
+
+        const hours = Math.floor(minutesUntil / 60);
+        const minutes = minutesUntil % 60;
+        if (hours < 24) {
+            return minutes > 0 ? `Còn ${hours} giờ ${minutes} phút` : `Còn ${hours} giờ`;
+        }
+
+        const days = Math.floor(hours / 24);
+        const remainingHours = hours % 24;
+        return remainingHours > 0 ? `Còn ${days} ngày ${remainingHours} giờ` : `Còn ${days} ngày`;
+    }
+
+    function getReminderLevelV2(minutesUntil) {
+        if (minutesUntil === null) {
+            return {
+                className: "neutral",
+                label: "Cần kiểm tra",
+                priority: 5
+            };
+        }
+
+        if (minutesUntil <= 30) {
+            return {
+                className: "urgent",
+                label: "Hết hạn sớm",
+                priority: 1
+            };
+        }
+
+        if (minutesUntil <= 120) {
+            return {
+                className: "soon",
+                label: "Rất gần hạn",
+                priority: 2
+            };
+        }
+
+        if (minutesUntil <= 480) {
+            return {
+                className: "high",
+                label: "Ưu tiên cao",
+                priority: 3
+            };
+        }
+
+        if (minutesUntil <= 1440) {
+            return {
+                className: "today",
+                label: "Trong 24 giờ",
+                priority: 4
+            };
+        }
+
+        return {
+            className: "neutral",
+                label: "Chờ duyệt",
+            priority: 5
+        };
+    }
+
+    function formatTimeUntilV2(minutesUntil) {
+        if (minutesUntil === null) return "Chưa xác định thời gian";
+        if (minutesUntil <= 0) return "Đã hết hạn xử lý";
+        if (minutesUntil < 60) return `Còn ${minutesUntil} phút để xử lý`;
+
+        const hours = Math.floor(minutesUntil / 60);
+        const minutes = minutesUntil % 60;
+        if (minutesUntil < 1440) {
+            return minutes > 0 ? `Còn ${hours} giờ ${minutes} phút để xử lý` : `Còn ${hours} giờ để xử lý`;
+        }
+
+        const days = Math.floor(hours / 24);
+        const remainingHours = hours % 24;
+        return remainingHours > 0 ? `Còn ${days} ngày ${remainingHours} giờ để xử lý` : `Còn ${days} ngày để xử lý`;
+    }
+
+    function formatTimeUntilExact(minutesUntil) {
+        return "";
+    }
+
+    function formatAppointmentLabel(appointment) {
+        return `${formatDateDisplay(appointment.date)} lúc ${appointment.time}`;
+    }
+
+    function formatDecisionDeadlineLabel(appointment) {
+        return `Hạn xử lý: trước 00:00 ngày ${formatDateDisplay(appointment.date)}`;
+    }
+
+    function getReminderActionLabel(reminderLevel) {
+        return reminderLevel.priority <= 2 ? "Xử lý ngay" : "Xem và xử lý";
+    }
+
+    function getReminderNote(reminderLevel) {
+        if (reminderLevel.className === "urgent") return "Sắp hết hạn chỉnh, cần duyệt hoặc từ chối ngay.";
+        if (reminderLevel.className === "soon") return "Nên xử lý trước khi sang ngày xem lịch.";
+        if (reminderLevel.className === "high") return "Hạn xử lý còn trong 8 giờ, ưu tiên kiểm tra trước.";
+        if (reminderLevel.className === "today") return "Hạn xử lý nằm trong 24 giờ tới.";
+        return "Lịch đang chờ duyệt.";
+    }
+
+    function createElement(tagName, className, text) {
+        const element = document.createElement(tagName);
+        if (className) element.className = className;
+        if (text !== undefined) element.textContent = text;
+        return element;
+    }
+
+    function createStatusBadge(status) {
+        const statusLabels = {
+            OVERDUE: "QUÁ HẠN"
+        };
+        const badge = createElement("span", `status-badge ${status.toLowerCase()}`, statusLabels[status] || status);
+        return badge;
+    }
+
+    function setStatusMessage(message) {
+        elements.statusMessage.textContent = message;
+        elements.statusMessage.classList.toggle("visible", Boolean(message));
+    }
+
+    function toggleRejectReason(show) {
+        elements.rejectReasonGroup.classList.toggle("sch-hidden", !show);
+        elements.rejectReason.required = show;
+        if (!show) {
+            elements.rejectReason.classList.remove("sch-field-error");
+        }
+    }
+
+    function validateRejectReason() {
+        if (elements.statusSelect.value !== "REJECTED") return true;
+
+        const reason = elements.rejectReason.value.trim();
+        if (reason.length >= 5) {
+            elements.rejectReason.classList.remove("sch-field-error");
+            return true;
+        }
+
+        elements.rejectReason.classList.add("sch-field-error");
+        setStatusMessage("Vui lòng nhập lý do từ chối tối thiểu 5 ký tự trước khi lưu.");
+        elements.rejectReason.focus();
+        return false;
+    }
+
+    function setModalEditMode(canEdit) {
+        elements.statusArea?.classList.toggle("readonly", !canEdit);
+        elements.statusSelect.classList.toggle("sch-hidden", !canEdit);
+        elements.saveStatus.classList.toggle("sch-hidden", !canEdit);
+        elements.closeModalFooter.textContent = canEdit ? "Hủy" : "Đóng";
+
+        if (elements.statusSelectLabel) {
+            elements.statusSelectLabel.textContent = canEdit ? "Cập nhật trạng thái" : "Trạng thái hiện tại";
+        }
+    }
+
+    function setStatusOptions(options) {
+        elements.statusSelect.innerHTML = "";
+        options.forEach(option => {
+            const optionElement = document.createElement("option");
+            optionElement.value = option.value;
+            optionElement.textContent = option.label;
+            elements.statusSelect.appendChild(optionElement);
+        });
+    }
+
+    function extractAppointmentsFromDOM() {
+        state.appointments = [];
+        elements.appointmentData.querySelectorAll(".appointment-data-row").forEach(row => {
+            const dateText = row.dataset.date || "";
+            const status = row.dataset.status ? row.dataset.status.trim().toUpperCase() : "PENDING";
+
+            state.appointments.push({
+                id: row.dataset.id || "",
+                phone: row.dataset.phone || "",
+                email: row.dataset.email || "",
+                note: row.dataset.note || "",
+                appointmentAt: row.dataset.appointmentAt || "",
+                client: row.dataset.client || "",
+                bonsai: row.dataset.bonsai || "",
+                date: parseDateInput(dateText),
+                time: row.dataset.time || "",
+                status
+            });
+        });
+    }
+
+    function renderStats() {
+        const total = state.appointments.length;
+        const todayString = getLocalDateString();
+        const today = state.appointments.filter(appointment => appointment.date === todayString).length;
+        const approved = state.appointments.filter(appointment => getEffectiveStatus(appointment) === "APPROVED").length;
+        const pending = state.appointments.filter(appointment => getEffectiveStatus(appointment) === "PENDING").length;
+        const overdue = state.appointments.filter(appointment => getEffectiveStatus(appointment) === "OVERDUE").length;
+        elements.statTotal.textContent = total;
+        elements.statToday.textContent = today;
+        elements.statApproved.textContent = approved;
+        elements.statPending.textContent = pending;
+        if (elements.statOverdue) elements.statOverdue.textContent = overdue;
+        elements.totalPercent.textContent = total > 0 ? `+${total}` : "0";
+        elements.approvedPercent.textContent = approved;
+        elements.pendingPercent.textContent = pending;
+        if (elements.overduePercent) {
+            elements.overduePercent.textContent = overdue;
+        }
+    }
+
+    function renderCalendar() {
+        elements.currentMonth.textContent = `${monthNames[state.currentMonth]} ${state.currentYear}`;
+        elements.calendarGrid.innerHTML = "";
+
+        const firstDay = new Date(state.currentYear, state.currentMonth, 1);
+        let startDayIndex = firstDay.getDay() - 1;
+        if (startDayIndex < 0) startDayIndex = 6;
+
+        const totalDays = new Date(state.currentYear, state.currentMonth + 1, 0).getDate();
+        for (let index = 0; index < startDayIndex; index += 1) {
+            elements.calendarGrid.appendChild(createElement("div", "calendar-day empty"));
+        }
+
+        for (let day = 1; day <= totalDays; day += 1) {
+            const dayButton = createElement("button", "calendar-day current-month-day", String(day));
+            const dateString = `${state.currentYear}-${padZero(state.currentMonth + 1)}-${padZero(day)}`;
+            dayButton.type = "button";
+            dayButton.dataset.date = dateString;
+            dayButton.setAttribute("aria-label", `Xem lịch hẹn ngày ${formatDateDisplay(dateString)}`);
+
+            if (dateString === getLocalDateString()) dayButton.classList.add("today");
+            if (dateString === state.selectedDate) dayButton.classList.add("selected");
+
+            if (state.appointments.some(appointment => appointment.date === dateString)) {
+                dayButton.appendChild(createElement("span", "appointment-dot"));
             }
-            renderDayPanel();
-            renderTable();
-        });
 
-        calendarGrid.appendChild(dayCell);
-    }
-}
-// 3. Render Today's / Selected Date's Appointments List
-function renderDayPanel() {
-    todayAppointmentsUl.innerHTML = "";
-
-    // Default to today (July 8, 2026) if no date is explicitly selected in state
-    const targetDate = selectedDateStr || "2026-07-08";
-    const dayAppointments = appointments.filter(a => a.date === targetDate);
-
-    if (dayAppointments.length === 0) {
-        const li = document.createElement("li");
-        li.className = "no-appointments";
-        li.textContent = "No appointments scheduled for this day.";
-        todayAppointmentsUl.appendChild(li);
-        return;
+            dayButton.addEventListener("click", () => selectCalendarDate(dateString));
+            elements.calendarGrid.appendChild(dayButton);
+        }
     }
 
-    // Sort chronological for display
-    const sortedDayList = [...dayAppointments].sort((a, b) => a.time.localeCompare(b.time));
+    function selectCalendarDate(dateString) {
+        if (state.selectedDate === dateString) {
+            state.selectedDate = "";
+            elements.todayPanelTitle.textContent = "Lịch hẹn hôm nay";
+        } else {
+            state.selectedDate = dateString;
+            elements.todayPanelTitle.textContent = `Lịch hẹn ngày ${formatDateDisplay(dateString)}`;
+        }
 
-    sortedDayList.forEach(a => {
-        const li = document.createElement("li");
-        li.className = "appointment-item";
-
-        let badgeClass = "pending";
-        if (a.status === "APPROVED") badgeClass = "approved";
-        if (a.status === "CANCELLED") badgeClass = "cancelled";
-
-        li.innerHTML = `
-            <div class="item-left">
-                <span class="item-title">${a.client}</span>
-                <span class="item-subtitle">${a.bonsai} (${a.id})</span>
-            </div>
-            <div class="item-right">
-                <span class="item-time"><i class="fa-regular fa-clock"></i> ${a.time}</span>
-                <span class="status-badge ${badgeClass}">${a.status}</span>
-            </div>
-        `;
-
-        // Double click item to edit status
-        li.addEventListener("dblclick", () => {
-            openEditModal(a.id);
-        });
-
-        todayAppointmentsUl.appendChild(li);
-    });
-}
-// 4. Render Table
-function renderTable() {
-    appointmentTableBody.innerHTML = "";
-
-    const searchText = searchInput.value.toLowerCase().trim();
-    const filterVal = statusFilter.value;
-
-    // Filter the items
-    const filtered = appointments.filter(a => {
-        // Search filter (ID, Client, Bonsai)
-        const matchesSearch = a.id.toLowerCase().includes(searchText) ||
-            a.client.toLowerCase().includes(searchText) ||
-            a.bonsai.toLowerCase().includes(searchText);
-
-        // Status filter
-        const matchesStatus = filterVal === "ALL" || a.status === filterVal;
-
-        // Calendar date selection filter
-        const matchesDate = !selectedDateStr || a.date === selectedDateStr;
-
-        return matchesSearch && matchesStatus && matchesDate;
-    });
-
-    if (filtered.length === 0) {
-        appointmentTableBody.innerHTML = `
-            <tr>
-                <td colspan="7" style="text-align: center; color: var(--text-secondary); font-style: italic; padding: 3rem 0;">
-                    No appointments found matching your filters.
-                </td>
-            </tr>
-        `;
-        return;
-    }
-
-    filtered.forEach(a => {
-        const tr = document.createElement("tr");
-
-        let badgeClass = "pending";
-        if (a.status === "APPROVED") badgeClass = "approved";
-        if (a.status === "CANCELLED") badgeClass = "cancelled";
-
-        tr.innerHTML = `
-            <td><strong>${a.id}</strong></td>
-            <td>${a.client}</td>
-            <td>${a.bonsai}</td>
-            <td>${formatDateDisplay(a.date)}</td>
-            <td>${a.time}</td>
-            <td><span class="status-badge ${badgeClass}">${a.status}</span></td>
-            <td class="table-actions">
-                <button class="edit-btn" aria-label="Edit status of ${a.id}"><i class="fa-solid fa-pen"></i></button>
-            </td>
-        `;
-
-        // Open modal on clicking edit icon
-        const editBtn = tr.querySelector(".edit-btn");
-        editBtn.addEventListener("click", (e) => {
-            e.stopPropagation();
-            openEditModal(a.id);
-        });
-
-        // Support double-clicking row to edit too
-        tr.addEventListener("dblclick", () => {
-            openEditModal(a.id);
-        });
-
-        appointmentTableBody.appendChild(tr);
-    });
-}
-// ==========================================================================
-// MODAL INTERACTIONS
-// ==========================================================================
-function openEditModal(id) {
-    const appointment = appointments.find(a => a.id === id);
-    if (!appointment) return;
-
-    editingAppointmentId = id;
-
-    infoId.textContent = appointment.id;
-    infoClient.textContent = appointment.client;
-    infoBonsai.textContent = appointment.bonsai;
-    infoDate.textContent = formatDateDisplay(appointment.date);
-    infoTime.textContent = appointment.time;
-
-    // Status can be APPROVED, PENDING, or CANCELLED.
-    // Note: Option value in select is APPROVED, PENDING, CANCELLED
-    statusSelect.value = appointment.status;
-
-    editModal.classList.add("show");
-
-    // Accessible focus management
-    statusSelect.focus();
-}
-function closeEditModal() {
-    editModal.classList.remove("show");
-    editingAppointmentId = null;
-}
-function saveStatusChange() {
-    if (!editingAppointmentId) return;
-
-    const appointment = appointments.find(a => a.id === editingAppointmentId);
-    if (appointment) {
-        appointment.status = statusSelect.value;
-
-        // Re-sort if status change triggers statistics updates
-        sortAppointments();
-
-        // Refresh UI components
-        renderStats();
         renderCalendar();
         renderDayPanel();
-        renderTable();
     }
 
-    closeEditModal();
-}
-// ==========================================================================
-// EVENT LISTENERS & INITIALIZATION
-// ==========================================================================
-// Calendar month buttons
-prevMonthBtn.addEventListener("click", () => {
-    currentMonth--;
-    if (currentMonth < 0) {
-        currentMonth = 11;
-        currentYear--;
+    function renderDayPanel() {
+        elements.todayAppointments.innerHTML = "";
+        const targetDate = state.selectedDate || getLocalDateString();
+        const dayAppointments = state.appointments
+                .filter(appointment => appointment.date === targetDate)
+                .sort((first, second) => first.time.localeCompare(second.time));
+
+        if (dayAppointments.length === 0) {
+            elements.todayAppointments.appendChild(
+                    createElement("li", "no-appointments", "Không có lịch hẹn.")
+            );
+            return;
+        }
+
+        dayAppointments.forEach(appointment => {
+            const item = createElement("li", "appointment-item");
+            const left = createElement("div", "item-left");
+            const right = createElement("div", "item-right");
+            const time = createElement("span", "item-time");
+
+            item.dataset.id = appointment.id;
+            item.setAttribute("role", "button");
+            item.tabIndex = 0;
+            left.appendChild(createElement("span", "item-title", appointment.client));
+            left.appendChild(createElement("span", "item-subtitle", `${appointment.bonsai} (${appointment.id})`));
+            time.appendChild(createElement("i", "fa-regular fa-clock"));
+            time.append(` ${appointment.time}`);
+            right.appendChild(time);
+            right.appendChild(createStatusBadge(getEffectiveStatus(appointment)));
+            item.append(left, right);
+            elements.todayAppointments.appendChild(item);
+        });
     }
-    renderCalendar();
-});
-nextMonthBtn.addEventListener("click", () => {
-    currentMonth++;
-    if (currentMonth > 11) {
-        currentMonth = 0;
-        currentYear++;
+
+    function renderReminderPanel() {
+        if (!elements.pendingReminders || !elements.reminderCount) return;
+
+        const pendingAppointments = state.appointments
+                .filter(appointment => getEffectiveStatus(appointment) === "PENDING")
+                .map(appointment => ({
+                    ...appointment,
+                    minutesUntil: getMinutesUntilAppointment(appointment)
+                }))
+                .sort((first, second) => {
+                    const firstLevel = getReminderLevelV2(first.minutesUntil);
+                    const secondLevel = getReminderLevelV2(second.minutesUntil);
+                    if (firstLevel.priority !== secondLevel.priority) {
+                        return firstLevel.priority - secondLevel.priority;
+                    }
+                    if (first.minutesUntil === null) return 1;
+                    if (second.minutesUntil === null) return -1;
+                    return first.minutesUntil - second.minutesUntil;
+                });
+
+        elements.reminderCount.textContent = `${pendingAppointments.length} lịch chờ`;
+        elements.pendingReminders.innerHTML = "";
+
+        if (pendingAppointments.length === 0) {
+            const emptyItem = createElement("li", "sch-reminder-empty", "Không có lịch chờ xử lý.");
+            elements.pendingReminders.appendChild(emptyItem);
+            return;
+        }
+
+        pendingAppointments.slice(0, 4).forEach((appointment, index) => {
+            const reminderLevel = getReminderLevelV2(appointment.minutesUntil);
+            const item = createElement("li", `sch-reminder-item ${reminderLevel.className}`);
+            const button = createElement("button", "sch-reminder-btn");
+            const priority = createElement("span", "sch-reminder-priority", `#${index + 1}`);
+            const content = createElement("div", "sch-reminder-content");
+            const title = createElement("strong", "", appointment.client);
+            const due = createElement("span", "sch-reminder-due", formatTimeUntilV2(appointment.minutesUntil));
+            const exactDue = createElement("small", "sch-reminder-exact", formatTimeUntilExact(appointment.minutesUntil));
+            const deadline = createElement("small", "sch-reminder-deadline", formatDecisionDeadlineLabel(appointment));
+            const meta = createElement(
+                    "span",
+                    "sch-reminder-meta",
+                    `${appointment.bonsai} • ${formatAppointmentLabel(appointment)}`
+            );
+            const note = createElement("small", "sch-reminder-note", getReminderNote(reminderLevel));
+            const badge = createElement("span", `sch-reminder-badge ${reminderLevel.className}`, reminderLevel.label);
+            const action = createElement("span", "sch-reminder-action", getReminderActionLabel(reminderLevel));
+
+            button.type = "button";
+            button.dataset.id = appointment.id;
+            content.append(title, due);
+            if (exactDue.textContent) content.appendChild(exactDue);
+            content.append(deadline, meta, note);
+            button.append(priority, content, badge, action);
+            item.appendChild(button);
+            elements.pendingReminders.appendChild(item);
+        });
     }
-    renderCalendar();
-});
-// Search and filters
-searchInput.addEventListener("input", renderTable);
-statusFilter.addEventListener("change", renderTable);
-// Modal action buttons
-saveStatusBtn.addEventListener("click", saveStatusChange);
-closeModalBtn.addEventListener("click", closeEditModal);
-// Close modal when clicking outside of modal-content
-editModal.addEventListener("click", (e) => {
-    if (e.target === editModal) {
-        closeEditModal();
+
+    function openEditModal(id) {
+        const appointment = state.appointments.find(item => item.id === String(id));
+        if (!appointment) return;
+
+        state.editingAppointmentId = appointment.id;
+        elements.infoId.textContent = appointment.id;
+        elements.infoClient.textContent = appointment.client;
+        elements.infoBonsai.textContent = appointment.bonsai;
+        elements.infoDate.textContent = formatDateDisplay(appointment.date);
+        elements.infoTime.textContent = appointment.time;
+        elements.infoPhone.textContent = appointment.phone || "-";
+        elements.infoEmail.textContent = appointment.email || "-";
+        elements.infoNote.textContent = appointment.note || "-";
+        elements.rejectReason.value = "";
+        const effectiveStatus = getEffectiveStatus(appointment);
+        const canEdit = effectiveStatus === "PENDING" || effectiveStatus === "APPROVED";
+        setModalEditMode(canEdit);
+
+        if (effectiveStatus === "OVERDUE") {
+            elements.statusSelect.disabled = true;
+            elements.saveStatus.disabled = true;
+            elements.statusSelect.value = "APPROVED";
+            setStatusMessage("Lịch PENDING này đã qua hạn xử lý trước 00:00 ngày xem lịch, không thể duyệt từ giao diện.");
+        } else if (effectiveStatus === "PENDING") {
+            setStatusOptions([
+                { value: "APPROVED", label: "APPROVED" },
+                { value: "REJECTED", label: "REJECTED" }
+            ]);
+            elements.statusSelect.disabled = false;
+            elements.saveStatus.disabled = false;
+            elements.statusSelect.value = "APPROVED";
+            setStatusMessage("");
+        } else if (effectiveStatus === "APPROVED") {
+            setStatusOptions([
+                { value: "COMPLETED", label: "COMPLETED" }
+            ]);
+            elements.statusSelect.disabled = false;
+            elements.saveStatus.disabled = false;
+            elements.statusSelect.value = "COMPLETED";
+            setStatusMessage("Lịch đã duyệt. Cập nhật COMPLETED khi khách đã xem cây xong.");
+        } else {
+            elements.statusSelect.disabled = true;
+            elements.saveStatus.disabled = true;
+            elements.statusSelect.value = effectiveStatus === "REJECTED" ? "REJECTED" : "APPROVED";
+            setStatusMessage(`Lịch hẹn này đã được xử lý (${effectiveStatus}).`);
+        }
+
+        toggleRejectReason(canEdit && elements.statusSelect.value === "REJECTED");
+        elements.editModal.classList.add("show");
     }
-});
-// Escape key to close modal
-document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && editModal.classList.contains("show")) {
-        closeEditModal();
+
+    function closeEditModal() {
+        elements.editModal.classList.remove("show");
+        state.editingAppointmentId = null;
+        setStatusMessage("");
+        setModalEditMode(true);
     }
+
+    function saveStatusChange() {
+        if (!state.editingAppointmentId) return;
+        const appointment = state.appointments.find(item => item.id === String(state.editingAppointmentId));
+        const effectiveStatus = appointment ? getEffectiveStatus(appointment) : "";
+
+        if (!appointment || (effectiveStatus !== "PENDING" && effectiveStatus !== "APPROVED")) {
+            setStatusMessage("Chỉ lịch PENDING hợp lệ hoặc APPROVED mới được cập nhật.");
+            return;
+        }
+
+        if (effectiveStatus === "PENDING" && !validateRejectReason()) return;
+
+        if (elements.statusSelect.value === "COMPLETED") {
+            state.completeSubmitMode = "status-update";
+            state.completingAppointmentId = state.editingAppointmentId;
+
+            if (elements.confirmCompleteMessage) {
+                elements.confirmCompleteMessage.textContent =
+                        `Lịch hẹn mã #${state.editingAppointmentId} sẽ được chuyển sang trạng thái COMPLETED. Khách hàng sẽ nhận thông báo hoàn thành.`;
+            }
+
+            if (elements.confirmCompleteModal) {
+                elements.confirmCompleteModal.classList.add("show");
+                elements.confirmCompleteModal.setAttribute("aria-hidden", "false");
+                elements.acceptCompleteConfirm?.focus();
+                return;
+            }
+        }
+
+        submitStatusChangeForm();
+    }
+
+    function submitStatusChangeForm() {
+        if (!state.editingAppointmentId) return;
+
+        elements.updateStatusForm.setAttribute(
+                "action",
+                `/artisan/appointments/update/${state.editingAppointmentId}/status`
+        );
+        elements.statusInput.value = elements.statusSelect.value;
+        elements.messageInput.value = elements.statusSelect.value === "REJECTED"
+                ? elements.rejectReason.value.trim()
+                : "";
+        elements.updateStatusForm.submit();
+    }
+
+    function completeAppointment(id) {
+        if (!id) return;
+        state.completingAppointmentId = id;
+        state.completeSubmitMode = "legacy-check";
+
+        if (elements.confirmCompleteMessage) {
+            elements.confirmCompleteMessage.textContent =
+                    `Lịch hẹn mã #${id} sẽ được chuyển sang trạng thái COMPLETED. Thao tác này không thể chỉnh lại từ màn hình này.`;
+        }
+
+        if (elements.confirmCompleteModal) {
+            elements.confirmCompleteModal.classList.add("show");
+            elements.confirmCompleteModal.setAttribute("aria-hidden", "false");
+            elements.acceptCompleteConfirm?.focus();
+            return;
+        }
+
+        submitCompleteAppointment();
+    }
+
+    function closeCompleteConfirm() {
+        if (!elements.confirmCompleteModal) return;
+        elements.confirmCompleteModal.classList.remove("show");
+        elements.confirmCompleteModal.setAttribute("aria-hidden", "true");
+        state.completingAppointmentId = null;
+        state.completeSubmitMode = "";
+    }
+
+    function submitCompleteAppointment() {
+        if (state.completeSubmitMode === "status-update") {
+            submitStatusChangeForm();
+            return;
+        }
+
+        const id = state.completingAppointmentId;
+        if (!id) return;
+
+        elements.completeForm.setAttribute("action", `/artisan/appointments/check/${id}`);
+        elements.completeForm.submit();
+    }
+
+    function markAppointmentOverdue(id) {
+        if (!id || !elements.overdueForm) return;
+        if (!confirm(`Cập nhật lịch hẹn mã #${id} sang trạng thái QUÁ HẠN trong database?`)) return;
+
+        elements.overdueForm.setAttribute("action", `/artisan/appointments/overdue/${id}`);
+        elements.overdueForm.submit();
+    }
+
+    function bindEvents() {
+        elements.prevMonth.addEventListener("click", () => {
+            state.currentMonth -= 1;
+            if (state.currentMonth < 0) {
+                state.currentMonth = 11;
+                state.currentYear -= 1;
+            }
+            renderCalendar();
+        });
+
+        elements.nextMonth.addEventListener("click", () => {
+            state.currentMonth += 1;
+            if (state.currentMonth > 11) {
+                state.currentMonth = 0;
+                state.currentYear += 1;
+            }
+            renderCalendar();
+        });
+
+        elements.todayAppointments.addEventListener("click", event => {
+            const item = event.target.closest(".appointment-item");
+            if (item) openEditModal(item.dataset.id);
+        });
+
+        elements.todayAppointments.addEventListener("keydown", event => {
+            if (event.key !== "Enter" && event.key !== " ") return;
+            const item = event.target.closest(".appointment-item");
+            if (!item) return;
+            event.preventDefault();
+            openEditModal(item.dataset.id);
+        });
+
+        if (elements.pendingReminders) {
+            elements.pendingReminders.addEventListener("click", event => {
+                const button = event.target.closest(".sch-reminder-btn");
+                if (button) openEditModal(button.dataset.id);
+            });
+        }
+
+        elements.statusSelect.addEventListener("change", () => {
+            toggleRejectReason(elements.statusSelect.value === "REJECTED");
+            setStatusMessage("");
+        });
+        elements.rejectReason.addEventListener("input", () => {
+            if (elements.rejectReason.value.trim().length >= 5) {
+                elements.rejectReason.classList.remove("sch-field-error");
+                setStatusMessage("");
+            }
+        });
+        elements.saveStatus.addEventListener("click", saveStatusChange);
+        elements.closeModal.addEventListener("click", closeEditModal);
+        elements.closeModalFooter.addEventListener("click", closeEditModal);
+        elements.editModal.addEventListener("click", event => {
+            if (event.target === elements.editModal) closeEditModal();
+        });
+        if (elements.cancelCompleteConfirm) {
+            elements.cancelCompleteConfirm.addEventListener("click", closeCompleteConfirm);
+        }
+        if (elements.acceptCompleteConfirm) {
+            elements.acceptCompleteConfirm.addEventListener("click", submitCompleteAppointment);
+        }
+        if (elements.confirmCompleteModal) {
+            elements.confirmCompleteModal.addEventListener("click", event => {
+                if (event.target === elements.confirmCompleteModal) closeCompleteConfirm();
+            });
+        }
+        document.addEventListener("keydown", event => {
+            if (event.key === "Escape" && elements.editModal.classList.contains("show")) {
+                closeEditModal();
+            }
+            if (event.key === "Escape" && elements.confirmCompleteModal?.classList.contains("show")) {
+                closeCompleteConfirm();
+            }
+        });
+
+        if (elements.notificationBtn && elements.notificationPopup) {
+            elements.notificationBtn.addEventListener("click", event => {
+                event.stopPropagation();
+                elements.notificationPopup.classList.toggle("show");
+            });
+            document.addEventListener("click", event => {
+                if (!elements.notificationPopup.contains(event.target) && event.target !== elements.notificationBtn) {
+                    elements.notificationPopup.classList.remove("show");
+                }
+            });
+        }
+    }
+
+    function init() {
+        extractAppointmentsFromDOM();
+        bindEvents();
+        renderStats();
+        renderReminderPanel();
+        renderCalendar();
+        renderDayPanel();
+        setInterval(() => {
+            renderStats();
+            renderReminderPanel();
+            renderCalendar();
+            renderDayPanel();
+        }, 60000);
+    }
+
+    init();
 });
-// App Initialization
-function initApp() {
-    generateMockData();
-    renderStats();
-    renderCalendar();
-    renderDayPanel();
-    renderTable();
-}
-// Start the application
-initApp();

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Walk-in Orders</title>
+    <title>In-person Orders</title>
     <link rel="icon" type="image/png" th:href="@{/images/logo.png}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -18,11 +18,11 @@
     <div th:replace="~{fragments/sidebar :: sidebar('artisan-walk-in-orders')}"></div>
 
     <main class="dashboard-main">
-        <div th:replace="~{fragments/artisan-topbar :: topbar('Walk-in Orders')}"></div>
+        <div th:replace="~{fragments/artisan-topbar :: topbar('In-person Orders')}"></div>
 
         <header class="page-header">
             <div>
-                <h1>Walk-in Orders</h1>
+                <h1>In-person Orders</h1>
                 <p>Artisan tạo đơn khách mua trực tiếp tại vườn, reserve cây, xác nhận nhận tiền và hoàn tất.</p>
             </div>
             <a class="btn secondary" th:href="@{/artisan/products}">My Products</a>
@@ -34,7 +34,7 @@
         <section class="portal-card mb-4">
             <div class="taxonomy-toolbar">
                 <div>
-                    <h2>Tạo Walk-in Order</h2>
+                    <h2>Tạo In-person Order</h2>
                     <p>Chỉ hiển thị sản phẩm đang AVAILABLE thuộc artisan hiện tại.</p>
                 </div>
             </div>
@@ -82,7 +82,7 @@
                 <div class="walk-in-customer-grid">
                     <label>
                         <span>Tên khách</span>
-                        <input name="customerName" required placeholder="Khách walk-in">
+                        <input name="customerName" required placeholder="Khách in-person">
                     </label>
 
                     <label>
@@ -144,7 +144,7 @@
             <div class="toolbar-header">
                 <div class="toolbar-search-row">
                     <div>
-                        <h2 class="mb-1">Danh sách Walk-in Orders</h2>
+                        <h2 class="mb-1">Danh sách In-person Orders</h2>
                         <p class="text-muted mb-0">Luồng: PENDING_PAYMENT → Payment SUCCESS → COMPLETED → Product SOLD.</p>
                     </div>
                 </div>
@@ -182,7 +182,7 @@
                     <tr th:each="order : ${orders.content}">
                         <td class="col-code" th:text="${order.orderCode}">BSMS-517407</td>
                         <td>
-                            <strong th:text="${order.customerName}">Walk-in customer</strong>
+                            <strong th:text="${order.customerName}">In-person customer</strong>
                             <small class="d-block text-muted" th:text="${order.customerPhone}">SĐT</small>
                         </td>
                         <td th:text="${!#lists.isEmpty(order.orderDetails) ? order.orderDetails[0].product.productName : '-'}">Product</td>
@@ -224,7 +224,7 @@
                     <tr th:if="${orders.totalElements == 0}">
                         <td colspan="7" class="empty-state">
                             <div class="empty-state-icon"><i class="fa-solid fa-cash-register"></i></div>
-                            <div class="empty-state-title">Chưa có walk-in order.</div>
+                            <div class="empty-state-title">Chưa có in-person order.</div>
                             <div class="empty-state-desc">Tạo đơn mới khi khách mua trực tiếp tại vườn.</div>
                         </td>
                     </tr>
@@ -299,7 +299,7 @@
 
                 <div class="drawer-section">
                     <h4 class="section-title">Phí Vận Chuyển & Cẩu Cây</h4>
-                    <p style="font-size:12px; color:var(--text-muted); margin-bottom:8px;">Walk-in order đã chốt phụ phí khi artisan tạo đơn.</p>
+                    <p style="font-size:12px; color:var(--text-muted); margin-bottom:8px;">In-person order đã chốt phụ phí khi artisan tạo đơn.</p>
                     <div class="fees-form-group">
                         <div class="input-field-group">
                             <label>Phí xe cẩu</label>
@@ -379,7 +379,7 @@
 
                 <form id="walkInCancelForm" class="reject-reason-box walk-in-cancel-box" method="post">
                     <input th:if="${_csrf != null}" type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-                    <label for="walkInCancelReason">Nhập lý do hủy walk-in order:</label>
+                    <label for="walkInCancelReason">Nhập lý do hủy in-person order:</label>
                     <textarea id="walkInCancelReason" name="reason" rows="3" placeholder="Ví dụ: Khách đổi ý không mua, hẹn xem lại cây khác..."></textarea>
                     <div class="reject-action-row">
                         <button class="btn-mini btn-mini-cancel" id="walkInCancelReasonClose" type="button">Hủy</button>
@@ -402,7 +402,7 @@
 <div id="walkInCancelConfirmModal" class="artisan-action-modal-backdrop hidden">
     <div class="artisan-action-modal" role="dialog" aria-modal="true" aria-labelledby="walkInCancelConfirmTitle">
         <header>
-            <h2 id="walkInCancelConfirmTitle">Xác nhận hủy walk-in order</h2>
+            <h2 id="walkInCancelConfirmTitle">Xác nhận hủy in-person order</h2>
             <button type="button" class="artisan-action-modal-close" aria-label="Đóng">×</button>
         </header>
         <div class="artisan-action-modal-body">
@@ -452,7 +452,7 @@
 <div id="walkInCreateConfirmModal" class="artisan-action-modal-backdrop hidden">
     <div class="artisan-action-modal" role="dialog" aria-modal="true" aria-labelledby="walkInCreateConfirmTitle">
         <header>
-            <h2 id="walkInCreateConfirmTitle">Xác nhận tạo walk-in order</h2>
+            <h2 id="walkInCreateConfirmTitle">Xác nhận tạo in-person order</h2>
             <button type="button" class="artisan-action-modal-close" aria-label="Đóng">×</button>
         </header>
         <div class="artisan-action-modal-body">

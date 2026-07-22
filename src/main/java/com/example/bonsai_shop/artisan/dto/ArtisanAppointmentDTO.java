@@ -1,4 +1,4 @@
-package com.example.bonsai_shop.customer.dto;
+package com.example.bonsai_shop.artisan.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -7,19 +7,19 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
-public class AppoimentDetailDTO {
+@AllArgsConstructor
+public class ArtisanAppointmentDTO {
 
     private Integer appointmentId;
-
-    private String productName;
+    private LocalDateTime appointmentDate;
+    private String status;
+    private String note;
 
     private String productCode;
+    private String productName;
 
-    private LocalDateTime appointmentDate;
-
-    private String status;
-
-    private String note;
+    private String customerName;
+    private String customerPhone;
+    private String customerEmail;
 }

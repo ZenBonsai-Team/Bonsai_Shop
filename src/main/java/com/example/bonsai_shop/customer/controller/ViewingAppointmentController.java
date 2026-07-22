@@ -1,7 +1,7 @@
 package com.example.bonsai_shop.customer.controller;
 
 
-import com.example.bonsai_shop.customer.dto.AppoimentDetailDTO;
+import com.example.bonsai_shop.customer.dto.AppointmentDetailDTO;
 import com.example.bonsai_shop.customer.service.UserService;
 import com.example.bonsai_shop.customer.service.ViewingAppointmentService;
 import com.example.bonsai_shop.entity.Product;
@@ -105,8 +105,8 @@ public class ViewingAppointmentController {
 
     @GetMapping("/appointments/detail/{id}")
     @ResponseBody
-    public AppoimentDetailDTO viewingAppointmentdetail(@PathVariable Integer id,
-                                                       Principal principal){
+    public AppointmentDetailDTO viewingAppointmentDetail(@PathVariable Integer id,
+                                                         Principal principal){
         User user = userService.findByEmail(principal.getName());
        return  viewingAppointmentService.findByIdAndCustomer(id, user);
 

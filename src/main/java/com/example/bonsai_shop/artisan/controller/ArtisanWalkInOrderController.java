@@ -68,7 +68,7 @@ public class ArtisanWalkInOrderController {
                     customerEmail,
                     notes
             );
-            redirectAttributes.addFlashAttribute("success", "Đã tạo walk-in order " + order.getOrderCode() + " và reserve sản phẩm.");
+            redirectAttributes.addFlashAttribute("success", "Đã tạo in-person order " + order.getOrderCode() + " và reserve sản phẩm.");
         } catch (RuntimeException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
@@ -95,7 +95,7 @@ public class ArtisanWalkInOrderController {
                          RedirectAttributes redirectAttributes) {
         try {
             Order order = walkInOrderService.cancelWalkInOrder(userDetails.getUsername(), orderId, reason);
-            redirectAttributes.addFlashAttribute("success", "Đã hủy walk-in order " + order.getOrderCode() + " và mở bán lại sản phẩm.");
+            redirectAttributes.addFlashAttribute("success", "Đã hủy in-person order " + order.getOrderCode() + " và mở bán lại sản phẩm.");
         } catch (RuntimeException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
@@ -127,7 +127,7 @@ public class ArtisanWalkInOrderController {
                     customerEmail,
                     notes
             );
-            redirectAttributes.addFlashAttribute("success", "Đã cập nhật walk-in order " + order.getOrderCode() + ".");
+            redirectAttributes.addFlashAttribute("success", "Đã cập nhật in-person order " + order.getOrderCode() + ".");
         } catch (RuntimeException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
