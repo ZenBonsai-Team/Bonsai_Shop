@@ -6,6 +6,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -13,97 +14,98 @@ import java.util.List;
 import java.util.Optional;
 
 public interface ProductRepository extends JpaRepository<Product, Integer>, JpaSpecificationExecutor<Product> {
-        List<Product> findBySellerUserIdOrderByCreatedAtDesc(Integer sellerId);
+    List<Product> findByArtisanUserIdOrderByCreatedAtDesc(Integer artisanUserId);
+    List<Product> findByArtisanUserIdAndProductStatusOrderByCreatedAtDesc(Integer artisanUserId, String productStatus);
+    Optional<Product> findByProductIdAndArtisanUserId(Integer productId, Integer artisanUserId);
+    boolean existsByProductCode(String productCode);
+    boolean existsByVarietyVarietyId(Integer varietyId);
+    boolean existsBySegmentSegmentId(Integer segmentId);
 
-        Optional<Product> findByProductIdAndSellerUserId(Integer productId, Integer sellerId);
+    @Modifying
+    @Query("""
+        UPDATE Product p
+        SET p.productStatus = 'RESERVED'
+        WHERE p.productId = :productId
+          AND p.productStatus = 'AVAILABLE'
+    """)
+    int reserveIfAvailable(@Param("productId") Integer productId);
 
-        boolean existsByProductCode(String productCode);
+    @Query("""
+        SELECT new com.example.bonsai_shop.product.dto.ProductCardDTO(
+                p.productId,
+                p.productCode,
+                p.productName,
+                v.varietyName,
+                p.age,
+                p.height,
+                p.trunkDiameter,
+                p.price,
+                a.fullName,
+                p.productStatus,
+                m.mediaUrl
+        )
+        FROM Product p
+        JOIN p.variety v
+        JOIN p.artisan a
+        LEFT JOIN p.productMedias m
+        WHERE
+                p.productStatus = 'AVAILABLE'
+                AND (m.isThumbnail = true OR m IS NULL)
+    """)
+    Page<ProductCardDTO> findMarketplaceProducts(Pageable pageable);
 
-        boolean existsByVarietyVarietyId(Integer varietyId);
+    @Query("SELECT p FROM Product p JOIN FETCH p.variety JOIN FETCH p.artisan WHERE p.productStatus <> 'HIDDEN'")
+    Page<Product> findAllActiveProducts(Pageable pageable);
 
-        boolean existsBySegmentSegmentId(Integer segmentId);
+    @Query("SELECT p FROM Product p JOIN FETCH p.variety JOIN FETCH p.artisan WHERE p.productStatus = 'AVAILABLE'")
+    Page<Product> findAvailableProductsOnly(Pageable pageable);
 
-        @Query("""
-                            SELECT new com.example.bonsai_shop.product.dto.ProductCardDTO(
-                                    p.productId,
-                                    p.productCode,
-                                    p.productName,
-                                    v.varietyName,
-                                    p.age,
-                                    p.height,
-                                    p.trunkDiameter,
-                                    p.price,
-                                    u.fullName,
-                                    p.productStatus,
-                                    m.mediaUrl
-                            )
-                            FROM Product p
-                            JOIN p.variety v
-                            JOIN p.seller u
-                            LEFT JOIN p.productMedias m
-                            WHERE
-                                    p.productStatus = 'AVAILABLE'
-                                    AND p.isPublicPrice = true
-                                    AND (m.isThumbnail = true OR m IS NULL)
-                        """)
-        Page<ProductCardDTO> findMarketplaceProducts(Pageable pageable);
+    @Query("""
+    SELECT new com.example.bonsai_shop.product.dto.ProductCardDTO(
+            p.productId,
+            p.productCode,
+            p.productName,
+            v.varietyName,
+            p.age,
+            p.height,
+            p.trunkDiameter,
+            p.price,
+            a.fullName,
+            p.productStatus,
+            m.mediaUrl
+    )
+    FROM Product p
+    JOIN p.variety v
+    JOIN p.artisan a
+    LEFT JOIN p.productMedias m
+    WHERE p.segment.segmentId = 2
+      AND p.isPublicPrice = false
+      AND (m.isThumbnail = true OR m IS NULL)
+""")
+    Page<ProductCardDTO> findPremiumProducts(Pageable pageable);
 
-        @Query("SELECT p FROM Product p JOIN FETCH p.variety JOIN FETCH p.seller WHERE p.productStatus <> 'HIDDEN'")
-        Page<Product> findAllActiveProducts(Pageable pageable);
-
-        @Query("SELECT p FROM Product p JOIN FETCH p.variety JOIN FETCH p.seller WHERE p.productStatus = 'AVAILABLE'")
-        Page<Product> findAvailableProductsOnly(Pageable pageable);
-
-        // ---------
-        // Prenium Bonsai
-        // ---------
-
-        @Query("""
-                            SELECT new com.example.bonsai_shop.product.dto.ProductCardDTO(
-                                    p.productId,
-                                    p.productCode,
-                                    p.productName,
-                                    v.varietyName,
-                                    p.age,
-                                    p.height,
-                                    p.trunkDiameter,
-                                    p.price,
-                                    u.fullName,
-                                    p.productStatus,
-                                    m.mediaUrl
-                            )
-                            FROM Product p
-                            JOIN p.variety v
-                            JOIN p.seller u
-                            LEFT JOIN p.productMedias m
-                            WHERE p.segment.segmentId = 2
-                              AND p.isPublicPrice = false
-                              AND (m.isThumbnail = true OR m IS NULL)
-                        """)
-        Page<ProductCardDTO> findPremiumProducts(Pageable pageable);
-
-        @Query("""
-                            SELECT new com.example.bonsai_shop.product.dto.ProductCardDTO(
-                                    p.productId,
-                                    p.productCode,
-                                    p.productName,
-                                    v.varietyName,
-                                    p.age,
-                                    p.height,
-                                    p.trunkDiameter,
-                                    p.price,
-                                    u.fullName,
-                                    p.productStatus,
-                                    m.mediaUrl
-                            )
-                            FROM Product p
-                            JOIN p.variety v
-                            JOIN p.seller u
-                            LEFT JOIN p.productMedias m
-                            WHERE p.segment.segmentId = 2
-                              AND p.isPublicPrice = false
-                              AND p.productId = :productId
-                              AND (m.isThumbnail = true OR m IS NULL)
-                        """)
-        ProductCardDTO findPremiumProductById(@Param("productId") Integer productId);
+    @Query("""
+    SELECT new com.example.bonsai_shop.product.dto.ProductCardDTO(
+            p.productId,
+            p.productCode,
+            p.productName,
+            v.varietyName,
+            p.age,
+            p.height,
+            p.trunkDiameter,
+            p.price,
+            a.fullName,
+            p.productStatus,
+            m.mediaUrl
+    )
+    FROM Product p
+    JOIN p.variety v
+    JOIN p.artisan a
+    LEFT JOIN p.productMedias m
+    WHERE p.segment.segmentId = 2
+      AND p.isPublicPrice = false
+      AND p.productId = :productId
+      AND (m.isThumbnail = true OR m IS NULL)
+""")
+    ProductCardDTO findPremiumProductById(@Param("productId") Integer productId);
 }

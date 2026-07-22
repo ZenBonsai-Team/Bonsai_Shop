@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Taxonomy Management</title>
+    <link rel="icon" type="image/png" th:href="@{/images/logo.png}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+    <link rel="stylesheet" th:href="@{/css/dashboard-layout.css}">
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+    <link rel="stylesheet" th:href="@{/css/artisan.css}">
+</head>
+<body>
+<div class="dashboard-layout">
+    <div th:replace="~{fragments/sidebar :: sidebar('artisan-catalog')}"></div>
+
+    <main class="dashboard-main">
+        <header th:replace="~{fragments/header :: header}"></header>
+    <header class="page-header">
+        <div>
+            <h1>Taxonomy Management</h1>
+            <p>Quản lý Category, Variety, Segment và Tag dùng khi tạo sản phẩm.</p>
+        </div>
+        <a class="btn secondary" th:href="@{/artisan/products/new}">Create Product</a>
+    </header>
+
+    <div th:if="${success}" class="alert success" th:text="${success}"></div>
+    <div th:if="${error}" class="alert error" th:text="${error}"></div>
+
+    <section class="taxonomy-layout">
+        <div class="taxonomy-panel">
+            <div class="taxonomy-toolbar">
+                <div>
+                    <h2>Category</h2>
+                    <p>Chọn category để xem varieties.</p>
+                </div>
+                <button type="button" class="btn small" data-open-modal="category-modal" data-mode="create">+ Add Category</button>
+            </div>
+            <input class="catalog-search" data-search-target="category-master" placeholder="Search category...">
+            <div id="category-master" class="master-list" data-page-size="6">
+                <div th:each="category, iter : ${categories}"
+                     class="master-row"
+                     th:classappend="${iter.index == 0} ? ' active'"
+                     th:attr="data-category-id=${category.categoryId},data-search-text=${category.categoryName}">
+                    <button type="button" class="master-item">
+                        <span th:text="${category.categoryName}"></span>
+                        <small th:text="${category.description}"></small>
+                    </button>
+                    <div class="actions">
+                        <button type="button"
+                                class="btn small"
+                                data-open-modal="category-modal"
+                                data-mode="edit"
+                                th:attr="data-action=@{/artisan/catalog/categories/{id}(id=${category.categoryId})},data-name=${category.categoryName},data-description=${category.description}">
+                            Edit
+                        </button>
+                        <form method="post" th:action="@{/artisan/catalog/categories/{id}/delete(id=${category.categoryId})}">
+                            <button type="submit" class="text-danger" onclick="return confirm('Xóa category này?')">Delete</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div class="pagination" data-pagination-for="category-master"></div>
+        </div>
+
+        <div class="taxonomy-panel">
+            <div class="taxonomy-toolbar">
+                <div>
+                    <h2>Variety</h2>
+                    <p>Danh sách variety theo category.</p>
+                </div>
+                <button type="button" class="btn small" data-open-modal="variety-modal" data-mode="create">+ Add Variety</button>
+            </div>
+            <input class="catalog-search" data-search-target="variety-detail" placeholder="Search variety...">
+            <table class="compact-table">
+                <thead>
+                <tr>
+                    <th>Tên variety</th>
+                    <th>Category</th>
+                    <th>Mô tả</th>
+                    <th>Actions</th>
+                </tr>
+                </thead>
+                <tbody id="variety-detail" data-page-size="6">
+                <tr th:each="variety : ${varieties}"
+                    th:attr="data-category-id=${variety.category.categoryId},data-search-text=${variety.varietyName + ' ' + variety.category.categoryName}">
+                    <td th:text="${variety.varietyName}"></td>
+                    <td th:text="${variety.category.categoryName}"></td>
+                    <td th:text="${variety.description}"></td>
+                    <td class="actions">
+                        <button type="button"
+                                class="btn small"
+                                data-open-modal="variety-modal"
+                                data-mode="edit"
+                                th:attr="data-action=@{/artisan/catalog/varieties/{id}(id=${variety.varietyId})},data-category-id=${variety.category.categoryId},data-name=${variety.varietyName},data-description=${variety.description}">
+                            Edit
+                        </button>
+                        <form method="post" th:action="@{/artisan/catalog/varieties/{id}/delete(id=${variety.varietyId})}">
+                            <button type="submit" class="text-danger" onclick="return confirm('Xóa variety này?')">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+            <div class="pagination" data-pagination-for="variety-detail"></div>
+        </div>
+    </section>
+
+    <section class="taxonomy-layout">
+        <div class="taxonomy-panel">
+            <div class="taxonomy-toolbar">
+                <h2>Segment</h2>
+                <button type="button" class="btn small" data-open-modal="segment-modal" data-mode="create">+ Add Segment</button>
+            </div>
+            <input class="catalog-search" data-search-target="segment-table" placeholder="Search segment...">
+            <table class="compact-table">
+                <thead>
+                <tr>
+                    <th>Tên segment</th>
+                    <th>Actions</th>
+                </tr>
+                </thead>
+                <tbody id="segment-table" data-page-size="5">
+                <tr th:each="segment : ${segments}" th:attr="data-search-text=${segment.segmentName}">
+                    <td th:text="${segment.segmentName}"></td>
+                    <td class="actions">
+                        <button type="button"
+                                class="btn small"
+                                data-open-modal="segment-modal"
+                                data-mode="edit"
+                                th:attr="data-action=@{/artisan/catalog/segments/{id}(id=${segment.segmentId})},data-name=${segment.segmentName}">
+                            Edit
+                        </button>
+                        <form method="post" th:action="@{/artisan/catalog/segments/{id}/delete(id=${segment.segmentId})}">
+                            <button type="submit" class="text-danger" onclick="return confirm('Xóa segment này?')">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+            <div class="pagination" data-pagination-for="segment-table"></div>
+        </div>
+
+        <div class="taxonomy-panel">
+            <div class="taxonomy-toolbar">
+                <h2>Tag</h2>
+                <button type="button" class="btn small" data-open-modal="tag-modal" data-mode="create">+ Add Tag</button>
+            </div>
+            <input class="catalog-search" data-search-target="tag-table" placeholder="Search tag...">
+            <table class="compact-table">
+                <thead>
+                <tr>
+                    <th>Tên tag</th>
+                    <th>Actions</th>
+                </tr>
+                </thead>
+                <tbody id="tag-table" data-page-size="5">
+                <tr th:each="tag : ${tags}" th:attr="data-search-text=${tag.tagName}">
+                    <td th:text="${tag.tagName}"></td>
+                    <td class="actions">
+                        <button type="button"
+                                class="btn small"
+                                data-open-modal="tag-modal"
+                                data-mode="edit"
+                                th:attr="data-action=@{/artisan/catalog/tags/{id}(id=${tag.tagId})},data-name=${tag.tagName}">
+                            Edit
+                        </button>
+                        <form method="post" th:action="@{/artisan/catalog/tags/{id}/delete(id=${tag.tagId})}">
+                            <button type="submit" class="text-danger" onclick="return confirm('Xóa tag này?')">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+            <div class="pagination" data-pagination-for="tag-table"></div>
+        </div>
+    </section>
+</main>
+</div>
+
+<div id="category-modal" class="modal-backdrop hidden">
+    <form class="modal-card" method="post" th:action="@{/artisan/catalog/categories}" data-create-action="/artisan/catalog/categories">
+        <header>
+            <h2 data-modal-title>Create Category</h2>
+            <button type="button" class="modal-close">×</button>
+        </header>
+        <label>Tên category
+            <input name="categoryName" required data-field="name">
+        </label>
+        <label>Mô tả
+            <input name="description" data-field="description">
+        </label>
+        <button type="submit">Save</button>
+    </form>
+</div>
+
+<div id="variety-modal" class="modal-backdrop hidden">
+    <form class="modal-card" method="post" th:action="@{/artisan/catalog/varieties}" data-create-action="/artisan/catalog/varieties">
+        <header>
+            <h2 data-modal-title>Create Variety</h2>
+            <button type="button" class="modal-close">×</button>
+        </header>
+        <label>Category
+            <select name="categoryId" required data-field="categoryId">
+                <option value="">-- Chọn category --</option>
+                <option th:each="category : ${categories}" th:value="${category.categoryId}" th:text="${category.categoryName}"></option>
+            </select>
+        </label>
+        <label>Tên variety
+            <input name="varietyName" required data-field="name">
+        </label>
+        <label>Mô tả
+            <input name="description" data-field="description">
+        </label>
+        <button type="submit">Save</button>
+    </form>
+</div>
+
+<div id="segment-modal" class="modal-backdrop hidden">
+    <form class="modal-card" method="post" th:action="@{/artisan/catalog/segments}" data-create-action="/artisan/catalog/segments">
+        <header>
+            <h2 data-modal-title>Create Segment</h2>
+            <button type="button" class="modal-close">×</button>
+        </header>
+        <label>Tên segment
+            <input name="segmentName" required data-field="name">
+        </label>
+        <button type="submit">Save</button>
+    </form>
+</div>
+
+<div id="tag-modal" class="modal-backdrop hidden">
+    <form class="modal-card" method="post" th:action="@{/artisan/catalog/tags}" data-create-action="/artisan/catalog/tags">
+        <header>
+            <h2 data-modal-title>Create Tag</h2>
+            <button type="button" class="modal-close">×</button>
+        </header>
+        <label>Tên tag
+            <input name="tagName" required data-field="name">
+        </label>
+        <button type="submit">Save</button>
+    </form>
+</div>
+
+<script>
+    const state = {};
+
+    function visibleRows(container) {
+        return [...container.children].filter((row) => !row.dataset.filtered && !row.dataset.masterFiltered);
+    }
+
+    function paginate(containerId, page = 1) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+        const pageSize = Number(container.dataset.pageSize || 5);
+        const rows = visibleRows(container);
+        const totalPages = Math.max(1, Math.ceil(rows.length / pageSize));
+        state[containerId] = Math.min(page, totalPages);
+
+        [...container.children].forEach((row) => row.hidden = true);
+        rows.forEach((row, index) => {
+            row.hidden = index < (state[containerId] - 1) * pageSize || index >= state[containerId] * pageSize;
+        });
+
+        const pagination = document.querySelector(`[data-pagination-for="${containerId}"]`);
+        if (!pagination) return;
+        pagination.innerHTML = '';
+        for (let index = 1; index <= totalPages; index++) {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.textContent = index;
+            button.className = index === state[containerId] ? 'active' : '';
+            button.addEventListener('click', () => paginate(containerId, index));
+            pagination.appendChild(button);
+        }
+    }
+
+    function filterBySearch(input) {
+        const container = document.getElementById(input.dataset.searchTarget);
+        const keyword = input.value.trim().toLowerCase();
+        [...container.children].forEach((row) => {
+            row.dataset.filtered = keyword && !row.dataset.searchText.toLowerCase().includes(keyword) ? 'true' : '';
+        });
+        paginate(container.id, 1);
+    }
+
+    function filterVarietiesByCategory(categoryId) {
+        document.querySelectorAll('#category-master .master-row').forEach((item) => {
+            item.classList.toggle('active', item.dataset.categoryId === categoryId);
+        });
+        document.querySelectorAll('#variety-detail tr').forEach((row) => {
+            row.dataset.masterFiltered = row.dataset.categoryId === categoryId ? '' : 'true';
+        });
+        paginate('variety-detail', 1);
+    }
+
+    document.querySelectorAll('[data-search-target]').forEach((input) => {
+        input.addEventListener('input', () => filterBySearch(input));
+    });
+
+    document.querySelectorAll('#category-master .master-row .master-item').forEach((item) => {
+        item.addEventListener('click', () => filterVarietiesByCategory(item.closest('.master-row').dataset.categoryId));
+    });
+
+    document.querySelectorAll('[data-open-modal]').forEach((button) => {
+        button.addEventListener('click', () => {
+            const modal = document.getElementById(button.dataset.openModal);
+            const form = modal.querySelector('form');
+            const title = modal.querySelector('[data-modal-title]');
+            const mode = button.dataset.mode;
+
+            form.reset();
+            form.action = mode === 'edit' ? button.dataset.action : form.dataset.createAction;
+            title.textContent = `${mode === 'edit' ? 'Edit' : 'Create'} ${title.textContent.split(' ').pop()}`;
+
+            modal.querySelectorAll('[data-field]').forEach((field) => {
+                field.value = button.dataset[field.dataset.field] || '';
+            });
+
+            modal.classList.remove('hidden');
+        });
+    });
+
+    document.querySelectorAll('.modal-close, .modal-backdrop').forEach((element) => {
+        element.addEventListener('click', (event) => {
+            if (event.target === element) {
+                element.closest('.modal-backdrop').classList.add('hidden');
+            }
+        });
+    });
+
+    document.querySelectorAll('[data-page-size]').forEach((container) => paginate(container.id));
+    const firstCategory = document.querySelector('#category-master .master-row');
+    if (firstCategory) {
+        filterVarietiesByCategory(firstCategory.dataset.categoryId);
+    }
+</script>
+</body>
+</html>
+

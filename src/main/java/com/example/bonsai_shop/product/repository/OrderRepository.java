@@ -19,6 +19,24 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
     long countByAssignedToUserId(Integer moderatorId);
     long countByAssignedToUserIdAndOrderStatus(Integer moderatorId, String orderStatus);
 
+    @Query("""
+            SELECT DISTINCT o
+            FROM Order o
+            JOIN o.orderDetails od
+            JOIN od.product p
+            JOIN p.artisan a
+            WHERE a.userId = :artisanUserId
+              AND o.orderType = :orderType
+              AND (:status = 'ALL' OR o.orderStatus = :status)
+            ORDER BY o.orderDate DESC
+            """)
+    Page<Order> findByArtisanUserIdAndTypeAndStatus(
+            @Param("artisanUserId") Integer artisanUserId,
+            @Param("orderType") String orderType,
+            @Param("status") String status,
+            Pageable pageable);
+
+
     @Query("SELECT DISTINCT o FROM Order o " +
             "LEFT JOIN o.orderDetails od " +
             "LEFT JOIN od.product p " +

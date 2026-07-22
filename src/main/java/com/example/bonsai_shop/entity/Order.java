@@ -51,6 +51,9 @@ public class Order {
     @Column(name = "OrderStatus", length = 50)
     private String orderStatus = "PENDING";
 
+    @Column(name = "OrderType", length = 50, nullable = false)
+    private String orderType = "ONLINE";
+
     @Column(name = "CraneFee", precision = 15, scale = 2)
     private BigDecimal craneFee = BigDecimal.ZERO;
 

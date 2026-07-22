@@ -15,18 +15,28 @@ public class HomeController {
 
     private final UserRepository userRepository;
 
+    @GetMapping("/")
+    public String index() {
+        return "redirect:/home";
+    }
+
     @GetMapping("/home")
     public String home(Model model,
-                       @AuthenticationPrincipal UserDetails userDetails) {
+            @AuthenticationPrincipal Object principal) {
 
-        if (userDetails != null) {
-            String email = userDetails.getUsername();
+        String email = null;
+        if (principal instanceof UserDetails) {
+            email = ((UserDetails) principal).getUsername();
+        } else if (principal instanceof org.springframework.security.oauth2.core.user.OAuth2User) {
+            email = ((org.springframework.security.oauth2.core.user.OAuth2User) principal).getAttribute("email");
+        }
 
-            User user = userRepository.findByEmail(email)
-                    .orElseThrow(() -> new RuntimeException("Không tìm thấy user"));
-
-            model.addAttribute("username", user.getUsername());
-            model.addAttribute("email", user.getEmail());
+        if (email != null) {
+            User user = userRepository.findByEmail(email).orElse(null);
+            if (user != null) {
+                model.addAttribute("username", user.getUsername());
+                model.addAttribute("email", user.getEmail());
+            }
         }
         model.addAttribute("activePage", "home");
 

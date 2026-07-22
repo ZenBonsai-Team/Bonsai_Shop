@@ -138,7 +138,10 @@
             </div>
 
             <div class="product-ctas">
-                <button class="btn primary schedule-btn" type="button" th:data-id="${product.productId}">Đặt lịch xem</button>
+                <button sec:authorize="!hasAnyRole('OWNER', 'ARTISAN', 'MODERATOR', 'CONTENT_MODERATOR')" class="btn primary schedule-btn" type="button" th:data-id="${product.productId}">Đặt lịch xem</button>
+                <div sec:authorize="hasAnyRole('OWNER', 'ARTISAN', 'MODERATOR', 'CONTENT_MODERATOR')" class="alert alert-info py-2 px-3 small rounded-3 shadow-sm mb-0 style-info-notice" style="background: rgba(255,255,255,0.1); color: #e0e0e0; border: 1px solid rgba(255,255,255,0.2);">
+                    <i class="fa-solid fa-circle-info me-1"></i> Bạn đang đăng nhập với tài khoản Quản trị / Nhà vườn / Kiểm duyệt. Tài khoản này chỉ có quyền xem thông tin, không thể đặt lịch xem cây.
+                </div>
             </div>
 
             <ul class="product-highlights">
@@ -151,7 +154,7 @@
                 <div><dt>Loại cây</dt><dd th:text="${product.varietyName != null ? product.varietyName : 'Bonsai'}"></dd></div>
                 <div><dt>Chiều cao</dt><dd><span th:text="${product.height != null ? product.height : 'N/A'}"></span> cm</dd></div>
                 <div><dt>Đường kính thân</dt><dd><span th:text="${product.trunkDiameter != null ? product.trunkDiameter : 'N/A'}"></span> cm</dd></div>
-                <div><dt>Nghệ nhân</dt><dd th:text="${product.sellerName != null ? product.sellerName : 'Xưởng Bonsai Luxury'}"></dd></div>
+                <div><dt>Nghệ nhân</dt><dd th:text="${product.artisanName != null ? product.artisanName : 'Xưởng Bonsai Luxury'}"></dd></div>
             </dl>
         </div>
     </div>

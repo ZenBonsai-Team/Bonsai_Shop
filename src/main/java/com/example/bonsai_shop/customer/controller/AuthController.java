@@ -29,13 +29,13 @@ public class AuthController {
             model.addAttribute("success",  "Đăng xuất thành công!");
         }
 
-        return "/customer/login";
+        return "customer/login";
     }
 
     // ===== TRANG REGISTER =====
     @GetMapping("/register")
     public String registerPage() {
-        return "/customer/register";
+        return "customer/register";
     }
 
     @PostMapping("/register")
@@ -49,10 +49,10 @@ public class AuthController {
             userService.register(fullName, username, email, password, phone);
             model.addAttribute("email", email); // ← truyền email sang verify-otp
             model.addAttribute("success", "Mã OTP đã được gửi đến " + email);
-            return "/customer/verify-otp";
+            return "customer/verify-otp";
         } catch (Exception e) {
             model.addAttribute("error", e.getMessage());
-            return "/customer/register";
+            return "customer/register";
         }
     }
 
@@ -64,11 +64,11 @@ public class AuthController {
             userService.verifyOtp(email, otpCode);
             userService.activateUser(email); // ← kích hoạt tài khoản
             model.addAttribute("success", "Đăng ký thành công! Vui lòng đăng nhập.");
-            return "/customer/login";
+            return "customer/login";
         } catch (RuntimeException e) {
             model.addAttribute("email", email);
             model.addAttribute("error", e.getMessage());
-            return "/customer/verify-otp";
+            return "customer/verify-otp";
         }
     }
 
@@ -78,11 +78,11 @@ public class AuthController {
             userService.sendOtp(email);
             model.addAttribute("email", email);
             model.addAttribute("success", "Mã OTP mới đã được gửi đến " + email);
-            return "/customer/verify-otp";
+            return "customer/verify-otp";
         } catch (RuntimeException e) {
             model.addAttribute("email", email);
             model.addAttribute("error", e.getMessage());
-            return "/customer/verify-otp";
+            return "customer/verify-otp";
         }
     }
 

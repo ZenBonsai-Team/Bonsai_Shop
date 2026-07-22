@@ -60,15 +60,7 @@ public class CustomUserDetailsService implements UserDetailsService {
                 .concat(mappedAuthorities.stream(), actionAuthorities.stream())
                 .toList();
 
-        return new org.springframework.security.core.userdetails.User(
-                user.getEmail(),
-                user.getPassword(),
-                enabled,
-                true,
-                true,
-                accountNonLocked,
-                allAuthorities
-        );
+        return new CustomUserDetails(user, allAuthorities);
     }
 
     private String normalizeRoleName(String roleName) {

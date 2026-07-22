@@ -312,6 +312,24 @@ public class OrderApiController {
         if (customer == null) {
             response.put("success", false);
             response.put("message", "Tài khoản người dùng không hợp lệ.");
+        // 2. Lấy thông tin user hiện tại (nếu đã đăng nhập)
+        User customer = null;
+        if (currentUser != null) {
+            boolean isStaffOrAdmin = currentUser.getAuthorities().stream()
+                    .anyMatch(a -> a.getAuthority().equals("ROLE_OWNER") || a.getAuthority().equals("ROLE_ARTISAN") 
+                            || a.getAuthority().equals("ROLE_MODERATOR") || a.getAuthority().equals("ROLE_CONTENT_MODERATOR")
+                            || a.getAuthority().equals("ROLE_ADMIN") || a.getAuthority().equals("ROLE_SELLER"));
+            if (isStaffOrAdmin) {
+                response.put("success", false);
+                response.put("message", "Tài khoản quản trị, nhà vườn hoặc kiểm duyệt viên không được phép thực hiện đặt hàng!");
+                return ResponseEntity.status(403).body(response);
+            }
+            customer = userRepository.findByEmail(currentUser.getUsername()).orElse(null);
+        }
+
+        if (customer == null) {
+            response.put("success", false);
+            response.put("message", "Tài khoản người dùng không hợp lệ.");
             return ResponseEntity.badRequest().body(response);
         }
 
@@ -323,7 +341,7 @@ public class OrderApiController {
             return ResponseEntity.badRequest().body(response);
         }
 
-        // 2. Kiểm tra tính khả dụng của tất cả các sản phẩm trong giỏ hàng
+        // Kiểm tra tính khả dụng của tất cả các sản phẩm trong giỏ hàng
         for (CartItem item : cartItems) {
             Product prod = item.getProduct();
             if (!"AVAILABLE".equalsIgnoreCase(prod.getProductStatus())) {
@@ -350,14 +368,17 @@ public class OrderApiController {
                 .totalAmount(totalAmount)
                 .depositAmount(BigDecimal.ZERO)
                 .orderStatus("PENDING")
+                .orderType("ONLINE")
                 .build();
 
         // 4. Liên kết các sản phẩm chi tiết (OrderDetail)
         List<OrderDetail> details = cartItems.stream().map(item -> {
             Product prod = item.getProduct();
-            // Khóa trạng thái sản phẩm sang RESERVED
+            int reserved = productRepository.reserveIfAvailable(prod.getProductId());
+            if (reserved == 0) {
+                throw new IllegalStateException("Tác phẩm '" + prod.getProductName() + "' đã được bán hoặc giữ chỗ!");
+            }
             prod.setProductStatus("RESERVED");
-            productRepository.save(prod);
 
             return OrderDetail.builder()
                     .order(order)
@@ -503,6 +524,7 @@ public class OrderApiController {
                 .depositAmount(order.getDepositAmount())
                 .orderDate(order.getOrderDate())
                 .orderStatus(order.getOrderStatus())
+                .orderType(order.getOrderType())
                 .craneFee(order.getCraneFee())
                 .shippingFee(order.getShippingFee())
                 .notes(order.getNotes())

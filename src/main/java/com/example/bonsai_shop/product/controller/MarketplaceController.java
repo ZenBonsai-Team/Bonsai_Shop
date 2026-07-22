@@ -78,8 +78,7 @@ public class MarketplaceController {
         model.addAttribute("sort", sort);
         model.addAttribute("activePage", "marketplace");
 
-        // return "/product/marketplace";
-        return "/product/marketplace";
+        return "product/marketplace";
     }
 
     @GetMapping({ "/products/detail", "/product/{id}" })

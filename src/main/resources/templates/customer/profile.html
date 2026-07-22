@@ -25,7 +25,7 @@
 
         <nav class="sidebar-menu">
             <!-- Nút quay lại dashboard cho các vai trò đặc biệt -->
-            <a sec:authorize="hasRole('OWNER')" th:href="@{/admin}" style="color: #2e7d32; font-weight: bold; background: #e8f5e9;">
+            <a sec:authorize="hasRole('OWNER')" th:href="@{/templates/owner}" style="color: #2e7d32; font-weight: bold; background: #e8f5e9;">
                 <i class="fa-solid fa-gauge"></i>
                 Bảng điều khiển Chủ
             </a>
@@ -37,7 +37,7 @@
                 <i class="fa-solid fa-gauge"></i>
                 Bảng điều khiển
             </a>
-            <a sec:authorize="hasRole('ARTISAN')" th:href="@{/seller}" style="color: #2e7d32; font-weight: bold; background: #e8f5e9;">
+            <a sec:authorize="hasRole('ARTISAN')" th:href="@{/artisan}" style="color: #2e7d32; font-weight: bold; background: #e8f5e9;">
                 <i class="fa-solid fa-store"></i>
                 Kênh Nghệ nhân / Người bán
             </a>
@@ -45,6 +45,16 @@
             <a class="active" th:href="@{/profile}">
                 <i class="fa-regular fa-user"></i>
                 Hồ sơ
+            </a>
+
+            <a href="#myBonsaiJourneysSection">
+                <i class="fa-solid fa-seedling text-success"></i>
+                Nhật ký Bonsai
+            </a>
+
+            <a href="#savedPostsSection">
+                <i class="fa-regular fa-bookmark text-primary"></i>
+                Bài viết đã lưu
             </a>
 
             <a th:href="@{/orders}">
@@ -83,14 +93,14 @@
         <!-- USER INFO TOP -->
         <section class="profile-top">
 
-            <div class="avatar-box">
+            <a th:href="@{/community/author/{id}(id=${user.userId})}" class="avatar-box text-decoration-none" title="Xem trang công khai của tôi">
                 <img th:if="${user.avatar != null}" th:src="${user.avatar}" alt="avatar">
 
                 <span th:unless="${user.avatar != null}"
                       th:text="${#strings.substring(user.fullName, 0, 1)}">
                     U
                 </span>
-            </div>
+            </a>
 
             <div class="user-info-grid">
 
@@ -150,9 +160,14 @@
 
             </div>
 
-            <a th:href="@{/profile/update}" class="edit-btn">
-                Chỉnh sửa hồ sơ
-            </a>
+            <div class="d-flex flex-column gap-2 align-self-stretch justify-content-start">
+                <a th:href="@{/profile/update}" class="edit-btn text-decoration-none w-100">
+                    Chỉnh sửa hồ sơ
+                </a>
+                <a th:href="@{/community/author/{id}(id=${user.userId})}" class="btn btn-outline-success btn-sm rounded-0 py-2 fw-semibold text-truncate d-flex align-items-center justify-content-center gap-1 w-100" style="border-color: #06210f; color: #06210f; font-size: 0.82rem;">
+                    <i class="fa-solid fa-eye" style="font-size: 0.75rem;"></i> Xem trang công khai
+                </a>
+            </div>
 
         </section>
 
@@ -213,9 +228,105 @@
 
         </section>
 
+        <!-- MY BONSAI JOURNEYS SECTION -->
+        <section class="order-section mt-4" id="myBonsaiJourneysSection" style="scroll-margin-top: 20px;">
+            <div class="section-title d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <p class="text-uppercase text-muted small fw-bold mb-1">NHẬT KÝ VÀ SỰ PHÁT TRIỂN CÂY</p>
+                    <h2 class="h4 fw-bold text-dark mb-0"><i class="fa-solid fa-seedling text-success me-2"></i>Hành trình Bonsai của tôi</h2>
+                </div>
+                <a th:href="@{/community/create?category=H%C3%A0nh%20tr%C3%ACnh%20Bonsai}" class="btn btn-success btn-sm rounded-pill px-3 py-2 fw-semibold">
+                    <i class="fa-solid fa-plus me-1"></i> Đăng nhật ký cây mới
+                </a>
+            </div>
+
+            <div class="row g-3" th:if="${myBonsaiPosts != null and !#lists.isEmpty(myBonsaiPosts)}">
+                <div class="col-md-6 col-lg-4" th:each="post : ${myBonsaiPosts}">
+                    <div class="card h-100 border-0 shadow-sm rounded-3 overflow-hidden">
+                        <img th:src="${post.imageUrl != null ? post.imageUrl : '/images/default-bonsai.png'}" 
+                             class="card-img-top" alt="Cover" style="height: 160px; object-fit: cover;">
+                        <div class="card-body p-3">
+                            <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill mb-2 px-2 py-1" style="font-size: 0.72rem;" th:text="${post.category}">Hành trình Bonsai</span>
+                            <h6 class="card-title fw-bold text-dark text-truncate mb-1" th:text="${post.title}">Tiêu đề nhật ký</h6>
+                            <p class="card-text text-muted small mb-2 text-truncate" th:text="${post.summary}">Tóm tắt nhật ký...</p>
+                            <div class="d-flex justify-content-between align-items-center pt-2 border-top text-muted small">
+                                <span th:text="${#temporals.format(post.createdAt, 'dd/MM/yyyy')}">12/06/2025</span>
+                                <a th:href="@{'/community/post/' + ${post.postId}}" class="text-success text-decoration-none fw-semibold">Xem chi tiết <i class="fa-solid fa-arrow-right small"></i></a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-4 text-center bg-light rounded-3 text-muted" th:if="${myBonsaiPosts == null or #lists.isEmpty(myBonsaiPosts)}">
+                <i class="fa-solid fa-leaf text-success mb-2 display-6"></i>
+                <p class="mb-2">Bạn chưa có bài viết nhật ký khoe cây nào.</p>
+                <a th:href="@{/community/create?category=H%C3%A0nh%20tr%C3%ACnh%20Bonsai}" class="btn btn-outline-success btn-sm rounded-pill px-3">
+                    Bắt đầu viết nhật ký hành trình cây đầu tiên
+                </a>
+            </div>
+        </section>
+
+        <!-- SAVED POSTS SECTION -->
+        <section class="order-section mt-4 mb-4" id="savedPostsSection" style="scroll-margin-top: 20px;">
+            <div class="section-title d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <p class="text-uppercase text-muted small fw-bold mb-1">BÀI VIẾT YÊU THÍCH & ĐÃ LƯU</p>
+                    <h2 class="h4 fw-bold text-dark mb-0"><i class="fa-regular fa-bookmark text-success me-2"></i>Bài viết đã lưu</h2>
+                </div>
+                <a th:href="@{/community(category='Đã lưu')}" class="text-success text-decoration-none small fw-semibold">
+                    Xem trên trang Cộng đồng <i class="fa-solid fa-arrow-right ms-1"></i>
+                </a>
+            </div>
+
+            <div class="row g-3" th:if="${savedPosts != null and !#lists.isEmpty(savedPosts)}">
+                <div class="col-md-6 col-lg-4" th:each="post : ${savedPosts}">
+                    <div class="card h-100 border-0 shadow-sm rounded-3 overflow-hidden">
+                        <img th:src="${post.imageUrl != null ? post.imageUrl : '/images/default-bonsai.png'}" 
+                             class="card-img-top" alt="Cover" style="height: 160px; object-fit: cover;">
+                        <div class="card-body p-3">
+                            <span class="badge bg-secondary-subtle text-secondary border rounded-pill mb-2 px-2 py-1" style="font-size: 0.72rem;" th:text="${post.category}">Cộng đồng</span>
+                            <h6 class="card-title fw-bold text-dark text-truncate mb-1" th:text="${post.title}">Tiêu đề bài viết</h6>
+                            <p class="card-text text-muted small mb-2 text-truncate" th:text="${post.summary}">Tóm tắt bài viết...</p>
+                            <div class="d-flex justify-content-between align-items-center pt-2 border-top text-muted small">
+                                <span th:text="${#temporals.format(post.createdAt, 'dd/MM/yyyy')}">12/06/2025</span>
+                                <a th:href="@{'/community/post/' + ${post.postId}}" class="text-success text-decoration-none fw-semibold">Đọc bài <i class="fa-solid fa-arrow-right small"></i></a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-4 text-center bg-light rounded-3 text-muted" th:if="${savedPosts == null or #lists.isEmpty(savedPosts)}">
+                <i class="fa-regular fa-bookmark text-muted mb-2 display-6"></i>
+                <p class="mb-0">Bạn chưa lưu bài viết nào. Hãy nhấn nút <strong>"Lưu bài viết"</strong> khi xem bài để đọc lại sau!</p>
+            </div>
+        </section>
+
     </main>
 
 </div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // Active state and smooth scrolling for sidebar links
+        const navLinks = document.querySelectorAll(".sidebar-menu a");
+        navLinks.forEach(link => {
+            link.addEventListener("click", function(e) {
+                const href = this.getAttribute("href");
+                if (href && href.startsWith("#")) {
+                    e.preventDefault();
+                    navLinks.forEach(l => l.classList.remove("active"));
+                    this.classList.add("active");
+                    const targetEl = document.querySelector(href);
+                    if (targetEl) {
+                        targetEl.scrollIntoView({ behavior: 'smooth' });
+                    }
+                }
+            });
+        });
+    });
+</script>
 
 </body>
 </html>

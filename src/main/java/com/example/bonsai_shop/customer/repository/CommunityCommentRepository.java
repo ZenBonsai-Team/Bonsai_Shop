@@ -13,4 +13,7 @@ public interface CommunityCommentRepository extends JpaRepository<CommunityComme
     List<CommunityComment> findByPostIdOrderByCreatedAtDesc(Integer postId);
     List<CommunityComment> findAllByOrderByCreatedAtDesc();
     Page<CommunityComment> findAllByOrderByCreatedAtDesc(Pageable pageable);
+    Page<CommunityComment> findByStatusOrderByCreatedAtDesc(String status, Pageable pageable);
+    Page<CommunityComment> findByContentContainingIgnoreCaseOrAuthorNameContainingIgnoreCaseOrderByCreatedAtDesc(String content, String authorName, Pageable pageable);
+    Page<CommunityComment> findByStatusAndContentContainingIgnoreCaseOrAuthorNameContainingIgnoreCaseOrderByCreatedAtDesc(String status, String content, String authorName, Pageable pageable);
 }

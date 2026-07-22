@@ -41,8 +41,8 @@
                         <a th:href="@{/register}" class="btn btn-auth-register">Đăng ký</a>
                     </div>
                     <div sec:authorize="isAuthenticated()" class="d-flex align-items-center gap-2">
-                        <!-- Nút Dashboard cho Admin/Moderator/Seller -->
-                        <a sec:authorize="hasRole('OWNER')" th:href="@{/admin}" class="btn btn-outline-dark btn-sm rounded-pill px-3" style="font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 600;">
+                        <!-- Nút Dashboard cho Owner/Moderator/Artisan -->
+                        <a sec:authorize="hasRole('OWNER')" th:href="@{/owner}" class="btn btn-outline-dark btn-sm rounded-pill px-3" style="font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 600;">
                             <i class="fa-solid fa-gauge me-1"></i> Bảng điều khiển Chủ cửa hàng
                         </a>
                         <a sec:authorize="hasRole('CONTENT_MODERATOR')" th:href="@{/moderator/community}" class="btn btn-outline-dark btn-sm rounded-pill px-3" style="font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 600;">
@@ -51,10 +51,145 @@
                         <a sec:authorize="hasRole('MODERATOR')" th:href="@{/moderator/orders}" class="btn btn-outline-dark btn-sm rounded-pill px-3" style="font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 600;">
                             <i class="fa-solid fa-gauge me-1"></i> Bảng điều khiển
                         </a>
-                        <a sec:authorize="hasRole('ARTISAN')" th:href="@{/seller}" class="btn btn-outline-dark btn-sm rounded-pill px-3" style="font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 600;">
+                        <a sec:authorize="hasRole('ARTISAN')" th:href="@{/artisan}" class="btn btn-outline-dark btn-sm rounded-pill px-3" style="font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 600;">
                             <i class="fa-solid fa-store me-1"></i> Kênh Nghệ nhân / Người bán
                         </a>
-                        <a th:href="@{/profile}" class="nav-icon-link text-decoration-none" title="Profile"><i class="fa-regular fa-user"></i></a>
+                        <!-- Bell Notification Dropdown -->
+                        <div class="dropdown me-1 position-relative">
+                            <button class="btn btn-link p-0 text-dark position-relative border-0 text-decoration-none shadow-none nav-icon-link" 
+                                    type="button" id="publicBellBtn" onclick="togglePublicBellDropdown(event)" title="Thông báo">
+                                <i class="fa-solid fa-bell"></i>
+                                <span id="publicBellBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none" style="font-size: 0.65rem; padding: 2px 5px;">0</span>
+                            </button>
+                            <div id="publicBellDropdownMenu" class="dropdown-menu dropdown-menu-end shadow-lg p-0 border-0 mt-2 position-absolute" aria-labelledby="publicBellBtn" style="width: 330px; max-height: 420px; overflow-y: auto; z-index: 1050; border-radius: 12px; background: #ffffff; right: 0;">
+                                <div class="p-3 border-bottom d-flex justify-content-between align-items-center bg-light" style="border-top-left-radius: 12px; border-top-right-radius: 12px;">
+                                    <strong class="text-dark" style="font-size: 0.9rem;">Thông báo hệ thống</strong>
+                                    <div class="d-flex gap-2">
+                                        <button type="button" class="btn btn-link p-0 text-decoration-none small text-success" onclick="markAllPublicNotificationsRead()" style="font-size: 0.78rem;">Đã đọc</button>
+                                        <span class="text-muted small">|</span>
+                                        <button type="button" class="btn btn-link p-0 text-decoration-none small text-danger" onclick="clearPublicReadNotifications()" style="font-size: 0.78rem;">Xóa đã đọc</button>
+                                    </div>
+                                </div>
+                                <div id="publicBellNotificationList" class="list-group list-group-flush">
+                                    <div class="text-center py-4 text-muted small">Đang tải thông báo...</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <script>
+                            function togglePublicBellDropdown(e) {
+                                if (e) e.stopPropagation();
+                                const menu = document.getElementById('publicBellDropdownMenu');
+                                if (!menu) return;
+                                if (menu.classList.contains('show')) {
+                                    menu.classList.remove('show');
+                                } else {
+                                    menu.classList.add('show');
+                                    loadPublicNotifications();
+                                }
+                            }
+
+                            document.addEventListener('click', function(e) {
+                                const menu = document.getElementById('publicBellDropdownMenu');
+                                const btn = document.getElementById('publicBellBtn');
+                                if (menu && btn && !menu.contains(e.target) && !btn.contains(e.target)) {
+                                    menu.classList.remove('show');
+                                }
+                            });
+
+                            function loadPublicNotifications() {
+                                fetch('/api/notifications')
+                                    .then(res => res.json())
+                                    .then(data => {
+                                        const badge = document.getElementById('publicBellBadge');
+                                        const list = document.getElementById('publicBellNotificationList');
+                                        if (!badge || !list) return;
+
+                                        if (data.unreadCount > 0) {
+                                            badge.innerText = data.unreadCount;
+                                            badge.classList.remove('d-none');
+                                        } else {
+                                            badge.classList.add('d-none');
+                                        }
+
+                                        if (!data.notifications || data.notifications.length === 0) {
+                                            list.innerHTML = '<div class="text-center py-4 text-muted small"><i class="fa-regular fa-bell-slash me-1"></i> Chưa có thông báo mới.</div>';
+                                            return;
+                                        }
+
+                                        let html = '';
+                                        data.notifications.forEach(item => {
+                                            const bgClass = item.isRead ? 'bg-white' : 'bg-light font-weight-bold';
+                                            const icon = item.isRead ? 'fa-regular fa-envelope-open text-secondary' : 'fa-solid fa-bell text-warning';
+                                            const safeMessage = item.message.replace(/'/g, "\\'");
+                                            const deleteBtn = item.isRead ? `<button class="btn btn-sm text-danger p-0 border-0 ms-1" onclick="deletePublicNotificationItem(${item.notificationId}, event)" title="Xóa thông báo này"><i class="fa-solid fa-trash-can" style="font-size:0.8rem;"></i></button>` : '';
+                                            html += `
+                                                <div class="list-group-item list-group-item-action ${bgClass} p-3 border-bottom d-flex justify-content-between align-items-start gap-2" 
+                                                     style="font-size: 0.85rem; cursor: pointer;"
+                                                     onclick="handlePublicNotificationClick(${item.notificationId}, '${safeMessage}')">
+                                                    <div class="d-flex gap-2 align-items-start flex-grow-1">
+                                                        <i class="${icon} mt-1"></i>
+                                                        <div>
+                                                            <p class="mb-1 text-dark" style="line-height: 1.4;">${item.message}</p>
+                                                            <span class="text-muted" style="font-size: 0.75rem;">${item.createdAt ? new Date(item.createdAt).toLocaleString('vi-VN') : ''}</span>
+                                                        </div>
+                                                    </div>
+                                                    ${deleteBtn}
+                                                </div>
+                                            `;
+                                        });
+                                        list.innerHTML = html;
+                                    }).catch(err => console.error(err));
+                            }
+
+                            function handlePublicNotificationClick(notificationId, message) {
+                                fetch('/api/notifications/' + notificationId + '/read', { method: 'POST' })
+                                    .then(res => res.json())
+                                    .then(() => {
+                                        loadPublicNotifications();
+                                        const match = message.match(/#(\d+)/);
+                                        if (match && match[1]) {
+                                            window.location.href = '/community/post/' + match[1];
+                                        } else if (message.includes("kiểm duyệt") || message.includes("hàng chờ")) {
+                                            window.location.href = '/moderator/community?tab=comments&status=FLAGGED';
+                                        }
+                                    }).catch(() => {
+                                        loadPublicNotifications();
+                                    });
+                            }
+
+                            function deletePublicNotificationItem(id, event) {
+                                if (event) event.stopPropagation();
+                                fetch('/api/notifications/' + id, { method: 'DELETE' })
+                                    .then(res => res.json())
+                                    .then(() => loadPublicNotifications());
+                            }
+
+                            function clearPublicReadNotifications() {
+                                fetch('/api/notifications/clear-read', { method: 'POST' })
+                                    .then(res => res.json())
+                                    .then(() => loadPublicNotifications());
+                            }
+
+                            function markAllPublicNotificationsRead() {
+                                fetch('/api/notifications/mark-read', { method: 'POST' })
+                                    .then(res => res.json())
+                                    .then(data => {
+                                        if (data.success) {
+                                            loadPublicNotifications();
+                                        }
+                                    }).catch(err => console.error(err));
+                            }
+
+                            document.addEventListener('DOMContentLoaded', function() {
+                                loadPublicNotifications();
+                            });
+                        </script>
+
+                        <a th:href="@{/profile}" class="nav-icon-link text-decoration-none" title="Profile">
+                            <img th:if="${#authentication.principal != null and #authentication.principal.avatar != null and !#authentication.principal.avatar.trim().isEmpty()}" th:src="${#authentication.principal.avatar}" alt="Avatar" style="width: 28px; height: 28px; border-radius: 50%; object-fit: cover; border: 1px solid #E2E8F0;">
+                            <i th:unless="${#authentication.principal != null and #authentication.principal.avatar != null and !#authentication.principal.avatar.trim().isEmpty()}" class="fa-regular fa-user"></i>
+                        </a>
                         <form method="post" th:action="@{/logout}" class="m-0" th:unless="${hideAdminBtn}">
                             <button type="submit" class="btn btn-link text-dark p-0 nav-icon-link" title="Đăng xuất"><i class="fa-solid fa-arrow-right-from-bracket"></i></button>
                         </form>

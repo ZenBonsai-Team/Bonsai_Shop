@@ -62,9 +62,9 @@ public class User {
     @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL)
     private List<Wishlist> wishlists;
 
-    @OneToMany(mappedBy = "seller", cascade = CascadeType.ALL)
-    private List<Product> productsSold;
-
     @OneToOne(mappedBy = "customer", cascade = CascadeType.ALL)
     private Cart cart;
+
+    @OneToMany(mappedBy = "createdBy", cascade = CascadeType.ALL)
+    private List<Product> createdProducts;
 }

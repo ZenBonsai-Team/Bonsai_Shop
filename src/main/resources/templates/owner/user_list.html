@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/dashboard-layout :: layout(~{::title}, ~{::#user-list-content}, ~{::styles}, ~{::scripts})}">
+<head>
+    <title>Quản lý người dùng - Bonsai Shop</title>
+    <th:block th:fragment="styles">
+        <link rel="stylesheet" th:href="@{/css/admin_user_list.css}">
+    </th:block>
+</head>
+<body>
+
+<div id="user-list-content" th:with="paramActivePage='users'">
+    <div th:if="${success}" th:text="${success}" class="alert alert-success"></div>
+    <div th:if="${error}" th:text="${error}" class="alert alert-error"></div>
+
+    <div class="dashboard-header mb-4">
+        <div>
+            <h1 class="serif-text mb-0">Quản lý người dùng</h1>
+        </div>
+        <a th:href="@{/owner/users/create}" class="btn-home">Tạo tài khoản</a>
+    </div>
+
+    <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <label for="searchEmail"></label>
+        <input type="text" id="searchEmail" placeholder="Tìm kiếm theo email..." autocomplete="off"/>
+        <button type="button" id="clearSearchBtn" class="btn-clear">×</button>
+    </div>
+
+    <table>
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Họ tên</th>
+            <th>Email</th>
+            <th>Trạng thái</th>
+            <th>Phân quyền</th>
+            <th>Hành động</th>
+        </tr>
+        </thead>
+        <tbody id="userTableBody">
+        <tr th:each="user : ${users}" th:attr="data-email=${user.email}">
+            <td th:text="${user.userId}">1</td>
+            <td th:text="${user.fullName}">Họ tên</td>
+            <td th:text="${user.email}">email@example.com</td>
+            <td>
+                <span class="status-badge"
+                      th:classappend="${user.status == 'ACTIVE' ? 'status-active' : (user.status == 'PENDING' ? 'status-pending' : 'status-locked')}"
+                      th:text="${user.status}">ACTIVE</span>
+            </td>
+            <td>
+                <span th:text="${user.role.roleName}">ROLE_CUSTOMER</span>
+            </td>
+            <td>
+                <form th:if="${user.role.roleName != 'OWNER' && user.role.roleName != 'ROLE_OWNER'}" method="post" th:action="@{/owner/users/toggle-status}">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                    <input type="hidden" name="userId" th:value="${user.userId}"/>
+                    <button type="submit"
+                            th:class="${user.status == 'LOCKED' ? 'btn-toggle btn-unlock' : 'btn-toggle btn-lock'}"
+                            th:text="${user.status == 'LOCKED' ? 'Mở khóa' : 'Khóa'}">
+                    </button>
+                </form>
+                <span th:if="${user.role.roleName == 'OWNER' || user.role.roleName == 'ROLE_OWNER'}" class="owner-protected">Không thể khóa</span>
+            </td>
+        </tr>
+
+        <tr id="noResultRow" style="display:none;">
+            <td colspan="6" style="text-align:center; color:#999; padding:30px;">
+                Không tìm thấy người dùng nào phù hợp
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+<th:block th:fragment="scripts">
+    <script th:src="@{/js/admin_user_list.js}"></script>
+</th:block>
+</body>
+</html>

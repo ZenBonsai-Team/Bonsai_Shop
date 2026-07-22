@@ -1,0 +1,29 @@
+name: CI/CD Deploy to Raspberry Pi 5
+
+on:
+  push:
+    branches:
+      - AnhPQ # Tự động deploy khi push lên nhánh AnhPQ (hoặc đổi thành master nếu muốn)
+
+jobs:
+  deploy:
+    runs-on: self-hosted # Chạy trên self-hosted runner đã đăng ký trên Pi 5
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Grant execute permission for mvnw
+        run: chmod +x mvnw
+
+      - name: Restore local config (not tracked by git)
+        run: cp /home/quanganh/Desktop/bonsai/Bonsai_Shop/src/main/resources/application-local.properties src/main/resources/application-local.properties
+
+      - name: Build Project with Maven
+        run: ./mvnw clean package -DskipTests
+
+      - name: Copy built JAR to Desktop folder
+        run: cp target/Bonsai_Shop-0.0.1-SNAPSHOT.jar /home/quanganh/Desktop/bonsai/Bonsai_Shop/target/
+
+      - name: Restart Web Service
+        run: sudo systemctl restart bonsai-shop.service

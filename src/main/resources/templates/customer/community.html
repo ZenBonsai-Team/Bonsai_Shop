@@ -35,27 +35,25 @@
         
         <div class="community-controls">
             <!-- Search bar -->
-            <form th:action="@{/community}" method="get" class="search-input-wrap m-0">
+            <form th:action="@{/community}" method="get" class="search-input-wrap m-0" style="width: 420px; max-width: 100%;">
                 <i class="fa-solid fa-magnifying-glass"></i>
-                <input type="text" name="search" th:value="${searchQuery}" class="community-search-input" placeholder="Tìm bài viết, chủ đề, tác giả...">
+                <input type="text" name="search" th:value="${searchQuery}" class="community-search-input" placeholder="Tìm kiếm bài viết, chủ đề, tác giả...">
                 <input type="hidden" name="category" th:value="${selectedCategory}" th:if="${selectedCategory != 'Tất cả'}">
             </form>
-            
-            <!-- Write share button -->
-            <a th:href="@{/community/create}" class="btn-community-write">
-                <i class="fa-solid fa-pen-nib"></i> Viết bài chia sẻ
-            </a>
         </div>
     </div>
 </header>
 
 <!-- Filter Tabs -->
-<div class="community-tabs-section sticky-top" style="top: 80px; z-index: 1010;">
+<div class="community-tabs-section">
     <div class="container">
         <div class="community-tabs">
             <a th:href="@{/community(category='Tất cả', search=${searchQuery})}" 
                th:classappend="${selectedCategory == 'Tất cả'} ? 'active' : ''"
                class="community-tab-btn">Tất cả</a>
+            <a th:href="@{/community(category='Hành trình Bonsai', search=${searchQuery})}" 
+               th:classappend="${selectedCategory == 'Hành trình Bonsai'} ? 'active' : ''"
+               class="community-tab-btn"><i class="fa-solid fa-seedling me-1 text-success"></i> Hành trình Bonsai</a>
             <a th:href="@{/community(category='Kỹ thuật', search=${searchQuery})}" 
                th:classappend="${selectedCategory == 'Kỹ thuật'} ? 'active' : ''"
                class="community-tab-btn">Kỹ thuật</a>
@@ -75,143 +73,176 @@
     </div>
 </div>
 
-<!-- Notifications list for user from Admin -->
-<div th:if="${moderationNotifications != null and !moderationNotifications.empty}" class="container mt-4">
-    <div class="alert alert-warning border-0 shadow-sm p-4" style="border-radius: 16px; background-color: #fffde7; border-left: 5px solid #fbc02d; color: #574200;">
-        <h5 class="fw-bold text-dark mb-3"><i class="fa-solid fa-bell text-warning me-2"></i> Thông báo điều phối nội dung từ Ban quản trị</h5>
-        <ul class="list-unstyled mb-0 d-flex flex-column gap-2">
-            <li th:each="notif : ${moderationNotifications}" class="pb-2 border-bottom" style="border-color: rgba(0,0,0,0.05);">
-                <div class="d-flex justify-content-between align-items-start gap-3">
-                    <span th:text="${notif.message}">Nội dung thông báo</span>
-                    <span class="text-muted small text-nowrap" th:text="${#temporals.format(notif.createdAt, 'dd/MM/yyyy HH:mm')}">Ngày thông báo</span>
-                </div>
-            </li>
-        </ul>
-    </div>
-</div>
+
 
 <!-- Layout container -->
 <div class="container community-layout-row">
     <div class="row g-4">
         
-        <!-- Left: Blog posts list -->
-        <main class="col-lg-8">
-            <div th:if="${posts == null or posts.isEmpty()}" class="text-center py-5">
+        <!-- LEFT SIDEBAR (3 cols) -->
+        <aside class="col-lg-3 d-none d-lg-block">
+            <!-- User Quick Menu Widget -->
+            <div class="feed-sidebar-card">
+                <a th:if="${currentUser != null}" th:href="@{/community/author/{id}(id=${currentUser.userId})}" class="sidebar-user-header text-decoration-none d-flex align-items-center gap-2" style="display: flex !important; transition: opacity 0.2s;" onmouseover="this.style.opacity=0.8" onmouseout="this.style.opacity=1">
+                    <img th:src="${currentUser.avatar != null && !currentUser.avatar.isEmpty() ? currentUser.avatar : 'https://ui-avatars.com/api/?name=' + currentUser.fullName}" alt="Avatar" class="author-avatar-img">
+                    <div>
+                        <h6 class="fw-bold mb-0 text-dark" th:text="${currentUser.fullName}">Tên người dùng</h6>
+                        <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill small" style="font-size:0.68rem;"
+                              th:with="r=${currentUser.role != null ? currentUser.role.roleName : ''}"
+                              th:text="${r == 'ROLE_OWNER' || r == 'OWNER' ? 'Quản trị viên' : 
+                                        (r == 'ROLE_CONTENT_MODERATOR' || r == 'CONTENT_MODERATOR' ? 'Kiểm duyệt viên' : 
+                                         (r == 'ROLE_ARTISAN' || r == 'ARTISAN' ? 'Nghệ nhân' : 
+                                          (r == 'ROLE_MODERATOR' || r == 'MODERATOR' ? 'Điều phối viên' : 'Thành viên')))}">Khách hàng</span>
+                    </div>
+                </a>
+                <div class="sidebar-user-header text-center py-2" th:if="${currentUser == null}">
+                    <p class="small text-muted mb-2">Đăng nhập để chia sẻ tác phẩm Bonsai và tương tác cùng cộng đồng</p>
+                    <a th:href="@{/login}" class="btn btn-outline-success btn-sm w-100 rounded-pill fw-semibold">Đăng nhập ngay</a>
+                </div>
+
+                <hr class="my-3 text-muted" style="opacity:0.15;">
+
+                <div class="d-flex flex-column gap-2">
+                    <a th:href="@{/profile#myBonsaiJourneysSection}" class="text-dark text-decoration-none small fw-semibold p-2 rounded hover-bg-light d-flex align-items-center gap-2">
+                        <i class="fa-solid fa-seedling text-success"></i> Hành trình Bonsai của tôi
+                    </a>
+                    <a th:href="@{/community(category='Đã lưu')}" class="text-dark text-decoration-none small fw-semibold p-2 rounded hover-bg-light d-flex align-items-center gap-2">
+                        <i class="fa-regular fa-bookmark text-primary"></i> Bài viết đã lưu
+                    </a>
+                    <a th:href="@{/community/create}" class="btn btn-success w-100 rounded-pill btn-sm mt-2 fw-semibold shadow-sm">
+                        <i class="fa-solid fa-plus me-1"></i> Tạo bài viết mới
+                    </a>
+                </div>
+            </div>
+
+            <!-- Hashtag Hot Widget -->
+            <div class="feed-sidebar-card">
+                <h6 class="fw-bold mb-3 text-dark"><i class="fa-solid fa-hashtag text-success me-2"></i>Chủ đề nổi bật</h6>
+                <div class="d-flex flex-wrap gap-1">
+                    <a th:each="tag : ${trendingHashtags}" 
+                       th:href="@{/community(search=${tag})}" 
+                       th:text="'#' + ${tag}" 
+                       class="hashtag-pill">#Hashtag</a>
+                </div>
+            </div>
+
+            <!-- Community Guidelines -->
+            <div class="feed-sidebar-card bg-light border-0">
+                <h6 class="fw-bold mb-2 text-dark"><i class="fa-solid fa-shield-halved text-success me-2"></i>Quy tắc cộng đồng</h6>
+                <p class="text-muted small mb-0" style="line-height: 1.5;">
+                    Tôn trọng nghệ thuật, chia sẻ tri thức chân thực. Mọi bài viết đều được kiểm duyệt nhằm giữ gìn chất lượng cho người yêu cây.
+                </p>
+            </div>
+        </aside>
+
+        <!-- CENTER MAIN FEED (6 cols) -->
+        <main class="col-lg-6 col-md-12">
+            <div th:if="${posts == null or posts.isEmpty()}" class="text-center py-5 bg-white rounded-3 shadow-sm p-4">
                 <i class="fa-solid fa-newspaper text-muted fs-1 mb-3"></i>
                 <h4 class="text-muted">Không tìm thấy bài viết nào phù hợp</h4>
-                <p class="text-secondary">Hãy thử tìm kiếm bằng từ khóa hoặc danh mục khác.</p>
-                <a th:href="@{/community}" class="btn btn-outline-success mt-2">Xem tất cả bài viết</a>
+                <p class="text-secondary small">Hãy thử tìm kiếm bằng từ khóa hoặc chọn danh mục khác.</p>
+                <a th:href="@{/community}" class="btn btn-outline-success btn-sm rounded-pill mt-2 px-4">Xem tất cả bài viết</a>
             </div>
-            
-            <div class="row row-cols-1 row-cols-md-2 g-4" th:if="${posts != null and !posts.isEmpty()}">
-                <div class="col" th:each="post : ${posts}">
-                    <article class="blog-card">
-                        <div class="blog-img-wrap">
-                            <span class="blog-badge-tag" th:text="${post.category}">Nghệ thuật</span>
-                            <a th:href="@{'/community/post/' + ${post.postId}}">
-                                <img th:src="${post.imageUrl}" th:alt="${post.title}">
+
+            <div th:if="${posts != null and !posts.isEmpty()}" class="social-feed-container">
+                <article th:each="post : ${posts}" class="social-feed-card">
+                    <!-- Post Header -->
+                    <div class="social-card-header">
+                        <div class="author-meta">
+                            <a th:href="${post.authorId != null ? '/community/author/' + post.authorId : '/community?search=' + post.authorName}" class="text-decoration-none d-flex align-items-center gap-2">
+                                <img th:src="${post.authorAvatar != null && !post.authorAvatar.isEmpty() ? post.authorAvatar : 'https://ui-avatars.com/api/?name=' + post.authorName}" alt="Avatar" class="author-avatar-img">
+                                <div>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="author-name-title text-dark" th:text="${post.authorName}">Nghệ nhân Nguyễn Văn Thành</span>
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill" style="font-size: 0.65rem;" th:text="${post.category}">Hành trình Bonsai</span>
+                                    </div>
+                                    <span class="post-time-ago" th:text="${#temporals.format(post.createdAt, 'dd/MM/yyyy HH:mm')}">2 giờ trước</span>
+                                </div>
                             </a>
                         </div>
-                        <div class="blog-card-content">
-                            <span class="blog-card-category" th:text="${post.category}">Nghệ thuật</span>
-                            <h2 class="blog-card-title">
-                                <a th:href="@{'/community/post/' + ${post.postId}}" th:text="${post.title}">Nghệ thuật Bonsai – Triết lý sống trong từng nhành cây</a>
-                            </h2>
-                            <p class="blog-card-summary" th:text="${post.summary}">Bonsai không chỉ là chơi cây, mà là hành trình rèn luyện sự kiên nhẫn, tỉ mỉ và cảm nhận vẻ đẹp của thiên nhiên thu nhỏ...</p>
-                            
-                            <div class="post-meta-wrap">
-                                <img th:src="${post.authorAvatar != null ? post.authorAvatar : 'https://ui-avatars.com/api/?name=' + post.authorName}" alt="Avatar" class="author-avatar">
-                                <div class="post-meta-info">
-                                    <span class="author-name" th:text="${post.authorName}">Nghệ nhân Nguyễn Văn Thành</span>
-                                    <span class="post-date-read" th:text="${#temporals.format(post.createdAt, 'dd/MM/yyyy') + ' • ' + post.readTime + ' phút đọc'}">28/06/2026 • 8 phút đọc</span>
-                                </div>
-                                <div class="post-stats">
-                                    <span><i class="fa-regular fa-thumbs-up"></i> <span th:text="${post.likesCount}">128</span></span>
-                                    <span><i class="fa-regular fa-comment"></i> <span th:text="${post.commentsCount}">24</span></span>
-                                </div>
-                            </div>
+                    </div>
+
+                    <!-- Post Cover Image -->
+                    <div class="social-card-media">
+                        <a th:href="@{'/community/post/' + ${post.postId}}">
+                            <img th:src="${post.imageUrl != null && !post.imageUrl.trim().isEmpty() && post.imageUrl != 'Cover' ? post.imageUrl : 'https://images.unsplash.com/photo-1599599810769-bcde5a160d32?auto=format&fit=crop&q=80&w=600'}" th:alt="${post.title}">
+                        </a>
+                    </div>
+
+                    <!-- Post Content -->
+                    <div class="social-card-body">
+                        <h2 class="social-card-title">
+                            <a th:href="@{'/community/post/' + ${post.postId}}" th:text="${post.title}">Tiêu đề bài viết Bonsai</a>
+                        </h2>
+                        <p class="social-card-summary" th:text="${post.summary}">Tóm tắt bài viết chia sẻ kinh nghiệm chăm sóc và định hình cây cảnh nghệ thuật...</p>
+                        
+                        <!-- Instant Interactive Actions -->
+                        <div class="social-card-actions">
+                            <!-- Like Button -->
+                            <button class="feed-action-btn btn-feed-like" th:data-post-id="${post.postId}" th:classappend="${likedPostIds != null and likedPostIds.contains(post.postId)} ? 'liked' : ''">
+                                <i th:class="${likedPostIds != null and likedPostIds.contains(post.postId)} ? 'fa-solid fa-thumbs-up text-danger' : 'fa-regular fa-thumbs-up'"></i>
+                                <span class="like-count" th:text="${post.likesCount != null ? post.likesCount : 0}">0</span> Thích
+                            </button>
+
+                            <!-- Comment Button -->
+                            <a th:href="@{'/community/post/' + ${post.postId}}" class="feed-action-btn">
+                                <i class="fa-regular fa-comment"></i>
+                                <span th:text="${post.commentsCount != null ? post.commentsCount : 0}">0</span> Bình luận
+                            </a>
+
+                            <!-- Bookmark Button -->
+                            <button class="feed-action-btn btn-feed-bookmark" th:data-post-id="${post.postId}" th:classappend="${bookmarkedPostIds != null and bookmarkedPostIds.contains(post.postId)} ? 'bookmarked' : ''">
+                                <i th:class="${bookmarkedPostIds != null and bookmarkedPostIds.contains(post.postId)} ? 'fa-solid fa-bookmark text-success' : 'fa-regular fa-bookmark'"></i>
+                                <span class="bookmark-text" th:text="${bookmarkedPostIds != null and bookmarkedPostIds.contains(post.postId)} ? 'Đã lưu' : 'Lưu'">Lưu</span>
+                            </button>
                         </div>
-                    </article>
-                </div>
+                    </div>
+                </article>
             </div>
         </main>
-        
-        <!-- Right: Sidebar -->
-        <aside class="col-lg-4">
-            <!-- About widget -->
-            <div class="sidebar-widget">
-                <h3 class="widget-title">Về cộng đồng</h3>
-                <p class="text-secondary" style="font-size: 0.88rem; line-height: 1.6;">
-                    Bonsai Journal là không gian chia sẻ tri thức của những người yêu cây cảnh Việt Nam. Mọi đóng góp đều được duyệt trước khi xuất bản nhằm giữ gìn chất lượng thông tin tốt nhất.
-                </p>
-                <a th:href="@{/community/create}" class="btn-widget-action mt-2">
-                    <i class="fa-solid fa-plus"></i> Gửi bài viết của bạn
-                </a>
+
+        <!-- RIGHT SIDEBAR (3 cols) -->
+        <aside class="col-lg-3 d-none d-lg-block">
+            <!-- Featured Artisans Widget -->
+            <div class="feed-sidebar-card">
+                <h6 class="fw-bold mb-3 text-dark"><i class="fa-solid fa-award text-warning me-2"></i>Nghệ Nhân Tiêu Biểu</h6>
+                <div class="d-flex flex-column gap-3" th:if="${featuredArtisans != null and !featuredArtisans.isEmpty()}">
+                    <a th:each="artisan : ${featuredArtisans}" th:href="@{'/community/author/' + ${artisan.userId}}" class="d-flex align-items-center gap-2 text-decoration-none">
+                        <img th:src="${artisan.avatar != null && !artisan.avatar.isEmpty() ? artisan.avatar : 'https://ui-avatars.com/api/?name=' + artisan.fullName}" class="rounded-circle border" style="width:36px; height:36px; object-fit:cover;">
+                        <div>
+                            <div class="fw-bold small text-dark d-flex align-items-center gap-1">
+                                <span th:text="${artisan.fullName}">Tên Nghệ nhân</span>
+                                <i class="fa-solid fa-circle-check text-primary" style="font-size:0.75rem;"></i>
+                            </div>
+                            <div class="text-muted" style="font-size:0.72rem;" th:text="${artisan.role != null ? artisan.role.roleName : 'Nghệ nhân Bonsai'}">Nghệ nhân Bonsai</div>
+                        </div>
+                    </a>
+                </div>
             </div>
-            
-            <!-- Real YouTube Embed to make the page pop -->
-            <div class="sidebar-widget">
-                <h3 class="widget-title">Xem Hướng Dẫn Bonsai</h3>
-                <div class="ratio ratio-16x9 rounded overflow-hidden shadow-sm" style="border: 1px solid var(--border-color);">
+
+            <!-- Video Tutorial Embed -->
+            <div class="feed-sidebar-card">
+                <h6 class="fw-bold mb-3 text-dark"><i class="fa-brands fa-youtube text-danger me-2"></i>Hướng Dẫn Bonsai</h6>
+                <div class="ratio ratio-16x9 rounded overflow-hidden shadow-sm border mb-2">
                     <iframe src="https://www.youtube.com/embed/9B01fXW02wQ" title="Nghệ thuật Bonsai" allowfullscreen></iframe>
                 </div>
-                <p class="text-secondary mt-2 mb-0" style="font-size: 0.78rem;">
-                    <i class="fa-brands fa-youtube text-danger me-1"></i> Video hướng dẫn các bước cơ bản để tạo dáng một chậu cây Bonsai nghệ thuật từ phôi thô.
+                <p class="text-secondary mb-0" style="font-size: 0.75rem;">
+                    Video hướng dẫn các bước cơ bản để uốn nắn một chậu cây Bonsai từ phôi thô.
                 </p>
             </div>
-            
-            <!-- Simulated Livestreams widget -->
-            <div class="sidebar-widget">
-                <h3 class="widget-title">Phát Trực Tiếp & Sự Kiện</h3>
-                <div class="live-stream-list">
-                    <!-- Stream 1 -->
-                    <a href="https://youtube.com" target="_blank" class="live-stream-item">
-                        <div class="live-thumbnail-wrap">
-                            <span class="live-badge-red"><i class="fa-solid fa-circle text-white" style="font-size:6px;"></i> LIVE</span>
-                            <img src="https://images.unsplash.com/photo-1599599810769-bcde5a160d32?auto=format&fit=crop&q=80&w=150" alt="Stream 1">
-                        </div>
-                        <div class="live-stream-info">
-                            <h4 class="live-stream-title">Chia Sẻ Trực Tiếp: Nghệ thuật đi kẽm uốn cây Tùng Cổ</h4>
-                            <div class="live-stream-meta">
-                                <i class="fa-brands fa-youtube"></i>
-                                <span>Youtube Live • 1.2k xem</span>
-                            </div>
-                        </div>
-                    </a>
-                    
-                    <!-- Stream 2 -->
-                    <a href="https://facebook.com" target="_blank" class="live-stream-item">
-                        <div class="live-thumbnail-wrap">
-                            <span class="live-badge-red"><i class="fa-solid fa-circle text-white" style="font-size:6px;"></i> LIVE</span>
-                            <img src="https://images.unsplash.com/photo-1512428559087-560fa5ceab42?auto=format&fit=crop&q=80&w=150" alt="Stream 2">
-                        </div>
-                        <div class="live-stream-info">
-                            <h4 class="live-stream-title">Triển Lãm Bonsai Bắc Bộ 2026 - Phát trực tiếp tại sân vườn</h4>
-                            <div class="live-stream-meta">
-                                <i class="fa-brands fa-facebook"></i>
-                                <span>Facebook Live • 850 xem</span>
-                            </div>
-                        </div>
-                    </a>
-                    
-                    <!-- Stream 3 -->
-                    <a href="https://tiktok.com" target="_blank" class="live-stream-item">
-                        <div class="live-thumbnail-wrap">
-                            <span class="live-badge-red"><i class="fa-solid fa-circle text-white" style="font-size:6px;"></i> LIVE</span>
-                            <img src="https://images.unsplash.com/photo-1583847268964-b28dc8f51f92?auto=format&fit=crop&q=80&w=150" alt="Stream 3">
-                        </div>
-                        <div class="live-stream-info">
-                            <h4 class="live-stream-title">Giao lưu nhà vườn: Báo giá lô phôi Sanh Nam Điền mới về</h4>
-                            <div class="live-stream-meta">
-                                <i class="fa-brands fa-tiktok"></i>
-                                <span>Tiktok Live • 2.4k xem</span>
-                            </div>
-                        </div>
+
+            <!-- Livestreams & Events -->
+            <div class="feed-sidebar-card">
+                <h6 class="fw-bold mb-3 text-dark"><i class="fa-solid fa-video text-danger me-2"></i>Sự Kiện Trực Tiếp</h6>
+                <div class="d-flex flex-column gap-2">
+                    <a href="https://youtube.com" target="_blank" class="text-decoration-none p-2 rounded border bg-light d-flex align-items-center gap-2">
+                        <span class="badge bg-danger rounded-pill" style="font-size:0.6rem;"><i class="fa-solid fa-circle text-white"></i> LIVE</span>
+                        <span class="small fw-semibold text-dark text-truncate">Kỹ thuật đi kẽm uốn cây Tùng Cổ</span>
                     </a>
                 </div>
             </div>
         </aside>
-        
+
     </div>
 </div>
 
@@ -220,5 +251,96 @@
 
 <!-- Bootstrap Bundle JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- AJAX Interactive Handlers for Instant Feed Like & Bookmark -->
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const token = document.querySelector('meta[name="_csrf"]')?.content;
+    const headerName = document.querySelector('meta[name="_csrf_header"]')?.content;
+
+    // AJAX Like toggle from Feed Card
+    document.querySelectorAll(".btn-feed-like").forEach(btn => {
+        btn.addEventListener("click", function(e) {
+            e.preventDefault();
+            const postId = this.getAttribute("data-post-id");
+            if (!postId) return;
+
+            fetch(`/community/post/${postId}/like`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    [headerName]: token
+                }
+            })
+            .then(res => {
+                if (res.status === 401) {
+                    alert('Bạn cần đăng nhập để thích bài viết.');
+                    window.location.href = '/login';
+                    return null;
+                }
+                return res.json();
+            })
+            .then(data => {
+                if (!data) return;
+                if (data.success) {
+                    const likeSpan = this.querySelector(".like-count");
+                    const icon = this.querySelector("i");
+                    if (likeSpan) likeSpan.textContent = data.likesCount;
+                    if (data.liked) {
+                        this.classList.add("liked");
+                        icon.className = "fa-solid fa-thumbs-up text-danger";
+                    } else {
+                        this.classList.remove("liked");
+                        icon.className = "fa-regular fa-thumbs-up";
+                    }
+                }
+            })
+            .catch(err => console.error("Error liking post:", err));
+        });
+    });
+
+    // AJAX Bookmark toggle from Feed Card
+    document.querySelectorAll(".btn-feed-bookmark").forEach(btn => {
+        btn.addEventListener("click", function(e) {
+            e.preventDefault();
+            const postId = this.getAttribute("data-post-id");
+            if (!postId) return;
+
+            fetch(`/community/post/${postId}/bookmark`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    [headerName]: token
+                }
+            })
+            .then(res => {
+                if (res.status === 401) {
+                    alert('Bạn cần đăng nhập để lưu bài viết.');
+                    window.location.href = '/login';
+                    return null;
+                }
+                return res.json();
+            })
+            .then(data => {
+                if (!data) return;
+                if (data.success) {
+                    const textSpan = this.querySelector(".bookmark-text");
+                    const icon = this.querySelector("i");
+                    if (data.bookmarked) {
+                        this.classList.add("bookmarked");
+                        if (textSpan) textSpan.textContent = "Đã lưu";
+                        icon.className = "fa-solid fa-bookmark text-success";
+                    } else {
+                        this.classList.remove("bookmarked");
+                        if (textSpan) textSpan.textContent = "Lưu";
+                        icon.className = "fa-regular fa-bookmark";
+                    }
+                }
+            })
+            .catch(err => console.error("Error bookmarking post:", err));
+        });
+    });
+});
+</script>
 </body>
 </html>

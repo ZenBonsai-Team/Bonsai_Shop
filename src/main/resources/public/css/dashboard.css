@@ -92,7 +92,8 @@
     border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.btn-sidebar-logout {
+.btn-sidebar-logout,
+.sidebar-logout-btn {
     width: 100%;
     display: flex;
     align-items: center;
@@ -108,7 +109,8 @@
     font-weight: 500;
 }
 
-.btn-sidebar-logout:hover {
+.btn-sidebar-logout:hover,
+.sidebar-logout-btn:hover {
     background-color: #b02a37;
     border-color: #b02a37;
 }
@@ -281,7 +283,7 @@
     border: 1px solid var(--border-color);
 }
 
-/* Seller portal aligned with moderator dashboard design */
+/* Artisan portal aligned with moderator dashboard design */
 .dashboard-layout {
     min-height: calc(100vh - 96px);
     height: auto;
@@ -378,16 +380,16 @@
     margin: 4px 0 0;
 }
 
-.seller-dashboard-kpis,
-.seller-kpis {
+.artisan-dashboard-kpis,
+.artisan-kpis {
     display: grid;
     gap: 16px;
     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
     margin-bottom: 20px;
 }
 
-.seller-dashboard-kpis .seller-kpi-card,
-.seller-kpis .card {
+.artisan-dashboard-kpis .artisan-kpi-card,
+.artisan-kpis .card {
     align-items: center;
     background: #fff;
     border: 1px solid #E8E4DD;
@@ -401,23 +403,23 @@
     padding: 14px 18px;
 }
 
-.seller-kpi-card:hover,
-.seller-kpis .card:hover,
-.seller-dashboard-card:hover,
+.artisan-kpi-card:hover,
+.artisan-kpis .card:hover,
+.artisan-dashboard-card:hover,
 .portal-card:hover {
     box-shadow: 0 12px 30px rgba(28, 51, 34, 0.06);
     transform: translateY(-1px);
 }
 
-.seller-kpi-icon {
+.artisan-kpi-icon {
     flex: 0 0 42px;
     height: 42px;
     width: 42px;
     font-size: 1rem;
 }
 
-.seller-kpi-card span,
-.seller-kpis .card span {
+.artisan-kpi-card span,
+.artisan-kpis .card span {
     color: #536257;
     display: block;
     font-size: 0.76rem;
@@ -426,8 +428,8 @@
     text-transform: uppercase;
 }
 
-.seller-kpi-card strong,
-.seller-kpis .card strong {
+.artisan-kpi-card strong,
+.artisan-kpis .card strong {
     color: #1C3322;
     display: block;
     font-size: clamp(1.35rem, 2vw, 1.85rem);
@@ -436,21 +438,21 @@
     overflow-wrap: anywhere;
 }
 
-.seller-kpi-card small {
+.artisan-kpi-card small {
     color: #536257;
     display: block;
     font-size: 0.78rem;
     margin-top: 4px;
 }
 
-.seller-dashboard-grid {
+.artisan-dashboard-grid {
     display: grid;
     gap: 20px;
     grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.9fr);
     margin-bottom: 24px;
 }
 
-.seller-dashboard-card,
+.artisan-dashboard-card,
 .portal-card {
     background: #fff;
     border: 1px solid #E8E4DD;
@@ -548,7 +550,7 @@
 }
 
 @media (max-width: 1200px) {
-    .seller-dashboard-grid {
+    .artisan-dashboard-grid {
         grid-template-columns: 1fr;
     }
 }
@@ -569,14 +571,14 @@
     }
 }
 
-/* Final seller portal redesign - aligned to moderator reference */
-body:has(.seller-topbar) {
+/* Final artisan portal redesign - aligned to moderator reference */
+body:has(.artisan-topbar) {
     background: #FAF8F5;
     min-height: 100vh;
     overflow-y: auto;
 }
 
-body:has(.seller-topbar) .dashboard-layout {
+body:has(.artisan-topbar) .dashboard-layout {
     background: #FAF8F5;
     display: flex;
     height: auto;
@@ -584,7 +586,7 @@ body:has(.seller-topbar) .dashboard-layout {
     overflow: visible;
 }
 
-body:has(.seller-topbar) .dashboard-sidebar {
+body:has(.artisan-topbar) .dashboard-sidebar {
     background: #1C3322;
     border-right: 1px solid rgba(255,255,255,0.04);
     box-shadow: none;
@@ -595,12 +597,12 @@ body:has(.seller-topbar) .dashboard-sidebar {
     width: 280px;
 }
 
-body:has(.seller-topbar) .dashboard-sidebar .sidebar-brand {
+body:has(.artisan-topbar) .dashboard-sidebar .sidebar-brand {
     border-bottom: 1px solid rgba(250,248,245,0.06);
     padding: 42px 20px 40px;
 }
 
-body:has(.seller-topbar) .sidebar-brand-link {
+body:has(.artisan-topbar) .sidebar-brand-link {
     align-items: center;
     color: #fff;
     display: flex;
@@ -608,7 +610,7 @@ body:has(.seller-topbar) .sidebar-brand-link {
     text-decoration: none;
 }
 
-body:has(.seller-topbar) .seller-brand-mark {
+body:has(.artisan-topbar) .artisan-brand-mark {
     align-items: center;
     background: #B8926A;
     border-radius: 999px;
@@ -621,7 +623,7 @@ body:has(.seller-topbar) .seller-brand-mark {
     width: 46px;
 }
 
-body:has(.seller-topbar) .seller-brand-text {
+body:has(.artisan-topbar) .artisan-brand-text {
     color: #fff;
     font-family: var(--font-sans);
     font-size: 1.55rem;
@@ -630,16 +632,16 @@ body:has(.seller-topbar) .seller-brand-text {
     line-height: 1.25;
 }
 
-body:has(.seller-topbar) .dashboard-sidebar .sidebar-nav {
+body:has(.artisan-topbar) .dashboard-sidebar .sidebar-nav {
     gap: 10px;
     padding: 36px 14px;
 }
 
-body:has(.seller-topbar) .dashboard-sidebar .nav-section-title {
+body:has(.artisan-topbar) .dashboard-sidebar .nav-section-title {
     display: none;
 }
 
-body:has(.seller-topbar) .dashboard-sidebar a {
+body:has(.artisan-topbar) .dashboard-sidebar a {
     align-items: center;
     border-left: 3px solid transparent;
     border-radius: 4px;
@@ -653,46 +655,60 @@ body:has(.seller-topbar) .dashboard-sidebar a {
     text-decoration: none;
 }
 
-body:has(.seller-topbar) .dashboard-sidebar a i {
+body:has(.artisan-topbar) .dashboard-sidebar a i {
     color: currentColor;
     font-size: 1.05rem;
     width: 22px;
 }
 
-body:has(.seller-topbar) .dashboard-sidebar a:hover {
+body:has(.artisan-topbar) .dashboard-sidebar a:hover {
     background: rgba(250,248,245,0.045);
     color: #fff;
 }
 
-body:has(.seller-topbar) .dashboard-sidebar a.active {
+body:has(.artisan-topbar) .dashboard-sidebar a.active {
     background: rgba(250,248,245,0.06);
     border-left-color: #B8926A;
     color: #fff;
 }
 
-body:has(.seller-topbar) .dashboard-sidebar .sidebar-footer {
+body:has(.artisan-topbar) .dashboard-sidebar .sidebar-footer {
     border-top: 0;
     margin-top: auto;
     padding: 24px 20px;
 }
 
-body:has(.seller-topbar) .btn-sidebar-logout {
+body:has(.artisan-topbar) .btn-sidebar-logout,
+body:has(.artisan-topbar) .sidebar-logout-btn {
+    align-items: center;
     background: transparent;
     border: 1px solid rgba(250,248,245,0.18);
     border-radius: 4px;
     color: rgba(250,248,245,0.72);
+    display: flex;
     font-weight: 800;
+    gap: 12px;
+    justify-content: flex-start;
     letter-spacing: 0.02em;
     padding: 14px 16px;
+    width: 100%;
 }
 
-body:has(.seller-topbar) .btn-sidebar-logout:hover {
+body:has(.artisan-topbar) .btn-sidebar-logout:hover,
+body:has(.artisan-topbar) .sidebar-logout-btn:hover {
     background: rgba(255,82,82,0.08);
     border-color: #ff5252;
     color: #ff6b6b;
 }
 
-body:has(.seller-topbar) .dashboard-main {
+body:has(.artisan-topbar) .sidebar-logout-btn .logout-icon {
+    align-items: center;
+    display: inline-flex;
+    justify-content: center;
+    width: 22px;
+}
+
+body:has(.artisan-topbar) .dashboard-main {
     background: #FAF8F5;
     flex: 1;
     height: auto;
@@ -703,7 +719,7 @@ body:has(.seller-topbar) .dashboard-main {
     padding: 0 0 48px;
 }
 
-.seller-topbar {
+.artisan-topbar {
     align-items: center;
     background: #fff;
     border-bottom: 1px solid #E8E4DD;
@@ -713,7 +729,7 @@ body:has(.seller-topbar) .dashboard-main {
     padding: 0 44px;
 }
 
-.seller-breadcrumb {
+.artisan-breadcrumb {
     align-items: center;
     color: #536257;
     display: flex;
@@ -721,23 +737,23 @@ body:has(.seller-topbar) .dashboard-main {
     font-size: 0.95rem;
 }
 
-.seller-breadcrumb a {
+.artisan-breadcrumb a {
     color: #536257;
     text-decoration: none;
 }
 
-.seller-breadcrumb strong {
+.artisan-breadcrumb strong {
     color: #1E221F;
     font-weight: 800;
 }
 
-.seller-topbar-right {
+.artisan-topbar-right {
     align-items: center;
     display: flex;
     gap: 18px;
 }
 
-.seller-notification {
+.artisan-notification {
     background: transparent;
     border: 0;
     color: #536257;
@@ -745,7 +761,7 @@ body:has(.seller-topbar) .dashboard-main {
     position: relative;
 }
 
-.seller-notification span {
+.artisan-notification span {
     background: #B8926A;
     border-radius: 50%;
     height: 7px;
@@ -755,7 +771,7 @@ body:has(.seller-topbar) .dashboard-main {
     width: 7px;
 }
 
-.seller-user-avatar img {
+.artisan-user-avatar img {
     background: #F4F1EA;
     border: 1px solid #E8E4DD;
     border-radius: 50%;
@@ -763,31 +779,31 @@ body:has(.seller-topbar) .dashboard-main {
     width: 44px;
 }
 
-.seller-user-meta strong,
-.seller-user-meta span {
+.artisan-user-meta strong,
+.artisan-user-meta span {
     display: block;
 }
 
-.seller-user-meta strong {
+.artisan-user-meta strong {
     color: #1E221F;
     font-size: 0.98rem;
     font-weight: 800;
 }
 
-.seller-user-meta span {
+.artisan-user-meta span {
     color: #B8926A;
     font-size: 0.75rem;
     font-weight: 800;
     letter-spacing: 0.1em;
 }
 
-body:has(.seller-topbar) .dashboard-main > :not(.seller-topbar):not(script) {
+body:has(.artisan-topbar) .dashboard-main > :not(.artisan-topbar):not(script) {
     margin-left: 44px;
     margin-right: 44px;
 }
 
-body:has(.seller-topbar) .dashboard-main > .dashboard-header,
-body:has(.seller-topbar) .dashboard-main > .page-header {
+body:has(.artisan-topbar) .dashboard-main > .dashboard-header,
+body:has(.artisan-topbar) .dashboard-main > .page-header {
     align-items: center;
     display: flex;
     justify-content: space-between;
@@ -795,8 +811,8 @@ body:has(.seller-topbar) .dashboard-main > .page-header {
     margin-bottom: 28px;
 }
 
-body:has(.seller-topbar) .dashboard-header h1,
-body:has(.seller-topbar) .page-header h1 {
+body:has(.artisan-topbar) .dashboard-header h1,
+body:has(.artisan-topbar) .page-header h1 {
     color: #1C3322;
     font-family: var(--font-sans);
     font-size: 2rem;
@@ -805,44 +821,44 @@ body:has(.seller-topbar) .page-header h1 {
     margin: 0;
 }
 
-body:has(.seller-topbar) .dashboard-header p,
-body:has(.seller-topbar) .page-header p {
+body:has(.artisan-topbar) .dashboard-header p,
+body:has(.artisan-topbar) .page-header p {
     color: #536257;
     margin: 6px 0 0;
 }
 
-body:has(.seller-topbar) .seller-kpis {
+body:has(.artisan-topbar) .artisan-kpis {
     display: grid;
     gap: 18px;
     grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
     margin-bottom: 22px;
 }
 
-body:has(.seller-topbar) .seller-kpis .card,
-body:has(.seller-topbar) .portal-card,
-body:has(.seller-topbar) .form-card,
-body:has(.seller-topbar) .seller-profile-card,
-body:has(.seller-topbar) .seller-dashboard-card {
+body:has(.artisan-topbar) .artisan-kpis .card,
+body:has(.artisan-topbar) .portal-card,
+body:has(.artisan-topbar) .form-card,
+body:has(.artisan-topbar) .artisan-profile-card,
+body:has(.artisan-topbar) .artisan-dashboard-card {
     background: #fff;
     border: 1px solid #E8E4DD;
     border-radius: 4px;
     box-shadow: 0 4px 20px rgba(28,51,34,0.03);
 }
 
-body:has(.seller-topbar) .seller-kpis .card {
+body:has(.artisan-topbar) .artisan-kpis .card {
     border-top: 3px solid #1C3322;
     min-height: 90px;
     padding: 18px 22px;
 }
 
-body:has(.seller-topbar) .seller-kpis .card strong {
+body:has(.artisan-topbar) .artisan-kpis .card strong {
     color: #1C3322;
     display: block;
     font-size: 1.55rem;
     line-height: 1;
 }
 
-body:has(.seller-topbar) .seller-kpis .card span {
+body:has(.artisan-topbar) .artisan-kpis .card span {
     color: #536257;
     display: block;
     font-size: 0.78rem;
@@ -852,20 +868,20 @@ body:has(.seller-topbar) .seller-kpis .card span {
     text-transform: uppercase;
 }
 
-body:has(.seller-topbar) .portal-card {
+body:has(.artisan-topbar) .portal-card {
     margin-bottom: 26px;
     overflow: hidden;
     padding: 20px;
 }
 
-body:has(.seller-topbar) .product-toolbar {
+body:has(.artisan-topbar) .product-toolbar {
     border-bottom: 1px solid #E8E4DD;
     margin: -20px -20px 18px;
     padding: 18px 20px 0;
 }
 
-body:has(.seller-topbar) .compact-table th,
-body:has(.seller-topbar) .product-table th {
+body:has(.artisan-topbar) .compact-table th,
+body:has(.artisan-topbar) .product-table th {
     background: #F4F1EA;
     color: #536257;
     font-size: 0.76rem;
@@ -875,93 +891,93 @@ body:has(.seller-topbar) .product-table th {
     text-transform: uppercase;
 }
 
-body:has(.seller-topbar) .compact-table td,
-body:has(.seller-topbar) .product-table td {
+body:has(.artisan-topbar) .compact-table td,
+body:has(.artisan-topbar) .product-table td {
     border-bottom: 1px solid #E8E4DD;
     padding: 12px 16px;
 }
 
-body:has(.seller-topbar) .btn {
+body:has(.artisan-topbar) .btn {
     border-radius: 4px;
     font-weight: 700;
 }
 
-body:has(.seller-topbar) .status-chip,
-body:has(.seller-topbar) .filter-chip {
+body:has(.artisan-topbar) .status-chip,
+body:has(.artisan-topbar) .filter-chip {
     border-radius: 20px;
     font-size: 0.74rem;
     font-weight: 800;
 }
 
 @media (max-width: 980px) {
-    body:has(.seller-topbar) .dashboard-layout {
+    body:has(.artisan-topbar) .dashboard-layout {
         display: block;
         height: auto;
         overflow: visible;
     }
 
-    body:has(.seller-topbar) .dashboard-sidebar,
-    body:has(.seller-topbar) .dashboard-main {
+    body:has(.artisan-topbar) .dashboard-sidebar,
+    body:has(.artisan-topbar) .dashboard-main {
         height: auto;
         max-width: 100%;
         min-height: auto;
         width: 100%;
     }
 
-    body:has(.seller-topbar) .dashboard-main > :not(.seller-topbar):not(script) {
+    body:has(.artisan-topbar) .dashboard-main > :not(.artisan-topbar):not(script) {
         margin-left: 20px;
         margin-right: 20px;
     }
 
-    .seller-topbar {
+    .artisan-topbar {
         padding: 0 20px;
     }
 }
 
-/* Seller profile overflow fixes */
-body:has(.seller-topbar) .dashboard-main > .dashboard-header,
-body:has(.seller-topbar) .dashboard-main > .page-header {
+/* Artisan profile overflow fixes */
+body:has(.artisan-topbar) .dashboard-main > .dashboard-header,
+body:has(.artisan-topbar) .dashboard-main > .page-header {
     gap: 20px;
     min-width: 0;
 }
 
-body:has(.seller-topbar) .dashboard-main > .dashboard-header > div,
-body:has(.seller-topbar) .dashboard-main > .page-header > div {
+body:has(.artisan-topbar) .dashboard-main > .dashboard-header > div,
+body:has(.artisan-topbar) .dashboard-main > .page-header > div {
     min-width: 0;
 }
 
-body:has(.seller-topbar) .dashboard-main > .dashboard-header .btn,
-body:has(.seller-topbar) .dashboard-main > .page-header .btn {
+body:has(.artisan-topbar) .dashboard-main > .dashboard-header .btn,
+body:has(.artisan-topbar) .dashboard-main > .page-header .btn {
     flex: 0 0 auto;
     white-space: nowrap;
 }
 
-body:has(.seller-topbar) .seller-profile-card {
+body:has(.artisan-topbar) .artisan-profile-card {
     margin: 0 auto 32px;
     max-width: 820px;
     width: min(820px, 100%);
 }
 
-body:has(.seller-topbar) .seller-profile-header {
+body:has(.artisan-topbar) .artisan-profile-header {
     background: linear-gradient(135deg, #1C3322, #2d6a4f);
 }
 
-body:has(.seller-topbar) .seller-profile-actions {
+body:has(.artisan-topbar) .artisan-profile-actions {
     display: flex;
     flex-wrap: wrap;
     gap: 12px;
 }
 
 @media (max-width: 980px) {
-    body:has(.seller-topbar) .dashboard-main > .dashboard-header,
-    body:has(.seller-topbar) .dashboard-main > .page-header {
+    body:has(.artisan-topbar) .dashboard-main > .dashboard-header,
+    body:has(.artisan-topbar) .dashboard-main > .page-header {
         align-items: flex-start;
         flex-direction: column;
     }
 }
 
-/* Seller sidebar/profile final alignment */
-body:has(.seller-topbar) .dashboard-sidebar {
+/* Artisan sidebar/profile final alignment */
+body:has(.artisan-topbar) .dashboard-sidebar {
     height: 100vh;
     max-height: 100vh;
     min-height: 100vh;
@@ -970,51 +986,51 @@ body:has(.seller-topbar) .dashboard-sidebar {
     top: 0;
 }
 
-body:has(.seller-topbar) .dashboard-sidebar .sidebar-brand,
-body:has(.seller-topbar) .dashboard-sidebar .sidebar-footer {
+body:has(.artisan-topbar) .dashboard-sidebar .sidebar-brand,
+body:has(.artisan-topbar) .dashboard-sidebar .sidebar-footer {
     flex: 0 0 auto;
 }
 
-body:has(.seller-topbar) .dashboard-sidebar .sidebar-nav {
+body:has(.artisan-topbar) .dashboard-sidebar .sidebar-nav {
     flex: 1 1 auto;
     min-height: 0;
     overflow-y: auto;
     padding-bottom: 20px;
 }
 
-body:has(.seller-topbar) .dashboard-sidebar .sidebar-nav::-webkit-scrollbar {
+body:has(.artisan-topbar) .dashboard-sidebar .sidebar-nav::-webkit-scrollbar {
     width: 6px;
 }
 
-body:has(.seller-topbar) .dashboard-sidebar .sidebar-nav::-webkit-scrollbar-thumb {
+body:has(.artisan-topbar) .dashboard-sidebar .sidebar-nav::-webkit-scrollbar-thumb {
     background: rgba(250,248,245,0.22);
     border-radius: 999px;
 }
 
-body:has(.seller-topbar) .dashboard-main > .page-header {
+body:has(.artisan-topbar) .dashboard-main > .page-header {
     margin-left: auto;
     margin-right: auto;
     max-width: 900px;
     width: calc(100% - 88px);
 }
 
-body:has(.seller-topbar) .seller-profile-card {
+body:has(.artisan-topbar) .artisan-profile-card {
     max-width: 900px;
     width: calc(100% - 88px);
 }
 
-body:has(.seller-topbar) .seller-profile-fields {
+body:has(.artisan-topbar) .artisan-profile-fields {
     display: grid;
     gap: 14px;
     grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-body:has(.seller-topbar) .seller-profile-actions {
+body:has(.artisan-topbar) .artisan-profile-actions {
     justify-content: flex-end;
 }
 
 @media (max-width: 980px) {
-    body:has(.seller-topbar) .dashboard-sidebar {
+    body:has(.artisan-topbar) .dashboard-sidebar {
         height: auto;
         max-height: none;
         min-height: auto;
@@ -1022,22 +1038,22 @@ body:has(.seller-topbar) .seller-profile-actions {
         position: static;
     }
 
-    body:has(.seller-topbar) .dashboard-main > .page-header,
-    body:has(.seller-topbar) .seller-profile-card {
+    body:has(.artisan-topbar) .dashboard-main > .page-header,
+    body:has(.artisan-topbar) .artisan-profile-card {
         width: calc(100% - 40px);
     }
 
-    body:has(.seller-topbar) .seller-profile-fields {
+    body:has(.artisan-topbar) .artisan-profile-fields {
         grid-template-columns: 1fr;
     }
 }
 
-/* Seller dashboard content redesign */
-body:has(.seller-topbar) .seller-dashboard-content {
+/* Artisan dashboard content redesign */
+body:has(.artisan-topbar) .artisan-dashboard-content {
     margin: 38px 44px 52px;
 }
 
-body:has(.seller-topbar) .seller-dashboard-hero {
+body:has(.artisan-topbar) .artisan-dashboard-hero {
     align-items: center;
     background: linear-gradient(135deg, #1C3322 0%, #25452d 55%, #B8926A 150%);
     border-radius: 22px;
@@ -1050,7 +1066,7 @@ body:has(.seller-topbar) .seller-dashboard-hero {
     position: relative;
 }
 
-.seller-dashboard-hero::after {
+.artisan-dashboard-hero::after {
     background: radial-gradient(circle, rgba(255,255,255,0.16), transparent 62%);
     content: "";
     height: 220px;
@@ -1060,12 +1076,12 @@ body:has(.seller-topbar) .seller-dashboard-hero {
     width: 220px;
 }
 
-.seller-dashboard-hero > * {
+.artisan-dashboard-hero > * {
     position: relative;
     z-index: 1;
 }
 
-.seller-eyebrow,
+.artisan-eyebrow,
 .panel-heading span {
     color: #B8926A;
     display: block;
@@ -1075,20 +1091,20 @@ body:has(.seller-topbar) .seller-dashboard-hero {
     text-transform: uppercase;
 }
 
-.seller-dashboard-hero h1 {
+.artisan-dashboard-hero h1 {
     color: #fff;
     font-size: 2.25rem;
     font-weight: 850;
     margin: 8px 0;
 }
 
-.seller-dashboard-hero p {
+.artisan-dashboard-hero p {
     color: rgba(255,255,255,0.76);
     margin: 0;
     max-width: 560px;
 }
 
-.seller-dashboard-hero .btn {
+.artisan-dashboard-hero .btn {
     align-items: center;
     background: #fff;
     color: #1C3322;
@@ -1096,27 +1112,32 @@ body:has(.seller-topbar) .seller-dashboard-hero {
     gap: 8px;
 }
 
-.seller-metric-grid {
+.artisan-metric-grid {
     display: grid;
     gap: 18px;
     grid-template-columns: repeat(4, minmax(0, 1fr));
     margin-bottom: 22px;
 }
 
-.seller-metric-card,
-.seller-dashboard-panel {
+.artisan-metric-card,
+.artisan-dashboard-panel {
     background: #fff;
     border: 1px solid #E8E4DD;
     border-radius: 18px;
     box-shadow: 0 14px 35px rgba(28,51,34,0.06);
 }
 
-.seller-metric-card {
+.artisan-metric-card {
     align-items: center;
     display: flex;
     gap: 16px;
     min-height: 122px;
     padding: 22px;
+}
+
+.artisan-metric-card > div:last-child,
+.revenue-summary-card > div:last-child {
+    min-width: 0;
 }
 
 .metric-icon {
@@ -1150,7 +1171,7 @@ body:has(.seller-topbar) .seller-dashboard-hero {
     color: #7342c8;
 }
 
-.seller-metric-card span {
+.artisan-metric-card span {
     color: #66736b;
     display: block;
     font-size: 0.82rem;
@@ -1158,7 +1179,7 @@ body:has(.seller-topbar) .seller-dashboard-hero {
     margin-bottom: 8px;
 }
 
-.seller-metric-card strong {
+.artisan-metric-card strong {
     color: #1C3322;
     display: block;
     font-size: 1.75rem;
@@ -1166,14 +1187,22 @@ body:has(.seller-topbar) .seller-dashboard-hero {
     line-height: 1.1;
 }
 
-.seller-dashboard-panel-grid {
+.artisan-metric-card .money-value {
+    font-size: clamp(1.1rem, 1.8vw, 1.55rem);
+    letter-spacing: -0.04em;
+    line-height: 1.18;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
+.artisan-dashboard-panel-grid {
     display: grid;
     gap: 22px;
     grid-template-columns: minmax(0, 1.35fr) minmax(320px, 0.65fr);
     margin-bottom: 22px;
 }
 
-.seller-dashboard-panel {
+.artisan-dashboard-panel {
     padding: 24px;
 }
 
@@ -1198,7 +1227,7 @@ body:has(.seller-topbar) .seller-dashboard-hero {
     line-height: 1;
 }
 
-.seller-bars {
+.artisan-bars {
     align-items: end;
     background: linear-gradient(180deg, #FAF8F5 0%, #F3EFE7 100%);
     border-radius: 16px;
@@ -1208,7 +1237,7 @@ body:has(.seller-topbar) .seller-dashboard-hero {
     padding: 24px;
 }
 
-.seller-bars span {
+.artisan-bars span {
     background: linear-gradient(180deg, #B8926A, #1C3322);
     border-radius: 999px 999px 8px 8px;
     flex: 1;
@@ -1216,12 +1245,12 @@ body:has(.seller-topbar) .seller-dashboard-hero {
     min-height: 26px;
 }
 
-.seller-chart-panel p {
+.artisan-chart-panel p {
     color: #66736b;
     margin: 18px 0 0;
 }
 
-.seller-chart-panel {
+.artisan-chart-panel {
     padding: 22px;
 }
 
@@ -1287,7 +1316,7 @@ body:has(.seller-topbar) .seller-dashboard-hero {
 }
 
 .revenue-area {
-    fill: url(#sellerRevenueFill);
+    fill: url(#artisanRevenueFill);
 }
 
 .revenue-line {
@@ -1357,7 +1386,14 @@ body:has(.seller-topbar) .seller-dashboard-hero {
     display: block;
     font-size: 1rem;
     font-weight: 900;
-    white-space: nowrap;
+}
+
+.revenue-summary-card .money-value {
+    font-size: clamp(0.82rem, 1.1vw, 0.95rem);
+    letter-spacing: -0.03em;
+    line-height: 1.2;
+    overflow-wrap: anywhere;
+    word-break: break-word;
 }
 
 .status-breakdown,
@@ -1390,7 +1426,7 @@ body:has(.seller-topbar) .seller-dashboard-hero {
     font-weight: 900;
 }
 
-.seller-attention-panel .panel-heading a {
+.artisan-attention-panel .panel-heading a {
     color: #B8926A;
     font-weight: 850;
     text-decoration: none;
@@ -1400,29 +1436,63 @@ body:has(.seller-topbar) .seller-dashboard-hero {
     grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
+.artisan-attention-panel .attention-cards {
+    align-items: stretch;
+}
+
+.artisan-attention-panel .attention-cards div {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 10px;
+    justify-content: center;
+    min-height: 118px;
+    padding: 20px;
+}
+
+.artisan-attention-panel .attention-cards strong {
+    align-items: center;
+    background: #EEF7F0;
+    border-radius: 14px;
+    color: #1C3322;
+    display: flex;
+    font-size: 1.85rem;
+    height: 48px;
+    justify-content: center;
+    line-height: 1;
+    min-width: 54px;
+    padding: 0 14px;
+}
+
+.artisan-attention-panel .attention-cards span {
+    color: #4f5d54;
+    font-size: 0.92rem;
+    font-weight: 800;
+    line-height: 1.35;
+}
+
 @media (max-width: 1180px) {
-    .seller-metric-grid,
+    .artisan-metric-grid,
     .attention-cards {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
-    .seller-dashboard-panel-grid {
+    .artisan-dashboard-panel-grid {
         grid-template-columns: 1fr;
     }
 }
 
 @media (max-width: 760px) {
-    .seller-dashboard-content {
+    .artisan-dashboard-content {
         margin: 24px 20px 40px;
     }
 
-    .seller-dashboard-hero {
+    .artisan-dashboard-hero {
         align-items: flex-start;
         flex-direction: column;
         gap: 18px;
     }
 
-    .seller-metric-grid,
+    .artisan-metric-grid,
     .attention-cards,
     .revenue-summary-grid {
         grid-template-columns: 1fr;
