@@ -81,7 +81,7 @@ function renderTable(orders) {
         tr.innerHTML = `
             <td class="col-code">${order.orderCode}</td>
             <td><strong>${order.customer ? order.customer.name : 'N/A'}</strong></td>
-            <td><span class="fw-bold text-dark">${order.quantity || 1} cây</span></td>
+            <td><span class="fw-bold text-dark">${order.items ? order.items.length : 1} cây</span></td>
             <td class="col-price">${new Intl.NumberFormat('vi-VN', {style: 'currency', currency: 'VND'}).format(order.totalAmount)}</td>
             <td>${new Date(order.orderDate).toLocaleString('vi-VN')}</td>
             <td><span class="status-badge pending">${order.orderStatus}</span></td>

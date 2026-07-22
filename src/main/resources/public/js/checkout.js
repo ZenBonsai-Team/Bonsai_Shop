@@ -66,7 +66,6 @@ function renderSummary(items) {
         div.innerHTML = `
             <div>
                 <span class="summary-item-name">${item.productName}</span>
-                <span class="summary-item-qty d-block">Số lượng: ${item.quantity || 1}</span>
             </div>
             <span class="summary-item-price">${formatVND(itemTotal)}</span>
         `;

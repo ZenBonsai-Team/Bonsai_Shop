@@ -117,7 +117,7 @@ function renderTable(orders) {
         tr.innerHTML = `
             <td class="col-code">${order.orderCode}</td>
             <td><strong>${order.customer ? order.customer.name : 'N/A'}</strong></td>
-            <td><span class="fw-bold text-dark">${order.quantity || 1} cây</span></td>
+            <td><span class="fw-bold text-dark">${order.items ? order.items.length : 1} cây</span></td>
             <td class="col-price">${formatVND(order.totalAmount || 0)}</td>
             <td>${new Date(order.orderDate).toLocaleString('vi-VN')}</td>
             <td><span class="status-badge ${order.orderStatus.toLowerCase()}">${order.orderStatus}</span></td>
@@ -249,8 +249,7 @@ function openDrawer(order) {
                             ${item.name}
                         </span>
                         <div class="small text-muted mt-1">
-                            <span>Đơn giá: <strong class="text-success">${formatVND(item.price || 0)}</strong></span> | 
-                            <span>Số lượng: <strong>${item.quantity || 1}</strong></span>
+                            <span>Đơn giá: <strong class="text-success">${formatVND(item.price || 0)}</strong></span>
                         </div>
                     </div>
                 `;

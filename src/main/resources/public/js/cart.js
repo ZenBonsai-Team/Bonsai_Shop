@@ -63,10 +63,7 @@ function renderCart(items) {
             <td>
                 <span class="cart-price">${formatVND(item.price || 0)}</span>
             </td>
-            <td style="text-align: center;">
-                <span class="fw-bold">${item.quantity || 1}</span>
-            </td>
-            <td style="text-align: center;">
+            <td>
                 <button class="btn-remove-item" onclick="removeItem(${item.productId})" title="Xóa khỏi giỏ">
                     <i class="fa-regular fa-trash-can"></i>
                 </button>
