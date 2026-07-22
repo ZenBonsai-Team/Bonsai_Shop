@@ -284,10 +284,10 @@ public class CommunityController {
         // 4. Fetch posts by authorId or by authorName
         List<CommunityPost> authorPosts = new java.util.ArrayList<>();
         if (authorId != null && authorId > 0) {
-            authorPosts = postRepository.findByAuthorIdOrderByCreatedAtDesc(authorId);
+            authorPosts = postRepository.findByAuthorIdAndStatusOrderByCreatedAtDesc(authorId, "APPROVED");
         }
         if (authorPosts.isEmpty() && authorName != null) {
-            authorPosts = postRepository.findByAuthorNameOrderByCreatedAtDesc(authorName);
+            authorPosts = postRepository.findByAuthorNameAndStatusOrderByCreatedAtDesc(authorName, "APPROVED");
         }
 
         String currentEmail = getEmailFromPrincipal(principal);

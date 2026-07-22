@@ -75,5 +75,9 @@ public interface CommunityPostRepository extends JpaRepository<CommunityPost, In
 
     List<CommunityPost> findByAuthorNameOrderByCreatedAtDesc(String authorName);
 
+    List<CommunityPost> findByAuthorIdAndStatusOrderByCreatedAtDesc(Integer authorId, String status);
+
+    List<CommunityPost> findByAuthorNameAndStatusOrderByCreatedAtDesc(String authorName, String status);
+
     List<CommunityPost> findByAuthorIdAndCategoryOrderByCreatedAtDesc(Integer authorId, String category);
 }

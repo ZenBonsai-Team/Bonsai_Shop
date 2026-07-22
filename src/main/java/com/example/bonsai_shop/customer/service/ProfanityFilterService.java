@@ -42,20 +42,19 @@ public class ProfanityFilterService {
         String cleanedText = text.replaceAll("https?://\\S+\\s?", " ").replaceAll("<[^>]*>", " ");
 
         String lower = cleanedText.toLowerCase();
-        String normalized = removeAccents(lower);
         
-        // Deobfuscate by removing punctuation (but not spaces) inside words (e.g. "d.i.t" -> "dit")
-        String deobfuscated = normalized.replaceAll("(?<=\\p{L})[._\\-*]+(?=\\p{L})", "");
+        // Deobfuscate by removing punctuation (but not spaces) inside words (e.g. "d.i.t" -> "dit", "b.u.ồ.i" -> "buồi")
+        String deobfuscated = lower.replaceAll("(?<=\\p{L})[._\\-*]+(?=\\p{L})", "");
 
         for (String patternWord : PROFANITY_PATTERNS) {
-            String patternNorm = removeAccents(patternWord.toLowerCase());
+            String pattern = patternWord.toLowerCase();
 
             // Unicode-compliant word boundary pattern
-            String regex = "(?<=^|[^\\p{L}\\p{N}])" + Pattern.quote(patternNorm) + "(?=$|[^\\p{L}\\p{N}])";
+            String regex = "(?<=^|[^\\p{L}\\p{N}])" + Pattern.quote(pattern) + "(?=$|[^\\p{L}\\p{N}])";
             Pattern compiled = Pattern.compile(regex, Pattern.UNICODE_CHARACTER_CLASS);
 
-            // 1. Match in normalized accentless text
-            if (compiled.matcher(normalized).find()) {
+            // 1. Match in original lowercase text
+            if (compiled.matcher(lower).find()) {
                 return true;
             }
 
@@ -77,16 +76,10 @@ public class ProfanityFilterService {
 
         String result = text;
         for (String patternWord : PROFANITY_PATTERNS) {
+            String pattern = patternWord.toLowerCase();
             // Mask exact word matches using regex with boundaries
-            String regex = "(?<=^|[^\\p{L}\\p{N}])(?i)" + Pattern.quote(patternWord) + "(?=$|[^\\p{L}\\p{N}])";
+            String regex = "(?<=^|[^\\p{L}\\p{N}])(?i)" + Pattern.quote(pattern) + "(?=$|[^\\p{L}\\p{N}])";
             result = Pattern.compile(regex, Pattern.UNICODE_CHARACTER_CLASS).matcher(result).replaceAll("***");
-
-            // Also check accent-removed forms if different
-            String normWord = removeAccents(patternWord);
-            if (!normWord.equalsIgnoreCase(patternWord)) {
-                String regexNorm = "(?<=^|[^\\p{L}\\p{N}])(?i)" + Pattern.quote(normWord) + "(?=$|[^\\p{L}\\p{N}])";
-                result = Pattern.compile(regexNorm, Pattern.UNICODE_CHARACTER_CLASS).matcher(result).replaceAll("***");
-            }
         }
         return result;
     }

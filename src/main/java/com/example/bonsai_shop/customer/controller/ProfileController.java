@@ -54,7 +54,7 @@ public class ProfileController {
 
         User user = userService.getCurrentUserProfile(email);
 
-        List<CommunityPost> myBonsaiPosts = communityPostRepository.findByAuthorIdOrderByCreatedAtDesc(user.getUserId());
+        List<CommunityPost> myBonsaiPosts = communityPostRepository.findByAuthorIdAndStatusOrderByCreatedAtDesc(user.getUserId(), "APPROVED");
 
         // Lấy các bài viết đã lưu (saved / bookmarked)
         List<CommunityPostBookmark> bookmarks = bookmarkRepository.findByUserIdOrderByCreatedAtDesc(user.getUserId());
