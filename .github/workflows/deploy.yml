@@ -16,6 +16,9 @@ jobs:
       - name: Grant execute permission for mvnw
         run: chmod +x mvnw
 
+      - name: Restore local config (not tracked by git)
+        run: cp /home/quanganh/Desktop/bonsai/Bonsai_Shop/src/main/resources/application-local.properties src/main/resources/application-local.properties
+
       - name: Build Project with Maven
         run: ./mvnw clean package -DskipTests
 

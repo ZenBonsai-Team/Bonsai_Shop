@@ -28,6 +28,7 @@ public class ProfileController {
     private final UserService userService;
     private final CommunityPostRepository communityPostRepository;
     private final CommunityPostBookmarkRepository bookmarkRepository;
+
     private String extractEmail(Object principal) {
         if (principal instanceof UserDetails userDetails) {
             return userDetails.getUsername();
@@ -53,7 +54,7 @@ public class ProfileController {
 
         User user = userService.getCurrentUserProfile(email);
 
-        List<CommunityPost> myBonsaiPosts = communityPostRepository.findByAuthorIdOrderByCreatedAtDesc(user.getUserId());
+        List<CommunityPost> myBonsaiPosts = communityPostRepository.findByAuthorIdAndStatusOrderByCreatedAtDesc(user.getUserId(), "APPROVED");
 
         // Lấy các bài viết đã lưu (saved / bookmarked)
         List<CommunityPostBookmark> bookmarks = bookmarkRepository.findByUserIdOrderByCreatedAtDesc(user.getUserId());

@@ -31,14 +31,6 @@ public class ProfanityFilterService {
     }
 
     /**
-     * Removes spaces, dots, and special punctuation used for obfuscation (e.g. 'đ.ị.t' -> 'dit').
-     */
-    public String stripObfuscation(String input) {
-        if (input == null) return "";
-        return removeAccents(input.toLowerCase()).replaceAll("[^a-z0-9]", "");
-    }
-
-    /**
      * Checks if text contains any profane terms (using original text & normalized forms).
      */
     public boolean containsProfanity(String text) {
@@ -46,25 +38,28 @@ public class ProfanityFilterService {
             return false;
         }
 
-        String lower = text.toLowerCase();
-        String normalized = removeAccents(lower);
-        String stripped = stripObfuscation(lower);
+        // Clean URLs and HTML tags first to avoid false positives inside links and markups
+        String cleanedText = text.replaceAll("https?://\\S+\\s?", " ").replaceAll("<[^>]*>", " ");
+
+        String lower = cleanedText.toLowerCase();
+        
+        // Deobfuscate by removing punctuation (but not spaces) inside words (e.g. "d.i.t" -> "dit", "b.u.ồ.i" -> "buồi")
+        String deobfuscated = lower.replaceAll("(?<=\\p{L})[._\\-*]+(?=\\p{L})", "");
 
         for (String patternWord : PROFANITY_PATTERNS) {
-            String patternNorm = removeAccents(patternWord.toLowerCase());
+            String pattern = patternWord.toLowerCase();
 
-            // 1. Direct match in original lower text
-            if (lower.contains(patternWord)) {
+            // Unicode-compliant word boundary pattern
+            String regex = "(?<=^|[^\\p{L}\\p{N}])" + Pattern.quote(pattern) + "(?=$|[^\\p{L}\\p{N}])";
+            Pattern compiled = Pattern.compile(regex, Pattern.UNICODE_CHARACTER_CLASS);
+
+            // 1. Match in original lowercase text
+            if (compiled.matcher(lower).find()) {
                 return true;
             }
 
-            // 2. Normalized accentless match
-            if (normalized.contains(patternNorm)) {
-                return true;
-            }
-
-            // 3. Obfuscation stripped match (for multi-character terms)
-            if (patternNorm.length() > 1 && stripped.contains(patternNorm.replaceAll("[^a-z0-9]", ""))) {
+            // 2. Match in deobfuscated text
+            if (compiled.matcher(deobfuscated).find()) {
                 return true;
             }
         }
@@ -81,16 +76,10 @@ public class ProfanityFilterService {
 
         String result = text;
         for (String patternWord : PROFANITY_PATTERNS) {
-            // Case-insensitive replace for exact match
-            result = Pattern.compile(Pattern.quote(patternWord), Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE)
-                    .matcher(result).replaceAll("***");
-
-            // Also check accent-removed forms if different
-            String normWord = removeAccents(patternWord);
-            if (!normWord.equalsIgnoreCase(patternWord)) {
-                result = Pattern.compile(Pattern.quote(normWord), Pattern.CASE_INSENSITIVE)
-                        .matcher(result).replaceAll("***");
-            }
+            String pattern = patternWord.toLowerCase();
+            // Mask exact word matches using regex with boundaries
+            String regex = "(?<=^|[^\\p{L}\\p{N}])(?i)" + Pattern.quote(pattern) + "(?=$|[^\\p{L}\\p{N}])";
+            result = Pattern.compile(regex, Pattern.UNICODE_CHARACTER_CLASS).matcher(result).replaceAll("***");
         }
         return result;
     }

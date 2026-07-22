@@ -2,6 +2,7 @@ package com.example.bonsai_shop.customer.controller;
 
 import com.example.bonsai_shop.customer.repository.ModerationNotificationRepository;
 import com.example.bonsai_shop.entity.ModerationNotification;
+import com.example.bonsai_shop.customer.service.CustomOAuth2User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -19,13 +20,29 @@ public class NotificationRestController {
 
     private final ModerationNotificationRepository notificationRepository;
 
+    private String getEmailFromPrincipal(Object principal) {
+        if (principal == null || "anonymousUser".equals(principal)) {
+            return null;
+        }
+        if (principal instanceof UserDetails) {
+            return ((UserDetails) principal).getUsername();
+        }
+        if (principal instanceof CustomOAuth2User) {
+            return ((CustomOAuth2User) principal).getUsername();
+        }
+        if (principal instanceof org.springframework.security.oauth2.core.user.OAuth2User) {
+            return ((org.springframework.security.oauth2.core.user.OAuth2User) principal).getAttribute("email");
+        }
+        return null;
+    }
+
     @GetMapping
-    public ResponseEntity<?> getNotifications(@AuthenticationPrincipal UserDetails userDetails) {
-        if (userDetails == null) {
+    public ResponseEntity<?> getNotifications(@AuthenticationPrincipal Object principal) {
+        String username = getEmailFromPrincipal(principal);
+        if (username == null) {
             return ResponseEntity.ok(Map.of("unreadCount", 0, "notifications", List.of()));
         }
 
-        String username = userDetails.getUsername();
         List<ModerationNotification> list = notificationRepository.findTop10ByTargetUsernameOrderByCreatedAtDesc(username);
         long unreadCount = notificationRepository.countByTargetUsernameAndIsReadFalse(username);
 
@@ -36,12 +53,12 @@ public class NotificationRestController {
     }
 
     @PostMapping("/mark-read")
-    public ResponseEntity<?> markAllAsRead(@AuthenticationPrincipal UserDetails userDetails) {
-        if (userDetails == null) {
+    public ResponseEntity<?> markAllAsRead(@AuthenticationPrincipal Object principal) {
+        String username = getEmailFromPrincipal(principal);
+        if (username == null) {
             return ResponseEntity.ok(Map.of("success", false));
         }
 
-        String username = userDetails.getUsername();
         List<ModerationNotification> list = notificationRepository.findByTargetUsernameOrderByCreatedAtDesc(username);
         for (ModerationNotification notification : list) {
             if (Boolean.FALSE.equals(notification.getIsRead())) {
@@ -55,8 +72,9 @@ public class NotificationRestController {
 
     @PostMapping("/{id}/read")
     public ResponseEntity<?> markAsRead(@PathVariable("id") Integer id,
-                                        @AuthenticationPrincipal UserDetails userDetails) {
-        if (userDetails == null) {
+                                        @AuthenticationPrincipal Object principal) {
+        String username = getEmailFromPrincipal(principal);
+        if (username == null) {
             return ResponseEntity.ok(Map.of("success", false));
         }
 
@@ -71,8 +89,9 @@ public class NotificationRestController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteNotification(@PathVariable("id") Integer id,
-                                                @AuthenticationPrincipal UserDetails userDetails) {
-        if (userDetails == null) {
+                                                @AuthenticationPrincipal Object principal) {
+        String username = getEmailFromPrincipal(principal);
+        if (username == null) {
             return ResponseEntity.ok(Map.of("success", false));
         }
 
@@ -81,12 +100,12 @@ public class NotificationRestController {
     }
 
     @RequestMapping(value = "/clear-read", method = {RequestMethod.POST, RequestMethod.DELETE})
-    public ResponseEntity<?> clearReadNotifications(@AuthenticationPrincipal UserDetails userDetails) {
-        if (userDetails == null) {
+    public ResponseEntity<?> clearReadNotifications(@AuthenticationPrincipal Object principal) {
+        String username = getEmailFromPrincipal(principal);
+        if (username == null) {
             return ResponseEntity.ok(Map.of("success", false));
         }
 
-        String username = userDetails.getUsername();
         List<ModerationNotification> list = notificationRepository.findByTargetUsernameOrderByCreatedAtDesc(username);
         List<ModerationNotification> readList = list.stream().filter(n -> Boolean.TRUE.equals(n.getIsRead())).toList();
         notificationRepository.deleteAll(readList);
