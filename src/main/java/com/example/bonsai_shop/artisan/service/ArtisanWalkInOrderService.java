@@ -30,13 +30,14 @@ public class ArtisanWalkInOrderService {
     public static final String STATUS_PENDING_PAYMENT = "PENDING_PAYMENT";
     public static final String STATUS_COMPLETED = "COMPLETED";
     public static final String STATUS_CANCELLED = "CANCELLED";
-    public static final String ORDER_TYPE_WALK_IN = "WALK_IN";
+    public static final String ORDER_TYPE_IN_PERSON = "IN_PERSON";
     public static final String ORDER_TYPE_ONLINE = "ONLINE";
     public static final String PRODUCT_AVAILABLE = "AVAILABLE";
     public static final String PRODUCT_RESERVED = "RESERVED";
     public static final String PRODUCT_SOLD = "SOLD";
     public static final String PAYMENT_METHOD_CASH = "CASH";
     public static final String PAYMENT_METHOD_VNPAY = "VNPAY";
+    public static final String PAYMENT_TYPE_IN_PERSON = "IN_PERSON";
 
     private final ArtisanProductService artisanProductService;
     private final ProductRepository productRepository;
@@ -57,7 +58,7 @@ public class ArtisanWalkInOrderService {
         Pageable pageable = PageRequest.of(Math.max(page, 0), Math.max(size, 1));
         return orderRepository.findByArtisanUserIdAndTypeAndStatus(
                 artisanUserId,
-                ORDER_TYPE_WALK_IN,
+                ORDER_TYPE_IN_PERSON,
                 status == null || status.isBlank() ? "ALL" : status,
                 pageable
         );
@@ -79,7 +80,7 @@ public class ArtisanWalkInOrderService {
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm thuộc artisan này."));
 
         if (!PRODUCT_AVAILABLE.equalsIgnoreCase(product.getProductStatus())) {
-            throw new RuntimeException("Chỉ có thể tạo walk-in order cho sản phẩm đang bán.");
+            throw new RuntimeException("Chỉ có thể tạo in-person order cho sản phẩm đang bán.");
         }
 
         BigDecimal normalizedCraneFee = nonNegative(craneFee, "Phí cẩu không được âm.");
@@ -91,8 +92,8 @@ public class ArtisanWalkInOrderService {
 
         Order order = Order.builder()
                 .orderCode(generateOrderCode())
-                .customerName(requireText(customerName, "Vui lòng nhập tên khách walk-in."))
-                .customerPhone(requireText(customerPhone, "Vui lòng nhập số điện thoại khách walk-in."))
+                .customerName(requireText(customerName, "Vui lòng nhập tên khách in-person."))
+                .customerPhone(requireText(customerPhone, "Vui lòng nhập số điện thoại khách in-person."))
                 .customerEmail(blankToNull(customerEmail))
                 .shippingAddress(requireText(shippingAddress, "Vui lòng nhập địa chỉ giao/nhận cây."))
                 .orderDate(LocalDateTime.now())
@@ -101,7 +102,7 @@ public class ArtisanWalkInOrderService {
                 .craneFee(normalizedCraneFee)
                 .shippingFee(normalizedShippingFee)
                 .orderStatus(STATUS_PENDING_PAYMENT)
-                .orderType(ORDER_TYPE_WALK_IN)
+                .orderType(ORDER_TYPE_IN_PERSON)
                 .notes(blankToNull(notes))
                 .build();
 
@@ -116,7 +117,7 @@ public class ArtisanWalkInOrderService {
                 .order(order)
                 .paymentMethod(normalizedPaymentMethod)
                 .paymentStatus("PENDING")
-                .paymentType("WALK_IN")
+                .paymentType(PAYMENT_TYPE_IN_PERSON)
                 .amount(totalAmount)
                 .build();
         order.setPayment(payment);
@@ -127,7 +128,7 @@ public class ArtisanWalkInOrderService {
         }
         product.setProductStatus(PRODUCT_RESERVED);
         Order savedOrder = orderRepository.save(order);
-        log(savedOrder, artisanUser, "WALK_IN_CREATE", null, STATUS_PENDING_PAYMENT);
+        log(savedOrder, artisanUser, "IN_PERSON_CREATE", null, STATUS_PENDING_PAYMENT);
         return savedOrder;
     }
 
@@ -135,14 +136,14 @@ public class ArtisanWalkInOrderService {
     public Order cancelWalkInOrder(String artisanEmail, Integer orderId, String reason) {
         User artisanUser = artisanProductService.getArtisanUser(artisanEmail);
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy walk-in order."));
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy in-person order."));
 
         Product product = getSingleProduct(order);
         if (product.getArtisan() == null || !artisanUser.getUserId().equals(product.getArtisan().getUserId())) {
             throw new RuntimeException("Order không thuộc artisan này.");
         }
-        if (!ORDER_TYPE_WALK_IN.equalsIgnoreCase(order.getOrderType())) {
-            throw new RuntimeException("Chỉ được hủy walk-in order.");
+        if (!ORDER_TYPE_IN_PERSON.equalsIgnoreCase(order.getOrderType())) {
+            throw new RuntimeException("Chỉ được hủy in-person order.");
         }
         if (!STATUS_PENDING_PAYMENT.equalsIgnoreCase(order.getOrderStatus())) {
             throw new RuntimeException("Chỉ được hủy order đang chờ nhận tiền.");
@@ -162,7 +163,7 @@ public class ArtisanWalkInOrderService {
         productRepository.save(product);
 
         Order savedOrder = orderRepository.save(order);
-        log(savedOrder, artisanUser, "WALK_IN_CANCEL", oldStatus, STATUS_CANCELLED);
+        log(savedOrder, artisanUser, "IN_PERSON_CANCEL", oldStatus, STATUS_CANCELLED);
         return savedOrder;
     }
 
@@ -179,14 +180,14 @@ public class ArtisanWalkInOrderService {
                                    String notes) {
         User artisanUser = artisanProductService.getArtisanUser(artisanEmail);
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy walk-in order."));
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy in-person order."));
 
         Product product = getSingleProduct(order);
         if (product.getArtisan() == null || !artisanUser.getUserId().equals(product.getArtisan().getUserId())) {
             throw new RuntimeException("Order không thuộc artisan này.");
         }
-        if (!ORDER_TYPE_WALK_IN.equalsIgnoreCase(order.getOrderType())) {
-            throw new RuntimeException("Chỉ được cập nhật walk-in order.");
+        if (!ORDER_TYPE_IN_PERSON.equalsIgnoreCase(order.getOrderType())) {
+            throw new RuntimeException("Chỉ được cập nhật in-person order.");
         }
         if (!STATUS_PENDING_PAYMENT.equalsIgnoreCase(order.getOrderStatus())) {
             throw new RuntimeException("Chỉ được cập nhật order đang chờ nhận tiền.");
@@ -199,8 +200,8 @@ public class ArtisanWalkInOrderService {
                 .add(normalizedCraneFee)
                 .add(normalizedShippingFee);
 
-        order.setCustomerName(requireText(customerName, "Vui lòng nhập tên khách walk-in."));
-        order.setCustomerPhone(requireText(customerPhone, "Vui lòng nhập số điện thoại khách walk-in."));
+        order.setCustomerName(requireText(customerName, "Vui lòng nhập tên khách in-person."));
+        order.setCustomerPhone(requireText(customerPhone, "Vui lòng nhập số điện thoại khách in-person."));
         order.setShippingAddress(requireText(shippingAddress, "Vui lòng nhập địa chỉ giao/nhận cây."));
         order.setCustomerEmail(blankToNull(customerEmail));
         order.setCraneFee(normalizedCraneFee);
@@ -213,7 +214,7 @@ public class ArtisanWalkInOrderService {
             payment = Payment.builder()
                     .order(order)
                     .paymentStatus("PENDING")
-                    .paymentType("WALK_IN")
+                    .paymentType(PAYMENT_TYPE_IN_PERSON)
                     .build();
         }
         payment.setPaymentMethod(normalizedPaymentMethod);
@@ -222,7 +223,7 @@ public class ArtisanWalkInOrderService {
         order.setPayment(payment);
 
         Order savedOrder = orderRepository.save(order);
-        log(savedOrder, artisanUser, "WALK_IN_UPDATE", STATUS_PENDING_PAYMENT, STATUS_PENDING_PAYMENT);
+        log(savedOrder, artisanUser, "IN_PERSON_UPDATE", STATUS_PENDING_PAYMENT, STATUS_PENDING_PAYMENT);
         return savedOrder;
     }
 
@@ -230,14 +231,14 @@ public class ArtisanWalkInOrderService {
     public Order confirmPayment(String artisanEmail, Integer orderId) {
         User artisanUser = artisanProductService.getArtisanUser(artisanEmail);
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy walk-in order."));
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy in-person order."));
 
         Product product = getSingleProduct(order);
         if (product.getArtisan() == null || !artisanUser.getUserId().equals(product.getArtisan().getUserId())) {
             throw new RuntimeException("Order không thuộc artisan này.");
         }
         if (!STATUS_PENDING_PAYMENT.equalsIgnoreCase(order.getOrderStatus())) {
-            throw new RuntimeException("Chỉ xác nhận thanh toán cho walk-in order đang chờ tiền.");
+            throw new RuntimeException("Chỉ xác nhận thanh toán cho in-person order đang chờ tiền.");
         }
 
         String oldStatus = order.getOrderStatus();
@@ -246,7 +247,7 @@ public class ArtisanWalkInOrderService {
             payment = Payment.builder()
                     .order(order)
                     .paymentMethod(PAYMENT_METHOD_CASH)
-                    .paymentType("WALK_IN")
+                    .paymentType(PAYMENT_TYPE_IN_PERSON)
                     .amount(order.getTotalAmount())
                     .build();
         }
@@ -259,7 +260,7 @@ public class ArtisanWalkInOrderService {
         product.setProductStatus(PRODUCT_SOLD);
         productRepository.save(product);
         Order savedOrder = orderRepository.save(order);
-        log(savedOrder, artisanUser, "WALK_IN_PAYMENT_CONFIRMED", oldStatus, STATUS_COMPLETED);
+        log(savedOrder, artisanUser, "IN_PERSON_PAYMENT_CONFIRMED", oldStatus, STATUS_COMPLETED);
         return savedOrder;
     }
 

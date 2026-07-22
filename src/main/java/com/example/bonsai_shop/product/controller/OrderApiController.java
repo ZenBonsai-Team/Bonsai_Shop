@@ -372,13 +372,14 @@ public class OrderApiController {
             }
             prod.setProductStatus("RESERVED");
 
-            return OrderDetail.builder()
-                    .order(order)
-                    .product(prod)
-                    .priceAtPurchase(prod.getPrice())
-                    .quantity(1)
-                    .build();
-        }).collect(Collectors.toList());
+        // 5. Reserve sản phẩm bằng atomic update để tránh đặt trùng với in-person/online order khác.
+        int reserved = productRepository.reserveIfAvailable(product.getProductId());
+        if (reserved == 0) {
+            response.put("success", false);
+            response.put("message", "Tác phẩm này đã được bán hoặc đã có khách đặt trước!");
+            return ResponseEntity.badRequest().body(response);
+        }
+        product.setProductStatus("RESERVED");
 
         order.setOrderDetails(details);
         orderRepository.save(order);
