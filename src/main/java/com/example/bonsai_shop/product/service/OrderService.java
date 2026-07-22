@@ -3,8 +3,10 @@ package com.example.bonsai_shop.product.service;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -13,10 +15,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.example.bonsai_shop.entity.Order;
+import com.example.bonsai_shop.entity.OrderDetail;
 import com.example.bonsai_shop.entity.OrderHandling;
 import com.example.bonsai_shop.entity.OrderLog;
 import com.example.bonsai_shop.entity.Product;
 import com.example.bonsai_shop.entity.User;
+import com.example.bonsai_shop.product.event.OrderRejectedEvent;
+import com.example.bonsai_shop.product.event.OrderVerifiedEvent;
 import com.example.bonsai_shop.product.repository.OrderHandlingRepository;
 import com.example.bonsai_shop.product.repository.OrderLogRepository;
 import com.example.bonsai_shop.product.repository.OrderRepository;
@@ -32,21 +37,39 @@ public class OrderService {
     private final ProductRepository productRepository;
     private final OrderLogRepository orderLogRepository;
     private final OrderHandlingRepository orderHandlingRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
-    @Transactional
+    @Transactional(readOnly = true)
     public Page<Order> getFilteredOrders(String search, String status, String sort, int page, int limit) {
-        Sort springSort;
-        if ("date_asc".equals(sort)) {
-            springSort = Sort.by(Sort.Direction.ASC, "orderDate");
-        } else if ("price_desc".equals(sort)) {
-            springSort = Sort.by(Sort.Direction.DESC, "totalAmount");
-        } else if ("price_asc".equals(sort)) {
-            springSort = Sort.by(Sort.Direction.ASC, "totalAmount");
-        } else {
-            springSort = Sort.by(Sort.Direction.DESC, "orderDate"); // default
-        }
+        Sort springSort = resolveSort(sort);
         Pageable pageable = PageRequest.of(page - 1, limit, springSort);
         return orderRepository.searchOrdersForModerator(status, search, pageable);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<Order> getPoolOrders(String search, String sort, int page, int limit) {
+        Sort springSort = resolveSort(sort);
+        Pageable pageable = PageRequest.of(page - 1, limit, springSort);
+        return orderRepository.searchOrdersPool(search, pageable);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<Order> getMyOrders(Integer moderatorId, String search, String status, String sort, int page, int limit) {
+        Sort springSort = resolveSort(sort);
+        Pageable pageable = PageRequest.of(page - 1, limit, springSort);
+        return orderRepository.searchMyOrders(moderatorId, status, search, pageable);
+    }
+
+    private Sort resolveSort(String sort) {
+        if ("date_asc".equals(sort)) {
+            return Sort.by(Sort.Direction.ASC, "orderDate");
+        } else if ("price_desc".equals(sort)) {
+            return Sort.by(Sort.Direction.DESC, "totalAmount");
+        } else if ("price_asc".equals(sort)) {
+            return Sort.by(Sort.Direction.ASC, "totalAmount");
+        } else {
+            return Sort.by(Sort.Direction.DESC, "orderDate"); // default: date_desc (Từ mới nhất)
+        }
     }
 
     @Transactional(readOnly = true)
@@ -66,28 +89,100 @@ public class OrderService {
         return kpis;
     }
 
+    @Transactional(readOnly = true)
+    public Map<String, Long> getModeratorPersonalKPIs(Integer moderatorId) {
+        Map<String, Long> kpis = new HashMap<>();
+        kpis.put("total", orderRepository.countByAssignedToUserId(moderatorId));
+        kpis.put("pending", orderRepository.countByAssignedToUserIdAndOrderStatus(moderatorId, "PENDING"));
+        kpis.put("approved", orderRepository.countByAssignedToUserIdAndOrderStatus(moderatorId, "APPROVED"));
+        kpis.put("paid", orderRepository.countByAssignedToUserIdAndOrderStatus(moderatorId, "PAID"));
+        kpis.put("rejected", orderRepository.countByAssignedToUserIdAndOrderStatus(moderatorId, "REJECTED"));
+        return kpis;
+    }
+
+    @Transactional(readOnly = true)
+    public List<OrderHandling> getOrderHandlingHistory(Integer orderId) {
+        return orderHandlingRepository.findByOrderOrderIdOrderByHandledAtDesc(orderId);
+    }
+
+    @Transactional
+    public boolean claimOrder(String orderCode, User moderator) {
+        Order order = orderRepository.findByOrderCode(orderCode)
+                .orElseThrow(() -> new RuntimeException("Đơn hàng không tồn tại!"));
+
+        if (order.getAssignedTo() != null) {
+            throw new IllegalStateException("Đơn hàng đã được nhận bởi người khác!");
+        }
+        if (!"PENDING".equals(order.getOrderStatus())) {
+            throw new IllegalStateException("Chỉ được phép nhận đơn hàng đang chờ duyệt!");
+        }
+
+        order.setAssignedTo(moderator);
+        order.setAssignedAt(LocalDateTime.now());
+        orderRepository.save(order);
+
+        OrderHandling handling = OrderHandling.builder()
+                .order(order)
+                .moderator(moderator)
+                .handledAt(LocalDateTime.now())
+                .isActive(true)
+                .build();
+        orderHandlingRepository.save(handling);
+
+        return true;
+    }
+
+    @Transactional
+    public boolean unclaimOrder(String orderCode, User moderator) {
+        Order order = orderRepository.findByOrderCode(orderCode)
+                .orElseThrow(() -> new RuntimeException("Đơn hàng không tồn tại!"));
+
+        if (order.getAssignedTo() == null || !order.getAssignedTo().getUserId().equals(moderator.getUserId())) {
+            throw new IllegalStateException("Bạn không sở hữu quyền xử lý đơn hàng này!");
+        }
+        if (!"PENDING".equalsIgnoreCase(order.getOrderStatus())) {
+            throw new IllegalStateException("Chỉ được phép trả lại đơn hàng chưa duyệt!");
+        }
+
+        order.setAssignedTo(null);
+        order.setAssignedAt(null);
+        orderRepository.save(order);
+
+        orderHandlingRepository.findAll().stream()
+                .filter(h -> h.getOrder() != null && h.getOrder().getOrderId().equals(order.getOrderId()) 
+                          && h.getModerator() != null && h.getModerator().getUserId().equals(moderator.getUserId())
+                          && Boolean.TRUE.equals(h.getIsActive()))
+                .forEach(h -> {
+                    h.setIsActive(false);
+                    h.setReleasedAt(LocalDateTime.now());
+                    orderHandlingRepository.save(h);
+                });
+
+        return true;
+    }
+
     @Transactional
     public boolean verifyOrder(String orderCode, BigDecimal craneFee, BigDecimal shippingFee, User moderator) {
         Order order = orderRepository.findByOrderCode(orderCode).orElse(null);
-        if (order == null || !"PENDING".equals(order.getOrderStatus())) {
+        if (order == null || !"PENDING".equalsIgnoreCase(order.getOrderStatus())) {
             return false;
         }
 
-        String oldStatus = order.getOrderStatus();
+        // Kiểm tra quyền sở hữu đơn hàng
+        if (order.getAssignedTo() == null || !order.getAssignedTo().getUserId().equals(moderator.getUserId())) {
+            throw new SecurityException("Bạn không có quyền duyệt đơn hàng này!");
+        }
 
-        // 1. Cập nhật phí xe cẩu, phí vận chuyện và trạng thái duyệt
+        String oldStatus = order.getOrderStatus();
         order.setCraneFee(craneFee);
         order.setShippingFee(shippingFee);
         order.setOrderStatus("APPROVED");
 
-        // 2. Tính lại tổng tiền: totalAmount = Tiền cây gốc + phí cẩu + phí ship
         BigDecimal originalAmount = order.getTotalAmount();
         BigDecimal newTotal = originalAmount.add(craneFee).add(shippingFee);
         order.setTotalAmount(newTotal);
-
         orderRepository.save(order);
 
-        // 3. Ghi OrderLog nhật ký hoạt động
         OrderLog log = OrderLog.builder()
                 .order(order)
                 .actionBy(moderator)
@@ -98,41 +193,48 @@ public class OrderService {
                 .build();
         orderLogRepository.save(log);
 
-        // 4. Lưu OrderHandling
-        OrderHandling handling = OrderHandling.builder()
-                .order(order)
-                .moderator(moderator)
-                .handledAt(LocalDateTime.now())
-                .isActive(true)
-                .build();
-        orderHandlingRepository.save(handling);
+        orderHandlingRepository.findAll().stream()
+                .filter(h -> h.getOrder() != null && h.getOrder().getOrderId().equals(order.getOrderId()) 
+                          && h.getModerator() != null && h.getModerator().getUserId().equals(moderator.getUserId())
+                          && Boolean.TRUE.equals(h.getIsActive()))
+                .forEach(h -> {
+                    h.setIsActive(false);
+                    h.setReleasedAt(LocalDateTime.now());
+                    orderHandlingRepository.save(h);
+                });
 
+        initializeOrderDetails(order);
+        eventPublisher.publishEvent(new OrderVerifiedEvent(order));
         return true;
     }
 
     @Transactional
     public boolean rejectOrder(String orderCode, String reason, User moderator) {
         Order order = orderRepository.findByOrderCode(orderCode).orElse(null);
-        if (order == null || !"PENDING".equals(order.getOrderStatus())) {
+        if (order == null || !"PENDING".equalsIgnoreCase(order.getOrderStatus())) {
             return false;
         }
-        String oldStatus = order.getOrderStatus();
 
-        // 1. Cập nhật trạng thái và lý do từ chối
+        // Kiểm tra quyền sở hữu đơn hàng
+        if (order.getAssignedTo() == null || !order.getAssignedTo().getUserId().equals(moderator.getUserId())) {
+            throw new SecurityException("Bạn không có quyền từ chối duyệt đơn hàng này!");
+        }
+
+        String oldStatus = order.getOrderStatus();
         order.setOrderStatus("REJECTED");
         order.setNotes("Từ chối duyệt với lý do: " + reason);
         orderRepository.save(order);
 
-        // 2. Giải phóng sản phẩm Bonsai về lại trạng thái AVAILABLE
-        if (order.getOrderDetails() != null && !order.getOrderDetails().isEmpty()) {
-            Product product = order.getOrderDetails().get(0).getProduct();
-            if (product != null) {
-                product.setProductStatus("AVAILABLE");
-                productRepository.save(product);
+        if (order.getOrderDetails() != null) {
+            for (OrderDetail detail : order.getOrderDetails()) {
+                Product product = detail.getProduct();
+                if (product != null) {
+                    product.setProductStatus("AVAILABLE");
+                    productRepository.save(product);
+                }
             }
         }
 
-        // 3. Ghi OrderLog nhật ký hoạt động
         OrderLog log = OrderLog.builder()
                 .order(order)
                 .actionBy(moderator)
@@ -143,15 +245,29 @@ public class OrderService {
                 .build();
         orderLogRepository.save(log);
 
-        // 4. Lưu OrderHandling
-        OrderHandling handling = OrderHandling.builder()
-                .order(order)
-                .moderator(moderator)
-                .handledAt(LocalDateTime.now())
-                .isActive(true)
-                .build();
-        orderHandlingRepository.save(handling);
+        orderHandlingRepository.findAll().stream()
+                .filter(h -> h.getOrder() != null && h.getOrder().getOrderId().equals(order.getOrderId()) 
+                          && h.getModerator() != null && h.getModerator().getUserId().equals(moderator.getUserId())
+                          && Boolean.TRUE.equals(h.getIsActive()))
+                .forEach(h -> {
+                    h.setIsActive(false);
+                    h.setReleasedAt(LocalDateTime.now());
+                    orderHandlingRepository.save(h);
+                });
 
+        initializeOrderDetails(order);
+        eventPublisher.publishEvent(new OrderRejectedEvent(order, reason));
         return true;
     }
+
+    private void initializeOrderDetails(Order order) {
+        if (order.getOrderDetails() != null) {
+            order.getOrderDetails().forEach(detail -> {
+                if (detail.getProduct() != null) {
+                    detail.getProduct().getProductName();
+                }
+            });
+        }
+    }
 }
+

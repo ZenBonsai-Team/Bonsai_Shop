@@ -61,8 +61,7 @@ public class MarketplaceController {
                 species,
                 styles,
                 priceRanges,
-                PageRequest.of(page, 12, springSort)
-        );
+                PageRequest.of(page, 12, springSort));
 
         model.addAttribute("products", products);
         model.addAttribute("keyword", keyword);
@@ -82,7 +81,7 @@ public class MarketplaceController {
         return "product/marketplace";
     }
 
-    @GetMapping({"/products/detail", "/product/{id}"})
+    @GetMapping({ "/products/detail", "/product/{id}" })
     public String productDetail(@PathVariable(value = "id", required = false) Integer id, Model model) {
         if (id != null) {
             Product product = productService.getProductById(id);

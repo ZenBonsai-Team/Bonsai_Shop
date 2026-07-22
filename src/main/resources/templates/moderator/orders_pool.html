@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="vi" 
+      xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/dashboard-layout :: layout(~{::title}, ~{::#moderator-content}, ~{::#page-styles}, ~{::#page-scripts})}"
+      th:with="paramActivePage='orders-pool'">
+<head>
+    <title>Orders Pool - Kho Đơn Hàng Chung</title>
+    <th:block id="page-styles">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+        <link rel="stylesheet" href="/css/moderator-orders.css">
+        <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}"/>
+        <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : 'X-CSRF-TOKEN'}"/>
+    </th:block>
+</head>
+<body>
+    <div id="moderator-content">
+        <!-- Sub Navigation Tabs -->
+        <div class="mb-4 d-flex gap-2">
+            <a href="/moderator/orders/pool" class="btn btn-primary">
+                <i class="fa-solid fa-box-open me-1"></i> Kho Đơn Hàng (Pool)
+            </a>
+            <a href="/moderator/orders/my" class="btn btn-outline-secondary">
+                <i class="fa-solid fa-user-check me-1"></i> Đơn Của Tôi (My Orders)
+            </a>
+        </div>
+
+        <div class="management-card">
+            <!-- Toolbar Header: Search & Sort (Default: Từ mới nhất) -->
+            <div class="toolbar-header">
+                <div class="toolbar-search-row">
+                    <div class="search-input-wrapper">
+                        <span class="search-icon"><i class="fa-solid fa-magnifying-glass"></i></span>
+                        <input type="text" id="orderSearchInput" placeholder="Tìm kiếm đơn chờ duyệt trong Kho chung (Mã đơn, khách hàng, tên cây)...">
+                    </div>
+                    <div class="toolbar-filters-group">
+                        <div class="sort-select-wrapper">
+                            <select id="orderSortSelect">
+                                <option value="date_desc" selected>Mới nhất xếp trước</option>
+                                <option value="date_asc">Cũ nhất xếp trước</option>
+                                <option value="price_desc">Giá trị lớn nhất</option>
+                                <option value="price_asc">Giá trị nhỏ nhất</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Table Container -->
+            <div class="table-container">
+                <table class="orders-table" id="ordersDataTable">
+                    <thead>
+                        <tr>
+                            <th>Mã Đơn Hàng</th>
+                            <th>Khách Hàng</th>
+                            <th>Số lượng cây (Items)</th>
+                            <th class="col-price">Tổng Tiền</th>
+                            <th>Ngày Đặt</th>
+                            <th>Trạng Thái</th>
+                            <th style="width: 160px; text-align: center;">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ordersTableBody">
+                        <tr>
+                            <td colspan="7" class="empty-state">
+                                <div class="empty-state-icon"><i class="fa-solid fa-rotate fa-spin"></i></div>
+                                <div class="empty-state-title">Đang tải dữ liệu từ Kho đơn chung...</div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination Toolbar Footer -->
+            <div class="pagination-footer">
+                <div class="pagination-info" id="paginationInfo">Hiển thị đơn hàng trong Pool</div>
+                <div class="pagination-controls" id="paginationControls"></div>
+            </div>
+        </div>
+
+        <!-- Offcanvas Chi tiết sản phẩm cây cảnh -->
+        <div class="offcanvas offcanvas-end" tabindex="-1" id="productDetailDrawer" aria-labelledby="productDetailDrawerLabel" style="width: 450px; border-left: 1px solid var(--border-color);">
+            <div class="offcanvas-header" style="border-bottom: 1px solid var(--border-color); padding: 20px;">
+                <h5 class="offcanvas-title" id="productDetailDrawerLabel" style="font-weight: 700; color: var(--primary-color);">
+                    <i class="fa-solid fa-tree me-2"></i> Chi Tiết Tác Phẩm Bonsai
+                </h5>
+                <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+            </div>
+            
+            <div class="offcanvas-body" style="padding: 24px;">
+                <div id="prodDrawerLoading" class="text-center py-5">
+                    <div class="spinner-border text-success" role="status" style="width: 3rem; height: 3rem;">
+                        <span class="visually-hidden">Đang tải...</span>
+                    </div>
+                    <p class="text-muted mt-3">Đang tải thông tin tác phẩm...</p>
+                </div>
+
+                <div id="prodDrawerError" class="text-center py-5 d-none">
+                    <div class="text-danger" style="font-size: 3rem;"><i class="fa-solid fa-circle-exclamation"></i></div>
+                    <p class="text-muted mt-2" id="prodDrawerErrorMessage">Không tìm thấy thông tin sản phẩm.</p>
+                </div>
+
+                <div id="prodDrawerContent" class="d-none">
+                    <div class="product-img-wrapper mb-4" style="border-radius: 8px; overflow: hidden; border: 1px solid var(--border-color); aspect-ratio: 4/3;">
+                        <img id="prodDrawerImg" src="" alt="Bonsai Image" style="width: 100%; height: 100%; object-fit: cover;">
+                    </div>
+
+                    <div class="mb-3">
+                        <span class="badge bg-success" id="prodDrawerStatus" style="font-size: 11px; padding: 6px 12px; border-radius: 20px; text-transform: uppercase;">AVAILABLE</span>
+                        <h4 id="prodDrawerName" class="mt-2 mb-1" style="font-weight: 700; color: var(--text-main);">Tên tác phẩm</h4>
+                        <p class="text-muted small" id="prodDrawerCode">Mã cây: -</p>
+                    </div>
+
+                    <div class="specs-box p-3 mb-4" style="background: var(--bg-beige); border-radius: 8px; border: 1px solid var(--border-color);">
+                        <h6 style="font-weight: 700; text-transform: uppercase; font-size: 11px; color: var(--text-muted); border-bottom: 1px solid rgba(0,0,0,0.06); padding-bottom: 6px; margin-bottom: 12px;">Thông số kỹ thuật tác phẩm</h6>
+                        
+                        <div style="display: grid; grid-template-columns: 140px 1fr; gap: 8px 12px; font-size: 13px;">
+                            <span class="text-muted">Dáng cây (Style):</span>
+                            <strong id="prodDrawerStyle" class="text-dark">-</strong>
+
+                            <span class="text-muted">Tuổi cây (Age):</span>
+                            <strong id="prodDrawerAge" class="text-dark">-</strong>
+
+                            <span class="text-muted">Chiều cao (Height):</span>
+                            <strong id="prodDrawerHeight" class="text-dark">-</strong>
+
+                            <span class="text-muted">Đường kính thân:</span>
+                            <strong id="prodDrawerDiameter" class="text-dark">-</strong>
+
+                            <span class="text-muted">Giá niêm yết:</span>
+                            <strong id="prodDrawerPrice" style="color: var(--accent-color); font-size: 15px;">-</strong>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h6 style="font-weight: 700; text-transform: uppercase; font-size: 11px; color: var(--text-muted); margin-bottom: 8px;">Mô tả chi tiết</h6>
+                        <p id="prodDrawerDesc" style="font-size: 13px; color: var(--text-muted); line-height: 1.6; text-align: justify; white-space: pre-line;">-</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <th:block id="page-scripts">
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="/js/orders_pool.js"></script>
+    </th:block>
+</body>
+</html>

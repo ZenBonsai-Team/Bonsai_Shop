@@ -1,289 +1,286 @@
-/* ==========================================================================
-   Bonsai Luxury — Premium Appointment Interactions (Production Ready)
-   ========================================================================== */
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener("DOMContentLoaded", () => {
+    "use strict";
 
-    /* ==========================================================================
-       BẮT THÔNG BÁO TỪ CONTROLLER TRẢ VỀ VÀ HIỂN THỊ QUA TOAST LUXURY
-       ========================================================================== */
-    const carrierSuccess = document.getElementById('carrier-success');
-    const carrierError = document.getElementById('carrier-error');
+    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const $ = (selector, scope = document) => scope.querySelector(selector);
+    const $$ = (selector, scope = document) => Array.from(scope.querySelectorAll(selector));
+    const body = document.body;
 
-    if (carrierSuccess && carrierSuccess.textContent.trim() !== "") {
-        showToast(carrierSuccess.textContent.trim(), 'success');
-    }
-    if (carrierError && carrierError.textContent.trim() !== "") {
-        showToast(carrierError.textContent.trim(), 'danger');
-    }
+    const createElement = (tagName, className, textContent) => {
+        const element = document.createElement(tagName);
+        if (className) element.className = className;
+        if (textContent !== undefined) element.textContent = textContent;
+        return element;
+    };
 
-    /* 1. TỰ ĐỘNG CẬP NHẬT NĂM FOOTER */
-    const yearEl = document.getElementById('year');
-    if (yearEl) yearEl.textContent = new Date().getFullYear();
+    const showToast = (message, type = "info") => {
+        const oldToast = $(".luxury-toast");
+        if (oldToast) oldToast.remove();
 
-    /* 2. ĐIỀU KHIỂN DROPDOWN ACCOUNT PREMIUM */
-    const userMenuContainer = document.querySelector('.user-menu-premium');
-    const userBtn = document.querySelector('.user-btn-premium');
-
-    if (userMenuContainer && userBtn) {
-        userBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            userMenuContainer.classList.toggle('active');
-            const isExpanded = userMenuContainer.classList.contains('active');
-            userBtn.setAttribute('aria-expanded', isExpanded);
-        });
-
-        document.addEventListener('click', (e) => {
-            if (!userMenuContainer.contains(e.target)) {
-                userMenuContainer.classList.remove('active');
-                userBtn.setAttribute('aria-expanded', 'false');
-            }
-        });
-    }
-
-    /* 3. HIỆU ỨNG TOAST NOTIFICATION CAO CẤP */
-    function showToast(text, type = 'info') {
-        const existing = document.querySelector('.luxury-toast');
-        if (existing) existing.remove();
-
-        const toast = document.createElement('div');
-        toast.className = `luxury-toast ${type}`;
-        toast.textContent = text;
-
-        Object.assign(toast.style, {
-            position: 'fixed',
-            bottom: '30px',
-            right: '30px',
-            background: type === 'danger' ? '#C0392B' : (type === 'success' ? '#113425' : '#1e221f'),
-            color: '#FFFFFF',
-            padding: '16px 32px',
-            fontSize: '0.82rem',
-            fontFamily: 'var(--font-sans)',
-            letterSpacing: '1px',
-            textTransform: 'uppercase',
-            boxShadow: '0 20px 50px rgba(0,0,0,0.15)',
-            zIndex: '9999',
-            opacity: '0',
-            transform: 'translateY(20px)',
-            transition: 'all 0.5s cubic-bezier(0.16, 1, 0.3, 1)'
-        });
-
+        const toast = createElement("div", `luxury-toast ${type}`, message);
         document.body.appendChild(toast);
-
-        setTimeout(() => {
-            toast.style.opacity = '1';
-            toast.style.transform = 'translateY(0)';
-        }, 50);
-
-        setTimeout(() => {
-            toast.style.opacity = '0';
-            toast.style.transform = 'translateY(20px)';
-            setTimeout(() => toast.remove(), 500);
-        }, 4000);
-    }
-
-    /* 4. ĐIỀU KHIỂN MODAL HỦY LỊCH HẸN CAO CẤP */
-    const cancelModal = document.getElementById('cancelAppointmentModal');
-    const cancelForm = document.getElementById('cancelAppointmentForm');
-    const cancelProductNameSpan = document.getElementById('cancelProductName');
-    const triggerCancelButtons = document.querySelectorAll('.trigger-cancel-modal');
-    const closeCancelElements = document.querySelectorAll('.id-close-cancel, .id-close-cancel-btn');
-
-    const closeCancelModal = () => {
-        if (cancelModal) {
-            cancelModal.classList.remove('active');
-        }
+        window.setTimeout(() => toast.remove(), 4200);
     };
 
-    triggerCancelButtons.forEach(button => {
-        button.addEventListener('click', function () {
-            const id = this.getAttribute('data-id');
-            const productName = this.getAttribute('data-product');
+    const initFlashMessages = () => {
+        const success = $("#carrier-success")?.textContent?.trim();
+        const error = $("#carrier-error")?.textContent?.trim();
+        if (success) showToast(success, "success");
+        if (error) showToast(error, "danger");
+    };
 
-            if (cancelProductNameSpan) {
-                cancelProductNameSpan.textContent = productName;
+    const initReveal = () => {
+        const items = $$(".appointment-hero-copy, .appointment-summary-card, .section-heading-row, .appointment-card, .empty-appointment-state");
+        if (!items.length || prefersReducedMotion) {
+            items.forEach((item) => item.classList.add("visible"));
+            return;
+        }
+
+        items.forEach((item) => item.classList.add("reveal-pending"));
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach((entry) => {
+                if (!entry.isIntersecting) return;
+                entry.target.classList.add("visible");
+                observer.unobserve(entry.target);
+            });
+        }, { threshold: 0.14, rootMargin: "0px 0px -40px 0px" });
+
+        items.forEach((item) => observer.observe(item));
+    };
+
+    const initPointerGlow = () => {
+        if (prefersReducedMotion) return;
+
+        $$(".appointment-summary-card, .appointment-card").forEach((item) => {
+            item.addEventListener("pointermove", (event) => {
+                const rect = item.getBoundingClientRect();
+                const x = ((event.clientX - rect.left) / rect.width) * 100;
+                const y = ((event.clientY - rect.top) / rect.height) * 100;
+                item.style.setProperty("--pointer-x", `${x.toFixed(2)}%`);
+                item.style.setProperty("--pointer-y", `${y.toFixed(2)}%`);
+            });
+        });
+    };
+
+    const openModal = (modal) => {
+        if (!modal) return;
+        modal.hidden = false;
+        body.classList.add("modal-open");
+        requestAnimationFrame(() => modal.classList.add("is-open"));
+        $(".modal-close", modal)?.focus();
+    };
+
+    const closeModal = (modal) => {
+        if (!modal || modal.hidden) return;
+        modal.classList.remove("is-open");
+        body.classList.remove("modal-open");
+        window.setTimeout(() => {
+            modal.hidden = true;
+        }, 180);
+    };
+
+    const formatDateTime = (value) => {
+        if (!value) return { date: "", time: "" };
+
+        const dateObject = new Date(value);
+        if (Number.isNaN(dateObject.getTime())) {
+            return { date: value, time: "" };
+        }
+
+        const day = String(dateObject.getDate()).padStart(2, "0");
+        const month = String(dateObject.getMonth() + 1).padStart(2, "0");
+        const year = dateObject.getFullYear();
+        const hours = String(dateObject.getHours()).padStart(2, "0");
+        const minutes = String(dateObject.getMinutes()).padStart(2, "0");
+
+        return {
+            date: `${day}/${month}/${year}`,
+            dateValue: `${year}-${month}-${day}`,
+            time: `${hours}:${minutes}`
+        };
+    };
+
+    const toLocalDateValue = (date) => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, "0");
+        const day = String(date.getDate()).padStart(2, "0");
+        return `${year}-${month}-${day}`;
+    };
+
+    const getTomorrowValue = () => {
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        return toLocalDateValue(tomorrow);
+    };
+
+    const initDetailModal = () => {
+        const modal = $("#appointmentModal");
+        if (!modal) return { close: () => {} };
+
+        const close = () => closeModal(modal);
+
+        $$(".view-detail-btn").forEach((button) => {
+            button.addEventListener("click", async () => {
+                const id = button.dataset.id;
+                if (!id) return;
+
+                showToast("Đang tải chi tiết lịch hẹn...", "info");
+                try {
+                    const response = await fetch(`/appointments/detail/${id}`);
+                    if (!response.ok) throw new Error("Không thể tải thông tin lịch hẹn.");
+                    const data = await response.json();
+                    const dateTime = formatDateTime(data.appointmentDate);
+
+                    $("#detailName").textContent = data.productName || "Bonsai Luxury";
+                    $("#detailCode").textContent = data.productCode || "BL-COLLECTOR";
+                    $("#detailDate").textContent = dateTime.date;
+                    $("#detailTime").textContent = dateTime.time || data.appointmentTime || "";
+                    $("#detailStatus").textContent = data.status || "PENDING";
+                    $("#detailNote").textContent = data.note || "Không có ghi chú riêng";
+
+                    openModal(modal);
+                } catch (error) {
+                    showToast(error.message, "danger");
+                }
+            });
+        });
+
+        $$(".close-modal-btn, [data-close-detail]", modal).forEach((element) => {
+            element.addEventListener("click", close);
+        });
+
+        return { close };
+    };
+
+    const initUpdateModal = () => {
+        const modal = $("#updateAppointmentModal");
+        const form = $("#updateAppointmentForm");
+        const dateInput = $("#updateDate");
+        const timeInput = $("#updateTime");
+        if (!modal || !form) return { close: () => {} };
+
+        const close = () => closeModal(modal);
+        const tomorrowValue = getTomorrowValue();
+        if (dateInput) dateInput.min = tomorrowValue;
+
+        $$(".update-btn").forEach((button) => {
+            button.addEventListener("click", async () => {
+                const card = button.closest(".appointment-card");
+                const status = $(".appointment-status-tag", card)?.dataset.status || "";
+                if (status !== "PENDING") {
+                    showToast("Chỉ lịch hẹn PENDING mới được cập nhật.", "danger");
+                    return;
+                }
+
+                const id = button.dataset.id;
+                if (!id) return;
+
+                showToast("Đang tải dữ liệu chỉnh sửa...", "info");
+                try {
+                    const response = await fetch(`/appointments/detail/${id}`);
+                    if (!response.ok) throw new Error("Không thể tải thông tin chỉnh sửa.");
+                    const data = await response.json();
+                    const dateTime = formatDateTime(data.appointmentDate);
+
+                    $("#updateName").textContent = data.productName || "Bonsai Luxury";
+                    $("#updateCode").textContent = data.productCode || "BL-COLLECTOR";
+                    $("#updateNote").value = data.note || "";
+                    form.setAttribute("action", `/appointments/update/${id}`);
+
+                    if (dateInput) {
+                        dateInput.value = dateTime.dateValue && dateTime.dateValue >= tomorrowValue ? dateTime.dateValue : tomorrowValue;
+                    }
+
+                    if (timeInput) {
+                        const safeTime = dateTime.time && dateTime.time >= "08:00" && dateTime.time <= "17:00" ? dateTime.time : "09:00";
+                        timeInput.value = safeTime;
+                    }
+
+                    openModal(modal);
+                } catch (error) {
+                    showToast(error.message, "danger");
+                }
+            });
+        });
+
+        $$(".id-close-update, .id-close-update-btn, [data-close-update]", modal).forEach((element) => {
+            element.addEventListener("click", close);
+        });
+
+        form.addEventListener("submit", (event) => {
+            if (!dateInput?.value || dateInput.value < tomorrowValue) {
+                event.preventDefault();
+                showToast("Vui lòng chọn ngày xem từ ngày mai trở đi.", "danger");
+                dateInput?.focus();
+                return;
             }
-            if (cancelForm) {
-                cancelForm.setAttribute('action', `/appointments/cancel/${id}`);
-            }
-            if (cancelModal) {
-                cancelModal.classList.add('active');
+
+            if (!timeInput?.value || timeInput.value < "08:00" || timeInput.value > "17:00") {
+                event.preventDefault();
+                showToast("Vui lòng chọn giờ xem trong khung 08:00 - 17:00.", "danger");
+                timeInput?.focus();
             }
         });
-    });
 
-    closeCancelElements.forEach(el => {
-        el.addEventListener('click', closeCancelModal);
-    });
+        return { close };
+    };
 
-    // Xử lý gửi yêu cầu hủy lịch hẹn
-    if (cancelForm) {
-        cancelForm.addEventListener('submit', function (e) {
-            e.preventDefault();
-            closeCancelModal();
+    const initCancelModal = () => {
+        const modal = $("#cancelAppointmentModal");
+        const form = $("#cancelAppointmentForm");
+        const productName = $("#cancelProductName");
+        if (!modal || !form) return { close: () => {} };
+
+        const close = () => closeModal(modal);
+
+        $$(".trigger-cancel-modal").forEach((button) => {
+            button.addEventListener("click", () => {
+                const card = button.closest(".appointment-card");
+                const status = $(".appointment-status-tag", card)?.dataset.status || "";
+                if (status !== "PENDING") {
+                    showToast("Chỉ lịch hẹn PENDING mới được hủy.", "danger");
+                    return;
+                }
+
+                const id = button.dataset.id;
+                if (!id) return;
+
+                productName.textContent = button.dataset.product || "Tác phẩm Bonsai Luxury";
+                form.setAttribute("action", `/appointments/cancel/${id}`);
+                openModal(modal);
+            });
+        });
+
+        $$(".id-close-cancel, .id-close-cancel-btn, [data-close-cancel]", modal).forEach((element) => {
+            element.addEventListener("click", close);
+        });
+
+        form.addEventListener("submit", () => {
             showToast("Đang xử lý yêu cầu hủy...", "info");
-
-            const actionUrl = this.getAttribute('action');
-            const formData = new FormData(this);
-
-            fetch(actionUrl, {
-                method: 'POST',
-                body: formData
-            })
-                .then(response => {
-                    if (response.ok) {
-                        // Nếu Controller chuyển hướng (redirect), di chuyển trình duyệt đến URL đó
-                        // Việc này giúp Spring Boot mang theo FlashAttribute hiển thị Toast thông báo thành công
-                        if (response.redirected) {
-                            window.location.href = response.url;
-                        } else {
-                            window.location.reload();
-                        }
-                    } else {
-                        showToast("Có lỗi xảy ra khi hủy lịch hẹn!", "danger");
-                    }
-                })
-                .catch(error => {
-                    console.error(error);
-                    showToast("Lỗi kết nối hệ thống!", "danger");
-                });
         });
-    }
 
-    /* 5. VIEW APPOINTMENT DETAIL[cite: 1] */
-    const modal = document.getElementById("appointmentModal");
-    const closeBtnElements = document.querySelectorAll(".close-btn, .close-modal-btn");
-    const detailButtons = document.querySelectorAll(".view-detail-btn");
-
-    detailButtons.forEach(button => {
-        button.addEventListener("click", function () {
-            const id = this.dataset.id;
-            showToast("Đang tải chi tiết...", "info");
-
-            fetch(`/appointments/detail/${id}`)
-                .then(response => response.json())
-                .then(data => {
-                    // Cập nhật thông tin chi tiết[cite: 1]
-                    document.getElementById("detailName").textContent = data.productName;
-                    document.getElementById("detailCode").textContent = data.productCode;
-                    document.getElementById("detailStatus").textContent = data.status;
-                    document.getElementById("detailNote").textContent = data.note ?? "Không có ghi chú riêng";
-
-                    if (data.appointmentDate) {
-                        const dateObj = new Date(data.appointmentDate);
-                        if (!isNaN(dateObj.getTime())) {
-                            const day = String(dateObj.getDate()).padStart(2, '0');
-                            const month = String(dateObj.getMonth() + 1).padStart(2, '0');
-                            const year = dateObj.getFullYear();
-                            const hours = String(dateObj.getHours()).padStart(2, '0');
-                            const minutes = String(dateObj.getMinutes()).padStart(2, '0');
-
-                            document.getElementById("detailDate").textContent = `${day}/${month}/${year}`;
-                            document.getElementById("detailTime").textContent = `${hours}:${minutes}`;
-                        } else {
-                            document.getElementById("detailDate").textContent = data.appointmentDate;
-                            document.getElementById("detailTime").textContent = data.appointmentTime ?? "";
-                        }
-                    } else {
-                        document.getElementById("detailDate").textContent = "";
-                        document.getElementById("detailTime").textContent = "";
-                    }
-
-                    if (modal) {
-                        modal.classList.add('active'); // Kích hoạt hiển thị[cite: 1]
-                    }
-                })
-                .catch(error => {
-                    console.error(error);
-                    showToast("Không thể tải thông tin lịch hẹn!", "danger");
-                });
-        });
-    });
-
-    const closeModal = () => {
-        if (modal) {
-            modal.classList.remove('active');
-        }
+        return { close };
     };
 
-    closeBtnElements.forEach(btn => {
-        btn.addEventListener("click", closeModal);
-    });
+    const detailModal = initDetailModal();
+    const updateModal = initUpdateModal();
+    const cancelModal = initCancelModal();
 
-    /* ==========================================================================
-       6. UPDATE APPOINTMENT MODAL INTERACTION
-       ========================================================================== */
-    const updateModal = document.getElementById("updateAppointmentModal");
-    const updateForm = document.getElementById("updateAppointmentForm");
-    const updateButtons = document.querySelectorAll(".update-btn");
-    const closeUpdateElements = document.querySelectorAll(".id-close-update, .id-close-update-btn");
-
-    updateButtons.forEach(button => {
-        button.addEventListener("click", function () {
-            const id = this.dataset.id;
-            showToast("Đang tải dữ liệu chỉnh sửa...", "info");
-
-            fetch(`/appointments/detail/${id}`)
-                .then(response => {
-                    if (!response.ok) throw new Error("Không tìm thấy lịch hẹn");
-                    return response.json();
-                })
-                .then(data => {
-                    document.getElementById("updateName").textContent = data.productName;
-                    document.getElementById("updateCode").textContent = data.productCode;
-                    document.getElementById("updateNote").value = data.note ?? "";
-
-                    if (updateForm) {
-                        updateForm.setAttribute("action", `/appointments/update/${id}`);
-                    }
-
-                    if (data.appointmentDate) {
-                        const dateObj = new Date(data.appointmentDate);
-                        if (!isNaN(dateObj.getTime())) {
-                            const year = dateObj.getFullYear();
-                            const month = String(dateObj.getMonth() + 1).padStart(2, '0');
-                            const day = String(dateObj.getDate()).padStart(2, '0');
-                            const hours = String(dateObj.getHours()).padStart(2, '0');
-                            const minutes = String(dateObj.getMinutes()).padStart(2, '0');
-
-                            document.getElementById("updateDate").value = `${year}-${month}-${day}`;
-                            document.getElementById("updateTime").value = `${hours}:${minutes}`;
-                        }
-                    }
-
-                    if (updateModal) {
-                        updateModal.classList.add('active');
-                    }
-                })
-                .catch(error => {
-                    console.error(error);
-                    showToast("Không thể tải thông tin chỉnh sửa!", "danger");
-                });
-        });
-    });
-
-    const closeUpdateModal = () => {
-        if (updateModal) {
-            updateModal.classList.remove('active');
+    document.addEventListener("keydown", (event) => {
+        if (event.key === "Tab") {
+            document.documentElement.classList.add("show-focus");
         }
-    };
-
-    closeUpdateElements.forEach(el => {
-        el.addEventListener("click", closeUpdateModal);
-    });
-
-    // Đóng modal khi click ra ngoài vùng phông nền tối[cite: 1]
-    window.addEventListener("click", function (e) {
-        if (e.target === modal) closeModal();
-        if (e.target === updateModal) closeUpdateModal();
-        if (e.target === cancelModal) closeCancelModal();
-    });
-
-    // Phím ESC đóng tất cả modal[cite: 1]
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') {
-            closeModal();
-            closeUpdateModal();
-            closeCancelModal();
+        if (event.key === "Escape") {
+            detailModal.close();
+            updateModal.close();
+            cancelModal.close();
         }
     });
+
+    const year = $("#year");
+    if (year) year.textContent = String(new Date().getFullYear());
+
+    initFlashMessages();
+    initReveal();
+    initPointerGlow();
 });

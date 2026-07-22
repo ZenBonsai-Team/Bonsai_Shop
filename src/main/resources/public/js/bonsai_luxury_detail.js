@@ -1,216 +1,298 @@
-/* ==========================================================================
-   Bonsai Luxury — Interactive Premium Script
-   ========================================================================== */
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener("DOMContentLoaded", () => {
+    "use strict";
 
-    // Helper Selectors
-    const $ = (sel, ctx = document) => Array.from(ctx.querySelectorAll(sel));
-    const one = (sel, ctx = document) => ctx.querySelector(sel);
-    const escapeHtml = s => String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[m]);
+    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const $ = (selector, scope = document) => scope.querySelector(selector);
+    const $$ = (selector, scope = document) => Array.from(scope.querySelectorAll(selector));
+    const body = document.body;
+    const isAuthenticated = body?.dataset.authenticated === "true";
 
-    // Toast Premium Notification System (Sử dụng đồng bộ flash-message của CSS)
-    const showToast = (text, type = 'success') => {
-        let container = one('.flash-container');
+    const createElement = (tagName, className, textContent) => {
+        const element = document.createElement(tagName);
+        if (className) element.className = className;
+        if (textContent !== undefined) element.textContent = textContent;
+        return element;
+    };
+
+    const createIcon = (className) => {
+        const icon = createElement("i", className);
+        icon.setAttribute("aria-hidden", "true");
+        return icon;
+    };
+
+    const showToast = (message, type = "success") => {
+        let container = $(".flash-container");
         if (!container) {
-            container = document.createElement('div');
-            container.className = 'flash-container';
+            container = createElement("div", "flash-container");
+            container.setAttribute("aria-live", "polite");
             document.body.appendChild(container);
         }
 
-        const msg = document.createElement('div');
-        msg.className = `flash-message flash-${type}`;
-        msg.innerHTML = `
-            <span class="flash-icon">${type === 'success' ? '✓' : '✕'}</span>
-            <span>${escapeHtml(text)}</span>
-        `;
-        container.appendChild(msg);
-
-        setTimeout(() => {
-            msg.remove();
-        }, 5000);
+        const toastType = type === "error" ? "error" : "success";
+        const toast = createElement("div", `flash-message flash-${toastType}`);
+        toast.appendChild(createIcon(toastType === "success" ? "fa-solid fa-check" : "fa-solid fa-xmark"));
+        toast.appendChild(createElement("span", "", message));
+        container.appendChild(toast);
+        window.setTimeout(() => toast.remove(), 5400);
     };
 
-    /* ----------------------------------------------------------------------
-       1. DROPDOWN USER PROFILE LOGIC
-       ---------------------------------------------------------------------- */
-    const userBtn = one('.user-btn-premium');
-    const userMenu = one('.user-menu-premium');
+    const initReveal = () => {
+        const items = $$(".summary-card, .main-image-wrap, .media-note, .detail-trust-strip, .lux-section, .specs-table-card, .profile-grid article, .artisan-profile-banner, .ownership-panel, .ownership-step");
+        if (!items.length || prefersReducedMotion) {
+            items.forEach((item) => item.classList.add("visible"));
+            return;
+        }
 
-    if (userBtn && userMenu) {
-        userBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const isExpanded = userBtn.getAttribute('aria-expanded') === 'true';
-            userBtn.setAttribute('aria-expanded', !isExpanded);
-            userMenu.classList.toggle('active');
+        items.forEach((item) => item.classList.add("reveal-pending"));
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach((entry) => {
+                if (!entry.isIntersecting) return;
+                entry.target.classList.add("visible");
+                observer.unobserve(entry.target);
+            });
+        }, { threshold: 0.14, rootMargin: "0px 0px -40px 0px" });
+
+        items.forEach((item) => observer.observe(item));
+    };
+
+    const initPointerGlow = () => {
+        if (prefersReducedMotion) return;
+
+        $$(".main-image-wrap, .summary-card, .specs-table-card, .profile-grid article, .artisan-profile-banner, .ownership-panel").forEach((item) => {
+            item.addEventListener("pointermove", (event) => {
+                const rect = item.getBoundingClientRect();
+                const x = ((event.clientX - rect.left) / rect.width) * 100;
+                const y = ((event.clientY - rect.top) / rect.height) * 100;
+                item.style.setProperty("--pointer-x", `${x.toFixed(2)}%`);
+                item.style.setProperty("--pointer-y", `${y.toFixed(2)}%`);
+            });
         });
+    };
 
-        document.addEventListener('click', (e) => {
-            if (!userMenu.contains(e.target)) {
-                userMenu.classList.remove('active');
-                userBtn.setAttribute('aria-expanded', 'false');
-            }
+    const initGallery = () => {
+        const mainImage = $("#mainImage");
+        const thumbnailButtons = $$(".thumb-item");
+        if (!mainImage || !thumbnailButtons.length) return;
+
+        thumbnailButtons.forEach((button) => {
+            button.addEventListener("click", () => {
+                const nextImageUrl = button.dataset.src;
+                if (!nextImageUrl || mainImage.src === nextImageUrl) return;
+
+                thumbnailButtons.forEach((item) => item.classList.remove("is-active"));
+                button.classList.add("is-active");
+                mainImage.classList.add("is-switching");
+
+                const clearState = () => mainImage.classList.remove("is-switching");
+                mainImage.addEventListener("load", clearState, { once: true });
+                mainImage.src = nextImageUrl;
+                window.setTimeout(clearState, 600);
+            });
         });
-    }
+    };
 
-    /* ----------------------------------------------------------------------
-       2. THUMBNAIL INTERACTION (Sửa lỗi transition time)
-       ---------------------------------------------------------------------- */
-    const mainImg = one('#mainImage');
-    const thumbBtns = $('.thumb');
+    const initLightbox = () => {
+        const overlayRoot = $("#overlayRoot");
+        if (!overlayRoot) return { close: () => {} };
 
-    thumbBtns.forEach(thumb => {
-        thumb.addEventListener('click', function() {
-            if (!mainImg) return;
+        let activeLightbox = null;
 
-            thumbBtns.forEach(t => t.classList.remove('active'));
-            this.classList.add('active');
+        const close = () => {
+            if (!activeLightbox) return;
 
-            const newSrc = this.getAttribute('data-src');
-            if (newSrc) {
-                mainImg.style.opacity = '0.3';
-                setTimeout(() => {
-                    mainImg.src = newSrc;
-                    mainImg.style.opacity = '1';
-                }, 150); // Đã sửa từ 15000ms thành 150ms chuẩn mượt mà
-            }
-        });
-    });
+            activeLightbox.classList.remove("is-open");
+            const currentLightbox = activeLightbox;
+            activeLightbox = null;
 
-    /* ----------------------------------------------------------------------
-       3. LIGHTBOX PREVIEW GALLERY
-       ---------------------------------------------------------------------- */
-    const galleryItems = $('.gallery-item');
-    const overlayRoot = document.getElementById('overlayRoot') || (() => {
-        const d = document.createElement('div'); d.id = 'overlayRoot'; document.body.appendChild(d); return d;
-    })();
+            window.setTimeout(() => {
+                currentLightbox.remove();
+                overlayRoot.setAttribute("aria-hidden", "true");
+            }, 180);
+        };
 
-    galleryItems.forEach(item => {
-        item.addEventListener('click', function() {
-            const imgSrc = this.getAttribute('data-src') || one('img', this)?.src;
-            if (!imgSrc) return;
+        const open = (imageUrl, imageAlt) => {
+            if (!imageUrl) return;
+            close();
 
-            const lightbox = document.createElement('div');
-            lightbox.className = 'popup';
-            lightbox.setAttribute('role', 'dialog');
-            lightbox.innerHTML = `
-                <div class="popup-content" style="max-width: 800px; padding: 10px; background: transparent; border: none; box-shadow: none;">
-                    <button class="popup-close" style="color: #FFF; background: rgba(0,0,0,0.5); top: -40px; right: 0;" aria-label="Đóng ảnh lớn">✕</button>
-                    <img src="${escapeHtml(imgSrc)}" alt="Bonsai Luxury Zoom" style="width: 100%; height: auto; max-height: 85vh; object-fit: contain; border: 1px solid rgba(255,255,255,0.2);">
-                </div>
-            `;
+            const lightbox = createElement("div", "lightbox");
+            lightbox.setAttribute("role", "dialog");
+            lightbox.setAttribute("aria-modal", "true");
+            lightbox.setAttribute("aria-label", "Ảnh chi tiết Bonsai");
+
+            const panel = createElement("div", "lightbox-panel");
+            const closeButton = createElement("button", "lightbox-close");
+            closeButton.type = "button";
+            closeButton.setAttribute("aria-label", "Đóng ảnh lớn");
+            closeButton.appendChild(createIcon("fa-solid fa-xmark"));
+
+            const image = createElement("img", "lightbox-image");
+            image.src = imageUrl;
+            image.alt = imageAlt || "Ảnh chi tiết Bonsai Luxury";
+
+            panel.append(closeButton, image);
+            lightbox.appendChild(panel);
             overlayRoot.appendChild(lightbox);
+            overlayRoot.removeAttribute("aria-hidden");
+            activeLightbox = lightbox;
 
-            const closeBox = () => lightbox.remove();
-            lightbox.querySelector('.popup-close')?.addEventListener('click', closeBox);
-            lightbox.addEventListener('click', (ev) => { if (ev.target === lightbox) closeBox(); });
+            requestAnimationFrame(() => lightbox.classList.add("is-open"));
+            closeButton.addEventListener("click", close);
+            lightbox.addEventListener("click", (event) => {
+                if (event.target === lightbox) close();
+            });
+            closeButton.focus();
+        };
+
+        $$(".gallery-item").forEach((item) => {
+            item.addEventListener("click", () => {
+                const image = $("img", item);
+                open(item.dataset.src || image?.src, image?.alt);
+            });
         });
-    });
 
-    /* ----------------------------------------------------------------------
-       4. PREMIUM BOOKING MODAL
-       ---------------------------------------------------------------------- */
-    const bookingModal = document.getElementById('bookingModal');
-    const modalProductId = document.getElementById('modalProductId');
-    const modalProductTitle = document.getElementById('modalProductTitle');
-    const actualBookingForm = document.getElementById('actualBookingForm');
-    const closeBookingBtn = document.getElementById('closeBookingBtn');
-    const cancelBookingBtn = document.getElementById('cancelBookingBtn');
-    const dateInput = document.getElementById('appointmentDate');
-    const timeInput = document.getElementById('appointmentTime');
-
-    const closeModal = () => {
-        if (!bookingModal) return;
-        bookingModal.style.opacity = '0';
-        setTimeout(() => {
-            bookingModal.style.display = 'none';
-            bookingModal.setAttribute('aria-hidden', 'true');
-        }, 300);
+        return { close };
     };
 
-    const openBookingModal = (e) => {
-        const btn = e.currentTarget;
-        const id = btn.dataset.id;
-        const title = document.getElementById('productTitle')?.textContent?.trim() || "Tác phẩm độc bản";
+    const initBooking = () => {
+        const bookingModal = $("#bookingModal");
+        const modalProductId = $("#modalProductId");
+        const modalProductTitle = $("#modalProductTitle");
+        const bookingForm = $("#actualBookingForm");
+        const closeBookingButton = $("#closeBookingBtn");
+        const cancelBookingButton = $("#cancelBookingBtn");
+        const dateInput = $("#appointmentDate");
+        const timeInput = $("#appointmentTime");
 
-        if (modalProductId) modalProductId.value = id;
-        if (modalProductTitle) modalProductTitle.textContent = title;
+        const toLocalDateValue = (date) => {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, "0");
+            const day = String(date.getDate()).padStart(2, "0");
+            return `${year}-${month}-${day}`;
+        };
 
-        // Cài đặt ngày mặc định tối thiểu là ngày mai
-        if (dateInput) {
+        const parseDateValue = (value) => {
+            const [year, month, day] = value.split("-").map(Number);
+            return new Date(year, month - 1, day);
+        };
+
+        const getTomorrowValue = () => {
             const tomorrow = new Date();
             tomorrow.setDate(tomorrow.getDate() + 1);
-            const yyyy = tomorrow.getFullYear();
-            const mm = String(tomorrow.getMonth() + 1).padStart(2, '0');
-            const dd = String(tomorrow.getDate()).padStart(2, '0');
-            const minDate = `${yyyy}-${mm}-${dd}`;
+            return toLocalDateValue(tomorrow);
+        };
 
-            dateInput.min = minDate;
-            dateInput.value = minDate;
-        }
+        const close = () => {
+            if (!bookingModal || bookingModal.hidden) return;
+            bookingModal.classList.remove("is-open");
+            body.classList.remove("modal-open");
+            window.setTimeout(() => {
+                bookingModal.hidden = true;
+            }, 180);
+        };
 
-        if (timeInput) timeInput.value = "";
-
-        if (bookingModal) {
-            bookingModal.style.display = 'flex';
-            bookingModal.setAttribute('aria-hidden', 'false');
-            void bookingModal.offsetWidth; // Trigger reflow
-            bookingModal.style.opacity = '1';
-        }
-    };
-
-    document.querySelectorAll('.schedule-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            const authenticated = document.body.dataset.authenticated === "true";
-            if (!authenticated) {
+        const open = (trigger) => {
+            if (!bookingModal) return;
+            if (trigger.disabled || trigger.dataset.available !== "true") {
+                showToast("Tác phẩm hiện chưa mở lịch xem riêng.", "error");
+                return;
+            }
+            if (!isAuthenticated) {
                 window.location.href = "/login";
                 return;
             }
-            openBookingModal(e);
-        });
-    });
 
-    closeBookingBtn?.addEventListener('click', closeModal);
-    cancelBookingBtn?.addEventListener('click', closeModal);
-
-    bookingModal?.addEventListener('click', e => {
-        if (e.target === bookingModal) closeModal();
-    });
-
-    // Validate Form Đặt Lịch
-    actualBookingForm?.addEventListener('submit', e => {
-        if (dateInput.value) {
-            const selected = new Date(dateInput.value);
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            selected.setHours(0, 0, 0, 0);
-
-            if (selected <= today) {
-                e.preventDefault();
-                showToast("Vui lòng chọn ngày từ ngày mai.", "error");
+            const productId = trigger.dataset.id || modalProductId?.value;
+            const productTitle = trigger.dataset.title || $("#productTitle")?.textContent?.trim() || "Tác phẩm Bonsai Luxury";
+            if (!productId) {
+                showToast("Không tìm thấy mã tác phẩm để đặt lịch.", "error");
                 return;
             }
-        }
 
-        if (!timeInput.value) {
-            e.preventDefault();
-            showToast("Vui lòng chọn giờ xem.", "error");
-            return;
-        }
+            if (modalProductId) modalProductId.value = productId;
+            if (modalProductTitle) modalProductTitle.textContent = productTitle;
 
-        if (timeInput.value < "08:00" || timeInput.value > "17:00") {
-            e.preventDefault();
-            showToast("Vui lòng chọn thời gian từ 08:00 đến 17:00.", "error");
-            return;
-        }
+            const tomorrowValue = getTomorrowValue();
+            if (dateInput) {
+                dateInput.min = tomorrowValue;
+                if (!dateInput.value || dateInput.value < tomorrowValue) {
+                    dateInput.value = tomorrowValue;
+                }
+            }
+            if (timeInput && (!timeInput.value || timeInput.value < "08:00" || timeInput.value > "17:00")) {
+                timeInput.value = "09:00";
+            }
 
-        const submitBtn = actualBookingForm.querySelector(".submit-booking-btn");
-        if (submitBtn) {
-            submitBtn.disabled = true;
-            submitBtn.textContent = "Đang xử lý...";
+            bookingModal.hidden = false;
+            requestAnimationFrame(() => bookingModal.classList.add("is-open"));
+            body.classList.add("modal-open");
+            closeBookingButton?.focus();
+        };
+
+        $$(".schedule-btn").forEach((button) => {
+            button.addEventListener("click", () => open(button));
+        });
+
+        closeBookingButton?.addEventListener("click", close);
+        cancelBookingButton?.addEventListener("click", close);
+        $("[data-close-modal]", bookingModal || document)?.addEventListener("click", close);
+
+        timeInput?.addEventListener("change", () => {
+            if (timeInput.value && (timeInput.value < "08:00" || timeInput.value > "17:00")) {
+                showToast("Vui lòng chọn giờ xem trong khung 08:00 - 17:00.", "error");
+                timeInput.value = "09:00";
+            }
+        });
+
+        bookingForm?.addEventListener("submit", (event) => {
+            const tomorrow = parseDateValue(getTomorrowValue());
+            const selectedDate = dateInput?.value ? parseDateValue(dateInput.value) : null;
+
+            if (!selectedDate || selectedDate < tomorrow) {
+                event.preventDefault();
+                showToast("Vui lòng chọn ngày xem từ ngày mai trở đi.", "error");
+                dateInput?.focus();
+                return;
+            }
+
+            if (!timeInput?.value || timeInput.value < "08:00" || timeInput.value > "17:00") {
+                event.preventDefault();
+                showToast("Vui lòng chọn giờ xem trong khung 08:00 - 17:00.", "error");
+                timeInput?.focus();
+                return;
+            }
+
+            const submitButton = $(".submit-booking-btn", bookingForm);
+            if (submitButton) {
+                submitButton.disabled = true;
+                submitButton.classList.add("is-submitting");
+                submitButton.textContent = "Đang xử lý...";
+            }
+        });
+
+        return { close };
+    };
+
+    const updateYear = () => {
+        const year = $("#year");
+        if (year) year.textContent = String(new Date().getFullYear());
+    };
+
+    document.body.addEventListener("keydown", (event) => {
+        if (event.key === "Tab") {
+            document.documentElement.classList.add("show-focus");
         }
     });
 
-    // Auto-update Footer Year
-    const yearEl = document.getElementById('year');
-    if (yearEl) yearEl.textContent = new Date().getFullYear();
+    initReveal();
+    initPointerGlow();
+    initGallery();
+    const lightbox = initLightbox();
+    const booking = initBooking();
+    updateYear();
+
+    document.addEventListener("keydown", (event) => {
+        if (event.key !== "Escape") return;
+        lightbox.close();
+        booking.close();
+    });
 });

@@ -201,21 +201,8 @@
                         <button type="button" 
                             class="btn-buy-vnpay" 
                             th:if="${product.productStatus == 'AVAILABLE'}"
-                            th:data-id="${product.productId}"
-                            th:data-name="${product.productName}"
-                            th:data-code="${product.productCode}"
-                            th:data-price="${#numbers.formatDecimal(product.price, 0, 'POINT', 0, 'POINT') + ' đ'}"
-                            th:data-img="${product.firstImageUrl}"
-                            th:data-segment="${product.segment != null ? product.segment.segmentName : 'Popular'}"
-                            onclick="openCheckoutModal(
-                                this.getAttribute('data-id'), 
-                                this.getAttribute('data-name'), 
-                                this.getAttribute('data-code'), 
-                                this.getAttribute('data-price'), 
-                                this.getAttribute('data-img'), 
-                                this.getAttribute('data-segment')
-                            )">
-                        Gửi yêu cầu mua
+                            th:onclick="'addToCartAndGo(' + ${product.productId} + ')'">
+                        Mua ngay (Đặt hàng)
                         </button>
 
                         <button class="btn-card-disabled" style="width: 100%; padding: 14px 0;" disabled th:if="${product.productStatus == 'RESERVED'}"><i class="fa-solid fa-lock"></i> Reserved</button>
@@ -233,11 +220,11 @@
                     </div>
 
                     <!-- Add to Cart Outline -->
-                    <button class="btn-add-cart-outline" th:if="${product.productStatus == 'AVAILABLE'}">
+                    <button class="btn-add-cart-outline" th:if="${product.productStatus == 'AVAILABLE'}" th:onclick="'addToCart(' + ${product.productId} + ')'">
                         <i class="fa-solid fa-cart-shopping"></i> Add to Cart
                     </button>
                 </div>
-
+            </div>
                 <!-- Small Policy Guarantees -->
                 <div class="guarantees-row">
                     <div class="guarantees-item">

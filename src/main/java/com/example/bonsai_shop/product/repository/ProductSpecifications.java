@@ -24,7 +24,8 @@ public class ProductSpecifications {
         return (Root<Product> root, CriteriaQuery<?> query, CriteriaBuilder cb) -> {
             List<Predicate> predicates = new ArrayList<>();
 
-            // Avoid fetch joins for count queries (used by Spring Data JPA pagination count query)
+            // Avoid fetch joins for count queries (used by Spring Data JPA pagination count
+            // query)
             if (query.getResultType() != Long.class && query.getResultType() != long.class) {
                 root.fetch("variety", JoinType.INNER);
                 root.fetch("artisan", JoinType.INNER);
@@ -33,13 +34,14 @@ public class ProductSpecifications {
             // Customer marketplace must not expose artisan-only product states.
             predicates.add(cb.not(root.get("productStatus").in("DRAFT", "HIDDEN")));
 
+            predicates.add(cb.equal(root.get("isPublicPrice"), true));
+
             // keyword (matches product name or code)
             if (keyword != null && !keyword.trim().isEmpty()) {
                 String pattern = "%" + keyword.trim().toLowerCase() + "%";
                 predicates.add(cb.or(
                         cb.like(cb.lower(root.get("productName")), pattern),
-                        cb.like(cb.lower(root.get("productCode")), pattern)
-                ));
+                        cb.like(cb.lower(root.get("productCode")), pattern)));
             }
 
             if (Boolean.TRUE.equals(availableOnly)) {
@@ -73,14 +75,47 @@ public class ProductSpecifications {
 
             // minPrice
             if (minPrice != null) {
-                predicates.add(cb.equal(root.get("isPublicPrice"), true));
                 predicates.add(cb.ge(root.get("price"), minPrice));
             }
 
             // maxPrice
             if (maxPrice != null) {
-                predicates.add(cb.equal(root.get("isPublicPrice"), true));
                 predicates.add(cb.le(root.get("price"), maxPrice));
+            }
+
+            if (priceRanges != null && !priceRanges.isEmpty()) {
+                List<Predicate> pricePredicates = new ArrayList<>();
+                for (String range : priceRanges) {
+                    if (range != null) {
+                        switch (range) {
+                            case "under1M":
+                                pricePredicates.add(cb.lessThan(root.get("price"), new BigDecimal(1000000)));
+                                break;
+                            case "1Mto5M":
+                                pricePredicates.add(cb.between(root.get("price"), new BigDecimal(1000000),
+                                        new BigDecimal(5000000)));
+                                break;
+                            case "5Mto10M":
+                                pricePredicates.add(cb.between(root.get("price"), new BigDecimal(5000000),
+                                        new BigDecimal(10000000)));
+                                break;
+                            case "10Mto30M":
+                                pricePredicates.add(cb.between(root.get("price"), new BigDecimal(10000000),
+                                        new BigDecimal(30000000)));
+                                break;
+                            case "30Mto100M":
+                                pricePredicates.add(cb.between(root.get("price"), new BigDecimal(30000000),
+                                        new BigDecimal(100000000)));
+                                break;
+                            case "over100M":
+                                pricePredicates.add(cb.greaterThan(root.get("price"), new BigDecimal(100000000)));
+                                break;
+                        }
+                    }
+                }
+                if (!pricePredicates.isEmpty()) {
+                    predicates.add(cb.or(pricePredicates.toArray(new Predicate[0])));
+                }
             }
 
             // ages (multiple checkboxes: OR logic between selected ranges)
@@ -109,15 +144,13 @@ public class ProductSpecifications {
                 }
             }
 
-            // species (variety name checklist)
             if (species != null && !species.isEmpty()) {
                 predicates.add(root.get("variety").get("varietyName").in(species));
             }
 
-            // styles (style checklist)
-            if (styles != null && !styles.isEmpty()) {
-                predicates.add(root.get("style").in(styles));
-            }
+            // if (styles != null && !styles.isEmpty()) {
+            // predicates.add(root.get("style").in(styles));
+            // }
 
             return cb.and(predicates.toArray(new Predicate[0]));
         };

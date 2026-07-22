@@ -4,7 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BSMS - Bonsai Marketplace</title>
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
     
     <!-- Fonts & Icons -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -132,7 +133,7 @@
                     <!-- Species Checklist -->
                     <div class="filter-block">
                         <div class="filter-block-title">
-                            Loài cây (Species)
+                            Dòng cây
                             <i class="fa-solid fa-chevron-up"></i>
                         </div>
                         <div class="filter-block-content">
@@ -164,45 +165,10 @@
                         </div>
                     </div>
     
-                    <!-- Style Checklist -->
-                    <div class="filter-block">
-                        <div class="filter-block-title">
-                            Thế dáng (Style)
-                            <i class="fa-solid fa-chevron-up"></i>
-                        </div>
-                        <div class="filter-block-content">
-                            <label class="checkbox-label">
-                                Dáng Trực
-                                <input type="checkbox" name="styles" value="Dáng Trực" th:checked="${styles != null && styles.contains('Dáng Trực')}">
-                                <span class="checkbox-checkmark"></span>
-                            </label>
-                            <label class="checkbox-label">
-                                Dáng Hoành
-                                <input type="checkbox" name="styles" value="Dáng Hoành" th:checked="${styles != null && styles.contains('Dáng Hoành')}">
-                                <span class="checkbox-checkmark"></span>
-                            </label>
-                            <label class="checkbox-label">
-                                Dáng Huyền
-                                <input type="checkbox" name="styles" value="Dáng Huyền" th:checked="${styles != null && styles.contains('Dáng Huyền')}">
-                                <span class="checkbox-checkmark"></span>
-                            </label>
-                            <label class="checkbox-label">
-                                Dáng Xiên
-                                <input type="checkbox" name="styles" value="Dáng Xiên" th:checked="${styles != null && styles.contains('Dáng Xiên')}">
-                                <span class="checkbox-checkmark"></span>
-                            </label>
-                            <label class="checkbox-label">
-                                Dáng Song Thụ
-                                <input type="checkbox" name="styles" value="Dáng Song Thụ" th:checked="${styles != null && styles.contains('Dáng Song Thụ')}">
-                                <span class="checkbox-checkmark"></span>
-                            </label>
-                        </div>
-                    </div>
-    
                     <!-- Age Checklist -->
                     <div class="filter-block">
                         <div class="filter-block-title">
-                            Tuổi cây (Age)
+                            Tuổi
                             <i class="fa-solid fa-chevron-up"></i>
                         </div>
                         <div class="filter-block-content">
@@ -402,7 +368,7 @@
                             
                             <div class="mt-2">
                                 <!-- Add to Cart / Disabled button based on status -->
-                                <button sec:authorize="!hasAnyRole('OWNER', 'ARTISAN', 'MODERATOR', 'CONTENT_MODERATOR')" th:if="${product.productStatus == 'AVAILABLE'}" class="btn-card-cart-outline"><i class="fa-solid fa-cart-shopping"></i> Add to Cart</button>
+                                <button sec:authorize="!hasAnyRole('OWNER', 'ARTISAN', 'MODERATOR', 'CONTENT_MODERATOR')" th:if="${product.productStatus == 'AVAILABLE'}" class="btn-card-cart-outline" th:onclick="'addToCart(' + ${product.productId} + ')'"><i class="fa-solid fa-cart-shopping"></i> Add to Cart</button>
                                 <button th:if="${product.productStatus == 'RESERVED'}" class="btn-card-disabled" disabled>Reserved</button>
                                 <button th:if="${product.productStatus == 'SOLD'}" class="btn-card-disabled" disabled>Sold</button>
                                 

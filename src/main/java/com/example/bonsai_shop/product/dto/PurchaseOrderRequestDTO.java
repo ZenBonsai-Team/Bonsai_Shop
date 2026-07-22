@@ -9,7 +9,6 @@ import lombok.Data;
 @Data
 public class PurchaseOrderRequestDTO {
 
-    @NotNull(message = "Mã sản phẩm không được trống")
     private Integer productId;
 
     @NotBlank(message = "Tên khách hàng không được trống")

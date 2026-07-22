@@ -60,10 +60,6 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
     @Query("SELECT p FROM Product p JOIN FETCH p.variety JOIN FETCH p.artisan WHERE p.productStatus = 'AVAILABLE'")
     Page<Product> findAvailableProductsOnly(Pageable pageable);
 
-    //---------
-    //Prenium Bonsai
-    //---------
-
     @Query("""
     SELECT new com.example.bonsai_shop.product.dto.ProductCardDTO(
             p.productId,
@@ -82,13 +78,11 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
     JOIN p.variety v
     JOIN p.artisan a
     LEFT JOIN p.productMedias m
-    WHERE p.segment.segmentId = 2
-      AND p.isPublicPrice = false
+    WHERE p.segment.segmentId = 3
       AND (m.isThumbnail = true OR m IS NULL)
 """)
     Page<ProductCardDTO> findPremiumProducts(Pageable pageable);
 
-
     @Query("""
     SELECT new com.example.bonsai_shop.product.dto.ProductCardDTO(
             p.productId,
@@ -107,8 +101,7 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
     JOIN p.variety v
     JOIN p.artisan a
     LEFT JOIN p.productMedias m
-    WHERE p.segment.segmentId = 2
-      AND p.isPublicPrice = false
+    WHERE p.segment.segmentId = 3
       AND p.productId = :productId
       AND (m.isThumbnail = true OR m IS NULL)
 """)

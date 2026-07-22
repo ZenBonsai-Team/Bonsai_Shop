@@ -39,16 +39,17 @@
 
             <!-- 2. ORDER MODERATOR MENU -->
             <th:block sec:authorize="hasRole('MODERATOR')">
-                <a th:href="@{/moderator/orders}" 
+                <a th:href="@{/moderator/orders/pool}" 
                    class="sidebar-nav-item" 
-                   th:classappend="${activePage == 'orders' ? 'active' : ''}">
+                   th:classappend="${activePage == 'pool' or activePage == 'orders-pool' ? 'active' : ''}">
                     <span class="nav-icon"><i class="fa-solid fa-box"></i></span>
-                    <span>Quản lý đơn hàng</span>
+                    <span>Kho Đơn Hàng (Pool)</span>
                 </a>
-                <a href="#" class="sidebar-nav-item" 
-                   th:classappend="${activePage == 'claims' ? 'active' : ''}">
-                    <span class="nav-icon"><i class="fa-solid fa-triangle-exclamation"></i></span>
-                    <span>Quản lý khiếu nại</span>
+                <a th:href="@{/moderator/orders/my}" 
+                   class="sidebar-nav-item" 
+                   th:classappend="${activePage == 'my' or activePage == 'my-orders' ? 'active' : ''}">
+                    <span class="nav-icon"><i class="fa-solid fa-clipboard-list"></i></span>
+                    <span>Đơn Của Tôi (My Orders)</span>
                 </a>
             </th:block>
 
