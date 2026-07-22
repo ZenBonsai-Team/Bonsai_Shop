@@ -117,13 +117,31 @@ public class CommunityController {
             }
         } else if (category != null && !category.trim().isEmpty() && !category.equals("Tất cả")) {
             if (search != null && !search.trim().isEmpty()) {
-                posts = postRepository.searchPostsByCategory(category, search);
+                String cleanSearch = search.trim();
+                if (cleanSearch.startsWith("#")) {
+                    cleanSearch = cleanSearch.substring(1).trim();
+                }
+                String spaceSeparated = cleanSearch.replaceAll("(?<=\\p{L})(?=\\p{Lu})", " ");
+                String trimmedPrefix = spaceSeparated;
+                if (spaceSeparated.toLowerCase().startsWith("bonsai ")) {
+                    trimmedPrefix = spaceSeparated.substring(7).trim();
+                }
+                posts = postRepository.searchPostsByCategorySmart(category, cleanSearch, spaceSeparated, "#" + cleanSearch, trimmedPrefix);
             } else {
                 posts = postRepository.findByCategoryAndStatusOrderByCreatedAtDesc(category, "APPROVED");
             }
         } else {
             if (search != null && !search.trim().isEmpty()) {
-                posts = postRepository.searchPosts(search);
+                String cleanSearch = search.trim();
+                if (cleanSearch.startsWith("#")) {
+                    cleanSearch = cleanSearch.substring(1).trim();
+                }
+                String spaceSeparated = cleanSearch.replaceAll("(?<=\\p{L})(?=\\p{Lu})", " ");
+                String trimmedPrefix = spaceSeparated;
+                if (spaceSeparated.toLowerCase().startsWith("bonsai ")) {
+                    trimmedPrefix = spaceSeparated.substring(7).trim();
+                }
+                posts = postRepository.searchPostsSmart(cleanSearch, spaceSeparated, "#" + cleanSearch, trimmedPrefix);
             } else {
                 posts = postRepository.findAllByStatusOrderByCreatedAtDesc("APPROVED");
             }
