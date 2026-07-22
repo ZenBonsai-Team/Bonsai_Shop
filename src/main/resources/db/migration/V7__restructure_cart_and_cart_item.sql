@@ -21,3 +21,6 @@ CREATE TABLE IF NOT EXISTS `cart_item` (
     CONSTRAINT `fk_cart_item_product` FOREIGN KEY (`ProductID`) REFERENCES `product` (`ProductID`) ON DELETE CASCADE,
     UNIQUE KEY `uk_cart_product` (`CartID`, `ProductID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Add quantity column to order_detail table if missing
+ALTER TABLE `order_detail` ADD COLUMN `quantity` INT NOT NULL DEFAULT 1;
