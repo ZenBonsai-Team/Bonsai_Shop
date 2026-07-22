@@ -1,267 +1,274 @@
-/* ==========================================================================
-   Bonsai Luxury — Premium Interactions (Production Ready)
-   ========================================================================== */
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener("DOMContentLoaded", () => {
+    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const $ = (selector, scope = document) => scope.querySelector(selector);
+    const $$ = (selector, scope = document) => Array.from(scope.querySelectorAll(selector));
 
-    /* ----------------------------------------------------------------------
-       1. TIỆN ÍCH & CẤU HÌNH CƠ BẢN (Utilities)
-       ---------------------------------------------------------------------- */
-    // Tự động cập nhật năm ở Footer
-    const yearEl = document.getElementById('year');
-    if (yearEl) yearEl.textContent = new Date().getFullYear();
-
-    // Mã hóa HTML để chống XSS
-    const escapeHtml = (str) => {
-        return String(str).replace(/[&<>"']/g, function (m) {
-            return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[m];
-        });
-    };
-
-    // Hàm hiển thị thông báo góc màn hình (Toast)
-    const showToast = (text) => {
-        const existing = document.querySelector('.toast');
-        if (existing) existing.remove();
-
-        const t = document.createElement('div');
-        t.className = 'toast';
-        t.textContent = text;
-        document.body.appendChild(t);
-
-        // Hiệu ứng mờ dần trước khi xóa
-        setTimeout(() => {
-            t.style.opacity = '0';
-            t.style.transition = 'opacity 0.4s ease';
-            setTimeout(() => t.remove(), 400);
-        }, 3500);
-    };
-
-    /* ----------------------------------------------------------------------
-       2. HIỆU ỨNG GIAO DIỆN CHUNG (UI/UX)
-       ---------------------------------------------------------------------- */
-    // Đã loại bỏ logic đổi màu Navbar (.scrolled) để giữ nguyên trạng thái một màu cố định.
-
-    // Cuộn mượt (Smooth Scroll) cho các liên kết mỏ neo (#)
-    document.querySelectorAll('.nav-link').forEach(link => {
-        const href = link.getAttribute('href');
-        if (href && href.startsWith('#') && href.length > 1) {
-            link.addEventListener('click', (e) => {
-                e.preventDefault();
-                const target = document.querySelector(href);
-                if (target) {
-                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }
-            });
+    const updateYear = () => {
+        const yearEl = $("#year");
+        if (yearEl) {
+            yearEl.textContent = new Date().getFullYear().toString();
         }
-    });
+    };
 
-    // Hiệu ứng Fade-in các thẻ sản phẩm khi cuộn đến
-    const revealOnScroll = () => {
-        document.querySelectorAll('.card').forEach(card => {
-            const rect = card.getBoundingClientRect();
-            if (rect.top < window.innerHeight - 50) {
-                card.classList.add('visible');
-            }
+    const showToast = (message) => {
+        const oldToast = $(".toast");
+        if (oldToast) oldToast.remove();
+
+        const toast = document.createElement("div");
+        toast.className = "toast";
+        toast.textContent = message;
+        document.body.appendChild(toast);
+
+        window.setTimeout(() => {
+            toast.style.opacity = "0";
+            window.setTimeout(() => toast.remove(), 280);
+        }, 2600);
+    };
+
+    const initAnchorScroll = () => {
+        $$('a[href^="#"]').forEach((anchor) => {
+            const href = anchor.getAttribute("href");
+            if (!href || href === "#") return;
+
+            anchor.addEventListener("click", (event) => {
+                const target = $(href);
+                if (!target) return;
+
+                event.preventDefault();
+                target.scrollIntoView({
+                    behavior: prefersReducedMotion ? "auto" : "smooth",
+                    block: "start"
+                });
+            });
         });
     };
-    revealOnScroll();
-    window.addEventListener('scroll', revealOnScroll, { passive: true });
 
-    /* ----------------------------------------------------------------------
-       3. HỆ THỐNG SLIDER (Hero & Studio)
-       ---------------------------------------------------------------------- */
-    // Hàm khởi tạo Slider dùng chung
-    const initSlider = (sliderId, slideClass, intervalTime) => {
-        const slider = document.getElementById(sliderId);
+    const initReveal = () => {
+        const items = $$(".luxury-product-card, .service, .atelier-showcase");
+        if (!items.length || prefersReducedMotion) {
+            items.forEach((item) => item.classList.add("visible"));
+            return;
+        }
+
+        items.forEach((item) => item.classList.add("reveal-pending"));
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach((entry) => {
+                if (!entry.isIntersecting) return;
+                entry.target.classList.add("visible");
+                observer.unobserve(entry.target);
+            });
+        }, { threshold: 0.16, rootMargin: "0px 0px -40px 0px" });
+
+        items.forEach((item) => observer.observe(item));
+    };
+
+    const initSlider = ({ sliderSelector, slideSelector, prevSelector, nextSelector, interval = 5200 }) => {
+        const slider = $(sliderSelector);
         if (!slider) return;
 
-        const slides = Array.from(slider.querySelectorAll(slideClass));
-        if (!slides.length) return;
+        const slides = $$(slideSelector, slider);
+        if (slides.length <= 1) return;
 
-        let idx = 0;
-        let timer;
+        let activeIndex = Math.max(0, slides.findIndex((slide) => slide.classList.contains("active")));
+        let timerId = null;
 
-        const showSlide = (i) => slides.forEach((s, j) => s.classList.toggle('active', j === i));
-
-        const next = () => { idx = (idx + 1) % slides.length; showSlide(idx); };
-        const prev = () => { idx = (idx - 1 + slides.length) % slides.length; showSlide(idx); };
-
-        const resetTimer = () => {
-            clearInterval(timer);
-            timer = setInterval(next, intervalTime);
+        const showSlide = (index) => {
+            activeIndex = (index + slides.length) % slides.length;
+            slides.forEach((slide, slideIndex) => {
+                slide.classList.toggle("active", slideIndex === activeIndex);
+            });
         };
 
-        // Khởi tạo
-        showSlide(idx);
-        timer = setInterval(next, intervalTime);
+        const next = () => showSlide(activeIndex + 1);
+        const prev = () => showSlide(activeIndex - 1);
+        const stop = () => {
+            if (timerId) window.clearInterval(timerId);
+            timerId = null;
+        };
+        const start = () => {
+            if (prefersReducedMotion) return;
+            stop();
+            timerId = window.setInterval(next, interval);
+        };
 
-        // Nút điều hướng (nếu có)
-        const parent = slider.parentElement;
-        const prevBtn = parent.querySelector('.prev') || parent.querySelector('.prev-studio');
-        const nextBtn = parent.querySelector('.next') || parent.querySelector('.next-studio');
-
-        if (prevBtn) prevBtn.addEventListener('click', () => { prev(); resetTimer(); });
-        if (nextBtn) nextBtn.addEventListener('click', () => { next(); resetTimer(); });
-
-        // Tạm dừng khi hover
-        slider.addEventListener('mouseenter', () => clearInterval(timer));
-        slider.addEventListener('mouseleave', () => resetTimer());
-    };
-
-    initSlider('heroSlider', '.slide', 5000);
-    initSlider('studioSlider', '.studio-slide', 6000);
-
-    /* ----------------------------------------------------------------------
-         4. BỘ LỌC TÌM KIẾM & HIỂN THỊ SẢN PHẨM (Search & Filter)
-         ---------------------------------------------------------------------- */
-    const searchInput = document.getElementById('search');
-    const varietyFilter = document.getElementById('varietyFilter');
-    const segmentFilter = document.getElementById('segmentFilter');
-    const ageFilter = document.getElementById('ageFilter');       // THÊM MỚI
-    const heightFilter = document.getElementById('heightFilter'); // THÊM MỚI
-    const resetFiltersBtn = document.getElementById('resetFilters');
-    const filterSummary = document.getElementById('filterSummary');
-    const emptyState = document.querySelector('#productGrid .empty-state');
-    const productCards = Array.from(document.querySelectorAll('#productGrid .card'));
-
-    // Tự động trích xuất các Option lọc dựa trên dữ liệu thật trên DOM
-    const populateFilterOptions = () => {
-        if (!productCards.length) return;
-
-        const varietySet = new Set();
-
-        productCards.forEach(card => {
-            const variety = card.dataset.variety?.trim();
-            if (variety) varietySet.add(variety);
+        $(prevSelector)?.addEventListener("click", () => {
+            prev();
+            start();
         });
 
-        Array.from(varietySet).sort().forEach(value => {
-            if(varietyFilter) {
-                const option = document.createElement('option');
-                option.value = value;
-                option.textContent = value;
-                varietyFilter.appendChild(option);
+        $(nextSelector)?.addEventListener("click", () => {
+            next();
+            start();
+        });
+
+        slider.addEventListener("mouseenter", stop);
+        slider.addEventListener("mouseleave", start);
+        slider.addEventListener("focusin", stop);
+        slider.addEventListener("focusout", start);
+
+        showSlide(activeIndex);
+        start();
+    };
+
+    const initFilters = () => {
+        const productGrid = $("#productGrid");
+        if (!productGrid) return;
+
+        const cards = $$(".luxury-product-card", productGrid);
+        const emptyState = $(".empty-state", productGrid);
+        const searchInput = $("#search");
+        const varietyFilter = $("#varietyFilter");
+        const segmentFilter = $("#segmentFilter");
+        const ageFilter = $("#ageFilter");
+        const heightFilter = $("#heightFilter");
+        const resetBtn = $("#resetFilters");
+        const summary = $("#filterSummary");
+        const tabs = $$(".luxury-tab");
+
+        const normalize = (value) => (value || "").toString().trim().toLowerCase();
+
+        const inRange = (range, value) => {
+            if (!range) return true;
+
+            const numericValue = Number.parseFloat(value);
+            if (Number.isNaN(numericValue)) return false;
+
+            if (range.endsWith("+")) {
+                return numericValue >= Number.parseFloat(range);
             }
-        });
-    };
 
-    // Hàm bổ trợ kiểm tra giá trị số có nằm trong khoảng lọc (min-max) không
-    const checkRangeMatch = (filterValue, cardValueStr) => {
-        if (!filterValue) return true; // Không chọn lọc khoảng này -> Mặc định khớp
-        if (!cardValueStr) return false; // Có lọc nhưng sản phẩm thiếu dữ liệu số -> Không khớp
+            const [min, max] = range.split("-").map(Number.parseFloat);
+            return numericValue >= min && numericValue <= max;
+        };
 
-        const cardValue = parseFloat(cardValueStr);
-        if (isNaN(cardValue)) return false;
+        const populateVarieties = () => {
+            if (!varietyFilter) return;
 
-        // Xử lý trường hợp đặc biệt dấu "+" (Ví dụ: 50+, 100+)
-        if (filterValue.endsWith('+')) {
-            const min = parseFloat(filterValue);
-            return cardValue >= min;
-        }
+            const existingValues = new Set($$("option", varietyFilter).map((option) => option.value));
+            const varieties = [...new Set(cards.map((card) => card.dataset.variety).filter(Boolean))]
+                .sort((first, second) => first.localeCompare(second, "vi"));
 
-        // Xử lý khoảng bình thường phân tách bằng dấu "-" (Ví dụ: 0-5, 5-15)
-        const parts = filterValue.split('-');
-        const min = parseFloat(parts[0]);
-        const max = parseFloat(parts[1]);
-        return cardValue >= min && cardValue <= max;
-    };
+            varieties.forEach((variety) => {
+                if (existingValues.has(variety)) return;
 
-    const applyFilters = () => {
-        const q = searchInput?.value.trim().toLowerCase() || '';
-        const variety = varietyFilter?.value.toLowerCase() || '';
-        const segment = segmentFilter?.value.toLowerCase() || '';
-        const ageRange = ageFilter?.value || '';       // THÊM MỚI
-        const heightRange = heightFilter?.value || ''; // THÊM MỚI
-        let visibleCount = 0;
+                const option = document.createElement("option");
+                option.value = variety;
+                option.textContent = variety;
+                varietyFilter.appendChild(option);
+            });
+        };
 
-        productCards.forEach(card => {
-            const title = (card.dataset.title || card.querySelector('.card-title')?.textContent || '').toLowerCase();
-            const meta = (card.querySelector('.card-meta')?.textContent || '').toLowerCase();
-            const cardVariety = (card.dataset.variety || '').toLowerCase();
-            const cardSegment = (card.dataset.segment || '').toLowerCase();
+        const setSummary = (visibleCount) => {
+            if (!summary) return;
+            summary.textContent = `Hiển thị ${visibleCount} tác phẩm`;
+        };
 
-            // Lấy giá trị tuổi và chiều cao từ thuộc tính data của thẻ card
-            const cardAge = card.dataset.age || '';       // THÊM MỚI
-            const cardHeight = card.dataset.height || ''; // THÊM MỚI
+        const syncTabs = (segment) => {
+            tabs.forEach((tab) => {
+                tab.classList.toggle("active", normalize(tab.dataset.segment) === segment);
+            });
+        };
 
-            const textMatch = !q || title.includes(q) || meta.includes(q);
-            const varietyMatch = !variety || cardVariety === variety;
-            const segmentMatch = !segment || cardSegment === segment;
+        const applyFilters = () => {
+            const query = normalize(searchInput?.value);
+            const variety = normalize(varietyFilter?.value);
+            const segment = normalize(segmentFilter?.value);
+            const ageRange = ageFilter?.value || "";
+            const heightRange = heightFilter?.value || "";
+            let visibleCount = 0;
 
-            // Thực hiện tính toán so khớp khoảng số cho tuổi và chiều cao
-            const ageMatch = checkRangeMatch(ageRange, cardAge);         // THÊM MỚI
-            const heightMatch = checkRangeMatch(heightRange, cardHeight); // THÊM MỚI
+            cards.forEach((card) => {
+                const title = normalize(card.dataset.title || $(".card-title", card)?.textContent);
+                const code = normalize(card.dataset.id || $(".card-eyebrow", card)?.textContent);
+                const meta = normalize($(".card-meta", card)?.textContent);
+                const cardVariety = normalize(card.dataset.variety);
+                const cardSegment = normalize(card.dataset.segment);
 
-            // Tổng hợp tất cả điều kiện lọc
-            const shouldShow = textMatch && varietyMatch && segmentMatch && ageMatch && heightMatch;
+                const matchesText = !query || title.includes(query) || code.includes(query) || meta.includes(query) || cardVariety.includes(query);
+                const matchesVariety = !variety || cardVariety === variety;
+                const matchesSegment = !segment || cardSegment === segment;
+                const matchesAge = inRange(ageRange, card.dataset.age);
+                const matchesHeight = inRange(heightRange, card.dataset.height);
+                const isVisible = matchesText && matchesVariety && matchesSegment && matchesAge && matchesHeight;
 
-            card.style.display = shouldShow ? '' : 'none';
-            if (shouldShow) visibleCount += 1;
-        });
+                card.hidden = !isVisible;
+                if (isVisible) visibleCount += 1;
+            });
 
-        if (filterSummary) {
-            filterSummary.textContent = `Hiển thị ${visibleCount} tác phẩm`;
-        }
-        if (emptyState) {
-            emptyState.style.display = visibleCount ? 'none' : 'block';
-        }
-    };
+            if (emptyState) {
+                emptyState.hidden = visibleCount > 0;
+            }
 
-    // Gắn sự kiện cho bộ lọc
-    populateFilterOptions();
-    if (searchInput) searchInput.addEventListener('input', applyFilters);
-    if (varietyFilter) varietyFilter.addEventListener('change', applyFilters);
-    if (segmentFilter) segmentFilter.addEventListener('change', applyFilters);
-    if (ageFilter) ageFilter.addEventListener('change', applyFilters);       // THÊM MỚI
-    if (heightFilter) heightFilter.addEventListener('change', applyFilters); // THÊM MỚI
+            setSummary(visibleCount);
+            syncTabs(segment);
+        };
 
-    if (resetFiltersBtn) {
-        resetFiltersBtn.addEventListener('click', () => {
-            if (varietyFilter) varietyFilter.value = '';
-            if (segmentFilter) segmentFilter.value = '';
-            if (ageFilter) ageFilter.value = '';         // THÊM MỚI
-            if (heightFilter) heightFilter.value = '';   // THÊM MỚI
-            if (searchInput) searchInput.value = '';
+        const resetFilters = () => {
+            [searchInput, varietyFilter, segmentFilter, ageFilter, heightFilter].forEach((control) => {
+                if (control) control.value = "";
+            });
             applyFilters();
+            showToast("Đã đặt lại bộ lọc");
+        };
+
+        populateVarieties();
+        [searchInput, varietyFilter, segmentFilter, ageFilter, heightFilter].forEach((control) => {
+            control?.addEventListener(control === searchInput ? "input" : "change", applyFilters);
         });
-    }
 
-    // Chạy mặc định lần đầu để quản lý hiển thị sản phẩm chính xác
-    applyFilters();
+        tabs.forEach((tab) => {
+            tab.addEventListener("click", () => {
+                if (segmentFilter) {
+                    segmentFilter.value = tab.dataset.segment || "";
+                }
+                applyFilters();
+            });
+        });
 
+        resetBtn?.addEventListener("click", resetFilters);
+        applyFilters();
+    };
 
-    /* ----------------------------------------------------------------------
-       5. KHẢ NĂNG TRUY CẬP (Accessibility)
-       ---------------------------------------------------------------------- */
-    document.body.addEventListener('keydown', (e) => {
-        if (e.key === 'Tab') document.documentElement.classList.add('show-focus');
+    const initPointerGlow = () => {
+        if (prefersReducedMotion) return;
+
+        const glowItems = $$(".luxury-product-card, .service, .filter-panel, .hero-right");
+        glowItems.forEach((item) => {
+            item.addEventListener("pointermove", (event) => {
+                const rect = item.getBoundingClientRect();
+                const x = ((event.clientX - rect.left) / rect.width) * 100;
+                const y = ((event.clientY - rect.top) / rect.height) * 100;
+
+                item.style.setProperty("--pointer-x", `${x.toFixed(2)}%`);
+                item.style.setProperty("--pointer-y", `${y.toFixed(2)}%`);
+            });
+        });
+    };
+
+    document.body.addEventListener("keydown", (event) => {
+        if (event.key === "Tab") {
+            document.documentElement.classList.add("show-focus");
+        }
     });
 
-    /* ----------------------------------------------------------------------
-       6. ĐIỀU KHIỂN CLICK DROPDOWN ACCOUNT (Đồng bộ Premium)
-       ---------------------------------------------------------------------- */
-    // Khối bao bọc cha chứa toàn bộ menu user
-    const userMenuContainer = document.querySelector('.user-menu-premium');
-    const userBtn = document.querySelector('.user-btn-premium');
-
-    if (userMenuContainer && userBtn) {
-        // Sự kiện Click vào nút User
-        userBtn.addEventListener('click', (e) => {
-            e.stopPropagation(); // Ngăn sự kiện nổi bọt gây đóng menu ngay lập tức
-
-            // Toggle class 'active' tại THẺ CHA để kích hoạt cả menu và xoay chevron từ CSS
-            userMenuContainer.classList.toggle('active');
-
-            // Cập nhật thuộc tính hỗ trợ tiếp cận ARIA
-            const isExpanded = userMenuContainer.classList.contains('active');
-            userBtn.setAttribute('aria-expanded', isExpanded);
-        });
-
-        // Click ra bất cứ đâu ngoài vùng Menu thì tự động đóng lại
-        document.addEventListener('click', (e) => {
-            if (!userMenuContainer.contains(e.target)) {
-                userMenuContainer.classList.remove('active');
-                userBtn.setAttribute('aria-expanded', 'false');
-            }
-        });
-    }
+    updateYear();
+    initAnchorScroll();
+    initReveal();
+    initSlider({
+        sliderSelector: "#heroSlider",
+        slideSelector: ".slide",
+        prevSelector: ".prev",
+        nextSelector: ".next",
+        interval: 5200
+    });
+    initSlider({
+        sliderSelector: "#studioSlider",
+        slideSelector: ".studio-slide",
+        prevSelector: ".prev-studio",
+        nextSelector: ".next-studio",
+        interval: 6400
+    });
+    initFilters();
+    initPointerGlow();
 });

@@ -10,8 +10,6 @@ import com.example.bonsai_shop.product.dto.ProductCardDTO;
 import com.example.bonsai_shop.product.repository.ProductRepository;
 import com.example.bonsai_shop.product.repository.ProductSpecifications;
 import org.springframework.transaction.annotation.Transactional;
-import java.math.BigDecimal;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -52,11 +50,11 @@ public class ProductService {
         );
     }
 
-    public Page<ProductCardDTO> getPreniumProducts(Pageable pageable) {
+    public Page<ProductCardDTO> getPremiumProducts(Pageable pageable) {
         return productRepository.findPremiumProducts(pageable);
     }
 
-    public ProductCardDTO getPreniumProductsById(Integer productId) {
+    public ProductCardDTO getPremiumProductsById(Integer productId) {
         return productRepository.findPremiumProductById(productId);
     }
 
