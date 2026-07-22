@@ -1,6 +1,6 @@
 .sch-kpi-grid {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(5, minmax(0, 1fr));
     gap: 16px;
     margin-bottom: 24px;
 }
@@ -75,6 +75,261 @@
     color: #536257;
     font-size: 0.82rem;
     margin: 4px 0 0;
+}
+
+.sch-reminder-panel {
+    background: linear-gradient(135deg, #fff 0%, #fbf7ef 100%);
+    border: 1px solid #eadfce;
+    margin-bottom: 24px;
+    padding: 24px;
+}
+
+.sch-reminder-head {
+    align-items: center;
+    display: flex;
+    gap: 16px;
+    justify-content: space-between;
+    margin-bottom: 14px;
+}
+
+.sch-reminder-kicker {
+    color: #b8926a;
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 1.6px;
+    margin: 0 0 4px;
+    text-transform: uppercase;
+}
+
+.sch-reminder-head h2 {
+    color: #1c3322;
+    font-size: 1.12rem;
+    font-weight: 800;
+    margin: 0;
+}
+
+.sch-reminder-count {
+    background: #fff7ed;
+    border: 1px solid #fed7aa;
+    border-radius: 999px;
+    color: #9a3412;
+    font-size: 0.78rem;
+    font-weight: 800;
+    padding: 6px 12px;
+    white-space: nowrap;
+}
+
+.sch-reminder-list {
+    display: grid;
+    gap: 16px;
+    grid-template-columns: repeat(4, minmax(240px, 1fr));
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.sch-reminder-item {
+    min-width: 0;
+}
+
+.sch-reminder-btn {
+    align-items: flex-start;
+    background: #faf8f5;
+    border: 1px solid #e8e4dd;
+    border-left: 4px solid #b8926a;
+    border-radius: 16px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    min-height: 100%;
+    padding: 18px;
+    position: relative;
+    text-align: left;
+    transition: all 0.18s ease;
+    width: 100%;
+}
+
+.sch-reminder-btn:hover {
+    background: #fff;
+    border-color: #b8926a;
+    box-shadow: 0 16px 36px rgba(28, 51, 34, 0.11);
+    transform: translateY(-2px);
+}
+
+.sch-reminder-priority {
+    align-items: center;
+    background: #1c3322;
+    border-radius: 999px;
+    color: #fff;
+    display: inline-flex;
+    font-size: 0.68rem;
+    font-weight: 900;
+    height: 26px;
+    justify-content: center;
+    min-width: 34px;
+    padding: 0 9px;
+}
+
+.sch-reminder-content {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    min-width: 0;
+    width: 100%;
+}
+
+.sch-reminder-content strong,
+.sch-reminder-meta {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    width: 100%;
+}
+
+.sch-reminder-content strong {
+    color: #1c3322;
+    font-size: 0.98rem;
+    font-weight: 800;
+}
+
+.sch-reminder-due {
+    color: #1c3322;
+    font-size: 0.94rem;
+    font-weight: 900;
+}
+
+.sch-reminder-deadline,
+.sch-reminder-exact,
+.sch-reminder-note {
+    display: block;
+    line-height: 1.45;
+}
+
+.sch-reminder-deadline {
+    background: rgba(184, 146, 106, 0.12);
+    border-radius: 8px;
+    color: #7c5b34;
+    font-size: 0.73rem;
+    font-weight: 800;
+    padding: 6px 8px;
+}
+
+.sch-reminder-exact {
+    color: #8a6d45;
+    font-size: 0.72rem;
+    font-weight: 700;
+}
+
+.sch-reminder-meta {
+    color: #536257;
+    font-size: 0.78rem;
+}
+
+.sch-reminder-note {
+    color: #657066;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.sch-reminder-badge {
+    border-radius: 999px;
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0.2px;
+    padding: 4px 9px;
+}
+
+.sch-reminder-action {
+    align-self: stretch;
+    background: rgba(28, 51, 34, 0.08);
+    border-radius: 10px;
+    color: #1c3322;
+    font-size: 0.78rem;
+    font-weight: 900;
+    padding: 8px 10px;
+    text-align: center;
+}
+
+.sch-reminder-badge.urgent {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.sch-reminder-badge.soon {
+    background: #ffedd5;
+    color: #9a3412;
+}
+
+.sch-reminder-badge.high {
+    background: #ffedd5;
+    color: #9a3412;
+}
+
+.sch-reminder-badge.today {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.sch-reminder-badge.neutral {
+    background: #e8f3ec;
+    color: #1c5f3a;
+}
+
+.sch-reminder-item.urgent .sch-reminder-btn {
+    background: linear-gradient(145deg, #fff7f7 0%, #fff 100%);
+    border-left-color: #dc2626;
+}
+
+.sch-reminder-item.soon .sch-reminder-btn {
+    background: linear-gradient(145deg, #fff7ed 0%, #fff 100%);
+    border-left-color: #ea580c;
+}
+
+.sch-reminder-item.high .sch-reminder-btn {
+    background: linear-gradient(145deg, #fff7ed 0%, #fff 100%);
+    border-left-color: #ea580c;
+}
+
+.sch-reminder-item.today .sch-reminder-btn {
+    background: linear-gradient(145deg, #fffbeb 0%, #fff 100%);
+    border-left-color: #d97706;
+}
+
+.sch-reminder-item.neutral .sch-reminder-btn {
+    background: linear-gradient(145deg, #f7fbf8 0%, #fff 100%);
+    border-left-color: #1c5f3a;
+}
+
+.sch-reminder-item.urgent .sch-reminder-priority {
+    background: #991b1b;
+}
+
+.sch-reminder-item.soon .sch-reminder-priority {
+    background: #9a3412;
+}
+
+.sch-reminder-item.high .sch-reminder-priority {
+    background: #9a3412;
+}
+
+.sch-reminder-item.today .sch-reminder-priority {
+    background: #92400e;
+}
+
+.sch-reminder-item.neutral .sch-reminder-priority {
+    background: #1c5f3a;
+}
+
+.sch-reminder-empty {
+    background: #faf8f5;
+    border: 1px dashed #d8d0c3;
+    border-radius: 12px;
+    color: #536257;
+    font-size: 0.86rem;
+    grid-column: 1 / -1;
+    padding: 18px;
+    text-align: center;
 }
 
 .sch-overview {
@@ -407,13 +662,13 @@
 }
 
 .status-badge.approved {
-    background: #d1fae5;
-    color: #065f46;
+    background: #dbeafe;
+    color: #1d4ed8;
 }
 
 .status-badge.completed {
-    background: #dcfce7;
-    color: #166534;
+    background: #d1fae5;
+    color: #065f46;
 }
 
 .status-badge.rejected {
@@ -424,6 +679,45 @@
 .status-badge.cancelled {
     background: #f3f4f6;
     color: #6b7280;
+}
+
+.status-badge.overdue {
+    background: #ffe4e6;
+    color: #9f1239;
+}
+
+.sch-overdue-action {
+    background: #fff1f2;
+    border: 1px solid #fecdd3;
+    border-radius: 999px;
+    color: #9f1239;
+    display: inline-flex;
+    font-size: 0.76rem;
+    font-weight: 800;
+    letter-spacing: 0.2px;
+    padding: 5px 10px;
+    white-space: nowrap;
+}
+
+.btn-overdue {
+    background: #9f1239;
+    border: 1px solid #9f1239;
+    border-radius: 999px;
+    color: #fff;
+    cursor: pointer;
+    font-size: 0.76rem;
+    font-weight: 800;
+    letter-spacing: 0.2px;
+    padding: 7px 12px;
+    transition: all 0.18s ease;
+    white-space: nowrap;
+}
+
+.btn-overdue:hover {
+    background: #7f1d1d;
+    border-color: #7f1d1d;
+    box-shadow: 0 8px 20px rgba(159, 18, 57, 0.2);
+    transform: translateY(-1px);
 }
 
 .sch-edit-btn {
@@ -449,9 +743,16 @@
 }
 
 .btn-complete {
+    background: #065f46;
+    border-color: #065f46;
     font-size: 0.82rem;
     font-weight: 700;
     padding: 6px 10px;
+}
+
+.btn-complete:hover {
+    background: #064e3b;
+    border-color: #064e3b;
 }
 
 .sch-modal-backdrop {
@@ -552,6 +853,16 @@
     gap: 10px;
 }
 
+.sch-status-area.readonly > label {
+    color: #b8926a;
+}
+
+.sch-status-area.readonly .sch-status-msg {
+    background: #f8fafc;
+    border-color: #dbe3eb;
+    color: #334155;
+}
+
 .sch-status-area > label,
 .sch-reject-label {
     color: #1e221f;
@@ -562,6 +873,11 @@
 .sch-reject-label {
     display: block;
     margin-bottom: 6px;
+}
+
+.sch-reject-label span {
+    color: #dc2626;
+    font-weight: 900;
 }
 
 .sch-status-area select,
@@ -584,6 +900,12 @@
 
 .sch-status-area textarea {
     resize: vertical;
+}
+
+.sch-status-area textarea.sch-field-error {
+    background: #fff7f7;
+    border-color: #dc2626;
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
 }
 
 .sch-status-msg {
@@ -609,12 +931,95 @@
     padding: 16px 22px;
 }
 
-.sch-hidden {
+.sch-confirm-backdrop {
+    align-items: center;
+    background: rgba(22, 24, 24, 0.58);
     display: none;
+    inset: 0;
+    justify-content: center;
+    padding: 24px;
+    position: fixed;
+    z-index: 3100;
+}
+
+.sch-confirm-backdrop.show {
+    display: flex;
+}
+
+.sch-confirm-dialog {
+    background: #fff;
+    border: 1px solid #e8e4dd;
+    border-radius: 18px;
+    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.28);
+    max-width: 430px;
+    padding: 26px;
+    text-align: center;
+    width: 100%;
+}
+
+.sch-confirm-icon {
+    align-items: center;
+    background: #d1fae5;
+    border-radius: 999px;
+    color: #065f46;
+    display: inline-flex;
+    font-size: 1.45rem;
+    height: 56px;
+    justify-content: center;
+    margin-bottom: 16px;
+    width: 56px;
+}
+
+.sch-confirm-kicker {
+    color: #b8926a;
+    font-size: 0.72rem;
+    font-weight: 900;
+    letter-spacing: 1.4px;
+    margin: 0 0 6px;
+    text-transform: uppercase;
+}
+
+.sch-confirm-content h2 {
+    color: #1c3322;
+    font-size: 1.2rem;
+    font-weight: 900;
+    margin: 0 0 8px;
+}
+
+.sch-confirm-content p:last-child {
+    color: #536257;
+    font-size: 0.9rem;
+    line-height: 1.55;
+    margin: 0;
+}
+
+.sch-confirm-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin-top: 22px;
+}
+
+.sch-hidden {
+    display: none !important;
+}
+
+@media (max-width: 1180px) {
+    .sch-kpi-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .sch-reminder-list {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
 }
 
 @media (max-width: 900px) {
     .sch-kpi-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .sch-reminder-list {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }
@@ -637,6 +1042,16 @@
     }
 
     .sch-info-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .sch-reminder-head {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .sch-reminder-list {
         grid-template-columns: 1fr;
     }
 }

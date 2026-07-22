@@ -81,6 +81,28 @@
                         <p class="sch-kpi-label">Chờ duyệt</p>
                     </div>
                 </article>
+
+                <article class="sch-kpi-card">
+                    <div class="sch-kpi-top">
+                        <div class="sch-kpi-icon rose"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                        <span class="sch-kpi-badge rose" id="overduePercent">0%</span>
+                    </div>
+                    <div>
+                        <p class="sch-kpi-val" id="statOverdue">0</p>
+                        <p class="sch-kpi-label">Quá hạn xử lý</p>
+                    </div>
+                </article>
+            </section>
+
+            <section class="portal-card sch-reminder-panel" aria-label="Nhắc việc cần xử lý">
+                <div class="sch-reminder-head">
+                    <div>
+                        <p class="sch-reminder-kicker">Nhắc lịch</p>
+                        <h2><i class="fa-solid fa-bell me-2"></i>Lịch đang chờ xử lý</h2>
+                    </div>
+                    <span id="reminderCount" class="sch-reminder-count">0 lịch chờ</span>
+                </div>
+                <ul id="pendingReminders" class="sch-reminder-list"></ul>
             </section>
 
             <div class="sch-overview">
@@ -120,6 +142,7 @@
                     <select id="statusFilter" class="sch-select" aria-label="Lọc trạng thái">
                         <option value="ALL">Tất cả trạng thái</option>
                         <option value="PENDING">PENDING</option>
+                        <option value="OVERDUE">OVERDUE</option>
                         <option value="APPROVED">APPROVED</option>
                         <option value="COMPLETED">COMPLETED</option>
                         <option value="REJECTED">REJECTED</option>
@@ -145,7 +168,8 @@
                             th:data-id="${appointment.appointmentId}"
                             th:data-phone="${appointment.customerPhone}"
                             th:data-email="${appointment.customerEmail}"
-                            th:data-note="${appointment.note}">
+                            th:data-note="${appointment.note}"
+                            th:data-appointment-at="${#temporals.format(appointment.appointmentDate,'yyyy-MM-dd''T''HH:mm')}">
                             <td><strong th:text="${appointment.appointmentId}">1</strong></td>
                             <td th:text="${appointment.customerName}">Nguyễn Văn A</td>
                             <td>
@@ -160,18 +184,12 @@
                                       th:text="${appointment.status}">PENDING</span>
                             </td>
                             <td class="table-actions">
-                                <button th:if="${appointment.status == 'PENDING'}"
+                                <button th:if="${appointment.status == 'PENDING' || appointment.status == 'APPROVED'}"
                                         type="button"
                                         class="sch-edit-btn edit-btn"
                                         th:data-id="${appointment.appointmentId}"
                                         aria-label="Cập nhật lịch hẹn">
                                     <i class="fa-solid fa-pen-to-square"></i>
-                                </button>
-                                <button th:if="${appointment.status == 'APPROVED'}"
-                                        type="button"
-                                        class="btn btn-success btn-complete"
-                                        th:data-id="${appointment.appointmentId}">
-                                    Complete
                                 </button>
                                 <span th:if="${appointment.status == 'COMPLETED'}" class="badge bg-success">Completed</span>
                                 <span th:if="${appointment.status == 'REJECTED'}" class="badge bg-danger">Rejected</span>
@@ -230,15 +248,15 @@
             </div>
 
             <div class="sch-status-area">
-                <label for="statusSelect">Cập nhật trạng thái</label>
+                <label id="statusSelectLabel" for="statusSelect">Cập nhật trạng thái</label>
                 <select id="statusSelect">
                     <option value="APPROVED">APPROVED</option>
                     <option value="REJECTED">REJECTED</option>
                 </select>
 
                 <div id="rejectReasonGroup" class="sch-hidden">
-                    <label for="rejectReason" class="sch-reject-label">Lý do từ chối</label>
-                    <textarea id="rejectReason" rows="3" placeholder="Nhập lý do từ chối..."></textarea>
+                    <label for="rejectReason" class="sch-reject-label">Lý do từ chối <span aria-hidden="true">*</span></label>
+                    <textarea id="rejectReason" rows="3" placeholder="Nhập lý do từ chối để khách hiểu và đặt lại lịch phù hợp hơn..."></textarea>
                 </div>
 
                 <p id="statusMessage" class="sch-status-msg"></p>
@@ -263,6 +281,29 @@
 <form id="globalCompleteForm" method="post" class="sch-hidden">
     <input type="hidden" name="_csrf" th:value="${_csrf?.token}">
 </form>
+
+<form id="globalOverdueForm" method="post" class="sch-hidden">
+    <input type="hidden" name="_csrf" th:value="${_csrf?.token}">
+</form>
+
+<div id="confirmCompleteModal" class="sch-confirm-backdrop" aria-hidden="true">
+    <div class="sch-confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="confirmCompleteTitle">
+        <div class="sch-confirm-icon">
+            <i class="fa-solid fa-circle-check"></i>
+        </div>
+        <div class="sch-confirm-content">
+            <p class="sch-confirm-kicker">Xác nhận hoàn thành</p>
+            <h2 id="confirmCompleteTitle">Hoàn thành lịch hẹn?</h2>
+            <p id="confirmCompleteMessage">Lịch hẹn này sẽ được chuyển sang trạng thái COMPLETED.</p>
+        </div>
+        <div class="sch-confirm-actions">
+            <button type="button" id="cancelCompleteConfirm" class="btn-modal-cancel">Hủy</button>
+            <button type="button" id="acceptCompleteConfirm" class="btn-modal-confirm">
+                <i class="fa-solid fa-check me-1"></i>Xác nhận
+            </button>
+        </div>
+    </div>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script th:src="@{/js/manage_schedule.js}"></script>

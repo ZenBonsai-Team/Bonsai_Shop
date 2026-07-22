@@ -60,7 +60,7 @@ public class ArtisanAppointmentController {
             artisanAppointmentService.updateAppointmentStatus(appointmentId,status,message,artisan);
             redirectAttributes.addFlashAttribute(
                     "success",
-                    "Appointment status updated successfully."
+                    "Lịch hẹn đã đổi trạng thái thành công."
             );
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error",
@@ -86,7 +86,7 @@ public class ArtisanAppointmentController {
 
                redirectAttributes.addFlashAttribute(
                        "success",
-                       "Appointment completed successfully."
+                       "Lịch hẹn đã đổi trạng thái thành công."
                );
 
 
@@ -94,6 +94,28 @@ public class ArtisanAppointmentController {
                redirectAttributes.addFlashAttribute("error",e.getMessage());
            }
            return "redirect:/artisan/appointments";
+    }
+
+    @PostMapping("artisan/appointments/overdue/{appointmentId}")
+    public String markAppointmentOverdue(
+            @PathVariable Integer appointmentId,
+            Authentication authentication,
+            RedirectAttributes redirectAttributes
+    ) {
+        String email = authentication.getName();
+        User artisan = userService.findByEmail(email);
+
+        try {
+            artisanAppointmentService.markAppointmentOverdue(appointmentId, artisan);
+            redirectAttributes.addFlashAttribute(
+                    "success",
+                    "Đã cập nhật lịch hẹn sang trạng thái quá hạn."
+            );
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        }
+
+        return "redirect:/artisan/appointments";
     }
 
 }

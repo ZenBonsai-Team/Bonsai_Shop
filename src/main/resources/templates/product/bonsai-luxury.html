@@ -1,135 +1,60 @@
 <!DOCTYPE html>
 <html lang="vi"
-      xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
-
+      xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Bonsai Luxury — Nghệ thuật Bonsai cao cấp</title>
+    <title>Bonsai Luxury — Bonsai di sản cho không gian cao cấp</title>
     <meta name="description"
-          content="Bonsai Luxury — bộ sưu tập bonsai cao cấp, vận chuyển an toàn, bảo hành, và dịch vụ chăm sóc chuyên nghiệp.">
+          content="Bonsai Luxury — bộ sưu tập bonsai di sản, tác phẩm độc bản, tư vấn nghệ nhân, bàn giao cao cấp và chăm sóc riêng sau sở hữu.">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Playfair+Display:wght@400;600;700&display=swap"
           rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap"
+          rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@300&display=swap"
           rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/common.css}">
     <link rel="stylesheet" th:href="@{/css/bonsai_luxury.css}">
 </head>
 
-<body>
-<header class="navbar" role="banner">
-    <div class="container nav-inner">
-
-        <!-- 1. KHỐI BRAND / LOGO -->
-        <div class="brand">
-            <!-- Thêm class logo-inner hoặc giữ nguyên cấu trúc cũ tùy CSS,
-                 đã đổi tên class chữ phụ thành logo-sans để ăn theo CSS mới -->
-            <a href="/" class="brand" aria-label="Bonsai Luxury Homepage">
-                <span class="logo-serif">BONSAI</span>
-                <span class="logo-sans">LUXURY</span>
-            </a>
-        </div>
-
-        <!-- 2. HỆ THỐNG ĐIỀU HƯỚNG TRUNG TÂM -->
-        <nav class="main-nav" role="navigation" aria-label="Điều hướng chính">
-            <ul class="menu">
-                <li><a class="nav-link" href="#home">Trang chủ</a></li>
-                <li><a class="nav-link" href="#collection">Bộ sưu tập</a></li>
-                <li><a class="nav-link" href="#services">Dịch vụ</a></li>
-                <li><a class="nav-link" href="/appointments">My Appointment</a></li>
-                <li><a class="nav-link" href="#about">Giới thiệu</a></li>
-                <li><a class="nav-link" href="#contact">Liên hệ</a></li>
-            </ul>
-        </nav>
-
-        <!-- 3. CỤM TIỆN ÍCH & TÀI KHOẢN CAO CẤP -->
-        <div class="nav-actions">
-
-            <!-- Ô tìm kiếm tối giản -->
-            <div class="search-wrap">
-                <label for="search" class="visually-hidden">Tìm kiếm tác phẩm</label>
-                <input id="search" class="search-bar" type="search" placeholder="Tìm tác phẩm...">
-                <span class="search-icon">🔍</span>
-            </div>
-
-            <!-- Giỏ hàng Premium -->
-            <button class="icon-btn cart" aria-label="Giỏ hàng cá nhân">
-                <span class="cart-icon">👜</span>
-                <span class="cart-count">0</span>
-            </button>
-
-            <!-- Notifications (chỉ hiện khi đã đăng nhập) -->
-            <div sec:authorize="isAuthenticated()" class="notification-wrap" id="notificationWrap">
-                <button class="icon-btn notification-bell-btn" id="notificationBellBtn" aria-label="Thông báo">
-                    <span class="bell-emoji">🔔</span>
-                    <span class="notification-count" id="notificationCount">0</span>
-                </button>
-                <div class="notification-dropdown" id="notificationDropdown">
-                    <div class="notification-dropdown-header">
-                        <span>Thông báo của bạn</span>
-                        <button id="markAllReadBtn" class="mark-all-read-btn">Đọc tất cả</button>
-                    </div>
-                    <ul class="notification-list" id="notificationList">
-                        <li class="notification-empty">Không có thông báo mới</li>
-                    </ul>
-                </div>
-            </div>
-
-            <!-- Trạng thái 1: Khách vãng lai -->
-            <div sec:authorize="!isAuthenticated()" id="guest-menu" class="guest-actions">
-                <a href="/login" class="btn-login-premium">Đăng nhập</a>
-                <a href="/register" class="btn-register-premium">Đăng Ký</a>
-            </div>
-
-            <!-- Trạng thái 2: Thành viên đã đăng nhập -->
-            <div sec:authorize="isAuthenticated()" id="user-menu" class="user-menu-premium">
-                <button class="user-btn-premium" aria-haspopup="true" aria-expanded="false">
-                    <div class="avatar-wrapper">
-                        <!-- Đã fix: Thêm th:src động cho Thymeleaf và src mặc định phòng hờ -->
-                        <img src="" class="avatar" alt="User Avatar" th:alt="${#authentication.name}">
-                        <span class="status-indicator"></span>
-                    </div>
-                    <span id="username" class="username-text" sec:authentication="name">Khách quý</span>
-                    <span class="chevron-icon">▼</span>
-                </button>
-
-                <div class="dropdown-premium" role="menu">
-                    <div class="dropdown-header">
-                        <span class="user-role">Thành viên Premium</span>
-                    </div>
-                    <a href="/profile" role="menuitem">👤 Hồ sơ cá nhân</a>
-                    <a href="/orders" role="menuitem">📦 Lịch sử tác phẩm</a>
-                    <a href="/appointments" role="menuitem">📋 My Appointment</a>
-                    <a href="/wishlist" role="menuitem">❤️ Tuyển chọn lưu trữ</a>
-                    <a href="/settings" role="menuitem">⚙ Cài đặt tài khoản</a>
-                    <div class="dropdown-divider"></div>
-                    <form th:action="@{/logout}" method="post" class="logout-form">
-                        <button type="submit" class="logout-btn-premium" role="menuitem">🚪 Đăng xuất hệ thống</button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-</header>
+<body class="luxury-shell luxury-home-shell">
+<div th:replace="~{fragments/navbar :: navbar}" th:with="activePage='luxury'"></div>
 
 <main id="home">
-    <section class="hero" aria-label="Giới thiệu không gian nghệ thuật">
+    <section class="hero hero-luxury-v2 hero-marketplace-luxury" aria-label="Giới thiệu không gian nghệ thuật">
+        <div class="hero-ambient hero-ambient-left" aria-hidden="true"></div>
+        <div class="hero-ambient hero-ambient-right" aria-hidden="true"></div>
+        <div class="container hero-marketplace-head">
+            <span class="hero-pill-badge luxury-hero-pill">Showroom riêng • Hồ sơ sưu tầm</span>
+            <h1 class="hero-main-title serif-text luxury-hero-title">Bonsai di sản cho bộ sưu tập riêng</h1>
+            <p class="hero-subtitle-desc luxury-hero-desc">
+                Tuyển chọn những tác phẩm có tuổi, dáng và chất thân rõ nét; phù hợp cho biệt thự, phòng khách lớn và không gian trưng bày cao cấp.
+            </p>
+            <div class="hero-marketplace-actions">
+                <a href="#collection" class="btn btn-hero-solid luxury-hero-solid text-decoration-none">Khám phá bộ sưu tập</a>
+                <a href="#services" class="btn btn-hero-outline luxury-hero-outline text-decoration-none">Dịch vụ sở hữu</a>
+            </div>
+        </div>
+
         <div class="container hero-inner">
             <div class="hero-left">
-                <p class="hero-kicker">Private Bonsai Collection</p>
-                <h1 class="hero-title">Bonsai tuyển chọn cho không gian sống tinh tế</h1>
-                <p class="hero-sub">Những tác phẩm độc bản được chăm sóc bởi nghệ nhân, bàn giao cùng hồ sơ cây và lịch bảo dưỡng riêng.</p>
-
-                <div class="hero-cta">
-                    <a href="#collection" class="btn primary">Khám phá bộ sưu tập</a>
-                    <a href="#services" class="btn ghost">Dịch vụ chăm sóc</a>
+                <div class="hero-edition-tag">
+                    <span>Showroom riêng</span>
+                    <strong>Tác phẩm tuyển chọn giới hạn</strong>
+                </div>
+                <div class="hero-curation-panel">
+                    <p class="hero-kicker">Tiêu chuẩn tuyển chọn</p>
+                    <h2>Tuyển chọn theo tiêu chuẩn sưu tầm</h2>
+                    <p>Ưu tiên dáng ổn định, bộ rễ khỏe, chất thân rõ tuổi và khả năng trưng bày lâu dài.</p>
                 </div>
 
                 <ul class="hero-features">
-                    <li>Hồ sơ tác phẩm</li>
-                    <li>Xem riêng tại showroom</li>
-                    <li>Bảo dưỡng sau bàn giao</li>
+                    <li><i class="fa-solid fa-certificate" aria-hidden="true"></i> Hồ sơ thẩm định</li>
+                    <li><i class="fa-solid fa-door-open" aria-hidden="true"></i> Xem riêng tại showroom</li>
+                    <li><i class="fa-solid fa-seedling" aria-hidden="true"></i> Bảo dưỡng sau bàn giao</li>
                 </ul>
 
                 <div class="showroom-metrics" aria-label="Thông số độc quyền từ showroom">
@@ -137,18 +62,38 @@
                     <div><strong>1:1</strong><span>Lịch xem riêng</span></div>
                     <div><strong>48h</strong><span>Bàn giao tận nơi</span></div>
                 </div>
+
+                <div class="hero-concierge-note" aria-label="Dịch vụ concierge">
+                    <span class="concierge-mark">BL</span>
+                    <div>
+                        <strong>Tư vấn riêng</strong>
+                        <p>Tư vấn chọn cây theo diện tích, hướng sáng và gu nội thất của từng không gian.</p>
+                    </div>
+                </div>
             </div>
 
             <div class="hero-right">
                 <div class="hero-slider" id="heroSlider" aria-live="polite">
                     <div class="slide active">
                         <img src="https://lh3.googleusercontent.com/aida/AP1WRLvD4DW4De5l6WK5em7ZQd3XMfilMNENkJUaqUPsXOgJy3RV835QSUBcPuglqyIchFEzSgCgrbHYEUcewcDFuYYegG0EUo0ZEdF7ZQfZVqaZyZLO-ye0eRvJFRcK6DM8da2G4ltGcIL617iCQl-iACYqHg0kdPolIk2Ut4USuAHN-G2IfYHgOMy6fH1VSzlyFwMa025Go6iOmFzbQ6n2Mp6tYAWgIAM9gM03_4LCc-HP1emrbd2PgPF5NA" alt="Bonsai cổ thụ trong chậu gốm cao cấp" loading="lazy">
+                        <div class="slide-caption">
+                            <span>Tác phẩm di sản</span>
+                            <strong>Tác phẩm cổ thụ cho phòng khách lớn</strong>
+                        </div>
                     </div>
                     <div class="slide">
                         <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuArKJkVfoXjaPvkE09Z4IurNtEQtggPvNhmS_03fOLwjo-b4HhEkQ1XMnIyINr3Eyjgw611S_0Ov9OgN2XLB_OYJQ9xkavk31l1dc8CtI_H30iAntsicKR5uN-hCbTKekb2Ls7df7XJCr2CV1-wVp3cmuaIpdLEFDqhzBNRG-lXJIMCN5PtDEmnEnc05I-iKO1HVf07KgEFhKouSnND6rlPrrGuiClK-8fJgWcpbIRhIVxwz5pYYGO48hSrny83c08uTrbA7TGJeiE" alt="Bonsai nghệ thuật trưng bày phòng khách" loading="lazy">
+                        <div class="slide-caption">
+                            <span>Điểm nhấn nội thất</span>
+                            <strong>Điểm nhấn nghệ thuật cho biệt thự</strong>
+                        </div>
                     </div>
                     <div class="slide">
                         <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuDq9V06hqRe8_IfbfIH4FmmCIBN3GxCW1-w98bjygyxnQpr4Esxdww_U1K2gLsrP5oBy4x6gLhkmMuQwWfO7E37IDBGet1V0BToSLt6N636RDx6LKKKLnpo6SJFBNzDOkICcPtiTMORGap_cnQURDmbGpvyTBFSkARcw5UE1fFlXr7EgaouI8vpCK8SYQMBXxMCydkp9yjCUrh3Su8tu6KeJ1SvBss6Cp5OM-P1XzVfi0e7SLUjBgRU-L3Cdb3FmTX4vFKBWZYwm1M" alt="Bonsai mini đặt trên kệ gỗ" loading="lazy">
+                        <div class="slide-caption">
+                            <span>Trưng bày riêng</span>
+                            <strong>Tinh gọn cho phòng làm việc cao cấp</strong>
+                        </div>
                     </div>
                 </div>
 
@@ -156,149 +101,238 @@
                     <button class="icon-btn prev" aria-label="Ảnh trước">‹</button>
                     <button class="icon-btn next" aria-label="Ảnh tiếp">›</button>
                 </div>
+
+                <div class="hero-spec-card">
+                    <span>Dịch vụ đặc tuyển</span>
+                    <strong>Bàn giao cao cấp</strong>
+                    <small>Bàn giao, đặt vị trí và hướng dẫn chăm sóc tại chỗ.</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="container hero-trust-strip" aria-label="Cam kết dịch vụ Bonsai Luxury">
+            <div>
+                <i class="fa-solid fa-file-signature" aria-hidden="true"></i>
+                <span>Hồ sơ sưu tầm</span>
+            </div>
+            <div>
+                <i class="fa-solid fa-user-tie" aria-hidden="true"></i>
+                <span>Nghệ nhân tư vấn</span>
+            </div>
+            <div>
+                <i class="fa-solid fa-truck-fast" aria-hidden="true"></i>
+                <span>Bàn giao cao cấp</span>
+            </div>
+            <div>
+                <i class="fa-solid fa-shield-heart" aria-hidden="true"></i>
+                <span>Chăm sóc riêng</span>
             </div>
         </div>
     </section>
 
     <section id="collection" class="collection container" aria-label="Bộ sưu tập Bonsai">
-        <div class="section-heading">
-            <p class="section-kicker">Curated Works</p>
-            <h2 class="section-title">Bộ sưu tập nổi bật</h2>
+        <div class="section-heading section-heading-luxury">
+            <div>
+                <p class="section-kicker">Tác phẩm tuyển chọn</p>
+                <h2 class="section-title">Bộ sưu tập nổi bật</h2>
+            </div>
             <p class="section-copy">Mỗi cây được chọn theo dáng, tuổi, chất thân và khả năng hiện diện trong không gian nội thất cao cấp.</p>
         </div>
 
-        <div class="filter-panel" aria-label="Bộ lọc sản phẩm">
-            <div class="filter-panel-header">
-                <div class="filter-panel-title">
-                    <span class="filter-panel-kicker">Curated Selection</span>
-                    <h3>Khám phá tác phẩm theo gu riêng</h3>
-                </div>
-                <div class="filter-summary" id="filterSummary">Hiển thị 0 tác phẩm</div>
-            </div>
-
-            <div class="filter-controls">
-                <div class="filter-group">
-                    <label for="varietyFilter">Loại cây</label>
-                    <select id="varietyFilter" class="filter-select">
-                        <option value="">Tất cả loại cây</option>
-                    </select>
-                </div>
-
-                <div class="filter-group">
-                    <label for="segmentFilter">Bộ sưu tập</label>
-                    <select id="segmentFilter" class="filter-select">
-                        <option value="">Tất cả bộ sưu tập</option>
-                    </select>
-                </div>
-
-                <!-- THÊM BỘ LỌC KHOẢNG TUỔI -->
-                <div class="filter-group">
-                    <label for="ageFilter">Độ tuổi (Năm)</label>
-                    <select id="ageFilter" class="filter-select">
-                        <option value="">Tất cả độ tuổi</option>
-                        <option value="0-5">Dưới 5 năm (Cây trẻ)</option>
-                        <option value="5-15">Từ 5 - 15 năm (Tầm trung)</option>
-                        <option value="15-50">Từ 15 - 50 năm (Cổ thụ nhỏ)</option>
-                        <option value="50+">Trên 50 năm (Đại thụ độc bản)</option>
-                    </select>
-                </div>
-
-                <!-- THÊM BỘ LỌC CHIỀU CAO -->
-                <div class="filter-group">
-                    <label for="heightFilter">Chiều cao (Kích thước)</label>
-                    <select id="heightFilter" class="filter-select">
-                        <option value="">Tất cả kích thước</option>
-                        <option value="0-30">Dưới 30 cm (Mini / Shito)</option>
-                        <option value="30-60">Từ 30 - 60 cm (Tầm trung / Chuhin)</option>
-                        <option value="60-100">Từ 60 - 100 cm (Đại / Omono)</option>
-                        <option value="100+">Trên 100 cm (Đại khủng)</option>
-                    </select>
-                </div>
-
-                <button id="resetFilters" class="btn outline reset-filters-btn">Xóa bộ lọc</button>
-            </div>
-            <p class="filter-note">Mỗi tác phẩm được tuyển chọn theo dáng cây, tuổi tác và tinh thần không gian sống.</p>
+        <div class="luxury-market-tabs" aria-label="Phân loại bộ sưu tập cao cấp">
+            <button type="button" class="luxury-tab active" data-segment="">
+                <span>Tất cả tác phẩm</span>
+                <small>Toàn bộ tác phẩm</small>
+            </button>
+            <button type="button" class="luxury-tab" data-segment="heritage">
+                <span>Cây di sản 50+</span>
+                <small>Cây di sản</small>
+            </button>
+            <button type="button" class="luxury-tab" data-segment="monumental">
+                <span>Tác phẩm cỡ lớn</span>
+                <small>Không gian lớn</small>
+            </button>
+            <button type="button" class="luxury-tab" data-segment="private">
+                <span>Showroom riêng</span>
+                <small>Lịch xem riêng</small>
+            </button>
         </div>
 
-        <div class="grid" id="productGrid">
-            <article class="card" th:each="product : ${product}"
-                     th:data-title="${product.productName}"
-                     th:data-price="${product.price}"
-                     th:data-variety="${product.varietyName}"
-                     th:data-id="${product.productId}">
-
-                <div class="card-media">
-                    <img th:src="${product.thumbnailUrl != null ? product.thumbnailUrl : 'https://images.unsplash.com/photo-1599599810769-bcde5a160d32?auto=format&fit=crop&q=80&w=600'}"
-                         th:alt="${product.productName}" loading="lazy">
-                    <span class="card-status" th:text="${product.status}"></span>
-                </div>
-
-                <div class="card-body">
-                    <h3 class="card-title" th:text="${product.productName}"></h3>
-                    <span class="card-tag" th:text="${product.varietyName}"></span>
-
-                    <p class="card-meta" th:text="${(product.age != null ? product.age + ' năm tuổi' : 'Tuổi chưa xác định') + ' · ' + product.productCode}">
-                    </p>
-
-                    <dl class="artwork-specs">
-                        <div>
-                            <dt>Cao</dt>
-                            <dd th:text="${product.height != null ? product.height + 'cm' : 'N/A'}"></dd>
+        <div class="marketplace-luxury-layout">
+            <aside class="luxury-filter-sidebar" aria-label="Bộ lọc tác phẩm cao cấp">
+                <div class="filter-panel">
+                    <div class="filter-panel-header">
+                        <div class="filter-panel-title">
+                            <span class="filter-panel-kicker">Bộ lọc sưu tầm</span>
+                            <h3>Lọc theo tiêu chuẩn sưu tầm</h3>
                         </div>
-                        <div>
-                            <dt>Đường kính</dt>
-                            <dd th:text="${product.trunkDiameter != null ? product.trunkDiameter + 'cm' : 'N/A'}"></dd>
-                        </div>
-                        <div>
-                            <dt>Loại</dt>
-                            <dd th:text="${product.varietyName}"></dd>
-                        </div>
-                    </dl>
+                        <button id="resetFilters" class="filter-panel-clear-link" type="button">Xóa</button>
+                    </div>
 
-                    <div class="card-footer">
-                        <div class="price-copy">Giá theo yêu cầu</div>
-                        <div class="card-actions">
-                            <a th:href="@{'/bonsai_luxury_detail/' + ${product.productId}}" class="btn-detail-luxury">
-                                <span class="btn-text">Xem chi tiết</span>
-                                <span class="btn-arrow" aria-hidden="true">→</span>
-                            </a>
+                    <div class="luxury-search-box">
+                        <label for="search">Tìm tác phẩm</label>
+                        <div class="luxury-search-input">
+                            <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                            <input id="search" type="search" placeholder="Tên cây, mã, nghệ nhân...">
                         </div>
                     </div>
-                </div>
-            </article>
 
-            <p class="empty-state" th:if="${product == null || #lists.isEmpty(product)}">
-                Hiện chưa có sản phẩm trong bộ sưu tập.
-            </p>
+                    <div class="filter-controls">
+                        <div class="filter-group">
+                            <label for="varietyFilter">Loại cây</label>
+                            <select id="varietyFilter" class="filter-select">
+                                <option value="">Tất cả loại cây</option>
+                            </select>
+                        </div>
+
+                        <div class="filter-group">
+                            <label for="segmentFilter">Phân hạng</label>
+                            <select id="segmentFilter" class="filter-select">
+                                <option value="">Tất cả phân hạng</option>
+                                <option value="heritage">Cây di sản 50+</option>
+                                <option value="monumental">Tác phẩm cỡ lớn</option>
+                                <option value="private">Showroom riêng</option>
+                            </select>
+                        </div>
+
+                        <div class="filter-group">
+                            <label for="ageFilter">Tuổi cây</label>
+                            <select id="ageFilter" class="filter-select">
+                                <option value="">Tất cả độ tuổi</option>
+                                <option value="0-5">Dưới 5 năm</option>
+                                <option value="5-15">5 - 15 năm</option>
+                                <option value="15-50">15 - 50 năm</option>
+                                <option value="50+">Trên 50 năm</option>
+                            </select>
+                        </div>
+
+                        <div class="filter-group">
+                            <label for="heightFilter">Chiều cao</label>
+                            <select id="heightFilter" class="filter-select">
+                                <option value="">Tất cả kích thước</option>
+                                <option value="0-30">Dưới 30 cm</option>
+                                <option value="30-60">30 - 60 cm</option>
+                                <option value="60-100">60 - 100 cm</option>
+                                <option value="100+">Trên 100 cm</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="filter-concierge-card">
+                        <span>Tư vấn riêng</span>
+                        <p>Chọn cây theo không gian, ánh sáng và lịch chăm sóc riêng.</p>
+                    </div>
+                </div>
+
+            </aside>
+
+            <section class="luxury-results" aria-label="Danh sách tác phẩm Bonsai Luxury">
+                <div class="luxury-results-bar">
+                    <div>
+                        <span class="results-kicker">Danh mục tuyển chọn</span>
+                        <h3>Danh mục tác phẩm đang mở lịch</h3>
+                    </div>
+                    <div class="filter-summary" id="filterSummary">Hiển thị 0 tác phẩm</div>
+                </div>
+
+                <div class="grid" id="productGrid">
+                    <article class="card luxury-product-card" th:each="item : ${product}"
+                             th:data-title="${item.productName}"
+                             th:data-price="${item.price}"
+                             th:data-variety="${item.varietyName}"
+                             th:data-age="${item.age}"
+                             th:data-height="${item.height}"
+                             th:data-segment="${item.age != null && item.age >= 50 ? 'heritage' : (item.height != null && item.height >= 100 ? 'monumental' : 'private')}"
+                             th:data-id="${item.productId}">
+
+                        <div class="card-media">
+                            <img th:src="${item.thumbnailUrl != null ? item.thumbnailUrl : 'https://images.unsplash.com/photo-1599599810769-bcde5a160d32?auto=format&fit=crop&q=80&w=600'}"
+                                 th:alt="${item.productName}" loading="lazy">
+                            <span class="card-status" th:text="${item.status}">AVAILABLE</span>
+                        </div>
+
+                        <div class="card-body">
+                            <div class="card-eyebrow">
+                                <span th:text="${item.varietyName}">Tùng La Hán</span>
+                                <span th:text="${item.productCode}">BL-001</span>
+                            </div>
+                            <h3 class="card-title" th:text="${item.productName}">Bonsai Luxury</h3>
+
+                            <p class="card-meta" th:text="${(item.age != null ? item.age + ' năm tuổi' : 'Tuổi chưa xác định') + ' · hồ sơ sưu tầm riêng'}">
+                                Hồ sơ sưu tầm riêng
+                            </p>
+
+                            <dl class="artwork-specs">
+                                <div>
+                                    <dt>Cao</dt>
+                                    <dd th:text="${item.height != null ? item.height + 'cm' : 'N/A'}">85cm</dd>
+                                </div>
+                                <div>
+                                    <dt>Thân</dt>
+                                    <dd th:text="${item.trunkDiameter != null ? item.trunkDiameter + 'cm' : 'N/A'}">15cm</dd>
+                                </div>
+                                <div>
+                                    <dt>Nghệ nhân</dt>
+                                    <dd th:text="${item.artisanName != null ? item.artisanName : 'BL Studio'}">BL Studio</dd>
+                                </div>
+                            </dl>
+
+                            <div class="card-service-row">
+                                <span><i class="fa-solid fa-certificate" aria-hidden="true"></i> Hồ sơ</span>
+                                <span><i class="fa-solid fa-truck-fast" aria-hidden="true"></i> Bàn giao</span>
+                            </div>
+
+                            <div class="card-footer">
+                                <div class="price-copy">Giá theo yêu cầu</div>
+                                <div class="card-actions">
+                                    <a th:href="@{'/bonsai_luxury_detail/' + ${item.productId}}" class="btn-detail-luxury">
+                                        <span class="btn-text">Xem chi tiết</span>
+                                        <span class="btn-arrow" aria-hidden="true">→</span>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </article>
+
+                    <p class="empty-state" th:if="${product == null || product.totalElements == 0}">
+                        Hiện chưa có sản phẩm trong bộ sưu tập.
+                    </p>
+                </div>
+            </section>
         </div>
     </section>
-    <section id="services" class="services container" aria-label="Dịch vụ đẳng cấp">
-        <div class="section-heading">
-            <p class="section-kicker">Ownership Service</p>
-            <h2 class="section-title">Dịch vụ cao cấp</h2>
+    <section id="services" class="services services-luxury container" aria-label="Dịch vụ sở hữu Bonsai Luxury">
+        <div class="section-heading services-heading-luxury">
+            <p class="section-kicker">Dịch vụ sở hữu</p>
+            <h2 class="section-title">Quy trình bàn giao dành cho tác phẩm cao cấp</h2>
+            <p class="section-copy">Từ tư vấn chọn cây đến bàn giao và chăm sóc sau sở hữu, mọi bước được thiết kế cho không gian trưng bày riêng.</p>
         </div>
         <div class="services-grid">
-            <div class="service">
-                <span class="service-icon" aria-hidden="true">local_shipping</span>
-                <h3>Vận chuyển chuyên nghiệp</h3>
-                <p>Đóng gói chống sốc, giao hàng an toàn đến tận nơi.</p>
-            </div>
-            <div class="service">
-                <span class="service-icon" aria-hidden="true">support_agent</span>
+            <article class="service">
+                <span class="service-index">01</span>
+                <span class="service-icon" aria-hidden="true"><i class="fa-solid fa-route"></i></span>
+                <h3>Bàn giao chuyên biệt</h3>
+                <p>Đóng gói, vận chuyển, đặt vị trí và kiểm tra ổn định cây tại không gian nhận.</p>
+            </article>
+            <article class="service service-featured">
+                <span class="service-index">02</span>
+                <span class="service-icon" aria-hidden="true"><i class="fa-solid fa-user-tie"></i></span>
                 <h3>Tư vấn nghệ nhân</h3>
-                <p>Tư vấn tạo dáng, chăm sóc theo từng cây.</p>
-            </div>
-            <div class="service">
-                <span class="service-icon" aria-hidden="true">verified</span>
-                <h3>Bảo hành &amp; chăm sóc</h3>
-                <p>Bảo hành rễ, hỗ trợ chăm sóc trọn đời.</p>
-            </div>
+                <p>Đánh giá ánh sáng, điểm nhìn chính và phương án chăm sóc theo từng dáng cây.</p>
+            </article>
+            <article class="service">
+                <span class="service-index">03</span>
+                <span class="service-icon" aria-hidden="true"><i class="fa-solid fa-shield-heart"></i></span>
+                <h3>Chăm sóc sau sở hữu</h3>
+                <p>Theo dõi sức cây, lịch tưới bón, cắt tỉa định kỳ và phục hồi khi cần.</p>
+            </article>
         </div>
     </section>
 
-    <section id="about" class="about container" aria-label="Xưởng Nghệ Thuật Bonsai Luxury">
-        <div class="about-inner showcase">
+    <section id="about" class="about about-luxury container" aria-label="Xưởng Nghệ Thuật Bonsai Luxury">
+        <div class="about-inner showcase atelier-showcase">
             <div class="showcase-left">
+                <span class="atelier-label">Bonsai Luxury Atelier</span>
                 <div class="studio-slider" id="studioSlider" aria-live="polite">
                     <div class="studio-slide active" data-name="Xưởng Nghệ Thuật Bonsai Luxury" data-year="25">
                         <img src="https://lh3.googleusercontent.com/aida/AP1WRLvKUms-13kTMJcEdB7wLrPp2oIsn-Dj1uWP4cALszEgz-owSPvrRxS-PVJKKKob3r9cvIfikaIy8MVsZAVRBdfKPlcq9Jk4pSVy7RyFElJ_BaJFB2QxMAzxY5FMyqW7RRKdL9oTqqtNbW8F_feHoHCYlXzZs61XCNVD2gv0a9Vcl9BfsKswj79qs41VvpD1XEmWWva-4GZeEhC4_iMU8L_O5uDpcO7sM4rX_lqd8RB15ZkTuLkaAA2uMg" alt="Xưởng nghệ thuật Bonsai Luxury" loading="lazy">
@@ -323,34 +357,34 @@
             </div>
 
             <div class="showcase-right">
-                <h2 class="section-title">Xưởng Nghệ Thuật</h2>
+                <p class="section-kicker">Xưởng nghệ thuật</p>
+                <h2 class="section-title">Nơi mỗi cây được hoàn thiện như một tác phẩm trưng bày</h2>
                 <p class="lead">
-                    Mỗi tác phẩm tại Bonsai Luxury là kết tinh của kỹ thuật truyền thống và thẩm mỹ hiện đại. Xưởng chúng tôi bảo tồn giá trị, đồng thời sáng tạo để mỗi cây trở thành tác phẩm nghệ thuật.
+                    Bonsai Luxury theo đuổi sự tiết chế: dáng cây rõ, thân già có chiều sâu, chậu và vị trí trưng bày được chọn để tôn lên khí chất của từng tác phẩm.
                 </p>
 
                 <ul class="studio-stats">
                     <li><strong>120+</strong><span>Tác phẩm độc bản</span></li>
-                    <li><strong>40</strong><span>Đối tác nghệ thuật</span></li>
+                    <li><strong>40</strong><span>Nghệ nhân đối tác</span></li>
                     <li><strong>25</strong><span>Năm kinh nghiệm</span></li>
                 </ul>
 
                 <div class="showcase-actions">
                     <a href="#collection" class="btn primary">Xem bộ sưu tập</a>
-                    <button class="btn outline contact-studio" data-studio="">Liên hệ ngay</button>
                 </div>
 
                 <div class="timeline" aria-label="Lịch sử phát triển">
                     <div class="timeline-item">
-                        <time datetime="1998">1998</time>
-                        <p>Thành lập xưởng Bonsai Luxury</p>
+                        <time datetime="1998">01</time>
+                        <p>Tuyển chọn cây theo dáng, tuổi và chất thân.</p>
                     </div>
                     <div class="timeline-item">
-                        <time datetime="2010">2010</time>
-                        <p>Mở rộng bộ sưu tập tác phẩm độc bản</p>
+                        <time datetime="2010">02</time>
+                        <p>Hoàn thiện bố cục, chậu và hồ sơ sưu tầm.</p>
                     </div>
                     <div class="timeline-item">
-                        <time datetime="2022">2022</time>
-                        <p>Ra mắt dịch vụ bảo hành trọn đời</p>
+                        <time datetime="2022">03</time>
+                        <p>Bàn giao và chăm sóc theo điều kiện không gian.</p>
                     </div>
                 </div>
             </div>
@@ -360,38 +394,15 @@
     <div id="studioModalRoot" aria-hidden="true"></div>
 </main>
 
-<footer id="contact" class="footer" role="contentinfo">
-    <div class="container footer-inner">
-        <div class="footer-col">
-            <h4>Bonsai Luxury</h4>
-            <p>Địa chỉ showroom, hotline, email liên hệ.</p>
-        </div>
-        <div class="footer-col">
-            <h4>Chính sách</h4>
-            <ul>
-                <li><a href="#">Giao hàng &amp; đổi trả</a></li>
-                <li><a href="#">Bảo hành</a></li>
-            </ul>
-        </div>
-        <div class="footer-col social">
-            <h4>Kết nối</h4>
-            <div class="social-icons">
-                <a href="#" aria-label="Website chính thức">🌐</a>
-                <a href="#" aria-label="Instagram">📷</a>
-                <a href="#" aria-label="YouTube channel">▶️</a>
-            </div>
-        </div>
-    </div>
-    <div class="footer-bottom">
-        <p>© <span id="year"></span> Bonsai Luxury. All rights reserved.</p>
-    </div>
-</footer>
+<div id="contact" class="footer-anchor"></div>
+<div th:replace="~{fragments/footer :: footer}"></div>
 
 <script th:src="@{/js/bonsai_luxury.js}"></script>
 <script th:if="${error}">
     document.addEventListener("DOMContentLoaded", function () {
 
         const modal = document.getElementById("bookingModal");
+        if (!modal) return;
 
         modal.style.display = "flex";
         modal.style.opacity = "1";

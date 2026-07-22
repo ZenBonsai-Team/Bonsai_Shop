@@ -19,7 +19,7 @@ public class PreniumbonsaiController {
     public String premium(
             @RequestParam(defaultValue = "0") int page
            ,Model model) {
-       Page<ProductCardDTO> product = productService.getPremiumProducts(PageRequest.of(page, 12));
+       Page<ProductCardDTO> product = productService.getPremiumProducts(PageRequest.of(page, 16));
        model.addAttribute("product", product);
        return "product/bonsai-luxury";
    }
