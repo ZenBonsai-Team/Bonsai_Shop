@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.example.bonsai_shop.entity.Order;
+import com.example.bonsai_shop.entity.OrderDetail;
 import com.example.bonsai_shop.entity.OrderHandling;
 import com.example.bonsai_shop.entity.OrderLog;
 import com.example.bonsai_shop.entity.Product;
@@ -224,11 +225,13 @@ public class OrderService {
         order.setNotes("Từ chối duyệt với lý do: " + reason);
         orderRepository.save(order);
 
-        if (order.getOrderDetails() != null && !order.getOrderDetails().isEmpty()) {
-            Product product = order.getOrderDetails().get(0).getProduct();
-            if (product != null) {
-                product.setProductStatus("AVAILABLE");
-                productRepository.save(product);
+        if (order.getOrderDetails() != null) {
+            for (OrderDetail detail : order.getOrderDetails()) {
+                Product product = detail.getProduct();
+                if (product != null) {
+                    product.setProductStatus("AVAILABLE");
+                    productRepository.save(product);
+                }
             }
         }
 

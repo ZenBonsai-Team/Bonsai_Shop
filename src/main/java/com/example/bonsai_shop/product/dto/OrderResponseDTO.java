@@ -26,6 +26,7 @@ public class OrderResponseDTO {
     private BigDecimal craneFee;
     private BigDecimal shippingFee;
     private String notes;
+    private List<OrderItemDTO> items;
 
     /*
      * --- THÔNG TIN PHÂN BỔ & TIMELINE ---
@@ -38,6 +39,18 @@ public class OrderResponseDTO {
     private String assignedToFullName;
     private LocalDateTime assignedAt;
     private List<OrderHandlingDTO> handlingHistory;
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class OrderItemDTO {
+        private Integer id;
+        private String name;
+        private String image;
+        private BigDecimal price;
+        private Integer quantity;
+    }
 
     @Data
     @Builder

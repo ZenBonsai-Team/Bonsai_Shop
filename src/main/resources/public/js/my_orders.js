@@ -114,17 +114,10 @@ function renderTable(orders) {
         tr.style.cursor = 'pointer';
         tr.addEventListener('click', () => openDrawer(order));
 
-        const prodNameHtml = order.product ? `
-            <span class="prod-name-link text-primary fw-bold text-decoration-underline" 
-                  onclick="event.stopPropagation(); openProductDetailDrawer(${order.product.id})">
-                ${order.product.name}
-            </span>
-        ` : '<span class="text-muted">Không có</span>';
-
         tr.innerHTML = `
             <td class="col-code">${order.orderCode}</td>
             <td><strong>${order.customer ? order.customer.name : 'N/A'}</strong></td>
-            <td>${prodNameHtml}</td>
+            <td><span class="fw-bold text-dark">${order.quantity || 1} cây</span></td>
             <td class="col-price">${formatVND(order.totalAmount || 0)}</td>
             <td>${new Date(order.orderDate).toLocaleString('vi-VN')}</td>
             <td><span class="status-badge ${order.orderStatus.toLowerCase()}">${order.orderStatus}</span></td>
@@ -202,7 +195,9 @@ function initDrawerEvents() {
 
 function updateLiveTotals() {
     if (!currentActiveOrder) return;
-    const basePrice = currentActiveOrder.product ? (currentActiveOrder.product.price || 0) : 0;
+    const basePrice = currentActiveOrder.items ? 
+        currentActiveOrder.items.reduce((sum, item) => sum + ((item.price || 0) * (item.quantity || 1)), 0) : 
+        (currentActiveOrder.totalAmount || 0);
     const craneFee = parseFloat(document.getElementById('inputCraneFee').value) || 0;
     const shippingFee = parseFloat(document.getElementById('inputShippingFee').value) || 0;
 
@@ -237,22 +232,40 @@ function openDrawer(order) {
         if (document.getElementById('drawerCustAddress')) document.getElementById('drawerCustAddress').textContent = '-';
     }
 
-    if (order.product) {
-        const prodNameEl = document.getElementById('drawerProdName');
-        if (prodNameEl) {
-            prodNameEl.innerHTML = `<span class="text-primary cursor-pointer fw-bold text-decoration-underline" onclick="openProductDetailDrawer(${order.product.id})">${order.product.name}</span>`;
+    // Render list of products in drawer
+    const productsContainer = document.getElementById('drawerProductsContainer');
+    if (productsContainer) {
+        productsContainer.innerHTML = '';
+        if (order.items && order.items.length > 0) {
+            order.items.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'product-card-info p-2 border rounded d-flex align-items-center gap-3';
+                const imgUrl = item.image || '/images/default-tree.jpg';
+                card.innerHTML = `
+                    <img src="${imgUrl}" class="product-card-img" style="width: 60px; height: 60px; object-fit: cover; border-radius: 4px;">
+                    <div class="product-card-details">
+                        <span class="product-card-name text-primary fw-bold text-decoration-underline cursor-pointer" 
+                              onclick="openProductDetailDrawer(${item.id})">
+                            ${item.name}
+                        </span>
+                        <div class="small text-muted mt-1">
+                            <span>Đơn giá: <strong class="text-success">${formatVND(item.price || 0)}</strong></span> | 
+                            <span>Số lượng: <strong>${item.quantity || 1}</strong></span>
+                        </div>
+                    </div>
+                `;
+                productsContainer.appendChild(card);
+            });
+        } else {
+            productsContainer.innerHTML = '<div class="text-muted small">Không có thông tin sản phẩm.</div>';
         }
-        if (document.getElementById('drawerProdPrice')) document.getElementById('drawerProdPrice').textContent = formatVND(order.product.price || 0);
-        if (document.getElementById('drawerProdImg')) document.getElementById('drawerProdImg').src = order.product.image || '/images/default-tree.jpg';
-    } else {
-        if (document.getElementById('drawerProdName')) document.getElementById('drawerProdName').textContent = 'Không có thông tin sản phẩm';
-        if (document.getElementById('drawerProdPrice')) document.getElementById('drawerProdPrice').textContent = '0 VND';
-        if (document.getElementById('drawerProdImg')) document.getElementById('drawerProdImg').src = '/images/default-tree.jpg';
     }
 
     if (document.getElementById('drawerNotes')) document.getElementById('drawerNotes').textContent = order.notes || 'Không có yêu cầu đặc biệt.';
 
-    const basePrice = order.product ? (order.product.price || 0) : 0;
+    const basePrice = order.items ? 
+        order.items.reduce((sum, item) => sum + ((item.price || 0) * (item.quantity || 1)), 0) : 
+        (order.totalAmount || 0);
     const craneFee = order.craneFee || 0;
     const shippingFee = order.shippingFee || 0;
     const deposit = order.depositAmount || 0;

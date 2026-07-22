@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+    
+    <!-- Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Styles -->
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+    <style>
+        .checkout-container {
+            margin-top: 60px;
+            margin-bottom: 80px;
+        }
+        .checkout-header-title {
+            font-family: var(--font-serif);
+            font-weight: 700;
+            color: var(--primary-color);
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 15px;
+            margin-bottom: 30px;
+        }
+        .checkout-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: var(--shadow-subtle);
+            margin-bottom: 30px;
+        }
+        .checkout-card-title {
+            font-family: var(--font-serif);
+            font-weight: 700;
+            font-size: 1.35rem;
+            color: var(--primary-color);
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 12px;
+            margin-bottom: 20px;
+        }
+        .order-summary-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+        .summary-item-name {
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--text-dark);
+        }
+        .summary-item-qty {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+        .summary-item-price {
+            font-weight: 600;
+            color: var(--accent-color);
+            font-size: 0.9rem;
+        }
+        .checkout-total-row {
+            display: flex;
+            justify-content: space-between;
+            padding-top: 15px;
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+        .payment-method-card {
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            transition: var(--transition);
+            margin-bottom: 12px;
+        }
+        .payment-method-card:hover {
+            border-color: var(--primary-color);
+            background-color: var(--bg-washi);
+        }
+        .payment-method-card input[type="radio"] {
+            accent-color: var(--primary-color);
+            width: 18px;
+            height: 18px;
+        }
+        .btn-place-order {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            width: 100%;
+            padding: 14px;
+            font-weight: 700;
+            border-radius: 4px;
+            font-size: 1.05rem;
+            transition: var(--transition);
+        }
+        .btn-place-order:hover {
+            background-color: var(--primary-hover);
+        }
+    </style>
+</head>
+<body>
+
+<div th:replace="~{fragments/navbar :: navbar}" th:with="activePage='checkout'"></div>
+
+<div class="container checkout-container">
+    <h2 class="checkout-header-title"><i class="fa-regular fa-credit-card me-2"></i> Tiến hành đặt hàng</h2>
+
+    <div class="row">
+        <!-- Left Column: Checkout Form -->
+        <div class="col-lg-7">
+            <div class="checkout-card">
+                <h3 class="checkout-card-title">Thông tin giao hàng</h3>
+                <form id="checkoutForm">
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label fw-600">Họ và tên người nhận</label>
+                            <input type="text" id="custName" class="form-control" placeholder="Nguyễn Văn A" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-600">Số điện thoại liên lạc</label>
+                            <input type="tel" id="custPhone" class="form-control" placeholder="0987654321" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-600">Địa chỉ Email</label>
+                            <input type="email" id="custEmail" class="form-control" placeholder="name@domain.com" required>
+                        </div>
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label fw-600">Địa chỉ nhận cây (Số nhà, đường, quận, tỉnh)</label>
+                            <input type="text" id="custAddress" class="form-control" placeholder="Số 12, ngõ 86, Phố Láng Hạ, Đống Đa, Hà Nội" required>
+                        </div>
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label fw-600">Yêu cầu thêm / Ghi chú (Nếu có)</label>
+                            <textarea id="orderNotes" class="form-control" rows="3" placeholder="Ví dụ: Giao hàng vào thứ Bảy, cẩu cây cẩn thận..."></textarea>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <div class="checkout-card">
+                <h3 class="checkout-card-title">Phương thức thanh toán</h3>
+                
+                <div class="payment-method-card" onclick="document.getElementById('payCOD').checked = true">
+                    <input type="radio" name="paymentMethod" id="payCOD" value="COD" checked>
+                    <div>
+                        <strong class="d-block text-dark">COD (Thanh toán khi nhận hàng)</strong>
+                        <span class="text-secondary small">Sau khi Moderator xác nhận chi phí vận chuyển xe cẩu, bạn sẽ thanh toán 30% cọc trực tiếp hoặc chuyển khoản theo hướng dẫn.</span>
+                    </div>
+                </div>
+
+                <div class="payment-method-card" onclick="document.getElementById('payVNPay').checked = true">
+                    <input type="radio" name="paymentMethod" id="payVNPay" value="VNPAY">
+                    <div>
+                        <strong class="d-block text-dark">Thanh toán qua cổng VNPay</strong>
+                        <span class="text-secondary small">Chuyển hướng sang VNPay để thanh toán an toàn, bảo mật.</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Order Summary -->
+        <div class="col-lg-5">
+            <div class="checkout-card">
+                <h3 class="checkout-card-title">Đơn hàng của bạn</h3>
+                
+                <div id="checkoutSummaryItems">
+                    <!-- Dynamic rendering of items -->
+                </div>
+
+                <div class="checkout-total-row border-top mt-3">
+                    <span>Tổng tiền tạm tính:</span>
+                    <span id="checkoutSubtotal">0 đ</span>
+                </div>
+                
+                <div class="text-muted small mt-2">
+                    <i class="fa-solid fa-circle-info me-1"></i> Chi phí vận chuyển cẩu chuyên dụng đối với Bonsai cỡ lớn sẽ được Moderator liên hệ và cập nhật trực tiếp sau khi xác nhận đơn.
+                </div>
+
+                <button type="button" class="btn-place-order mt-4" id="btnPlaceOrder">Xác nhận đặt hàng</button>
+                <a href="/cart" class="btn btn-outline-secondary w-100 mt-2">Quay lại giỏ hàng</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div th:replace="~{fragments/footer :: footer}"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/js/checkout.js"></script>
+</body>
+</html>

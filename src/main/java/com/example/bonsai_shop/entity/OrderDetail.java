@@ -28,4 +28,8 @@ public class OrderDetail {
 
     @Column(name = "PriceAtPurchase", nullable = false, precision = 15, scale = 2)
     private BigDecimal priceAtPurchase;
+
+    @Column(name = "quantity", nullable = false)
+    @Builder.Default
+    private Integer quantity = 1;
 }

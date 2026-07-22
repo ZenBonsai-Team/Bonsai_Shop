@@ -4,7 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BSMS - Bonsai Marketplace</title>
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
     
     <!-- Fonts & Icons -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -367,7 +368,7 @@
                             
                             <div class="mt-2">
                                 <!-- Add to Cart / Disabled button based on status -->
-                                <button th:if="${product.productStatus == 'AVAILABLE'}" class="btn-card-cart-outline"><i class="fa-solid fa-cart-shopping"></i> Add to Cart</button>
+                                <button th:if="${product.productStatus == 'AVAILABLE'}" class="btn-card-cart-outline" th:onclick="'addToCart(' + ${product.productId} + ')'"><i class="fa-solid fa-cart-shopping"></i> Add to Cart</button>
                                 <button th:if="${product.productStatus == 'RESERVED'}" class="btn-card-disabled" disabled>Reserved</button>
                                 <button th:if="${product.productStatus == 'SOLD'}" class="btn-card-disabled" disabled>Sold</button>
                                 

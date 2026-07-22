@@ -11,6 +11,8 @@ import com.example.bonsai_shop.product.repository.ProductRepository;
 import com.example.bonsai_shop.product.service.OrderService;
 import com.example.bonsai_shop.product.repository.OrderRepository;
 import com.example.bonsai_shop.customer.repository.UserRepository;
+import com.example.bonsai_shop.product.service.CartService;
+import com.example.bonsai_shop.entity.CartItem;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,6 +47,9 @@ public class OrderApiController {
 
     @Autowired
     private OrderService orderService;
+
+    @Autowired
+    private CartService cartService;
 
     @GetMapping("/pool")
     public ResponseEntity<Map<String, Object>> getPoolOrders(
@@ -297,30 +302,43 @@ public class OrderApiController {
 
         Map<String, Object> response = new HashMap<>();
 
-        // 1. Kiểm tra sản phẩm
-        Product product = productRepository.findById(dto.getProductId())
-                .orElse(null);
-        if (product == null) {
+        if (currentUser == null) {
             response.put("success", false);
-            response.put("message", "Sản phẩm cây cảnh này không tồn tại!");
+            response.put("message", "Vui lòng đăng nhập trước khi thanh toán.");
+            return ResponseEntity.status(401).body(response);
+        }
+
+        User customer = userRepository.findByEmail(currentUser.getUsername()).orElse(null);
+        if (customer == null) {
+            response.put("success", false);
+            response.put("message", "Tài khoản người dùng không hợp lệ.");
             return ResponseEntity.badRequest().body(response);
         }
 
-        // Đảm bảo cây đang ở trạng thái AVAILABLE
-        if (!"AVAILABLE".equals(product.getProductStatus())) {
+        // 1. Lấy toàn bộ các mặt hàng đang có trong giỏ của người dùng
+        List<CartItem> cartItems = cartService.getCartItems(customer.getUserId());
+        if (cartItems == null || cartItems.isEmpty()) {
             response.put("success", false);
-            response.put("message", "Tác phẩm này đã được bán hoặc đã có khách đặt trước!");
+            response.put("message", "Giỏ hàng của bạn đang trống! Vui lòng chọn sản phẩm trước.");
             return ResponseEntity.badRequest().body(response);
         }
 
-        // 2. Lấy thông tin user hiện tại (nếu đã đăng nhập)
-        User customer = null;
-        if (currentUser != null) {
-            customer = userRepository.findByEmail(currentUser.getUsername()).orElse(null);
+        // 2. Kiểm tra tính khả dụng của tất cả các sản phẩm trong giỏ hàng
+        for (CartItem item : cartItems) {
+            Product prod = item.getProduct();
+            if (!"AVAILABLE".equalsIgnoreCase(prod.getProductStatus())) {
+                response.put("success", false);
+                response.put("message", "Tác phẩm '" + prod.getProductName() + "' đã được bán hoặc giữ chỗ bởi khách hàng khác!");
+                return ResponseEntity.badRequest().body(response);
+            }
         }
 
-        // 3. Khởi tạo BonsaiOrder
+        // 3. Khởi tạo Đơn Hàng mới (Order)
         String orderCode = "BSMS-" + VNPayConfig.getRandomNumber(6).toUpperCase();
+        BigDecimal totalAmount = cartItems.stream()
+                .map(item -> item.getProduct().getPrice().multiply(BigDecimal.valueOf(item.getQuantity())))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
         Order order = Order.builder()
                 .customer(customer)
                 .orderCode(orderCode)
@@ -329,36 +347,38 @@ public class OrderApiController {
                 .customerEmail(dto.getCustomerEmail())
                 .shippingAddress(dto.getShippingAddress())
                 .orderDate(LocalDateTime.now())
-                .totalAmount(product.getPrice())
+                .totalAmount(totalAmount)
                 .depositAmount(BigDecimal.ZERO)
                 .orderStatus("PENDING")
                 .build();
 
-        // 4. Thiết lập chi tiết đơn hàng (OrderDetail)
-        OrderDetail detail = OrderDetail.builder()
-                .order(order)
-                .product(product)
-                .priceAtPurchase(product.getPrice())
-                .build();
-        order.setOrderDetails(Collections.singletonList(detail));
+        // 4. Liên kết các sản phẩm chi tiết (OrderDetail)
+        List<OrderDetail> details = cartItems.stream().map(item -> {
+            Product prod = item.getProduct();
+            // Khóa trạng thái sản phẩm sang RESERVED
+            prod.setProductStatus("RESERVED");
+            productRepository.save(prod);
 
-        // 5. Cập nhật trạng thái sản phẩm thành RESERVED để tránh người khác đặt mua
-        // trùng
-        product.setProductStatus("RESERVED");
-        productRepository.save(product);
+            return OrderDetail.builder()
+                    .order(order)
+                    .product(prod)
+                    .priceAtPurchase(prod.getPrice())
+                    .quantity(item.getQuantity())
+                    .build();
+        }).collect(Collectors.toList());
 
-        // Lưu đơn hàng vào cơ sở dữ liệu
+        order.setOrderDetails(details);
         orderRepository.save(order);
+
+        // 5. Xóa sạch giỏ hàng của người dùng sau khi checkout thành công
+        cartService.clearCart(customer.getUserId());
 
         // 6. Xử lý phân nhánh Phương thức thanh toán
         if ("VNPAY".equalsIgnoreCase(dto.getPaymentMethod())) {
-            // Logic tạo URL thanh toán VNPay (Tạm thời không nhảy sang trang VNPay mà xử lý
-            // hiển thị thành công giống COD)
             response.put("success", true);
             response.put("paymentMethod", "VNPAY");
             response.put("orderCode", orderCode);
         } else {
-            // Thanh toán COD thành công
             response.put("success", true);
             response.put("paymentMethod", "COD");
             response.put("orderCode", orderCode);
@@ -423,16 +443,33 @@ public class OrderApiController {
 
     private OrderResponseDTO convertToDTO(Order order) {
         OrderResponseDTO.ProductDTO productDTO = null;
+        List<OrderResponseDTO.OrderItemDTO> itemsDTO = new ArrayList<>();
+
         if (order.getOrderDetails() != null && !order.getOrderDetails().isEmpty()) {
-            OrderDetail detail = order.getOrderDetails().get(0);
-            Product prod = detail.getProduct();
-            if (prod != null) {
+            // First item (for backwards compatibility if any client code still uses .product)
+            OrderDetail detail0 = order.getOrderDetails().get(0);
+            Product prod0 = detail0.getProduct();
+            if (prod0 != null) {
                 productDTO = OrderResponseDTO.ProductDTO.builder()
-                        .id(prod.getProductId())
-                        .name(prod.getProductName())
-                        .image(prod.getFirstImageUrl())
-                        .price(prod.getPrice())
+                        .id(prod0.getProductId())
+                        .name(prod0.getProductName())
+                        .image(prod0.getFirstImageUrl())
+                        .price(detail0.getPriceAtPurchase())
                         .build();
+            }
+
+            // Fill all items list
+            for (OrderDetail detail : order.getOrderDetails()) {
+                Product prod = detail.getProduct();
+                if (prod != null) {
+                    itemsDTO.add(OrderResponseDTO.OrderItemDTO.builder()
+                            .id(prod.getProductId())
+                            .name(prod.getProductName())
+                            .image(prod.getFirstImageUrl())
+                            .price(detail.getPriceAtPurchase())
+                            .quantity(detail.getQuantity())
+                            .build());
+                }
             }
         }
 
@@ -460,7 +497,8 @@ public class OrderApiController {
                         .address(order.getShippingAddress())
                         .build())
                 .product(productDTO)
-                .quantity(1)
+                .items(itemsDTO)
+                .quantity(itemsDTO.stream().mapToInt(OrderResponseDTO.OrderItemDTO::getQuantity).sum())
                 .totalAmount(order.getTotalAmount())
                 .depositAmount(order.getDepositAmount())
                 .orderDate(order.getOrderDate())

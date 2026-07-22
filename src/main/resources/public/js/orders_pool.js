@@ -78,18 +78,10 @@ function renderTable(orders) {
 
     orders.forEach(order => {
         const tr = document.createElement('tr');
-        const prodNameHtml = order.product ? `
-            <span class="prod-name-link text-primary fw-bold text-decoration-underline" 
-                  style="cursor: pointer;"
-                  onclick="event.stopPropagation(); openProductDetailDrawer(${order.product.id})">
-                ${order.product.name}
-            </span>
-        ` : '<span class="text-muted">Không có</span>';
-
         tr.innerHTML = `
             <td class="col-code">${order.orderCode}</td>
             <td><strong>${order.customer ? order.customer.name : 'N/A'}</strong></td>
-            <td>${prodNameHtml}</td>
+            <td><span class="fw-bold text-dark">${order.quantity || 1} cây</span></td>
             <td class="col-price">${new Intl.NumberFormat('vi-VN', {style: 'currency', currency: 'VND'}).format(order.totalAmount)}</td>
             <td>${new Date(order.orderDate).toLocaleString('vi-VN')}</td>
             <td><span class="status-badge pending">${order.orderStatus}</span></td>

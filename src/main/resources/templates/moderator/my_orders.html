@@ -134,7 +134,7 @@
                         <tr>
                             <th>Mã Đơn Hàng</th>
                             <th>Khách Hàng</th>
-                            <th>Sản Phẩm Cây Cảnh</th>
+                            <th>Số lượng cây (Items)</th>
                             <th class="col-price">Tổng Tiền</th>
                             <th>Ngày Đặt</th>
                             <th>Trạng Thái</th>
@@ -185,14 +185,9 @@
 
                 <!-- Product Details -->
                 <div class="drawer-section">
-                    <h4 class="section-title">Thông tin tác phẩm Bonsai</h4>
-                    <div class="product-card-info">
-                        <img src="" id="drawerProdImg" class="product-card-img" style="width: 80px; height: 80px; object-fit: cover;">
-                        <div class="product-card-details">
-                            <span class="product-card-name" id="drawerProdName">Bonsai Name</span>
-                            <span class="product-card-price" id="drawerProdPrice">0 VND</span>
-                            <span style="font-size:12px; color:var(--text-muted);">Số lượng đặt: <strong id="drawerQty">1</strong></span>
-                        </div>
+                    <h4 class="section-title">Danh sách Bonsai đặt mua</h4>
+                    <div id="drawerProductsContainer" class="d-flex flex-column gap-3">
+                        <!-- List of ordered products will be dynamically loaded here -->
                     </div>
                 </div>
 
