@@ -30,10 +30,11 @@ public class ArtisanAppointmentService {
         String currentStatus = appointment.getStatus();
         String nextStatus = status == null ? "" : status.trim().toUpperCase();
 
+
         if ("PENDING".equalsIgnoreCase(currentStatus)) {
             validatePendingTransition(nextStatus, message);
         } else if ("APPROVED".equalsIgnoreCase(currentStatus)) {
-            validateApprovedTransition(nextStatus);
+            validateApprovedTransition(nextStatus, appointment.getAppointmentDate());
         } else {
             throw new RuntimeException("Lịch hẹn đã được xử lý.");
         }
@@ -52,7 +53,12 @@ public class ArtisanAppointmentService {
         if (!"APPROVED".equalsIgnoreCase(appointment.getStatus())) {
             throw new RuntimeException("Không thể hoàn thành lịch khi đang ở trạng thái " + appointment.getStatus());
         }
-
+        LocalDateTime appointmentTime =appointment.getAppointmentDate();
+        if (LocalDateTime.now().isBefore(appointmentTime)) {
+            throw new RuntimeException(
+                    "Chưa đến thời gian diễn ra lịch hẹn nên không thể hoàn thành."
+            );
+        }
         appointment.setStatus("COMPLETED");
         appointment.setUpdatedAt(LocalDateTime.now());
         viewingAppointmentRepository.save(appointment);
@@ -87,9 +93,14 @@ public class ArtisanAppointmentService {
         }
     }
 
-    private void validateApprovedTransition(String nextStatus) {
+    private void validateApprovedTransition(String nextStatus, LocalDateTime appointmentTime) {
         if (!"COMPLETED".equals(nextStatus)) {
             throw new RuntimeException("Lịch đã duyệt chỉ có thể chuyển sang COMPLETED.");
+        }
+        if (LocalDateTime.now().isBefore(appointmentTime)) {
+            throw new RuntimeException(
+                    "Chưa đến thời gian hẹn. Không thể hoàn thành lịch hẹn."
+            );
         }
     }
 

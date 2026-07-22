@@ -80,6 +80,7 @@
 .sch-reminder-panel {
     background: linear-gradient(135deg, #fff 0%, #fbf7ef 100%);
     border: 1px solid #eadfce;
+    font-family: var(--font-sans, "Plus Jakarta Sans", sans-serif);
     margin-bottom: 24px;
     padding: 24px;
 }
@@ -95,7 +96,7 @@
 .sch-reminder-kicker {
     color: #b8926a;
     font-size: 0.72rem;
-    font-weight: 800;
+    font-weight: 700;
     letter-spacing: 1.6px;
     margin: 0 0 4px;
     text-transform: uppercase;
@@ -104,7 +105,7 @@
 .sch-reminder-head h2 {
     color: #1c3322;
     font-size: 1.12rem;
-    font-weight: 800;
+    font-weight: 700;
     margin: 0;
 }
 
@@ -114,7 +115,7 @@
     border-radius: 999px;
     color: #9a3412;
     font-size: 0.78rem;
-    font-weight: 800;
+    font-weight: 700;
     padding: 6px 12px;
     white-space: nowrap;
 }
@@ -141,6 +142,7 @@
     cursor: pointer;
     display: flex;
     flex-direction: column;
+    font-family: inherit;
     gap: 14px;
     min-height: 100%;
     padding: 18px;
@@ -163,8 +165,8 @@
     border-radius: 999px;
     color: #fff;
     display: inline-flex;
-    font-size: 0.68rem;
-    font-weight: 900;
+    font-size: 0.72rem;
+    font-weight: 700;
     height: 26px;
     justify-content: center;
     min-width: 34px;
@@ -189,14 +191,14 @@
 
 .sch-reminder-content strong {
     color: #1c3322;
-    font-size: 0.98rem;
-    font-weight: 800;
+    font-size: 0.88rem;
+    font-weight: 700;
 }
 
 .sch-reminder-due {
     color: #1c3322;
-    font-size: 0.94rem;
-    font-weight: 900;
+    font-size: 0.86rem;
+    font-weight: 700;
 }
 
 .sch-reminder-deadline,
@@ -210,32 +212,32 @@
     background: rgba(184, 146, 106, 0.12);
     border-radius: 8px;
     color: #7c5b34;
-    font-size: 0.73rem;
-    font-weight: 800;
+    font-size: 0.76rem;
+    font-weight: 600;
     padding: 6px 8px;
 }
 
 .sch-reminder-exact {
     color: #8a6d45;
-    font-size: 0.72rem;
-    font-weight: 700;
+    font-size: 0.76rem;
+    font-weight: 500;
 }
 
 .sch-reminder-meta {
     color: #536257;
-    font-size: 0.78rem;
+    font-size: 0.82rem;
 }
 
 .sch-reminder-note {
     color: #657066;
-    font-size: 0.75rem;
-    font-weight: 600;
+    font-size: 0.78rem;
+    font-weight: 500;
 }
 
 .sch-reminder-badge {
     border-radius: 999px;
-    font-size: 0.68rem;
-    font-weight: 800;
+    font-size: 0.72rem;
+    font-weight: 700;
     letter-spacing: 0.2px;
     padding: 4px 9px;
 }
@@ -245,8 +247,8 @@
     background: rgba(28, 51, 34, 0.08);
     border-radius: 10px;
     color: #1c3322;
-    font-size: 0.78rem;
-    font-weight: 900;
+    font-size: 0.82rem;
+    font-weight: 700;
     padding: 8px 10px;
     text-align: center;
 }

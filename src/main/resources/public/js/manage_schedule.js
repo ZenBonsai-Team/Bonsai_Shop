@@ -32,9 +32,7 @@ document.addEventListener("DOMContentLoaded", () => {
         calendarGrid: document.querySelector(".calendar-grid"),
         todayAppointments: document.getElementById("todayAppointments"),
         todayPanelTitle: document.getElementById("todayPanelTitle"),
-        searchInput: document.getElementById("searchInput"),
-        statusFilter: document.getElementById("statusFilter"),
-        appointmentTableBody: document.getElementById("appointmentTableBody"),
+        appointmentData: document.getElementById("appointmentData"),
         editModal: document.getElementById("editModal"),
         closeModal: document.getElementById("closeModal"),
         closeModalFooter: document.getElementById("closeModalFooter"),
@@ -274,19 +272,6 @@ document.addEventListener("DOMContentLoaded", () => {
         return element;
     }
 
-    function appendTextCell(row, text, strong = false) {
-        const cell = document.createElement("td");
-        if (strong) {
-            const strongElement = document.createElement("strong");
-            strongElement.textContent = text;
-            cell.appendChild(strongElement);
-        } else {
-            cell.textContent = text;
-        }
-        row.appendChild(cell);
-        return cell;
-    }
-
     function createStatusBadge(status) {
         const statusLabels = {
             OVERDUE: "QUÁ HẠN"
@@ -346,11 +331,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function extractAppointmentsFromDOM() {
         state.appointments = [];
-        elements.appointmentTableBody.querySelectorAll("tr").forEach(row => {
-            if (row.cells.length < 6) return;
-
-            const dateText = row.cells[3] ? row.cells[3].textContent.trim() : "";
-            const status = row.cells[5] ? row.cells[5].textContent.trim().toUpperCase() : "PENDING";
+        elements.appointmentData.querySelectorAll(".appointment-data-row").forEach(row => {
+            const dateText = row.dataset.date || "";
+            const status = row.dataset.status ? row.dataset.status.trim().toUpperCase() : "PENDING";
 
             state.appointments.push({
                 id: row.dataset.id || "",
@@ -358,10 +341,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 email: row.dataset.email || "",
                 note: row.dataset.note || "",
                 appointmentAt: row.dataset.appointmentAt || "",
-                client: row.cells[1] ? row.cells[1].textContent.trim() : "",
-                bonsai: row.cells[2] ? row.cells[2].textContent.trim() : "",
+                client: row.dataset.client || "",
+                bonsai: row.dataset.bonsai || "",
                 date: parseDateInput(dateText),
-                time: row.cells[4] ? row.cells[4].textContent.trim() : "",
+                time: row.dataset.time || "",
                 status
             });
         });
@@ -374,24 +357,16 @@ document.addEventListener("DOMContentLoaded", () => {
         const approved = state.appointments.filter(appointment => getEffectiveStatus(appointment) === "APPROVED").length;
         const pending = state.appointments.filter(appointment => getEffectiveStatus(appointment) === "PENDING").length;
         const overdue = state.appointments.filter(appointment => getEffectiveStatus(appointment) === "OVERDUE").length;
-        const activeAppointments = approved + pending + overdue;
-
         elements.statTotal.textContent = total;
         elements.statToday.textContent = today;
         elements.statApproved.textContent = approved;
         elements.statPending.textContent = pending;
         if (elements.statOverdue) elements.statOverdue.textContent = overdue;
         elements.totalPercent.textContent = total > 0 ? `+${total}` : "0";
-        elements.approvedPercent.textContent = activeAppointments > 0
-                ? `${Math.round((approved / activeAppointments) * 100)}%`
-                : "0%";
-        elements.pendingPercent.textContent = activeAppointments > 0
-                ? `${Math.round((pending / activeAppointments) * 100)}%`
-                : "0%";
+        elements.approvedPercent.textContent = approved;
+        elements.pendingPercent.textContent = pending;
         if (elements.overduePercent) {
-            elements.overduePercent.textContent = activeAppointments > 0
-                    ? `${Math.round((overdue / activeAppointments) * 100)}%`
-                    : "0%";
+            elements.overduePercent.textContent = overdue;
         }
     }
 
@@ -438,7 +413,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
         renderCalendar();
         renderDayPanel();
-        renderTable();
     }
 
     function renderDayPanel() {
@@ -532,87 +506,6 @@ document.addEventListener("DOMContentLoaded", () => {
             item.appendChild(button);
             elements.pendingReminders.appendChild(item);
         });
-    }
-
-    function renderTable() {
-        const searchText = elements.searchInput.value.toLowerCase().trim();
-        const filterValue = elements.statusFilter.value;
-        const filteredAppointments = state.appointments.filter(appointment => {
-            const matchesSearch = appointment.id.toLowerCase().includes(searchText)
-                    || appointment.client.toLowerCase().includes(searchText)
-                    || appointment.bonsai.toLowerCase().includes(searchText);
-            const effectiveStatus = getEffectiveStatus(appointment);
-            const matchesStatus = filterValue === "ALL" || effectiveStatus === filterValue;
-            const matchesDate = !state.selectedDate || appointment.date === state.selectedDate;
-            return matchesSearch && matchesStatus && matchesDate;
-        });
-
-        elements.appointmentTableBody.innerHTML = "";
-
-        if (filteredAppointments.length === 0) {
-            const emptyRow = document.createElement("tr");
-            const emptyCell = createElement("td", "sch-empty-table", "Không tìm thấy lịch hẹn phù hợp.");
-            emptyCell.colSpan = 7;
-            emptyRow.appendChild(emptyCell);
-            elements.appointmentTableBody.appendChild(emptyRow);
-            return;
-        }
-
-        filteredAppointments.forEach(appointment => {
-            const row = document.createElement("tr");
-            row.dataset.id = appointment.id;
-            row.dataset.phone = appointment.phone;
-            row.dataset.email = appointment.email;
-            row.dataset.note = appointment.note;
-            row.dataset.appointmentAt = appointment.appointmentAt;
-
-            appendTextCell(row, appointment.id, true);
-            appendTextCell(row, appointment.client);
-            appendTextCell(row, appointment.bonsai);
-            appendTextCell(row, formatDateDisplay(appointment.date));
-            appendTextCell(row, appointment.time);
-
-            const statusCell = document.createElement("td");
-            statusCell.appendChild(createStatusBadge(getEffectiveStatus(appointment)));
-            row.appendChild(statusCell);
-
-            const actionsCell = createElement("td", "table-actions");
-            actionsCell.appendChild(createActionElement(appointment));
-            row.appendChild(actionsCell);
-            elements.appointmentTableBody.appendChild(row);
-        });
-    }
-
-    function createActionElement(appointment) {
-        const effectiveStatus = getEffectiveStatus(appointment);
-
-        if (appointment.status === "PENDING" && effectiveStatus === "OVERDUE") {
-            const button = createElement("button", "btn-overdue", "Cập nhật quá hạn");
-            button.type = "button";
-            button.dataset.id = appointment.id;
-            return button;
-        }
-
-        if (effectiveStatus === "OVERDUE") {
-            return createElement("span", "sch-overdue-action", "Đã quá hạn");
-        }
-
-        if (effectiveStatus === "PENDING" || effectiveStatus === "APPROVED") {
-            const button = createElement("button", "sch-edit-btn edit-btn");
-            button.type = "button";
-            button.dataset.id = appointment.id;
-            button.setAttribute("aria-label", "Cập nhật lịch hẹn");
-            button.appendChild(createElement("i", "fa-solid fa-pen-to-square"));
-            return button;
-        }
-
-        const badgeClass = effectiveStatus === "COMPLETED"
-                ? "badge bg-success"
-                : effectiveStatus === "REJECTED"
-                        ? "badge bg-danger"
-                        : "badge bg-secondary";
-        const text = effectiveStatus.charAt(0) + effectiveStatus.slice(1).toLowerCase();
-        return createElement("span", badgeClass, text);
     }
 
     function openEditModal(id) {
@@ -807,20 +700,6 @@ document.addEventListener("DOMContentLoaded", () => {
             });
         }
 
-        elements.appointmentTableBody.addEventListener("click", event => {
-            const editButton = event.target.closest(".edit-btn");
-            const completeButton = event.target.closest(".btn-complete");
-            const overdueButton = event.target.closest(".btn-overdue");
-
-            if (editButton) {
-                openEditModal(editButton.dataset.id);
-            } else if (completeButton) {
-                completeAppointment(completeButton.dataset.id);
-            } else if (overdueButton) {
-                markAppointmentOverdue(overdueButton.dataset.id);
-            }
-        });
-
         elements.statusSelect.addEventListener("change", () => {
             toggleRejectReason(elements.statusSelect.value === "REJECTED");
             setStatusMessage("");
@@ -831,8 +710,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 setStatusMessage("");
             }
         });
-        elements.searchInput.addEventListener("input", renderTable);
-        elements.statusFilter.addEventListener("change", renderTable);
         elements.saveStatus.addEventListener("click", saveStatusChange);
         elements.closeModal.addEventListener("click", closeEditModal);
         elements.closeModalFooter.addEventListener("click", closeEditModal);
@@ -879,13 +756,11 @@ document.addEventListener("DOMContentLoaded", () => {
         renderReminderPanel();
         renderCalendar();
         renderDayPanel();
-        renderTable();
         setInterval(() => {
             renderStats();
             renderReminderPanel();
             renderCalendar();
             renderDayPanel();
-            renderTable();
         }, 60000);
     }
 
