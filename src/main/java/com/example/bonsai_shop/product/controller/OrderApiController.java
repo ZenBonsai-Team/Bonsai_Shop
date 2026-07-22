@@ -308,25 +308,17 @@ public class OrderApiController {
             return ResponseEntity.status(401).body(response);
         }
 
-        User customer = userRepository.findByEmail(currentUser.getUsername()).orElse(null);
-        if (customer == null) {
+        boolean isStaffOrAdmin = currentUser.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_OWNER") || a.getAuthority().equals("ROLE_ARTISAN") 
+                        || a.getAuthority().equals("ROLE_MODERATOR") || a.getAuthority().equals("ROLE_CONTENT_MODERATOR")
+                        || a.getAuthority().equals("ROLE_ADMIN") || a.getAuthority().equals("ROLE_SELLER"));
+        if (isStaffOrAdmin) {
             response.put("success", false);
-            response.put("message", "Tài khoản người dùng không hợp lệ.");
-        // 2. Lấy thông tin user hiện tại (nếu đã đăng nhập)
-        User customer = null;
-        if (currentUser != null) {
-            boolean isStaffOrAdmin = currentUser.getAuthorities().stream()
-                    .anyMatch(a -> a.getAuthority().equals("ROLE_OWNER") || a.getAuthority().equals("ROLE_ARTISAN") 
-                            || a.getAuthority().equals("ROLE_MODERATOR") || a.getAuthority().equals("ROLE_CONTENT_MODERATOR")
-                            || a.getAuthority().equals("ROLE_ADMIN") || a.getAuthority().equals("ROLE_SELLER"));
-            if (isStaffOrAdmin) {
-                response.put("success", false);
-                response.put("message", "Tài khoản quản trị, nhà vườn hoặc kiểm duyệt viên không được phép thực hiện đặt hàng!");
-                return ResponseEntity.status(403).body(response);
-            }
-            customer = userRepository.findByEmail(currentUser.getUsername()).orElse(null);
+            response.put("message", "Tài khoản quản trị, nhà vườn hoặc kiểm duyệt viên không được phép thực hiện đặt hàng!");
+            return ResponseEntity.status(403).body(response);
         }
 
+        User customer = userRepository.findByEmail(currentUser.getUsername()).orElse(null);
         if (customer == null) {
             response.put("success", false);
             response.put("message", "Tài khoản người dùng không hợp lệ.");
