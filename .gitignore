@@ -34,3 +34,7 @@ build/
 
 # Bảo mật - không push lên GitHub
 src/main/resources/application-local.properties
+
+# Tài liệu cá nhân
+docs/
+
