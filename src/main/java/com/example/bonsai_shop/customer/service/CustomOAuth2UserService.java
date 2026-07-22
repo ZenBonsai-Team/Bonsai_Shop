@@ -2,6 +2,7 @@ package com.example.bonsai_shop.customer.service;
 
 import com.example.bonsai_shop.entity.Role;
 import com.example.bonsai_shop.entity.User;
+import com.example.bonsai_shop.customer.repository.RoleActionRepository;
 import com.example.bonsai_shop.customer.repository.RoleRepository;
 import com.example.bonsai_shop.customer.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -9,14 +10,17 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
-import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -24,6 +28,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
+    private final RoleActionRepository roleActionRepository;
 
     @Override
     @Transactional
@@ -53,12 +58,16 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         }
 
         // Tạo authorities từ role của user
-        List<SimpleGrantedAuthority> authorities = List.of(
-                new SimpleGrantedAuthority(user.getRole().getRoleName())
-        );
+        List<SimpleGrantedAuthority> authorities = buildAuthorities(user);
+
+        Map<String, Object> enrichedAttributes = new HashMap<>(attributes);
+        enrichedAttributes.put("email", user.getEmail());
+        enrichedAttributes.put("fullName", user.getFullName());
+        enrichedAttributes.put("avatar", user.getAvatar());
+        enrichedAttributes.put("roleName", user.getRole() != null ? user.getRole().getRoleName() : "");
 
         // Trả về OAuth2User với email làm nameAttributeKey
-        return new DefaultOAuth2User(authorities, attributes, "email");
+        return new CustomOAuth2User(user, authorities, enrichedAttributes, "email");
     }
 
     private User createNewGoogleUser(String email, String fullName, String avatar) {
@@ -76,5 +85,36 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                 .build();
 
         return userRepository.save(newUser);
+    }
+
+    private List<SimpleGrantedAuthority> buildAuthorities(User user) {
+        if (user.getRole() == null || user.getRole().getRoleName() == null) {
+            throw new OAuth2AuthenticationException("Tai khoan chua duoc gan role!");
+        }
+
+        String normRole = normalizeRoleName(user.getRole().getRoleName());
+        List<SimpleGrantedAuthority> mappedAuthorities = new ArrayList<>();
+        mappedAuthorities.add(new SimpleGrantedAuthority(normRole));
+
+        if ("ROLE_OWNER".equals(normRole)) {
+            mappedAuthorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
+        } else if ("ROLE_ARTISAN".equals(normRole)) {
+            mappedAuthorities.add(new SimpleGrantedAuthority("ROLE_SELLER"));
+        }
+
+        List<SimpleGrantedAuthority> actionAuthorities = roleActionRepository
+                .findByRoleRoleIdAndIsEnabledTrue(user.getRole().getRoleId())
+                .stream()
+                .filter(roleAction -> roleAction.getAction() != null && roleAction.getAction().getActionCode() != null)
+                .map(roleAction -> new SimpleGrantedAuthority(
+                        "ACTION_" + roleAction.getAction().getActionCode()))
+                .toList();
+
+        return Stream.concat(mappedAuthorities.stream(), actionAuthorities.stream()).toList();
+    }
+
+    private String normalizeRoleName(String roleName) {
+        String normalized = roleName.trim().toUpperCase(Locale.ROOT);
+        return normalized.startsWith("ROLE_") ? normalized : "ROLE_" + normalized;
     }
 }
