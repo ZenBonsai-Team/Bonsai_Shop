@@ -141,22 +141,22 @@
                     <div class="row">
                         <div class="col-md-12 mb-3">
                             <label class="form-label fw-600">Họ và tên người nhận</label>
-                            <input type="text" id="custName" class="form-control" placeholder="Nguyễn Văn A" required>
+                            <input type="text" id="custName" class="form-control" th:value="${user != null ? user.fullName : ''}" placeholder="Nguyễn Văn A" required>
                             <div class="invalid-feedback">Vui lòng nhập họ tên người nhận.</div>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-600">Số điện thoại liên lạc</label>
-                            <input type="tel" id="custPhone" class="form-control" placeholder="0987654321" required>
+                            <input type="tel" id="custPhone" class="form-control" th:value="${user != null ? user.phone : ''}" placeholder="0987654321" required>
                             <div class="invalid-feedback" id="phoneFeedback">Vui lòng nhập số điện thoại liên lạc hợp lệ (10 số).</div>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-600">Địa chỉ Email</label>
-                            <input type="email" id="custEmail" class="form-control" placeholder="name@domain.com" required>
+                            <input type="email" id="custEmail" class="form-control" th:value="${user != null ? user.email : ''}" placeholder="name@domain.com" required>
                             <div class="invalid-feedback" id="emailFeedback">Vui lòng nhập địa chỉ email hợp lệ.</div>
                         </div>
                         <div class="col-md-12 mb-3">
                             <label class="form-label fw-600">Địa chỉ nhận cây (Số nhà, đường, quận, tỉnh)</label>
-                            <input type="text" id="custAddress" class="form-control" placeholder="Số 12, ngõ 86, Phố Láng Hạ, Đống Đa, Hà Nội" required>
+                            <input type="text" id="custAddress" class="form-control" th:value="${user != null ? user.address : ''}" placeholder="Số 12, ngõ 86, Phố Láng Hạ, Đống Đa, Hà Nội" required>
                             <div class="invalid-feedback">Vui lòng nhập địa chỉ nhận cây.</div>
                         </div>
                         <div class="col-md-12 mb-3">

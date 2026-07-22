@@ -41,7 +41,6 @@ public class CartApiController {
                 .productName(item.getProduct().getProductName())
                 .productImage(item.getProduct().getFirstImageUrl())
                 .price(item.getProduct().getPrice())
-                .quantity(item.getQuantity())
                 .build()).collect(Collectors.toList());
 
         return ResponseEntity.ok(dtoList);
@@ -68,7 +67,7 @@ public class CartApiController {
 
         Integer productId = payload.get("productId");
         try {
-            boolean success = cartService.addToCart(user.getUserId(), productId, 1, user);
+            boolean success = cartService.addToCart(user.getUserId(), productId, user);
             response.put("success", success);
             response.put("message", "Đã thêm tác phẩm vào giỏ hàng thành công.");
             return ResponseEntity.ok(response);

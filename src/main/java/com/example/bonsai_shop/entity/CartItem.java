@@ -5,7 +5,7 @@ import lombok.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "cart_item")
+@Table(name = "CART_ITEM")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -15,22 +15,18 @@ public class CartItem {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "cart_item_id")
+    @Column(name = "CartItemID")
     private Integer cartItemId;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    @JoinColumn(name = "CartID", nullable = false)
+    private Cart cart;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "product_id", nullable = false)
+    @JoinColumn(name = "ProductID", nullable = false)
     private Product product;
 
-    @Column(name = "quantity", nullable = false)
-    @Builder.Default
-    private Integer quantity = 1;
-
-    @Column(name = "created_at")
+    @Column(name = "CreatedAt")
     @Builder.Default
     private LocalDateTime createdAt = LocalDateTime.now();
 }

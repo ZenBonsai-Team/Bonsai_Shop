@@ -336,7 +336,7 @@ public class OrderApiController {
         // 3. Khởi tạo Đơn Hàng mới (Order)
         String orderCode = "BSMS-" + VNPayConfig.getRandomNumber(6).toUpperCase();
         BigDecimal totalAmount = cartItems.stream()
-                .map(item -> item.getProduct().getPrice().multiply(BigDecimal.valueOf(item.getQuantity())))
+                .map(item -> item.getProduct().getPrice())
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         Order order = Order.builder()
@@ -363,7 +363,7 @@ public class OrderApiController {
                     .order(order)
                     .product(prod)
                     .priceAtPurchase(prod.getPrice())
-                    .quantity(item.getQuantity())
+                    .quantity(1)
                     .build();
         }).collect(Collectors.toList());
 
