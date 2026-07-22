@@ -40,6 +40,7 @@ import com.example.bonsai_shop.customer.repository.CommunityPostBookmarkReposito
 import com.example.bonsai_shop.entity.CommunityPostBookmark;
 
 import lombok.RequiredArgsConstructor;
+import com.example.bonsai_shop.customer.service.CustomOAuth2User;
 
 @Controller
 @RequiredArgsConstructor
@@ -56,17 +57,54 @@ public class CommunityController {
     private final CommunityPostBookmarkRepository bookmarkRepository;
     private final com.example.bonsai_shop.customer.service.ProfanityFilterService profanityFilterService;
 
+    private String getEmailFromPrincipal(Object principal) {
+        if (principal == null || "anonymousUser".equals(principal)) {
+            return null;
+        }
+        if (principal instanceof UserDetails) {
+            return ((UserDetails) principal).getUsername();
+        }
+        if (principal instanceof CustomOAuth2User) {
+            return ((CustomOAuth2User) principal).getUsername();
+        }
+        if (principal instanceof org.springframework.security.oauth2.core.user.OAuth2User) {
+            return ((org.springframework.security.oauth2.core.user.OAuth2User) principal).getAttribute("email");
+        }
+        return null;
+    }
+
+    private boolean hasRole(Object principal, String... roles) {
+        if (principal == null || "anonymousUser".equals(principal)) {
+            return false;
+        }
+        java.util.Collection<? extends org.springframework.security.core.GrantedAuthority> authorities = null;
+        if (principal instanceof UserDetails) {
+            authorities = ((UserDetails) principal).getAuthorities();
+        } else if (principal instanceof org.springframework.security.oauth2.core.user.OAuth2User) {
+            authorities = ((org.springframework.security.oauth2.core.user.OAuth2User) principal).getAuthorities();
+        }
+        if (authorities != null) {
+            for (String role : roles) {
+                if (authorities.stream().anyMatch(a -> role.equals(a.getAuthority()))) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     @GetMapping
     public String community(Model model,
             @RequestParam(value = "category", required = false) String category,
             @RequestParam(value = "search", required = false) String search,
-            @AuthenticationPrincipal UserDetails userDetails) {
+            @AuthenticationPrincipal Object principal) {
 
         List<CommunityPost> posts = new java.util.ArrayList<>();
+        String currentEmail = getEmailFromPrincipal(principal);
 
         if (category != null && category.trim().equals("Đã lưu")) {
-            if (userDetails != null) {
-                User user = userRepository.findByEmail(userDetails.getUsername()).orElse(null);
+            if (currentEmail != null) {
+                User user = userRepository.findByEmail(currentEmail).orElse(null);
                 if (user != null) {
                     List<CommunityPostBookmark> bookmarks = bookmarkRepository.findByUserIdOrderByCreatedAtDesc(user.getUserId());
                     List<Integer> postIds = bookmarks.stream().map(CommunityPostBookmark::getPostId).collect(java.util.stream.Collectors.toList());
@@ -95,8 +133,8 @@ public class CommunityController {
         java.util.Set<Integer> bookmarkedPostIds = new java.util.HashSet<>();
 
         // Add info to check if user is logged in (for UI controls)
-        if (userDetails != null) {
-            userRepository.findByEmail(userDetails.getUsername()).ifPresent(user -> {
+        if (currentEmail != null) {
+            userRepository.findByEmail(currentEmail).ifPresent(user -> {
                 model.addAttribute("currentUser", user);
                 // Fetch notifications for current user
                 List<ModerationNotification> notifications = notificationRepository.findByTargetUsernameOrderByCreatedAtDesc(user.getFullName());
@@ -187,7 +225,7 @@ public class CommunityController {
     // ===== TRANG HỒ SƠ TÁC GIẢ BÀI VIẾT (PUBLIC AUTHOR PROFILE) =====
     @GetMapping("/author/{identifier}")
     public String viewAuthorProfile(@PathVariable("identifier") String identifier, Model model,
-            @AuthenticationPrincipal UserDetails userDetails) {
+            @AuthenticationPrincipal Object principal) {
         User author = null;
         Integer authorId = null;
         String authorName = identifier;
@@ -234,8 +272,9 @@ public class CommunityController {
             authorPosts = postRepository.findByAuthorNameOrderByCreatedAtDesc(authorName);
         }
 
-        if (userDetails != null) {
-            userRepository.findByEmail(userDetails.getUsername()).ifPresent(user -> {
+        String currentEmail = getEmailFromPrincipal(principal);
+        if (currentEmail != null) {
+            userRepository.findByEmail(currentEmail).ifPresent(user -> {
                 model.addAttribute("currentUser", user);
             });
         }
@@ -248,23 +287,21 @@ public class CommunityController {
 
     @GetMapping("/post/{id}")
     public String viewPost(@PathVariable("id") Integer id, Model model,
-            @AuthenticationPrincipal UserDetails userDetails) {
+            @AuthenticationPrincipal Object principal) {
         CommunityPost post = postRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy bài viết"));
 
         if (!"APPROVED".equals(post.getStatus())) {
             // Check if user is Admin or Moderator. Admins/Moderators can see hidden posts
-            boolean isAdminOrMod = userDetails != null && userDetails.getAuthorities().stream()
-                    .anyMatch(a -> "ROLE_OWNER".equals(a.getAuthority())
-                            || "ROLE_CONTENT_MODERATOR".equals(a.getAuthority())
-                            || "ROLE_MODERATOR".equals(a.getAuthority()));
+            boolean isAdminOrMod = hasRole(principal, "ROLE_OWNER", "ROLE_CONTENT_MODERATOR", "ROLE_MODERATOR");
             if (!isAdminOrMod) {
                 throw new RuntimeException("Bài viết này đã bị ẩn bởi quản trị viên.");
             }
         }
 
-        if (userDetails != null) {
-            userRepository.findByEmail(userDetails.getUsername()).ifPresent(user -> {
+        String currentEmail = getEmailFromPrincipal(principal);
+        if (currentEmail != null) {
+            userRepository.findByEmail(currentEmail).ifPresent(user -> {
                 model.addAttribute("currentUser", user);
             });
         }
@@ -284,8 +321,8 @@ public class CommunityController {
         // Kiểm tra xem user hiện tại đã like / bookmark chưa
         boolean isLiked = false;
         boolean isBookmarked = false;
-        if (userDetails != null) {
-            User user = userRepository.findByEmail(userDetails.getUsername()).orElse(null);
+        if (currentEmail != null) {
+            User user = userRepository.findByEmail(currentEmail).orElse(null);
             if (user != null) {
                 isLiked = likeRepository.findByPostIdAndUserId(id, user.getUserId()).isPresent();
                 isBookmarked = bookmarkRepository.existsByPostIdAndUserId(id, user.getUserId());
@@ -306,17 +343,18 @@ public class CommunityController {
     @ResponseBody
     public ResponseEntity<Map<String, Object>> likePost(
             @PathVariable("id") Integer id,
-            @AuthenticationPrincipal UserDetails userDetails) {
+            @AuthenticationPrincipal Object principal) {
         Map<String, Object> response = new HashMap<>();
+        String currentEmail = getEmailFromPrincipal(principal);
         // Phải đăng nhập mới like được
-        if (userDetails == null) {
+        if (currentEmail == null) {
             response.put("success", false);
             response.put("message", "Bạn cần đăng nhập để thích bài viết.");
             return ResponseEntity.status(401).body(response);
         }
         CommunityPost post = postRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy bài viết"));
-        User user = userRepository.findByEmail(userDetails.getUsername())
+        User user = userRepository.findByEmail(currentEmail)
                 .orElseThrow(() -> new RuntimeException("Người dùng không tồn tại"));
         // Toggle like
         var existingLike = likeRepository.findByPostIdAndUserId(id, user.getUserId());
@@ -346,12 +384,13 @@ public class CommunityController {
     @GetMapping("/create")
     public String showCreateForm(Model model, 
                                  @RequestParam(required = false) String category,
-                                 @AuthenticationPrincipal UserDetails userDetails) {
-        if (userDetails == null) {
+                                 @AuthenticationPrincipal Object principal) {
+        String currentEmail = getEmailFromPrincipal(principal);
+        if (currentEmail == null) {
             return "redirect:/login";
         }
 
-        userRepository.findByEmail(userDetails.getUsername()).ifPresent(user -> {
+        userRepository.findByEmail(currentEmail).ifPresent(user -> {
             model.addAttribute("currentUser", user);
         });
 
@@ -367,12 +406,13 @@ public class CommunityController {
     @PostMapping("/create")
     public String createPost(@ModelAttribute("post") CommunityPost post,
             @RequestParam(value = "imageFile", required = false) MultipartFile imageFile,
-            @AuthenticationPrincipal UserDetails userDetails) {
-        if (userDetails == null) {
+            @AuthenticationPrincipal Object principal) {
+        String currentEmail = getEmailFromPrincipal(principal);
+        if (currentEmail == null) {
             return "redirect:/login";
         }
 
-        User user = userRepository.findByEmail(userDetails.getUsername())
+        User user = userRepository.findByEmail(currentEmail)
                 .orElseThrow(() -> new RuntimeException("Người dùng chưa được xác thực"));
 
         // Process uploaded image file if provided
@@ -456,11 +496,12 @@ public class CommunityController {
     @ResponseBody
     public ResponseEntity<Map<String, Object>> addComment(@PathVariable("id") Integer id,
             @RequestBody Map<String, String> body,
-            @AuthenticationPrincipal UserDetails userDetails) {
+            @AuthenticationPrincipal Object principal) {
         
         Map<String, Object> response = new HashMap<>();
+        String currentEmail = getEmailFromPrincipal(principal);
         
-        if (userDetails == null) {
+        if (currentEmail == null) {
             response.put("success", false);
             response.put("message", "Bạn cần đăng nhập để bình luận.");
             return ResponseEntity.status(401).body(response);
@@ -479,7 +520,7 @@ public class CommunityController {
             return ResponseEntity.badRequest().body(response);
         }
 
-        User user = userRepository.findByEmail(userDetails.getUsername())
+        User user = userRepository.findByEmail(currentEmail)
                 .orElseThrow(() -> new RuntimeException("Người dùng chưa được xác thực"));
 
         CommunityPost post = postRepository.findById(id)
@@ -567,14 +608,15 @@ public class CommunityController {
     @ResponseBody
     public ResponseEntity<Map<String, Object>> bookmarkPost(
             @PathVariable("id") Integer id,
-            @AuthenticationPrincipal UserDetails userDetails) {
+            @AuthenticationPrincipal Object principal) {
         Map<String, Object> response = new HashMap<>();
-        if (userDetails == null) {
+        String currentEmail = getEmailFromPrincipal(principal);
+        if (currentEmail == null) {
             response.put("success", false);
             response.put("message", "Bạn cần đăng nhập để lưu bài viết.");
             return ResponseEntity.status(401).body(response);
         }
-        User user = userRepository.findByEmail(userDetails.getUsername())
+        User user = userRepository.findByEmail(currentEmail)
                 .orElseThrow(() -> new RuntimeException("Người dùng không tồn tại"));
 
         var existingBookmark = bookmarkRepository.findByPostIdAndUserId(id, user.getUserId());
