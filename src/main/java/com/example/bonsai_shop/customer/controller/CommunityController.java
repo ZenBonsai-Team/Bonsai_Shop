@@ -123,8 +123,65 @@ public class CommunityController {
         model.addAttribute("selectedCategory", category != null ? category : "Tất cả");
         model.addAttribute("searchQuery", search != null ? search : "");
         model.addAttribute("activePage", "community");
+        model.addAttribute("trendingHashtags", getTrendingHashtags());
 
         return "customer/community";
+    }
+
+    private List<String> getTrendingHashtags() {
+        List<String> defaultTags = java.util.Arrays.asList(
+                "TùngLaHán", "NghệThuậtUốnCây", "SanhNamĐiền", "BonsaiHảiHậu", "KỹThuậtChămSóc", "ChămSócMùaĐông"
+        );
+
+        try {
+            org.springframework.data.domain.Page<CommunityPost> recentPostsPage = 
+                    postRepository.findByStatusOrderByCreatedAtDesc("APPROVED", org.springframework.data.domain.PageRequest.of(0, 100));
+            List<CommunityPost> recentPosts = recentPostsPage.getContent();
+
+            if (recentPosts.isEmpty()) {
+                return defaultTags;
+            }
+
+            java.util.Map<String, Integer> tagCounts = new java.util.HashMap<>();
+            java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("#([\\p{L}\\p{N}]+)");
+
+            for (CommunityPost post : recentPosts) {
+                String text = (post.getTitle() != null ? post.getTitle() : "") + " " + (post.getContent() != null ? post.getContent() : "");
+                java.util.regex.Matcher matcher = pattern.matcher(text);
+                while (matcher.find()) {
+                    String tag = matcher.group(1);
+                    if (tag.length() >= 2) {
+                        tagCounts.put(tag, tagCounts.getOrDefault(tag, 0) + 1);
+                    }
+                }
+            }
+
+            if (tagCounts.isEmpty()) {
+                return defaultTags;
+            }
+
+            List<String> sortedTags = tagCounts.entrySet().stream()
+                    .sorted((e1, e2) -> e2.getValue().compareTo(e1.getValue()))
+                    .map(java.util.Map.Entry::getKey)
+                    .limit(6)
+                    .collect(java.util.stream.Collectors.toList());
+
+            if (sortedTags.size() < 6) {
+                for (String defaultTag : defaultTags) {
+                    boolean exists = sortedTags.stream().anyMatch(t -> t.equalsIgnoreCase(defaultTag));
+                    if (!exists) {
+                        sortedTags.add(defaultTag);
+                    }
+                    if (sortedTags.size() == 6) {
+                        break;
+                    }
+                }
+            }
+
+            return sortedTags;
+        } catch (Exception e) {
+            return defaultTags;
+        }
     }
 
     // ===== TRANG HỒ SƠ TÁC GIẢ BÀI VIẾT (PUBLIC AUTHOR PROFILE) =====

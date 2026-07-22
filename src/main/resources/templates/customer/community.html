@@ -87,7 +87,12 @@
                     <img th:src="${currentUser.avatar != null && !currentUser.avatar.isEmpty() ? currentUser.avatar : 'https://ui-avatars.com/api/?name=' + currentUser.fullName}" alt="Avatar" class="author-avatar-img">
                     <div>
                         <h6 class="fw-bold mb-0 text-dark" th:text="${currentUser.fullName}">Tên người dùng</h6>
-                        <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill small" style="font-size:0.68rem;" th:text="${currentUser.role != null ? currentUser.role.roleName : 'Thành viên'}">Khách hàng</span>
+                        <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill small" style="font-size:0.68rem;"
+                              th:with="r=${currentUser.role != null ? currentUser.role.roleName : ''}"
+                              th:text="${r == 'ROLE_OWNER' || r == 'OWNER' ? 'Quản trị viên' : 
+                                        (r == 'ROLE_CONTENT_MODERATOR' || r == 'CONTENT_MODERATOR' ? 'Kiểm duyệt viên' : 
+                                         (r == 'ROLE_ARTISAN' || r == 'ARTISAN' ? 'Nghệ nhân' : 
+                                          (r == 'ROLE_MODERATOR' || r == 'MODERATOR' ? 'Điều phối viên' : 'Thành viên')))}">Khách hàng</span>
                     </div>
                 </div>
                 <div class="sidebar-user-header text-center py-2" th:if="${currentUser == null}">
@@ -114,12 +119,10 @@
             <div class="feed-sidebar-card">
                 <h6 class="fw-bold mb-3 text-dark"><i class="fa-solid fa-hashtag text-success me-2"></i>Chủ đề nổi bật</h6>
                 <div class="d-flex flex-wrap gap-1">
-                    <a th:href="@{/community(search='Tùng La Hán')}" class="hashtag-pill">#TùngLaHán</a>
-                    <a th:href="@{/community(search='Uốn cây')}" class="hashtag-pill">#NghệThuậtUốnCây</a>
-                    <a th:href="@{/community(search='Sanh Nam Điền')}" class="hashtag-pill">#SanhNamĐiền</a>
-                    <a th:href="@{/community(search='Hải Hậu')}" class="hashtag-pill">#BonsaiHảiHậu</a>
-                    <a th:href="@{/community(search='Chăm sóc')}" class="hashtag-pill">#KỹThuậtChămSóc</a>
-                    <a th:href="@{/community(search='Mùa đông')}" class="hashtag-pill">#ChămSócMùaĐông</a>
+                    <a th:each="tag : ${trendingHashtags}" 
+                       th:href="@{/community(search=${tag})}" 
+                       th:text="'#' + ${tag}" 
+                       class="hashtag-pill">#Hashtag</a>
                 </div>
             </div>
 

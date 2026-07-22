@@ -3,9 +3,11 @@ package com.example.bonsai_shop.owner.controller;
 import com.example.bonsai_shop.customer.repository.CommunityPostRepository;
 import com.example.bonsai_shop.customer.repository.CommunityCommentRepository;
 import com.example.bonsai_shop.customer.repository.ModerationNotificationRepository;
+import com.example.bonsai_shop.customer.repository.UserRepository;
 import com.example.bonsai_shop.entity.CommunityPost;
 import com.example.bonsai_shop.entity.CommunityComment;
 import com.example.bonsai_shop.entity.ModerationNotification;
+import com.example.bonsai_shop.entity.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -16,6 +18,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -29,6 +32,7 @@ public class AdminCommunityController {
     private final CommunityPostRepository postRepository;
     private final CommunityCommentRepository commentRepository;
     private final ModerationNotificationRepository notificationRepository;
+    private final UserRepository userRepository;
 
     @GetMapping
     public String index(Model model,
@@ -100,11 +104,48 @@ public class AdminCommunityController {
                     .orElseThrow(() -> new RuntimeException("Không tìm thấy bình luận"));
             comment.setStatus("APPROVED");
             commentRepository.save(comment);
+
+            // Gửi thông báo bằng email thực tế
+            User user = userRepository.findById(comment.getUserId()).orElse(null);
+            String email = user != null ? user.getEmail() : comment.getAuthorName();
+            notificationRepository.save(ModerationNotification.builder()
+                    .targetUsername(email)
+                    .message("✅ Bình luận của bạn trên bài viết #" + comment.getPostId() + " đã được phê duyệt và hiển thị công khai.")
+                    .isRead(false)
+                    .createdAt(LocalDateTime.now())
+                    .build());
+
             redirectAttributes.addFlashAttribute("success", "Đã duyệt bình luận thành công!");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Lỗi: " + e.getMessage());
         }
         return "redirect:/moderator/community?tab=comments";
+    }
+
+    @PostMapping("/posts/{id}/approve")
+    public String approvePost(@PathVariable("id") Integer id,
+                              RedirectAttributes redirectAttributes) {
+        try {
+            CommunityPost post = postRepository.findById(id)
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy bài viết"));
+            post.setStatus("APPROVED");
+            postRepository.save(post);
+
+            // Gửi thông báo bằng email thực tế
+            User user = userRepository.findById(post.getAuthorId()).orElse(null);
+            String email = user != null ? user.getEmail() : post.getAuthorName();
+            notificationRepository.save(ModerationNotification.builder()
+                    .targetUsername(email)
+                    .message("✅ Bài viết '" + post.getTitle() + "' của bạn đã được phê duyệt và hiển thị công khai.")
+                    .isRead(false)
+                    .createdAt(LocalDateTime.now())
+                    .build());
+
+            redirectAttributes.addFlashAttribute("success", "Đã duyệt bài viết thành công!");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Lỗi: " + e.getMessage());
+        }
+        return "redirect:/moderator/community?tab=posts";
     }
 
     @PostMapping("/posts/{id}/toggle-status")
@@ -115,20 +156,27 @@ public class AdminCommunityController {
             CommunityPost post = postRepository.findById(id)
                     .orElseThrow(() -> new RuntimeException("Không tìm thấy bài viết"));
             
+            User user = userRepository.findById(post.getAuthorId()).orElse(null);
+            String email = user != null ? user.getEmail() : post.getAuthorName();
+
             if ("APPROVED".equals(post.getStatus())) {
                 post.setStatus("HIDDEN");
                 String reasonStr = (reason != null && !reason.trim().isEmpty()) ? reason : "Vi phạm quy chuẩn nội dung";
                 notificationRepository.save(ModerationNotification.builder()
-                        .targetUsername(post.getAuthorName())
-                        .message("Bài viết '" + post.getTitle() + "' của bạn đã bị ẩn bởi Quản trị viên. Lý do: " + reasonStr)
+                        .targetUsername(email)
+                        .message("Bài viết '" + post.getTitle() + "' của bạn đã bị tạm ẩn bởi Quản trị viên. Lý do: " + reasonStr)
+                        .isRead(false)
+                        .createdAt(LocalDateTime.now())
                         .build());
                 redirectAttributes.addFlashAttribute("success", "Đã ẩn bài viết thành công!");
             } else {
                 post.setStatus("APPROVED");
                 String reasonStr = (reason != null && !reason.trim().isEmpty()) ? reason : "Đã được phê duyệt hiển thị lại";
                 notificationRepository.save(ModerationNotification.builder()
-                        .targetUsername(post.getAuthorName())
+                        .targetUsername(email)
                         .message("Bài viết '" + post.getTitle() + "' của bạn đã được hiển thị lại. Ghi chú: " + reasonStr)
+                        .isRead(false)
+                        .createdAt(LocalDateTime.now())
                         .build());
                 redirectAttributes.addFlashAttribute("success", "Đã hiện bài viết thành công!");
             }
@@ -147,10 +195,15 @@ public class AdminCommunityController {
             CommunityPost post = postRepository.findById(id)
                     .orElseThrow(() -> new RuntimeException("Không tìm thấy bài viết"));
             
+            User user = userRepository.findById(post.getAuthorId()).orElse(null);
+            String email = user != null ? user.getEmail() : post.getAuthorName();
+
             String reasonStr = (reason != null && !reason.trim().isEmpty()) ? reason : "Vi phạm quy chuẩn nội dung";
             notificationRepository.save(ModerationNotification.builder()
-                    .targetUsername(post.getAuthorName())
+                    .targetUsername(email)
                     .message("Bài viết '" + post.getTitle() + "' của bạn đã bị xóa vĩnh viễn bởi Quản trị viên. Lý do: " + reasonStr)
+                    .isRead(false)
+                    .createdAt(LocalDateTime.now())
                     .build());
 
             postRepository.deleteById(id);
@@ -169,6 +222,9 @@ public class AdminCommunityController {
             CommunityComment comment = commentRepository.findById(id)
                     .orElseThrow(() -> new RuntimeException("Không tìm thấy bình luận"));
             
+            User user = userRepository.findById(comment.getUserId()).orElse(null);
+            String email = user != null ? user.getEmail() : comment.getAuthorName();
+
             String reasonStr = (reason != null && !reason.trim().isEmpty()) ? reason : "Vi phạm quy chuẩn nội dung";
             
             String postTitle = "Bài viết #" + comment.getPostId();
@@ -178,8 +234,10 @@ public class AdminCommunityController {
             }
 
             notificationRepository.save(ModerationNotification.builder()
-                    .targetUsername(comment.getAuthorName())
+                    .targetUsername(email)
                     .message("Bình luận của bạn tại bài viết '" + postTitle + "' đã bị xóa bởi Quản trị viên. Lý do: " + reasonStr)
+                    .isRead(false)
+                    .createdAt(LocalDateTime.now())
                     .build());
 
             // Cập nhật CommentsCount cho Post
