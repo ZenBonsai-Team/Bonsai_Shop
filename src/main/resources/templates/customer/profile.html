@@ -93,14 +93,14 @@
         <!-- USER INFO TOP -->
         <section class="profile-top">
 
-            <div class="avatar-box">
+            <a th:href="@{/community/author/{id}(id=${user.userId})}" class="avatar-box text-decoration-none" title="Xem trang công khai của tôi">
                 <img th:if="${user.avatar != null}" th:src="${user.avatar}" alt="avatar">
 
                 <span th:unless="${user.avatar != null}"
                       th:text="${#strings.substring(user.fullName, 0, 1)}">
                     U
                 </span>
-            </div>
+            </a>
 
             <div class="user-info-grid">
 
@@ -160,9 +160,14 @@
 
             </div>
 
-            <a th:href="@{/profile/update}" class="edit-btn">
-                Chỉnh sửa hồ sơ
-            </a>
+            <div class="d-flex flex-column gap-2 align-self-stretch justify-content-start">
+                <a th:href="@{/profile/update}" class="edit-btn text-decoration-none w-100">
+                    Chỉnh sửa hồ sơ
+                </a>
+                <a th:href="@{/community/author/{id}(id=${user.userId})}" class="btn btn-outline-success btn-sm rounded-0 py-2 fw-semibold text-truncate d-flex align-items-center justify-content-center gap-1 w-100" style="border-color: #06210f; color: #06210f; font-size: 0.82rem;">
+                    <i class="fa-solid fa-eye" style="font-size: 0.75rem;"></i> Xem trang công khai
+                </a>
+            </div>
 
         </section>
 

@@ -83,7 +83,7 @@
         <aside class="col-lg-3 d-none d-lg-block">
             <!-- User Quick Menu Widget -->
             <div class="feed-sidebar-card">
-                <div class="sidebar-user-header" th:if="${currentUser != null}">
+                <a th:if="${currentUser != null}" th:href="@{/community/author/{id}(id=${currentUser.userId})}" class="sidebar-user-header text-decoration-none d-flex align-items-center gap-2" style="display: flex !important; transition: opacity 0.2s;" onmouseover="this.style.opacity=0.8" onmouseout="this.style.opacity=1">
                     <img th:src="${currentUser.avatar != null && !currentUser.avatar.isEmpty() ? currentUser.avatar : 'https://ui-avatars.com/api/?name=' + currentUser.fullName}" alt="Avatar" class="author-avatar-img">
                     <div>
                         <h6 class="fw-bold mb-0 text-dark" th:text="${currentUser.fullName}">Tên người dùng</h6>
@@ -94,7 +94,7 @@
                                          (r == 'ROLE_ARTISAN' || r == 'ARTISAN' ? 'Nghệ nhân' : 
                                           (r == 'ROLE_MODERATOR' || r == 'MODERATOR' ? 'Điều phối viên' : 'Thành viên')))}">Khách hàng</span>
                     </div>
-                </div>
+                </a>
                 <div class="sidebar-user-header text-center py-2" th:if="${currentUser == null}">
                     <p class="small text-muted mb-2">Đăng nhập để chia sẻ tác phẩm Bonsai và tương tác cùng cộng đồng</p>
                     <a th:href="@{/login}" class="btn btn-outline-success btn-sm w-100 rounded-pill fw-semibold">Đăng nhập ngay</a>

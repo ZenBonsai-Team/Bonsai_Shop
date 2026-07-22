@@ -155,7 +155,7 @@ public class CommunityController {
             userRepository.findByEmail(currentEmail).ifPresent(user -> {
                 model.addAttribute("currentUser", user);
                 // Fetch notifications for current user
-                List<ModerationNotification> notifications = notificationRepository.findByTargetUsernameOrderByCreatedAtDesc(user.getFullName());
+                List<ModerationNotification> notifications = notificationRepository.findByTargetUsernameOrderByCreatedAtDesc(user.getEmail());
                 model.addAttribute("moderationNotifications", notifications);
 
                 // Fetch user's liked and bookmarked post IDs for instant feed UI state
