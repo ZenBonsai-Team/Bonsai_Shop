@@ -217,7 +217,7 @@ public class OrderApiController {
                 .build();
         order.setOrderDetails(Collections.singletonList(detail));
 
-        // 5. Reserve sản phẩm bằng atomic update để tránh đặt trùng với walk-in/online order khác.
+        // 5. Reserve sản phẩm bằng atomic update để tránh đặt trùng với in-person/online order khác.
         int reserved = productRepository.reserveIfAvailable(product.getProductId());
         if (reserved == 0) {
             response.put("success", false);
