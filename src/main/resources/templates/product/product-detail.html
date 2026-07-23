@@ -136,7 +136,10 @@
             <div class="price-panel">
                 <div class="price-label">Giá cố định</div>
                 <!-- CALL DB: product.price -->
-                <div class="price-value-large" th:text="${#numbers.formatDecimal(product.price, 0, 'POINT', 0, 'POINT') + ' đ'}">8.900.000 đ</div>
+                <div class="price-value-large"
+                     th:if="${product.isPublicPrice}"
+                     th:text="${#numbers.formatDecimal(product.price, 0, 'POINT', 0, 'POINT') + ' đ'}">8.900.000 đ</div>
+                <div class="price-value-large" th:if="${!product.isPublicPrice}">Liên hệ</div>
                 <p class="price-subtext">Đã bao gồm hồ sơ phả hệ • Phí vận chuyển cẩu chuyên dụng tính riêng</p>
             </div>
 

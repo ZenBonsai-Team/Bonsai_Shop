@@ -130,12 +130,6 @@
                 <span>VNĐ</span>
             </span>
         </label>
-
-        <label class="checkbox">
-            <input type="checkbox" name="isPublicPrice" value="true" th:checked="${product == null || product.isPublicPrice}">
-            Hiển thị giá sản phẩm trên marketplace
-        </label>
-
         <input th:if="${product != null}" type="hidden" name="productStatus" th:value="${product.productStatus}">
         <button type="submit">Save & Continue</button>
     </form>
