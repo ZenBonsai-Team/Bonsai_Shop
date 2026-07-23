@@ -64,11 +64,11 @@
 
             <!-- Thumbnail Selector Strip -->
             <div class="gallery-thumbnails-row">
-                <!-- CALL DB: product.productMedias, product.productName -->
-                <!-- Dynamic thumbnails if media exists in DB -->
-                <th:block th:if="${product.productMedias != null and !product.productMedias.isEmpty()}">
-                    <div th:each="media, iterStat : ${product.productMedias}"
-                         th:classappend="${iterStat.first ? 'active' : ''}"
+                <!-- CALL DB: productImages, product.productName -->
+                <!-- Dynamic image thumbnails if media exists in DB -->
+                <th:block th:if="${productImages != null and !productImages.isEmpty()}">
+                    <div th:each="media : ${productImages}"
+                         th:classappend="${media.mediaUrl == product.firstImageUrl ? 'active' : ''}"
                          class="gallery-thumb-item"
                          th:data-image-url="${media.mediaUrl}"
                          onclick="switchMainImage(this, this.getAttribute('data-image-url'))">
@@ -76,7 +76,7 @@
                     </div>
                 </th:block>
                 <!-- HARDCODED Fallback if no media exists in DB -->
-                <th:block th:if="${product.productMedias == null or product.productMedias.isEmpty()}">
+                <th:block th:if="${productImages == null or productImages.isEmpty()}">
                     <div class="gallery-thumb-item active" onclick="switchMainImage(this, 'https://images.unsplash.com/photo-1599599810769-bcde5a160d32?auto=format&fit=crop&q=80&w=800')">
                         <!-- HARDCODED --><img src="https://images.unsplash.com/photo-1599599810769-bcde5a160d32?auto=format&fit=crop&q=80&w=150" alt="Front View">
                     </div>
@@ -97,6 +97,22 @@
 
             <div class="gallery-caption-text">
                 Front • Side • Root structure • Foliage detail • Pot
+            </div>
+
+            <div class="product-video-section" th:if="${productVideos != null and !productVideos.isEmpty()}">
+                <h3 class="product-video-title">Video sản phẩm</h3>
+                <div class="product-video-list">
+                    <div class="product-video-card" th:each="media : ${productVideos}">
+                        <video class="product-detail-video"
+                               th:src="${media.mediaUrl}"
+                               controls
+                               playsinline
+                               preload="metadata"></video>
+                        <p class="product-video-caption"
+                           th:if="${media.caption != null && !media.caption.isEmpty()}"
+                           th:text="${media.caption}">Video sản phẩm</p>
+                    </div>
+                </div>
             </div>
         </section>
 
@@ -598,3 +614,4 @@
 <div th:replace="~{fragments/checkout-modal :: checkoutModal}"></div>
 </body>
 </html>
+

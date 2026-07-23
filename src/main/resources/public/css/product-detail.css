@@ -87,6 +87,37 @@
             letter-spacing: 0.02em;
         }
 
+        .product-video-section {
+            margin-top: 22px;
+            border: 1px solid var(--border-color);
+            background-color: #FFFFFF;
+            border-radius: 4px;
+            padding: 16px;
+        }
+        .product-video-title {
+            font-family: var(--font-sans);
+            font-size: 0.9rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: var(--text-primary);
+        }
+        .product-video-list {
+            display: grid;
+            gap: 12px;
+        }
+        .product-detail-video {
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            display: block;
+            background-color: #000;
+            border-radius: 4px;
+        }
+        .product-video-caption {
+            margin: 8px 0 0;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
         /* --- PRODUCT INFORMATION --- */
         .info-badge-row {
             display: flex;

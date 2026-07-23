@@ -1,6 +1,7 @@
 package com.example.bonsai_shop.product.controller;
 
 import com.example.bonsai_shop.entity.Product;
+import com.example.bonsai_shop.entity.ProductMedia;
 import com.example.bonsai_shop.product.service.ProductService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.List;
 
 @Controller
@@ -83,17 +85,29 @@ public class MarketplaceController {
 
     @GetMapping({ "/products/detail", "/product/{id}" })
     public String productDetail(@PathVariable(value = "id", required = false) Integer id, Model model) {
+        Product product = null;
         if (id != null) {
-            Product product = productService.getProductById(id);
-            model.addAttribute("product", product);
+            product = productService.getProductById(id);
         } else {
             Page<Product> products = productService.getAllActiveProducts(PageRequest.of(0, 1));
             if (!products.isEmpty()) {
-                Product product = productService.getProductById(products.getContent().get(0).getProductId());
-                model.addAttribute("product", product);
+                product = productService.getProductById(products.getContent().get(0).getProductId());
             }
         }
+
+        model.addAttribute("product", product);
+        model.addAttribute("productImages", getMediaByType(product, "IMAGE"));
+        model.addAttribute("productVideos", getMediaByType(product, "VIDEO"));
         model.addAttribute("activePage", "marketplace");
         return "product/product-detail";
+    }
+
+    private List<ProductMedia> getMediaByType(Product product, String mediaType) {
+        if (product == null || product.getProductMedias() == null) {
+            return Collections.emptyList();
+        }
+        return product.getProductMedias().stream()
+                .filter(media -> mediaType.equals(media.getMediaType()))
+                .toList();
     }
 }
