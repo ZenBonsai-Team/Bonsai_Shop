@@ -79,7 +79,7 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
     JOIN p.artisan a
     LEFT JOIN p.productMedias m
     WHERE p.segment.segmentId = 3
-      AND p.productStatus = 'AVAILABLE'
+      AND p.productStatus NOT IN ('DRAFT', 'HIDDEN')
       AND (
           m.isThumbnail = true
           OR (
@@ -119,7 +119,7 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
     JOIN p.artisan a
     LEFT JOIN p.productMedias m
     WHERE p.segment.segmentId = 3
-      AND p.productStatus = 'AVAILABLE'
+      AND p.productStatus NOT IN ('DRAFT', 'HIDDEN')
       AND p.productId = :productId
       AND (
           m.isThumbnail = true
