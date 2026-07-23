@@ -50,7 +50,6 @@ public class ArtisanProductController {
                          @RequestParam Float trunkDiameter,
                          @RequestParam String style,
                          @RequestParam BigDecimal price,
-                         @RequestParam(defaultValue = "false") Boolean isPublicPrice,
                          @RequestParam(required = false) List<Integer> tagIds,
                          RedirectAttributes redirectAttributes) {
         try {
@@ -65,7 +64,6 @@ public class ArtisanProductController {
                     trunkDiameter,
                     style,
                     price,
-                    isPublicPrice,
                     "DRAFT",
                     tagIds
             );
@@ -103,7 +101,6 @@ public class ArtisanProductController {
                          @RequestParam Float trunkDiameter,
                          @RequestParam String style,
                          @RequestParam BigDecimal price,
-                         @RequestParam(defaultValue = "false") Boolean isPublicPrice,
                          @RequestParam String productStatus,
                          @RequestParam(required = false) List<Integer> tagIds,
                          RedirectAttributes redirectAttributes) {
@@ -120,7 +117,6 @@ public class ArtisanProductController {
                     trunkDiameter,
                     style,
                     price,
-                    isPublicPrice,
                     productStatus,
                     tagIds
             );

@@ -92,7 +92,6 @@ public class ArtisanProductService {
                                  Float trunkDiameter,
                                  String style,
                                  BigDecimal price,
-                                 Boolean isPublicPrice,
                                  String productStatus,
                                  List<Integer> tagIds) {
         User artisanUser = getArtisanUser(artisanEmail);
@@ -117,7 +116,7 @@ public class ArtisanProductService {
                 .trunkDiameter(trunkDiameter)
                 .style(style)
                 .price(price)
-                .isPublicPrice(Boolean.TRUE.equals(isPublicPrice))
+                .isPublicPrice(isPublicPriceForSegment(segment))
                 .productStatus(productStatus == null || productStatus.isBlank() ? "DRAFT" : productStatus)
                 .viewCount(0)
                 .createdAt(LocalDateTime.now())
@@ -142,7 +141,6 @@ public class ArtisanProductService {
                                  Float trunkDiameter,
                                  String style,
                                  BigDecimal price,
-                                 Boolean isPublicPrice,
                                  String productStatus,
                                  List<Integer> tagIds) {
         Product product = getMyProduct(artisanEmail, productId);
@@ -163,7 +161,7 @@ public class ArtisanProductService {
         product.setTrunkDiameter(trunkDiameter);
         product.setStyle(style);
         product.setPrice(price);
-        product.setIsPublicPrice(Boolean.TRUE.equals(isPublicPrice));
+        product.setIsPublicPrice(isPublicPriceForSegment(segment));
         product.setProductStatus(productStatus);
 
         Product savedProduct = productRepository.save(product);
@@ -197,8 +195,9 @@ public class ArtisanProductService {
         String mediaType = contentType != null && contentType.startsWith("video/") ? "VIDEO" : "IMAGE";
         String normalizedShotType = normalizeShotType(slotType, mediaType);
         List<ProductMedia> existingMedia = productMediaRepository.findByProductOrderByDisplayOrderAscMediaIdAsc(product);
+        boolean shouldSetThumbnail = Boolean.TRUE.equals(isThumbnail) || existingMedia.isEmpty();
 
-        if (Boolean.TRUE.equals(isThumbnail)) {
+        if (shouldSetThumbnail) {
             existingMedia.forEach(media -> {
                 media.setIsThumbnail(false);
                 productMediaRepository.save(media);
@@ -211,7 +210,7 @@ public class ArtisanProductService {
                 .mediaType(mediaType)
                 .slotType(normalizedShotType)
                 .caption(caption)
-                .isThumbnail(Boolean.TRUE.equals(isThumbnail))
+                .isThumbnail(shouldSetThumbnail)
                 .displayOrder(getNextDisplayOrder(existingMedia))
                 .build();
 
@@ -267,6 +266,7 @@ public class ArtisanProductService {
         Product product = getMyProduct(artisanEmail, productId);
         ensureEditable(product);
         ensurePublishReady(product);
+        product.setIsPublicPrice(isPublicPriceForSegment(product.getSegment()));
         product.setProductStatus("AVAILABLE");
         productRepository.save(product);
     }
@@ -361,6 +361,13 @@ public class ArtisanProductService {
             throw new RuntimeException("Vui lòng nhập style cây.");
         }
     }
+
+    private boolean isPublicPriceForSegment(ProductSegment segment) {
+        return segment == null
+                || segment.getSegmentName() == null
+                || !"elite".equals(segment.getSegmentName().trim().toLowerCase(Locale.ROOT));
+    }
+
     public boolean isSold(Product product) {
         return product != null && "SOLD".equalsIgnoreCase(product.getProductStatus());
     }
