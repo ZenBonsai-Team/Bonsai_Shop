@@ -44,6 +44,13 @@
                 <div class="mb-4">
                     <label for="title" class="form-label form-label-custom">Tiêu đề bài viết</label>
                     <input type="text" id="title" th:field="*{title}" class="form-control form-control-custom" required placeholder="Nhập tiêu đề ấn tượng và rõ nghĩa...">
+                    <div id="title-warning" class="text-danger small mt-1" style="display: none; font-weight: 500;">
+                        <i class="fa-solid fa-circle-exclamation me-1"></i>Tiêu đề bắt buộc từ 5 đến 255 ký tự.
+                    </div>
+                    <div class="form-text d-flex justify-content-between small text-secondary mt-1">
+                        <span>Nhập từ 5 đến 255 ký tự. Rõ nghĩa, không chứa từ ngữ tục tĩu.</span>
+                        <span id="title-counter" class="text-muted">0/255</span>
+                    </div>
                 </div>
                 
                 <div class="row">
@@ -63,7 +70,11 @@
                     <!-- Read time estimate -->
                     <div class="col-md-6 mb-4">
                         <label for="readTime" class="form-label form-label-custom">Thời gian đọc ước tính (phút)</label>
-                        <input type="number" id="readTime" th:field="*{readTime}" class="form-control form-control-custom" required min="1" max="60" value="5">
+                        <input type="number" id="readTime" th:field="*{readTime}" class="form-control form-control-custom" required min="1" max="15" value="5">
+                        <div id="readTime-warning" class="text-danger small mt-1" style="display: none; font-weight: 500;">
+                            <i class="fa-solid fa-circle-exclamation me-1"></i>Thời gian đọc phải từ 1 đến 15 phút.
+                        </div>
+                        <div class="form-text small text-secondary mt-1">Nhập từ 1 đến 15 phút.</div>
                     </div>
                 </div>
                 
@@ -95,6 +106,13 @@
                 <div class="mb-4">
                     <label for="summary" class="form-label form-label-custom">Mô tả tóm tắt ngắn</label>
                     <input type="text" id="summary" th:field="*{summary}" class="form-control form-control-custom" required placeholder="Một đoạn tóm tắt ngắn khoảng 2-3 câu thu hút người đọc...">
+                    <div id="summary-warning" class="text-danger small mt-1" style="display: none; font-weight: 500;">
+                        <i class="fa-solid fa-circle-exclamation me-1"></i>Mô tả tóm tắt ngắn phải từ 10 đến 1000 ký tự.
+                    </div>
+                    <div class="form-text d-flex justify-content-between small text-secondary mt-1">
+                        <span>Nhập từ 10 đến 1000 ký tự. Tóm tắt ngắn gọn nội dung bài đăng.</span>
+                        <span id="summary-counter" class="text-muted">0/1000</span>
+                    </div>
                 </div>
                 
                 <!-- Detailed content markdown -->
@@ -108,6 +126,13 @@
                         Để chèn video, dán trực tiếp liên kết YouTube ở một dòng riêng.
                     </p>
                     <textarea id="content" th:field="*{content}" class="form-control form-control-custom" rows="12" required placeholder="Viết chia sẻ chi tiết của bạn tại đây..."></textarea>
+                    <div id="content-warning" class="text-danger small mt-1" style="display: none; font-weight: 500;">
+                        <i class="fa-solid fa-circle-exclamation me-1"></i>Nội dung chi tiết bắt buộc từ 20 đến 20000 ký tự.
+                    </div>
+                    <div class="form-text d-flex justify-content-between small text-secondary mt-1">
+                        <span>Nhập từ 20 đến 20000 ký tự. Hỗ trợ định dạng Markdown.</span>
+                        <span id="content-counter" class="text-muted">0/20000</span>
+                    </div>
                 </div>
                 
                 <!-- Form actions -->
@@ -153,6 +178,124 @@
                 if (urlInput.value && urlInput.value.startsWith('http')) {
                     previewImg.src = urlInput.value;
                     previewContainer.style.display = 'block';
+                }
+            });
+        }
+
+        // --- Custom Validation & Character Counters ---
+        const form = document.querySelector('.create-post-form');
+        const titleInput = document.getElementById('title');
+        const titleWarning = document.getElementById('title-warning');
+        const titleCounter = document.getElementById('title-counter');
+
+        const readTimeInput = document.getElementById('readTime');
+        const readTimeWarning = document.getElementById('readTime-warning');
+
+        const summaryInput = document.getElementById('summary');
+        const summaryWarning = document.getElementById('summary-warning');
+        const summaryCounter = document.getElementById('summary-counter');
+
+        const contentInput = document.getElementById('content');
+        const contentWarning = document.getElementById('content-warning');
+        const contentCounter = document.getElementById('content-counter');
+
+        function validateTitle(showWarning = true) {
+            const length = titleInput.value.length;
+            titleCounter.textContent = length + '/255';
+            if (length < 5 || length > 255) {
+                if (showWarning) {
+                    titleWarning.style.display = 'block';
+                    titleInput.classList.add('is-invalid');
+                }
+                return false;
+            } else {
+                titleWarning.style.display = 'none';
+                titleInput.classList.remove('is-invalid');
+                return true;
+            }
+        }
+
+        function validateReadTime(showWarning = true) {
+            const val = parseInt(readTimeInput.value, 10);
+            if (isNaN(val) || val < 1 || val > 15) {
+                if (showWarning) {
+                    readTimeWarning.style.display = 'block';
+                    readTimeInput.classList.add('is-invalid');
+                }
+                return false;
+            } else {
+                readTimeWarning.style.display = 'none';
+                readTimeInput.classList.remove('is-invalid');
+                return true;
+            }
+        }
+
+        function validateSummary(showWarning = true) {
+            const length = summaryInput.value.length;
+            summaryCounter.textContent = length + '/1000';
+            if (length < 10 || length > 1000) {
+                if (showWarning) {
+                    summaryWarning.style.display = 'block';
+                    summaryInput.classList.add('is-invalid');
+                }
+                return false;
+            } else {
+                summaryWarning.style.display = 'none';
+                summaryInput.classList.remove('is-invalid');
+                return true;
+            }
+        }
+
+        function validateContent(showWarning = true) {
+            const length = contentInput.value.length;
+            contentCounter.textContent = length + '/20000';
+            if (length < 20 || length > 20000) {
+                if (showWarning) {
+                    contentWarning.style.display = 'block';
+                    contentInput.classList.add('is-invalid');
+                }
+                return false;
+            } else {
+                contentWarning.style.display = 'none';
+                contentInput.classList.remove('is-invalid');
+                return true;
+            }
+        }
+
+        // Live validation listeners
+        if (titleInput) {
+            titleInput.addEventListener('input', () => validateTitle(true));
+            validateTitle(false); // initial count
+        }
+        if (readTimeInput) {
+            readTimeInput.addEventListener('input', () => validateReadTime(true));
+            validateReadTime(false);
+        }
+        if (summaryInput) {
+            summaryInput.addEventListener('input', () => validateSummary(true));
+            validateSummary(false);
+        }
+        if (contentInput) {
+            contentInput.addEventListener('input', () => validateContent(true));
+            validateContent(false);
+        }
+
+        // Form submit validation check
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                const isTitleValid = validateTitle(true);
+                const isReadTimeValid = validateReadTime(true);
+                const isSummaryValid = validateSummary(true);
+                const isContentValid = validateContent(true);
+
+                if (!isTitleValid || !isReadTimeValid || !isSummaryValid || !isContentValid) {
+                    e.preventDefault();
+                    // Scroll to first error
+                    const firstError = document.querySelector('.is-invalid');
+                    if (firstError) {
+                        firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        firstError.focus();
+                    }
                 }
             });
         }

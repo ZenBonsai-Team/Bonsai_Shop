@@ -93,6 +93,25 @@ public class CommunityController {
         return false;
     }
 
+    private void syncPostAuthorDetails(List<CommunityPost> posts) {
+        if (posts == null) return;
+        for (CommunityPost post : posts) {
+            syncPostAuthorDetails(post);
+        }
+    }
+
+    private void syncPostAuthorDetails(CommunityPost post) {
+        if (post == null) return;
+        if (post.getAuthorId() != null) {
+            userRepository.findById(post.getAuthorId()).ifPresent(user -> {
+                post.setAuthorName(user.getFullName() != null && !user.getFullName().isEmpty() ? user.getFullName() : user.getUsername());
+                if (user.getAvatar() != null && !user.getAvatar().isEmpty()) {
+                    post.setAuthorAvatar(user.getAvatar());
+                }
+            });
+        }
+    }
+
     @GetMapping
     public String community(Model model,
             @RequestParam(value = "category", required = false) String category,
@@ -175,6 +194,7 @@ public class CommunityController {
         model.addAttribute("likedPostIds", likedPostIds);
         model.addAttribute("bookmarkedPostIds", bookmarkedPostIds);
 
+        syncPostAuthorDetails(posts);
         model.addAttribute("posts", posts);
         model.addAttribute("selectedCategory", category != null ? category : "Tất cả");
         model.addAttribute("searchQuery", search != null ? search : "");
@@ -297,6 +317,7 @@ public class CommunityController {
             });
         }
 
+        syncPostAuthorDetails(authorPosts);
         model.addAttribute("author", author);
         model.addAttribute("authorPosts", authorPosts);
         model.addAttribute("activePage", "community");
@@ -325,6 +346,8 @@ public class CommunityController {
             }
         }
 
+        syncPostAuthorDetails(post);
+
         String currentEmail = getEmailFromPrincipal(principal);
         if (currentEmail != null) {
             userRepository.findByEmail(currentEmail).ifPresent(user -> {
@@ -344,6 +367,7 @@ public class CommunityController {
         // Lấy 3 bài viết tương tự cùng danh mục
         List<CommunityPost> relatedPosts = postRepository.findTop3ByCategoryAndStatusAndPostIdNotOrderByCreatedAtDesc(
                 post.getCategory(), "APPROVED", id);
+        syncPostAuthorDetails(relatedPosts);
         // Kiểm tra xem user hiện tại đã like / bookmark chưa
         boolean isLiked = false;
         boolean isBookmarked = false;

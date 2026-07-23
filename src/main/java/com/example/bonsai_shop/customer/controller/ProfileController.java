@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.security.oauth2.core.user.OAuth2User;
+import com.example.bonsai_shop.customer.repository.UserRepository;
 
 import com.example.bonsai_shop.customer.repository.CommunityPostRepository;
 import com.example.bonsai_shop.entity.CommunityPost;
@@ -28,6 +29,7 @@ public class ProfileController {
     private final UserService userService;
     private final CommunityPostRepository communityPostRepository;
     private final CommunityPostBookmarkRepository bookmarkRepository;
+    private final UserRepository userRepository;
 
     private String extractEmail(Object principal) {
         if (principal instanceof UserDetails userDetails) {
@@ -55,11 +57,27 @@ public class ProfileController {
         User user = userService.getCurrentUserProfile(email);
 
         List<CommunityPost> myBonsaiPosts = communityPostRepository.findByAuthorIdOrderByCreatedAtDesc(user.getUserId());
+        for (CommunityPost post : myBonsaiPosts) {
+            post.setAuthorName(user.getFullName() != null && !user.getFullName().isEmpty() ? user.getFullName() : user.getUsername());
+            if (user.getAvatar() != null && !user.getAvatar().isEmpty()) {
+                post.setAuthorAvatar(user.getAvatar());
+            }
+        }
 
         // Lấy các bài viết đã lưu (saved / bookmarked)
         List<CommunityPostBookmark> bookmarks = bookmarkRepository.findByUserIdOrderByCreatedAtDesc(user.getUserId());
         List<Integer> savedPostIds = bookmarks.stream().map(CommunityPostBookmark::getPostId).collect(Collectors.toList());
         List<CommunityPost> savedPosts = savedPostIds.isEmpty() ? List.of() : communityPostRepository.findAllById(savedPostIds);
+        for (CommunityPost post : savedPosts) {
+            if (post.getAuthorId() != null) {
+                userRepository.findById(post.getAuthorId()).ifPresent(author -> {
+                    post.setAuthorName(author.getFullName() != null && !author.getFullName().isEmpty() ? author.getFullName() : author.getUsername());
+                    if (author.getAvatar() != null && !author.getAvatar().isEmpty()) {
+                        post.setAuthorAvatar(author.getAvatar());
+                    }
+                });
+            }
+        }
 
         model.addAttribute("user", user);
         model.addAttribute("myBonsaiPosts", myBonsaiPosts);
