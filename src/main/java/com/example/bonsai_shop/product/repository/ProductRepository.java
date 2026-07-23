@@ -79,7 +79,24 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
     JOIN p.artisan a
     LEFT JOIN p.productMedias m
     WHERE p.segment.segmentId = 3
-      AND (m.isThumbnail = true OR m IS NULL)
+      AND p.productStatus = 'AVAILABLE'
+      AND (
+          m.isThumbnail = true
+          OR (
+              m.mediaId = (
+                  SELECT MIN(m2.mediaId)
+                  FROM ProductMedia m2
+                  WHERE m2.product = p
+              )
+              AND NOT EXISTS (
+                  SELECT 1
+                  FROM ProductMedia m3
+                  WHERE m3.product = p
+                    AND m3.isThumbnail = true
+              )
+          )
+          OR m IS NULL
+      )
 """)
     Page<ProductCardDTO> findPremiumProducts(Pageable pageable);
 
@@ -102,8 +119,25 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
     JOIN p.artisan a
     LEFT JOIN p.productMedias m
     WHERE p.segment.segmentId = 3
+      AND p.productStatus = 'AVAILABLE'
       AND p.productId = :productId
-      AND (m.isThumbnail = true OR m IS NULL)
+      AND (
+          m.isThumbnail = true
+          OR (
+              m.mediaId = (
+                  SELECT MIN(m2.mediaId)
+                  FROM ProductMedia m2
+                  WHERE m2.product = p
+              )
+              AND NOT EXISTS (
+                  SELECT 1
+                  FROM ProductMedia m3
+                  WHERE m3.product = p
+                    AND m3.isThumbnail = true
+              )
+          )
+          OR m IS NULL
+      )
 """)
     ProductCardDTO findPremiumProductById(@Param("productId") Integer productId);
 }

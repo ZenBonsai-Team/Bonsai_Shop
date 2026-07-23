@@ -33,8 +33,7 @@ public class ProductSpecifications {
 
             // Customer marketplace must not expose artisan-only product states.
             predicates.add(cb.not(root.get("productStatus").in("DRAFT", "HIDDEN")));
-
-            predicates.add(cb.equal(root.get("isPublicPrice"), true));
+            predicates.add(cb.notEqual(root.get("segment").get("segmentId"), 3));
 
             // keyword (matches product name or code)
             if (keyword != null && !keyword.trim().isEmpty()) {
