@@ -63,40 +63,62 @@
             </div>
 
             <!-- Thumbnail Selector Strip -->
-            <div class="gallery-thumbnails-row">
-                <!-- CALL DB: product.productMedias, product.productName -->
-                <!-- Dynamic thumbnails if media exists in DB -->
-                <th:block th:if="${product.productMedias != null and !product.productMedias.isEmpty()}">
-                    <div th:each="media, iterStat : ${product.productMedias}"
-                         th:classappend="${iterStat.first ? 'active' : ''}"
-                         class="gallery-thumb-item"
-                         th:data-image-url="${media.mediaUrl}"
-                         onclick="switchMainImage(this, this.getAttribute('data-image-url'))">
-                        <img th:src="${media.mediaUrl}" th:alt="${product.productName}">
-                    </div>
-                </th:block>
-                <!-- HARDCODED Fallback if no media exists in DB -->
-                <th:block th:if="${product.productMedias == null or product.productMedias.isEmpty()}">
-                    <div class="gallery-thumb-item active" onclick="switchMainImage(this, 'https://images.unsplash.com/photo-1599599810769-bcde5a160d32?auto=format&fit=crop&q=80&w=800')">
-                        <!-- HARDCODED --><img src="https://images.unsplash.com/photo-1599599810769-bcde5a160d32?auto=format&fit=crop&q=80&w=150" alt="Front View">
-                    </div>
-                    <div class="gallery-thumb-item" onclick="switchMainImage(this, 'https://images.unsplash.com/photo-1592150621744-aca64f48394a?auto=format&fit=crop&q=80&w=800')">
-                        <!-- HARDCODED --><img src="https://images.unsplash.com/photo-1592150621744-aca64f48394a?auto=format&fit=crop&q=80&w=150" alt="Side View">
-                    </div>
-                    <div class="gallery-thumb-item" onclick="switchMainImage(this, 'https://images.unsplash.com/photo-1502082553048-f009c37129b9?auto=format&fit=crop&q=80&w=800')">
-                        <!-- HARDCODED --><img src="https://images.unsplash.com/photo-1502082553048-f009c37129b9?auto=format&fit=crop&q=80&w=150" alt="Root Structure">
-                    </div>
-                    <div class="gallery-thumb-item" onclick="switchMainImage(this, 'https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?auto=format&fit=crop&q=80&w=800')">
-                        <!-- HARDCODED --><img src="https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?auto=format&fit=crop&q=80&w=150" alt="Foliage Detail">
-                    </div>
-                    <div class="gallery-thumb-item" onclick="switchMainImage(this, 'https://images.unsplash.com/photo-1583847268964-b28dc8f51f92?auto=format&fit=crop&q=80&w=800')">
-                        <!-- HARDCODED --><img src="https://images.unsplash.com/photo-1583847268964-b28dc8f51f92?auto=format&fit=crop&q=80&w=150" alt="Pot View">
-                    </div>
-                </th:block>
+            <div class="gallery-thumbnails-shell">
+                <button type="button" class="gallery-nav-btn gallery-nav-prev" aria-label="Ảnh trước" onclick="scrollGalleryThumbs(-1)">
+                    <i class="fa-solid fa-chevron-left"></i>
+                </button>
+                <div class="gallery-thumbnails-row" id="galleryThumbnailsRow">
+                    <!-- CALL DB: productImageSlots, product.productName -->
+                    <!-- Dynamic image thumbnails grouped by slot type -->
+                    <th:block th:if="${productImageSlots != null and !productImageSlots.isEmpty()}">
+                        <div th:each="slot : ${productImageSlots}"
+                             th:with="media=${slot.media}"
+                             th:classappend="${media.mediaUrl == product.firstImageUrl ? 'active' : ''}"
+                             class="gallery-thumb-item"
+                             th:data-image-url="${media.mediaUrl}"
+                             onclick="switchMainImage(this, this.getAttribute('data-image-url'))">
+                            <img th:src="${media.mediaUrl}" th:alt="${product.productName}">
+                            <span class="gallery-thumb-label" th:text="${slot.label}">Overview</span>
+                        </div>
+                    </th:block>
+                    <!-- HARDCODED Fallback if no media exists in DB -->
+                    <th:block th:if="${productImageSlots == null or productImageSlots.isEmpty()}">
+                        <div class="gallery-thumb-item active" onclick="switchMainImage(this, 'https://images.unsplash.com/photo-1599599810769-bcde5a160d32?auto=format&fit=crop&q=80&w=800')">
+                            <!-- HARDCODED --><img src="https://images.unsplash.com/photo-1599599810769-bcde5a160d32?auto=format&fit=crop&q=80&w=150" alt="Front View">
+                        </div>
+                        <div class="gallery-thumb-item" onclick="switchMainImage(this, 'https://images.unsplash.com/photo-1592150621744-aca64f48394a?auto=format&fit=crop&q=80&w=800')">
+                            <!-- HARDCODED --><img src="https://images.unsplash.com/photo-1592150621744-aca64f48394a?auto=format&fit=crop&q=80&w=150" alt="Side View">
+                        </div>
+                        <div class="gallery-thumb-item" onclick="switchMainImage(this, 'https://images.unsplash.com/photo-1502082553048-f009c37129b9?auto=format&fit=crop&q=80&w=800')">
+                            <!-- HARDCODED --><img src="https://images.unsplash.com/photo-1502082553048-f009c37129b9?auto=format&fit=crop&q=80&w=150" alt="Root Structure">
+                        </div>
+                        <div class="gallery-thumb-item" onclick="switchMainImage(this, 'https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?auto=format&fit=crop&q=80&w=800')">
+                            <!-- HARDCODED --><img src="https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?auto=format&fit=crop&q=80&w=150" alt="Foliage Detail">
+                        </div>
+                        <div class="gallery-thumb-item" onclick="switchMainImage(this, 'https://images.unsplash.com/photo-1583847268964-b28dc8f51f92?auto=format&fit=crop&q=80&w=800')">
+                            <!-- HARDCODED --><img src="https://images.unsplash.com/photo-1583847268964-b28dc8f51f92?auto=format&fit=crop&q=80&w=150" alt="Pot View">
+                        </div>
+                    </th:block>
+                </div>
+                <button type="button" class="gallery-nav-btn gallery-nav-next" aria-label="Ảnh sau" onclick="scrollGalleryThumbs(1)">
+                    <i class="fa-solid fa-chevron-right"></i>
+                </button>
             </div>
 
-            <div class="gallery-caption-text">
-                Front • Side • Root structure • Foliage detail • Pot
+            <div class="product-video-section" th:if="${productVideos != null and !productVideos.isEmpty()}">
+                <h3 class="product-video-title">Video sản phẩm</h3>
+                <div class="product-video-list">
+                    <div class="product-video-card" th:each="media : ${productVideos}">
+                        <video class="product-detail-video"
+                               th:src="${media.mediaUrl}"
+                               controls
+                               playsinline
+                               preload="metadata"></video>
+                        <p class="product-video-caption"
+                           th:if="${media.caption != null && !media.caption.isEmpty()}"
+                           th:text="${media.caption}">Video sản phẩm</p>
+                    </div>
+                </div>
             </div>
         </section>
 
@@ -177,6 +199,14 @@
                 </div>
             </div>
 
+            <div class="product-description-box">
+                <h2 class="product-description-title">Mô tả sản phẩm</h2>
+                <p class="product-description-text"
+                   th:text="${product.description != null && !product.description.isBlank() ? product.description : 'Sản phẩm hiện chưa có mô tả chi tiết.'}">
+                    Sản phẩm hiện chưa có mô tả chi tiết.
+                </p>
+            </div>
+
             <!-- Artisan Brief Info -->
             <!-- HARDCODED: Chi tiết nghệ nhân/nhà vườn không có trong DB entity (User chỉ có thông tin cơ bản) -->
             <div class="artisan-summary-box">
@@ -254,7 +284,8 @@
         <h2 class="story-heading">Một đời cây — một đời nghệ nhân</h2>
         
         <!-- CALL DB: product.description -->
-        <p class="story-intro-para" th:text="${product.description}">
+        <p class="story-intro-para"
+           th:text="${product.description != null && !product.description.isBlank() ? product.description : 'Sản phẩm hiện chưa có mô tả chi tiết.'}">
             Tùng được uốn nắn qua hơn 18 năm dưới bàn tay của nghệ nhân Nguyễn Văn Thành tại vùng đất Nam Định — cái nôi của nghệ thuật bonsai Bắc Bộ.
         </p>
 
@@ -593,6 +624,18 @@
         if (thumbElement) {
             thumbElement.classList.add('active');
         }
+    }
+
+    function scrollGalleryThumbs(direction) {
+        const row = document.getElementById('galleryThumbnailsRow');
+        if (!row) return;
+
+        const firstThumb = row.querySelector('.gallery-thumb-item');
+        const scrollAmount = firstThumb ? firstThumb.offsetWidth * 3 : 320;
+        row.scrollBy({
+            left: direction * scrollAmount,
+            behavior: 'smooth'
+        });
     }
 </script>
 <div th:replace="~{fragments/checkout-modal :: checkoutModal}"></div>
