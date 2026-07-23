@@ -134,6 +134,16 @@
 
 <!-- Main Article View -->
 <main class="container py-5">
+    <!-- Status Warning Banner for Author / Moderators -->
+    <div class="alert alert-warning border-0 rounded-3 shadow-sm mb-4 d-flex align-items-center gap-3 p-3" th:if="${post.status != 'APPROVED'}" style="background-color: #FFF9E6; color: #8A6D3B; font-family: var(--font-sans);">
+        <i class="fa-solid fa-triangle-exclamation display-6 text-warning" style="font-size: 2.5rem;"></i>
+        <div>
+            <strong class="d-block text-warning-emphasis" th:if="${post.status == 'FLAGGED'}">⚠️ Bài viết này đang ở trạng thái Chờ kiểm duyệt</strong>
+            <strong class="d-block text-danger" th:if="${post.status == 'HIDDEN'}">🚫 Bài viết này đã bị tạm ẩn bởi Kiểm duyệt viên</strong>
+            <span class="small text-muted d-block mt-1">Hiện tại bài viết này chỉ có bạn (tác giả) và các kiểm duyệt viên nhìn thấy. Bạn có thể chỉnh sửa lại nội dung để gửi kiểm duyệt lại.</span>
+        </div>
+    </div>
+
     <div class="row">
         <!-- Floating Interaction Bar (Left) -->
         <div class="col-lg-1 d-none d-lg-block">

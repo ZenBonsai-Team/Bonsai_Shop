@@ -310,9 +310,17 @@ public class CommunityController {
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy bài viết"));
 
         if (!"APPROVED".equals(post.getStatus())) {
-            // Check if user is Admin or Moderator. Admins/Moderators can see hidden posts
+            // Check if user is Admin, Moderator, or the Author of this post
             boolean isAdminOrMod = hasRole(principal, "ROLE_OWNER", "ROLE_CONTENT_MODERATOR", "ROLE_MODERATOR");
-            if (!isAdminOrMod) {
+            boolean isAuthor = false;
+            String currentEmail = getEmailFromPrincipal(principal);
+            if (currentEmail != null) {
+                User user = userRepository.findByEmail(currentEmail).orElse(null);
+                if (user != null && post.getAuthorId() != null && post.getAuthorId().equals(user.getUserId())) {
+                    isAuthor = true;
+                }
+            }
+            if (!isAdminOrMod && !isAuthor) {
                 throw new RuntimeException("Bài viết này đã bị ẩn bởi quản trị viên.");
             }
         }
@@ -720,6 +728,9 @@ public class CommunityController {
             post.setImageUrl(postForm.getImageUrl().trim());
         }
 
+        // Save old status to handle state machine
+        String oldStatus = post.getStatus();
+
         // Update post properties
         post.setTitle(postForm.getTitle());
         post.setSummary(postForm.getSummary());
@@ -743,19 +754,33 @@ public class CommunityController {
                     .isRead(false)
                     .createdAt(LocalDateTime.now())
                     .build());
+        } else {
+            if ("HIDDEN".equals(oldStatus) || "FLAGGED".equals(oldStatus)) {
+                post.setStatus("FLAGGED");
+                
+                // Notification for Author
+                notificationRepository.save(ModerationNotification.builder()
+                        .targetUsername(user.getEmail())
+                        .message("📝 Bài viết '" + post.getTitle() + "' đã được cập nhật thành công và gửi lại vào Hàng chờ kiểm duyệt.")
+                        .isRead(false)
+                        .createdAt(LocalDateTime.now())
+                        .build());
+            } else {
+                post.setStatus("APPROVED");
+            }
+        }
 
-            // Notification for CONTENT_MODERATORs
+        // Notification for CONTENT_MODERATORs if the post is in FLAGGED state
+        if ("FLAGGED".equals(post.getStatus())) {
             List<User> moderators = userRepository.findByRoleRoleNameIn(List.of("ROLE_CONTENT_MODERATOR", "CONTENT_MODERATOR"));
             for (User mod : moderators) {
                 notificationRepository.save(ModerationNotification.builder()
                         .targetUsername(mod.getEmail())
-                        .message("🚨 Bài viết đã chỉnh sửa từ " + (user.getFullName() != null ? user.getFullName() : user.getUsername()) + " nghi vấn chứa từ ngữ vi phạm cần kiểm duyệt.")
+                        .message("🚨 Bài viết đã chỉnh sửa từ " + (user.getFullName() != null ? user.getFullName() : user.getUsername()) + " cần kiểm duyệt lại.")
                         .isRead(false)
                         .createdAt(LocalDateTime.now())
                         .build());
             }
-        } else {
-            post.setStatus("APPROVED");
         }
 
         postRepository.save(post);
