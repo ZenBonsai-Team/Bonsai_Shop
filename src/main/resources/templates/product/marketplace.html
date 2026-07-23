@@ -78,13 +78,13 @@
            class="category-tab-pill" 
            th:classappend="${segment == 'Popular Picks'} ? 'active'">Popular Picks</a>
         
-        <a th:href="@{/marketplace(maxPrice=3000000, keyword=${keyword}, availableOnly=${availableOnly}, ages=${ages}, species=${species}, styles=${styles}, sort=${sort})}" 
+        <a th:href="@{/marketplace(segment='Budget', keyword=${keyword}, availableOnly=${availableOnly}, ages=${ages}, species=${species}, styles=${styles}, sort=${sort})}" 
            class="category-tab-pill" 
-           th:classappend="${maxPrice == 3000000 && minPrice == null} ? 'active'">Affordable Trees (Budget)</a>
+           th:classappend="${segment == 'Budget'} ? 'active'">Affordable Trees (Budget)</a>
         
-        <a th:href="@{/marketplace(minPrice=3000000, maxPrice=10000000, keyword=${keyword}, availableOnly=${availableOnly}, ages=${ages}, species=${species}, styles=${styles}, sort=${sort})}" 
+        <a th:href="@{/marketplace(segment='Mid', keyword=${keyword}, availableOnly=${availableOnly}, ages=${ages}, species=${species}, styles=${styles}, sort=${sort})}" 
            class="category-tab-pill" 
-           th:classappend="${minPrice == 3000000 && maxPrice == 10000000} ? 'active'">Mid-range Trees</a>
+           th:classappend="${segment == 'Mid'} ? 'active'">Mid-range Trees</a>
     </div>
 </div>
 
