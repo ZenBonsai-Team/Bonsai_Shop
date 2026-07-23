@@ -58,7 +58,9 @@ public class ProductSpecifications {
                     Integer segmentId = Integer.parseInt(segment);
                     predicates.add(cb.equal(root.get("segment").get("segmentId"), segmentId));
                 } catch (NumberFormatException e) {
-                    predicates.add(cb.equal(root.get("segment").get("segmentName"), segment));
+                    predicates.add(cb.equal(
+                            cb.lower(root.get("segment").get("segmentName")),
+                            segment.trim().toLowerCase()));
                 }
             }
 

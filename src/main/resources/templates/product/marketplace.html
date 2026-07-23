@@ -78,13 +78,13 @@
            class="category-tab-pill" 
            th:classappend="${segment == 'Popular Picks'} ? 'active'">Popular Picks</a>
         
-        <a th:href="@{/marketplace(maxPrice=3000000, keyword=${keyword}, availableOnly=${availableOnly}, ages=${ages}, species=${species}, styles=${styles}, sort=${sort})}" 
+        <a th:href="@{/marketplace(segment='Budget', keyword=${keyword}, availableOnly=${availableOnly}, ages=${ages}, species=${species}, styles=${styles}, sort=${sort})}" 
            class="category-tab-pill" 
-           th:classappend="${maxPrice == 3000000 && minPrice == null} ? 'active'">Affordable Trees (Budget)</a>
+           th:classappend="${segment == 'Budget'} ? 'active'">Affordable Trees (Budget)</a>
         
-        <a th:href="@{/marketplace(minPrice=3000000, maxPrice=10000000, keyword=${keyword}, availableOnly=${availableOnly}, ages=${ages}, species=${species}, styles=${styles}, sort=${sort})}" 
+        <a th:href="@{/marketplace(segment='Mid', keyword=${keyword}, availableOnly=${availableOnly}, ages=${ages}, species=${species}, styles=${styles}, sort=${sort})}" 
            class="category-tab-pill" 
-           th:classappend="${minPrice == 3000000 && maxPrice == 10000000} ? 'active'">Mid-range Trees</a>
+           th:classappend="${segment == 'Mid'} ? 'active'">Mid-range Trees</a>
     </div>
 </div>
 
@@ -296,7 +296,11 @@
 
                 <!-- DYNAMIC PRODUCT CARDS LOOP -->
                 <div class="col" th:each="product : ${products}">
-                    <div class="product-card">
+                    <div class="product-card"
+                         th:with="primaryMediaUrl=${product.primaryMediaUrl},
+                                  primaryMediaType=${product.primaryMediaType},
+                                  isMidSegment=${product.midSegment}"
+                         th:classappend="${isMidSegment} ? ' product-card-mid' : ' product-card-budget'">
                         <div class="card-image-wrap">
                             <!-- Status Badge: Dynamically rendered based on ProductStatus -->
                             <span th:if="${product.productStatus == 'AVAILABLE'}" class="card-status-badge avail">AVAILABLE</span>
@@ -314,13 +318,19 @@
                             -->
                             <button class="card-btn-wishlist" title="Yêu thích"><i class="fa-regular fa-heart"></i></button>
                             
-                            <!-- Image URL binding with default fallback -->
-                            <!--
-                            TODO
-                            Image fallback to a default Unsplash mockup image if product.firstImageUrl is empty.
-                            Reason: Current ProductMedia does not provide usable image data for some items.
-                            -->
-                            <img th:src="${product.firstImageUrl != null && !product.firstImageUrl.isEmpty() ? product.firstImageUrl : 'https://images.unsplash.com/photo-1599599810769-bcde5a160d32?auto=format&fit=crop&q=80&w=600'}" 
+                            <span class="card-segment-ribbon" th:if="${isMidSegment}">
+                                <i class="fa-solid fa-gem"></i> Selected
+                            </span>
+
+                            <video th:if="${primaryMediaUrl != null && !primaryMediaUrl.isEmpty() && primaryMediaType == 'VIDEO'}"
+                                   th:src="${primaryMediaUrl}"
+                                   class="card-img-asset"
+                                   controls
+                                   muted
+                                   playsinline
+                                   preload="metadata"></video>
+                            <img th:if="${primaryMediaUrl == null || primaryMediaUrl.isEmpty() || primaryMediaType != 'VIDEO'}"
+                                 th:src="${primaryMediaUrl != null && !primaryMediaUrl.isEmpty() ? primaryMediaUrl : 'https://images.unsplash.com/photo-1599599810769-bcde5a160d32?auto=format&fit=crop&q=80&w=600'}"
                                  th:alt="${product.productName}" class="card-img-asset">
                         </div>
                         
@@ -328,6 +338,10 @@
                             <!-- Variety/Species binding -->
                             <span class="card-species-tag" th:text="${product.variety != null ? product.variety.varietyName : 'Bonsai'}">Sanh Nam Điền</span>
                             
+                            <span class="card-mid-tag" th:if="${isMidSegment}">
+                                <i class="fa-solid fa-certificate"></i> Nghệ nhân tuyển chọn
+                            </span>
+
                             <!-- Title binding -->
                             <h3 class="card-title-serif" th:text="${product.productName}">Sanh Nam Điền Dáng Trực Cổ</h3>
                             

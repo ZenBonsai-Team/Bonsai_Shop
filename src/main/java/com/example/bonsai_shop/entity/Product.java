@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
 
 @Entity
@@ -84,16 +85,58 @@ public class Product {
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL)
     private List<Wishlist> wishlists;
 
+    public ProductMedia getPrimaryMedia() {
+        if (productMedias == null || productMedias.isEmpty()) {
+            return null;
+        }
+        return productMedias.stream()
+                .filter(media -> Boolean.TRUE.equals(media.getIsThumbnail()))
+                .min(mediaDisplayComparator())
+                .orElseGet(() -> productMedias.stream()
+                        .min(mediaDisplayComparator())
+                        .orElse(null));
+    }
+
+    public String getPrimaryMediaUrl() {
+        ProductMedia primaryMedia = getPrimaryMedia();
+        return primaryMedia != null ? primaryMedia.getMediaUrl() : null;
+    }
+
+    public String getPrimaryMediaType() {
+        ProductMedia primaryMedia = getPrimaryMedia();
+        return primaryMedia != null ? primaryMedia.getMediaType() : null;
+    }
+
     public String getFirstImageUrl() {
         if (productMedias == null || productMedias.isEmpty()) {
             return null;
         }
-        for (ProductMedia media : productMedias) {
-            if (Boolean.TRUE.equals(media.getIsThumbnail())) {
-                return media.getMediaUrl();
-            }
+        return productMedias.stream()
+                .filter(media -> "IMAGE".equals(media.getMediaType()))
+                .filter(media -> Boolean.TRUE.equals(media.getIsThumbnail()))
+                .min(mediaDisplayComparator())
+                .or(() -> productMedias.stream()
+                        .filter(media -> "IMAGE".equals(media.getMediaType()))
+                        .min(mediaDisplayComparator()))
+                .map(ProductMedia::getMediaUrl)
+                .orElse(null);
+    }
+
+    private Comparator<ProductMedia> mediaDisplayComparator() {
+        return Comparator
+                .comparing(ProductMedia::getDisplayOrder, Comparator.nullsLast(Integer::compareTo))
+                .thenComparing(ProductMedia::getMediaId, Comparator.nullsLast(Integer::compareTo));
+    }
+
+    public boolean isMidSegment() {
+        if (segment == null || segment.getSegmentName() == null) {
+            return false;
         }
-        return productMedias.get(0).getMediaUrl();
+        String segmentName = segment.getSegmentName().toLowerCase();
+        return segmentName.contains("mid")
+                || segmentName.contains("middle")
+                || segmentName.contains("standard")
+                || segmentName.contains("trung");
     }
 
     public Double getAverageRating() {

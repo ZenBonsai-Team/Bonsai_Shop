@@ -1,6 +1,7 @@
 package com.example.bonsai_shop.product.controller;
 
 import com.example.bonsai_shop.entity.Product;
+import com.example.bonsai_shop.entity.ProductMedia;
 import com.example.bonsai_shop.product.service.ProductService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -12,11 +13,29 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
 
 @Controller
 @RequiredArgsConstructor
 public class MarketplaceController {
+    private static final List<ImageSlotDefinition> IMAGE_SLOT_DEFINITIONS = List.of(
+            new ImageSlotDefinition("OVERVIEW", "Tổng quan"),
+            new ImageSlotDefinition("FRONT", "Mặt trước"),
+            new ImageSlotDefinition("BACK", "Mặt sau"),
+            new ImageSlotDefinition("LEFT", "Bên trái"),
+            new ImageSlotDefinition("RIGHT", "Bên phải"),
+            new ImageSlotDefinition("TOP", "Từ trên"),
+            new ImageSlotDefinition("ROOT", "Bộ rễ"),
+            new ImageSlotDefinition("TRUNK", "Thân cây"),
+            new ImageSlotDefinition("BRANCH", "Cành"),
+            new ImageSlotDefinition("POT", "Chậu"),
+            new ImageSlotDefinition("DETAIL", "Chi tiết")
+    );
+
     private final ProductService productService;
 
     @GetMapping("/marketplace")
@@ -83,17 +102,72 @@ public class MarketplaceController {
 
     @GetMapping({ "/products/detail", "/product/{id}" })
     public String productDetail(@PathVariable(value = "id", required = false) Integer id, Model model) {
+        Product product = null;
         if (id != null) {
-            Product product = productService.getProductById(id);
-            model.addAttribute("product", product);
+            product = productService.getProductById(id);
         } else {
             Page<Product> products = productService.getAllActiveProducts(PageRequest.of(0, 1));
             if (!products.isEmpty()) {
-                Product product = productService.getProductById(products.getContent().get(0).getProductId());
-                model.addAttribute("product", product);
+                product = productService.getProductById(products.getContent().get(0).getProductId());
             }
         }
+
+        model.addAttribute("product", product);
+        model.addAttribute("productImages", getMediaByType(product, "IMAGE"));
+        model.addAttribute("productImageSlots", getImageSlots(product));
+        model.addAttribute("productVideos", getMediaByType(product, "VIDEO"));
         model.addAttribute("activePage", "marketplace");
         return "product/product-detail";
+    }
+
+    private List<ProductMedia> getMediaByType(Product product, String mediaType) {
+        if (product == null || product.getProductMedias() == null) {
+            return Collections.emptyList();
+        }
+        return product.getProductMedias().stream()
+                .filter(media -> mediaType.equals(media.getMediaType()))
+                .toList();
+    }
+
+    private List<ProductImageSlot> getImageSlots(Product product) {
+        List<ProductMedia> images = getMediaByType(product, "IMAGE").stream()
+                .sorted(mediaDisplayComparator())
+                .toList();
+        if (images.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        Set<String> definedSlotTypes = IMAGE_SLOT_DEFINITIONS.stream()
+                .map(ImageSlotDefinition::slotType)
+                .collect(java.util.stream.Collectors.toSet());
+        List<ProductImageSlot> imageSlots = new ArrayList<>();
+
+        for (ImageSlotDefinition slotDefinition : IMAGE_SLOT_DEFINITIONS) {
+            images.stream()
+                    .filter(media -> slotDefinition.slotType().equals(media.getSlotType()))
+                    .forEach(media -> imageSlots.add(new ProductImageSlot(
+                            slotDefinition.slotType(),
+                            slotDefinition.label(),
+                            media
+                    )));
+        }
+
+        images.stream()
+                .filter(media -> media.getSlotType() == null || !definedSlotTypes.contains(media.getSlotType()))
+                .forEach(media -> imageSlots.add(new ProductImageSlot("OTHER", "Ảnh khác", media)));
+
+        return imageSlots;
+    }
+
+    private Comparator<ProductMedia> mediaDisplayComparator() {
+        return Comparator
+                .comparing(ProductMedia::getDisplayOrder, Comparator.nullsLast(Integer::compareTo))
+                .thenComparing(ProductMedia::getMediaId, Comparator.nullsLast(Integer::compareTo));
+    }
+
+    public record ImageSlotDefinition(String slotType, String label) {
+    }
+
+    public record ProductImageSlot(String slotType, String label, ProductMedia media) {
     }
 }
