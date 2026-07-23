@@ -89,6 +89,20 @@ a {
     max-width: var(--lux-container);
 }
 
+.appointment-shell .navbar-custom .container {
+    width: 100%;
+    max-width: 1320px;
+    column-gap: normal;
+}
+
+.appointment-shell .navbar-brand-custom {
+    margin-right: 1rem;
+}
+
+.appointment-shell .navbar-custom .navbar-collapse {
+    gap: 0;
+}
+
 .luxury-shell .navbar-brand-custom img {
     border-color: rgba(185, 145, 75, 0.22) !important;
     box-shadow: 0 12px 32px rgba(0, 0, 0, 0.16) !important;
@@ -138,6 +152,166 @@ a {
 .luxury-shell .navbar-custom .nav-icon-link:hover,
 .luxury-shell .navbar-custom .btn-link.nav-icon-link:hover {
     color: var(--lux-gold-soft) !important;
+}
+
+.luxury-shell .navbar-custom .nav-icon-link,
+.luxury-shell .navbar-custom .btn-link.nav-icon-link {
+    width: 34px;
+    height: 34px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 !important;
+    font-size: 1.15rem;
+    line-height: 1;
+}
+
+.luxury-shell .navbar-custom a.nav-icon-link[title="Profile"] img {
+    width: 28px !important;
+    height: 28px !important;
+    border-radius: 50% !important;
+    object-fit: cover !important;
+}
+
+.appointment-shell .navbar-custom a.nav-icon-link[title="Profile"] {
+    position: relative;
+    isolation: isolate;
+    width: 40px;
+    height: 40px;
+    padding: 3px !important;
+    overflow: visible;
+    border-radius: 50%;
+    background:
+        linear-gradient(145deg, rgba(13, 23, 16, 0.94), rgba(16, 47, 33, 0.96)) padding-box,
+        conic-gradient(from 145deg, #7d5a24, #f2dfb4, var(--lux-gold), #fff7dc, #8a6428) border-box;
+    border: 1px solid transparent;
+    box-shadow:
+        0 0 0 1px rgba(255, 250, 241, 0.07),
+        0 10px 22px rgba(0, 0, 0, 0.22),
+        0 0 18px rgba(185, 145, 75, 0.16);
+    animation: vipAvatarGlow 3.8s ease-in-out infinite;
+}
+
+.appointment-shell .navbar-custom a.nav-icon-link[title="Profile"] img {
+    position: relative;
+    z-index: 1;
+    width: 100% !important;
+    height: 100% !important;
+    border: 1px solid rgba(255, 250, 241, 0.2) !important;
+    border-radius: 50% !important;
+    object-fit: cover !important;
+}
+
+.appointment-shell .navbar-custom a.nav-icon-link[title="Profile"] i {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    height: 100%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(255, 250, 241, 0.2);
+    border-radius: 50%;
+    background: rgba(16, 47, 33, 0.86);
+    color: var(--lux-gold-soft);
+    font-size: 0.95rem;
+}
+
+.appointment-shell .navbar-custom a.nav-icon-link[title="Profile"]::before {
+    content: "♛";
+    position: absolute;
+    top: -12px;
+    left: 50%;
+    z-index: 3;
+    color: var(--lux-gold-soft);
+    font-size: 0.82rem;
+    line-height: 1;
+    text-shadow:
+        0 1px 0 rgba(111, 82, 36, 0.85),
+        0 0 10px rgba(234, 219, 192, 0.62);
+    transform: translateX(-50%) rotate(0deg);
+    animation: vipCrownTwinkle 2.8s ease-in-out infinite;
+    pointer-events: none;
+}
+
+.appointment-shell .navbar-custom a.nav-icon-link[title="Profile"]::after {
+    content: "";
+    position: absolute;
+    inset: 1px;
+    z-index: 2;
+    border-radius: 50%;
+    background:
+        linear-gradient(115deg, transparent 12%, rgba(255, 250, 241, 0.42) 46%, transparent 62%);
+    opacity: 0;
+    -webkit-mask: radial-gradient(circle, transparent 56%, #000 58%, #000 72%, transparent 74%);
+    mask: radial-gradient(circle, transparent 56%, #000 58%, #000 72%, transparent 74%);
+    animation: vipSheenSweep 3.6s ease-in-out infinite;
+    pointer-events: none;
+}
+
+.appointment-shell .navbar-custom a.nav-icon-link[title="Profile"]:hover {
+    box-shadow:
+        0 0 0 4px rgba(185, 145, 75, 0.14),
+        0 12px 28px rgba(185, 145, 75, 0.3),
+        0 0 22px rgba(234, 219, 192, 0.2);
+    transform: translateY(-1px);
+}
+
+@keyframes vipAvatarGlow {
+    0%,
+    100% {
+        filter: brightness(1);
+    }
+
+    50% {
+        filter: brightness(1.18);
+    }
+}
+
+@keyframes vipCrownTwinkle {
+    0%,
+    100% {
+        opacity: 0.78;
+        transform: translateX(-50%) scale(1);
+    }
+
+    50% {
+        opacity: 1;
+        transform: translateX(-50%) scale(1.1);
+    }
+}
+
+@keyframes vipSheenSweep {
+    0%,
+    68%,
+    100% {
+        opacity: 0;
+        transform: rotate(0deg);
+    }
+
+    36% {
+        opacity: 1;
+        transform: rotate(145deg);
+    }
+}
+
+.appointment-shell .navbar-custom form.m-0 {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+}
+
+.appointment-shell .navbar-custom button.nav-icon-link[title="Đăng xuất"] {
+    border: 0;
+    background: transparent;
+    text-decoration: none;
+    appearance: none;
+}
+
+.appointment-shell .navbar-custom button.nav-icon-link[title="Đăng xuất"] i {
+    display: block;
+    line-height: 1;
 }
 
 .luxury-shell .navbar-custom .btn-auth-register,
@@ -380,11 +554,7 @@ a {
     inset: 0;
     z-index: 0;
     background:
-        radial-gradient(
-            circle at var(--pointer-x, 50%) var(--pointer-y, 0%),
-            rgba(185, 145, 75, 0.18),
-            transparent 34%
-        );
+        radial-gradient(circle at center, rgba(185, 145, 75, 0.18), transparent 34%);
     opacity: 0;
     transition: opacity var(--lux-ease);
     pointer-events: none;

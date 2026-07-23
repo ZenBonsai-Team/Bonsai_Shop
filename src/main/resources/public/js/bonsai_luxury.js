@@ -124,9 +124,76 @@ document.addEventListener("DOMContentLoaded", () => {
         const heightFilter = $("#heightFilter");
         const resetBtn = $("#resetFilters");
         const summary = $("#filterSummary");
+        const activeFilterChips = $("#activeFilterChips");
+        const pagination = $("#luxuryPagination");
+        const prevPageBtn = $("#luxuryPagePrev");
+        const nextPageBtn = $("#luxuryPageNext");
+        const pageStatus = $("#luxuryPageStatus");
         const tabs = $$(".luxury-tab");
 
         const normalize = (value) => (value || "").toString().trim().toLowerCase();
+        const optionControls = [varietyFilter, segmentFilter].filter(Boolean);
+        const rangeControls = [ageFilter, heightFilter].filter(Boolean);
+        const filterControls = [...optionControls, ...rangeControls];
+        const pageSize = Number.parseInt(productGrid.dataset.pageSize, 10) || 8;
+        let currentPage = 1;
+
+        const getRangeConfig = (control) => {
+            const input = $("input[type='range']", control);
+            return {
+                input,
+                values: (input?.dataset.values || "").split("|"),
+                labels: (input?.dataset.labels || "").split("|")
+            };
+        };
+
+        const updateRangeDisplay = (control) => {
+            const { input, values, labels } = getRangeConfig(control);
+            if (!input) return;
+
+            const index = Number.parseInt(input.value, 10) || 0;
+            const value = values[index] || "";
+            const label = labels[index] || control.dataset.display || value;
+            const max = Number.parseInt(input.max, 10) || values.length - 1 || 1;
+            const progress = max > 0 ? (index / max) * 100 : 0;
+
+            control.dataset.value = value;
+            control.dataset.display = label;
+            control.style.setProperty("--range-progress", `${progress}%`);
+            $(".range-current", control)?.replaceChildren(document.createTextNode(label));
+        };
+
+        const getControlValue = (control) => {
+            if (!control) return "";
+            if ("value" in control) return control.value || "";
+            return control.dataset.value || "";
+        };
+
+        const setControlValue = (control, value = "") => {
+            if (!control) return;
+
+            if ("value" in control) {
+                control.value = value;
+                return;
+            }
+
+            if (control.classList.contains("filter-range-control")) {
+                const { input, values } = getRangeConfig(control);
+                if (input) {
+                    const selectedIndex = values.findIndex((rangeValue) => normalize(rangeValue) === normalize(value));
+                    input.value = selectedIndex >= 0 ? selectedIndex.toString() : "0";
+                }
+                updateRangeDisplay(control);
+                return;
+            }
+
+            control.dataset.value = value;
+            $$(".filter-option", control).forEach((option) => {
+                const isActive = normalize(option.dataset.value) === normalize(value);
+                option.classList.toggle("active", isActive);
+                option.setAttribute("aria-selected", isActive ? "true" : "false");
+            });
+        };
 
         const inRange = (range, value) => {
             if (!range) return true;
@@ -145,15 +212,18 @@ document.addEventListener("DOMContentLoaded", () => {
         const populateVarieties = () => {
             if (!varietyFilter) return;
 
-            const existingValues = new Set($$("option", varietyFilter).map((option) => option.value));
+            const existingValues = new Set($$(".filter-option", varietyFilter).map((option) => option.dataset.value));
             const varieties = [...new Set(cards.map((card) => card.dataset.variety).filter(Boolean))]
                 .sort((first, second) => first.localeCompare(second, "vi"));
 
             varieties.forEach((variety) => {
                 if (existingValues.has(variety)) return;
 
-                const option = document.createElement("option");
-                option.value = variety;
+                const option = document.createElement("button");
+                option.type = "button";
+                option.className = "filter-option";
+                option.dataset.value = variety;
+                option.setAttribute("aria-selected", "false");
                 option.textContent = variety;
                 varietyFilter.appendChild(option);
             });
@@ -164,19 +234,95 @@ document.addEventListener("DOMContentLoaded", () => {
             summary.textContent = `Hiển thị ${visibleCount} tác phẩm`;
         };
 
+        const updatePagination = (totalItems) => {
+            const totalPages = totalItems > 0 ? Math.ceil(totalItems / pageSize) : 0;
+            const hasMultiplePages = totalPages > 1;
+
+            if (currentPage > totalPages) {
+                currentPage = totalPages || 1;
+            }
+
+            if (pageStatus) {
+                pageStatus.textContent = `Trang ${totalItems > 0 ? currentPage : 0}/${totalPages || 0}`;
+            }
+
+            if (prevPageBtn) {
+                prevPageBtn.disabled = !hasMultiplePages || currentPage <= 1;
+            }
+
+            if (nextPageBtn) {
+                nextPageBtn.disabled = !hasMultiplePages || currentPage >= totalPages;
+            }
+
+            pagination?.classList.toggle("is-ready", hasMultiplePages);
+        };
+
+        const getSelectedText = (select) => {
+            const value = getControlValue(select);
+            if (!select || !value) return "";
+
+            if ("options" in select) {
+                return select.options[select.selectedIndex]?.textContent?.trim() || value;
+            }
+
+            if (select.classList.contains("filter-range-control")) {
+                return select.dataset.display || value;
+            }
+
+            const activeOption = $$(".filter-option", select).find((option) => normalize(option.dataset.value) === normalize(value));
+            return activeOption?.textContent?.trim() || value;
+        };
+
+        const setActiveState = () => {
+            filterControls.forEach((control) => {
+                control.classList.toggle("is-active", Boolean(getControlValue(control)));
+            });
+            searchInput?.classList.toggle("is-active", Boolean(searchInput.value.trim()));
+        };
+
+        const renderActiveFilters = () => {
+            if (!activeFilterChips) return;
+
+            const activeFilters = [
+                searchInput?.value.trim() ? { icon: "fa-magnifying-glass", label: `Tìm: ${searchInput.value.trim()}` } : null,
+                getControlValue(varietyFilter) ? { icon: "fa-seedling", label: getSelectedText(varietyFilter) } : null,
+                getControlValue(segmentFilter) ? { icon: "fa-gem", label: getSelectedText(segmentFilter) } : null,
+                getControlValue(ageFilter) ? { icon: "fa-hourglass-half", label: getSelectedText(ageFilter) } : null,
+                getControlValue(heightFilter) ? { icon: "fa-ruler-vertical", label: getSelectedText(heightFilter) } : null
+            ].filter(Boolean);
+
+            activeFilterChips.replaceChildren();
+
+            if (!activeFilters.length) {
+                const defaultChip = document.createElement("span");
+                defaultChip.className = "luxury-active-chip is-muted";
+                defaultChip.innerHTML = '<i class="fa-solid fa-layer-group" aria-hidden="true"></i><span>Toàn bộ bộ sưu tập</span>';
+                activeFilterChips.appendChild(defaultChip);
+                return;
+            }
+
+            activeFilters.forEach((filter) => {
+                const chip = document.createElement("span");
+                chip.className = "luxury-active-chip";
+                chip.innerHTML = `<i class="fa-solid ${filter.icon}" aria-hidden="true"></i><span></span>`;
+                chip.querySelector("span").textContent = filter.label;
+                activeFilterChips.appendChild(chip);
+            });
+        };
+
         const syncTabs = (segment) => {
             tabs.forEach((tab) => {
                 tab.classList.toggle("active", normalize(tab.dataset.segment) === segment);
             });
         };
 
-        const applyFilters = () => {
+        const applyFilters = ({ resetPage = false } = {}) => {
             const query = normalize(searchInput?.value);
-            const variety = normalize(varietyFilter?.value);
-            const segment = normalize(segmentFilter?.value);
-            const ageRange = ageFilter?.value || "";
-            const heightRange = heightFilter?.value || "";
-            let visibleCount = 0;
+            const variety = normalize(getControlValue(varietyFilter));
+            const segment = normalize(getControlValue(segmentFilter));
+            const ageRange = getControlValue(ageFilter);
+            const heightRange = getControlValue(heightFilter);
+            const matchedCards = [];
 
             cards.forEach((card) => {
                 const title = normalize(card.dataset.title || $(".card-title", card)?.textContent);
@@ -192,8 +338,25 @@ document.addEventListener("DOMContentLoaded", () => {
                 const matchesHeight = inRange(heightRange, card.dataset.height);
                 const isVisible = matchesText && matchesVariety && matchesSegment && matchesAge && matchesHeight;
 
-                card.hidden = !isVisible;
-                if (isVisible) visibleCount += 1;
+                card.hidden = true;
+                if (isVisible) matchedCards.push(card);
+            });
+
+            const visibleCount = matchedCards.length;
+            const totalPages = visibleCount > 0 ? Math.ceil(visibleCount / pageSize) : 0;
+
+            if (resetPage) {
+                currentPage = 1;
+            }
+
+            if (currentPage > totalPages) {
+                currentPage = totalPages || 1;
+            }
+
+            const pageStart = (currentPage - 1) * pageSize;
+            const pageEnd = pageStart + pageSize;
+            matchedCards.slice(pageStart, pageEnd).forEach((card) => {
+                card.hidden = false;
             });
 
             if (emptyState) {
@@ -201,29 +364,57 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
             setSummary(visibleCount);
+            updatePagination(visibleCount);
             syncTabs(segment);
+            setActiveState();
+            renderActiveFilters();
         };
 
         const resetFilters = () => {
-            [searchInput, varietyFilter, segmentFilter, ageFilter, heightFilter].forEach((control) => {
-                if (control) control.value = "";
-            });
-            applyFilters();
+            if (searchInput) searchInput.value = "";
+            filterControls.forEach((control) => setControlValue(control, ""));
+            applyFilters({ resetPage: true });
             showToast("Đã đặt lại bộ lọc");
         };
 
         populateVarieties();
-        [searchInput, varietyFilter, segmentFilter, ageFilter, heightFilter].forEach((control) => {
-            control?.addEventListener(control === searchInput ? "input" : "change", applyFilters);
+        optionControls.forEach((control) => {
+            setControlValue(control, getControlValue(control));
+            control.addEventListener("click", (event) => {
+                const option = event.target.closest(".filter-option");
+                if (!option || !control.contains(option)) return;
+
+                setControlValue(control, option.dataset.value || "");
+                applyFilters({ resetPage: true });
+            });
         });
+        rangeControls.forEach((control) => {
+            setControlValue(control, getControlValue(control));
+            $("input[type='range']", control)?.addEventListener("input", () => {
+                updateRangeDisplay(control);
+                applyFilters({ resetPage: true });
+            });
+        });
+        searchInput?.addEventListener("input", () => applyFilters({ resetPage: true }));
 
         tabs.forEach((tab) => {
             tab.addEventListener("click", () => {
-                if (segmentFilter) {
-                    segmentFilter.value = tab.dataset.segment || "";
-                }
-                applyFilters();
+                setControlValue(segmentFilter, tab.dataset.segment || "");
+                applyFilters({ resetPage: true });
             });
+        });
+
+        prevPageBtn?.addEventListener("click", () => {
+            if (currentPage <= 1) return;
+            currentPage -= 1;
+            applyFilters();
+            productGrid.scrollIntoView({ behavior: prefersReducedMotion ? "auto" : "smooth", block: "start" });
+        });
+
+        nextPageBtn?.addEventListener("click", () => {
+            currentPage += 1;
+            applyFilters();
+            productGrid.scrollIntoView({ behavior: prefersReducedMotion ? "auto" : "smooth", block: "start" });
         });
 
         resetBtn?.addEventListener("click", resetFilters);

@@ -163,10 +163,18 @@
                 <div class="filter-panel">
                     <div class="filter-panel-header">
                         <div class="filter-panel-title">
-                            <span class="filter-panel-kicker">Bộ lọc sưu tầm</span>
-                            <h3>Lọc theo tiêu chuẩn sưu tầm</h3>
+                            <span class="filter-panel-emblem" aria-hidden="true">
+                                <i class="fa-solid fa-sliders"></i>
+                            </span>
+                            <div>
+                                <span class="filter-panel-kicker">Bộ lọc sưu tầm</span>
+                                <h3>Lọc theo tiêu chuẩn sưu tầm</h3>
+                            </div>
                         </div>
-                        <button id="resetFilters" class="filter-panel-clear-link" type="button">Xóa</button>
+                        <button id="resetFilters" class="filter-panel-clear-link" type="button">
+                            <i class="fa-solid fa-rotate-left" aria-hidden="true"></i>
+                            <span>Xóa</span>
+                        </button>
                     </div>
 
                     <div class="luxury-search-box">
@@ -177,50 +185,95 @@
                         </div>
                     </div>
 
+                    <div class="filter-active-strip" id="activeFilterChips" aria-live="polite"></div>
+
                     <div class="filter-controls">
                         <div class="filter-group">
-                            <label for="varietyFilter">Loại cây</label>
-                            <select id="varietyFilter" class="filter-select">
-                                <option value="">Tất cả loại cây</option>
-                            </select>
+                            <label for="varietyFilter">
+                                <i class="fa-solid fa-seedling" aria-hidden="true"></i>
+                                <span>Loại cây</span>
+                            </label>
+                            <div id="varietyFilter" class="filter-options" data-value="" role="listbox" aria-label="Loại cây">
+                                <button type="button" class="filter-option active" data-value="">Tất cả loại cây</button>
+                            </div>
                         </div>
 
                         <div class="filter-group">
-                            <label for="segmentFilter">Phân hạng</label>
-                            <select id="segmentFilter" class="filter-select">
-                                <option value="">Tất cả phân hạng</option>
-                                <option value="heritage">Cây di sản 50+</option>
-                                <option value="monumental">Tác phẩm cỡ lớn</option>
-                                <option value="private">Showroom riêng</option>
-                            </select>
+                            <label for="segmentFilter">
+                                <i class="fa-solid fa-gem" aria-hidden="true"></i>
+                                <span>Phân hạng</span>
+                            </label>
+                            <div id="segmentFilter" class="filter-options" data-value="" role="listbox" aria-label="Phân hạng">
+                                <button type="button" class="filter-option active" data-value="">Tất cả phân hạng</button>
+                                <button type="button" class="filter-option" data-value="heritage">Cây di sản 50+</button>
+                                <button type="button" class="filter-option" data-value="monumental">Tác phẩm cỡ lớn</button>
+                                <button type="button" class="filter-option" data-value="private">Showroom riêng</button>
+                            </div>
                         </div>
 
                         <div class="filter-group">
-                            <label for="ageFilter">Tuổi cây</label>
-                            <select id="ageFilter" class="filter-select">
-                                <option value="">Tất cả độ tuổi</option>
-                                <option value="0-5">Dưới 5 năm</option>
-                                <option value="5-15">5 - 15 năm</option>
-                                <option value="15-50">15 - 50 năm</option>
-                                <option value="50+">Trên 50 năm</option>
-                            </select>
+                            <label for="ageRangeInput">
+                                <i class="fa-solid fa-hourglass-half" aria-hidden="true"></i>
+                                <span>Tuổi cây</span>
+                            </label>
+                            <div id="ageFilter" class="filter-range-control" data-value="" data-display="Tất cả độ tuổi">
+                                <div class="filter-range-readout">
+                                    <span class="range-current">Tất cả độ tuổi</span>
+                                </div>
+                                <input type="range"
+                                       id="ageRangeInput"
+                                       min="0"
+                                       max="4"
+                                       step="1"
+                                       value="0"
+                                       data-values="|0-5|5-15|15-50|50+"
+                                       data-labels="Tất cả độ tuổi|Dưới 5 năm|5 - 15 năm|15 - 50 năm|Trên 50 năm"
+                                       aria-label="Tuổi cây">
+                                <div class="filter-range-ticks" aria-hidden="true">
+                                    <span>Tất cả</span>
+                                    <span>5</span>
+                                    <span>15</span>
+                                    <span>50</span>
+                                    <span>50+</span>
+                                </div>
+                            </div>
                         </div>
 
                         <div class="filter-group">
-                            <label for="heightFilter">Chiều cao</label>
-                            <select id="heightFilter" class="filter-select">
-                                <option value="">Tất cả kích thước</option>
-                                <option value="0-30">Dưới 30 cm</option>
-                                <option value="30-60">30 - 60 cm</option>
-                                <option value="60-100">60 - 100 cm</option>
-                                <option value="100+">Trên 100 cm</option>
-                            </select>
+                            <label for="heightRangeInput">
+                                <i class="fa-solid fa-ruler-vertical" aria-hidden="true"></i>
+                                <span>Chiều cao</span>
+                            </label>
+                            <div id="heightFilter" class="filter-range-control" data-value="" data-display="Tất cả kích thước">
+                                <div class="filter-range-readout">
+                                    <span class="range-current">Tất cả kích thước</span>
+                                </div>
+                                <input type="range"
+                                       id="heightRangeInput"
+                                       min="0"
+                                       max="4"
+                                       step="1"
+                                       value="0"
+                                       data-values="|0-30|30-60|60-100|100+"
+                                       data-labels="Tất cả kích thước|Dưới 30 cm|30 - 60 cm|60 - 100 cm|Trên 100 cm"
+                                       aria-label="Chiều cao">
+                                <div class="filter-range-ticks" aria-hidden="true">
+                                    <span>Tất cả</span>
+                                    <span>30</span>
+                                    <span>60</span>
+                                    <span>100</span>
+                                    <span>100+</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
                     <div class="filter-concierge-card">
-                        <span>Tư vấn riêng</span>
-                        <p>Chọn cây theo không gian, ánh sáng và lịch chăm sóc riêng.</p>
+                        <i class="fa-solid fa-user-tie" aria-hidden="true"></i>
+                        <div>
+                            <span>Tư vấn riêng</span>
+                            <p>Chọn cây theo không gian, ánh sáng và lịch chăm sóc riêng.</p>
+                        </div>
                     </div>
                 </div>
 
@@ -235,7 +288,7 @@
                     <div class="filter-summary" id="filterSummary">Hiển thị 0 tác phẩm</div>
                 </div>
 
-                <div class="grid" id="productGrid">
+                <div class="grid" id="productGrid" data-page-size="8">
                     <article class="card luxury-product-card" th:each="item : ${product}"
                              th:data-title="${item.productName}"
                              th:data-price="${item.price}"
@@ -294,10 +347,20 @@
                         </div>
                     </article>
 
-                    <p class="empty-state" th:if="${product == null || product.totalElements == 0}">
-                        Hiện chưa có sản phẩm trong bộ sưu tập.
+                    <p class="empty-state" id="luxuryEmptyState" th:hidden="${product != null && product.totalElements > 0}">
+                        Chưa có tác phẩm phù hợp với bộ lọc hiện tại.
                     </p>
                 </div>
+
+                <nav class="luxury-pagination" id="luxuryPagination" aria-label="Chuyển trang danh sách Bonsai Luxury">
+                    <button type="button" class="luxury-page-btn" id="luxuryPagePrev" aria-label="Trang trước">
+                        <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+                    </button>
+                    <span class="luxury-page-status" id="luxuryPageStatus">Trang 1/1</span>
+                    <button type="button" class="luxury-page-btn" id="luxuryPageNext" aria-label="Trang tiếp">
+                        <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                    </button>
+                </nav>
             </section>
         </div>
     </section>
@@ -332,12 +395,11 @@
     <section id="about" class="about about-luxury container" aria-label="Xưởng Nghệ Thuật Bonsai Luxury">
         <div class="about-inner showcase atelier-showcase">
             <div class="showcase-left">
-                <span class="atelier-label">Bonsai Luxury Atelier</span>
                 <div class="studio-slider" id="studioSlider" aria-live="polite">
                     <div class="studio-slide active" data-name="Xưởng Nghệ Thuật Bonsai Luxury" data-year="25">
                         <img src="https://lh3.googleusercontent.com/aida/AP1WRLvKUms-13kTMJcEdB7wLrPp2oIsn-Dj1uWP4cALszEgz-owSPvrRxS-PVJKKKob3r9cvIfikaIy8MVsZAVRBdfKPlcq9Jk4pSVy7RyFElJ_BaJFB2QxMAzxY5FMyqW7RRKdL9oTqqtNbW8F_feHoHCYlXzZs61XCNVD2gv0a9Vcl9BfsKswj79qs41VvpD1XEmWWva-4GZeEhC4_iMU8L_O5uDpcO7sM4rX_lqd8RB15ZkTuLkaAA2uMg" alt="Xưởng nghệ thuật Bonsai Luxury" loading="lazy">
                         <div class="studio-caption">
-                            <h3 class="studio-name">Xưởng Bonsai Luxury</h3>
+                            <h3 class="studio-name">Bonsai Luxury</h3>
                             <p class="studio-role">Bảo tồn và sáng tạo — 25 năm kinh nghiệm</p>
                         </div>
                     </div>
