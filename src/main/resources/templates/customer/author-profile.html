@@ -53,7 +53,11 @@
                 
                 <div class="d-flex flex-wrap align-items-center justify-content-center justify-content-md-start gap-2 mb-2">
                     <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-1" style="font-size: 0.75rem;" 
-                          th:text="${author.role != null ? author.role.roleName : 'Tác giả cộng đồng'}">Nghệ nhân</span>
+                          th:with="r=${author.role != null ? author.role.roleName : ''}"
+                          th:text="${r == 'ROLE_OWNER' || r == 'OWNER' ? 'Quản trị viên' : 
+                                    (r == 'ROLE_CONTENT_MODERATOR' || r == 'CONTENT_MODERATOR' ? 'Kiểm duyệt viên' : 
+                                     (r == 'ROLE_ARTISAN' || r == 'ARTISAN' ? 'Nghệ nhân' : 
+                                      (r == 'ROLE_MODERATOR' || r == 'MODERATOR' ? 'Điều phối viên' : 'Thành viên')))}">Nghệ nhân</span>
                     <span class="text-muted small">
                         <i class="fa-solid fa-location-dot text-danger me-1"></i><span th:text="${author.address != null ? author.address : 'Việt Nam'}">Nam Định</span>
                     </span>
