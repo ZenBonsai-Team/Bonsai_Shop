@@ -54,13 +54,24 @@
             object-fit: cover;
             transition: var(--transition);
         }
-        .gallery-thumbnails-row {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 10px;
+        .gallery-thumbnails-shell {
+            position: relative;
             margin-bottom: 12px;
         }
+        .gallery-thumbnails-row {
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            scroll-behavior: smooth;
+            scrollbar-width: none;
+            padding: 2px 42px 6px;
+        }
+        .gallery-thumbnails-row::-webkit-scrollbar {
+            display: none;
+        }
         .gallery-thumb-item {
+            position: relative;
+            flex: 0 0 104px;
             border: 1px solid var(--border-color);
             background-color: #FFFFFF;
             padding: 6px;
@@ -78,6 +89,49 @@
         .gallery-thumb-item:hover, .gallery-thumb-item.active {
             border-color: var(--accent-color);
             box-shadow: 0 0 0 1px var(--accent-color);
+        }
+        .gallery-thumb-label {
+            position: absolute;
+            left: 6px;
+            right: 6px;
+            bottom: 6px;
+            background-color: rgba(0, 0, 0, 0.62);
+            color: #FFFFFF;
+            font-size: 0.62rem;
+            font-weight: 700;
+            line-height: 1.2;
+            padding: 3px 5px;
+            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .gallery-nav-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 2;
+            width: 34px;
+            height: 34px;
+            border: 1px solid var(--border-color);
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.94);
+            color: var(--primary-color);
+            box-shadow: var(--shadow-sm);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+        }
+        .gallery-nav-btn:hover {
+            background-color: var(--primary-color);
+            color: #FFFFFF;
+        }
+        .gallery-nav-prev {
+            left: 0;
+        }
+        .gallery-nav-next {
+            right: 0;
         }
         .gallery-caption-text {
             font-size: 0.72rem;
@@ -273,6 +327,28 @@
             font-size: 0.9rem;
             font-weight: 700;
             color: var(--primary-color);
+        }
+
+        .product-description-box {
+            border: 1px solid var(--border-color);
+            background-color: #FFFFFF;
+            border-radius: 4px;
+            padding: 18px;
+            margin-bottom: 18px;
+        }
+        .product-description-title {
+            font-family: var(--font-sans);
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+        .product-description-text {
+            color: var(--text-secondary);
+            font-size: 0.92rem;
+            line-height: 1.7;
+            margin: 0;
+            white-space: pre-line;
         }
 
         /* --- SELLER SUMMARY ROW --- */
