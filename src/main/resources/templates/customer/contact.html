@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Liên hệ & Thông tin - Bonsai Shop</title>
+    <link rel="icon" type="image/png" th:href="@{/images/logo.png}">
+    
+    <!-- Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Custom Style System -->
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+    
+    <style>
+        :root {
+            --primary-color: #06210f;
+            --accent-color: #1a5235;
+            --gold-accent: #b89047;
+            --light-bg: #f9fbf9;
+            --border-color: #eaeaea;
+            --font-serif: 'Cormorant Garamond', serif;
+            --font-sans: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            background-color: #fafbfa;
+            color: #333333;
+        }
+
+        .serif-text {
+            font-family: var(--font-serif);
+        }
+
+        .info-page-header {
+            background: linear-gradient(135deg, #06210f 0%, #153e25 100%);
+            color: #ffffff;
+            padding: 80px 0 50px 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .info-page-header::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 10px;
+            background: linear-gradient(90deg, var(--gold-accent) 0%, transparent 100%);
+        }
+
+        .info-page-header .brand-subtitle {
+            color: var(--gold-accent);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-weight: 700;
+            font-size: 0.85rem;
+        }
+
+        .info-layout {
+            margin-top: -30px;
+            position: relative;
+            z-index: 10;
+        }
+
+        /* Sidebar Tabs styling */
+        .info-sidebar {
+            background-color: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+            border: 1px solid var(--border-color);
+            padding: 20px;
+            position: sticky;
+            top: 100px;
+        }
+
+        .nav-info-tabs {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .nav-info-tabs .nav-link {
+            border: none;
+            background: none;
+            color: #555555;
+            padding: 14px 18px;
+            border-radius: 10px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.92rem;
+            transition: all 0.25s ease;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .nav-info-tabs .nav-link i {
+            font-size: 1.1rem;
+            width: 24px;
+            text-align: center;
+        }
+
+        .nav-info-tabs .nav-link:hover {
+            background-color: #f4f7f4;
+            color: var(--accent-color);
+            padding-left: 24px;
+        }
+
+        .nav-info-tabs .nav-link.active {
+            background-color: #e8f0eb;
+            color: var(--accent-color);
+            border-left: 4px solid var(--accent-color);
+            border-radius: 0 10px 10px 0;
+            padding-left: 24px;
+        }
+
+        /* Content Area */
+        .info-content-card {
+            background-color: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+            border: 1px solid var(--border-color);
+            padding: 40px;
+            min-height: 500px;
+        }
+
+        /* Tab Pane Title */
+        .tab-pane-title {
+            font-family: var(--font-serif);
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 25px;
+            position: relative;
+            padding-bottom: 12px;
+        }
+
+        .tab-pane-title::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 50px;
+            height: 3px;
+            background-color: var(--gold-accent);
+        }
+
+        /* Contact Section Details */
+        .contact-info-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .contact-info-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+        }
+
+        .contact-info-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background-color: #f0f5f2;
+            color: var(--accent-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.15rem;
+            flex-shrink: 0;
+            transition: all 0.3s;
+        }
+
+        .contact-info-item:hover .contact-info-icon {
+            background-color: var(--accent-color);
+            color: #ffffff;
+        }
+
+        .contact-info-text strong {
+            display: block;
+            font-size: 0.78rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #888888;
+            margin-bottom: 3px;
+        }
+
+        .contact-info-text span, .contact-info-text a {
+            font-size: 0.95rem;
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .contact-info-text a:hover {
+            color: var(--gold-accent);
+        }
+
+        /* Social Channel Button group */
+        .social-channel-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .social-channel-btn {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 15px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: #ffffff;
+            transition: opacity 0.2s;
+        }
+
+        .social-channel-btn:hover {
+            opacity: 0.9;
+            color: #ffffff;
+        }
+
+        .btn-youtube { background-color: #ff0000; }
+        .btn-facebook { background-color: #1877f2; }
+        .btn-tiktok { background-color: #010101; }
+        .btn-zalo { background-color: #0068ff; }
+
+        /* Google Map Placeholder */
+        .map-placeholder-container {
+            width: 100%;
+            height: 250px;
+            background-color: #f1f4f2;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            position: relative;
+            overflow: hidden;
+            margin-top: 25px;
+        }
+
+        .map-placeholder-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: radial-gradient(circle, #ddd 10%, transparent 10%);
+            background-size: 16px 16px;
+            opacity: 0.15;
+        }
+
+        .map-placeholder-icon {
+            font-size: 3rem;
+            color: var(--gold-accent);
+            animation: bounce 2s infinite;
+            position: relative;
+            z-index: 2;
+        }
+
+        .map-placeholder-title {
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: var(--primary-color);
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Contact Form custom styling */
+        .form-control-info {
+            border: 1px solid var(--border-color);
+            padding: 12px 16px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            background-color: #fcfdfc;
+            transition: all 0.3s;
+        }
+
+        .form-control-info:focus {
+            background-color: #ffffff;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 4px rgba(26, 82, 83, 0.08);
+            outline: none;
+        }
+
+        /* Legal Content Typography */
+        .legal-block {
+            margin-bottom: 30px;
+        }
+
+        .legal-block h4 {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 12px;
+            font-family: var(--font-sans);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .legal-block p, .legal-block li {
+            font-size: 0.95rem;
+            line-height: 1.7;
+            color: #555555;
+            text-align: justify;
+        }
+
+        .legal-block ul {
+            padding-left: 20px;
+        }
+
+        .legal-block li {
+            margin-bottom: 8px;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        @media (max-width: 991px) {
+            .info-sidebar {
+                position: relative;
+                top: 0;
+                margin-bottom: 30px;
+            }
+            .nav-info-tabs {
+                flex-direction: row;
+                overflow-x: auto;
+                padding-bottom: 8px;
+            }
+            .nav-info-tabs .nav-link {
+                white-space: nowrap;
+            }
+            .info-content-card {
+                padding: 25px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Navbar -->
+<div th:replace="~{fragments/navbar :: navbar}"></div>
+
+<!-- Header -->
+<header class="info-page-header">
+    <div class="container">
+        <span class="brand-subtitle">Trung Tâm Hỗ Trợ Khách Hàng</span>
+        <h1 class="serif-text display-5 fw-bold mt-1 mb-0">Liên hệ & Điều khoản dịch vụ</h1>
+    </div>
+</header>
+
+<!-- Main Layout -->
+<div class="container info-layout pb-5">
+    <div class="row">
+        <!-- Sidebar Navigation (3 cols) -->
+        <div class="col-lg-3">
+            <div class="info-sidebar">
+                <div class="nav nav-info-tabs" id="v-pills-tab" role="tablist" aria-orientation="vertical">
+                    <button class="nav-link" id="v-pills-contact-tab" data-bs-toggle="pill" data-bs-target="#v-pills-contact" type="button" role="tab" aria-controls="v-pills-contact" aria-selected="true">
+                        <i class="fa-solid fa-address-book"></i>Liên hệ & Bản đồ
+                    </button>
+                    <button class="nav-link" id="v-pills-about-tab" data-bs-toggle="pill" data-bs-target="#v-pills-about" type="button" role="tab" aria-controls="v-pills-about" aria-selected="false">
+                        <i class="fa-solid fa-circle-info"></i>Về chúng tôi
+                    </button>
+                    <button class="nav-link" id="v-pills-terms-tab" data-bs-toggle="pill" data-bs-target="#v-pills-terms" type="button" role="tab" aria-controls="v-pills-terms" aria-selected="false">
+                        <i class="fa-solid fa-scroll"></i>Điều khoản dịch vụ
+                    </button>
+                    <button class="nav-link" id="v-pills-privacy-tab" data-bs-toggle="pill" data-bs-target="#v-pills-privacy" type="button" role="tab" aria-controls="v-pills-privacy" aria-selected="false">
+                        <i class="fa-solid fa-shield-halved"></i>Chính sách bảo mật
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content Area (9 cols) -->
+        <div class="col-lg-9">
+            <div class="tab-content info-content-card" id="v-pills-tabContent">
+                
+                <!-- 1. CONTACT TAB -->
+                <div class="tab-pane fade" id="v-pills-contact" role="tabpanel" aria-labelledby="v-pills-contact-tab">
+                    <h2 class="tab-pane-title">Liên hệ với Bonsai Shop</h2>
+                    
+                    <div class="row g-4">
+                        <!-- Contact Form -->
+                        <div class="col-md-7">
+                            <h5 class="fw-bold mb-3 text-dark">Gửi tin nhắn phản hồi</h5>
+                            <form action="#" method="post" onsubmit="event.preventDefault(); alert('Cảm ơn bạn đã phản hồi! Chúng tôi sẽ liên hệ lại sớm nhất.'); this.reset();">
+                                <div class="mb-3">
+                                    <label for="contactName" class="form-label small fw-bold text-secondary">Họ và tên</label>
+                                    <input type="text" class="form-control form-control-info" id="contactName" placeholder="Nhập họ và tên..." required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="contactEmail" class="form-label small fw-bold text-secondary">Địa chỉ Email</label>
+                                    <input type="email" class="form-control form-control-info" id="contactEmail" placeholder="name@example.com" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="contactSubject" class="form-label small fw-bold text-secondary">Tiêu đề</label>
+                                    <input type="text" class="form-control form-control-info" id="contactSubject" placeholder="Nhập tiêu đề..." required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="contactMessage" class="form-label small fw-bold text-secondary">Nội dung liên hệ</label>
+                                    <textarea class="form-control form-control-info" id="contactMessage" rows="5" placeholder="Nhập nội dung tin nhắn của bạn..." required></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-success rounded-pill px-4 py-2 fw-semibold w-100" style="font-size: 0.88rem; background-color: var(--accent-color); border: none;">
+                                    Gửi liên hệ <i class="fa-solid fa-paper-plane ms-1"></i>
+                                </button>
+                            </form>
+                        </div>
+                        
+                        <!-- Contact Info & Map Placeholder -->
+                        <div class="col-md-5">
+                            <h5 class="fw-bold mb-3 text-dark">Thông tin liên lạc</h5>
+                            <ul class="contact-info-list mb-4">
+                                <li class="contact-info-item">
+                                    <div class="contact-info-icon"><i class="fa-solid fa-envelope"></i></div>
+                                    <div class="contact-info-text">
+                                        <strong>Email hỗ trợ</strong>
+                                        <a href="mailto:haihaugarden@gmail.com">haihaugarden@gmail.com</a>
+                                    </div>
+                                </li>
+                                <li class="contact-info-item">
+                                    <div class="contact-info-icon"><i class="fa-solid fa-phone"></i></div>
+                                    <div class="contact-info-text">
+                                        <strong>Số điện thoại</strong>
+                                        <span>Cập nhật sau</span>
+                                    </div>
+                                </li>
+                                <li class="contact-info-item">
+                                    <div class="contact-info-icon"><i class="fa-solid fa-location-dot"></i></div>
+                                    <div class="contact-info-text">
+                                        <strong>Địa chỉ nhà vườn</strong>
+                                        <span>Hải Hậu, Nam Định (Cập nhật chi tiết sau)</span>
+                                    </div>
+                                </li>
+                            </ul>
+                            
+                            <h5 class="fw-bold text-dark mb-2">Kênh mạng xã hội</h5>
+                            <div class="social-channel-grid">
+                                <a href="https://www.youtube.com/@HaihauGarden" target="_blank" class="social-channel-btn btn-youtube">
+                                    <i class="fa-brands fa-youtube fs-5"></i> YouTube
+                                </a>
+                                <a href="#" class="social-channel-btn btn-facebook" onclick="alert('Kênh Facebook đang được thiết lập và sẽ cập nhật sau.')">
+                                    <i class="fa-brands fa-facebook-f fs-5"></i> Facebook
+                                </a>
+                                <a href="#" class="social-channel-btn btn-tiktok" onclick="alert('Kênh Tiktok đang được thiết lập và sẽ cập nhật sau.')">
+                                    <i class="fa-brands fa-tiktok fs-5"></i> Tiktok
+                                </a>
+                                <a href="#" class="social-channel-btn btn-zalo" onclick="alert('Số Zalo đang được thiết lập và sẽ cập nhật sau.')">
+                                    <i class="fa-solid fa-comment-dots fs-5"></i> Zalo
+                                </a>
+                            </div>
+                            
+                            <!-- Map Container -->
+                            <div class="map-placeholder-container">
+                                <i class="fa-solid fa-map-location-dot map-placeholder-icon"></i>
+                                <span class="map-placeholder-title">Bản đồ vị trí nhà vườn</span>
+                                <span class="text-secondary small position-relative z-2">Cập nhật sau</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 2. ABOUT US TAB -->
+                <div class="tab-pane fade" id="v-pills-about" role="tabpanel" aria-labelledby="v-pills-about-tab">
+                    <h2 class="tab-pane-title">Về chúng tôi</h2>
+                    
+                    <div class="legal-block">
+                        <h4><i class="fa-solid fa-seedling text-success"></i> Câu chuyện Bonsai Shop</h4>
+                        <p>
+                            Bonsai Shop ra đời với mong muốn xây dựng một sân chơi và nền tảng quản lý, giao dịch cây cảnh nghệ thuật chuyên nghiệp cho cộng đồng những người yêu mến bonsai tại Việt Nam. Chúng tôi tin rằng, mỗi cây bonsai không chỉ là một sản phẩm thực vật đơn thuần, mà là một tác phẩm nghệ thuật sống kết tinh thời gian, triết lý sống và kỹ nghệ tài hoa của nghệ nhân.
+                        </p>
+                        <p>
+                            Nền tảng kết nối trực tiếp những nghệ nhân có tay nghề lâu năm, chủ nhà vườn và những khách hàng đam mê sinh vật cảnh. Qua đó, gìn giữ và phát huy giá trị di sản nghệ thuật cây cảnh truyền thống của vùng đất Bắc Bộ cũng như mọi miền tổ quốc.
+                        </p>
+                    </div>
+
+                    <div class="legal-block">
+                        <h4><i class="fa-solid fa-gem text-success"></i> Sứ mệnh & Tầm nhìn</h4>
+                        <ul>
+                            <li><strong>Sứ mệnh:</strong> Số hóa và nâng tầm chuyên nghiệp hoạt động giao lưu, trao đổi, thẩm định sinh vật cảnh. Đảm bảo tính minh bạch, xuất xứ rõ ràng và chất lượng nghệ thuật cao nhất cho từng tác phẩm.</li>
+                            <li><strong>Tầm nhìn:</strong> Trở thành hệ sinh thái cây cảnh nghệ thuật trực tuyến hàng đầu Việt Nam, nơi hội tụ tinh hoa làng nghề, hỗ trợ kỹ thuật chuyên sâu và cung cấp dịch vụ logistics chuyên dụng cho bonsai cỡ lớn.</li>
+                        </ul>
+                    </div>
+
+                    <div class="legal-block">
+                        <h4><i class="fa-solid fa-circle-check text-success"></i> Cam kết của chúng tôi</h4>
+                        <p>
+                            Chúng tôi cam kết cung cấp các dịch vụ chất lượng vượt trội: kiểm duyệt bài đăng chặt chẽ chống spam, liên kết thanh toán an toàn, bảo mật thông tin cá nhân tối đa và hỗ trợ tận tình kỹ thuật chăm sóc cây trọn đời cho mọi khách hàng giao dịch qua nền tảng.
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- 3. TERMS OF SERVICE TAB -->
+                <div class="tab-pane fade" id="v-pills-terms" role="tabpanel" aria-labelledby="v-pills-terms-tab">
+                    <h2 class="tab-pane-title">Điều khoản dịch vụ</h2>
+                    
+                    <div class="legal-block">
+                        <h4>1. Giới thiệu chung</h4>
+                        <p>
+                            Chào mừng bạn đến với Bonsai Shop. Bằng việc truy cập sử dụng trang web, đăng ký thành viên hoặc thực hiện giao dịch, bạn xác nhận đã đọc, hiểu và đồng ý tuân thủ tất cả các điều khoản và điều kiện được ghi nhận tại đây.
+                        </p>
+                    </div>
+
+                    <div class="legal-block">
+                        <h4>2. Tài khoản và Bảo mật</h4>
+                        <p>
+                            Người dùng có trách nhiệm giữ bí mật thông tin tài khoản và mật khẩu của mình. Bạn hoàn toàn chịu trách nhiệm về tất cả các hoạt động xảy ra dưới tài khoản của mình. Khi có dấu hiệu bị rò rỉ bảo mật hoặc lạm dụng tài khoản, vui lòng thông báo ngay cho đội ngũ hỗ trợ của Bonsai Shop.
+                        </p>
+                    </div>
+
+                    <div class="legal-block">
+                        <h4>3. Quy định đăng bài & Quy tắc ứng xử trên Cộng đồng</h4>
+                        <ul>
+                            <li>Tác giả cam kết chịu trách nhiệm hoàn toàn về tính xác thực của thông tin bài viết nhật ký, chia sẻ kỹ thuật.</li>
+                            <li>Nội dung không chứa từ ngữ kích động, xúc phạm, thô tục hoặc vi phạm pháp luật.</li>
+                            <li>Bài viết chứa từ ngữ vi phạm bộ lọc hệ thống sẽ bị chuyển vào hàng chờ kiểm duyệt (`FLAGGED`) hoặc bị ẩn tạm thời bởi kiểm duyệt viên (`HIDDEN`). Tác giả có quyền sửa đổi lại nội dung vi phạm để gửi duyệt lại.</li>
+                        </ul>
+                    </div>
+
+                    <div class="legal-block">
+                        <h4>4. Quy định giao dịch và thanh toán</h4>
+                        <p>
+                            Mọi hoạt động thanh toán trực tuyến qua cổng VNPay hoặc các hình thức đặt trước cần tuân thủ đúng quy trình giao dịch được niêm yết công khai tại trang thanh toán. Bonsai Shop cam kết giữ tiền tạm khóa bảo đảm và chỉ giải ngân cho người bán khi quá trình xác nhận nhận hàng và kiểm tra cây thực tế hoàn tất thành công.
+                        </p>
+                    </div>
+
+                    <div class="legal-block">
+                        <h4>5. Thay đổi điều khoản</h4>
+                        <p>
+                            Chúng tôi giữ quyền thay đổi, sửa đổi, thêm hoặc bớt bất kỳ phần nào của các Điều khoản dịch vụ này vào bất kỳ lúc nào. Các thay đổi sẽ có hiệu lực ngay khi được đăng tải lên trang web mà không cần thông báo trước. Việc bạn tiếp tục sử dụng dịch vụ sau khi có thay đổi đồng nghĩa với việc bạn đồng ý với các thay đổi đó.
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- 4. PRIVACY POLICY TAB -->
+                <div class="tab-pane fade" id="v-pills-privacy" role="tabpanel" aria-labelledby="v-pills-privacy-tab">
+                    <h2 class="tab-pane-title">Chính sách bảo mật</h2>
+                    
+                    <div class="legal-block">
+                        <h4>1. Thu thập thông tin cá nhân</h4>
+                        <p>
+                            Bonsai Shop thu thập thông tin khi bạn đăng ký tài khoản thành viên, bao gồm: Họ tên, địa chỉ email, số điện thoại, địa chỉ nhận hàng và hình ảnh đại diện cá nhân. Các thông tin này giúp chúng tôi xác thực danh tính người dùng và tối ưu hóa quy trình giao dịch vận chuyển.
+                        </p>
+                    </div>
+
+                    <div class="legal-block">
+                        <h4>2. Mục đích sử dụng thông tin</h4>
+                        <p>
+                            Chúng tôi sử dụng thông tin thu thập được cho các mục đích:
+                        </p>
+                        <ul>
+                            <li>Xử lý và hoàn tất các đơn hàng mua bán tác phẩm bonsai.</li>
+                            <li>Hỗ trợ sắp xếp lịch hẹn đến xem cây trực tiếp tại vườn của các nghệ nhân.</li>
+                            <li>Gửi các thông báo về trạng thái đơn hàng, trạng thái duyệt bài viết cộng đồng hoặc các cập nhật quan trọng từ hệ thống.</li>
+                            <li>Ngăn chặn các hành vi giả mạo, lừa đảo hoặc vi phạm an ninh tài khoản của người dùng.</li>
+                        </ul>
+                    </div>
+
+                    <div class="legal-block">
+                        <h4>3. Bảo vệ và Bảo mật thông tin</h4>
+                        <p>
+                            Thông tin cá nhân của bạn được bảo mật tuyệt đối trên hệ thống máy chủ của Bonsai Shop bằng các công nghệ mã hóa dữ liệu tiên tiến. Chúng tôi cam kết không bán, chia sẻ hoặc tiết lộ thông tin của bạn cho bên thứ ba ngoại trừ các đối tác vận chuyển và thanh toán được ủy quyền thực hiện dịch vụ trực tiếp cho đơn hàng của bạn.
+                        </p>
+                    </div>
+
+                    <div class="legal-block">
+                        <h4>4. Quyền lợi của Người dùng</h4>
+                        <p>
+                            Bạn có toàn quyền kiểm tra, cập nhật hoặc xóa thông tin cá nhân của mình bằng cách đăng nhập vào phần Quản lý Hồ sơ trên trang web. Nếu có thắc mắc hoặc cần yêu cầu hỗ trợ xóa tài khoản vĩnh viễn, bạn có thể gửi yêu cầu trực tiếp qua email haihaugarden@gmail.com của chúng tôi.
+                        </p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Footer -->
+<div th:replace="~{fragments/footer :: footer}"></div>
+
+<!-- Bootstrap Bundle JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<script th:inline="javascript">
+    document.addEventListener("DOMContentLoaded", function() {
+        // Read activeTab passed from Thymeleaf controller
+        /*[[${activeTab}]]*/
+        let activeTab = /*[[${activeTab}]]*/ 'contact';
+        
+        // Normalize values
+        if (!activeTab || activeTab.trim() === '') {
+            activeTab = 'contact';
+        }
+        
+        // Activate correct tab pane
+        const targetTabButton = document.getElementById('v-pills-' + activeTab + '-tab');
+        const targetTabPane = document.getElementById('v-pills-' + activeTab);
+        
+        if (targetTabButton && targetTabPane) {
+            // Remove active/show class from all tabs
+            document.querySelectorAll('.nav-info-tabs .nav-link').forEach(btn => {
+                btn.classList.remove('active');
+                btn.setAttribute('aria-selected', 'false');
+            });
+            document.querySelectorAll('.tab-content .tab-pane').forEach(pane => {
+                pane.classList.remove('show', 'active');
+            });
+            
+            // Add active class to target tab
+            targetTabButton.classList.add('active');
+            targetTabButton.setAttribute('aria-selected', 'true');
+            targetTabPane.classList.add('show', 'active');
+        } else {
+            // Fallback default
+            const defaultBtn = document.getElementById('v-pills-contact-tab');
+            const defaultPane = document.getElementById('v-pills-contact');
+            if (defaultBtn && defaultPane) {
+                defaultBtn.classList.add('active');
+                defaultBtn.setAttribute('aria-selected', 'true');
+                defaultPane.classList.add('show', 'active');
+            }
+        }
+    });
+</script>
+</body>
+</html>

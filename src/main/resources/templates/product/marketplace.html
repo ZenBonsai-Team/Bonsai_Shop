@@ -705,52 +705,7 @@
 <!-- ===================================================== -->
 <!-- FOOTER -->
 <!-- ===================================================== -->
-<footer class="footer-dark">
-    <div class="container">
-        <div class="row g-5">
-            <!-- Brand Section -->
-            <div class="col-lg-4 col-md-6">
-                <div class="footer-logo-title">🌿 BSMS</div>
-                <p class="footer-desc-para">
-                    Nền tảng quản lý và giao dịch cây cảnh nghệ thuật — gìn giữ và phát huy di sản nghệ thuật bonsai Bắc Bộ Việt Nam.
-                </p>
-                <div class="footer-social-strip">
-                    <a href="#" class="footer-social-btn"><i class="fa-brands fa-facebook-f"></i></a>
-                    <a href="#" class="footer-social-btn"><i class="fa-brands fa-instagram"></i></a>
-                    <a href="#" class="footer-social-btn"><i class="fa-brands fa-youtube"></i></a>
-                    <a href="#" class="footer-social-btn"><i class="fa-brands fa-pinterest-p"></i></a>
-                </div>
-            </div>
-            
-            <!-- Company Links -->
-            <div class="col-lg-3 col-md-6 col-6">
-                <h5 class="footer-column-heading">Company</h5>
-                <ul class="footer-column-links">
-                    <li><a href="#">About Us</a></li>
-                    <li><a href="#">Contact</a></li>
-                    <li><a href="#">Terms of Service</a></li>
-                    <li><a href="#">Privacy Policy</a></li>
-                </ul>
-            </div>
-
-            <!-- Connect Info -->
-            <div class="col-lg-5 col-md-12 col-6">
-                <h5 class="footer-column-heading">Connect</h5>
-                <ul class="footer-connect-list">
-                    <li><i class="fa-solid fa-phone"></i>Hotline: 1900 6868</li>
-                    <li><i class="fa-solid fa-envelope"></i>Email: support@bsms.vn</li>
-                    <li class="text-secondary mt-3" style="font-size:0.75rem; color: rgba(255,255,255,0.4) !important;">Powered by VNPay & Crane Logistics Network</li>
-                </ul>
-            </div>
-        </div>
-
-        <!-- Copyright Row -->
-        <div class="footer-base-row">
-            <span>© 2026 BSMS — Bonsai Shop Management System. All rights reserved.</span>
-            <span>Powered by VNPay - Crane Logistics Network</span>
-        </div>
-    </div>
-</footer>
+<div th:replace="~{fragments/footer :: footer}"></div>
 
 <!-- Bootstrap Bundle JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>

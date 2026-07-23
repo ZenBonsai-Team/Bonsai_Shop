@@ -33,7 +33,7 @@
                         <a class="nav-link nav-link-custom" th:classappend="${activePage == 'appointments'} ? 'active' : ''" th:href="@{/appointments}">My Appointment</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link nav-link-custom" href="#">Contact</a>
+                        <a class="nav-link nav-link-custom" th:classappend="${activePage == 'contact'} ? 'active' : ''" th:href="@{/contact}">Contact</a>
                     </li>
                 </ul>
 
