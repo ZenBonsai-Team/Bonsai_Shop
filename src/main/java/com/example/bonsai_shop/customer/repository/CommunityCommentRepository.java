@@ -11,6 +11,10 @@ import java.util.List;
 @Repository
 public interface CommunityCommentRepository extends JpaRepository<CommunityComment, Integer> {
     List<CommunityComment> findByPostIdOrderByCreatedAtDesc(Integer postId);
+
+    @org.springframework.data.jpa.repository.Modifying
+    @org.springframework.transaction.annotation.Transactional
+    void deleteByPostId(Integer postId);
     List<CommunityComment> findAllByOrderByCreatedAtDesc();
     Page<CommunityComment> findAllByOrderByCreatedAtDesc(Pageable pageable);
     Page<CommunityComment> findByStatusOrderByCreatedAtDesc(String status, Pageable pageable);

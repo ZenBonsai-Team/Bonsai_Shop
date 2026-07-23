@@ -16,4 +16,8 @@ public interface CommunityPostBookmarkRepository extends JpaRepository<Community
     boolean existsByPostIdAndUserId(Integer postId, Integer userId);
 
     void deleteByPostIdAndUserId(Integer postId, Integer userId);
+
+    @org.springframework.data.jpa.repository.Modifying
+    @org.springframework.transaction.annotation.Transactional
+    void deleteByPostId(Integer postId);
 }

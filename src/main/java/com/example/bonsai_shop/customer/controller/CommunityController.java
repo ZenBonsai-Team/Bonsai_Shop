@@ -655,4 +655,158 @@ public class CommunityController {
         response.put("message", isBookmarked ? "Đã lưu bài viết thành công!" : "Đã bỏ lưu bài viết!");
         return ResponseEntity.ok(response);
     }
+
+    // ===== CHỈNH SỬA BÀI VIẾT (GET Form & POST Action) =====
+    @GetMapping("/post/edit/{id}")
+    public String editPostForm(@PathVariable("id") Integer id,
+            Model model,
+            @AuthenticationPrincipal Object principal) {
+        String currentEmail = getEmailFromPrincipal(principal);
+        if (currentEmail == null) {
+            return "redirect:/login";
+        }
+        User user = userRepository.findByEmail(currentEmail)
+                .orElseThrow(() -> new RuntimeException("Người dùng chưa được xác thực"));
+
+        CommunityPost post = postRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Bài viết không tồn tại"));
+
+        // Only the author can edit
+        if (post.getAuthorId() == null || !post.getAuthorId().equals(user.getUserId())) {
+            return "redirect:/community";
+        }
+
+        model.addAttribute("post", post);
+        model.addAttribute("activePage", "community");
+        return "customer/community-edit";
+    }
+
+    @PostMapping("/post/edit/{id}")
+    public String editPost(@PathVariable("id") Integer id,
+            @ModelAttribute("post") CommunityPost postForm,
+            @RequestParam(value = "imageFile", required = false) MultipartFile imageFile,
+            @AuthenticationPrincipal Object principal) {
+        String currentEmail = getEmailFromPrincipal(principal);
+        if (currentEmail == null) {
+            return "redirect:/login";
+        }
+        User user = userRepository.findByEmail(currentEmail)
+                .orElseThrow(() -> new RuntimeException("Người dùng chưa được xác thực"));
+
+        CommunityPost post = postRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Bài viết không tồn tại"));
+
+        // Only the author can edit
+        if (post.getAuthorId() == null || !post.getAuthorId().equals(user.getUserId())) {
+            return "redirect:/community";
+        }
+
+        // Process uploaded image file if provided
+        if (imageFile != null && !imageFile.isEmpty()) {
+            try {
+                CloudinaryUploadResponse response = cloudinaryStorageService.uploadImage(imageFile, CloudinaryFolder.COMMUNITY);
+                if (response != null && response.getUrl() != null) {
+                    post.setImageUrl(response.getUrl());
+                }
+            } catch (Exception e) {
+                try {
+                    String localUrl = fileStorageService.storeAvatar(imageFile);
+                    post.setImageUrl(localUrl);
+                } catch (Exception ex) {
+                    // Ignore
+                }
+            }
+        } else if (postForm.getImageUrl() != null && !postForm.getImageUrl().trim().isEmpty()) {
+            post.setImageUrl(postForm.getImageUrl().trim());
+        }
+
+        // Update post properties
+        post.setTitle(postForm.getTitle());
+        post.setSummary(postForm.getSummary());
+        post.setCategory(postForm.getCategory());
+        post.setContent(postForm.getContent());
+        if (postForm.getReadTime() != null && postForm.getReadTime() > 0) {
+            post.setReadTime(postForm.getReadTime());
+        }
+
+        // Apply profanity check
+        boolean isFlagged = profanityFilterService.containsProfanity(post.getTitle()) || profanityFilterService.containsProfanity(post.getContent());
+        if (isFlagged) {
+            post.setTitle(profanityFilterService.maskProfanity(post.getTitle()));
+            post.setContent(profanityFilterService.maskProfanity(post.getContent()));
+            post.setStatus("FLAGGED");
+            
+            // Notification for Author
+            notificationRepository.save(ModerationNotification.builder()
+                    .targetUsername(user.getEmail())
+                    .message("⚠️ Bài viết '" + post.getTitle() + "' sau khi chỉnh sửa có nghi vấn chứa từ ngữ vi phạm và đã chuyển vào Hàng chờ kiểm duyệt.")
+                    .isRead(false)
+                    .createdAt(LocalDateTime.now())
+                    .build());
+
+            // Notification for CONTENT_MODERATORs
+            List<User> moderators = userRepository.findByRoleRoleNameIn(List.of("ROLE_CONTENT_MODERATOR", "CONTENT_MODERATOR"));
+            for (User mod : moderators) {
+                notificationRepository.save(ModerationNotification.builder()
+                        .targetUsername(mod.getEmail())
+                        .message("🚨 Bài viết đã chỉnh sửa từ " + (user.getFullName() != null ? user.getFullName() : user.getUsername()) + " nghi vấn chứa từ ngữ vi phạm cần kiểm duyệt.")
+                        .isRead(false)
+                        .createdAt(LocalDateTime.now())
+                        .build());
+            }
+        } else {
+            post.setStatus("APPROVED");
+        }
+
+        postRepository.save(post);
+        return "redirect:/community/post/" + id;
+    }
+
+    // ===== XÓA BÀI VIẾT (POST Action) =====
+    @PostMapping("/post/delete/{id}")
+    @org.springframework.transaction.annotation.Transactional
+    public String deletePost(@PathVariable("id") Integer id,
+            @AuthenticationPrincipal Object principal) {
+        String currentEmail = getEmailFromPrincipal(principal);
+        if (currentEmail == null) {
+            return "redirect:/login";
+        }
+        User user = userRepository.findByEmail(currentEmail)
+                .orElseThrow(() -> new RuntimeException("Người dùng chưa được xác thực"));
+
+        CommunityPost post = postRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Bài viết không tồn tại"));
+
+        boolean isAuthor = post.getAuthorId() != null && post.getAuthorId().equals(user.getUserId());
+        boolean isContentModerator = hasRole(principal, "ROLE_CONTENT_MODERATOR", "CONTENT_MODERATOR");
+
+        // Only the author OR content moderator can delete
+        if (!isAuthor && !isContentModerator) {
+            return "redirect:/community";
+        }
+
+        // Notify author if deleted by content moderator
+        if (isContentModerator && !isAuthor) {
+            if (post.getAuthorId() != null) {
+                userRepository.findById(post.getAuthorId()).ifPresent(author -> {
+                    notificationRepository.save(ModerationNotification.builder()
+                            .targetUsername(author.getEmail())
+                            .message("🚫 Bài viết '" + post.getTitle() + "' của bạn đã bị gỡ bỏ bởi Kiểm duyệt viên nội dung do vi phạm tiêu chuẩn cộng đồng.")
+                            .isRead(false)
+                            .createdAt(LocalDateTime.now())
+                            .build());
+                });
+            }
+        }
+
+        // Cascading deletion programmatically
+        commentRepository.deleteByPostId(id);
+        likeRepository.deleteByPostId(id);
+        bookmarkRepository.deleteByPostId(id);
+
+        // Delete post
+        postRepository.delete(post);
+
+        return "redirect:/community";
+    }
 }

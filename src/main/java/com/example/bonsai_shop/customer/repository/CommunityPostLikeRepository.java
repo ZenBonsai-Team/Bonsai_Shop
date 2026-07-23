@@ -16,4 +16,8 @@ public interface CommunityPostLikeRepository extends JpaRepository<CommunityPost
 
     /** Count total likes for a post */
     long countByPostId(Integer postId);
+
+    @org.springframework.data.jpa.repository.Modifying
+    @org.springframework.transaction.annotation.Transactional
+    void deleteByPostId(Integer postId);
 }
