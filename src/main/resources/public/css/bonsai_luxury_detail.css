@@ -116,22 +116,36 @@ button:disabled {
 }
 
 .luxury-detail-shell .navbar-brand-custom {
-    margin-right: 1rem;
+    flex-shrink: 0;
+    margin-right: 0.75rem;
 }
 
 .luxury-detail-shell .navbar-custom .navbar-collapse {
     gap: 0;
+    min-width: 0;
+}
+
+.luxury-shell .navbar-custom .navbar-nav {
+    align-items: center;
+    flex-wrap: nowrap;
+    min-width: 0;
+}
+
+.luxury-shell .navbar-custom .navbar-collapse > .d-flex {
+    flex-shrink: 0;
+    gap: 0.5rem !important;
 }
 
 .luxury-shell .navbar-custom .nav-link-custom {
     position: relative;
     color: rgba(255, 250, 241, 0.74) !important;
     font-family: var(--lux-sans);
-    font-size: 0.76rem;
+    font-size: 0.72rem;
     font-weight: 700;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.055em;
     text-transform: uppercase;
-    padding: 8px 14px !important;
+    padding: 8px 9px !important;
+    white-space: nowrap;
 }
 
 .luxury-shell .navbar-custom .nav-link-custom::after {
@@ -161,6 +175,17 @@ button:disabled {
 .luxury-shell .navbar-custom .nav-icon-link,
 .luxury-shell .navbar-custom .btn-link.nav-icon-link {
     color: rgba(255, 250, 241, 0.84) !important;
+}
+
+.luxury-shell .navbar-custom .btn-auth-signin,
+.luxury-shell .navbar-custom .btn-auth-register {
+    flex-shrink: 0;
+    font-size: 0.76rem;
+    white-space: nowrap;
+}
+
+.luxury-shell .navbar-custom .btn-auth-signin {
+    padding: 6px 8px;
 }
 
 .luxury-shell .navbar-custom .btn-auth-signin:hover,
@@ -337,6 +362,7 @@ button:disabled {
     border: 1px solid rgba(185, 145, 75, 0.5);
     background: rgba(185, 145, 75, 0.16);
     color: var(--lux-panel) !important;
+    padding: 7px 12px;
     box-shadow: none;
 }
 

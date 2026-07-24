@@ -288,8 +288,8 @@
                     <div class="filter-summary" id="filterSummary">Hiển thị 0 tác phẩm</div>
                 </div>
 
-                <div class="grid" id="productGrid" data-page-size="8">
-                    <article class="card luxury-product-card" th:each="item : ${product}"
+                <div class="grid" id="productGrid">
+                    <article class="card luxury-product-card" th:each="item : ${product.content}"
                              th:data-title="${item.productName}"
                              th:data-price="${item.price}"
                              th:data-variety="${item.varietyName}"
@@ -301,15 +301,15 @@
                         <div class="card-media">
                             <img th:src="${item.thumbnailUrl != null ? item.thumbnailUrl : 'https://images.unsplash.com/photo-1599599810769-bcde5a160d32?auto=format&fit=crop&q=80&w=600'}"
                                  th:alt="${item.productName}" loading="lazy">
-                            <span class="card-status" th:text="${item.status}">AVAILABLE</span>
+                            <span class="card-status" th:text="${item.status}"></span>
                         </div>
 
                         <div class="card-body">
                             <div class="card-eyebrow">
-                                <span th:text="${item.varietyName}">Tùng La Hán</span>
-                                <span th:text="${item.productCode}">BL-001</span>
+                                <span th:text="${item.varietyName}"></span>
+                                <span th:text="${item.productCode}"></span>
                             </div>
-                            <h3 class="card-title" th:text="${item.productName}">Bonsai Luxury</h3>
+                            <h3 class="card-title" th:text="${item.productName}"></h3>
 
                             <p class="card-meta" th:text="${(item.age != null ? item.age + ' năm tuổi' : 'Tuổi chưa xác định') + ' · hồ sơ sưu tầm riêng'}">
                                 Hồ sơ sưu tầm riêng
@@ -352,14 +352,24 @@
                     </p>
                 </div>
 
-                <nav class="luxury-pagination" id="luxuryPagination" aria-label="Chuyển trang danh sách Bonsai Luxury">
-                    <button type="button" class="luxury-page-btn" id="luxuryPagePrev" aria-label="Trang trước">
+                <nav class="luxury-pagination" id="luxuryPagination" aria-label="Chuyển trang danh sách Bonsai Luxury"
+                     th:if="${product != null && product.totalPages > 0}">
+                    <a class="luxury-page-btn"
+                       th:href="@{/bonsai-luxury(page=${product.hasPrevious() ? product.number - 1 : product.number})}"
+                       th:classappend="${!product.hasPrevious()} ? 'is-disabled'"
+                       th:attr="aria-disabled=${!product.hasPrevious()}"
+                       aria-label="Trang trước">
                         <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
-                    </button>
-                    <span class="luxury-page-status" id="luxuryPageStatus">Trang 1/1</span>
-                    <button type="button" class="luxury-page-btn" id="luxuryPageNext" aria-label="Trang tiếp">
+                    </a>
+                    <span class="luxury-page-status" id="luxuryPageStatus"
+                          th:text="${'Trang ' + (product.number + 1) + '/' + product.totalPages}">Trang 1/1</span>
+                    <a class="luxury-page-btn"
+                       th:href="@{/bonsai-luxury(page=${product.hasNext() ? product.number + 1 : product.number})}"
+                       th:classappend="${!product.hasNext()} ? 'is-disabled'"
+                       th:attr="aria-disabled=${!product.hasNext()}"
+                       aria-label="Trang tiếp">
                         <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
-                    </button>
+                    </a>
                 </nav>
             </section>
         </div>

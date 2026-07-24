@@ -125,18 +125,12 @@ document.addEventListener("DOMContentLoaded", () => {
         const resetBtn = $("#resetFilters");
         const summary = $("#filterSummary");
         const activeFilterChips = $("#activeFilterChips");
-        const pagination = $("#luxuryPagination");
-        const prevPageBtn = $("#luxuryPagePrev");
-        const nextPageBtn = $("#luxuryPageNext");
-        const pageStatus = $("#luxuryPageStatus");
         const tabs = $$(".luxury-tab");
 
         const normalize = (value) => (value || "").toString().trim().toLowerCase();
         const optionControls = [varietyFilter, segmentFilter].filter(Boolean);
         const rangeControls = [ageFilter, heightFilter].filter(Boolean);
         const filterControls = [...optionControls, ...rangeControls];
-        const pageSize = Number.parseInt(productGrid.dataset.pageSize, 10) || 8;
-        let currentPage = 1;
 
         const getRangeConfig = (control) => {
             const input = $("input[type='range']", control);
@@ -234,29 +228,6 @@ document.addEventListener("DOMContentLoaded", () => {
             summary.textContent = `Hiển thị ${visibleCount} tác phẩm`;
         };
 
-        const updatePagination = (totalItems) => {
-            const totalPages = totalItems > 0 ? Math.ceil(totalItems / pageSize) : 0;
-            const hasMultiplePages = totalPages > 1;
-
-            if (currentPage > totalPages) {
-                currentPage = totalPages || 1;
-            }
-
-            if (pageStatus) {
-                pageStatus.textContent = `Trang ${totalItems > 0 ? currentPage : 0}/${totalPages || 0}`;
-            }
-
-            if (prevPageBtn) {
-                prevPageBtn.disabled = !hasMultiplePages || currentPage <= 1;
-            }
-
-            if (nextPageBtn) {
-                nextPageBtn.disabled = !hasMultiplePages || currentPage >= totalPages;
-            }
-
-            pagination?.classList.toggle("is-ready", hasMultiplePages);
-        };
-
         const getSelectedText = (select) => {
             const value = getControlValue(select);
             if (!select || !value) return "";
@@ -316,7 +287,7 @@ document.addEventListener("DOMContentLoaded", () => {
             });
         };
 
-        const applyFilters = ({ resetPage = false } = {}) => {
+        const applyFilters = () => {
             const query = normalize(searchInput?.value);
             const variety = normalize(getControlValue(varietyFilter));
             const segment = normalize(getControlValue(segmentFilter));
@@ -343,19 +314,7 @@ document.addEventListener("DOMContentLoaded", () => {
             });
 
             const visibleCount = matchedCards.length;
-            const totalPages = visibleCount > 0 ? Math.ceil(visibleCount / pageSize) : 0;
-
-            if (resetPage) {
-                currentPage = 1;
-            }
-
-            if (currentPage > totalPages) {
-                currentPage = totalPages || 1;
-            }
-
-            const pageStart = (currentPage - 1) * pageSize;
-            const pageEnd = pageStart + pageSize;
-            matchedCards.slice(pageStart, pageEnd).forEach((card) => {
+            matchedCards.forEach((card) => {
                 card.hidden = false;
             });
 
@@ -364,7 +323,6 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
             setSummary(visibleCount);
-            updatePagination(visibleCount);
             syncTabs(segment);
             setActiveState();
             renderActiveFilters();
@@ -373,7 +331,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const resetFilters = () => {
             if (searchInput) searchInput.value = "";
             filterControls.forEach((control) => setControlValue(control, ""));
-            applyFilters({ resetPage: true });
+            applyFilters();
             showToast("Đã đặt lại bộ lọc");
         };
 
@@ -385,36 +343,23 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (!option || !control.contains(option)) return;
 
                 setControlValue(control, option.dataset.value || "");
-                applyFilters({ resetPage: true });
+                applyFilters();
             });
         });
         rangeControls.forEach((control) => {
             setControlValue(control, getControlValue(control));
             $("input[type='range']", control)?.addEventListener("input", () => {
                 updateRangeDisplay(control);
-                applyFilters({ resetPage: true });
+                applyFilters();
             });
         });
-        searchInput?.addEventListener("input", () => applyFilters({ resetPage: true }));
+        searchInput?.addEventListener("input", () => applyFilters());
 
         tabs.forEach((tab) => {
             tab.addEventListener("click", () => {
                 setControlValue(segmentFilter, tab.dataset.segment || "");
-                applyFilters({ resetPage: true });
+                applyFilters();
             });
-        });
-
-        prevPageBtn?.addEventListener("click", () => {
-            if (currentPage <= 1) return;
-            currentPage -= 1;
-            applyFilters();
-            productGrid.scrollIntoView({ behavior: prefersReducedMotion ? "auto" : "smooth", block: "start" });
-        });
-
-        nextPageBtn?.addEventListener("click", () => {
-            currentPage += 1;
-            applyFilters();
-            productGrid.scrollIntoView({ behavior: prefersReducedMotion ? "auto" : "smooth", block: "start" });
         });
 
         resetBtn?.addEventListener("click", resetFilters);

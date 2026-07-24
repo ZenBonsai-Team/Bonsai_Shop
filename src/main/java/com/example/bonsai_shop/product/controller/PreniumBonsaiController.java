@@ -12,14 +12,14 @@ import org.springframework.web.bind.annotation.RequestParam;
 @Controller
 @RequiredArgsConstructor
 
-public class PreniumbonsaiController {
+public class PreniumBonsaiController {
    private final ProductService productService;
 
    @GetMapping("/bonsai-luxury")
     public String premium(
             @RequestParam(defaultValue = "0") int page
            ,Model model) {
-       Page<ProductCardDTO> product = productService.getPremiumProducts(PageRequest.of(page, 16));
+       Page<ProductCardDTO> product = productService.getPremiumProducts(PageRequest.of(page, 8));
        model.addAttribute("product", product);
        return "product/bonsai-luxury";
    }
