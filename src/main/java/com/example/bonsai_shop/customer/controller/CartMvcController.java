@@ -10,11 +10,17 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import com.example.bonsai_shop.entity.Order;
+import com.example.bonsai_shop.product.service.OrderService;
+
+import com.example.bonsai_shop.config.SecurityUtils;
+
 @Controller
 @RequiredArgsConstructor
 public class CartMvcController {
 
     private final UserService userService;
+    private final OrderService orderService;
 
     @GetMapping("/cart")
     public String viewCart(Model model) {
@@ -23,10 +29,11 @@ public class CartMvcController {
     }
 
     @GetMapping("/checkout")
-    public String viewCheckout(@AuthenticationPrincipal UserDetails userDetails, Model model) {
+    public String viewCheckout(@AuthenticationPrincipal Object principal, Model model) {
         model.addAttribute("activePage", "checkout");
-        if (userDetails != null) {
-            User user = userService.getCurrentUserProfile(userDetails.getUsername());
+        String email = SecurityUtils.extractEmail(principal);
+        if (email != null) {
+            User user = userService.getCurrentUserProfile(email);
             model.addAttribute("user", user);
         }
         return "customer/checkout";
@@ -37,5 +44,24 @@ public class CartMvcController {
         model.addAttribute("activePage", "orders");
         model.addAttribute("orderCode", orderCode);
         return "customer/order_success";
+    }
+
+    @GetMapping({"/order/lookup", "/lookup", "/orders/lookup"})
+    public String viewOrderLookup(@RequestParam(required = false) String orderCode, Model model) {
+        model.addAttribute("activePage", "orderLookup");
+        boolean searched = false;
+        Order order = null;
+        String searchCode = "";
+
+        if (orderCode != null && !orderCode.trim().isEmpty()) {
+            searchCode = orderCode.trim();
+            searched = true;
+            order = orderService.getOrderByCodeWithDetails(searchCode);
+        }
+
+        model.addAttribute("searched", searched);
+        model.addAttribute("order", order);
+        model.addAttribute("searchCode", searchCode);
+        return "customer/order_lookup";
     }
 }

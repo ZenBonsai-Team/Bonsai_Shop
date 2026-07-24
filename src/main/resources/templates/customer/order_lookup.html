@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tra cứu đơn hàng - Bonsai Shop</title>
+
+    <!-- Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Styles -->
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+    <style>
+        .lookup-hero {
+            background: linear-gradient(135deg, #06210f 0%, #154d24 100%);
+            color: white;
+            padding: 50px 20px;
+            border-radius: 16px;
+            margin-top: 30px;
+            margin-bottom: 40px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(6, 33, 15, 0.15);
+        }
+        .lookup-hero h1 {
+            font-family: 'Cormorant Garamond', serif;
+            font-weight: 700;
+            font-size: 2.8rem;
+            margin-bottom: 12px;
+        }
+        .lookup-hero p {
+            color: #d1e7dd;
+            font-size: 1.05rem;
+            max-width: 600px;
+            margin: 0 auto 30px;
+        }
+        .search-box-card {
+            background: white;
+            border-radius: 12px;
+            padding: 10px;
+            max-width: 580px;
+            margin: 0 auto;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+        }
+        .search-input-group {
+            display: flex;
+            gap: 8px;
+        }
+        .search-input-group input {
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 14px 18px;
+            font-size: 1.05rem;
+            font-family: monospace;
+            letter-spacing: 0.5px;
+        }
+        .search-input-group input:focus {
+            border-color: #2e7d32;
+            box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.15);
+        }
+        .search-btn {
+            background-color: #2e7d32;
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        .search-btn:hover {
+            background-color: #1b5e20;
+            color: white;
+        }
+        .result-card {
+            background: white;
+            border-radius: 16px;
+            border: 1px solid #e9ecef;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+            overflow: hidden;
+            margin-bottom: 60px;
+        }
+        .result-header {
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+            padding: 24px 30px;
+        }
+        .status-badge-lg {
+            padding: 8px 16px;
+            border-radius: 30px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+
+<div th:replace="~{fragments/navbar :: navbar}" th:with="activePage='orderLookup'"></div>
+
+<div class="container">
+
+    <!-- HERO SEARCH -->
+    <div class="lookup-hero">
+        <h1>Tra cứu đơn hàng Bonsai</h1>
+        <p>Nhập mã đơn hàng được cấp cho bạn (ví dụ: BSMS-XXXXXX) để kiểm tra tình trạng xử lý và chi tiết đơn hàng trực tuyến.</p>
+
+        <div class="search-box-card">
+            <form th:action="@{/order/lookup}" method="get" class="search-input-group">
+                <input type="text" name="orderCode" class="form-control" 
+                       placeholder="Nhập mã đơn hàng (VD: BSMS-123456)" 
+                       th:value="${searchCode}" required autocomplete="off">
+                <button type="submit" class="search-btn">
+                    <i class="fa-solid fa-search me-2"></i>Tra cứu
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- KHÔNG TÌM THẤY KẾT QUẢ -->
+    <div class="alert alert-warning border-0 shadow-sm rounded-4 p-4 text-center my-4" th:if="${searched == true and order == null}">
+        <i class="fa-solid fa-triangle-exclamation text-warning display-5 mb-3"></i>
+        <h4 class="fw-bold text-dark mb-2">Không tìm thấy đơn hàng!</h4>
+        <p class="text-muted mb-0">Không tìm thấy đơn hàng nào có mã <strong class="text-danger font-monospace" th:text="${searchCode}">BSMS-XXXXXX</strong>. Vui lòng kiểm tra lại mã đơn hàng chính xác trên hóa đơn hoặc email/SĐT của bạn.</p>
+    </div>
+
+    <!-- KẾT QUẢ TÌM THẤY -->
+    <div class="result-card" th:if="${searched == true and order != null}">
+        
+        <!-- HEADER KẾT QUẢ -->
+        <div class="result-header d-flex flex-wrap justify-content-between align-items-center gap-3">
+            <div>
+                <span class="text-uppercase text-muted small fw-bold d-block mb-1">KẾT QUẢ TRA CỨU ĐƠN HÀNG</span>
+                <h3 class="fw-bold text-success font-monospace mb-0" th:text="${order.orderCode}">BSMS-123456</h3>
+                <span class="text-muted small">Ngày đặt hàng: <strong th:text="${#temporals.format(order.orderDate, 'dd/MM/yyyy HH:mm')}">12/06/2025 14:30</strong></span>
+            </div>
+
+            <div>
+                <span th:if="${order.orderStatus == 'PENDING'}" class="status-badge-lg bg-warning-subtle text-warning-emphasis border border-warning-subtle">
+                    <i class="fa-solid fa-clock me-1"></i>Chờ xác nhận
+                </span>
+                <span th:if="${order.orderStatus == 'VERIFIED'}" class="status-badge-lg bg-info-subtle text-info-emphasis border border-info-subtle">
+                    <i class="fa-solid fa-circle-check me-1"></i>Đã duyệt
+                </span>
+                <span th:if="${order.orderStatus == 'PAID'}" class="status-badge-lg bg-primary-subtle text-primary border border-primary-subtle">
+                    <i class="fa-solid fa-credit-card me-1"></i>Đã thanh toán
+                </span>
+                <span th:if="${order.orderStatus == 'PROCESSING'}" class="status-badge-lg bg-info-subtle text-info-emphasis border border-info-subtle">
+                    <i class="fa-solid fa-gears me-1"></i>Đang xử lý
+                </span>
+                <span th:if="${order.orderStatus == 'SHIPPED'}" class="status-badge-lg bg-warning-subtle text-warning-emphasis border border-warning-subtle">
+                    <i class="fa-solid fa-truck me-1"></i>Đang giao hàng
+                </span>
+                <span th:if="${order.orderStatus == 'COMPLETED'}" class="status-badge-lg bg-success-subtle text-success border border-success-subtle">
+                    <i class="fa-solid fa-circle-check me-1"></i>Hoàn thành
+                </span>
+                <span th:if="${order.orderStatus == 'CANCELLED'}" class="status-badge-lg bg-danger-subtle text-danger border border-danger-subtle">
+                    <i class="fa-solid fa-circle-xmark me-1"></i>Đã hủy
+                </span>
+                <span th:if="${order.orderStatus == 'REJECTED'}" class="status-badge-lg bg-danger-subtle text-danger border border-danger-subtle">
+                    <i class="fa-solid fa-ban me-1"></i>Từ chối
+                </span>
+            </div>
+        </div>
+
+        <!-- BODY KẾT QUẢ -->
+        <div class="p-4">
+
+            <!-- THÔNG TIN NGƯỜI NHẬN & VẬN CHUYỂN -->
+            <div class="row g-4 mb-4">
+                <div class="col-md-6">
+                    <div class="p-3 bg-light rounded-3 h-100 border">
+                        <h6 class="fw-bold text-success mb-3"><i class="fa-solid fa-user me-2"></i>Thông tin người nhận</h6>
+                        <p class="mb-2 text-dark"><strong>Họ tên:</strong> <span th:text="${order.customerName}">Bùi Nam Kha</span></p>
+                        <p class="mb-2 text-dark"><strong>Số điện thoại:</strong> <span th:text="${order.customerPhone}">0987654321</span></p>
+                        <p class="mb-2 text-dark"><strong>Email:</strong> <span th:text="${order.customerEmail}">email@example.com</span></p>
+                        <p class="mb-0 text-dark"><strong>Địa chỉ giao:</strong> <span th:text="${order.shippingAddress}">123 Nguyễn Văn Cừ, Q5, TP.HCM</span></p>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="p-3 bg-light rounded-3 h-100 border">
+                        <h6 class="fw-bold text-success mb-3"><i class="fa-solid fa-circle-info me-2"></i>Thông tin giao dịch</h6>
+                        <p class="mb-2 text-dark"><strong>Hình thức đặt:</strong> <span class="badge bg-secondary" th:text="${order.orderType}">ONLINE</span></p>
+                        <p class="mb-2 text-dark"><strong>Tổng số tiền:</strong> <strong class="text-success fs-5 ms-1" th:text="${#numbers.formatDecimal(order.totalAmount, 0, 'COMMA', 0, 'POINT')} + ' ₫'">2.500.000 ₫</strong></p>
+                        <p class="mb-0 text-muted small" th:if="${order.notes != null and !order.notes.isEmpty()}">
+                            <strong>Ghi chú từ khách/nhà vườn:</strong> <span th:text="${order.notes}">Ghi chú đơn...</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TABLE SẢN PHẨM -->
+            <h6 class="fw-bold text-dark mb-3"><i class="fa-solid fa-cubes text-success me-2"></i>Danh sách sản phẩm trong đơn hàng</h6>
+            <div class="table-responsive mb-4">
+                <table class="table table-bordered align-middle">
+                    <thead class="table-light small text-uppercase">
+                        <tr>
+                            <th>Sản phẩm</th>
+                            <th class="text-center">Đơn giá</th>
+                            <th class="text-center">Số lượng</th>
+                            <th class="text-end">Thành tiền</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="detail : ${order.orderDetails}">
+                            <td>
+                                <div class="d-flex align-items-center gap-3">
+                                    <img th:src="${detail.product != null and detail.product.firstImageUrl != null ? detail.product.firstImageUrl : '/images/bonsai-1.png'}" 
+                                         onerror="this.onerror=null;this.src='/images/bonsai-1.png';"
+                                         alt="Product" class="rounded" style="width: 54px; height: 54px; object-fit: cover;">
+                                    <div>
+                                        <div class="fw-bold text-dark fs-6" th:text="${detail.product != null ? detail.product.productName : 'Sản phẩm'}">Bonsai Tùng Cối VIP</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="text-center" th:text="${#numbers.formatDecimal(detail.priceAtPurchase, 0, 'COMMA', 0, 'POINT')} + ' ₫'">1.000.000 ₫</td>
+                            <td class="text-center fw-bold" th:text="${detail.quantity}">1</td>
+                            <td class="text-end fw-bold text-dark" th:text="${#numbers.formatDecimal(detail.priceAtPurchase * detail.quantity, 0, 'COMMA', 0, 'POINT')} + ' ₫'">1.000.000 ₫</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- TỔNG KẾT TÀI CHÍNH -->
+            <div class="p-3 bg-light rounded-3 text-end ms-auto" style="max-width: 450px;">
+                <div class="d-flex justify-content-between mb-2" th:if="${order.craneFee != null and order.craneFee > 0}">
+                    <span class="text-muted">Phí xe cẩu:</span>
+                    <span class="fw-semibold" th:text="${#numbers.formatDecimal(order.craneFee, 0, 'COMMA', 0, 'POINT')} + ' ₫'">0 ₫</span>
+                </div>
+                <div class="d-flex justify-content-between mb-2" th:if="${order.shippingFee != null and order.shippingFee > 0}">
+                    <span class="text-muted">Phí vận chuyển:</span>
+                    <span class="fw-semibold" th:text="${#numbers.formatDecimal(order.shippingFee, 0, 'COMMA', 0, 'POINT')} + ' ₫'">0 ₫</span>
+                </div>
+                <div class="d-flex justify-content-between mb-2" th:if="${order.depositAmount != null and order.depositAmount > 0}">
+                    <span class="text-muted">Đã đặt cọc:</span>
+                    <span class="fw-semibold text-primary" th:text="${#numbers.formatDecimal(order.depositAmount, 0, 'COMMA', 0, 'POINT')} + ' ₫'">0 ₫</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                    <span class="fw-bold text-dark fs-5">TỔNG THÀNH TIỀN:</span>
+                    <span class="fw-bold text-success fs-4" th:text="${#numbers.formatDecimal(order.totalAmount, 0, 'COMMA', 0, 'POINT')} + ' ₫'">2.500.000 ₫</span>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+<div th:replace="~{fragments/footer :: footer}"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
