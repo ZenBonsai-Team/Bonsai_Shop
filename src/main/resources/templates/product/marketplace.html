@@ -380,13 +380,23 @@
                             Reason: These fields are not displayed directly on the grid card UI layout.
                             -->
                             
-                            <div class="mt-2">
-                                <!-- Add to Cart / Disabled button based on status -->
-                                <button sec:authorize="!hasAnyRole('OWNER', 'ARTISAN', 'MODERATOR', 'CONTENT_MODERATOR')" th:if="${product.productStatus == 'AVAILABLE'}" class="btn-card-cart-outline" th:onclick="'addToCart(' + ${product.productId} + ')'"><i class="fa-solid fa-cart-shopping"></i> Add to Cart</button>
-                                <button th:if="${product.productStatus == 'RESERVED'}" class="btn-card-disabled" disabled>Reserved</button>
-                                <button th:if="${product.productStatus == 'SOLD'}" class="btn-card-disabled" disabled>Sold</button>
-                                
-                                <a th:href="@{'/product/' + ${product.productId}}" class="card-view-details-link">View Details →</a>
+                            <div class="card-action-row">
+                                <a th:href="@{'/product/' + ${product.productId}}" class="btn-card-view-details">Xem chi tiết</a>
+                                <button sec:authorize="!hasAnyRole('OWNER', 'ARTISAN', 'MODERATOR', 'CONTENT_MODERATOR')" 
+                                        th:if="${product.productStatus == 'AVAILABLE'}" 
+                                        type="button" 
+                                        class="btn-card-cart-icon" 
+                                        th:onclick="'addToCart(' + ${product.productId} + ')'" 
+                                        title="Thêm vào giỏ hàng">
+                                    <i class="fa-solid fa-cart-shopping"></i>
+                                </button>
+                                <button th:if="${product.productStatus == 'RESERVED' || product.productStatus == 'SOLD'}" 
+                                        type="button" 
+                                        class="btn-card-cart-icon btn-card-disabled" 
+                                        disabled 
+                                        title="Đã đặt / Đã bán">
+                                    <i class="fa-solid fa-lock"></i>
+                                </button>
                             </div>
                         </div>
                     </div>

@@ -446,6 +446,70 @@ h1, h2, h3, h4, h5, h6, .serif-text {
     font-size: 0.7rem;
 }
 
+/* --- PRODUCT CARD ACTION LAYOUT (HORIZONTAL FLEXBOX) --- */
+.card-action-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.btn-card-view-details {
+    flex: 1;
+    height: 40px;
+    background-color: var(--primary-color);
+    color: #ffffff;
+    font-family: var(--font-sans);
+    font-size: 0.78rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    border: 1px solid var(--primary-color);
+    border-radius: 4px;
+    transition: var(--transition);
+    box-sizing: border-box;
+}
+
+.btn-card-view-details:hover {
+    background-color: var(--primary-hover);
+    color: #ffffff;
+    border-color: var(--primary-hover);
+    text-decoration: none;
+}
+
+.btn-card-cart-icon {
+    width: 44px;
+    height: 40px;
+    flex-shrink: 0;
+    background-color: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--primary-color);
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: var(--transition);
+    box-sizing: border-box;
+    padding: 0;
+}
+
+.btn-card-cart-icon:hover:not(:disabled) {
+    background-color: var(--primary-color);
+    color: #ffffff;
+    border-color: var(--primary-color);
+}
+
+.btn-card-cart-icon:disabled {
+    background-color: #F5F5F5;
+    border-color: var(--border-color);
+    color: #9E9E9E;
+    cursor: not-allowed;
+}
+
 .btn-card-cart-outline {
     width: 100%;
     background-color: transparent;
@@ -469,15 +533,12 @@ h1, h2, h3, h4, h5, h6, .serif-text {
 }
 
 .btn-card-disabled {
-    width: 100%;
     background-color: #F5F5F5;
     border: 1px solid var(--border-color);
     color: #9E9E9E;
     font-family: var(--font-sans);
     font-size: 0.75rem;
     font-weight: 600;
-    padding: 9px 0;
-    text-align: center;
     cursor: not-allowed;
 }
 
