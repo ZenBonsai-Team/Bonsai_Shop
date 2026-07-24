@@ -4,7 +4,9 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "artisan_profile")
+@Table(name = "artisan_profile", uniqueConstraints = {
+        @UniqueConstraint(name = "uq_artisan_profile_user_id", columnNames = "UserID")
+})
 @Getter
 @Setter
 @NoArgsConstructor
@@ -17,7 +19,7 @@ public class ArtisanProfile {
     @Column(name = "ArtisanID")
     private Integer artisanId;
 
-    @Column(name = "UserID")
+    @Column(name = "UserID", unique = true)
     private Integer userId;
 
     @Column(name = "FullName", nullable = false, length = 255)

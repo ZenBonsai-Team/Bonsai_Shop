@@ -126,6 +126,4 @@ public class ProfileController {
         return "customer/profile_update";
     }
 
-
-
 }

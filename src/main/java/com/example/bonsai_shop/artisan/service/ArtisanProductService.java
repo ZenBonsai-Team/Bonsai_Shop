@@ -10,7 +10,6 @@ import com.example.bonsai_shop.entity.ProductTag;
 import com.example.bonsai_shop.entity.Tag;
 import com.example.bonsai_shop.entity.User;
 import com.example.bonsai_shop.entity.Variety;
-import com.example.bonsai_shop.product.repository.ArtisanProfileRepository;
 import com.example.bonsai_shop.product.repository.CategoryRepository;
 import com.example.bonsai_shop.product.repository.ProductMediaRepository;
 import com.example.bonsai_shop.product.repository.ProductRepository;
@@ -48,8 +47,8 @@ public class ArtisanProductService {
     private final TagRepository tagRepository;
     private final VarietyRepository varietyRepository;
     private final UserRepository userRepository;
-    private final ArtisanProfileRepository artisanProfileRepository;
     private final ArtisanMediaStorageService mediaStorageService;
+    private final ArtisanProfileService artisanProfileService;
 
     public User getArtisanUser(String email) {
         return userRepository.findByEmail(email)
@@ -57,9 +56,7 @@ public class ArtisanProductService {
     }
 
     public ArtisanProfile getArtisanProfile(String email) {
-        User artisanUser = getArtisanUser(email);
-        return artisanProfileRepository.findByUserId(artisanUser.getUserId())
-                .orElseThrow(() -> new RuntimeException("Tài khoản artisan chưa có hồ sơ artisan_profile!"));
+        return artisanProfileService.getOrCreateProfile(email);
     }
 
     public List<Product> getMyProducts(String artisanEmail) {
@@ -483,3 +480,4 @@ public class ArtisanProductService {
         return suffix.toString();
     }
 }
+
