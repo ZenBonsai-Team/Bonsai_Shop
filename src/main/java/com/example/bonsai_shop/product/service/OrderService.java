@@ -60,6 +60,11 @@ public class OrderService {
         return orderRepository.searchMyOrders(moderatorId, status, search, pageable);
     }
 
+    @Transactional(readOnly = true)
+    public List<Order> getOrdersByCustomerId(Integer customerId) {
+        return orderRepository.findByCustomerUserIdWithDetailsOrderByOrderDateDesc(customerId);
+    }
+
     private Sort resolveSort(String sort) {
         if ("date_asc".equals(sort)) {
             return Sort.by(Sort.Direction.ASC, "orderDate");
@@ -75,6 +80,14 @@ public class OrderService {
     @Transactional(readOnly = true)
     public Order getOrderByCode(String orderCode) {
         return orderRepository.findByOrderCode(orderCode).orElse(null);
+    }
+
+    @Transactional(readOnly = true)
+    public Order getOrderByCodeWithDetails(String orderCode) {
+        if (orderCode == null || orderCode.trim().isEmpty()) {
+            return null;
+        }
+        return orderRepository.findByOrderCodeWithDetails(orderCode.trim()).orElse(null);
     }
 
     @Transactional(readOnly = true)

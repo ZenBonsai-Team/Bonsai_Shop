@@ -61,6 +61,9 @@ public class SecurityConfig {
                                                                 "/css/**", // ← cho phép CSS
                                                                 "/js/**", // ← cho phép JS
                                                                 "/images/**", // ← cho phép images
+                                                                "/lookup", // ← cho phép truy cập /lookup
+                                                                "/order/lookup", // ← cho phép khách tra cứu đơn hàng theo mã
+                                                                "/orders/lookup", // ← cho phép truy cập /orders/lookup
                                                                 "/api/orders", // ← tạm thời cho phép để test API chính
                                                                 "/api/orders/**", // ← tạm thời cho phép để test API con
                                                                 "/api/products/**", // ← cho phép lấy thông tin chi tiết sản phẩm

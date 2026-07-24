@@ -1,5 +1,6 @@
 package com.example.bonsai_shop.product.controller;
 
+import com.example.bonsai_shop.config.SecurityUtils;
 import com.example.bonsai_shop.config.VNPayConfig;
 import com.example.bonsai_shop.entity.Order;
 import com.example.bonsai_shop.entity.OrderDetail;
@@ -18,7 +19,9 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
@@ -99,14 +102,11 @@ public class OrderApiController {
             @RequestParam(defaultValue = "date_desc") String sort,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "8") int limit,
-            @AuthenticationPrincipal UserDetails currentUser) {
+            @AuthenticationPrincipal Object principal) {
 
-        if (currentUser == null) {
-            return ResponseEntity.status(401).build();
-        }
-        User moderator = userRepository.findByEmail(currentUser.getUsername()).orElse(null);
+        User moderator = SecurityUtils.getCurrentUser(principal, userRepository);
         if (moderator == null) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.status(401).build();
         }
 
         Page<Order> orderPage = orderService.getMyOrders(moderator.getUserId(), search, status, sort, page, limit);
@@ -125,13 +125,10 @@ public class OrderApiController {
 
     @GetMapping("/my-stats")
     public ResponseEntity<Map<String, Long>> getMyStats(
-            @AuthenticationPrincipal UserDetails currentUser) {
-        if (currentUser == null) {
-            return ResponseEntity.status(401).build();
-        }
-        User moderator = userRepository.findByEmail(currentUser.getUsername()).orElse(null);
+            @AuthenticationPrincipal Object principal) {
+        User moderator = SecurityUtils.getCurrentUser(principal, userRepository);
         if (moderator == null) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.status(401).build();
         }
         return ResponseEntity.ok(orderService.getModeratorPersonalKPIs(moderator.getUserId()));
     }
@@ -139,19 +136,14 @@ public class OrderApiController {
     @PostMapping("/{orderCode}/claim")
     public ResponseEntity<Map<String, Object>> claimOrder(
             @PathVariable String orderCode,
-            @AuthenticationPrincipal UserDetails currentUser) {
+            @AuthenticationPrincipal Object principal) {
 
         Map<String, Object> response = new HashMap<>();
-        if (currentUser == null) {
+        User moderator = SecurityUtils.getCurrentUser(principal, userRepository);
+        if (moderator == null) {
             response.put("success", false);
             response.put("message", "Chưa đăng nhập.");
             return ResponseEntity.status(401).body(response);
-        }
-        User moderator = userRepository.findByEmail(currentUser.getUsername()).orElse(null);
-        if (moderator == null) {
-            response.put("success", false);
-            response.put("message", "Người dùng không hợp lệ.");
-            return ResponseEntity.badRequest().body(response);
         }
 
         try {
@@ -173,19 +165,14 @@ public class OrderApiController {
     @PostMapping("/{orderCode}/unclaim")
     public ResponseEntity<Map<String, Object>> unclaimOrder(
             @PathVariable String orderCode,
-            @AuthenticationPrincipal UserDetails currentUser) {
+            @AuthenticationPrincipal Object principal) {
 
         Map<String, Object> response = new HashMap<>();
-        if (currentUser == null) {
+        User moderator = SecurityUtils.getCurrentUser(principal, userRepository);
+        if (moderator == null) {
             response.put("success", false);
             response.put("message", "Chưa đăng nhập.");
             return ResponseEntity.status(401).body(response);
-        }
-        User moderator = userRepository.findByEmail(currentUser.getUsername()).orElse(null);
-        if (moderator == null) {
-            response.put("success", false);
-            response.put("message", "Người dùng không hợp lệ.");
-            return ResponseEntity.badRequest().body(response);
         }
 
         try {
@@ -227,20 +214,14 @@ public class OrderApiController {
     public ResponseEntity<Map<String, Object>> verifyOrder(
             @PathVariable String orderCode,
             @RequestBody Map<String, Object> payload,
-            @AuthenticationPrincipal UserDetails currentUser) {
+            @AuthenticationPrincipal Object principal) {
 
         Map<String, Object> response = new HashMap<>();
-        if (currentUser == null) {
+        User moderator = SecurityUtils.getCurrentUser(principal, userRepository);
+        if (moderator == null) {
             response.put("success", false);
             response.put("message", "Chưa đăng nhập hệ thống.");
             return ResponseEntity.status(401).body(response);
-        }
-
-        User moderator = userRepository.findByEmail(currentUser.getUsername()).orElse(null);
-        if (moderator == null) {
-            response.put("success", false);
-            response.put("message", "Người dùng không hợp lệ.");
-            return ResponseEntity.badRequest().body(response);
         }
 
         BigDecimal craneFee = new BigDecimal(payload.getOrDefault("craneFee", 0).toString());
@@ -260,20 +241,14 @@ public class OrderApiController {
     public ResponseEntity<Map<String, Object>> rejectOrder(
             @PathVariable String orderCode,
             @RequestBody Map<String, String> payload,
-            @AuthenticationPrincipal UserDetails currentUser) {
+            @AuthenticationPrincipal Object principal) {
 
         Map<String, Object> response = new HashMap<>();
-        if (currentUser == null) {
+        User moderator = SecurityUtils.getCurrentUser(principal, userRepository);
+        if (moderator == null) {
             response.put("success", false);
             response.put("message", "Chưa đăng nhập hệ thống.");
             return ResponseEntity.status(401).body(response);
-        }
-
-        User moderator = userRepository.findByEmail(currentUser.getUsername()).orElse(null);
-        if (moderator == null) {
-            response.put("success", false);
-            response.put("message", "Người dùng không hợp lệ.");
-            return ResponseEntity.badRequest().body(response);
         }
 
         String reason = payload.getOrDefault("reason", "");
@@ -297,28 +272,30 @@ public class OrderApiController {
     @Transactional
     public ResponseEntity<Map<String, Object>> checkout(
             @Valid @RequestBody PurchaseOrderRequestDTO dto,
-            @AuthenticationPrincipal UserDetails currentUser,
+            @AuthenticationPrincipal Object principal,
             HttpServletRequest request) throws UnsupportedEncodingException {
 
         Map<String, Object> response = new HashMap<>();
 
-        if (currentUser == null) {
+        User customer = SecurityUtils.getCurrentUser(principal, userRepository);
+        if (customer == null) {
             response.put("success", false);
             response.put("message", "Vui lòng đăng nhập trước khi thanh toán.");
             return ResponseEntity.status(401).body(response);
         }
 
-        boolean isStaffOrAdmin = currentUser.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_OWNER") || a.getAuthority().equals("ROLE_ARTISAN") 
-                        || a.getAuthority().equals("ROLE_MODERATOR") || a.getAuthority().equals("ROLE_CONTENT_MODERATOR")
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        boolean isStaffOrAdmin = auth != null && auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_OWNER") || a.getAuthority().equals("ROLE_ARTISAN")
+                        || a.getAuthority().equals("ROLE_MODERATOR")
+                        || a.getAuthority().equals("ROLE_CONTENT_MODERATOR")
                         || a.getAuthority().equals("ROLE_ADMIN") || a.getAuthority().equals("ROLE_SELLER"));
         if (isStaffOrAdmin) {
             response.put("success", false);
-            response.put("message", "Tài khoản quản trị, nhà vườn hoặc kiểm duyệt viên không được phép thực hiện đặt hàng!");
+            response.put("message",
+                    "Tài khoản quản trị, nhà vườn hoặc kiểm duyệt viên không được phép thực hiện đặt hàng!");
             return ResponseEntity.status(403).body(response);
         }
-
-        User customer = userRepository.findByEmail(currentUser.getUsername()).orElse(null);
         if (customer == null) {
             response.put("success", false);
             response.put("message", "Tài khoản người dùng không hợp lệ.");
@@ -338,7 +315,8 @@ public class OrderApiController {
             Product prod = item.getProduct();
             if (!"AVAILABLE".equalsIgnoreCase(prod.getProductStatus())) {
                 response.put("success", false);
-                response.put("message", "Tác phẩm '" + prod.getProductName() + "' đã được bán hoặc giữ chỗ bởi khách hàng khác!");
+                response.put("message",
+                        "Tác phẩm '" + prod.getProductName() + "' đã được bán hoặc giữ chỗ bởi khách hàng khác!");
                 return ResponseEntity.badRequest().body(response);
             }
         }
@@ -457,7 +435,8 @@ public class OrderApiController {
         List<OrderResponseDTO.OrderItemDTO> itemsDTO = new ArrayList<>();
 
         if (order.getOrderDetails() != null && !order.getOrderDetails().isEmpty()) {
-            // First item (for backwards compatibility if any client code still uses .product)
+            // First item (for backwards compatibility if any client code still uses
+            // .product)
             OrderDetail detail0 = order.getOrderDetails().get(0);
             Product prod0 = detail0.getProduct();
             if (prod0 != null) {
