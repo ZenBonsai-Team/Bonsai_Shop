@@ -2,9 +2,11 @@
 
 /* Page Header */
 .community-header {
-    background-color: var(--bg-beige);
-    padding: 60px 0;
+    background: linear-gradient(rgba(247, 246, 242, 0.88), rgba(247, 246, 242, 0.88)), url('https://images.unsplash.com/photo-1502082553048-f009c37129b9?auto=format&fit=crop&q=80&w=1200') no-repeat center center;
+    background-size: cover;
+    padding: 80px 0;
     border-bottom: 1px solid var(--border-color);
+    text-align: center;
 }
 
 .community-pill-badge {
@@ -35,8 +37,8 @@
     font-size: 0.95rem;
     line-height: 1.6;
     color: var(--text-secondary);
-    max-width: 600px;
-    margin-bottom: 25px;
+    max-width: 650px;
+    margin: 0 auto 25px auto;
 }
 
 /* Search and Write bar */
@@ -45,6 +47,7 @@
     gap: 15px;
     flex-wrap: wrap;
     align-items: center;
+    justify-content: center;
 }
 
 .search-input-wrap {

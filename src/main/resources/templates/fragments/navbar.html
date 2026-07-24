@@ -18,35 +18,48 @@
             <div class="collapse navbar-collapse" id="navbarContent">
                 <ul class="navbar-nav mx-auto mb-2 mb-lg-0">
                     <li class="nav-item">
-                        <a class="nav-link nav-link-custom" th:classappend="${activePage == 'home'} ? 'active' : ''" th:href="@{/home}">Home</a>
+                        <a class="nav-link nav-link-custom" th:classappend="${activePage == 'home'} ? 'active' : ''" th:href="@{/home}" th:text="#{nav.home}">Trang chủ</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link nav-link-custom" th:classappend="${activePage == 'marketplace'} ? 'active' : ''" th:href="@{/marketplace}">Bonsai Marketplace</a>
+                        <a class="nav-link nav-link-custom" th:classappend="${activePage == 'marketplace'} ? 'active' : ''" th:href="@{/marketplace}" th:text="#{nav.marketplace}">Sàn giao dịch</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link nav-link-custom" th:classappend="${activePage == 'community'} ? 'active' : ''" th:href="@{/community}">Community</a>
+                        <a class="nav-link nav-link-custom" th:classappend="${activePage == 'community'} ? 'active' : ''" th:href="@{/community}" th:text="#{nav.community}">Cộng đồng</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link nav-link-custom" th:classappend="${activePage == 'luxury'} ? 'active' : ''" th:href="@{/bonsai-luxury}">VIP Elite Showroom</a>
+                        <a class="nav-link nav-link-custom" th:classappend="${activePage == 'luxury'} ? 'active' : ''" th:href="@{/bonsai-luxury}" th:text="#{nav.luxury}">Triển lãm VIP</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link nav-link-custom" th:classappend="${activePage == 'appointments'} ? 'active' : ''" th:href="@{/appointments}">My Appointment</a>
+                        <a class="nav-link nav-link-custom" th:classappend="${activePage == 'appointments'} ? 'active' : ''" th:href="@{/appointments}" th:text="#{nav.appointments}">Lịch hẹn của tôi</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link nav-link-custom" th:classappend="${activePage == 'contact'} ? 'active' : ''" th:href="@{/contact}">Contact</a>
+                        <a class="nav-link nav-link-custom" th:classappend="${activePage == 'contact'} ? 'active' : ''" th:href="@{/contact}" th:text="#{nav.contact}">Liên hệ</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link nav-link-custom" th:classappend="${activePage == 'orderLookup'} ? 'active' : ''" th:href="@{/order/lookup}">
-                            <i class="fa-solid fa-magnifying-glass me-1 small"></i>Tra cứu đơn hàng
+                            <i class="fa-solid fa-magnifying-glass me-1 small"></i><span th:text="#{nav.order_lookup}">Tra cứu đơn hàng</span>
                         </a>
                     </li>
                 </ul>
 
                 <!-- Auth & Cart -->
                 <div class="d-flex align-items-center gap-3">
+                    <!-- Language Selector -->
+                    <div class="dropdown" style="position: relative;">
+                        <button class="btn btn-link text-dark p-0 border-0 text-decoration-none shadow-none nav-icon-link dropdown-toggle" 
+                                type="button" id="langDropdown" onclick="toggleLangDropdown(event)" aria-expanded="false" title="Ngôn ngữ / Language" style="font-size: 0.95rem;">
+                            <i class="fa-solid fa-globe"></i>
+                            <span class="ms-1 small fw-bold" th:text="${#locale.language == 'en' ? 'EN' : 'VI'}">VI</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end lang-dropdown-menu" id="langDropdownMenu" aria-labelledby="langDropdown">
+                            <li><a class="dropdown-item" href="javascript:void(0)" onclick="changeLanguage('vi')">Tiếng Việt</a></li>
+                            <li><a class="dropdown-item" href="javascript:void(0)" onclick="changeLanguage('en')">English</a></li>
+                        </ul>
+                    </div>
+
                     <div sec:authorize="isAnonymous()" class="d-flex align-items-center gap-2">
-                        <a th:href="@{/login}" class="btn-auth-signin">Đăng nhập</a>
-                        <a th:href="@{/register}" class="btn btn-auth-register">Đăng ký</a>
+                        <a th:href="@{/login}" class="btn-auth-signin" th:text="#{nav.login}">Đăng nhập</a>
+                        <a th:href="@{/register}" class="btn btn-auth-register" th:text="#{nav.register}">Đăng ký</a>
                     </div>
                     <div sec:authorize="isAuthenticated()" class="d-flex align-items-center gap-2">
                         <!-- Nút Dashboard cho Owner/Moderator/Artisan -->
@@ -338,6 +351,28 @@
                 alert("Có lỗi kết nối đến máy chủ.");
             });
         }
+
+        function changeLanguage(lang) {
+            const url = new URL(window.location.href);
+            url.searchParams.set('lang', lang);
+            window.location.href = url.toString();
+        }
+
+        function toggleLangDropdown(event) {
+            if (event) event.stopPropagation();
+            const menu = document.getElementById('langDropdownMenu');
+            if (menu) {
+                menu.classList.toggle('show');
+            }
+        }
+
+        document.addEventListener('click', function(e) {
+            const menu = document.getElementById('langDropdownMenu');
+            const btn = document.getElementById('langDropdown');
+            if (menu && btn && !menu.contains(e.target) && !btn.contains(e.target)) {
+                menu.classList.remove('show');
+            }
+        });
     </script>
 </div>
 </body>

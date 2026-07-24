@@ -594,7 +594,8 @@ h1, h2, h3, h4, h5, h6, .serif-text {
 }
 
 .service-label-title {
-    font-size: 1rem;
+    font-family: var(--font-sans);
+    font-size: 1.05rem;
     font-weight: 600;
     color: var(--primary-color);
     margin-bottom: 10px;
@@ -812,7 +813,7 @@ h1, h2, h3, h4, h5, h6, .serif-text {
     font-size: 0.95rem;
     line-height: 1.7;
     color: rgba(255, 255, 255, 0.9);
-    max-width: 680px;
+    max-width: 1000px;
     margin: 0 auto 30px;
     font-weight: 400;
 }
@@ -879,4 +880,34 @@ html {
 
 @view-transition {
     navigation: auto;
+}
+
+/* Custom Language Dropdown styling */
+.lang-dropdown-menu {
+    position: absolute !important;
+    right: 0 !important;
+    left: auto !important;
+    z-index: 10000 !important;
+    border-radius: 12px !important;
+    border: none !important;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08) !important;
+    background-color: #ffffff !important;
+    min-width: 130px !important;
+    padding: 8px 0 !important;
+    margin-top: 8px !important;
+}
+
+.lang-dropdown-menu .dropdown-item {
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+    padding: 8px 16px !important;
+    color: var(--text-dark, #2d2d2d) !important;
+    font-weight: 500 !important;
+    transition: background-color 0.2s ease !important;
+    display: block !important;
+    text-align: left !important;
+}
+
+.lang-dropdown-menu .dropdown-item:hover {
+    background-color: rgba(28, 51, 34, 0.05) !important;
+    color: var(--primary-color, #1c3322) !important;
 }

@@ -2,7 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="vi">
 
-<head th:replace="~{fragments/head :: head('Bonsai Shop - Trang Chủ', '/css/home.css')}"></head>
+<head th:replace="~{fragments/head :: head(#{home.title}, '/css/home.css')}"></head>
 
 <body>
 
@@ -19,13 +19,13 @@
     </button>
 
     <div class="hero-content">
-        <p>NGHỆ THUẬT SỐNG XANH</p>
+        <p th:text="#{home.hero.tag}">NGHỆ THUẬT SỐNG XANH</p>
         <h1>Bonsai Shop</h1>
-        <span>Khám phá vẻ đẹp tĩnh tại trong từng dáng cây</span>
+        <span th:text="#{home.hero.sub}">Khám phá vẻ đẹp tĩnh tại trong từng dáng cây</span>
     </div>
 
     <a th:href="@{/marketplace}" class="scroll-down">
-        CUỘN ĐỂ KHÁM PHÁ
+        <span th:text="#{home.hero.scroll}">CUỘN ĐỂ KHÁM PHÁ</span>
         <span>⌄</span>
     </a>
 </section>
@@ -34,10 +34,10 @@
 <section class="collection-section">
     <div class="collection-header">
         <div>
-            <p class="collection-tag">DÀNH CHO NHÀ SƯU TẦM</p>
-            <h2 class="collection-title">Bộ Sưu Tập Di Sản</h2>
+            <p class="collection-tag" th:text="#{home.collection.tag}">DÀNH CHO NHÀ SƯU TẦM</p>
+            <h2 class="collection-title" th:text="#{home.collection.title}">Bộ Sưu Tập Di Sản</h2>
         </div>
-        <a th:href="@{/marketplace}" class="collection-link">Xem tất cả sản phẩm →</a>
+        <a th:href="@{/marketplace}" class="collection-link" th:text="#{home.collection.view_all}">Xem tất cả sản phẩm →</a>
     </div>
 
     <!-- DANH SÁCH SẢN PHẨM -->
@@ -65,7 +65,7 @@
                 <!-- THÔNG TIN SẢN PHẨM -->
                 <div class="product-info">
                     <p class="product-age"
-                       th:text="${product.age != null ? 'TUỔI: ' + product.age + ' NĂM' : 'BONSAI'}">
+                       th:text="${product.age != null ? (#locale.language == 'en' ? 'AGE: ' + product.age + ' YEARS' : 'TUỔI: ' + product.age + ' NĂM') : 'BONSAI'}">
                         TUỔI: 65 NĂM
                     </p>
                     <h3 class="product-name" th:text="${product.productName}">
@@ -77,7 +77,8 @@
 
         <!-- Hiện thông báo nếu chưa có sản phẩm nào -->
         <div th:if="${topProducts == null or topProducts.isEmpty()}"
-             style="text-align:center; color:#888; padding:60px; width:100%;">
+             style="text-align:center; color:#888; padding:60px; width:100%;"
+             th:text="#{home.collection.empty}">
             Chưa có sản phẩm nào
         </div>
     </div>
@@ -87,14 +88,14 @@
     <div class="about-image"></div>
 
     <div class="about-content">
-        <p>TRIẾT LÝ CỦA CHÚNG TÔI</p>
-        <h2>Tại sao là<br>Bonsai Shop?</h2>
-        <h4>“Bonsai không chỉ là một cái cây, đó là một cuộc hành trình vượt thời gian.”</h4>
-        <span>
+        <p th:text="#{home.about.tag}">TRIẾT LÝ CỦA CHÚNG TÔI</p>
+        <h2 th:utext="#{home.about.title}">Tại sao là<br>Bonsai Shop?</h2>
+        <h4 th:text="#{home.about.quote}">“Bonsai không chỉ là một cái cây, đó là một cuộc hành trình vượt thời gian.”</h4>
+        <span th:text="#{home.about.desc}">
             Tại Bonsai Shop, chúng tôi không chỉ cung cấp những tác phẩm nghệ thuật sống.
             Chúng tôi chia sẻ tri thức, kinh nghiệm và sự tận tâm trong từng dáng cây.
         </span>
-        <a th:href="@{/marketplace}" class="outline-btn">Tìm hiểu thêm</a>
+        <a th:href="@{/marketplace}" class="outline-btn" th:text="#{home.about.more}">Tìm hiểu thêm</a>
     </div>
 </section>
 
@@ -104,29 +105,29 @@
     </div>
 
     <div class="standard-info">
-        <h2>Tiêu chuẩn Bonsai Shop</h2>
+        <h2 th:text="#{home.standard.title}">Tiêu chuẩn Bonsai Shop</h2>
 
         <div class="info-row">
-            <span>Nguồn gốc</span>
-            <strong>Vườn ươm Omiya, Nhật Bản</strong>
+            <span th:text="#{home.standard.origin}">Nguồn gốc</span>
+            <strong th:text="#{home.standard.origin.val}">Vườn ươm Omiya, Nhật Bản</strong>
         </div>
 
         <div class="info-row">
-            <span>Chế tác</span>
-            <strong>Nghệ nhân cấp quốc gia</strong>
+            <span th:text="#{home.standard.artisan}">Chế tác</span>
+            <strong th:text="#{home.standard.artisan.val}">Nghệ nhân cấp quốc gia</strong>
         </div>
 
         <div class="info-row">
-            <span>Dụng cụ</span>
-            <strong>Thép Masakuni rèn tay</strong>
+            <span th:text="#{home.standard.tool}">Dụng cụ</span>
+            <strong th:text="#{home.standard.tool.val}">Thép Masakuni rèn tay</strong>
         </div>
 
         <div class="info-row">
-            <span>Hậu mãi</span>
-            <strong>Bảo hành sinh trưởng 12 tháng</strong>
+            <span th:text="#{home.standard.warranty}">Hậu mãi</span>
+            <strong th:text="#{home.standard.warranty.val}">Bảo hành sinh trưởng 12 tháng</strong>
         </div>
 
-        <blockquote>
+        <blockquote th:text="#{home.standard.quote}">
             “Một tác phẩm luôn đi kèm chứng nhận danh tính và bộ hướng dẫn chăm sóc chuyên biệt.”
         </blockquote>
     </div>

@@ -107,16 +107,16 @@
 
     <!-- HERO SEARCH -->
     <div class="lookup-hero">
-        <h1>Tra cứu đơn hàng Bonsai</h1>
-        <p>Nhập mã đơn hàng được cấp cho bạn (ví dụ: BSMS-XXXXXX) để kiểm tra tình trạng xử lý và chi tiết đơn hàng trực tuyến.</p>
+        <h1 th:text="#{lookup.title}">Tra cứu đơn hàng Bonsai</h1>
+        <p th:text="#{lookup.subtitle}">Nhập mã đơn hàng được cấp cho bạn (ví dụ: BSMS-XXXXXX) để kiểm tra tình trạng xử lý và chi tiết đơn hàng trực tuyến.</p>
 
         <div class="search-box-card">
             <form th:action="@{/order/lookup}" method="get" class="search-input-group">
                 <input type="text" name="orderCode" class="form-control" 
-                       placeholder="Nhập mã đơn hàng (VD: BSMS-123456)" 
+                       th:placeholder="#{lookup.placeholder}" 
                        th:value="${searchCode}" required autocomplete="off">
                 <button type="submit" class="search-btn">
-                    <i class="fa-solid fa-search me-2"></i>Tra cứu
+                    <i class="fa-solid fa-search me-2"></i><span th:text="#{lookup.button}">Tra cứu</span>
                 </button>
             </form>
         </div>
@@ -125,8 +125,8 @@
     <!-- KHÔNG TÌM THẤY KẾT QUẢ -->
     <div class="alert alert-warning border-0 shadow-sm rounded-4 p-4 text-center my-4" th:if="${searched == true and order == null}">
         <i class="fa-solid fa-triangle-exclamation text-warning display-5 mb-3"></i>
-        <h4 class="fw-bold text-dark mb-2">Không tìm thấy đơn hàng!</h4>
-        <p class="text-muted mb-0">Không tìm thấy đơn hàng nào có mã <strong class="text-danger font-monospace" th:text="${searchCode}">BSMS-XXXXXX</strong>. Vui lòng kiểm tra lại mã đơn hàng chính xác trên hóa đơn hoặc email/SĐT của bạn.</p>
+        <h4 class="fw-bold text-dark mb-2" th:text="#{lookup.not_found}">Không tìm thấy đơn hàng!</h4>
+        <p class="text-muted mb-0"><span th:text="#{lookup.not_found_desc}">Không tìm thấy đơn hàng nào có mã</span> <strong class="text-danger font-monospace" th:text="${searchCode}">BSMS-XXXXXX</strong>. <span th:text="#{lookup.check_again}">Vui lòng kiểm tra lại mã đơn hàng chính xác trên hóa đơn hoặc email/SĐT của bạn.</span></p>
     </div>
 
     <!-- KẾT QUẢ TÌM THẤY -->
@@ -135,9 +135,9 @@
         <!-- HEADER KẾT QUẢ -->
         <div class="result-header d-flex flex-wrap justify-content-between align-items-center gap-3">
             <div>
-                <span class="text-uppercase text-muted small fw-bold d-block mb-1">KẾT QUẢ TRA CỨU ĐƠN HÀNG</span>
+                <span class="text-uppercase text-muted small fw-bold d-block mb-1" th:text="#{lookup.result_header}">KẾT QUẢ TRA CỨU ĐƠN HÀNG</span>
                 <h3 class="fw-bold text-success font-monospace mb-0" th:text="${order.orderCode}">BSMS-123456</h3>
-                <span class="text-muted small">Ngày đặt hàng: <strong th:text="${#temporals.format(order.orderDate, 'dd/MM/yyyy HH:mm')}">12/06/2025 14:30</strong></span>
+                <span class="text-muted small"><span th:text="#{lookup.order_date}">Ngày đặt hàng</span>: <strong th:text="${#temporals.format(order.orderDate, 'dd/MM/yyyy HH:mm')}">12/06/2025 14:30</strong></span>
             </div>
 
             <div>
