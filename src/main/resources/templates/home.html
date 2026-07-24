@@ -30,35 +30,55 @@
     </a>
 </section>
 
-<section class="collection">
-    <div class="section-heading">
+<!-- BỘ SƯU TẬP DI SẢN - TOP 5 XEM NHIỀU NHẤT -->
+<section class="collection-section">
+    <div class="collection-header">
         <div>
-            <p>DÀNH CHO NHÀ SƯU TẦM</p>
-            <h2>Bộ Sưu Tập Di Sản</h2>
+            <p class="collection-tag">DÀNH CHO NHÀ SƯU TẦM</p>
+            <h2 class="collection-title">Bộ Sưu Tập Di Sản</h2>
         </div>
-        <a th:href="@{/marketplace}">Xem tất cả tác phẩm</a>
+        <a th:href="@{/marketplace}" class="collection-link">Xem tất cả sản phẩm →</a>
     </div>
 
+    <!-- DANH SÁCH SẢN PHẨM -->
     <div class="product-grid">
-        <div class="product-card">
-            <img src="/images/bonsai-1.png" alt="Bonsai">
-            <p>TUỔI: 45 NĂM</p>
-            <h3>Shimpaku Juniper 'Eternity'</h3>
-            <strong>125.000.000 ₫</strong>
+        <div th:each="product : ${topProducts}" class="product-card">
+            <a th:href="@{'/product/' + ${product.productId}}" class="product-card-link">
+
+                <!-- ẢNH SẢN PHẨM -->
+                <div class="product-image-wrapper">
+                    <!-- Lấy ảnh thumbnail nếu có -->
+                    <img th:if="${product.productMedias != null and !product.productMedias.isEmpty()}"
+                         th:src="${product.productMedias[0].mediaUrl}"
+                         th:alt="${product.productName}"
+                         class="product-image"/>
+                    <!-- Placeholder nếu chưa có ảnh -->
+                    <div th:unless="${product.productMedias != null and !product.productMedias.isEmpty()}"
+                         class="product-image-placeholder">🌿</div>
+
+                    <!-- Badge lượt xem -->
+                    <div class="product-view-badge">
+                        👁 <span th:text="${product.viewCount}">0</span>
+                    </div>
+                </div>
+
+                <!-- THÔNG TIN SẢN PHẨM -->
+                <div class="product-info">
+                    <p class="product-age"
+                       th:text="${product.age != null ? 'TUỔI: ' + product.age + ' NĂM' : 'BONSAI'}">
+                        TUỔI: 65 NĂM
+                    </p>
+                    <h3 class="product-name" th:text="${product.productName}">
+                        Tên sản phẩm
+                    </h3>
+                </div>
+            </a>
         </div>
 
-        <div class="product-card">
-            <img src="/images/bonsai-2.png" alt="Bonsai">
-            <p>TUỔI: 80 NĂM</p>
-            <h3>Kuro-Matsu Black Pine</h3>
-            <strong>480.000.000 ₫</strong>
-        </div>
-
-        <div class="product-card">
-            <img src="/images/bonsai-3.png" alt="Bonsai">
-            <p>TUỔI: 30 NĂM</p>
-            <h3>Satsuki Azalea 'Grace'</h3>
-            <strong>85.000.000 ₫</strong>
+        <!-- Hiện thông báo nếu chưa có sản phẩm nào -->
+        <div th:if="${topProducts == null or topProducts.isEmpty()}"
+             style="text-align:center; color:#888; padding:60px; width:100%;">
+            Chưa có sản phẩm nào
         </div>
     </div>
 </section>

@@ -20,6 +20,15 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
     boolean existsByProductCode(String productCode);
     boolean existsByVarietyVarietyId(Integer varietyId);
     boolean existsBySegmentSegmentId(Integer segmentId);
+    List<Product> findTop5ByProductStatusOrderByViewCountDesc(String productStatus);
+   @Modifying
+    @Query("""
+        UPDATE Product p
+        SET p.viewCount = COALESCE(p.viewCount, 0) + 1
+        WHERE p.productId = :productId
+    """)
+    int incrementViewCount(@Param("productId") Integer productId);
+
 
     @Modifying
     @Query("""

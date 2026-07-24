@@ -6,6 +6,7 @@ import com.example.bonsai_shop.product.service.ProductService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.data.domain.Sort;
@@ -101,7 +102,10 @@ public class MarketplaceController {
     }
 
     @GetMapping({ "/products/detail", "/product/{id}" })
-    public String productDetail(@PathVariable(value = "id", required = false) Integer id, Model model) {
+    public String productDetail(
+            @PathVariable(value = "id", required = false) Integer id,
+            Authentication authentication,
+            Model model) {
         Product product = null;
         if (id != null) {
             product = productService.getProductById(id);
@@ -109,6 +113,12 @@ public class MarketplaceController {
             Page<Product> products = productService.getAllActiveProducts(PageRequest.of(0, 1));
             if (!products.isEmpty()) {
                 product = productService.getProductById(products.getContent().get(0).getProductId());
+            }
+        }
+        if (product != null) {
+            boolean viewCountIncremented = productService.incrementViewCountForCustomer(product.getProductId(), authentication);
+            if (viewCountIncremented) {
+                product.setViewCount((product.getViewCount() == null ? 0 : product.getViewCount()) + 1);
             }
         }
 

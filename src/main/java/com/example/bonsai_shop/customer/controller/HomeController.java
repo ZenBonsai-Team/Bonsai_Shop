@@ -1,20 +1,26 @@
 package com.example.bonsai_shop.customer.controller;
 
+import com.example.bonsai_shop.entity.Product;
 import com.example.bonsai_shop.entity.User;
 import com.example.bonsai_shop.customer.repository.UserRepository;
+import com.example.bonsai_shop.product.service.ProductService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+
+import java.util.List;
 
 @Controller
 @RequiredArgsConstructor
 public class HomeController {
 
     private final UserRepository userRepository;
+    private final ProductService productService;
 
     @GetMapping("/")
     public String index() {
@@ -40,6 +46,17 @@ public class HomeController {
             }
         }
         model.addAttribute("activePage", "home");
+
+        // Lấy top 5 sản phẩm xem nhiều nhất
+        List<Product> topProducts = productService.getTop5MostViewed();
+        model.addAttribute("topProducts", topProducts);
+
+        // Lấy email user nếu đã đăng nhập
+        if (principal instanceof UserDetails userDetails) {
+            model.addAttribute("email", userDetails.getUsername());
+        } else if (principal instanceof OAuth2User oAuth2User) {
+            model.addAttribute("email", oAuth2User.getAttribute("email"));
+        }
 
         return "home";
     }
@@ -81,4 +98,6 @@ public class HomeController {
     public String privacy() {
         return "redirect:/contact?tab=privacy";
     }
+
+
 }
