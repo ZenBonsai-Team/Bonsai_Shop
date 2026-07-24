@@ -267,6 +267,38 @@
             margin-right: 2px;
         }
 
+        .product-tag-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin: -8px 0 18px;
+        }
+        .product-tag-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            border: 1px solid rgba(181, 126, 44, 0.38);
+            border-radius: 999px;
+            background: linear-gradient(135deg, #FFF8E8, #F6E4BA);
+            color: #7A4D12;
+            padding: 6px 12px;
+            font-size: 0.74rem;
+            font-weight: 800;
+            letter-spacing: 0.04em;
+            box-shadow: 0 8px 18px rgba(94, 63, 17, 0.08);
+            transition: var(--transition);
+        }
+        .product-tag-chip::before {
+            content: '#';
+            color: var(--accent-color);
+            font-weight: 900;
+        }
+        .product-tag-chip:hover {
+            transform: translateY(-1px);
+            border-color: rgba(181, 126, 44, 0.7);
+            box-shadow: 0 12px 24px rgba(94, 63, 17, 0.14);
+        }
+
         /* --- PRICE PANEL --- */
         .price-panel {
             background-color: var(--bg-beige);
