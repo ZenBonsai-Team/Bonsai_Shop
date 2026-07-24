@@ -1,4 +1,4 @@
-package com.example.bonsai_shop.product.repository;
+package com.example.bonsai_shop.artisan.repository;
 
 import com.example.bonsai_shop.entity.ArtisanProfile;
 import org.springframework.data.jpa.repository.JpaRepository;

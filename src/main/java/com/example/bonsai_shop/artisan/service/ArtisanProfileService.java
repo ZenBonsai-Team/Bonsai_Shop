@@ -5,7 +5,7 @@ import com.example.bonsai_shop.customer.repository.UserRepository;
 import com.example.bonsai_shop.entity.ArtisanProfile;
 import com.example.bonsai_shop.entity.Role;
 import com.example.bonsai_shop.entity.User;
-import com.example.bonsai_shop.product.repository.ArtisanProfileRepository;
+import com.example.bonsai_shop.artisan.repository.ArtisanProfileRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
