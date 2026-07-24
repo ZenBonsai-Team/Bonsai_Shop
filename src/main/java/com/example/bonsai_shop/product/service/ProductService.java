@@ -2,8 +2,11 @@ package com.example.bonsai_shop.product.service;
 
 import java.math.BigDecimal;
 import java.util.List;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
 import com.example.bonsai_shop.entity.Product;
 import com.example.bonsai_shop.product.dto.ProductCardDTO;
@@ -70,5 +73,26 @@ public class ProductService {
             }
         }
         return product;
+    }
+
+    @Transactional
+    public boolean incrementViewCountForCustomer(Integer productId, Authentication authentication) {
+        if (productId == null || authentication == null || !authentication.isAuthenticated()) {
+            return false;
+        }
+
+        boolean isCustomer = authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .anyMatch("ROLE_CUSTOMER"::equals);
+
+        if (isCustomer) {
+            return productRepository.incrementViewCount(productId) > 0;
+        }
+        return false;
+    }
+
+    public List<Product> getTop5MostViewed() {
+        return productRepository
+                .findTop5ByProductStatusOrderByViewCountDesc("AVAILABLE");
     }
 }
