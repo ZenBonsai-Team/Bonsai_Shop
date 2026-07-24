@@ -30,7 +30,9 @@
                         <a class="nav-link nav-link-custom" th:classappend="${activePage == 'luxury'} ? 'active' : ''" th:href="@{/bonsai-luxury}">VIP Elite Showroom</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link nav-link-custom" href="#">Contact</a>
+                        <a class="nav-link nav-link-custom" th:classappend="${activePage == 'orderLookup'} ? 'active' : ''" th:href="@{/order/lookup}">
+                            <i class="fa-solid fa-magnifying-glass me-1 small"></i>Tra cứu đơn hàng
+                        </a>
                     </li>
                 </ul>
 

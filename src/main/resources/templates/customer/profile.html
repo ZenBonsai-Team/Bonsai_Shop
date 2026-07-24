@@ -57,7 +57,7 @@
                 Bài viết đã lưu
             </a>
 
-            <a th:href="@{/orders}">
+            <a href="#orderHistorySection">
                 <i class="fa-solid fa-bag-shopping"></i>
                 Đơn hàng
             </a>
@@ -176,54 +176,199 @@
         <div th:if="${error}" th:text="${error}" class="alert alert-error"></div>
 
         <!-- ORDER HISTORY -->
-        <section class="order-section">
+        <section class="order-section" id="orderHistorySection" style="scroll-margin-top: 20px;">
 
-            <div class="section-title">
+            <div class="section-title d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
                 <div>
-                    <p>LỊCH SỬ GIAO DỊCH</p>
-                    <h2>Đơn hàng gần đây</h2>
+                    <p class="text-uppercase text-muted small fw-bold mb-1">LỊCH SỬ GIAO DỊCH</p>
+                    <h2 class="h4 fw-bold text-dark mb-0"><i class="fa-solid fa-bag-shopping text-success me-2"></i>Đơn hàng gần đây</h2>
                 </div>
 
-                <a th:href="@{/orders}">Xem tất cả</a>
+                <div class="d-flex align-items-center">
+                    <div class="input-group input-group-sm" style="width: 280px;">
+                        <span class="input-group-text bg-white border-end-0"><i class="fa-solid fa-search text-muted"></i></span>
+                        <input type="text" id="orderSearchInput" class="form-control border-start-0 ps-0" placeholder="Nhập mã đơn hàng để lọc..." onkeyup="filterUserOrders()">
+                    </div>
+                </div>
             </div>
 
-            <div class="order-table">
+            <div class="table-responsive" th:if="${orders != null and !#lists.isEmpty(orders)}">
+                <table class="table table-hover align-middle mb-0" id="orderHistoryTable">
+                    <thead class="table-light">
+                        <tr class="text-uppercase small text-muted">
+                            <th>Mã đơn</th>
+                            <th>Ngày đặt</th>
+                            <th>Sản phẩm</th>
+                            <th>Tổng tiền</th>
+                            <th>Trạng thái</th>
+                            <th class="text-end">Chi tiết</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="order : ${orders}">
+                            <td>
+                                <strong class="text-success font-monospace" th:text="${order.orderCode}">#BSMS-123456</strong>
+                            </td>
+                            <td>
+                                <span class="small text-muted" th:text="${#temporals.format(order.orderDate, 'dd/MM/yyyy HH:mm')}">12/06/2025 14:30</span>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center gap-2" th:if="${order.orderDetails != null and !#lists.isEmpty(order.orderDetails)}">
+                                    <img th:src="${order.orderDetails[0].product != null and order.orderDetails[0].product.firstImageUrl != null ? order.orderDetails[0].product.firstImageUrl : '/images/bonsai-1.png'}" 
+                                         onerror="this.onerror=null;this.src='/images/bonsai-1.png';"
+                                         alt="Product" class="rounded" style="width: 40px; height: 40px; object-fit: cover;">
+                                    <div>
+                                        <div class="fw-semibold text-dark text-truncate" style="max-width: 200px;" 
+                                             th:text="${order.orderDetails[0].product != null ? order.orderDetails[0].product.productName : 'Sản phẩm'}">Bonsai Tùng Cối</div>
+                                        <span class="small text-muted" th:if="${#lists.size(order.orderDetails) > 1}" 
+                                              th:text="'+ ' + (${#lists.size(order.orderDetails)} - 1) + ' sản phẩm khác'">+ 1 sản phẩm khác</span>
+                                    </div>
+                                </div>
+                                <span class="text-muted small" th:if="${order.orderDetails == null or #lists.isEmpty(order.orderDetails)}">Không có sản phẩm</span>
+                            </td>
+                            <td>
+                                <strong class="text-dark" th:text="${#numbers.formatDecimal(order.totalAmount, 0, 'COMMA', 0, 'POINT')} + ' ₫'">2.500.000 ₫</strong>
+                            </td>
+                            <td>
+                                <span th:if="${order.orderStatus == 'PENDING'}" class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill px-3 py-1">
+                                    <i class="fa-solid fa-clock me-1"></i>Chờ xác nhận
+                                </span>
+                                <span th:if="${order.orderStatus == 'VERIFIED'}" class="badge bg-info-subtle text-info-emphasis border border-info-subtle rounded-pill px-3 py-1">
+                                    <i class="fa-solid fa-circle-check me-1"></i>Đã duyệt
+                                </span>
+                                <span th:if="${order.orderStatus == 'PAID'}" class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-3 py-1">
+                                    <i class="fa-solid fa-credit-card me-1"></i>Đã thanh toán
+                                </span>
+                                <span th:if="${order.orderStatus == 'PROCESSING'}" class="badge bg-info-subtle text-info-emphasis border border-info-subtle rounded-pill px-3 py-1">
+                                    <i class="fa-solid fa-gears me-1"></i>Đang xử lý
+                                </span>
+                                <span th:if="${order.orderStatus == 'SHIPPED'}" class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill px-3 py-1">
+                                    <i class="fa-solid fa-truck me-1"></i>Đang giao hàng
+                                </span>
+                                <span th:if="${order.orderStatus == 'COMPLETED'}" class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-1">
+                                    <i class="fa-solid fa-circle-check me-1"></i>Hoàn thành
+                                </span>
+                                <span th:if="${order.orderStatus == 'CANCELLED'}" class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-3 py-1">
+                                    <i class="fa-solid fa-circle-xmark me-1"></i>Đã hủy
+                                </span>
+                                <span th:if="${order.orderStatus == 'REJECTED'}" class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-3 py-1">
+                                    <i class="fa-solid fa-ban me-1"></i>Từ chối
+                                </span>
+                            </td>
+                            <td class="text-end">
+                                <button type="button" class="btn btn-sm btn-outline-success rounded-pill px-3 fw-semibold" 
+                                        data-bs-toggle="modal" th:data-bs-target="'#orderModal-' + ${order.orderId}">
+                                    <i class="fa-regular fa-eye me-1"></i>Xem
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
 
-                <div class="order-row order-head">
-                    <span>Mã đơn</span>
-                    <span>Ngày đặt</span>
-                    <span>Tổng tiền</span>
-                    <span>Trạng thái</span>
-                    <span>Chi tiết</span>
+            <div class="p-4 text-center bg-light rounded-3 text-muted" th:if="${orders == null or #lists.isEmpty(orders)}">
+                <i class="fa-solid fa-box-open text-muted mb-2 display-6"></i>
+                <p class="mb-2">Bạn chưa có đơn hàng nào.</p>
+                <a href="/marketplace" class="btn btn-outline-success btn-sm rounded-pill px-3">
+                    Khám phá sản phẩm ngay
+                </a>
+            </div>
+
+            <!-- MODALS CHI TIẾT ĐƠN HÀNG -->
+            <div th:each="order : ${orders}" class="modal fade" th:id="'orderModal-' + ${order.orderId}" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-lg modal-dialog-centered">
+                    <div class="modal-content rounded-4 border-0 shadow">
+                        <div class="modal-header bg-light border-0 py-3">
+                            <h5 class="modal-title fw-bold text-dark d-flex align-items-center gap-2">
+                                <i class="fa-solid fa-receipt text-success"></i>
+                                Chi tiết đơn hàng <span class="text-success font-monospace" th:text="${order.orderCode}">BSMS-XXXXXX</span>
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body p-4">
+                            <!-- Thông tin chung & người nhận -->
+                            <div class="row g-3 mb-4">
+                                <div class="col-md-6">
+                                    <div class="p-3 bg-light rounded-3 h-100">
+                                        <h6 class="fw-bold text-success mb-2"><i class="fa-solid fa-user me-2"></i>Thông tin người nhận</h6>
+                                        <p class="mb-1 text-dark"><strong>Họ tên:</strong> <span th:text="${order.customerName}">Bùi Nam Kha</span></p>
+                                        <p class="mb-1 text-dark"><strong>Số điện thoại:</strong> <span th:text="${order.customerPhone}">0987654321</span></p>
+                                        <p class="mb-1 text-dark"><strong>Email:</strong> <span th:text="${order.customerEmail}">email@example.com</span></p>
+                                        <p class="mb-0 text-dark"><strong>Địa chỉ giao:</strong> <span th:text="${order.shippingAddress}">123 Nguyễn Văn Cừ, Q5</span></p>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="p-3 bg-light rounded-3 h-100">
+                                        <h6 class="fw-bold text-success mb-2"><i class="fa-solid fa-circle-info me-2"></i>Thông tin đơn hàng</h6>
+                                        <p class="mb-1 text-dark"><strong>Ngày đặt:</strong> <span th:text="${#temporals.format(order.orderDate, 'dd/MM/yyyy HH:mm')}">12/06/2025</span></p>
+                                        <p class="mb-1 text-dark"><strong>Hình thức:</strong> <span class="badge bg-secondary" th:text="${order.orderType}">ONLINE</span></p>
+                                        <p class="mb-1 text-dark"><strong>Trạng thái:</strong> 
+                                            <span th:text="${order.orderStatus}" class="fw-bold text-success">PENDING</span>
+                                        </p>
+                                        <p class="mb-0 text-muted small" th:if="${order.notes != null and !order.notes.isEmpty()}">
+                                            <strong>Ghi chú:</strong> <span th:text="${order.notes}">Ghi chú đơn hàng...</span>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Danh sách sản phẩm -->
+                            <h6 class="fw-bold text-dark mb-3"><i class="fa-solid fa-cubes me-2 text-success"></i>Danh sách sản phẩm</h6>
+                            <div class="table-responsive mb-3">
+                                <table class="table table-bordered align-middle">
+                                    <thead class="table-light small text-uppercase">
+                                        <tr>
+                                            <th>Sản phẩm</th>
+                                            <th class="text-center">Đơn giá</th>
+                                            <th class="text-center">Số lượng</th>
+                                            <th class="text-end">Thành tiền</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:each="detail : ${order.orderDetails}">
+                                            <td>
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <img th:src="${detail.product != null and detail.product.firstImageUrl != null ? detail.product.firstImageUrl : '/images/bonsai-1.png'}" 
+                                                         onerror="this.onerror=null;this.src='/images/bonsai-1.png';"
+                                                         alt="Product" class="rounded" style="width: 48px; height: 48px; object-fit: cover;">
+                                                    <div>
+                                                        <div class="fw-semibold text-dark" th:text="${detail.product != null ? detail.product.productName : 'Sản phẩm'}">Bonsai Tùng Cối</div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td class="text-center" th:text="${#numbers.formatDecimal(detail.priceAtPurchase, 0, 'COMMA', 0, 'POINT')} + ' ₫'">1.000.000 ₫</td>
+                                            <td class="text-center" th:text="${detail.quantity}">1</td>
+                                            <td class="text-end fw-semibold" th:text="${#numbers.formatDecimal(detail.priceAtPurchase * detail.quantity, 0, 'COMMA', 0, 'POINT')} + ' ₫'">1.000.000 ₫</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- Tổng kết chi phí -->
+                            <div class="p-3 bg-light rounded-3 text-end">
+                                <div class="d-flex justify-content-between mb-1" th:if="${order.craneFee != null and order.craneFee > 0}">
+                                    <span class="text-muted">Phí cẩu:</span>
+                                    <span class="fw-semibold" th:text="${#numbers.formatDecimal(order.craneFee, 0, 'COMMA', 0, 'POINT')} + ' ₫'">0 ₫</span>
+                                </div>
+                                <div class="d-flex justify-content-between mb-1" th:if="${order.shippingFee != null and order.shippingFee > 0}">
+                                    <span class="text-muted">Phí vận chuyển:</span>
+                                    <span class="fw-semibold" th:text="${#numbers.formatDecimal(order.shippingFee, 0, 'COMMA', 0, 'POINT')} + ' ₫'">0 ₫</span>
+                                </div>
+                                <div class="d-flex justify-content-between mb-1" th:if="${order.depositAmount != null and order.depositAmount > 0}">
+                                    <span class="text-muted">Tiền đã cọc:</span>
+                                    <span class="fw-semibold text-primary" th:text="${#numbers.formatDecimal(order.depositAmount, 0, 'COMMA', 0, 'POINT')} + ' ₫'">0 ₫</span>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                                    <span class="fw-bold text-dark fs-5">Tổng cộng:</span>
+                                    <span class="fw-bold text-success fs-5" th:text="${#numbers.formatDecimal(order.totalAmount, 0, 'COMMA', 0, 'POINT')} + ' ₫'">2.500.000 ₫</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer border-0 pt-0">
+                            <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Đóng</button>
+                        </div>
+                    </div>
                 </div>
-
-                <div class="order-row" th:each="order : ${orders}">
-                    <span th:text="${order.orderCode}">#ZB-9821</span>
-
-                    <span th:text="${#temporals.format(order.createdAt, 'dd/MM/yyyy')}">
-                        12/06/2025
-                    </span>
-
-                    <span th:text="${#numbers.formatDecimal(order.totalAmount, 0, 'COMMA', 0, 'POINT')} + ' ₫'">
-                        2.500.000 ₫
-                    </span>
-
-                    <span class="status"
-                          th:classappend="${order.status == 'COMPLETED'} ? ' completed' :
-                                          (${order.status == 'PENDING'} ? ' pending' : ' cancelled')"
-                          th:text="${order.status}">
-                        COMPLETED
-                    </span>
-
-                    <a th:href="@{/orders/{id}(id=${order.id})}" class="detail-link">
-                        Xem
-                    </a>
-                </div>
-
-                <div class="empty-orders" th:if="${orders == null or #lists.isEmpty(orders)}">
-                    Bạn chưa có đơn hàng nào.
-                </div>
-
             </div>
 
         </section>
@@ -307,7 +452,26 @@
 
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
+    function filterUserOrders() {
+        const input = document.getElementById("orderSearchInput");
+        if (!input) return;
+        const filter = input.value.toUpperCase().trim();
+        const rows = document.querySelectorAll("#orderHistoryTable tbody tr");
+        rows.forEach(row => {
+            const orderCodeCell = row.querySelector("td strong");
+            if (orderCodeCell) {
+                const txtValue = orderCodeCell.textContent || orderCodeCell.innerText;
+                if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                    row.style.display = "";
+                } else {
+                    row.style.display = "none";
+                }
+            }
+        });
+    }
+
     document.addEventListener("DOMContentLoaded", function() {
         // Active state and smooth scrolling for sidebar links
         const navLinks = document.querySelectorAll(".sidebar-menu a");

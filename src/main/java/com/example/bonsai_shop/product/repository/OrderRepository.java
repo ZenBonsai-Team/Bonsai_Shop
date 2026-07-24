@@ -1,6 +1,7 @@
 package com.example.bonsai_shop.product.repository;
 
 import com.example.bonsai_shop.entity.Order;
+import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -13,7 +14,14 @@ import org.springframework.stereotype.Repository;
 public interface OrderRepository extends JpaRepository<Order, Integer> {
     Optional<Order> findByOrderCode(String orderCode);
 
+    @Query("SELECT DISTINCT o FROM Order o LEFT JOIN FETCH o.orderDetails od LEFT JOIN FETCH od.product WHERE LOWER(o.orderCode) = LOWER(:orderCode)")
+    Optional<Order> findByOrderCodeWithDetails(@Param("orderCode") String orderCode);
+
     long countByOrderStatus(String orderStatus);
+
+    // Truy vấn lịch sử đơn hàng của người mua (Customer)
+    @Query("SELECT DISTINCT o FROM Order o LEFT JOIN FETCH o.orderDetails od LEFT JOIN FETCH od.product WHERE o.customer.userId = :customerId ORDER BY o.orderDate DESC")
+    List<Order> findByCustomerUserIdWithDetailsOrderByOrderDateDesc(@Param("customerId") Integer customerId);
 
     // Đếm số đơn thuộc về Moderator cụ thể
     long countByAssignedToUserId(Integer moderatorId);

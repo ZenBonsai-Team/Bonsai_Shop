@@ -19,6 +19,8 @@ import java.util.List;
 
 import com.example.bonsai_shop.customer.repository.CommunityPostBookmarkRepository;
 import com.example.bonsai_shop.entity.CommunityPostBookmark;
+import com.example.bonsai_shop.entity.Order;
+import com.example.bonsai_shop.product.service.OrderService;
 import java.util.stream.Collectors;
 
 @Controller
@@ -28,6 +30,7 @@ public class ProfileController {
     private final UserService userService;
     private final CommunityPostRepository communityPostRepository;
     private final CommunityPostBookmarkRepository bookmarkRepository;
+    private final OrderService orderService;
 
     private String extractEmail(Object principal) {
         if (principal instanceof UserDetails userDetails) {
@@ -40,15 +43,8 @@ public class ProfileController {
 
     @GetMapping("/profile")
     public String viewProfile(@AuthenticationPrincipal Object principal, Model model) {
-        String email;
-
-        if (principal instanceof UserDetails userDetails) {
-            // Đăng nhập bằng email/password
-            email = userDetails.getUsername();
-        } else if (principal instanceof OAuth2User oAuth2User) {
-            // Đăng nhập bằng Google
-            email =  oAuth2User.getAttribute("email");
-        } else {
+        String email = extractEmail(principal);
+        if (email == null) {
             return "redirect:/login";
         }
 
@@ -61,11 +57,20 @@ public class ProfileController {
         List<Integer> savedPostIds = bookmarks.stream().map(CommunityPostBookmark::getPostId).collect(Collectors.toList());
         List<CommunityPost> savedPosts = savedPostIds.isEmpty() ? List.of() : communityPostRepository.findAllById(savedPostIds);
 
+        // Lấy lịch sử đơn hàng của người dùng
+        List<Order> orders = orderService.getOrdersByCustomerId(user.getUserId());
+
         model.addAttribute("user", user);
         model.addAttribute("myBonsaiPosts", myBonsaiPosts);
         model.addAttribute("savedPosts", savedPosts);
+        model.addAttribute("orders", orders);
         return "customer/profile"; // templates/customer/profile.html
 
+    }
+
+    @GetMapping("/orders")
+    public String viewMyOrders() {
+        return "redirect:/profile#orderHistorySection";
     }
 
     @GetMapping("/profile/update")
