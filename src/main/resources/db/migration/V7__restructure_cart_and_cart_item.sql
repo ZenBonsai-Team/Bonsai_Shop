@@ -1,4 +1,4 @@
-11-- Restructure CART and CART_ITEM tables to enterprise standard:
+-- Restructure CART and CART_ITEM tables to enterprise standard:
 -- 1. User/Customer (1) <---> (1) CART
 -- 2. CART (1) <---> (N) CART_ITEM (No quantity column for unique bonsai items)
 
