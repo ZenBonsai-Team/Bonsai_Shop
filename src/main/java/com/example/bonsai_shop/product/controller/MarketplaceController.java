@@ -116,6 +116,7 @@ public class MarketplaceController {
         model.addAttribute("productImages", getMediaByType(product, "IMAGE"));
         model.addAttribute("productImageSlots", getImageSlots(product));
         model.addAttribute("productVideos", getMediaByType(product, "VIDEO"));
+        model.addAttribute("productTags", productService.getProductTags(product));
         model.addAttribute("activePage", "marketplace");
         return "product/product-detail";
     }

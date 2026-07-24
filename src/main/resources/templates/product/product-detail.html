@@ -154,6 +154,12 @@
                 <span th:text="${'Mã: ' + product.productCode}">Mã: BSMS-TLH-218</span>
             </div>
 
+            <div class="product-tag-row" th:if="${productTags != null and !productTags.isEmpty()}">
+                <span class="product-tag-chip"
+                      th:each="tag : ${productTags}"
+                      th:text="${tag.tagName}">Tag</span>
+            </div>
+
             <!-- Price Panel -->
             <div class="price-panel">
                 <div class="price-label">Giá cố định</div>

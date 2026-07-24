@@ -6,9 +6,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import com.example.bonsai_shop.entity.Product;
+import com.example.bonsai_shop.entity.ProductTag;
+import com.example.bonsai_shop.entity.Tag;
 import com.example.bonsai_shop.product.dto.ProductCardDTO;
 import com.example.bonsai_shop.product.repository.ProductRepository;
 import com.example.bonsai_shop.product.repository.ProductSpecifications;
+import com.example.bonsai_shop.product.repository.ProductTagRepository;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 
@@ -16,6 +19,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class ProductService {
     private final ProductRepository productRepository;
+    private final ProductTagRepository productTagRepository;
 
     public Page<ProductCardDTO> getMarketplaceProducts(Pageable pageable) {
         return productRepository.findMarketplaceProducts(pageable);
@@ -56,6 +60,16 @@ public class ProductService {
 
     public ProductCardDTO getPremiumProductsById(Integer productId) {
         return productRepository.findPremiumProductById(productId);
+    }
+
+    @Transactional(readOnly = true)
+    public List<Tag> getProductTags(Product product) {
+        if (product == null) {
+            return List.of();
+        }
+        return productTagRepository.findByProduct(product).stream()
+                .map(ProductTag::getTag)
+                .toList();
     }
 
     @Transactional(readOnly = true)
