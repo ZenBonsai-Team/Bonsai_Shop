@@ -30,60 +30,88 @@
     </a>
 </section>
 
-<!-- BỘ SƯU TẬP DI SẢN - TOP 5 XEM NHIỀU NHẤT -->
+<!-- BỘ SƯU TẬP DI SẢN - TOP 5 XEM NHIỀU NHẤT - DẠNG STACK GIỮA -->
 <section class="collection-section">
     <div class="collection-header">
         <div>
-            <p class="collection-tag" th:text="#{home.collection.tag}">DÀNH CHO NHÀ SƯU TẦM</p>
-            <h2 class="collection-title" th:text="#{home.collection.title}">Bộ Sưu Tập Di Sản</h2>
+            <p class="collection-tag" th:text="#{home.collection.tag}">Bộ Sưu Tập Di Sản</p>
+            <h2 class="collection-title" th:text="#{home.collection.title}">Tuyệt tác thời gian</h2>
         </div>
-        <a th:href="@{/marketplace}" class="collection-link" th:text="#{home.collection.view_all}">Xem tất cả sản phẩm →</a>
+        <a th:href="@{/marketplace}" class="collection-link"
+           th:text="#{home.collection.view_all}">Xem tất cả sản phẩm →</a>
     </div>
 
-    <!-- DANH SÁCH SẢN PHẨM -->
-    <div class="product-grid">
-        <div th:each="product : ${topProducts}" class="product-card">
-            <a th:href="@{'/product/' + ${product.productId}}" class="product-card-link">
+    <!-- SLIDER STACK GIỮA -->
+    <div class="film-slider-wrapper" id="filmSlider">
 
-                <!-- ẢNH SẢN PHẨM -->
-                <div class="product-image-wrapper">
-                    <!-- Lấy ảnh thumbnail nếu có -->
-                    <img th:if="${product.productMedias != null and !product.productMedias.isEmpty()}"
-                         th:src="${product.productMedias[0].mediaUrl}"
-                         th:alt="${product.productName}"
-                         class="product-image"/>
-                    <!-- Placeholder nếu chưa có ảnh -->
-                    <div th:unless="${product.productMedias != null and !product.productMedias.isEmpty()}"
-                         class="product-image-placeholder">🌿</div>
+        <!-- NÚT TRÁI -->
+        <button th:if="${topProducts != null and !topProducts.isEmpty()}"
+                class="film-arrow film-arrow-left" type="button" onclick="filmPrev()">
+            <i class="fa-solid fa-chevron-left"></i>
+        </button>
 
-                    <!-- Badge lượt xem -->
-                    <div class="product-view-badge">
-                        👁 <span th:text="${product.viewCount}">0</span>
+        <!-- TRACK CHỨA CÁC CARD -->
+        <div class="film-track" id="filmTrack">
+            <div th:each="product, stat : ${topProducts}"
+                 class="film-card"
+                 th:classappend="${stat.index == 0 ? ' active' : ''}"
+                 th:attr="data-index=${stat.index},
+                          data-id=${product.productId},
+                          data-name=${product.productName},
+                          data-age=${product.age},
+                          data-views=${product.viewCount}">
+                <a th:href="@{'/product/' + ${product.productId}}" class="film-card-link">
+                    <!-- ẢNH -->
+                    <div class="film-image-wrapper">
+                        <img th:if="${product.productMedias != null and !product.productMedias.isEmpty()}"
+                             th:src="${product.productMedias[0].mediaUrl}"
+                             th:alt="${product.productName}"
+                             class="film-image"/>
+                        <div th:unless="${product.productMedias != null and !product.productMedias.isEmpty()}"
+                             class="film-image-placeholder">🌿</div>
+
+                        <!-- OVERLAY THÔNG TIN (chỉ hiện khi active) -->
+                        <div class="film-overlay">
+                            <h3 class="film-name" th:text="${product.productName}">Tên cây</h3>
+                            <p class="film-age"
+                               th:text="${product.age != null ? 'TUỔI: ' + product.age + ' NĂM' : 'BONSAI'}">
+                                TUỔI: 65 NĂM
+                            </p>
+                        </div>
+
+                        <!-- PROGRESS BAR (chỉ hiện khi active) -->
+                        <div class="film-progress">
+                            <div class="film-progress-bar"></div>
+                        </div>
                     </div>
-                </div>
+                </a>
+            </div>
 
-                <!-- THÔNG TIN SẢN PHẨM -->
-                <div class="product-info">
-                    <p class="product-age"
-                       th:text="${product.age != null ? (#locale.language == 'en' ? 'AGE: ' + product.age + ' YEARS' : 'TUỔI: ' + product.age + ' NĂM') : 'BONSAI'}">
-                        TUỔI: 65 NĂM
-                    </p>
-                    <h3 class="product-name" th:text="${product.productName}">
-                        Tên sản phẩm
-                    </h3>
-                </div>
-            </a>
+            <!-- Fallback khi không có sản phẩm -->
+            <div th:if="${topProducts == null or topProducts.isEmpty()}"
+                 class="film-empty">
+                <span>🌿</span>
+                <p th:text="#{home.collection.empty}">Chưa có sản phẩm nào</p>
+            </div>
         </div>
 
-        <!-- Hiện thông báo nếu chưa có sản phẩm nào -->
-        <div th:if="${topProducts == null or topProducts.isEmpty()}"
-             style="text-align:center; color:#888; padding:60px; width:100%;"
-             th:text="#{home.collection.empty}">
-            Chưa có sản phẩm nào
+        <!-- NÚT PHẢI -->
+        <button th:if="${topProducts != null and !topProducts.isEmpty()}"
+                class="film-arrow film-arrow-right" type="button" onclick="filmNext()">
+            <i class="fa-solid fa-chevron-right"></i>
+        </button>
+
+        <!-- CHỈ SỐ DOTS -->
+        <div th:if="${topProducts != null and !topProducts.isEmpty()}"
+             class="film-dots" id="filmDots">
+            <span th:each="product, stat : ${topProducts}"
+                  class="film-dot"
+                  th:classappend="${stat.index == 0 ? ' active' : ''}"
+                  th:attr="onclick='filmGoTo(' + ${stat.index} + ')'">
+            </span>
         </div>
     </div>
 </section>
-
 <section class="about">
     <div class="about-image"></div>
 
