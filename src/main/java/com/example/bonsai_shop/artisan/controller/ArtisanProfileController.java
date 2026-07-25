@@ -1,23 +1,16 @@
 package com.example.bonsai_shop.artisan.controller;
 
-import com.example.bonsai_shop.artisan.dto.ArtisanProfileFormDTO;
-import com.example.bonsai_shop.artisan.service.ArtisanProfileService;
 import com.example.bonsai_shop.customer.service.UserService;
-import com.example.bonsai_shop.entity.ArtisanProfile;
 import com.example.bonsai_shop.entity.User;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
-import org.springframework.validation.BindingResult;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.web.multipart.MultipartFile;
 
 @Controller
@@ -26,20 +19,10 @@ import org.springframework.web.multipart.MultipartFile;
 public class ArtisanProfileController {
 
     private final UserService userService;
-    private final ArtisanProfileService artisanProfileService;
 
     @GetMapping
     public String profile() {
         return "redirect:/profile";
-    }
-
-    @GetMapping("/artisan-profile")
-    public String viewArtisanProfile(@AuthenticationPrincipal UserDetails userDetails, Model model) {
-        ArtisanProfile artisanProfile = artisanProfileService.getOrCreateProfile(userDetails.getUsername());
-        model.addAttribute("artisanProfile", artisanProfile);
-        model.addAttribute("role", "ARTISAN");
-        model.addAttribute("activeMenu", "artisan-profile");
-        return "artisan/artisan-profile";
     }
 
     @GetMapping("/update")
@@ -47,7 +30,7 @@ public class ArtisanProfileController {
         User artisan = userService.getCurrentUserProfile(userDetails.getUsername());
         model.addAttribute("artisan", artisan);
         model.addAttribute("role", "ARTISAN");
-        model.addAttribute("activeMenu", "artisan-profile");
+        model.addAttribute("activeMenu", "profile");
         return "artisan/profile-update";
     }
 
@@ -69,50 +52,16 @@ public class ArtisanProfileController {
             User artisan = userService.getCurrentUserProfile(email);
             model.addAttribute("artisan", artisan);
             model.addAttribute("role", "ARTISAN");
-            model.addAttribute("activeMenu", "artisan-profile");
+            model.addAttribute("activeMenu", "profile");
             model.addAttribute("error", e.getMessage());
             return "artisan/profile-update";
-        }
-    }
-
-    @GetMapping("/artisan-profile/update")
-    public String updateArtisanProfile(@AuthenticationPrincipal UserDetails userDetails, Model model) {
-        ArtisanProfile artisanProfile = artisanProfileService.getOrCreateProfile(userDetails.getUsername());
-        model.addAttribute("artisanProfileForm", artisanProfileService.toFormDTO(artisanProfile));
-        model.addAttribute("role", "ARTISAN");
-        model.addAttribute("activeMenu", "artisan-profile");
-        return "artisan/artisan-profile-update";
-    }
-
-    @PostMapping("/artisan-profile/update")
-    public String updateArtisanProfile(@AuthenticationPrincipal UserDetails userDetails,
-                                       @Valid @ModelAttribute("artisanProfileForm") ArtisanProfileFormDTO form,
-                                       BindingResult bindingResult,
-                                       @RequestParam(value = "coverImageFile", required = false) MultipartFile coverImageFile,
-                                       Model model,
-                                       RedirectAttributes redirectAttributes) {
-        String email = userDetails.getUsername();
-        model.addAttribute("role", "ARTISAN");
-        model.addAttribute("activeMenu", "artisan-profile");
-
-        if (bindingResult.hasErrors()) {
-            return "artisan/artisan-profile-update";
-        }
-
-        try {
-            artisanProfileService.updateProfile(email, form, coverImageFile);
-            redirectAttributes.addFlashAttribute("success", "Cập nhật hồ sơ nghệ nhân thành công!");
-            return "redirect:/artisan/profile/artisan-profile";
-        } catch (RuntimeException e) {
-            model.addAttribute("error", e.getMessage());
-            return "artisan/artisan-profile-update";
         }
     }
 
     @GetMapping("/change-password")
     public String changePasswordPage(Model model) {
         model.addAttribute("role", "ARTISAN");
-        model.addAttribute("activeMenu", "artisan-profile");
+        model.addAttribute("activeMenu", "profile");
         return "artisan/change-password";
     }
 
@@ -123,7 +72,7 @@ public class ArtisanProfileController {
                                  @RequestParam String confirmPassword,
                                  Model model) {
         model.addAttribute("role", "ARTISAN");
-        model.addAttribute("activeMenu", "artisan-profile");
+        model.addAttribute("activeMenu", "profile");
         try {
             userService.changePassword(
                     userDetails.getUsername(),

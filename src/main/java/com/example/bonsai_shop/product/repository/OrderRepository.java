@@ -32,7 +32,7 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
             FROM Order o
             JOIN o.orderDetails od
             JOIN od.product p
-            JOIN p.artisan a
+            JOIN p.createdBy a
             WHERE a.userId = :artisanUserId
               AND o.orderType = :orderType
               AND (:status = 'ALL' OR o.orderStatus = :status)

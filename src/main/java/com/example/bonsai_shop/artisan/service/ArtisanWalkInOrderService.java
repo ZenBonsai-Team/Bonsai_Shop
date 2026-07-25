@@ -47,7 +47,7 @@ public class ArtisanWalkInOrderService {
 
     public List<Product> getAvailableProducts(String artisanEmail) {
         Integer artisanUserId = artisanProductService.getArtisanUser(artisanEmail).getUserId();
-        return productRepository.findByArtisanUserIdAndProductStatusOrderByCreatedAtDesc(
+        return productRepository.findByCreatedByUserIdAndProductStatusOrderByCreatedAtDesc(
                 artisanUserId,
                 PRODUCT_AVAILABLE
         );
@@ -76,15 +76,15 @@ public class ArtisanWalkInOrderService {
                                    String customerEmail,
                                    String notes) {
         User artisanUser = artisanProductService.getArtisanUser(artisanEmail);
-        Product product = productRepository.findByProductIdAndArtisanUserId(productId, artisanUser.getUserId())
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm thuộc artisan này."));
+        Product product = productRepository.findByProductIdAndCreatedByUserId(productId, artisanUser.getUserId())
+                .orElseThrow(() -> new RuntimeException("KhÃ´ng tÃ¬m tháº¥y sáº£n pháº©m thuá»™c artisan nÃ y."));
 
         if (!PRODUCT_AVAILABLE.equalsIgnoreCase(product.getProductStatus())) {
-            throw new RuntimeException("Chỉ có thể tạo in-person order cho sản phẩm đang bán.");
+            throw new RuntimeException("Chá»‰ cÃ³ thá»ƒ táº¡o in-person order cho sáº£n pháº©m Ä‘ang bÃ¡n.");
         }
 
-        BigDecimal normalizedCraneFee = nonNegative(craneFee, "Phí cẩu không được âm.");
-        BigDecimal normalizedShippingFee = nonNegative(shippingFee, "Phí vận chuyển không được âm.");
+        BigDecimal normalizedCraneFee = nonNegative(craneFee, "PhÃ­ cáº©u khÃ´ng Ä‘Æ°á»£c Ã¢m.");
+        BigDecimal normalizedShippingFee = nonNegative(shippingFee, "PhÃ­ váº­n chuyá»ƒn khÃ´ng Ä‘Æ°á»£c Ã¢m.");
         String normalizedPaymentMethod = normalizePaymentMethod(paymentMethod);
         BigDecimal totalAmount = product.getPrice()
                 .add(normalizedCraneFee)
@@ -92,10 +92,10 @@ public class ArtisanWalkInOrderService {
 
         Order order = Order.builder()
                 .orderCode(generateOrderCode())
-                .customerName(requireText(customerName, "Vui lòng nhập tên khách in-person."))
-                .customerPhone(requireText(customerPhone, "Vui lòng nhập số điện thoại khách in-person."))
+                .customerName(requireText(customerName, "Vui lÃ²ng nháº­p tÃªn khÃ¡ch in-person."))
+                .customerPhone(requireText(customerPhone, "Vui lÃ²ng nháº­p sá»‘ Ä‘iá»‡n thoáº¡i khÃ¡ch in-person."))
                 .customerEmail(blankToNull(customerEmail))
-                .shippingAddress(requireText(shippingAddress, "Vui lòng nhập địa chỉ giao/nhận cây."))
+                .shippingAddress(requireText(shippingAddress, "Vui lÃ²ng nháº­p Ä‘á»‹a chá»‰ giao/nháº­n cÃ¢y."))
                 .orderDate(LocalDateTime.now())
                 .totalAmount(totalAmount)
                 .depositAmount(BigDecimal.ZERO)
@@ -124,7 +124,7 @@ public class ArtisanWalkInOrderService {
 
         int reserved = productRepository.reserveIfAvailable(product.getProductId());
         if (reserved == 0) {
-            throw new RuntimeException("Sản phẩm đã được đặt hoặc không còn khả dụng.");
+            throw new RuntimeException("Sáº£n pháº©m Ä‘Ã£ Ä‘Æ°á»£c Ä‘áº·t hoáº·c khÃ´ng cÃ²n kháº£ dá»¥ng.");
         }
         product.setProductStatus(PRODUCT_RESERVED);
         Order savedOrder = orderRepository.save(order);
@@ -136,17 +136,15 @@ public class ArtisanWalkInOrderService {
     public Order cancelWalkInOrder(String artisanEmail, Integer orderId, String reason) {
         User artisanUser = artisanProductService.getArtisanUser(artisanEmail);
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy in-person order."));
+                .orElseThrow(() -> new RuntimeException("KhÃ´ng tÃ¬m tháº¥y in-person order."));
 
         Product product = getSingleProduct(order);
-        if (product.getArtisan() == null || !artisanUser.getUserId().equals(product.getArtisan().getUserId())) {
-            throw new RuntimeException("Order không thuộc artisan này.");
-        }
+        ensureOwnedByArtisan(product, artisanUser);
         if (!ORDER_TYPE_IN_PERSON.equalsIgnoreCase(order.getOrderType())) {
-            throw new RuntimeException("Chỉ được hủy in-person order.");
+            throw new RuntimeException("Chá»‰ Ä‘Æ°á»£c há»§y in-person order.");
         }
         if (!STATUS_PENDING_PAYMENT.equalsIgnoreCase(order.getOrderStatus())) {
-            throw new RuntimeException("Chỉ được hủy order đang chờ nhận tiền.");
+            throw new RuntimeException("Chá»‰ Ä‘Æ°á»£c há»§y order Ä‘ang chá» nháº­n tiá»n.");
         }
 
         String oldStatus = order.getOrderStatus();
@@ -180,29 +178,27 @@ public class ArtisanWalkInOrderService {
                                    String notes) {
         User artisanUser = artisanProductService.getArtisanUser(artisanEmail);
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy in-person order."));
+                .orElseThrow(() -> new RuntimeException("KhÃ´ng tÃ¬m tháº¥y in-person order."));
 
         Product product = getSingleProduct(order);
-        if (product.getArtisan() == null || !artisanUser.getUserId().equals(product.getArtisan().getUserId())) {
-            throw new RuntimeException("Order không thuộc artisan này.");
-        }
+        ensureOwnedByArtisan(product, artisanUser);
         if (!ORDER_TYPE_IN_PERSON.equalsIgnoreCase(order.getOrderType())) {
-            throw new RuntimeException("Chỉ được cập nhật in-person order.");
+            throw new RuntimeException("Chá»‰ Ä‘Æ°á»£c cáº­p nháº­t in-person order.");
         }
         if (!STATUS_PENDING_PAYMENT.equalsIgnoreCase(order.getOrderStatus())) {
-            throw new RuntimeException("Chỉ được cập nhật order đang chờ nhận tiền.");
+            throw new RuntimeException("Chá»‰ Ä‘Æ°á»£c cáº­p nháº­t order Ä‘ang chá» nháº­n tiá»n.");
         }
 
-        BigDecimal normalizedCraneFee = nonNegative(craneFee, "Phí cẩu không được âm.");
-        BigDecimal normalizedShippingFee = nonNegative(shippingFee, "Phí vận chuyển không được âm.");
+        BigDecimal normalizedCraneFee = nonNegative(craneFee, "PhÃ­ cáº©u khÃ´ng Ä‘Æ°á»£c Ã¢m.");
+        BigDecimal normalizedShippingFee = nonNegative(shippingFee, "PhÃ­ váº­n chuyá»ƒn khÃ´ng Ä‘Æ°á»£c Ã¢m.");
         String normalizedPaymentMethod = normalizePaymentMethod(paymentMethod);
         BigDecimal totalAmount = getBasePrice(order, product)
                 .add(normalizedCraneFee)
                 .add(normalizedShippingFee);
 
-        order.setCustomerName(requireText(customerName, "Vui lòng nhập tên khách in-person."));
-        order.setCustomerPhone(requireText(customerPhone, "Vui lòng nhập số điện thoại khách in-person."));
-        order.setShippingAddress(requireText(shippingAddress, "Vui lòng nhập địa chỉ giao/nhận cây."));
+        order.setCustomerName(requireText(customerName, "Vui lÃ²ng nháº­p tÃªn khÃ¡ch in-person."));
+        order.setCustomerPhone(requireText(customerPhone, "Vui lÃ²ng nháº­p sá»‘ Ä‘iá»‡n thoáº¡i khÃ¡ch in-person."));
+        order.setShippingAddress(requireText(shippingAddress, "Vui lÃ²ng nháº­p Ä‘á»‹a chá»‰ giao/nháº­n cÃ¢y."));
         order.setCustomerEmail(blankToNull(customerEmail));
         order.setCraneFee(normalizedCraneFee);
         order.setShippingFee(normalizedShippingFee);
@@ -231,14 +227,12 @@ public class ArtisanWalkInOrderService {
     public Order confirmPayment(String artisanEmail, Integer orderId) {
         User artisanUser = artisanProductService.getArtisanUser(artisanEmail);
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy in-person order."));
+                .orElseThrow(() -> new RuntimeException("KhÃ´ng tÃ¬m tháº¥y in-person order."));
 
         Product product = getSingleProduct(order);
-        if (product.getArtisan() == null || !artisanUser.getUserId().equals(product.getArtisan().getUserId())) {
-            throw new RuntimeException("Order không thuộc artisan này.");
-        }
+        ensureOwnedByArtisan(product, artisanUser);
         if (!STATUS_PENDING_PAYMENT.equalsIgnoreCase(order.getOrderStatus())) {
-            throw new RuntimeException("Chỉ xác nhận thanh toán cho in-person order đang chờ tiền.");
+            throw new RuntimeException("Chá»‰ xÃ¡c nháº­n thanh toÃ¡n cho in-person order Ä‘ang chá» tiá»n.");
         }
 
         String oldStatus = order.getOrderStatus();
@@ -266,11 +260,16 @@ public class ArtisanWalkInOrderService {
 
     private Product getSingleProduct(Order order) {
         if (order.getOrderDetails() == null || order.getOrderDetails().isEmpty()) {
-            throw new RuntimeException("Order chưa có sản phẩm.");
+            throw new RuntimeException("Order chÆ°a cÃ³ sáº£n pháº©m.");
         }
         return order.getOrderDetails().get(0).getProduct();
     }
 
+    private void ensureOwnedByArtisan(Product product, User artisanUser) {
+        if (product.getCreatedBy() == null || !artisanUser.getUserId().equals(product.getCreatedBy().getUserId())) {
+            throw new RuntimeException("Order khong thuoc artisan nay.");
+        }
+    }
     private BigDecimal getBasePrice(Order order, Product product) {
         OrderDetail detail = order.getOrderDetails().get(0);
         if (detail.getPriceAtPurchase() != null) {
@@ -316,9 +315,9 @@ public class ArtisanWalkInOrderService {
     private String appendCancelReason(String currentNotes, String reason) {
         String normalizedReason = blankToNull(reason);
         if (normalizedReason == null) {
-            normalizedReason = "Khách đổi ý không mua.";
+            normalizedReason = "KhÃ¡ch Ä‘á»•i Ã½ khÃ´ng mua.";
         }
-        String cancelNote = "Lý do hủy: " + normalizedReason;
+        String cancelNote = "LÃ½ do há»§y: " + normalizedReason;
         String normalizedCurrentNotes = blankToNull(currentNotes);
         return normalizedCurrentNotes == null ? cancelNote : normalizedCurrentNotes + "\n" + cancelNote;
     }
@@ -336,8 +335,9 @@ public class ArtisanWalkInOrderService {
                 ? PAYMENT_METHOD_CASH
                 : paymentMethod.trim().toUpperCase(Locale.ROOT);
         if (!PAYMENT_METHOD_CASH.equals(normalized) && !PAYMENT_METHOD_VNPAY.equals(normalized)) {
-            throw new RuntimeException("Phương thức thanh toán không hợp lệ.");
+            throw new RuntimeException("PhÆ°Æ¡ng thá»©c thanh toÃ¡n khÃ´ng há»£p lá»‡.");
         }
         return normalized;
     }
 }
+
