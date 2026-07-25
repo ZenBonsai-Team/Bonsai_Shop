@@ -100,6 +100,12 @@
                     <span class="nav-icon"><i class="fa-solid fa-book"></i></span>
                     <span>Danh mục sản phẩm</span>
                 </a>
+                <a th:href="@{/artisan/profile/artisan-profile}"
+                   class="sidebar-nav-item"
+                   th:classappend="${activePage == 'profile' or activePage == 'artisan-profile' ? 'active' : ''}">
+                    <span class="nav-icon"><i class="fa-solid fa-id-card"></i></span>
+                    <span>Hồ sơ nghệ nhân</span>
+                </a>
             </th:block>
         </nav>
 

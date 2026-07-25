@@ -34,7 +34,7 @@
 
     <div th:if="${error}" class="alert error" th:text="${error}"></div>
 
-    <form class="form-card" method="post"
+    <form class="form-card" method="post" th:object="${productForm}"
           th:action="${product == null} ? @{/artisan/products} : @{/artisan/products/{id}(id=${product.productId})}">
         <label th:if="${product != null}">Mã sản phẩm
             <input readonly th:value="${product.productCode}">
@@ -42,7 +42,8 @@
         <p th:if="${product == null}" class="form-hint">Mã sản phẩm sẽ được hệ thống tự động sinh sau khi lưu.</p>
 
         <label>Tên cây
-            <input name="productName" required th:value="${product != null ? product.productName : ''}">
+            <input th:field="*{productName}" required>
+            <small th:if="${#fields.hasErrors('productName')}" th:errors="*{productName}" class="text-danger"></small>
         </label>
 
         <div class="grid">
@@ -62,19 +63,20 @@
                     <option th:each="variety : ${varieties}"
                             th:value="${variety.varietyId}"
                             th:attr="data-category-id=${variety.category.categoryId}"
-                            th:selected="${product != null && product.variety.varietyId == variety.varietyId}"
+                            th:selected="${productForm.varietyId != null && productForm.varietyId == variety.varietyId}"
                             th:text="${variety.varietyName}"></option>
                 </select>
+                <small th:if="${#fields.hasErrors('varietyId')}" th:errors="*{varietyId}" class="text-danger"></small>
             </label>
 
             <label>Segment
-                <select name="segmentId" required>
+                <select th:field="*{segmentId}" required>
                     <option value="">-- Chọn segment --</option>
                     <option th:each="segment : ${segments}"
                             th:value="${segment.segmentId}"
-                            th:selected="${product != null && product.segment.segmentId == segment.segmentId}"
                             th:text="${segment.segmentName}"></option>
                 </select>
+                <small th:if="${#fields.hasErrors('segmentId')}" th:errors="*{segmentId}" class="text-danger"></small>
             </label>
         </div>
 
@@ -83,40 +85,43 @@
             <p th:if="${#lists.isEmpty(tags)}" class="form-hint">Chưa có tag nào trong hệ thống.</p>
             <label class="checkbox" th:each="tag : ${tags}">
                 <input type="checkbox"
-                       name="tagIds"
-                       th:value="${tag.tagId}"
-                       th:checked="${selectedTagIds.contains(tag.tagId)}">
+                       th:field="*{tagIds}"
+                       th:value="${tag.tagId}">
                 <span th:text="${tag.tagName}"></span>
             </label>
         </fieldset>
 
         <label>Mô tả
-            <textarea name="description" rows="5" th:text="${product != null ? product.description : ''}"></textarea>
+            <textarea th:field="*{description}" rows="5"></textarea>
         </label>
 
         <div class="grid">
             <label>Tuổi
                 <span class="input-with-unit">
-                    <input type="number" name="age" min="0" required th:value="${product != null ? product.age : ''}">
+                    <input type="number" th:field="*{age}" min="0" required>
                     <span>năm</span>
                 </span>
+                <small th:if="${#fields.hasErrors('age')}" th:errors="*{age}" class="text-danger"></small>
             </label>
             <label>Chiều cao
                 <span class="input-with-unit">
-                    <input type="number" step="0.01" name="height" min="0" required th:value="${product != null ? product.height : ''}">
+                    <input type="number" step="0.01" th:field="*{height}" min="0" required>
                     <span>cm</span>
                 </span>
+                <small th:if="${#fields.hasErrors('height')}" th:errors="*{height}" class="text-danger"></small>
             </label>
             <label>Đường kính thân
                 <span class="input-with-unit">
-                    <input type="number" step="0.01" name="trunkDiameter" min="0" required th:value="${product != null ? product.trunkDiameter : ''}">
+                    <input type="number" step="0.01" th:field="*{trunkDiameter}" min="0" required>
                     <span>cm</span>
                 </span>
+                <small th:if="${#fields.hasErrors('trunkDiameter')}" th:errors="*{trunkDiameter}" class="text-danger"></small>
             </label>
         </div>
 
         <label>Style
-            <input name="style" required th:value="${product != null ? product.style : ''}">
+            <input th:field="*{style}" required>
+            <small th:if="${#fields.hasErrors('style')}" th:errors="*{style}" class="text-danger"></small>
         </label>
 
         <label>Giá
@@ -125,12 +130,13 @@
                        type="text"
                        inputmode="numeric"
                        required
-                       th:attr="data-price=${product != null ? product.price : ''}">
-                <input id="priceValue" type="hidden" name="price" th:value="${product != null ? product.price : ''}">
+                       th:attr="data-price=${productForm.price}">
+                <input id="priceValue" type="hidden" name="price" th:value="${productForm.price}">
                 <span>VNĐ</span>
             </span>
+            <small th:if="${#fields.hasErrors('price')}" th:errors="*{price}" class="text-danger"></small>
         </label>
-        <input th:if="${product != null}" type="hidden" name="productStatus" th:value="${product.productStatus}">
+        <input th:if="${product != null}" type="hidden" name="productStatus" th:value="${productForm.productStatus}">
         <button type="submit">Save & Continue</button>
     </form>
 </main>

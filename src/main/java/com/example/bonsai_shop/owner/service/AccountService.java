@@ -1,5 +1,6 @@
 package com.example.bonsai_shop.owner.service;
 
+import com.example.bonsai_shop.artisan.service.ArtisanProfileService;
 import com.example.bonsai_shop.customer.repository.RoleRepository;
 import com.example.bonsai_shop.entity.Role;
 import com.example.bonsai_shop.entity.User;
@@ -19,6 +20,7 @@ public class AccountService {
     private final AccountRepository accountRepository;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
+    private final ArtisanProfileService artisanProfileService;
 
     public List<User> findAll() {
         return accountRepository.findAll();
@@ -46,7 +48,8 @@ public class AccountService {
                 .createdAt(LocalDateTime.now())
                 .build();
 
-        accountRepository.save(user);
+        User savedUser = accountRepository.save(user);
+        artisanProfileService.createDefaultProfileIfArtisan(savedUser);
     }
 
     @Transactional

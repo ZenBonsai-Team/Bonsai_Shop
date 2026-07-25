@@ -1,5 +1,6 @@
 package com.example.bonsai_shop.artisan.service;
 
+import com.example.bonsai_shop.artisan.dto.ArtisanProductFormDTO;
 import com.example.bonsai_shop.customer.repository.UserRepository;
 import com.example.bonsai_shop.entity.ArtisanProfile;
 import com.example.bonsai_shop.entity.Category;
@@ -10,7 +11,6 @@ import com.example.bonsai_shop.entity.ProductTag;
 import com.example.bonsai_shop.entity.Tag;
 import com.example.bonsai_shop.entity.User;
 import com.example.bonsai_shop.entity.Variety;
-import com.example.bonsai_shop.product.repository.ArtisanProfileRepository;
 import com.example.bonsai_shop.product.repository.CategoryRepository;
 import com.example.bonsai_shop.product.repository.ProductMediaRepository;
 import com.example.bonsai_shop.product.repository.ProductRepository;
@@ -48,8 +48,8 @@ public class ArtisanProductService {
     private final TagRepository tagRepository;
     private final VarietyRepository varietyRepository;
     private final UserRepository userRepository;
-    private final ArtisanProfileRepository artisanProfileRepository;
     private final ArtisanMediaStorageService mediaStorageService;
+    private final ArtisanProfileService artisanProfileService;
 
     public User getArtisanUser(String email) {
         return userRepository.findByEmail(email)
@@ -57,9 +57,7 @@ public class ArtisanProductService {
     }
 
     public ArtisanProfile getArtisanProfile(String email) {
-        User artisanUser = getArtisanUser(email);
-        return artisanProfileRepository.findByUserId(artisanUser.getUserId())
-                .orElseThrow(() -> new RuntimeException("Tài khoản artisan chưa có hồ sơ artisan_profile!"));
+        return artisanProfileService.getOrCreateProfile(email);
     }
 
     public List<Product> getMyProducts(String artisanEmail) {
@@ -82,26 +80,15 @@ public class ArtisanProductService {
     }
 
     @Transactional
-    public Product createProduct(String artisanEmail,
-                                 Integer varietyId,
-                                 Integer segmentId,
-                                 String productName,
-                                 String description,
-                                 Integer age,
-                                 Float height,
-                                 Float trunkDiameter,
-                                 String style,
-                                 BigDecimal price,
-                                 String productStatus,
-                                 List<Integer> tagIds) {
+    public Product createProduct(String artisanEmail, ArtisanProductFormDTO form) {
         User artisanUser = getArtisanUser(artisanEmail);
         ArtisanProfile artisanProfile = getArtisanProfile(artisanEmail);
-        Variety variety = varietyRepository.findById(varietyId)
+        Variety variety = varietyRepository.findById(form.getVarietyId())
                 .orElseThrow(() -> new RuntimeException("Variety không tồn tại!"));
-        ProductSegment segment = productSegmentRepository.findById(segmentId)
+        ProductSegment segment = productSegmentRepository.findById(form.getSegmentId())
                 .orElseThrow(() -> new RuntimeException("Segment không tồn tại!"));
 
-        validateRequiredSpecifications(age, height, trunkDiameter, style);
+        validateRequiredSpecifications(form.getAge(), form.getHeight(), form.getTrunkDiameter(), form.getStyle());
 
         Product product = Product.builder()
                 .createdBy(artisanUser)
@@ -109,15 +96,15 @@ public class ArtisanProductService {
                 .variety(variety)
                 .segment(segment)
                 .productCode(createTemporaryProductCode())
-                .productName(productName)
-                .description(description)
-                .age(age)
-                .height(height)
-                .trunkDiameter(trunkDiameter)
-                .style(style)
-                .price(price)
+                .productName(form.getProductName())
+                .description(form.getDescription())
+                .age(form.getAge())
+                .height(form.getHeight())
+                .trunkDiameter(form.getTrunkDiameter())
+                .style(form.getStyle())
+                .price(form.getPrice())
                 .isPublicPrice(isPublicPriceForSegment(segment))
-                .productStatus(productStatus == null || productStatus.isBlank() ? "DRAFT" : productStatus)
+                .productStatus("DRAFT")
                 .viewCount(0)
                 .createdAt(LocalDateTime.now())
                 .build();
@@ -125,47 +112,55 @@ public class ArtisanProductService {
         Product savedProduct = productRepository.save(product);
         savedProduct.setProductCode(generateProductCode(savedProduct.getVariety()));
         Product productWithCode = productRepository.save(savedProduct);
-        syncProductTags(productWithCode, tagIds);
+        syncProductTags(productWithCode, form.getTagIds());
         return productWithCode;
     }
 
     @Transactional
-    public void updateProduct(String artisanEmail,
-                                 Integer productId,
-                                 Integer varietyId,
-                                 Integer segmentId,
-                                 String productName,
-                                 String description,
-                                 Integer age,
-                                 Float height,
-                                 Float trunkDiameter,
-                                 String style,
-                                 BigDecimal price,
-                                 String productStatus,
-                                 List<Integer> tagIds) {
+    public void updateProduct(String artisanEmail, Integer productId, ArtisanProductFormDTO form) {
         Product product = getMyProduct(artisanEmail, productId);
         ensureEditable(product);
-        Variety variety = varietyRepository.findById(varietyId)
+        Variety variety = varietyRepository.findById(form.getVarietyId())
                 .orElseThrow(() -> new RuntimeException("Variety không tồn tại!"));
-        ProductSegment segment = productSegmentRepository.findById(segmentId)
+        ProductSegment segment = productSegmentRepository.findById(form.getSegmentId())
                 .orElseThrow(() -> new RuntimeException("Segment không tồn tại!"));
 
-        validateRequiredSpecifications(age, height, trunkDiameter, style);
+        validateRequiredSpecifications(form.getAge(), form.getHeight(), form.getTrunkDiameter(), form.getStyle());
 
         product.setVariety(variety);
         product.setSegment(segment);
-        product.setProductName(productName);
-        product.setDescription(description);
-        product.setAge(age);
-        product.setHeight(height);
-        product.setTrunkDiameter(trunkDiameter);
-        product.setStyle(style);
-        product.setPrice(price);
+        product.setProductName(form.getProductName());
+        product.setDescription(form.getDescription());
+        product.setAge(form.getAge());
+        product.setHeight(form.getHeight());
+        product.setTrunkDiameter(form.getTrunkDiameter());
+        product.setStyle(form.getStyle());
+        product.setPrice(form.getPrice());
         product.setIsPublicPrice(isPublicPriceForSegment(segment));
-        product.setProductStatus(productStatus);
+        product.setProductStatus(form.getProductStatus());
 
         Product savedProduct = productRepository.save(product);
-        syncProductTags(savedProduct, tagIds);
+        syncProductTags(savedProduct, form.getTagIds());
+    }
+
+    public ArtisanProductFormDTO toFormDTO(Product product) {
+        if (product == null) {
+            return new ArtisanProductFormDTO();
+        }
+
+        return ArtisanProductFormDTO.builder()
+                .varietyId(product.getVariety() == null ? null : product.getVariety().getVarietyId())
+                .segmentId(product.getSegment() == null ? null : product.getSegment().getSegmentId())
+                .productName(product.getProductName())
+                .description(product.getDescription())
+                .age(product.getAge())
+                .height(product.getHeight())
+                .trunkDiameter(product.getTrunkDiameter())
+                .style(product.getStyle())
+                .price(product.getPrice())
+                .productStatus(product.getProductStatus())
+                .tagIds(getSelectedTagIds(product))
+                .build();
     }
 
     @Transactional
@@ -483,3 +478,4 @@ public class ArtisanProductService {
         return suffix.toString();
     }
 }
+

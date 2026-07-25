@@ -1,0 +1,104 @@
+﻿<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hồ sơ Nghệ nhân - Bonsai Shop</title>
+    <link rel="icon" type="image/png" th:href="@{/images/logo.png}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+    <link rel="stylesheet" th:href="@{/css/dashboard-layout.css}">
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+    <link rel="stylesheet" th:href="@{/css/artisan-profile.css}">
+</head>
+<body>
+<div class="dashboard-layout">
+    <div th:replace="~{fragments/sidebar :: sidebar('artisan-profile')}"></div>
+
+    <main class="dashboard-main">
+        <header th:replace="~{fragments/header :: header}"></header>
+
+        <div class="artisan-profile-page">
+            <div class="artisan-profile-container">
+                <aside class="artisan-profile-cover-panel">
+                    <img th:if="${!#strings.isEmpty(artisanProfile.coverImageUrl)}"
+                         th:src="${artisanProfile.coverImageUrl}"
+                         alt="Ảnh bìa hồ sơ nghệ nhân">
+                    <div th:if="${#strings.isEmpty(artisanProfile.coverImageUrl)}" class="artisan-profile-cover-placeholder">
+                        <i class="fa-regular fa-image"></i>
+                        <span>Chưa có ảnh bìa</span>
+                    </div>
+                </aside>
+
+                <section class="artisan-profile-card">
+                    <div class="artisan-profile-heading">
+                        <h1>Hồ sơ Nghệ nhân</h1>
+                        <p>Thông tin hành nghề được lưu riêng trong bảng artisan_profile.</p>
+                    </div>
+
+                    <div th:if="${success}" class="artisan-profile-message" th:text="${success}"></div>
+
+                    <div class="artisan-profile-field">
+                        <span class="artisan-profile-icon"><i class="fa-regular fa-id-badge"></i></span>
+                        <div>
+                            <span class="artisan-profile-label">Tên nghệ nhân</span>
+                            <div class="artisan-profile-value"
+                                 th:text="${#strings.isEmpty(artisanProfile.fullName) ? 'Chưa cập nhật' : artisanProfile.fullName}">
+                                Nguyễn Thành
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="artisan-profile-field">
+                        <span class="artisan-profile-icon"><i class="fa-solid fa-medal"></i></span>
+                        <div>
+                            <span class="artisan-profile-label">Chuyên môn</span>
+                            <div class="artisan-profile-value"
+                                 th:text="${#strings.isEmpty(artisanProfile.specialty) ? 'Chưa cập nhật' : artisanProfile.specialty}">
+                                Sanh Nam Điền
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="artisan-profile-field">
+                        <span class="artisan-profile-icon"><i class="fa-regular fa-hourglass-half"></i></span>
+                        <div>
+                            <span class="artisan-profile-label">Năm kinh nghiệm</span>
+                            <div class="artisan-profile-inline">
+                                <div class="artisan-profile-value"
+                                     th:text="${artisanProfile.yearsOfExperience != null ? artisanProfile.yearsOfExperience : 0}">
+                                    40
+                                </div>
+                                <span class="artisan-profile-unit">Năm</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="artisan-profile-field">
+                        <span class="artisan-profile-icon"><i class="fa-regular fa-scroll"></i></span>
+                        <div>
+                            <span class="artisan-profile-label">Giới thiệu nghệ nhân</span>
+                            <div class="artisan-profile-value"
+                                 th:text="${#strings.isEmpty(artisanProfile.bio) ? 'Chưa cập nhật' : artisanProfile.bio}">
+                                Chuyên gia Sanh cổ Nam Định, với hơn 4 thập kỷ cống hiến.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="artisan-profile-actions">
+                        <a class="artisan-profile-btn primary" th:href="@{/artisan/profile/artisan-profile/update}">
+                            Chỉnh sửa hồ sơ
+                        </a>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </main>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
