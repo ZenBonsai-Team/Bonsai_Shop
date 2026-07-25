@@ -11,6 +11,7 @@ public class PurchaseOrderRequestDTO {
 
     private Integer productId;
     private java.util.List<Integer> productIds;
+    private String otpCode;
 
     @NotBlank(message = "Tên khách hàng không được trống")
     private String customerName;

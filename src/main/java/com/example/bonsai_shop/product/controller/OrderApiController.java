@@ -35,6 +35,10 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import com.example.bonsai_shop.customer.repository.RegisterOtpRepository;
+import com.example.bonsai_shop.customer.service.EmailService;
+import com.example.bonsai_shop.entity.PasswordResetOtp;
+
 @RestController
 @RequestMapping("/api/orders")
 public class OrderApiController {
@@ -53,6 +57,43 @@ public class OrderApiController {
 
     @Autowired
     private CartService cartService;
+
+    @Autowired
+    private RegisterOtpRepository registerOtpRepository;
+
+    @Autowired
+    private EmailService emailService;
+
+    @PostMapping("/send-guest-otp")
+    public ResponseEntity<Map<String, Object>> sendGuestOtp(@RequestBody Map<String, String> payload) {
+        Map<String, Object> response = new HashMap<>();
+        String email = payload.get("email");
+        if (email == null || !email.matches("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$")) {
+            response.put("success", false);
+            response.put("message", "Địa chỉ Email không hợp lệ!");
+            return ResponseEntity.badRequest().body(response);
+        }
+
+        try {
+            registerOtpRepository.deleteByEmail(email);
+        } catch (Exception ignored) {}
+
+        String otpCode = String.format("%06d", new java.security.SecureRandom().nextInt(1000000));
+        PasswordResetOtp otp = PasswordResetOtp.builder()
+                .email(email)
+                .otpCode(otpCode)
+                .expiredAt(LocalDateTime.now().plusMinutes(5))
+                .isUsed(false)
+                .createdAt(LocalDateTime.now())
+                .build();
+
+        registerOtpRepository.save(otp);
+        emailService.sendGuestOrderOtp(email, otpCode);
+
+        response.put("success", true);
+        response.put("message", "Mã OTP xác nhận đơn hàng đã được gửi tới Email: " + email);
+        return ResponseEntity.ok(response);
+    }
 
     @GetMapping("/pool")
     public ResponseEntity<Map<String, Object>> getPoolOrders(
@@ -289,6 +330,29 @@ public class OrderApiController {
             response.put("message",
                     "Tài khoản quản trị, nhà vườn hoặc kiểm duyệt viên không được phép thực hiện đặt hàng!");
             return ResponseEntity.status(403).body(response);
+        }
+
+        // Xác thực mã OTP nếu là Khách vãng lai (Guest Checkout)
+        if (customer == null) {
+            String otpCode = dto.getOtpCode();
+            if (otpCode == null || otpCode.trim().isEmpty()) {
+                response.put("success", false);
+                response.put("requireOtp", true);
+                response.put("message", "Vui lòng nhập mã OTP xác nhận được gửi về Email.");
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            PasswordResetOtp otp = registerOtpRepository.findTopByEmailOrderByCreatedAtDesc(dto.getCustomerEmail())
+                    .orElse(null);
+            if (otp == null || Boolean.TRUE.equals(otp.getIsUsed()) || otp.getExpiredAt().isBefore(LocalDateTime.now())
+                    || !otp.getOtpCode().equals(otpCode.trim())) {
+                response.put("success", false);
+                response.put("message", "Mã OTP không hợp lệ hoặc đã hết hạn. Vui lòng lấy mã mới và thử lại!");
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            otp.setIsUsed(true);
+            registerOtpRepository.save(otp);
         }
 
         // 1. Lấy danh sách sản phẩm cần đặt hàng (từ DTO hoặc từ Giỏ hàng trong DB)
