@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>In-person Orders</title>
+    <title>In-person Order</title>
     <link rel="icon" type="image/png" th:href="@{/images/logo.png}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -15,14 +15,14 @@
 </head>
 <body>
 <div class="dashboard-layout">
-    <div th:replace="~{fragments/sidebar :: sidebar('artisan-walk-in-orders')}"></div>
+    <div th:replace="~{fragments/sidebar :: sidebar('artisan-in-person-order')}"></div>
 
     <main class="dashboard-main">
-        <div th:replace="~{fragments/artisan-topbar :: topbar('In-person Orders')}"></div>
+        <div th:replace="~{fragments/artisan-topbar :: topbar('In-person Order')}"></div>
 
         <header class="page-header">
             <div>
-                <h1>In-person Orders</h1>
+                <h1>In-person Order</h1>
                 <p>Artisan tạo đơn khách mua trực tiếp tại vườn, reserve cây, xác nhận nhận tiền và hoàn tất.</p>
             </div>
             <a class="btn secondary" th:href="@{/artisan/products}">My Products</a>
@@ -39,7 +39,7 @@
                 </div>
             </div>
 
-            <form id="walkInCreateForm" method="post" th:action="@{/artisan/walk-in-orders}" class="artisan-profile-fields walk-in-order-form">
+            <form id="walkInCreateForm" method="post" th:action="@{/artisan/in-person-order}" class="artisan-profile-fields walk-in-order-form">
                 <div class="walk-in-product-picker">
                     <label>
                         <span>Sản phẩm</span>
@@ -144,7 +144,7 @@
             <div class="toolbar-header">
                 <div class="toolbar-search-row">
                     <div>
-                        <h2 class="mb-1">Danh sách In-person Orders</h2>
+                        <h2 class="mb-1">Danh sách In-person Order</h2>
                         <p class="text-muted mb-0">Luồng: PENDING_PAYMENT → Payment SUCCESS → COMPLETED → Product SOLD.</p>
                     </div>
                 </div>
@@ -152,16 +152,16 @@
                 <div class="filter-tabs">
                     <a class="tab-btn text-decoration-none"
                        th:classappend="${selectedStatus == 'ALL'} ? ' active'"
-                       th:href="@{/artisan/walk-in-orders(status='ALL')}">Tất cả</a>
+                       th:href="@{/artisan/in-person-order(status='ALL')}">Tất cả</a>
                     <a class="tab-btn text-decoration-none"
                        th:classappend="${selectedStatus == pendingPaymentStatus} ? ' active'"
-                       th:href="@{/artisan/walk-in-orders(status=${pendingPaymentStatus})}">Chờ nhận tiền</a>
+                       th:href="@{/artisan/in-person-order(status=${pendingPaymentStatus})}">Chờ nhận tiền</a>
                     <a class="tab-btn text-decoration-none"
                        th:classappend="${selectedStatus == completedStatus} ? ' active'"
-                       th:href="@{/artisan/walk-in-orders(status=${completedStatus})}">Hoàn tất</a>
+                       th:href="@{/artisan/in-person-order(status=${completedStatus})}">Hoàn tất</a>
                     <a class="tab-btn text-decoration-none"
                        th:classappend="${selectedStatus == cancelledStatus} ? ' active'"
-                       th:href="@{/artisan/walk-in-orders(status=${cancelledStatus})}">Đã hủy</a>
+                       th:href="@{/artisan/in-person-order(status=${cancelledStatus})}">Đã hủy</a>
                 </div>
             </div>
 
@@ -214,9 +214,9 @@
                                     th:data-total-amount="${order.totalAmount}"
                                     th:data-deposit-amount="${order.depositAmount}"
                                     th:data-notes="${order.notes != null ? order.notes : 'Không có ghi chú thêm.'}"
-                                    th:data-confirm-url="@{/artisan/walk-in-orders/{id}/confirm-payment(id=${order.orderId})}"
-                                    th:data-update-url="@{/artisan/walk-in-orders/{id}/update(id=${order.orderId})}"
-                                    th:data-cancel-url="@{/artisan/walk-in-orders/{id}/cancel(id=${order.orderId})}">
+                                    th:data-confirm-url="@{/artisan/in-person-order/{id}/confirm-payment(id=${order.orderId})}"
+                                    th:data-update-url="@{/artisan/in-person-order/{id}/update(id=${order.orderId})}"
+                                    th:data-cancel-url="@{/artisan/in-person-order/{id}/cancel(id=${order.orderId})}">
                                 Chi tiết
                             </button>
                         </td>
@@ -224,7 +224,7 @@
                     <tr th:if="${orders.totalElements == 0}">
                         <td colspan="7" class="empty-state">
                             <div class="empty-state-icon"><i class="fa-solid fa-cash-register"></i></div>
-                            <div class="empty-state-title">Chưa có in-person order.</div>
+                            <div class="empty-state-title">Chưa có In-person Order.</div>
                             <div class="empty-state-desc">Tạo đơn mới khi khách mua trực tiếp tại vườn.</div>
                         </td>
                     </tr>
@@ -235,8 +235,8 @@
             <div class="pagination-footer" th:if="${orders.totalPages > 1}">
                 <div class="pagination-info" th:text="${'Hiển thị trang ' + (orders.number + 1) + ' / ' + orders.totalPages}"></div>
                 <div class="pagination-controls">
-                    <a class="page-btn" th:if="${orders.hasPrevious()}" th:href="@{/artisan/walk-in-orders(status=${selectedStatus},page=${orders.number - 1})}">Trước</a>
-                    <a class="page-btn" th:if="${orders.hasNext()}" th:href="@{/artisan/walk-in-orders(status=${selectedStatus},page=${orders.number + 1})}">Sau</a>
+                    <a class="page-btn" th:if="${orders.hasPrevious()}" th:href="@{/artisan/in-person-order(status=${selectedStatus},page=${orders.number - 1})}">Trước</a>
+                    <a class="page-btn" th:if="${orders.hasNext()}" th:href="@{/artisan/in-person-order(status=${selectedStatus},page=${orders.number + 1})}">Sau</a>
                 </div>
             </div>
         </section>
@@ -379,7 +379,7 @@
 
                 <form id="walkInCancelForm" class="reject-reason-box walk-in-cancel-box" method="post">
                     <input th:if="${_csrf != null}" type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-                    <label for="walkInCancelReason">Nhập lý do hủy in-person order:</label>
+                    <label for="walkInCancelReason">Nhập lý do hủy In-person Order:</label>
                     <textarea id="walkInCancelReason" name="reason" rows="3" placeholder="Ví dụ: Khách đổi ý không mua, hẹn xem lại cây khác..."></textarea>
                     <div class="reject-action-row">
                         <button class="btn-mini btn-mini-cancel" id="walkInCancelReasonClose" type="button">Hủy</button>
@@ -402,7 +402,7 @@
 <div id="walkInCancelConfirmModal" class="artisan-action-modal-backdrop hidden">
     <div class="artisan-action-modal" role="dialog" aria-modal="true" aria-labelledby="walkInCancelConfirmTitle">
         <header>
-            <h2 id="walkInCancelConfirmTitle">Xác nhận hủy in-person order</h2>
+            <h2 id="walkInCancelConfirmTitle">Xác nhận hủy In-person Order</h2>
             <button type="button" class="artisan-action-modal-close" aria-label="Đóng">×</button>
         </header>
         <div class="artisan-action-modal-body">
@@ -452,7 +452,7 @@
 <div id="walkInCreateConfirmModal" class="artisan-action-modal-backdrop hidden">
     <div class="artisan-action-modal" role="dialog" aria-modal="true" aria-labelledby="walkInCreateConfirmTitle">
         <header>
-            <h2 id="walkInCreateConfirmTitle">Xác nhận tạo in-person order</h2>
+            <h2 id="walkInCreateConfirmTitle">Xác nhận tạo In-person Order</h2>
             <button type="button" class="artisan-action-modal-close" aria-label="Đóng">×</button>
         </header>
         <div class="artisan-action-modal-body">
@@ -826,3 +826,4 @@
 </script>
 </body>
 </html>
+
