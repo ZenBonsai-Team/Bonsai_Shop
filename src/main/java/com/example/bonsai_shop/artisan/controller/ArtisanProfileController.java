@@ -88,6 +88,7 @@ public class ArtisanProfileController {
     public String updateArtisanProfile(@AuthenticationPrincipal UserDetails userDetails,
                                        @Valid @ModelAttribute("artisanProfileForm") ArtisanProfileFormDTO form,
                                        BindingResult bindingResult,
+                                       @RequestParam(value = "coverImageFile", required = false) MultipartFile coverImageFile,
                                        Model model,
                                        RedirectAttributes redirectAttributes) {
         String email = userDetails.getUsername();
@@ -99,7 +100,7 @@ public class ArtisanProfileController {
         }
 
         try {
-            artisanProfileService.updateProfile(email, form);
+            artisanProfileService.updateProfile(email, form, coverImageFile);
             redirectAttributes.addFlashAttribute("success", "Cập nhật hồ sơ nghệ nhân thành công!");
             return "redirect:/artisan/profile/artisan-profile";
         } catch (RuntimeException e) {

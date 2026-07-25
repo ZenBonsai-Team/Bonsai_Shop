@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
@@ -24,6 +24,16 @@
 
         <div class="artisan-profile-page">
             <div class="artisan-profile-container">
+                <aside class="artisan-profile-cover-panel">
+                    <img th:if="${!#strings.isEmpty(artisanProfile.coverImageUrl)}"
+                         th:src="${artisanProfile.coverImageUrl}"
+                         alt="Ảnh bìa hồ sơ nghệ nhân">
+                    <div th:if="${#strings.isEmpty(artisanProfile.coverImageUrl)}" class="artisan-profile-cover-placeholder">
+                        <i class="fa-regular fa-image"></i>
+                        <span>Chưa có ảnh bìa</span>
+                    </div>
+                </aside>
+
                 <section class="artisan-profile-card">
                     <div class="artisan-profile-heading">
                         <h1>Hồ sơ Nghệ nhân</h1>
@@ -86,7 +96,6 @@
                     </div>
                 </section>
             </div>
-
         </div>
     </main>
 </div>

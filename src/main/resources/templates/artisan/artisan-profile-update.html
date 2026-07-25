@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
@@ -24,6 +24,16 @@
 
         <div class="artisan-profile-page">
             <div class="artisan-profile-container">
+                <aside class="artisan-profile-cover-panel">
+                    <img th:if="${!#strings.isEmpty(artisanProfileForm.coverImageUrl)}"
+                         th:src="${artisanProfileForm.coverImageUrl}"
+                         alt="Ảnh bìa hồ sơ nghệ nhân">
+                    <div th:if="${#strings.isEmpty(artisanProfileForm.coverImageUrl)}" class="artisan-profile-cover-placeholder">
+                        <i class="fa-regular fa-image"></i>
+                        <span>Chưa có ảnh bìa</span>
+                    </div>
+                </aside>
+
                 <section class="artisan-profile-card">
                     <div class="artisan-profile-heading">
                         <h1>Cập nhật Hồ sơ Nghệ nhân</h1>
@@ -32,7 +42,7 @@
 
                     <div th:if="${error}" class="artisan-profile-message error" th:text="${error}"></div>
 
-                    <form method="post" th:action="@{/artisan/profile/artisan-profile/update}" th:object="${artisanProfileForm}">
+                    <form method="post" enctype="multipart/form-data" th:action="@{/artisan/profile/artisan-profile/update}" th:object="${artisanProfileForm}">
                         <input th:if="${_csrf != null}" type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
 
                         <div class="artisan-profile-field">
@@ -50,6 +60,24 @@
                                 <label class="artisan-profile-label" for="specialty">Chuyên môn</label>
                                 <input id="specialty" th:field="*{specialty}" placeholder="Ví dụ: Sanh Nam Điền">
                                 <small th:if="${#fields.hasErrors('specialty')}" th:errors="*{specialty}" class="artisan-profile-error"></small>
+                            </div>
+                        </div>
+
+                        <div class="artisan-profile-field">
+                            <span class="artisan-profile-icon"><i class="fa-regular fa-image"></i></span>
+                            <div>
+                                <label class="artisan-profile-label" for="coverImageFile">Ảnh bìa</label>
+                                <input id="coverImageFile" name="coverImageFile" type="file" accept="image/*">
+                                <small class="artisan-profile-help">Chọn ảnh từ máy để cập nhật ảnh bìa hồ sơ nghệ nhân.</small>
+                            </div>
+                        </div>
+
+                        <div class="artisan-profile-field">
+                            <span class="artisan-profile-icon"><i class="fa-solid fa-link"></i></span>
+                            <div>
+                                <label class="artisan-profile-label" for="coverImageUrl">URL ảnh bìa hiện tại</label>
+                                <input id="coverImageUrl" th:field="*{coverImageUrl}" placeholder="https://...">
+                                <small th:if="${#fields.hasErrors('coverImageUrl')}" th:errors="*{coverImageUrl}" class="artisan-profile-error"></small>
                             </div>
                         </div>
 
@@ -81,7 +109,6 @@
                     </form>
                 </section>
             </div>
-
         </div>
     </main>
 </div>

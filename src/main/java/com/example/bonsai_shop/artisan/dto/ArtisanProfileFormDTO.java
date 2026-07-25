@@ -28,4 +28,7 @@ public class ArtisanProfileFormDTO {
 
     @Size(max = 255, message = "Chuyên môn không được vượt quá 255 ký tự.")
     private String specialty;
+
+    @Size(max = 500, message = "URL ảnh bìa không được vượt quá 500 ký tự.")
+    private String coverImageUrl;
 }
