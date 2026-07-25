@@ -278,12 +278,6 @@ public class OrderApiController {
         Map<String, Object> response = new HashMap<>();
 
         User customer = SecurityUtils.getCurrentUser(principal, userRepository);
-        if (customer == null) {
-            response.put("success", false);
-            response.put("message", "Vui lòng đăng nhập trước khi thanh toán.");
-            return ResponseEntity.status(401).body(response);
-        }
-
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         boolean isStaffOrAdmin = auth != null && auth.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_OWNER") || a.getAuthority().equals("ROLE_ARTISAN")
@@ -296,23 +290,32 @@ public class OrderApiController {
                     "Tài khoản quản trị, nhà vườn hoặc kiểm duyệt viên không được phép thực hiện đặt hàng!");
             return ResponseEntity.status(403).body(response);
         }
-        if (customer == null) {
-            response.put("success", false);
-            response.put("message", "Tài khoản người dùng không hợp lệ.");
-            return ResponseEntity.badRequest().body(response);
+
+        // 1. Lấy danh sách sản phẩm cần đặt hàng (từ DTO hoặc từ Giỏ hàng trong DB)
+        List<Product> productsToBuy = new ArrayList<>();
+        if (dto.getProductIds() != null && !dto.getProductIds().isEmpty()) {
+            for (Integer pId : dto.getProductIds()) {
+                productRepository.findById(pId).ifPresent(productsToBuy::add);
+            }
+        } else if (dto.getProductId() != null) {
+            productRepository.findById(dto.getProductId()).ifPresent(productsToBuy::add);
+        } else if (customer != null) {
+            List<CartItem> cartItems = cartService.getCartItems(customer.getUserId());
+            if (cartItems != null) {
+                for (CartItem item : cartItems) {
+                    productsToBuy.add(item.getProduct());
+                }
+            }
         }
 
-        // 1. Lấy toàn bộ các mặt hàng đang có trong giỏ của người dùng
-        List<CartItem> cartItems = cartService.getCartItems(customer.getUserId());
-        if (cartItems == null || cartItems.isEmpty()) {
+        if (productsToBuy.isEmpty()) {
             response.put("success", false);
             response.put("message", "Giỏ hàng của bạn đang trống! Vui lòng chọn sản phẩm trước.");
             return ResponseEntity.badRequest().body(response);
         }
 
-        // Kiểm tra tính khả dụng của tất cả các sản phẩm trong giỏ hàng
-        for (CartItem item : cartItems) {
-            Product prod = item.getProduct();
+        // 2. Kiểm tra tính khả dụng của tất cả các sản phẩm
+        for (Product prod : productsToBuy) {
             if (!"AVAILABLE".equalsIgnoreCase(prod.getProductStatus())) {
                 response.put("success", false);
                 response.put("message",
@@ -323,8 +326,8 @@ public class OrderApiController {
 
         // 3. Khởi tạo Đơn Hàng mới (Order)
         String orderCode = "BSMS-" + VNPayConfig.getRandomNumber(6).toUpperCase();
-        BigDecimal totalAmount = cartItems.stream()
-                .map(item -> item.getProduct().getPrice())
+        BigDecimal totalAmount = productsToBuy.stream()
+                .map(Product::getPrice)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         Order order = Order.builder()
@@ -342,8 +345,7 @@ public class OrderApiController {
                 .build();
 
         // 4. Liên kết các sản phẩm chi tiết (OrderDetail)
-        List<OrderDetail> details = cartItems.stream().map(item -> {
-            Product prod = item.getProduct();
+        List<OrderDetail> details = productsToBuy.stream().map(prod -> {
             int reserved = productRepository.reserveIfAvailable(prod.getProductId());
             if (reserved == 0) {
                 throw new IllegalStateException("Tác phẩm '" + prod.getProductName() + "' đã được bán hoặc giữ chỗ!");
@@ -359,8 +361,10 @@ public class OrderApiController {
         order.setOrderDetails(details);
         orderRepository.save(order);
 
-        // 5. Xóa sạch giỏ hàng của người dùng sau khi checkout thành công
-        cartService.clearCart(customer.getUserId());
+        // 5. Xóa sạch giỏ hàng DB nếu là User đã đăng nhập
+        if (customer != null) {
+            cartService.clearCart(customer.getUserId());
+        }
 
         // 6. Xử lý phân nhánh Phương thức thanh toán
         if ("VNPAY".equalsIgnoreCase(dto.getPaymentMethod())) {

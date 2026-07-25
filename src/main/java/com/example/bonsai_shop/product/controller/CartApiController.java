@@ -85,4 +85,28 @@ public class CartApiController {
         response.put("message", "Đã xóa sản phẩm khỏi giỏ hàng.");
         return ResponseEntity.ok(response);
     }
+
+    @PostMapping("/sync")
+    public ResponseEntity<Map<String, Object>> syncGuestCart(
+            @RequestBody List<Integer> productIds,
+            @AuthenticationPrincipal Object principal) {
+
+        Map<String, Object> response = new HashMap<>();
+        User user = SecurityUtils.getCurrentUser(principal, userRepository);
+        if (user == null || productIds == null || productIds.isEmpty()) {
+            response.put("success", false);
+            return ResponseEntity.ok(response);
+        }
+
+        for (Integer pId : productIds) {
+            try {
+                cartService.addToCart(user.getUserId(), pId, user);
+            } catch (Exception ignored) {
+            }
+        }
+
+        response.put("success", true);
+        response.put("message", "Đã đồng bộ giỏ hàng thành công.");
+        return ResponseEntity.ok(response);
+    }
 }

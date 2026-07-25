@@ -19,20 +19,49 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 async function loadCheckoutSummary() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const singleProductId = urlParams.get('productId');
+
     try {
         const response = await fetch('/api/cart');
-        if (response.status === 401) {
-            window.location.href = '/login';
-            return;
+        if (response.ok) {
+            const items = await response.json();
+            if (items && items.length > 0) {
+                renderSummary(items);
+                return;
+            }
         }
-        if (!response.ok) {
-            throw new Error('Failed to fetch cart');
-        }
-        
-        const items = await response.json();
-        renderSummary(items);
     } catch (error) {
-        console.error('Error loading checkout summary:', error);
+    }
+
+    // Fallback cho Khách vãng lai (Guest)
+    let guestProductIds = [];
+    if (singleProductId) {
+        guestProductIds.push(parseInt(singleProductId));
+    } else {
+        const guestCart = JSON.parse(localStorage.getItem('bonsai_guest_cart') || '[]');
+        guestProductIds = guestCart;
+    }
+
+    if (guestProductIds.length > 0) {
+        const items = [];
+        for (const pId of guestProductIds) {
+            try {
+                const res = await fetch(`/api/products/${pId}`);
+                if (res.ok) {
+                    const prod = await res.json();
+                    items.push({
+                        productId: prod.productId,
+                        productName: prod.productName,
+                        price: prod.price
+                    });
+                }
+            } catch (err) {}
+        }
+        window.guestProductIdsToBuy = guestProductIds;
+        renderSummary(items);
+    } else {
+        renderSummary([]);
     }
 }
 
@@ -146,14 +175,12 @@ async function placeOrder() {
     
     // Xử lý khi có lỗi validate
     if (hasError) {
-        // Kích hoạt Toast thông báo chung
         const toastEl = document.getElementById('validationToast');
         if (toastEl) {
             const toast = new bootstrap.Toast(toastEl);
             toast.show();
         }
         
-        // Focus và cuộn mượt tới trường lỗi đầu tiên
         if (firstErrorField) {
             firstErrorField.scrollIntoView({ behavior: 'smooth', block: 'center' });
             firstErrorField.focus();
@@ -174,7 +201,8 @@ async function placeOrder() {
         customerEmail: custEmail,
         shippingAddress: custAddress,
         notes: notes,
-        paymentMethod: paymentMethod
+        paymentMethod: paymentMethod,
+        productIds: window.guestProductIdsToBuy || null
     };
     
     const btn = document.getElementById('btnPlaceOrder');
@@ -191,13 +219,13 @@ async function placeOrder() {
         const result = await response.json();
         
         if (response.ok && result.success) {
+            // Đã đặt hàng thành công -> Xóa giỏ hàng guest nếu có
+            localStorage.removeItem('bonsai_guest_cart');
             if (typeof window.updateCartBadge === 'function') {
                 window.updateCartBadge();
             }
-            // Chuyển hướng sang trang Success chuyên nghiệp
             window.location.href = `/order/success?orderCode=${result.orderCode}`;
         } else {
-            // Case 2: Business Error
             showBusinessErrorModal(result.message || "Đặt hàng thất bại. Vui lòng thử lại!");
             btn.disabled = false;
             btn.textContent = "Xác nhận đặt hàng";
