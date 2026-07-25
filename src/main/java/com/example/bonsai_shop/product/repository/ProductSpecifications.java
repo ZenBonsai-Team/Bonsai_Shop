@@ -28,7 +28,7 @@ public class ProductSpecifications {
             // query)
             if (query.getResultType() != Long.class && query.getResultType() != long.class) {
                 root.fetch("variety", JoinType.INNER);
-                root.fetch("artisan", JoinType.INNER);
+                root.fetch("createdBy", JoinType.LEFT);
             }
 
             // Customer marketplace must not expose artisan-only product states.
