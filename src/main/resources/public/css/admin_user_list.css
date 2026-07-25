@@ -162,3 +162,19 @@ tbody tr:hover {
     font-size: 12px;
     font-weight: 600;
 }
+
+.pagination{
+    margin-top:20px;
+    display:flex;
+    justify-content:center;
+    gap:10px;
+}
+
+.pagination button{
+    padding:8px 16px;
+    border:none;
+    border-radius:8px;
+    background:#1b4332;
+    color:white;
+    cursor:pointer;
+}
