@@ -24,15 +24,6 @@ AND a.status IN ('PENDING','APPROVED')
     long countActiveAppointmentByCustomer(
             @Param("customer") User customer);
 
-    @Query("""
-SELECT COUNT(a)
-FROM ViewingAppointment a
-WHERE a.product = :product
-AND a.status IN ('PENDING','APPROVED')
-""")
-    long countAppointmentByProduct(
-            @Param("product") Product product
-    );
     List<ViewingAppointment> findByCustomer(User customer);
 
     Optional<ViewingAppointment> findByAppointmentIdAndCustomer(Integer appointmentId, User customer);

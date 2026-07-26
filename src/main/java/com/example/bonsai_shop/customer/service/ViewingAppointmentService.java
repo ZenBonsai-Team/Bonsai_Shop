@@ -23,14 +23,6 @@ public class ViewingAppointmentService {
 
     @Transactional
     public void createViewingAppointment(ViewingAppointment viewingAppointment) {
-
-        if (viewingAppointmentRepository.countActiveAppointmentByCustomer(
-                viewingAppointment.getCustomer()) > 0) {
-            throw new RuntimeException(
-                    "Bạn đã có lịch hẹn."
-            );
-        }
-
         userService.checkProfileEmailAndPhone(viewingAppointment.getCustomer());
 
         Product product = viewingAppointment.getProduct();
@@ -41,10 +33,7 @@ public class ViewingAppointmentService {
         if ("SOLD".equals(product.getProductStatus())) {
             throw new RuntimeException("Sản phẩm đã được bán!");
         }
-        long totalAppointment = viewingAppointmentRepository.countAppointmentByProduct(product);
-        if (totalAppointment >= 10) {
-            throw new RuntimeException("Cây bonsai này đã đủ số lượng khách đặt lịch xem.");
-        }
+
         viewingAppointmentRepository.save(viewingAppointment);
 
         notificationService.createNotification(viewingAppointment.getCustomer(),

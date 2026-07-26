@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="vi"
-      xmlns:th="http://www.thymeleaf.org">
+      xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.w3.org/1999/xhtml">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -336,7 +336,12 @@
                             </div>
 
                             <div class="card-footer">
-                                <div class="price-copy">Giá theo yêu cầu</div>
+                                <div class="price-copy"
+                                     sec:authorize="hasAnyRole('OWNER', 'ARTISAN')"
+                                     th:text="${item.price != null ? #numbers.formatDecimal(item.price, 0, 'POINT', 0, 'POINT') + ' đ' : 'Đang cập nhật'}">
+                                    Đang cập nhật
+                                </div>
+                                <div class="price-copy" sec:authorize="!hasAnyRole('OWNER', 'ARTISAN')">Giá theo yêu cầu</div>
                                 <div class="card-actions">
                                     <a th:href="@{'/bonsai_luxury_detail/' + ${item.productId}}" class="btn-detail-luxury">
                                         <span class="btn-text">Xem chi tiết</span>

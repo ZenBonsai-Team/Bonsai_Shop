@@ -97,7 +97,14 @@
                     <span><i class="fa-solid fa-door-open" aria-hidden="true"></i> Xem riêng tại showroom</span>
                 </div>
 
-                <div class="price-panel">
+                <div class="price-panel" sec:authorize="hasAnyRole('OWNER', 'ARTISAN')">
+                    <span>Giá tác phẩm</span>
+                    <strong th:text="${product != null && product.price != null ? #numbers.formatDecimal(product.price, 0, 'POINT', 0, 'POINT') + ' đ' : 'Đang cập nhật'}">
+                        Đang cập nhật
+                    </strong>
+                </div>
+
+                <div class="price-panel" sec:authorize="!hasAnyRole('OWNER', 'ARTISAN')">
                     <span>Định giá riêng</span>
                     <strong>Liên hệ showroom để được tư vấn</strong>
                 </div>
