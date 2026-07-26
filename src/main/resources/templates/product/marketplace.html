@@ -29,25 +29,18 @@
 <!-- ===================================================== -->
 <div th:replace="~{fragments/navbar :: navbar}" th:with="activePage='marketplace'"></div>
 
-<!-- WELCOME BAR (chỉ hiện khi đã đăng nhập) -->
-<div class="welcome-bar" sec:authorize="isAuthenticated()">
-    <span>Chào mừng <span th:text="${username}"></span> đã quay trở lại!</span>
-    <button class="close-welcome-btn" onclick="this.parentElement.style.display='none'" aria-label="Đóng">&times;</button>
-</div>
-
 <!-- ===================================================== -->
 <!-- HERO -->
 <!-- ===================================================== -->
 <header class="hero-centered">
     <div class="container">
-        <span class="hero-pill-badge">Bộ sưu tập cố định giá • Phả hệ minh bạch</span>
-        <h1 class="hero-main-title serif-text">Sở Hữu Tác Phẩm Cây Cảnh<br>Nghệ Thuật Cố Định Giá</h1>
-        <p class="hero-subtitle-desc">
-            Mỗi tác phẩm là một di sản có hồ sơ phả hệ rõ ràng, được tuyển chọn từ nhà vườn nghệ nhân Bắc Bộ. Vận chuyển chuyên dụng có cẩu cho cây cỡ lớn.
+        <h1 class="hero-main-title serif-text" th:utext="#{hero.title}">Sở Hữu Tác Phẩm Cây Cảnh<br>Nghệ Thuật Độc Bản</h1>
+        <p class="hero-subtitle-desc" th:text="#{hero.subtitle}">
+            Mỗi tác phẩm bonsai là một di sản nghệ thuật có hồ sơ phả hệ rõ ràng, tuyển chọn từ nhà vườn nghệ nhân Bắc Bộ.
         </p>
         <div class="d-flex justify-content-center align-items-center">
-            <a href="#marketplace-anchor" class="btn btn-hero-solid text-decoration-none">Khám phá bộ sưu tập</a>
-            <a href="#" class="btn btn-hero-outline text-decoration-none">Xem theo phân loại</a>
+            <a href="#marketplace-anchor" class="btn btn-hero-solid text-decoration-none" th:text="#{hero.explore}">Khám phá bộ sưu tập</a>
+            <a href="#" class="btn btn-hero-outline text-decoration-none" th:text="#{hero.category}">Xem theo phân loại</a>
         </div>
     </div>
     <!-- TODO:
@@ -72,19 +65,23 @@
     <div class="category-tabs-container">
         <a th:href="@{/marketplace(keyword=${keyword}, availableOnly=${availableOnly}, ages=${ages}, species=${species}, styles=${styles}, sort=${sort})}" 
            class="category-tab-pill" 
-           th:classappend="${segment == null && minPrice == null && (maxPrice == null || maxPrice == 20000000)} ? 'active'">All Bonsai Trees</a>
+           th:classappend="${segment == null && minPrice == null && (maxPrice == null || maxPrice == 20000000)} ? 'active'"
+           th:text="${#locale.language == 'en' ? 'All Bonsai Trees' : 'Tất Cả Cây'}">All Bonsai Trees</a>
         
         <a th:href="@{/marketplace(segment='Popular Picks', keyword=${keyword}, availableOnly=${availableOnly}, ages=${ages}, species=${species}, styles=${styles}, sort=${sort})}" 
            class="category-tab-pill" 
-           th:classappend="${segment == 'Popular Picks'} ? 'active'">Popular Picks</a>
+           th:classappend="${segment == 'Popular Picks'} ? 'active'"
+           th:text="${#locale.language == 'en' ? 'Popular Picks' : 'Được yêu thích'}">Popular Picks</a>
         
         <a th:href="@{/marketplace(segment='Budget', keyword=${keyword}, availableOnly=${availableOnly}, ages=${ages}, species=${species}, styles=${styles}, sort=${sort})}" 
            class="category-tab-pill" 
-           th:classappend="${segment == 'Budget'} ? 'active'">Affordable Trees (Budget)</a>
+           th:classappend="${segment == 'Budget'} ? 'active'"
+           th:text="${#locale.language == 'en' ? 'Affordable Trees (Budget)' : 'Bonsai Bình Dân'}">Affordable Trees (Budget)</a>
         
         <a th:href="@{/marketplace(segment='Mid', keyword=${keyword}, availableOnly=${availableOnly}, ages=${ages}, species=${species}, styles=${styles}, sort=${sort})}" 
            class="category-tab-pill" 
-           th:classappend="${segment == 'Mid'} ? 'active'">Mid-range Trees</a>
+           th:classappend="${segment == 'Mid'} ? 'active'"
+           th:text="${#locale.language == 'en' ? 'Mid-range Trees' : 'Bonsai Tầm Trung'}">Mid-range Trees</a>
     </div>
 </div>
 
@@ -96,15 +93,15 @@
     <!-- Mobile Filter Toggle Bar -->
     <div class="mobile-filter-bar d-lg-none">
         <button class="btn btn-outline-dark btn-sm rounded-0 px-3 py-2" id="mobileFilterToggleBtn">
-            <i class="fa-solid fa-sliders me-2"></i>Bộ lọc nâng cao
+            <i class="fa-solid fa-sliders me-2"></i><span th:text="#{market.filter.advanced}">Bộ lọc nâng cao</span>
         </button>
         <div class="d-flex align-items-center gap-2">
-            <span class="text-muted small">Sắp xếp:</span>
+            <span class="text-muted small" th:text="#{market.sort.by}">Sắp xếp:</span>
             <select class="form-select form-select-sm border-0 bg-light" style="width: 140px;" id="mobileSortSelect">
-                <option value="featured" th:selected="${sort == 'featured' || sort == null}">Nổi bật</option>
-                <option value="price_asc" th:selected="${sort == 'price_asc'}">Giá: Thấp đến Cao</option>
-                <option value="price_desc" th:selected="${sort == 'price_desc'}">Giá: Cao đến Thấp</option>
-                <option value="age_desc" th:selected="${sort == 'age_desc'}">Tuổi lớn nhất</option>
+                <option value="featured" th:selected="${sort == 'featured' || sort == null}" th:text="#{market.sort.featured}">Nổi bật</option>
+                <option value="price_asc" th:selected="${sort == 'price_asc'}" th:text="#{market.sort.price_asc}">Giá: Thấp đến Cao</option>
+                <option value="price_desc" th:selected="${sort == 'price_desc'}" th:text="#{market.sort.price_desc}">Giá: Cao đến Thấp</option>
+                <option value="age_desc" th:selected="${sort == 'age_desc'}" th:text="#{market.sort.age_desc}">Tuổi lớn nhất</option>
             </select>
         </div>
     </div>
@@ -120,10 +117,10 @@
             <form method="get" action="/marketplace" id="filterForm">
                 <div class="filter-panel">
                     <div class="filter-panel-header">
-                        <h5 class="filter-panel-title">Bộ lọc nâng cao</h5>
+                        <h5 class="filter-panel-title" th:text="#{market.filter.advanced}">Bộ lọc nâng cao</h5>
                         <!-- Button to close drawer on mobile -->
                         <button type="button" class="btn-close d-lg-none close-filter-btn" id="mobileFilterCloseBtn" aria-label="Close"></button>
-                        <a href="/marketplace" class="filter-panel-clear-link">Xoá</a>
+                        <a href="/marketplace" class="filter-panel-clear-link" th:text="#{market.filter.clear}">Xoá</a>
                     </div>
     
                     <!-- Preserved search and sorting state -->
@@ -133,7 +130,7 @@
                     <!-- Species Checklist -->
                     <div class="filter-block">
                         <div class="filter-block-title">
-                            Dòng cây
+                            <span th:text="#{market.filter.species}">Dòng cây</span>
                             <i class="fa-solid fa-chevron-up"></i>
                         </div>
                         <div class="filter-block-content">
@@ -168,27 +165,27 @@
                     <!-- Age Checklist -->
                     <div class="filter-block">
                         <div class="filter-block-title">
-                            Tuổi
+                            <span th:text="#{market.filter.age}">Tuổi</span>
                             <i class="fa-solid fa-chevron-up"></i>
                         </div>
                         <div class="filter-block-content">
                             <label class="checkbox-label">
-                                Under 5 years
+                                <span th:text="${#locale.language == 'en' ? 'Under 5 years' : 'Dưới 5 năm'}">Under 5 years</span>
                                 <input type="checkbox" name="ages" value="under5" th:checked="${ages != null && ages.contains('under5')}">
                                 <span class="checkbox-checkmark"></span>
                             </label>
                             <label class="checkbox-label">
-                                5–10 years
+                                <span th:text="${#locale.language == 'en' ? '5–10 years' : 'Từ 5 đến 10 năm'}">5–10 years</span>
                                 <input type="checkbox" name="ages" value="5to10" th:checked="${ages != null && ages.contains('5to10')}">
                                 <span class="checkbox-checkmark"></span>
                             </label>
                             <label class="checkbox-label">
-                                11–20 years
+                                <span th:text="${#locale.language == 'en' ? '11–20 years' : 'Từ 11 đến 20 năm'}">11–20 years</span>
                                 <input type="checkbox" name="ages" value="11to20" th:checked="${ages != null && ages.contains('11to20')}">
                                 <span class="checkbox-checkmark"></span>
                             </label>
                             <label class="checkbox-label">
-                                Over 20 years
+                                <span th:text="${#locale.language == 'en' ? 'Over 20 years' : 'Trên 20 năm'}">Over 20 years</span>
                                 <input type="checkbox" name="ages" value="over20" th:checked="${ages != null && ages.contains('over20')}">
                                 <span class="checkbox-checkmark"></span>
                             </label>
@@ -198,58 +195,58 @@
                     <!-- Price Filter -->
                     <div class="filter-block">
                         <div class="filter-block-title">
-                            Khoảng giá (Price)
+                            <span th:text="#{market.filter.price}">Khoảng giá</span>
                             <i class="fa-solid fa-chevron-up"></i>
                         </div>
                         <div class="filter-block-content">
                             <!-- Manual input fields -->
                             <div class="mb-2">
-                                <label class="form-label small text-secondary mb-1">Min Price</label>
-                                <input type="number" name="minPrice" th:value="${minPrice}" class="form-control form-control-sm" placeholder="Min Price" min="0" style="border-color: var(--border-color); border-radius: 4px; box-shadow: none;">
+                                <label class="form-label small text-secondary mb-1" th:text="#{market.filter.price.min}">Min Price</label>
+                                <input type="number" name="minPrice" th:value="${minPrice}" class="form-control form-control-sm" th:placeholder="#{market.filter.price.min}" min="0" style="border-color: var(--border-color); border-radius: 4px; box-shadow: none;">
                             </div>
                             <div class="mb-3">
-                                <label class="form-label small text-secondary mb-1">Max Price</label>
-                                <input type="number" name="maxPrice" th:value="${maxPrice}" class="form-control form-control-sm" placeholder="Max Price" min="0" style="border-color: var(--border-color); border-radius: 4px; box-shadow: none;">
+                                <label class="form-label small text-secondary mb-1" th:text="#{market.filter.price.max}">Max Price</label>
+                                <input type="number" name="maxPrice" th:value="${maxPrice}" class="form-control form-control-sm" th:placeholder="#{market.filter.price.max}" min="0" style="border-color: var(--border-color); border-radius: 4px; box-shadow: none;">
                             </div>
-
+ 
                             <!-- Divider line -->
                             <hr style="border-top: 1px solid var(--border-color); margin: 15px 0; opacity: 0.5;">
-
+ 
                             <!-- Quick range section -->
-                            <div class="small text-secondary fw-bold mb-2">Quick Range</div>
+                            <div class="small text-secondary fw-bold mb-2" th:text="#{market.filter.quick_range}">Quick Range</div>
                             
                             <label class="checkbox-label">
-                                Under 1M
+                                <span th:text="${#locale.language == 'en' ? 'Under 1M' : 'Dưới 1 triệu'}">Under 1M</span>
                                 <input type="checkbox" name="priceRanges" value="under1M" th:checked="${priceRanges != null && priceRanges.contains('under1M')}">
                                 <span class="checkbox-checkmark"></span>
                             </label>
                             
                             <label class="checkbox-label">
-                                1M – 5M
+                                <span th:text="${#locale.language == 'en' ? '1M – 5M' : 'Từ 1 đến 5 triệu'}">1M – 5M</span>
                                 <input type="checkbox" name="priceRanges" value="1Mto5M" th:checked="${priceRanges != null && priceRanges.contains('1Mto5M')}">
                                 <span class="checkbox-checkmark"></span>
                             </label>
                             
                             <label class="checkbox-label">
-                                5M – 10M
+                                <span th:text="${#locale.language == 'en' ? '5M – 10M' : 'Từ 5 đến 10 triệu'}">5M – 10M</span>
                                 <input type="checkbox" name="priceRanges" value="5Mto10M" th:checked="${priceRanges != null && priceRanges.contains('5Mto10M')}">
                                 <span class="checkbox-checkmark"></span>
                             </label>
                             
                             <label class="checkbox-label">
-                                10M – 30M
+                                <span th:text="${#locale.language == 'en' ? '10M – 30M' : 'Từ 10 đến 30 triệu'}">10M – 30M</span>
                                 <input type="checkbox" name="priceRanges" value="10Mto30M" th:checked="${priceRanges != null && priceRanges.contains('10Mto30M')}">
                                 <span class="checkbox-checkmark"></span>
                             </label>
                             
                             <label class="checkbox-label">
-                                30M – 100M
+                                <span th:text="${#locale.language == 'en' ? '30M – 100M' : 'Từ 30 đến 100 triệu'}">30M – 100M</span>
                                 <input type="checkbox" name="priceRanges" value="30Mto100M" th:checked="${priceRanges != null && priceRanges.contains('30Mto100M')}">
                                 <span class="checkbox-checkmark"></span>
                             </label>
                             
                             <label class="checkbox-label">
-                                Over 100M
+                                <span th:text="${#locale.language == 'en' ? 'Over 100M' : 'Trên 100 triệu'}">Over 100M</span>
                                 <input type="checkbox" name="priceRanges" value="over100M" th:checked="${priceRanges != null && priceRanges.contains('over100M')}">
                                 <span class="checkbox-checkmark"></span>
                             </label>
@@ -262,31 +259,32 @@
                             <label class="indicator-label-wrap">
                                 <input type="checkbox" name="availableOnly" th:checked="${availableOnly}" style="accent-color: var(--primary-color);">
                                 <span class="status-dot-green"></span>
-                                Chỉ hiển thị AVAILABLE
+                                <span th:text="#{market.filter.available_only}">Chỉ hiển thị AVAILABLE</span>
                             </label>
                         </div>
                     </div>
     
                     <!-- Filter Actions -->
-                    <button type="submit" class="btn-filter-apply">Áp dụng bộ lọc</button>
+                    <button type="submit" class="btn-filter-apply" th:text="#{market.filter.apply}">Áp dụng bộ lọc</button>
                 </div>
             </form>
         </aside>
-
+ 
         <!-- ===================================================== -->
         <!-- PRODUCT GRID -->
         <!-- ===================================================== -->
         <section class="col-lg-9">
             <!-- Grid Header Info -->
             <div class="d-none d-lg-flex justify-content-between align-items-center mb-4">
-                <span class="text-secondary small font-monospace" th:text="${'Hiển thị ' + products.totalElements + ' tác phẩm'}">Hiển thị 8 tác phẩm</span>
+                <span class="text-secondary small font-monospace" 
+                      th:text="${#locale.language == 'en' ? 'Showing ' + products.totalElements + ' products' : 'Hiển thị ' + products.totalElements + ' tác phẩm'}">Hiển thị 8 tác phẩm</span>
                 <div class="d-flex align-items-center gap-2">
-                    <span class="text-secondary small">Sắp xếp:</span>
+                    <span class="text-secondary small" th:text="#{market.sort.by}">Sắp xếp:</span>
                     <select class="form-select form-select-sm border-light-subtle shadow-sm" style="width: 140px; font-weight: 500; cursor: pointer;" id="gridSortSelect">
-                        <option value="featured" th:selected="${sort == 'featured' || sort == null}">Nổi bật</option>
-                        <option value="price_asc" th:selected="${sort == 'price_asc'}">Giá thấp đến cao</option>
-                        <option value="price_desc" th:selected="${sort == 'price_desc'}">Giá cao đến thấp</option>
-                        <option value="age_desc" th:selected="${sort == 'age_desc'}">Tuổi cây lớn nhất</option>
+                        <option value="featured" th:selected="${sort == 'featured' || sort == null}" th:text="#{market.sort.featured}">Nổi bật</option>
+                        <option value="price_asc" th:selected="${sort == 'price_asc'}" th:text="#{market.sort.price_asc}">Giá thấp đến cao</option>
+                        <option value="price_desc" th:selected="${sort == 'price_desc'}" th:text="#{market.sort.price_desc}">Giá cao đến thấp</option>
+                        <option value="age_desc" th:selected="${sort == 'age_desc'}" th:text="#{market.sort.age_desc}">Tuổi cây lớn nhất</option>
                     </select>
                 </div>
             </div>
@@ -303,9 +301,9 @@
                          th:classappend="${isMidSegment} ? ' product-card-mid' : ' product-card-budget'">
                         <div class="card-image-wrap">
                             <!-- Status Badge: Dynamically rendered based on ProductStatus -->
-                            <span th:if="${product.productStatus == 'AVAILABLE'}" class="card-status-badge avail">AVAILABLE</span>
-                            <span th:if="${product.productStatus == 'RESERVED'}" class="card-status-badge resv">RESERVED</span>
-                            <span th:if="${product.productStatus == 'SOLD'}" class="card-status-badge sld">SOLD</span>
+                            <span th:if="${product.productStatus == 'AVAILABLE'}" class="card-status-badge avail" th:text="#{product.available}">AVAILABLE</span>
+                            <span th:if="${product.productStatus == 'RESERVED'}" class="card-status-badge resv" th:text="#{product.reserved}">RESERVED</span>
+                            <span th:if="${product.productStatus == 'SOLD'}" class="card-status-badge sld" th:text="#{product.sold}">SOLD</span>
                             <!-- Fallback for other status values -->
                             <span th:if="${product.productStatus != 'AVAILABLE' && product.productStatus != 'RESERVED' && product.productStatus != 'SOLD'}" 
                                   th:text="${product.productStatus}" class="card-status-badge avail">AVAILABLE</span>
@@ -319,7 +317,7 @@
                             <button class="card-btn-wishlist" title="Yêu thích"><i class="fa-regular fa-heart"></i></button>
                             
                             <span class="card-segment-ribbon" th:if="${isMidSegment}">
-                                <i class="fa-solid fa-gem"></i> Selected
+                                <i class="fa-solid fa-gem"></i> <span th:text="#{product.selected}">Selected</span>
                             </span>
 
                             <video th:if="${primaryMediaUrl != null && !primaryMediaUrl.isEmpty() && primaryMediaType == 'VIDEO'}"
@@ -339,18 +337,18 @@
                             <span class="card-species-tag" th:text="${product.variety != null ? product.variety.varietyName : 'Bonsai'}">Sanh Nam Điền</span>
                             
                             <span class="card-mid-tag" th:if="${isMidSegment}">
-                                <i class="fa-solid fa-certificate"></i> Nghệ nhân tuyển chọn
+                                <i class="fa-solid fa-certificate"></i> <span th:text="${#locale.language == 'en' ? 'Artisan Selected' : 'Nghệ nhân tuyển chọn'}">Nghệ nhân tuyển chọn</span>
                             </span>
 
                             <!-- Title binding -->
                             <h3 class="card-title-serif" th:text="${product.productName}">Sanh Nam Điền Dáng Trực Cổ</h3>
                             
                             <!-- Pedigree/Code binding -->
-                            <p class="card-pedigree-code text-muted mb-1" style="font-size:0.7rem;" th:text="${'Mã: ' + product.productCode}">Mã: BSMS-SND-102</p>
+                            <p class="card-pedigree-code text-muted mb-1" style="font-size:0.7rem;" th:text="${(#locale.language == 'en' ? 'Code: ' : 'Mã: ') + product.productCode}">Mã: BSMS-SND-102</p>
                             
                             <!-- Dimensions Metadata (Age, Height, TrunkDiameter) -->
                             <p class="card-dimensions-meta text-muted mb-2" 
-                               th:text="${'Tuổi: ' + (product.age != null ? product.age + ' năm' : 'N/A') + ' • Cao: ' + (product.height != null ? product.height + 'cm' : 'N/A') + ' • Thân: ' + (product.trunkDiameter != null ? product.trunkDiameter + 'cm' : 'N/A')}">
+                               th:text="${(#locale.language == 'en' ? 'Age: ' : 'Tuổi: ') + (product.age != null ? product.age + (#locale.language == 'en' ? ' yrs' : ' năm') : 'N/A') + ' • ' + (#locale.language == 'en' ? 'Height: ' : 'Cao: ') + (product.height != null ? product.height + 'cm' : 'N/A') + ' • ' + (#locale.language == 'en' ? 'Trunk: ' : 'Thân: ') + (product.trunkDiameter != null ? product.trunkDiameter + 'cm' : 'N/A')}">
                                 Tuổi: 12 năm • Cao: 65cm • Thân: 15cm
                             </p>
                             
@@ -359,7 +357,7 @@
                                 <span class="card-price-val"
                                       th:if="${product.isPublicPrice}"
                                       th:text="${#numbers.formatDecimal(product.price, 0, 'POINT', 0, 'POINT') + ' đ'}">4.500.000 đ</span>
-                                <span class="card-price-val" th:if="${!product.isPublicPrice}">Liên hệ</span>
+                                <span class="card-price-val" th:if="${!product.isPublicPrice}" th:text="${#locale.language == 'en' ? 'Contact' : 'Liên hệ'}">Liên hệ</span>
                                 
                                 <!-- Rating binding with fallback -->
                                 <!--
@@ -381,20 +379,20 @@
                             -->
                             
                             <div class="card-action-row">
-                                <a th:href="@{'/product/' + ${product.productId}}" class="btn-card-view-details">Xem chi tiết</a>
+                                <a th:href="@{'/product/' + ${product.productId}}" class="btn-card-view-details" th:text="#{product.view_details}">Xem chi tiết</a>
                                 <button sec:authorize="!hasAnyRole('OWNER', 'ARTISAN', 'MODERATOR', 'CONTENT_MODERATOR')" 
                                         th:if="${product.productStatus == 'AVAILABLE'}" 
                                         type="button" 
                                         class="btn-card-cart-icon" 
                                         th:onclick="'addToCart(' + ${product.productId} + ')'" 
-                                        title="Thêm vào giỏ hàng">
+                                        th:title="#{product.add_to_cart}">
                                     <i class="fa-solid fa-cart-shopping"></i>
                                 </button>
                                 <button th:if="${product.productStatus == 'RESERVED' || product.productStatus == 'SOLD'}" 
                                         type="button" 
                                         class="btn-card-cart-icon btn-card-disabled" 
                                         disabled 
-                                        title="Đã đặt / Đã bán">
+                                        th:title="${product.productStatus == 'RESERVED' ? #messages.msg('product.reserved') : #messages.msg('product.sold')}">
                                     <i class="fa-solid fa-lock"></i>
                                 </button>
                             </div>
@@ -697,28 +695,28 @@
             <div class="col-md-3 col-sm-6">
                 <div class="service-feature-card">
                     <div class="service-icon-circle"><i class="fa-solid fa-leaf"></i></div>
-                    <h4 class="service-label-title">Authentic Bonsai</h4>
+                    <h4 class="service-label-title" th:text="#{feature.authentic}">Authentic Bonsai</h4>
                     <p class="service-desc-text">Cây thật, ảnh thật — Cam kết hình ảnh chuẩn xác thực tế 100%.</p>
                 </div>
             </div>
             <div class="col-md-3 col-sm-6">
                 <div class="service-feature-card">
                     <div class="service-icon-circle"><i class="fa-solid fa-shield-halved"></i></div>
-                    <h4 class="service-label-title">Verified Artisans</h4>
+                    <h4 class="service-label-title" th:text="#{feature.artisans}">Verified Artisans</h4>
                     <p class="service-desc-text">Nhà vườn nghệ nhân uy tín Bắc Bộ với nghệ nhân có kinh nghiệm lâu năm trong ngành.</p>
                 </div>
             </div>
             <div class="col-md-3 col-sm-6">
                 <div class="service-feature-card">
                     <div class="service-icon-circle"><i class="fa-solid fa-credit-card"></i></div>
-                    <h4 class="service-label-title">Secure Payment</h4>
+                    <h4 class="service-label-title" th:text="#{feature.payment}">Secure Payment</h4>
                     <p class="service-desc-text">Tích hợp cổng thanh toán VNPay an toàn, bảo mật tuyệt đối.</p>
                 </div>
             </div>
             <div class="col-md-3 col-sm-6">
                 <div class="service-feature-card">
                     <div class="service-icon-circle"><i class="fa-solid fa-truck-ramp-box"></i></div>
-                    <h4 class="service-label-title">Delivery Support</h4>
+                    <h4 class="service-label-title" th:text="#{feature.delivery}">Delivery Support</h4>
                     <p class="service-desc-text">Vận chuyển chuyên dụng có cẩu cho các cây cỡ lớn, an toàn.</p>
                 </div>
             </div>
@@ -730,9 +728,6 @@
 <!-- FOOTER -->
 <!-- ===================================================== -->
 <div th:replace="~{fragments/footer :: footer}"></div>
-
-<!-- Bootstrap Bundle JS -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
 <!-- Custom UI Logic Script -->
 <script>

@@ -215,9 +215,9 @@
 
             <!-- Artisan Brief Info -->
             <!-- HARDCODED: Chi tiết nghệ nhân/nhà vườn không có trong DB entity (User chỉ có thông tin cơ bản) -->
-            <div class="artisan-summary-box">
+            <!-- <div class="artisan-summary-box"> -->
                 <!-- HARDCODED -->
-                <div class="artisan-avatar-wrap">
+                <!-- <div class="artisan-avatar-wrap">
                     <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150" alt="Avatar">
                 </div>
                 <div class="artisan-summary-info">
@@ -227,7 +227,7 @@
                 <div class="artisan-summary-rating">
                     <i class="fa-solid fa-star"></i> 4.9
                 </div>
-            </div>
+            </div> -->
 
             <!-- Buying and Add to Cart Action buttons -->
             <div class="mt-4">
@@ -574,28 +574,28 @@
             <div class="col-md-3 col-sm-6">
                 <div class="service-feature-card">
                     <div class="service-icon-circle"><i class="fa-solid fa-leaf"></i></div>
-                    <h4 class="service-label-title">Authentic Bonsai</h4>
+                    <h4 class="service-label-title" th:text="#{feature.authentic}">Authentic Bonsai</h4>
                     <p class="service-desc-text">Cây thật, ảnh thật — Cam kết hình ảnh chuẩn xác thực tế 100%.</p>
                 </div>
             </div>
             <div class="col-md-3 col-sm-6">
                 <div class="service-feature-card">
                     <div class="service-icon-circle"><i class="fa-solid fa-shield-halved"></i></div>
-                    <h4 class="service-label-title">Verified Artisans</h4>
+                    <h4 class="service-label-title" th:text="#{feature.artisans}">Verified Artisans</h4>
                     <p class="service-desc-text">Nhà vườn nghệ nhân uy tín Bắc Bộ với nghệ nhân có kinh nghiệm lâu năm trong ngành.</p>
                 </div>
             </div>
             <div class="col-md-3 col-sm-6">
                 <div class="service-feature-card">
                     <div class="service-icon-circle"><i class="fa-solid fa-credit-card"></i></div>
-                    <h4 class="service-label-title">Secure Payment</h4>
+                    <h4 class="service-label-title" th:text="#{feature.payment}">Secure Payment</h4>
                     <p class="service-desc-text">Tích hợp cổng thanh toán VNPay an toàn, bảo mật tuyệt đối.</p>
                 </div>
             </div>
             <div class="col-md-3 col-sm-6">
                 <div class="service-feature-card">
                     <div class="service-icon-circle"><i class="fa-solid fa-truck-ramp-box"></i></div>
-                    <h4 class="service-label-title">Delivery Support</h4>
+                    <h4 class="service-label-title" th:text="#{feature.delivery}">Delivery Support</h4>
                     <p class="service-desc-text">Vận chuyển chuyên dụng có cẩu cho các cây cỡ lớn, an toàn.</p>
                 </div>
             </div>
@@ -607,9 +607,6 @@
 <!-- FOOTER (Identical to Marketplace) -->
 <!-- ===================================================== -->
 <div th:replace="~{fragments/footer :: footer}"></div>
-
-<!-- Bootstrap Bundle JS -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
 <!-- ===================================================== -->
 <!-- UI SCRIPT FOR DETAIL INTERACTION -->

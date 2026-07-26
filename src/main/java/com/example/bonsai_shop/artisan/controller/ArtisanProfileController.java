@@ -21,12 +21,8 @@ public class ArtisanProfileController {
     private final UserService userService;
 
     @GetMapping
-    public String profile(@AuthenticationPrincipal UserDetails userDetails, Model model) {
-        User artisan = userService.getCurrentUserProfile(userDetails.getUsername());
-        model.addAttribute("artisan", artisan);
-        model.addAttribute("role", "ARTISAN");
-        model.addAttribute("activeMenu", "artisan-profile");
-        return "artisan/profile";
+    public String profile() {
+        return "redirect:/profile";
     }
 
     @GetMapping("/update")
@@ -34,7 +30,7 @@ public class ArtisanProfileController {
         User artisan = userService.getCurrentUserProfile(userDetails.getUsername());
         model.addAttribute("artisan", artisan);
         model.addAttribute("role", "ARTISAN");
-        model.addAttribute("activeMenu", "artisan-profile");
+        model.addAttribute("activeMenu", "profile");
         return "artisan/profile-update";
     }
 
@@ -56,7 +52,7 @@ public class ArtisanProfileController {
             User artisan = userService.getCurrentUserProfile(email);
             model.addAttribute("artisan", artisan);
             model.addAttribute("role", "ARTISAN");
-            model.addAttribute("activeMenu", "artisan-profile");
+            model.addAttribute("activeMenu", "profile");
             model.addAttribute("error", e.getMessage());
             return "artisan/profile-update";
         }
@@ -65,7 +61,7 @@ public class ArtisanProfileController {
     @GetMapping("/change-password")
     public String changePasswordPage(Model model) {
         model.addAttribute("role", "ARTISAN");
-        model.addAttribute("activeMenu", "artisan-profile");
+        model.addAttribute("activeMenu", "profile");
         return "artisan/change-password";
     }
 
@@ -76,7 +72,7 @@ public class ArtisanProfileController {
                                  @RequestParam String confirmPassword,
                                  Model model) {
         model.addAttribute("role", "ARTISAN");
-        model.addAttribute("activeMenu", "artisan-profile");
+        model.addAttribute("activeMenu", "profile");
         try {
             userService.changePassword(
                     userDetails.getUsername(),

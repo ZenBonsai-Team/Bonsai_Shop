@@ -365,8 +365,8 @@
 <!-- Header -->
 <header class="info-page-header">
     <div class="container">
-        <span class="brand-subtitle">Trung Tâm Hỗ Trợ Khách Hàng</span>
-        <h1 class="serif-text display-5 fw-bold mt-1 mb-0">Liên hệ & Điều khoản dịch vụ</h1>
+        <span class="brand-subtitle" th:text="#{contact.subtitle}">Trung Tâm Hỗ Trợ Khách Hàng</span>
+        <h1 class="serif-text display-5 fw-bold mt-1 mb-0" th:text="#{contact.title}">Liên hệ & Điều khoản dịch vụ</h1>
     </div>
 </header>
 
@@ -378,16 +378,16 @@
             <div class="info-sidebar">
                 <div class="nav nav-info-tabs" id="v-pills-tab" role="tablist" aria-orientation="vertical">
                     <button class="nav-link" id="v-pills-contact-tab" data-bs-toggle="pill" data-bs-target="#v-pills-contact" type="button" role="tab" aria-controls="v-pills-contact" aria-selected="true">
-                        <i class="fa-solid fa-address-book"></i>Liên hệ & Bản đồ
+                        <i class="fa-solid fa-address-book"></i><span th:text="#{contact.tab.contact}">Liên hệ & Bản đồ</span>
                     </button>
                     <button class="nav-link" id="v-pills-about-tab" data-bs-toggle="pill" data-bs-target="#v-pills-about" type="button" role="tab" aria-controls="v-pills-about" aria-selected="false">
-                        <i class="fa-solid fa-circle-info"></i>Về chúng tôi
+                        <i class="fa-solid fa-circle-info"></i><span th:text="#{contact.tab.about}">Về chúng tôi</span>
                     </button>
                     <button class="nav-link" id="v-pills-terms-tab" data-bs-toggle="pill" data-bs-target="#v-pills-terms" type="button" role="tab" aria-controls="v-pills-terms" aria-selected="false">
-                        <i class="fa-solid fa-scroll"></i>Điều khoản dịch vụ
+                        <i class="fa-solid fa-scroll"></i><span th:text="#{contact.tab.terms}">Điều khoản dịch vụ</span>
                     </button>
                     <button class="nav-link" id="v-pills-privacy-tab" data-bs-toggle="pill" data-bs-target="#v-pills-privacy" type="button" role="tab" aria-controls="v-pills-privacy" aria-selected="false">
-                        <i class="fa-solid fa-shield-halved"></i>Chính sách bảo mật
+                        <i class="fa-solid fa-shield-halved"></i><span th:text="#{contact.tab.privacy}">Chính sách bảo mật</span>
                     </button>
                 </div>
             </div>
@@ -399,63 +399,63 @@
                 
                 <!-- 1. CONTACT TAB -->
                 <div class="tab-pane fade" id="v-pills-contact" role="tabpanel" aria-labelledby="v-pills-contact-tab">
-                    <h2 class="tab-pane-title">Liên hệ với Bonsai Shop</h2>
+                    <h2 class="tab-pane-title" th:text="#{contact.form.title}">Liên hệ với Bonsai Shop</h2>
                     
                     <div class="row g-4">
                         <!-- Contact Form -->
                         <div class="col-md-7">
-                            <h5 class="fw-bold mb-3 text-dark">Gửi tin nhắn phản hồi</h5>
+                            <h5 class="fw-bold mb-3 text-dark" th:text="#{contact.form.heading}">Gửi tin nhắn phản hồi</h5>
                             <form action="#" method="post" onsubmit="event.preventDefault(); alert('Cảm ơn bạn đã phản hồi! Chúng tôi sẽ liên hệ lại sớm nhất.'); this.reset();">
                                 <div class="mb-3">
-                                    <label for="contactName" class="form-label small fw-bold text-secondary">Họ và tên</label>
-                                    <input type="text" class="form-control form-control-info" id="contactName" placeholder="Nhập họ và tên..." required>
+                                    <label for="contactName" class="form-label small fw-bold text-secondary" th:text="#{contact.form.name}">Họ và tên</label>
+                                    <input type="text" class="form-control form-control-info" id="contactName" th:placeholder="#{contact.form.name_placeholder}" required>
                                 </div>
                                 <div class="mb-3">
-                                    <label for="contactEmail" class="form-label small fw-bold text-secondary">Địa chỉ Email</label>
+                                    <label for="contactEmail" class="form-label small fw-bold text-secondary" th:text="#{contact.form.email}">Địa chỉ Email</label>
                                     <input type="email" class="form-control form-control-info" id="contactEmail" placeholder="name@example.com" required>
                                 </div>
                                 <div class="mb-3">
-                                    <label for="contactSubject" class="form-label small fw-bold text-secondary">Tiêu đề</label>
-                                    <input type="text" class="form-control form-control-info" id="contactSubject" placeholder="Nhập tiêu đề..." required>
+                                    <label for="contactSubject" class="form-label small fw-bold text-secondary" th:text="#{contact.form.subject}">Tiêu đề</label>
+                                    <input type="text" class="form-control form-control-info" id="contactSubject" th:placeholder="#{contact.form.subject_placeholder}" required>
                                 </div>
                                 <div class="mb-3">
-                                    <label for="contactMessage" class="form-label small fw-bold text-secondary">Nội dung liên hệ</label>
-                                    <textarea class="form-control form-control-info" id="contactMessage" rows="5" placeholder="Nhập nội dung tin nhắn của bạn..." required></textarea>
+                                    <label for="contactMessage" class="form-label small fw-bold text-secondary" th:text="#{contact.form.message}">Nội dung liên hệ</label>
+                                    <textarea class="form-control form-control-info" id="contactMessage" rows="5" th:placeholder="#{contact.form.message_placeholder}" required></textarea>
                                 </div>
                                 <button type="submit" class="btn btn-success rounded-pill px-4 py-2 fw-semibold w-100" style="font-size: 0.88rem; background-color: var(--accent-color); border: none;">
-                                    Gửi liên hệ <i class="fa-solid fa-paper-plane ms-1"></i>
+                                    <span th:text="#{contact.form.submit}">Gửi liên hệ</span> <i class="fa-solid fa-paper-plane ms-1"></i>
                                 </button>
                             </form>
                         </div>
                         
                         <!-- Contact Info & Map Placeholder -->
                         <div class="col-md-5">
-                            <h5 class="fw-bold mb-3 text-dark">Thông tin liên lạc</h5>
+                            <h5 class="fw-bold mb-3 text-dark" th:text="#{contact.info.heading}">Thông tin liên lạc</h5>
                             <ul class="contact-info-list mb-4">
                                 <li class="contact-info-item">
                                     <div class="contact-info-icon"><i class="fa-solid fa-envelope"></i></div>
                                     <div class="contact-info-text">
-                                        <strong>Email hỗ trợ</strong>
+                                        <strong th:text="#{contact.info.email}">Email hỗ trợ</strong>
                                         <a href="mailto:haihaugarden@gmail.com">haihaugarden@gmail.com</a>
                                     </div>
                                 </li>
                                 <li class="contact-info-item">
                                     <div class="contact-info-icon"><i class="fa-solid fa-phone"></i></div>
                                     <div class="contact-info-text">
-                                        <strong>Số điện thoại</strong>
-                                        <span>Cập nhật sau</span>
+                                        <strong th:text="#{contact.info.phone}">Số điện thoại</strong>
+                                        <span th:text="#{contact.info.phone_val}">Cập nhật sau</span>
                                     </div>
                                 </li>
                                 <li class="contact-info-item">
                                     <div class="contact-info-icon"><i class="fa-solid fa-location-dot"></i></div>
                                     <div class="contact-info-text">
-                                        <strong>Địa chỉ nhà vườn</strong>
-                                        <span>Hải Hậu, Nam Định (Cập nhật chi tiết sau)</span>
+                                        <strong th:text="#{contact.info.address}">Địa chỉ nhà vườn</strong>
+                                        <span th:text="#{contact.info.address_val}">Hải Hậu, Nam Định (Cập nhật chi tiết sau)</span>
                                     </div>
                                 </li>
                             </ul>
                             
-                            <h5 class="fw-bold text-dark mb-2">Kênh mạng xã hội</h5>
+                            <h5 class="fw-bold text-dark mb-2" th:text="#{contact.info.social}">Kênh mạng xã hội</h5>
                             <div class="social-channel-grid">
                                 <a href="https://www.youtube.com/@HaihauGarden" target="_blank" class="social-channel-btn btn-youtube">
                                     <i class="fa-brands fa-youtube fs-5"></i> YouTube
@@ -474,8 +474,8 @@
                             <!-- Map Container -->
                             <div class="map-placeholder-container">
                                 <i class="fa-solid fa-map-location-dot map-placeholder-icon"></i>
-                                <span class="map-placeholder-title">Bản đồ vị trí nhà vườn</span>
-                                <span class="text-secondary small position-relative z-2">Cập nhật sau</span>
+                                <span class="map-placeholder-title" th:text="#{contact.info.map}">Bản đồ vị trí nhà vườn</span>
+                                <span class="text-secondary small position-relative z-2" th:text="#{contact.info.map_val}">Cập nhật sau</span>
                             </div>
                         </div>
                     </div>

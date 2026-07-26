@@ -11,7 +11,7 @@
                         <img th:src="@{/images/logo.png}" alt="Logo" style="width: 32px; height: 32px; object-fit: contain;">
                         <span style="font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; color: #ffffff; font-size: 1.5rem; letter-spacing: 0.5px;">Bonsai Shop</span>
                     </div>
-                    <p class="footer-desc-para">
+                    <p class="footer-desc-para" th:text="#{footer.description}">
                         Nền tảng quản lý và giao dịch cây cảnh nghệ thuật — gìn giữ và phát huy di sản nghệ thuật bonsai Bắc Bộ Việt Nam.
                     </p>
                     <div class="footer-social-strip">
@@ -24,29 +24,29 @@
                 
                 <!-- Company Links -->
                 <div class="col-lg-3 col-md-6 col-6">
-                    <h5 class="footer-column-heading">Company</h5>
+                    <h5 class="footer-column-heading" th:text="#{footer.company}">Company</h5>
                     <ul class="footer-column-links">
-                        <li><a th:href="@{/contact(tab='about')}">About Us</a></li>
-                        <li><a th:href="@{/contact(tab='contact')}">Contact</a></li>
-                        <li><a th:href="@{/contact(tab='terms')}">Terms of Service</a></li>
-                        <li><a th:href="@{/contact(tab='privacy')}">Privacy Policy</a></li>
+                        <li><a th:href="@{/contact(tab='about')}" th:text="#{footer.about}">About Us</a></li>
+                        <li><a th:href="@{/contact(tab='contact')}" th:text="#{footer.contact}">Contact</a></li>
+                        <li><a th:href="@{/contact(tab='terms')}" th:text="#{footer.terms}">Terms of Service</a></li>
+                        <li><a th:href="@{/contact(tab='privacy')}" th:text="#{footer.privacy}">Privacy Policy</a></li>
                     </ul>
                 </div>
-
+ 
                 <!-- Connect Info -->
                 <div class="col-lg-5 col-md-12 col-6">
-                    <h5 class="footer-column-heading">Connect</h5>
+                    <h5 class="footer-column-heading" th:text="#{footer.connect}">Connect</h5>
                     <ul class="footer-connect-list">
-                        <li><i class="fa-solid fa-phone"></i>Hotline: Cập nhật sau</li>
+                        <li><i class="fa-solid fa-phone"></i><span th:text="#{footer.hotline}">Hotline: Cập nhật sau</span></li>
                         <li><i class="fa-solid fa-envelope"></i>Email: haihaugarden@gmail.com</li>
                         <li class="text-secondary mt-3" style="font-size:0.75rem; color: rgba(255,255,255,0.4) !important;">Powered by VNPay & Crane Logistics Network</li>
                     </ul>
                 </div>
             </div>
-
+ 
             <!-- Copyright Row -->
             <div class="footer-base-row">
-                <span>© 2026 Bonsai Shop. All rights reserved.</span>
+                <span th:text="#{footer.copyright}">© 2026 Bonsai Shop. All rights reserved.</span>
                 <span>Powered by VNPay - Crane Logistics Network</span>
             </div>
         </div>

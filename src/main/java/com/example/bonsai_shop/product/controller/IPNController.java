@@ -1,7 +1,14 @@
 package com.example.bonsai_shop.product.controller;
 
 import com.example.bonsai_shop.config.VNPayConfig;
+import com.example.bonsai_shop.entity.Order;
+import com.example.bonsai_shop.entity.OrderDetail;
+import com.example.bonsai_shop.entity.Product;
+import com.example.bonsai_shop.product.repository.OrderRepository;
+import com.example.bonsai_shop.product.repository.ProductRepository;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -13,7 +20,14 @@ import java.util.*;
 @RestController
 public class IPNController {
 
+    @Autowired
+    private OrderRepository orderRepository;
+
+    @Autowired
+    private ProductRepository productRepository;
+
     @GetMapping("/vnpay/ipn")
+    @Transactional
     public Map<String, String> receiveIPN(HttpServletRequest request) {
         Map<String, String> response = new HashMap<>();
         Map<String, String> fields = new HashMap<>();
@@ -39,12 +53,9 @@ public class IPNController {
             String fieldValue = fields.get(fieldName);
             if ((fieldValue != null) && (fieldValue.length() > 0)) {
                 try {
-                    sb.append(fieldName);
-                    sb.append('=');
-                    sb.append(URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII.toString()).replace("+", "%20"));
-                    if (itr.hasNext()) {
-                        sb.append('&');
-                    }
+                    sb.append(fieldName).append('=').append(
+                            URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII.toString()));
+                    if (itr.hasNext()) sb.append('&');
                 } catch (UnsupportedEncodingException e) {
                     e.printStackTrace();
                 }
@@ -54,23 +65,37 @@ public class IPNController {
         String signValue = VNPayConfig.hmacSHA512(VNPayConfig.vnp_HashSecret, sb.toString());
 
         if (signValue.equals(vnp_SecureHash)) {
-            // TODO: BƯỚC XỬ LÝ NGHIỆP VỤ CỦA HỆ THỐNG
-            // 1. Kiểm tra mã đơn hàng (vnp_TxnRef) có tồn tại trong Database hay không
-            // 2. Kiểm tra số tiền thanh toán (vnp_Amount) khớp với giá trị đơn hàng trong DB
-            // 3. Kiểm tra trạng thái đơn hàng hiện tại (chỉ cập nhật nếu đơn hàng ở trạng thái chờ thanh toán)
+            String orderCode = request.getParameter("vnp_TxnRef");
+            long vnpAmount = Long.parseLong(request.getParameter("vnp_Amount"));
 
-            boolean checkOrderId = true; // Giả sử đơn hàng tồn tại
-            boolean checkAmount = true;  // Giả sử số tiền khớp
-            boolean checkOrderStatus = true; // Giả sử đơn hàng chưa được xử lý thanh toán trước đó
+            Order order = orderRepository.findByOrderCode(orderCode).orElse(null);
+            boolean checkOrderId = order != null;
+            boolean checkAmount = false;
+            boolean checkOrderStatus = false;
+
+            if (checkOrderId) {
+                long expectedAmount = order.getTotalAmount().longValue() * 100;
+                checkAmount = Math.abs(vnpAmount - expectedAmount) < 1000;
+                checkOrderStatus = !"PAID".equalsIgnoreCase(order.getOrderStatus());
+            }
 
             if (checkOrderId) {
                 if (checkAmount) {
                     if (checkOrderStatus) {
                         String responseCode = request.getParameter("vnp_ResponseCode");
                         if ("00".equals(responseCode)) {
-                            // Cập nhật trạng thái ĐÃ THANH TOÁN thành công cho đơn hàng trong DB
-                        } else {
-                            // Cập nhật trạng thái THANH TOÁN THẤT BẠI cho đơn hàng trong DB
+                            order.setOrderStatus("PAID");
+                            orderRepository.save(order);
+
+                            if (order.getOrderDetails() != null) {
+                                for (OrderDetail detail : order.getOrderDetails()) {
+                                    Product prod = detail.getProduct();
+                                    if (prod != null) {
+                                        prod.setProductStatus("SOLD");
+                                        productRepository.save(prod);
+                                    }
+                                }
+                            }
                         }
 
                         response.put("RspCode", "00");

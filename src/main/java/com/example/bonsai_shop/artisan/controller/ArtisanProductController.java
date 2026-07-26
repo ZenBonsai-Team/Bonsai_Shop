@@ -1,22 +1,26 @@
 package com.example.bonsai_shop.artisan.controller;
 
+import com.example.bonsai_shop.artisan.dto.ArtisanProductFormDTO;
 import com.example.bonsai_shop.entity.Product;
 import com.example.bonsai_shop.entity.ProductMedia;
+import com.example.bonsai_shop.entity.Variety;
 import com.example.bonsai_shop.artisan.service.ArtisanProductService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.math.BigDecimal;
 import java.util.List;
 
 @Controller
@@ -35,43 +39,29 @@ public class ArtisanProductController {
 
     @GetMapping("/new")
     public String createForm(Model model) {
-        addProductFormData(model, null);
+        addProductFormData(model, null, new ArtisanProductFormDTO());
         return "artisan/product-form";
     }
 
     @PostMapping
     public String create(@AuthenticationPrincipal UserDetails userDetails,
-                         @RequestParam Integer varietyId,
-                         @RequestParam Integer segmentId,
-                         @RequestParam String productName,
-                         @RequestParam(required = false) String description,
-                         @RequestParam Integer age,
-                         @RequestParam Float height,
-                         @RequestParam Float trunkDiameter,
-                         @RequestParam String style,
-                         @RequestParam BigDecimal price,
-                         @RequestParam(required = false) List<Integer> tagIds,
+                         @Valid @ModelAttribute("productForm") ArtisanProductFormDTO form,
+                         BindingResult bindingResult,
+                         Model model,
                          RedirectAttributes redirectAttributes) {
+        if (bindingResult.hasErrors()) {
+            addProductFormData(model, null, form);
+            return "artisan/product-form";
+        }
+
         try {
-            Product product = artisanProductService.createProduct(
-                    userDetails.getUsername(),
-                    varietyId,
-                    segmentId,
-                    productName,
-                    description,
-                    age,
-                    height,
-                    trunkDiameter,
-                    style,
-                    price,
-                    "DRAFT",
-                    tagIds
-            );
+            Product product = artisanProductService.createProduct(userDetails.getUsername(), form);
             redirectAttributes.addFlashAttribute("success", "Đã lưu thông tin cây. Tiếp tục upload media.");
             return "redirect:/artisan/products/" + product.getProductId() + "/media";
         } catch (RuntimeException e) {
-            redirectAttributes.addFlashAttribute("error", e.getMessage());
-            return "redirect:/artisan/products/new";
+            model.addAttribute("error", e.getMessage());
+            addProductFormData(model, null, form);
+            return "artisan/product-form";
         }
     }
 
@@ -85,46 +75,32 @@ public class ArtisanProductController {
             redirectAttributes.addFlashAttribute("error", "Chỉ có thể sửa sản phẩm nháp hoặc đã ẩn.");
             return "redirect:/artisan/products/" + productId + "/preview";
         }
-        addProductFormData(model, product);
+        addProductFormData(model, product, artisanProductService.toFormDTO(product));
         return "artisan/product-form";
     }
 
     @PostMapping("/{productId}")
     public String update(@AuthenticationPrincipal UserDetails userDetails,
                          @PathVariable Integer productId,
-                         @RequestParam Integer varietyId,
-                         @RequestParam Integer segmentId,
-                         @RequestParam String productName,
-                         @RequestParam(required = false) String description,
-                         @RequestParam Integer age,
-                         @RequestParam Float height,
-                         @RequestParam Float trunkDiameter,
-                         @RequestParam String style,
-                         @RequestParam BigDecimal price,
-                         @RequestParam String productStatus,
-                         @RequestParam(required = false) List<Integer> tagIds,
+                         @Valid @ModelAttribute("productForm") ArtisanProductFormDTO form,
+                         BindingResult bindingResult,
+                         Model model,
                          RedirectAttributes redirectAttributes) {
+        Product product = artisanProductService.getMyProduct(userDetails.getUsername(), productId);
+
+        if (bindingResult.hasErrors()) {
+            addProductFormData(model, product, form);
+            return "artisan/product-form";
+        }
+
         try {
-            artisanProductService.updateProduct(
-                    userDetails.getUsername(),
-                    productId,
-                    varietyId,
-                    segmentId,
-                    productName,
-                    description,
-                    age,
-                    height,
-                    trunkDiameter,
-                    style,
-                    price,
-                    productStatus,
-                    tagIds
-            );
+            artisanProductService.updateProduct(userDetails.getUsername(), productId, form);
             redirectAttributes.addFlashAttribute("success", "Đã cập nhật sản phẩm.");
             return "redirect:/artisan/products/" + productId + "/preview";
         } catch (RuntimeException e) {
-            redirectAttributes.addFlashAttribute("error", e.getMessage());
-            return "redirect:/artisan/products/" + productId + "/edit";
+            model.addAttribute("error", e.getMessage());
+            addProductFormData(model, product, form);
+            return "artisan/product-form";
         }
     }
 
@@ -270,13 +246,32 @@ public class ArtisanProductController {
         return "redirect:/artisan/products";
     }
 
-    private void addProductFormData(Model model, Product product) {
+    private void addProductFormData(Model model, Product product, ArtisanProductFormDTO form) {
+        List<Variety> varieties = artisanProductService.getVarieties();
+
         model.addAttribute("product", product);
+        model.addAttribute("productForm", form);
         model.addAttribute("categories", artisanProductService.getCategories());
-        model.addAttribute("varieties", artisanProductService.getVarieties());
+        model.addAttribute("varieties", varieties);
         model.addAttribute("segments", artisanProductService.getSegments());
         model.addAttribute("tags", artisanProductService.getTags());
-        model.addAttribute("selectedCategoryId", product == null ? null : product.getVariety().getCategory().getCategoryId());
-        model.addAttribute("selectedTagIds", product == null ? List.of() : artisanProductService.getSelectedTagIds(product));
+        model.addAttribute("selectedCategoryId", resolveSelectedCategoryId(form, product, varieties));
+        model.addAttribute("selectedTagIds", form.getTagIds() == null ? List.of() : form.getTagIds());
+    }
+
+    private Integer resolveSelectedCategoryId(ArtisanProductFormDTO form, Product product, List<Variety> varieties) {
+        if (form.getVarietyId() != null) {
+            return varieties.stream()
+                    .filter(variety -> form.getVarietyId().equals(variety.getVarietyId()))
+                    .findFirst()
+                    .map(variety -> variety.getCategory().getCategoryId())
+                    .orElse(null);
+        }
+
+        if (product == null || product.getVariety() == null || product.getVariety().getCategory() == null) {
+            return null;
+        }
+
+        return product.getVariety().getCategory().getCategoryId();
     }
 }

@@ -30,23 +30,23 @@
 
         <div class="appointment-container appointment-hero-grid">
             <div class="appointment-hero-copy">
-                <span class="appointment-pill">Private Showroom Schedule</span>
-                <p class="appointment-kicker">My Appointment</p>
-                <h1>Lịch hẹn xem riêng của tôi</h1>
-                <p>Theo dõi trạng thái, xem chi tiết, cập nhật hoặc hủy lịch hẹn thưởng lãm các tác phẩm Bonsai Luxury tại showroom.</p>
+                <span class="appointment-pill" th:text="${#locale.language == 'en' ? 'Private Showroom Schedule' : 'Lịch hẹn Showroom riêng'}">Private Showroom Schedule</span>
+                <p class="appointment-kicker" th:text="${#locale.language == 'en' ? 'My Appointments' : 'Lịch hẹn của tôi'}">My Appointment</p>
+                <h1 th:text="${#locale.language == 'en' ? 'My Private Appointments' : 'Lịch hẹn xem riêng của tôi'}">Lịch hẹn xem riêng của tôi</h1>
+                <p th:text="${#locale.language == 'en' ? 'Track status, view details, update or cancel private viewing appointments at the showroom.' : 'Theo dõi trạng thái, xem chi tiết, cập nhật hoặc hủy lịch hẹn thưởng lãm các tác phẩm Bonsai Luxury tại showroom.'}">Theo dõi trạng thái, xem chi tiết, cập nhật hoặc hủy lịch hẹn thưởng lãm các tác phẩm Bonsai Luxury tại showroom.</p>
                 <div class="hero-actions">
-                    <a th:href="@{/bonsai-luxury}" class="btn-luxury-primary">Khám phá thêm tác phẩm</a>
-                    <a href="#appointmentList" class="btn-luxury-ghost">Xem lịch hẹn</a>
+                    <a th:href="@{/bonsai-luxury}" class="btn-luxury-primary" th:text="${#locale.language == 'en' ? 'Explore More Works' : 'Khám phá thêm tác phẩm'}">Khám phá thêm tác phẩm</a>
+                    <a href="#appointmentList" class="btn-luxury-ghost" th:text="${#locale.language == 'en' ? 'View Appointments' : 'Xem lịch hẹn'}">Xem lịch hẹn</a>
                 </div>
             </div>
 
             <div class="appointment-summary-card">
-                <span class="summary-label">Collector schedule</span>
+                <span class="summary-label" th:text="${#locale.language == 'en' ? 'Collector Schedule' : 'Lịch trình sưu tầm'}">Collector schedule</span>
                 <strong th:text="${viewingAppointments != null ? #lists.size(viewingAppointments) : 0}">0</strong>
-                <p>Lịch hẹn đang được lưu trong tài khoản của bạn.</p>
+                <p th:text="${#locale.language == 'en' ? 'Appointments currently saved in your account.' : 'Lịch hẹn đang được lưu trong tài khoản của bạn.'}">Lịch hẹn đang được lưu trong tài khoản của bạn.</p>
                 <div class="summary-mini-grid">
-                    <div><i class="fa-solid fa-file-signature" aria-hidden="true"></i><span>Hồ sơ hẹn riêng</span></div>
-                    <div><i class="fa-solid fa-user-tie" aria-hidden="true"></i><span>Showroom tư vấn</span></div>
+                    <div><i class="fa-solid fa-file-signature" aria-hidden="true"></i><span th:text="${#locale.language == 'en' ? 'Private Dossier' : 'Hồ sơ hẹn riêng'}">Hồ sơ hẹn riêng</span></div>
+                    <div><i class="fa-solid fa-user-tie" aria-hidden="true"></i><span th:text="${#locale.language == 'en' ? 'Showroom Curation' : 'Showroom tư vấn'}">Showroom tư vấn</span></div>
                 </div>
             </div>
         </div>
@@ -56,10 +56,10 @@
         <div class="appointment-container">
             <div class="section-heading-row">
                 <div>
-                    <p class="section-kicker">Viewing requests</p>
-                    <h2>Danh sách lịch hẹn</h2>
+                    <p class="section-kicker" th:text="${#locale.language == 'en' ? 'Viewing Requests' : 'Yêu cầu thưởng lãm'}">Viewing requests</p>
+                    <h2 th:text="${#locale.language == 'en' ? 'Appointment List' : 'Danh sách lịch hẹn'}">Danh sách lịch hẹn</h2>
                 </div>
-                <p>Mỗi lịch hẹn gắn với một tác phẩm cụ thể. Bạn có thể xem chi tiết, cập nhật thời gian hoặc hủy nếu chưa thể đến showroom.</p>
+                <p th:text="${#locale.language == 'en' ? 'Each appointment is tied to a specific masterpiece. You can view details, update timing, or cancel.' : 'Mỗi lịch hẹn gắn với một tác phẩm cụ thể. Bạn có thể xem chi tiết, cập nhật thời gian hoặc hủy nếu chưa thể đến showroom.'}">Mỗi lịch hẹn gắn với một tác phẩm cụ thể. Bạn có thể xem chi tiết, cập nhật thời gian hoặc hủy nếu chưa thể đến showroom.</p>
             </div>
 
             <div class="appointment-grid" th:if="${viewingAppointments != null && !#lists.isEmpty(viewingAppointments)}">

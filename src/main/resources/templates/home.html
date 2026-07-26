@@ -2,7 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="vi">
 
-<head th:replace="~{fragments/head :: head('Bonsai Shop - Trang Chủ', '/css/home.css')}"></head>
+<head th:replace="~{fragments/head :: head(#{home.title}, '/css/home.css')}"></head>
 
 <body>
 
@@ -19,62 +19,111 @@
     </button>
 
     <div class="hero-content">
-        <p>NGHỆ THUẬT SỐNG XANH</p>
+        <p th:text="#{home.hero.tag}">NGHỆ THUẬT SỐNG XANH</p>
         <h1>Bonsai Shop</h1>
-        <span>Khám phá vẻ đẹp tĩnh tại trong từng dáng cây</span>
+        <span th:text="#{home.hero.sub}">Khám phá vẻ đẹp tĩnh tại trong từng dáng cây</span>
     </div>
 
     <a th:href="@{/marketplace}" class="scroll-down">
-        CUỘN ĐỂ KHÁM PHÁ
+        <span th:text="#{home.hero.scroll}">CUỘN ĐỂ KHÁM PHÁ</span>
         <span>⌄</span>
     </a>
 </section>
 
-<section class="collection">
-    <div class="section-heading">
+<!-- BỘ SƯU TẬP DI SẢN - TOP 5 XEM NHIỀU NHẤT - DẠNG STACK GIỮA -->
+<section class="collection-section">
+    <div class="collection-header">
         <div>
-            <p>DÀNH CHO NHÀ SƯU TẦM</p>
-            <h2>Bộ Sưu Tập Di Sản</h2>
+            <p class="collection-tag" th:text="#{home.collection.tag}">Bộ Sưu Tập Di Sản</p>
+            <h2 class="collection-title" th:text="#{home.collection.title}">Tuyệt tác thời gian</h2>
         </div>
-        <a th:href="@{/marketplace}">Xem tất cả tác phẩm</a>
+        <a th:href="@{/marketplace}" class="collection-link"
+           th:text="#{home.collection.view_all}">Xem tất cả sản phẩm →</a>
     </div>
 
-    <div class="product-grid">
-        <div class="product-card">
-            <img src="/images/bonsai-1.png" alt="Bonsai">
-            <p>TUỔI: 45 NĂM</p>
-            <h3>Shimpaku Juniper 'Eternity'</h3>
-            <strong>125.000.000 ₫</strong>
+    <!-- SLIDER STACK GIỮA -->
+    <div class="film-slider-wrapper" id="filmSlider">
+
+        <!-- NÚT TRÁI -->
+        <button th:if="${topProducts != null and !topProducts.isEmpty()}"
+                class="film-arrow film-arrow-left" type="button" onclick="filmPrev()">
+            <i class="fa-solid fa-chevron-left"></i>
+        </button>
+
+        <!-- TRACK CHỨA CÁC CARD -->
+        <div class="film-track" id="filmTrack">
+            <div th:each="product, stat : ${topProducts}"
+                 class="film-card"
+                 th:classappend="${stat.index == 0 ? ' active' : ''}"
+                 th:attr="data-index=${stat.index},
+                          data-id=${product.productId},
+                          data-name=${product.productName},
+                          data-age=${product.age},
+                          data-views=${product.viewCount}">
+                <a th:href="@{'/product/' + ${product.productId}}" class="film-card-link">
+                    <!-- ẢNH -->
+                    <div class="film-image-wrapper">
+                        <img th:if="${product.productMedias != null and !product.productMedias.isEmpty()}"
+                             th:src="${product.productMedias[0].mediaUrl}"
+                             th:alt="${product.productName}"
+                             class="film-image"/>
+                        <div th:unless="${product.productMedias != null and !product.productMedias.isEmpty()}"
+                             class="film-image-placeholder">🌿</div>
+
+                        <!-- OVERLAY THÔNG TIN (chỉ hiện khi active) -->
+                        <div class="film-overlay">
+                            <h3 class="film-name" th:text="${product.productName}">Tên cây</h3>
+                            <p class="film-age"
+                               th:text="${product.age != null ? 'TUỔI: ' + product.age + ' NĂM' : 'BONSAI'}">
+                                TUỔI: 65 NĂM
+                            </p>
+                        </div>
+
+                        <!-- PROGRESS BAR (chỉ hiện khi active) -->
+                        <div class="film-progress">
+                            <div class="film-progress-bar"></div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <!-- Fallback khi không có sản phẩm -->
+            <div th:if="${topProducts == null or topProducts.isEmpty()}"
+                 class="film-empty">
+                <span>🌿</span>
+                <p th:text="#{home.collection.empty}">Chưa có sản phẩm nào</p>
+            </div>
         </div>
 
-        <div class="product-card">
-            <img src="/images/bonsai-2.png" alt="Bonsai">
-            <p>TUỔI: 80 NĂM</p>
-            <h3>Kuro-Matsu Black Pine</h3>
-            <strong>480.000.000 ₫</strong>
-        </div>
+        <!-- NÚT PHẢI -->
+        <button th:if="${topProducts != null and !topProducts.isEmpty()}"
+                class="film-arrow film-arrow-right" type="button" onclick="filmNext()">
+            <i class="fa-solid fa-chevron-right"></i>
+        </button>
 
-        <div class="product-card">
-            <img src="/images/bonsai-3.png" alt="Bonsai">
-            <p>TUỔI: 30 NĂM</p>
-            <h3>Satsuki Azalea 'Grace'</h3>
-            <strong>85.000.000 ₫</strong>
+        <!-- CHỈ SỐ DOTS -->
+        <div th:if="${topProducts != null and !topProducts.isEmpty()}"
+             class="film-dots" id="filmDots">
+            <span th:each="product, stat : ${topProducts}"
+                  class="film-dot"
+                  th:classappend="${stat.index == 0 ? ' active' : ''}"
+                  th:attr="onclick='filmGoTo(' + ${stat.index} + ')'">
+            </span>
         </div>
     </div>
 </section>
-
 <section class="about">
     <div class="about-image"></div>
 
     <div class="about-content">
-        <p>TRIẾT LÝ CỦA CHÚNG TÔI</p>
-        <h2>Tại sao là<br>Bonsai Shop?</h2>
-        <h4>“Bonsai không chỉ là một cái cây, đó là một cuộc hành trình vượt thời gian.”</h4>
-        <span>
+        <p th:text="#{home.about.tag}">TRIẾT LÝ CỦA CHÚNG TÔI</p>
+        <h2 th:utext="#{home.about.title}">Tại sao là<br>Bonsai Shop?</h2>
+        <h4 th:text="#{home.about.quote}">“Bonsai không chỉ là một cái cây, đó là một cuộc hành trình vượt thời gian.”</h4>
+        <span th:text="#{home.about.desc}">
             Tại Bonsai Shop, chúng tôi không chỉ cung cấp những tác phẩm nghệ thuật sống.
             Chúng tôi chia sẻ tri thức, kinh nghiệm và sự tận tâm trong từng dáng cây.
         </span>
-        <a th:href="@{/marketplace}" class="outline-btn">Tìm hiểu thêm</a>
+        <a th:href="@{/marketplace}" class="outline-btn" th:text="#{home.about.more}">Tìm hiểu thêm</a>
     </div>
 </section>
 
@@ -84,29 +133,29 @@
     </div>
 
     <div class="standard-info">
-        <h2>Tiêu chuẩn Bonsai Shop</h2>
+        <h2 th:text="#{home.standard.title}">Tiêu chuẩn Bonsai Shop</h2>
 
         <div class="info-row">
-            <span>Nguồn gốc</span>
-            <strong>Vườn ươm Omiya, Nhật Bản</strong>
+            <span th:text="#{home.standard.origin}">Nguồn gốc</span>
+            <strong th:text="#{home.standard.origin.val}">Vườn ươm Omiya, Nhật Bản</strong>
         </div>
 
         <div class="info-row">
-            <span>Chế tác</span>
-            <strong>Nghệ nhân cấp quốc gia</strong>
+            <span th:text="#{home.standard.artisan}">Chế tác</span>
+            <strong th:text="#{home.standard.artisan.val}">Nghệ nhân cấp quốc gia</strong>
         </div>
 
         <div class="info-row">
-            <span>Dụng cụ</span>
-            <strong>Thép Masakuni rèn tay</strong>
+            <span th:text="#{home.standard.tool}">Dụng cụ</span>
+            <strong th:text="#{home.standard.tool.val}">Thép Masakuni rèn tay</strong>
         </div>
 
         <div class="info-row">
-            <span>Hậu mãi</span>
-            <strong>Bảo hành sinh trưởng 12 tháng</strong>
+            <span th:text="#{home.standard.warranty}">Hậu mãi</span>
+            <strong th:text="#{home.standard.warranty.val}">Bảo hành sinh trưởng 12 tháng</strong>
         </div>
 
-        <blockquote>
+        <blockquote th:text="#{home.standard.quote}">
             “Một tác phẩm luôn đi kèm chứng nhận danh tính và bộ hướng dẫn chăm sóc chuyên biệt.”
         </blockquote>
     </div>

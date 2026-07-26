@@ -13,7 +13,7 @@ public interface OrderDetailRepository extends JpaRepository<OrderDetail, Intege
     @Query("""
             SELECT COALESCE(SUM(od.priceAtPurchase), 0)
             FROM OrderDetail od
-            WHERE od.product.artisan.userId = :artisanUserId
+            WHERE od.product.createdBy.userId = :artisanUserId
               AND od.order.orderDate >= :startDate
               AND od.order.orderDate < :endDate
               AND UPPER(COALESCE(od.order.orderStatus, '')) = 'COMPLETED'
@@ -25,7 +25,7 @@ public interface OrderDetailRepository extends JpaRepository<OrderDetail, Intege
     @Query("""
             SELECT COUNT(od)
             FROM OrderDetail od
-            WHERE od.product.artisan.userId = :artisanUserId
+            WHERE od.product.createdBy.userId = :artisanUserId
               AND od.order.orderDate >= :startDate
               AND od.order.orderDate < :endDate
               AND UPPER(COALESCE(od.order.orderStatus, '')) = 'COMPLETED'

@@ -4,6 +4,7 @@ import com.example.bonsai_shop.product.service.ProductService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -26,10 +27,14 @@ public class PreniumBonsaiController {
 
    @GetMapping("/bonsai_luxury_detail/{productId}")
    public String premiumDetail(
-           @PathVariable Integer productId
-           , Model model) {
+           @PathVariable Integer productId,
+           Authentication authentication,
+           Model model) {
       ProductCardDTO product =
               productService.getPremiumProductsById(productId);
+      if (product != null) {
+         productService.incrementViewCountForCustomer(productId, authentication);
+      }
    model.addAttribute("product", product);
    return "product/bonsai_luxury_detail";
    }

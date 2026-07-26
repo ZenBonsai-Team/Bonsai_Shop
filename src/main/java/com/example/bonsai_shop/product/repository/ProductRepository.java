@@ -14,12 +14,21 @@ import java.util.List;
 import java.util.Optional;
 
 public interface ProductRepository extends JpaRepository<Product, Integer>, JpaSpecificationExecutor<Product> {
-    List<Product> findByArtisanUserIdOrderByCreatedAtDesc(Integer artisanUserId);
-    List<Product> findByArtisanUserIdAndProductStatusOrderByCreatedAtDesc(Integer artisanUserId, String productStatus);
-    Optional<Product> findByProductIdAndArtisanUserId(Integer productId, Integer artisanUserId);
+    List<Product> findByCreatedByUserIdOrderByCreatedAtDesc(Integer artisanUserId);
+    List<Product> findByCreatedByUserIdAndProductStatusOrderByCreatedAtDesc(Integer artisanUserId, String productStatus);
+    Optional<Product> findByProductIdAndCreatedByUserId(Integer productId, Integer artisanUserId);
     boolean existsByProductCode(String productCode);
     boolean existsByVarietyVarietyId(Integer varietyId);
     boolean existsBySegmentSegmentId(Integer segmentId);
+    List<Product> findTop5ByProductStatusOrderByViewCountDesc(String productStatus);
+   @Modifying
+    @Query("""
+        UPDATE Product p
+        SET p.viewCount = COALESCE(p.viewCount, 0) + 1
+        WHERE p.productId = :productId
+    """)
+    int incrementViewCount(@Param("productId") Integer productId);
+
 
     @Modifying
     @Query("""
@@ -46,7 +55,7 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
         )
         FROM Product p
         JOIN p.variety v
-        JOIN p.artisan a
+        JOIN p.createdBy a
         LEFT JOIN p.productMedias m
         WHERE
                 p.productStatus = 'AVAILABLE'
@@ -54,10 +63,10 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
     """)
     Page<ProductCardDTO> findMarketplaceProducts(Pageable pageable);
 
-    @Query("SELECT p FROM Product p JOIN FETCH p.variety JOIN FETCH p.artisan WHERE p.productStatus <> 'HIDDEN'")
+    @Query("SELECT p FROM Product p JOIN FETCH p.variety LEFT JOIN FETCH p.createdBy WHERE p.productStatus <> 'HIDDEN'")
     Page<Product> findAllActiveProducts(Pageable pageable);
 
-    @Query("SELECT p FROM Product p JOIN FETCH p.variety JOIN FETCH p.artisan WHERE p.productStatus = 'AVAILABLE'")
+    @Query("SELECT p FROM Product p JOIN FETCH p.variety LEFT JOIN FETCH p.createdBy WHERE p.productStatus = 'AVAILABLE'")
     Page<Product> findAvailableProductsOnly(Pageable pageable);
 
     @Query("""
@@ -76,7 +85,7 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
     )
     FROM Product p
     JOIN p.variety v
-    JOIN p.artisan a
+    JOIN p.createdBy a
     LEFT JOIN p.productMedias m
     WHERE p.segment.segmentId = 3
       AND p.productStatus NOT IN ('DRAFT', 'HIDDEN')
@@ -116,7 +125,7 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
     )
     FROM Product p
     JOIN p.variety v
-    JOIN p.artisan a
+    JOIN p.createdBy a
     LEFT JOIN p.productMedias m
     WHERE p.segment.segmentId = 3
       AND p.productStatus NOT IN ('DRAFT', 'HIDDEN')

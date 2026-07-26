@@ -1,6 +1,7 @@
 package com.example.bonsai_shop;
 
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +28,23 @@ class BonsaiShopApplicationTests {
     void contextLoads() {
         try (Connection conn = dataSource.getConnection();
                 Statement stmt = conn.createStatement()) {
+
+            java.util.Map<String, String> vnp_Params = new java.util.HashMap<>();
+            vnp_Params.put("vnp_TmnCode", "URXDCBW6");
+            vnp_Params.put("vnp_Amount", "10000000");
+            vnp_Params.put("vnp_CurrCode", "VND");
+            vnp_Params.put("vnp_TxnRef", "BSMS-TEST1234");
+            vnp_Params.put("vnp_OrderInfo", "Thanh toan don hang BSMS TEST1234");
+            vnp_Params.put("vnp_OrderType", "other");
+            vnp_Params.put("vnp_Locale", "vn");
+            vnp_Params.put("vnp_ReturnUrl", "http://localhost:8080/vnpay/payment-callback");
+            vnp_Params.put("vnp_IpAddr", "127.0.0.1");
+
+            java.util.Calendar cld = java.util.Calendar.getInstance(java.util.TimeZone.getTimeZone("Asia/Ho_Chi_Minh"));
+            java.text.SimpleDateFormat formatter = new java.text.SimpleDateFormat("yyyyMMddHHmmss");
+            vnp_Params.put("vnp_CreateDate", formatter.format(cld.getTime()));
+            cld.add(java.util.Calendar.MINUTE, 15);
+            vnp_Params.put("vnp_ExpireDate", formatter.format(cld.getTime()));
 
             System.out.println("========== DATABASE INSPECTION ==========");
             System.out.println("Connected to: " + conn.getMetaData().getURL());

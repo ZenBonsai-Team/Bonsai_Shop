@@ -28,46 +28,46 @@
         <div class="hero-ambient hero-ambient-left" aria-hidden="true"></div>
         <div class="hero-ambient hero-ambient-right" aria-hidden="true"></div>
         <div class="container hero-marketplace-head">
-            <span class="hero-pill-badge luxury-hero-pill">Showroom riêng • Hồ sơ sưu tầm</span>
-            <h1 class="hero-main-title serif-text luxury-hero-title">Bonsai di sản cho bộ sưu tập riêng</h1>
-            <p class="hero-subtitle-desc luxury-hero-desc">
+            <span class="hero-pill-badge luxury-hero-pill" th:text="#{luxury.hero.badge}">Showroom riêng • Hồ sơ sưu tầm</span>
+            <h1 class="hero-main-title serif-text luxury-hero-title" th:text="#{luxury.hero.title}">Bonsai di sản cho bộ sưu tập riêng</h1>
+            <p class="hero-subtitle-desc luxury-hero-desc" th:text="#{luxury.hero.desc}">
                 Tuyển chọn những tác phẩm có tuổi, dáng và chất thân rõ nét; phù hợp cho biệt thự, phòng khách lớn và không gian trưng bày cao cấp.
             </p>
             <div class="hero-marketplace-actions">
-                <a href="#collection" class="btn btn-hero-solid luxury-hero-solid text-decoration-none">Khám phá bộ sưu tập</a>
-                <a href="#services" class="btn btn-hero-outline luxury-hero-outline text-decoration-none">Dịch vụ sở hữu</a>
+                <a href="#collection" class="btn btn-hero-solid luxury-hero-solid text-decoration-none" th:text="#{luxury.hero.explore}">Khám phá bộ sưu tập</a>
+                <a href="#services" class="btn btn-hero-outline luxury-hero-outline text-decoration-none" th:text="#{luxury.hero.services}">Dịch vụ sở hữu</a>
             </div>
         </div>
 
         <div class="container hero-inner">
             <div class="hero-left">
                 <div class="hero-edition-tag">
-                    <span>Showroom riêng</span>
-                    <strong>Tác phẩm tuyển chọn giới hạn</strong>
+                    <span th:text="#{luxury.left.showroom}">Showroom riêng</span>
+                    <strong th:text="#{luxury.left.curation}">Tác phẩm tuyển chọn giới hạn</strong>
                 </div>
                 <div class="hero-curation-panel">
-                    <p class="hero-kicker">Tiêu chuẩn tuyển chọn</p>
-                    <h2>Tuyển chọn theo tiêu chuẩn sưu tầm</h2>
-                    <p>Ưu tiên dáng ổn định, bộ rễ khỏe, chất thân rõ tuổi và khả năng trưng bày lâu dài.</p>
+                    <p class="hero-kicker" th:text="#{luxury.left.standards.tag}">Tiêu chuẩn tuyển chọn</p>
+                    <h2 th:text="#{luxury.left.standards.title}">Tuyển chọn theo tiêu chuẩn sưu tầm</h2>
+                    <p th:text="#{luxury.left.standards.desc}">Ưu tiên dáng ổn định, bộ rễ khỏe, chất thân rõ tuổi và khả năng trưng bày lâu dài.</p>
                 </div>
 
                 <ul class="hero-features">
-                    <li><i class="fa-solid fa-certificate" aria-hidden="true"></i> Hồ sơ thẩm định</li>
-                    <li><i class="fa-solid fa-door-open" aria-hidden="true"></i> Xem riêng tại showroom</li>
-                    <li><i class="fa-solid fa-seedling" aria-hidden="true"></i> Bảo dưỡng sau bàn giao</li>
+                    <li><i class="fa-solid fa-certificate" aria-hidden="true"></i> <span th:text="#{luxury.features.dossier}">Hồ sơ thẩm định</span></li>
+                    <li><i class="fa-solid fa-door-open" aria-hidden="true"></i> <span th:text="#{luxury.features.showroom}">Xem riêng tại showroom</span></li>
+                    <li><i class="fa-solid fa-seedling" aria-hidden="true"></i> <span th:text="#{luxury.features.maintenance}">Bảo dưỡng sau bàn giao</span></li>
                 </ul>
 
                 <div class="showroom-metrics" aria-label="Thông số độc quyền từ showroom">
-                    <div><strong>120+</strong><span>Tác phẩm di sản</span></div>
-                    <div><strong>1:1</strong><span>Lịch xem riêng</span></div>
-                    <div><strong>48h</strong><span>Bàn giao tận nơi</span></div>
+                    <div><strong>120+</strong><span th:text="#{luxury.metrics.heritage}">Tác phẩm di sản</span></div>
+                    <div><strong>1:1</strong><span th:text="#{luxury.metrics.viewing}">Lịch xem riêng</span></div>
+                    <div><strong>48h</strong><span th:text="#{luxury.metrics.delivery}">Bàn giao tận nơi</span></div>
                 </div>
 
                 <div class="hero-concierge-note" aria-label="Dịch vụ concierge">
                     <span class="concierge-mark">BL</span>
                     <div>
-                        <strong>Tư vấn riêng</strong>
-                        <p>Tư vấn chọn cây theo diện tích, hướng sáng và gu nội thất của từng không gian.</p>
+                        <strong th:text="#{luxury.concierge.title}">Tư vấn riêng</strong>
+                        <p th:text="#{luxury.concierge.desc}">Tư vấn chọn cây theo diện tích, hướng sáng và gu nội thất của từng không gian.</p>
                     </div>
                 </div>
             </div>
@@ -133,10 +133,10 @@
     <section id="collection" class="collection container" aria-label="Bộ sưu tập Bonsai">
         <div class="section-heading section-heading-luxury">
             <div>
-                <p class="section-kicker">Tác phẩm tuyển chọn</p>
-                <h2 class="section-title">Bộ sưu tập nổi bật</h2>
+                <p class="section-kicker" th:text="#{luxury.collection.tag}">Tác phẩm tuyển chọn</p>
+                <h2 class="section-title" th:text="#{luxury.collection.title}">Bộ sưu tập nổi bật</h2>
             </div>
-            <p class="section-copy">Mỗi cây được chọn theo dáng, tuổi, chất thân và khả năng hiện diện trong không gian nội thất cao cấp.</p>
+            <p class="section-copy" th:text="#{luxury.collection.desc}">Mỗi cây được chọn theo dáng, tuổi, chất thân và khả năng hiện diện trong không gian nội thất cao cấp.</p>
         </div>
 
         <div class="luxury-market-tabs" aria-label="Phân loại bộ sưu tập cao cấp">

@@ -3,8 +3,10 @@ package com.example.bonsai_shop.product.controller;
 import com.example.bonsai_shop.config.SecurityUtils;
 import com.example.bonsai_shop.customer.repository.UserRepository;
 import com.example.bonsai_shop.entity.CartItem;
+import com.example.bonsai_shop.entity.Product;
 import com.example.bonsai_shop.entity.User;
 import com.example.bonsai_shop.product.dto.CartItemResponseDTO;
+import com.example.bonsai_shop.product.repository.ProductRepository;
 import com.example.bonsai_shop.product.service.CartService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -23,6 +25,7 @@ public class CartApiController {
 
     private final CartService cartService;
     private final UserRepository userRepository;
+    private final ProductRepository productRepository;
 
     @GetMapping
     public ResponseEntity<List<CartItemResponseDTO>> getCart(@AuthenticationPrincipal Object principal) {
@@ -84,5 +87,32 @@ public class CartApiController {
         response.put("success", true);
         response.put("message", "Đã xóa sản phẩm khỏi giỏ hàng.");
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/sync")
+    public ResponseEntity<Map<String, Object>> syncGuestCart(
+            @RequestBody List<Integer> productIds,
+            @AuthenticationPrincipal Object principal) {
+
+        User user = SecurityUtils.getCurrentUser(principal, userRepository);
+        if (user == null || productIds == null || productIds.isEmpty()) {
+            return ResponseEntity.ok(Map.of("success", false));
+        }
+
+        int addedCount = 0;
+        for (Integer pId : productIds) {
+            Product product = productRepository.findById(pId).orElse(null);
+            if (product != null && "AVAILABLE".equalsIgnoreCase(product.getProductStatus())) {
+                try {
+                    cartService.addToCart(user.getUserId(), pId, user);
+                    addedCount++;
+                } catch (Exception ignored) {
+                }
+            }
+        }
+
+        return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "Đã đồng bộ " + addedCount + " tác phẩm vào giỏ hàng."));
     }
 }

@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 public enum CloudinaryFolder {
 
     AVATAR("bonsai_shop/avatars"),
+    ARTISAN_COVER("bonsai_shop/artisans/covers"),
     PRODUCT_IMAGE("bonsai_shop/products/images"),
     PRODUCT_VIDEO("bonsai_shop/products/videos"),
     BANNER("bonsai_shop/banners"),

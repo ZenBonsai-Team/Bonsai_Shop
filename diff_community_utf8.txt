@@ -1,0 +1,277 @@
+diff --git a/src/main/resources/templates/customer/community.html b/src/main/resources/templates/customer/community.html
+index 3717728..2aed112 100644
+--- a/src/main/resources/templates/customer/community.html
++++ b/src/main/resources/templates/customer/community.html
+@@ -1,5 +1,5 @@
+ <!DOCTYPE html>
+-<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="vi">
++<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" th:lang="${#locale.language}">
+ <head>
+     <meta charset="UTF-8">
+     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+@@ -27,9 +27,8 @@
+ <!-- Header -->
+ <header class="community-header">
+     <div class="container">
+-        <span class="community-pill-badge">Bonsai Journal</span>
+-        <h1 class="community-title">Nơi giao lưu tri thức về cây cảnh & nghệ thuật Bonsai</h1>
+-        <p class="community-desc">
++        <h1 class="community-title" th:text="#{community.header.title}">Nơi giao lưu tri thức về cây cảnh & nghệ thuật Bonsai</h1>
++        <p class="community-desc" th:text="#{community.header.desc}">
+             Cộng đồng BSMS — nơi những người yêu cây chia sẻ kỹ thuật, câu chuyện và cảm hứng, từ nghệ nhân lão thành đến người mới bắt đầu.
+         </p>
+         
+@@ -37,7 +36,7 @@
+             <!-- Search bar -->
+             <form th:action="@{/community}" method="get" class="search-input-wrap m-0" style="width: 420px; max-width: 100%;">
+                 <i class="fa-solid fa-magnifying-glass"></i>
+-                <input type="text" name="search" th:value="${searchQuery}" class="community-search-input" placeholder="Tìm kiếm bài viết, chủ đề, tác giả...">
++                <input type="text" name="search" th:value="${searchQuery}" class="community-search-input" th:placeholder="#{community.search.placeholder}">
+                 <input type="hidden" name="category" th:value="${selectedCategory}" th:if="${selectedCategory != 'Tất cả'}">
+             </form>
+         </div>
+@@ -50,25 +49,34 @@
+         <div class="community-tabs">
+             <a th:href="@{/community(category='Tất cả', search=${searchQuery})}" 
+                th:classappend="${selectedCategory == 'Tất cả'} ? 'active' : ''"
+-               class="community-tab-btn">Tất cả</a>
++               class="community-tab-btn"
++               th:text="${#locale.language == 'en' ? 'All' : 'Tất cả'}">Tất cả</a>
+             <a th:href="@{/community(category='Hành trình Bonsai', search=${searchQuery})}" 
+                th:classappend="${selectedCategory == 'Hành trình Bonsai'} ? 'active' : ''"
+-               class="community-tab-btn"><i class="fa-solid fa-seedling me-1 text-success"></i> Hành trình Bonsai</a>
++               class="community-tab-btn">
++               <i class="fa-solid fa-seedling me-1 text-success"></i> 
++               <span th:text="${#locale.language == 'en' ? 'Bonsai Journey' : 'Hành trình Bonsai'}">Hành trình Bonsai</span>
++            </a>
+             <a th:href="@{/community(category='Kỹ thuật', search=${searchQuery})}" 
+                th:classappend="${selectedCategory == 'Kỹ thuật'} ? 'active' : ''"
+-               class="community-tab-btn">Kỹ thuật</a>
++               class="community-tab-btn"
++               th:text="${#locale.language == 'en' ? 'Techniques' : 'Kỹ thuật'}">Kỹ thuật</a>
+             <a th:href="@{/community(category='Nghệ thuật', search=${searchQuery})}" 
+                th:classappend="${selectedCategory == 'Nghệ thuật'} ? 'active' : ''"
+-               class="community-tab-btn">Nghệ thuật</a>
++               class="community-tab-btn"
++               th:text="${#locale.language == 'en' ? 'Arts' : 'Nghệ thuật'}">Nghệ thuật</a>
+             <a th:href="@{/community(category='Chăm sóc', search=${searchQuery})}" 
+                th:classappend="${selectedCategory == 'Chăm sóc'} ? 'active' : ''"
+-               class="community-tab-btn">Chăm sóc</a>
++               class="community-tab-btn"
++               th:text="${#locale.language == 'en' ? 'Care' : 'Chăm sóc'}">Chăm sóc</a>
+             <a th:href="@{/community(category='Câu chuyện', search=${searchQuery})}" 
+                th:classappend="${selectedCategory == 'Câu chuyện'} ? 'active' : ''"
+-               class="community-tab-btn">Câu chuyện</a>
++               class="community-tab-btn"
++               th:text="${#locale.language == 'en' ? 'Stories' : 'Câu chuyện'}">Câu chuyện</a>
+             <a th:href="@{/community(category='Sự kiện', search=${searchQuery})}" 
+                th:classappend="${selectedCategory == 'Sự kiện'} ? 'active' : ''"
+-               class="community-tab-btn">Sự kiện</a>
++               class="community-tab-btn"
++               th:text="${#locale.language == 'en' ? 'Events' : 'Sự kiện'}">Sự kiện</a>
+         </div>
+     </div>
+ </div>
+@@ -89,35 +97,35 @@
+                         <h6 class="fw-bold mb-0 text-dark" th:text="${currentUser.fullName}">Tên người dùng</h6>
+                         <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill small" style="font-size:0.68rem;"
+                               th:with="r=${currentUser.role != null ? currentUser.role.roleName : ''}"
+-                              th:text="${r == 'ROLE_OWNER' || r == 'OWNER' ? 'Quản trị viên' : 
+-                                        (r == 'ROLE_CONTENT_MODERATOR' || r == 'CONTENT_MODERATOR' ? 'Kiểm duyệt viên' : 
+-                                         (r == 'ROLE_ARTISAN' || r == 'ARTISAN' ? 'Nghệ nhân' : 
+-                                          (r == 'ROLE_MODERATOR' || r == 'MODERATOR' ? 'Điều phối viên' : 'Thành viên')))}">Khách hàng</span>
++                              th:text="${r == 'ROLE_OWNER' || r == 'OWNER' ? (#locale.language == 'en' ? 'Administrator' : 'Quản trị viên') : 
++                                        (r == 'ROLE_CONTENT_MODERATOR' || r == 'CONTENT_MODERATOR' ? (#locale.language == 'en' ? 'Moderator' : 'Kiểm duyệt viên') : 
++                                         (r == 'ROLE_ARTISAN' || r == 'ARTISAN' ? (#locale.language == 'en' ? 'Artisan' : 'Nghệ nhân') : 
++                                          (r == 'ROLE_MODERATOR' || r == 'MODERATOR' ? (#locale.language == 'en' ? 'Coordinator' : 'Điều phối viên') : (#locale.language == 'en' ? 'Member' : 'Thành viên'))))}">Khách hàng</span>
+                     </div>
+                 </a>
+                 <div class="sidebar-user-header text-center py-2" th:if="${currentUser == null}">
+-                    <p class="small text-muted mb-2">Đăng nhập để chia sẻ tác phẩm Bonsai và tương tác cùng cộng đồng</p>
+-                    <a th:href="@{/login}" class="btn btn-outline-success btn-sm w-100 rounded-pill fw-semibold">Đăng nhập ngay</a>
++                    <p class="small text-muted mb-2" th:text="${#locale.language == 'en' ? 'Log in to share your Bonsai masterpieces and interact with the community' : 'Đăng nhập để chia sẻ tác phẩm Bonsai và tương tác cùng cộng đồng'}">Đăng nhập để chia sẻ tác phẩm Bonsai và tương tác cùng cộng đồng</p>
++                    <a th:href="@{/login}" class="btn btn-outline-success btn-sm w-100 rounded-pill fw-semibold" th:text="${#locale.language == 'en' ? 'Log in now' : 'Đăng nhập ngay'}">Đăng nhập ngay</a>
+                 </div>
+ 
+                 <hr class="my-3 text-muted" style="opacity:0.15;">
+ 
+                 <div class="d-flex flex-column gap-2">
+                     <a th:href="@{/profile#myBonsaiJourneysSection}" class="text-dark text-decoration-none small fw-semibold p-2 rounded hover-bg-light d-flex align-items-center gap-2">
+-                        <i class="fa-solid fa-seedling text-success"></i> Hành trình Bonsai của tôi
++                        <i class="fa-solid fa-seedling text-success"></i> <span th:text="${#locale.language == 'en' ? 'My Bonsai Journey' : 'Hành trình Bonsai của tôi'}">Hành trình Bonsai của tôi</span>
+                     </a>
+                     <a th:href="@{/community(category='Đã lưu')}" class="text-dark text-decoration-none small fw-semibold p-2 rounded hover-bg-light d-flex align-items-center gap-2">
+-                        <i class="fa-regular fa-bookmark text-primary"></i> Bài viết đã lưu
++                        <i class="fa-regular fa-bookmark text-primary"></i> <span th:text="${#locale.language == 'en' ? 'Saved Posts' : 'Bài viết đã lưu'}">Bài viết đã lưu</span>
+                     </a>
+                     <a th:href="@{/community/create}" class="btn btn-success w-100 rounded-pill btn-sm mt-2 fw-semibold shadow-sm">
+-                        <i class="fa-solid fa-plus me-1"></i> Tạo bài viết mới
++                        <i class="fa-solid fa-plus me-1"></i> <span th:text="${#locale.language == 'en' ? 'Create New Post' : 'Tạo bài viết mới'}">Tạo bài viết mới</span>
+                     </a>
+                 </div>
+             </div>
+ 
+             <!-- Hashtag Hot Widget -->
+             <div class="feed-sidebar-card">
+-                <h6 class="fw-bold mb-3 text-dark"><i class="fa-solid fa-hashtag text-success me-2"></i>Chủ đề nổi bật</h6>
++                <h6 class="fw-bold mb-3 text-dark"><i class="fa-solid fa-hashtag text-success me-2"></i><span th:text="${#locale.language == 'en' ? 'Trending Topics' : 'Chủ đề nổi bật'}">Chủ đề nổi bật</span></h6>
+                 <div class="d-flex flex-wrap gap-1">
+                     <a th:each="tag : ${trendingHashtags}" 
+                        th:href="@{/community(search=${tag})}" 
+@@ -128,8 +136,8 @@
+ 
+             <!-- Community Guidelines -->
+             <div class="feed-sidebar-card bg-light border-0">
+-                <h6 class="fw-bold mb-2 text-dark"><i class="fa-solid fa-shield-halved text-success me-2"></i>Quy tắc cộng đồng</h6>
+-                <p class="text-muted small mb-0" style="line-height: 1.5;">
++                <h6 class="fw-bold mb-2 text-dark"><i class="fa-solid fa-shield-halved text-success me-2"></i><span th:text="${#locale.language == 'en' ? 'Community Guidelines' : 'Quy tắc cộng đồng'}">Quy tắc cộng đồng</span></h6>
++                <p class="text-muted small mb-0" style="line-height: 1.5;" th:text="${#locale.language == 'en' ? 'Respect the art, share authentic knowledge. All posts are moderated to preserve quality for tree lovers.' : 'Tôn trọng nghệ thuật, chia sẻ tri thức chân thực. Mọi bài viết đều được kiểm duyệt nhằm giữ gìn chất lượng cho người yêu cây.'}">
+                     Tôn trọng nghệ thuật, chia sẻ tri thức chân thực. Mọi bài viết đều được kiểm duyệt nhằm giữ gìn chất lượng cho người yêu cây.
+                 </p>
+             </div>
+@@ -139,9 +147,9 @@
+         <main class="col-lg-6 col-md-12">
+             <div th:if="${posts == null or posts.isEmpty()}" class="text-center py-5 bg-white rounded-3 shadow-sm p-4">
+                 <i class="fa-solid fa-newspaper text-muted fs-1 mb-3"></i>
+-                <h4 class="text-muted">Không tìm thấy bài viết nào phù hợp</h4>
+-                <p class="text-secondary small">Hãy thử tìm kiếm bằng từ khóa hoặc chọn danh mục khác.</p>
+-                <a th:href="@{/community}" class="btn btn-outline-success btn-sm rounded-pill mt-2 px-4">Xem tất cả bài viết</a>
++                <h4 class="text-muted" th:text="${#locale.language == 'en' ? 'No posts found matching the criteria' : 'Không tìm thấy bài viết nào phù hợp'}">Không tìm thấy bài viết nào phù hợp</h4>
++                <p class="text-secondary small" th:text="${#locale.language == 'en' ? 'Please try searching with another keyword or select a different category.' : 'Hãy thử tìm kiếm bằng từ khóa hoặc chọn danh mục khác.'}">Hãy thử tìm kiếm bằng từ khóa hoặc chọn danh mục khác.</p>
++                <a th:href="@{/community}" class="btn btn-outline-success btn-sm rounded-pill mt-2 px-4" th:text="${#locale.language == 'en' ? 'View all posts' : 'Xem tất cả bài viết'}">Xem tất cả bài viết</a>
+             </div>
+ 
+             <div th:if="${posts != null and !posts.isEmpty()}" class="social-feed-container">
+@@ -154,7 +162,13 @@
+                                 <div>
+                                     <div class="d-flex align-items-center gap-2">
+                                         <span class="author-name-title text-dark" th:text="${post.authorName}">Nghệ nhân Nguyễn Văn Thành</span>
+-                                        <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill" style="font-size: 0.65rem;" th:text="${post.category}">Hành trình Bonsai</span>
++                                        <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill" style="font-size: 0.65rem;" 
++                                              th:text="${post.category == 'Hành trình Bonsai' ? (#locale.language == 'en' ? 'Bonsai Journey' : 'Hành trình Bonsai') : 
++                                                        (post.category == 'Kỹ thuật' ? (#locale.language == 'en' ? 'Techniques' : 'Kỹ thuật') : 
++                                                         (post.category == 'Nghệ thuật' ? (#locale.language == 'en' ? 'Arts' : 'Nghệ thuật') : 
++                                                          (post.category == 'Chăm sóc' ? (#locale.language == 'en' ? 'Care' : 'Chăm sóc') : 
++                                                           (post.category == 'Câu chuyện' ? (#locale.language == 'en' ? 'Stories' : 'Câu chuyện') : 
++                                                            (post.category == 'Sự kiện' ? (#locale.language == 'en' ? 'Events' : 'Sự kiện') : post.category)))))}">Hành trình Bonsai</span>
+                                     </div>
+                                     <span class="post-time-ago" th:text="${#temporals.format(post.createdAt, 'dd/MM/yyyy HH:mm')}">2 giờ trước</span>
+                                 </div>
+@@ -181,19 +195,19 @@
+                             <!-- Like Button -->
+                             <button class="feed-action-btn btn-feed-like" th:data-post-id="${post.postId}" th:classappend="${likedPostIds != null and likedPostIds.contains(post.postId)} ? 'liked' : ''">
+                                 <i th:class="${likedPostIds != null and likedPostIds.contains(post.postId)} ? 'fa-solid fa-thumbs-up text-danger' : 'fa-regular fa-thumbs-up'"></i>
+-                                <span class="like-count" th:text="${post.likesCount != null ? post.likesCount : 0}">0</span> Thích
++                                <span class="like-count" th:text="${post.likesCount != null ? post.likesCount : 0}">0</span><span th:text="${#locale.language == 'en' ? ' Like' : ' Thích'}"> Thích</span>
+                             </button>
+ 
+                             <!-- Comment Button -->
+                             <a th:href="@{'/community/post/' + ${post.postId}}" class="feed-action-btn">
+                                 <i class="fa-regular fa-comment"></i>
+-                                <span th:text="${post.commentsCount != null ? post.commentsCount : 0}">0</span> Bình luận
++                                <span th:text="${post.commentsCount != null ? post.commentsCount : 0}">0</span><span th:text="${#locale.language == 'en' ? ' Comments' : ' Bình luận'}"> Bình luận</span>
+                             </a>
+ 
+                             <!-- Bookmark Button -->
+                             <button class="feed-action-btn btn-feed-bookmark" th:data-post-id="${post.postId}" th:classappend="${bookmarkedPostIds != null and bookmarkedPostIds.contains(post.postId)} ? 'bookmarked' : ''">
+                                 <i th:class="${bookmarkedPostIds != null and bookmarkedPostIds.contains(post.postId)} ? 'fa-solid fa-bookmark text-success' : 'fa-regular fa-bookmark'"></i>
+-                                <span class="bookmark-text" th:text="${bookmarkedPostIds != null and bookmarkedPostIds.contains(post.postId)} ? 'Đã lưu' : 'Lưu'">Lưu</span>
++                                <span class="bookmark-text" th:text="${bookmarkedPostIds != null and bookmarkedPostIds.contains(post.postId)} ? (#locale.language == 'en' ? 'Saved' : 'Đã lưu') : (#locale.language == 'en' ? 'Save' : 'Lưu')">Lưu</span>
+                             </button>
+                         </div>
+                     </div>
+@@ -205,7 +219,7 @@
+         <aside class="col-lg-3 d-none d-lg-block">
+             <!-- Featured Artisans Widget -->
+             <div class="feed-sidebar-card">
+-                <h6 class="fw-bold mb-3 text-dark"><i class="fa-solid fa-award text-warning me-2"></i>Nghệ Nhân Tiêu Biểu</h6>
++                <h6 class="fw-bold mb-3 text-dark"><i class="fa-solid fa-award text-warning me-2"></i><span th:text="${#locale.language == 'en' ? 'Featured Artisans' : 'Nghệ Nhân Tiêu Biểu'}">Nghệ Nhân Tiêu Biểu</span></h6>
+                 <div class="d-flex flex-column gap-3" th:if="${featuredArtisans != null and !featuredArtisans.isEmpty()}">
+                     <a th:each="artisan : ${featuredArtisans}" th:href="@{'/community/author/' + ${artisan.userId}}" class="d-flex align-items-center gap-2 text-decoration-none">
+                         <img th:src="${artisan.avatar != null && !artisan.avatar.isEmpty() ? artisan.avatar : 'https://ui-avatars.com/api/?name=' + artisan.fullName}" class="rounded-circle border" style="width:36px; height:36px; object-fit:cover;">
+@@ -216,10 +230,10 @@
+                             </div>
+                             <div class="text-muted" style="font-size:0.72rem;" 
+                                  th:with="r=${artisan.role != null ? artisan.role.roleName : ''}"
+-                                 th:text="${r == 'ROLE_OWNER' || r == 'OWNER' ? 'Quản trị viên' : 
+-                                           (r == 'ROLE_CONTENT_MODERATOR' || r == 'CONTENT_MODERATOR' ? 'Kiểm duyệt viên' : 
+-                                            (r == 'ROLE_ARTISAN' || r == 'ARTISAN' ? 'Nghệ nhân' : 
+-                                             (r == 'ROLE_MODERATOR' || r == 'MODERATOR' ? 'Điều phối viên' : 'Thành viên')))}">Nghệ nhân</div>
++                                 th:text="${r == 'ROLE_OWNER' || r == 'OWNER' ? (#locale.language == 'en' ? 'Administrator' : 'Quản trị viên') : 
++                                           (r == 'ROLE_CONTENT_MODERATOR' || r == 'CONTENT_MODERATOR' ? (#locale.language == 'en' ? 'Moderator' : 'Kiểm duyệt viên') : 
++                                            (r == 'ROLE_ARTISAN' || r == 'ARTISAN' ? (#locale.language == 'en' ? 'Artisan' : 'Nghệ nhân') : 
++                                             (r == 'ROLE_MODERATOR' || r == 'MODERATOR' ? (#locale.language == 'en' ? 'Coordinator' : 'Điều phối viên') : (#locale.language == 'en' ? 'Member' : 'Thành viên'))))}">Nghệ nhân</div>
+                         </div>
+                     </a>
+                 </div>
+@@ -227,26 +241,26 @@
+ 
+             <!-- Video Tutorial Embed -->
+             <div class="feed-sidebar-card">
+-                <h6 class="fw-bold mb-3 text-dark"><i class="fa-brands fa-youtube text-danger me-2"></i>Hướng Dẫn Bonsai</h6>
++                <h6 class="fw-bold mb-3 text-dark"><i class="fa-brands fa-youtube text-danger me-2"></i><span th:text="${#locale.language == 'en' ? 'Bonsai Tutorials' : 'Hướng Dẫn Bonsai'}">Hướng Dẫn Bonsai</span></h6>
+                 <div class="ratio ratio-16x9 rounded overflow-hidden shadow-sm border mb-2">
+                     <iframe src="https://www.youtube.com/embed/HC7o9FUsGj0" title="HaiHau Garden - Bonsai & Cây Cảnh Nghệ Thuật" allowfullscreen></iframe>
+                 </div>
+-                <p class="text-secondary mb-0" style="font-size: 0.75rem;">
++                <p class="text-secondary mb-0" style="font-size: 0.75rem;" th:text="${#locale.language == 'en' ? 'Tutorial video from HaiHai Garden - Art Bonsai & Ornamental Trees.' : 'Video hướng dẫn của kênh HaiHau Garden - Bonsai & Cây Cảnh Nghệ Thuật.'}">
+                     Video hướng dẫn của kênh HaiHau Garden - Bonsai & Cây Cảnh Nghệ Thuật.
+                 </p>
+             </div>
+ 
+             <!-- Livestreams & Events -->
+             <div class="feed-sidebar-card">
+-                <h6 class="fw-bold mb-3 text-dark"><i class="fa-solid fa-video text-danger me-2"></i>Sự Kiện Trực Tiếp</h6>
++                <h6 class="fw-bold mb-3 text-dark"><i class="fa-solid fa-video text-danger me-2"></i><span th:text="${#locale.language == 'en' ? 'Live Events' : 'Sự Kiện Trực Tiếp'}">Sự Kiện Trực Tiếp</span></h6>
+                 <div class="d-flex flex-column gap-2">
+                     <a href="#" data-bs-toggle="modal" data-bs-target="#liveStreamModal" data-video-id="awQzjn72bI0" data-title="Kỹ thuật đi kẽm uốn cây Tùng Cổ" class="text-decoration-none p-2 rounded border bg-light d-flex align-items-center gap-2 live-stream-trigger">
+                         <span class="badge bg-danger rounded-pill" style="font-size:0.6rem;"><i class="fa-solid fa-circle text-white"></i> LIVE</span>
+-                        <span class="small fw-semibold text-dark text-truncate">Kỹ thuật đi kẽm uốn cây Tùng Cổ</span>
++                        <span class="small fw-semibold text-dark text-truncate" th:text="${#locale.language == 'en' ? 'Wiring technique for Buddhist Pine' : 'Kỹ thuật đi kẽm uốn cây Tùng Cổ'}">Kỹ thuật đi kẽm uốn cây Tùng Cổ</span>
+                     </a>
+                     <a href="#" data-bs-toggle="modal" data-bs-target="#liveStreamModal" data-video-id="Jm8wRjD3xVA" data-title="Giao lưu & chia sẻ kinh nghiệm Bonsai" class="text-decoration-none p-2 rounded border bg-light d-flex align-items-center gap-2 live-stream-trigger">
+                         <span class="badge bg-danger rounded-pill" style="font-size:0.6rem;"><i class="fa-solid fa-circle text-white"></i> LIVE</span>
+-                        <span class="small fw-semibold text-dark text-truncate">Giao lưu & chia sẻ kinh nghiệm Bonsai</span>
++                        <span class="small fw-semibold text-dark text-truncate" th:text="${#locale.language == 'en' ? 'Sharing Bonsai experience & networking' : 'Giao lưu & chia sẻ kinh nghiệm Bonsai'}">Giao lưu & chia sẻ kinh nghiệm Bonsai</span>
+                     </a>
+                 </div>
+             </div>
+@@ -258,9 +272,6 @@
+ <!-- Footer -->
+ <div th:replace="~{fragments/footer :: footer}"></div>
+ 
+-<!-- Bootstrap Bundle JS -->
+-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+-
+ <!-- AJAX Interactive Handlers for Instant Feed Like & Bookmark -->
+ <script>
+ document.addEventListener("DOMContentLoaded", function() {
+@@ -335,13 +346,14 @@ document.addEventListener("DOMContentLoaded", function() {
+                 if (data.success) {
+                     const textSpan = this.querySelector(".bookmark-text");
+                     const icon = this.querySelector("i");
++                    const isEn = document.documentElement.lang === 'en' || window.location.search.includes('lang=en') || document.cookie.includes('lang=en');
+                     if (data.bookmarked) {
+                         this.classList.add("bookmarked");
+-                        if (textSpan) textSpan.textContent = "Đã lưu";
++                        if (textSpan) textSpan.textContent = isEn ? "Saved" : "Đã lưu";
+                         icon.className = "fa-solid fa-bookmark text-success";
+                     } else {
+                         this.classList.remove("bookmarked");
+-                        if (textSpan) textSpan.textContent = "Lưu";
++                        if (textSpan) textSpan.textContent = isEn ? "Save" : "Lưu";
+                         icon.className = "fa-regular fa-bookmark";
+                     }
+                 }
+@@ -412,9 +424,9 @@ document.addEventListener("DOMContentLoaded", function() {
+                         <div class="col-lg-4 d-flex flex-column border-start live-modal-container" style="height: 480px;">
+                             <div class="bg-light p-3 border-bottom fw-bold small text-dark d-flex align-items-center justify-content-between">
+                                 <span class="d-flex align-items-center gap-2">
+-                                    <i class="fa-regular fa-comments text-danger"></i> Trò chuyện trực tiếp
++                                    <i class="fa-regular fa-comments text-danger"></i> <span th:text="${#locale.language == 'en' ? 'Live Chat' : 'Trò chuyện trực tiếp'}">Trò chuyện trực tiếp</span>
+                                 </span>
+-                                <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill" style="font-size: 0.7rem;">Đồng bộ</span>
++                                <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill" style="font-size: 0.7rem;" th:text="${#locale.language == 'en' ? 'Synced' : 'Đồng bộ'}">Đồng bộ</span>
+                             </div>
+                             <div class="flex-grow-1">
+                                 <iframe id="modalLiveChat" src="" width="100%" height="100%" frameborder="0"></iframe>
