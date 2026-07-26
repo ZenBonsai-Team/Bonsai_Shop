@@ -38,6 +38,7 @@ public class OrderService {
     private final OrderLogRepository orderLogRepository;
     private final OrderHandlingRepository orderHandlingRepository;
     private final ApplicationEventPublisher eventPublisher;
+    private final MailService mailService;
 
     @Transactional(readOnly = true)
     public Page<Order> getFilteredOrders(String search, String status, String sort, int page, int limit) {
@@ -176,6 +177,11 @@ public class OrderService {
 
     @Transactional
     public boolean verifyOrder(String orderCode, BigDecimal craneFee, BigDecimal shippingFee, User moderator) {
+        return verifyOrder(orderCode, craneFee, shippingFee, null, moderator);
+    }
+
+    @Transactional
+    public boolean verifyOrder(String orderCode, BigDecimal craneFee, BigDecimal shippingFee, BigDecimal depositAmount, User moderator) {
         Order order = orderRepository.findByOrderCode(orderCode).orElse(null);
         if (order == null || !"PENDING".equalsIgnoreCase(order.getOrderStatus())) {
             return false;
@@ -187,12 +193,15 @@ public class OrderService {
         }
 
         String oldStatus = order.getOrderStatus();
-        order.setCraneFee(craneFee);
-        order.setShippingFee(shippingFee);
+        order.setCraneFee(craneFee != null ? craneFee : BigDecimal.ZERO);
+        order.setShippingFee(shippingFee != null ? shippingFee : BigDecimal.ZERO);
+        if (depositAmount != null) {
+            order.setDepositAmount(depositAmount);
+        }
         order.setOrderStatus("APPROVED");
 
         BigDecimal originalAmount = order.getTotalAmount();
-        BigDecimal newTotal = originalAmount.add(craneFee).add(shippingFee);
+        BigDecimal newTotal = originalAmount.add(order.getCraneFee()).add(order.getShippingFee());
         order.setTotalAmount(newTotal);
         orderRepository.save(order);
 
@@ -281,6 +290,67 @@ public class OrderService {
                 }
             });
         }
+    }
+
+    @Transactional
+    public boolean recordDepositPayment(String orderCode, BigDecimal depositAmount, User moderator) {
+        Order order = orderRepository.findByOrderCode(orderCode).orElse(null);
+        if (order == null || (!"PENDING".equalsIgnoreCase(order.getOrderStatus()) && !"APPROVED".equalsIgnoreCase(order.getOrderStatus()))) {
+            return false;
+        }
+
+        String oldStatus = order.getOrderStatus();
+        order.setDepositAmount(depositAmount);
+        order.setOrderStatus("DEPOSITED");
+        orderRepository.save(order);
+
+        OrderLog log = OrderLog.builder()
+                .order(order)
+                .actionBy(moderator)
+                .actionType("DEPOSIT")
+                .fromStatus(oldStatus)
+                .toStatus("DEPOSITED")
+                .actionAt(LocalDateTime.now())
+                .build();
+        orderLogRepository.save(log);
+
+        try {
+            mailService.sendOrderDepositedEmail(order);
+        } catch (Exception e) {
+            // Log warning if email fail
+        }
+
+        return true;
+    }
+
+    @Transactional
+    public boolean recordFinalPayment(String orderCode, User moderator) {
+        Order order = orderRepository.findByOrderCode(orderCode).orElse(null);
+        if (order == null) {
+            return false;
+        }
+
+        String oldStatus = order.getOrderStatus();
+        order.setOrderStatus("PAID");
+        orderRepository.save(order);
+
+        OrderLog log = OrderLog.builder()
+                .order(order)
+                .actionBy(moderator)
+                .actionType("PAID")
+                .fromStatus(oldStatus)
+                .toStatus("PAID")
+                .actionAt(LocalDateTime.now())
+                .build();
+        orderLogRepository.save(log);
+
+        try {
+            mailService.sendOrderFinalReceiptEmail(order);
+        } catch (Exception e) {
+            // Log warning if email fail
+        }
+
+        return true;
     }
 }
 
