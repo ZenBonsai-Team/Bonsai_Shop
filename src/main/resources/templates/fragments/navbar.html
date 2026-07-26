@@ -266,6 +266,24 @@
                         throw new Error('Not logged in or error');
                     })
                     .then(data => {
+                        // Tự động đồng bộ giỏ hàng vãng lai nếu vừa đăng nhập
+                        const guestCart = JSON.parse(localStorage.getItem('bonsai_guest_cart') || '[]');
+                        if (guestCart.length > 0) {
+                            fetch('/api/cart/sync', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    [document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content') || 'X-CSRF-TOKEN']: 
+                                        document.querySelector('meta[name="_csrf"]')?.getAttribute('content') || ''
+                                },
+                                body: JSON.stringify(guestCart)
+                            }).then(() => {
+                                localStorage.removeItem('bonsai_guest_cart');
+                                updateCartBadge();
+                            }).catch(() => {});
+                            return;
+                        }
+
                         const badge = document.getElementById('cartBadgeCount');
                         if (badge) {
                             const count = data.reduce((sum, item) => sum + (item.quantity || 1), 0);
@@ -274,8 +292,12 @@
                         }
                     })
                     .catch(err => {
+                        const guestCart = JSON.parse(localStorage.getItem('bonsai_guest_cart') || '[]');
                         const badge = document.getElementById('cartBadgeCount');
-                        if (badge) badge.style.display = 'none';
+                        if (badge) {
+                            badge.textContent = guestCart.length;
+                            badge.style.display = guestCart.length > 0 ? 'flex' : 'none';
+                        }
                     });
             }
             updateCartBadge();
@@ -296,9 +318,17 @@
                 body: JSON.stringify({ productId: productId })
             })
             .then(response => {
-                if (response.status === 401) {
-                    alert("Vui lòng đăng nhập trước khi thêm sản phẩm vào giỏ hàng.");
-                    window.location.href = "/login";
+                if (response.status === 401 || response.redirected || response.url.includes('/login')) {
+                    // Xử lý giỏ hàng cho khách vãng lai (Guest Cart)
+                    let guestCart = JSON.parse(localStorage.getItem('bonsai_guest_cart') || '[]');
+                    if (!guestCart.includes(productId)) {
+                        guestCart.push(productId);
+                        localStorage.setItem('bonsai_guest_cart', JSON.stringify(guestCart));
+                    }
+                    alert("Đã thêm tác phẩm vào giỏ hàng!");
+                    if (typeof window.updateCartBadge === 'function') {
+                        window.updateCartBadge();
+                    }
                     return null;
                 }
                 return response.json();
@@ -315,8 +345,15 @@
                 }
             })
             .catch(err => {
-                console.error(err);
-                alert("Có lỗi kết nối đến máy chủ.");
+                let guestCart = JSON.parse(localStorage.getItem('bonsai_guest_cart') || '[]');
+                if (!guestCart.includes(productId)) {
+                    guestCart.push(productId);
+                    localStorage.setItem('bonsai_guest_cart', JSON.stringify(guestCart));
+                }
+                alert("Đã thêm tác phẩm vào giỏ hàng!");
+                if (typeof window.updateCartBadge === 'function') {
+                    window.updateCartBadge();
+                }
             });
         }
 
@@ -331,9 +368,14 @@
                 body: JSON.stringify({ productId: productId })
             })
             .then(response => {
-                if (response.status === 401) {
-                    alert("Vui lòng đăng nhập trước khi thêm sản phẩm vào giỏ hàng.");
-                    window.location.href = "/login";
+                if (response.status === 401 || response.redirected || response.url.includes('/login')) {
+                    // Khách vãng lai bấm "Mua ngay"
+                    let guestCart = JSON.parse(localStorage.getItem('bonsai_guest_cart') || '[]');
+                    if (!guestCart.includes(productId)) {
+                        guestCart.push(productId);
+                        localStorage.setItem('bonsai_guest_cart', JSON.stringify(guestCart));
+                    }
+                    window.location.href = "/checkout?productId=" + productId;
                     return null;
                 }
                 return response.json();
@@ -341,14 +383,18 @@
             .then(result => {
                 if (!result) return;
                 if (result.success) {
-                    window.location.href = "/cart";
+                    window.location.href = "/checkout?productId=" + productId;
                 } else {
                     alert(result.message || "Lỗi khi thêm vào giỏ hàng.");
                 }
             })
             .catch(err => {
-                console.error(err);
-                alert("Có lỗi kết nối đến máy chủ.");
+                let guestCart = JSON.parse(localStorage.getItem('bonsai_guest_cart') || '[]');
+                if (!guestCart.includes(productId)) {
+                    guestCart.push(productId);
+                    localStorage.setItem('bonsai_guest_cart', JSON.stringify(guestCart));
+                }
+                window.location.href = "/checkout?productId=" + productId;
             });
         }
 

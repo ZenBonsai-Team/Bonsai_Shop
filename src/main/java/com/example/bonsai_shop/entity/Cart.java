@@ -21,7 +21,7 @@ public class Cart {
     private Integer cartId;
 
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "CustomerID", nullable = false, unique = true)
+    @JoinColumn(name = "CustomerID", nullable = true, unique = true)
     private User customer;
 
     @Column(name = "CreatedAt")

@@ -1,7 +1,9 @@
 package com.example.bonsai_shop.product.controller;
 
 import com.example.bonsai_shop.config.VNPayConfig;
+import com.example.bonsai_shop.entity.Order;
 import com.example.bonsai_shop.entity.Product;
+import com.example.bonsai_shop.product.repository.OrderRepository;
 import com.example.bonsai_shop.product.repository.ProductRepository;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -23,6 +25,8 @@ public class PaymentController {
 
     @Autowired
     private ProductRepository productRepository;
+    @Autowired
+    private OrderRepository orderRepository;
 
     // Tạo link thanh toán VNPay
     @GetMapping("/vnpay/create-payment")
@@ -54,14 +58,14 @@ public class PaymentController {
         vnp_Params.put("vnp_CurrCode", "VND");
 
         vnp_Params.put("vnp_TxnRef", vnp_TxnRef);
-        vnp_Params.put("vnp_OrderInfo", "Thanh toan don hang BSMS:" + vnp_TxnRef);
+        vnp_Params.put("vnp_OrderInfo", "Thanh toan don hang " + vnp_TxnRef);
         vnp_Params.put("vnp_OrderType", orderType);
         vnp_Params.put("vnp_Locale", "vn");
         vnp_Params.put("vnp_ReturnUrl", VNPayConfig.vnp_ReturnUrl);
         vnp_Params.put("vnp_IpAddr", vnp_IpAddr);
 
-        // Định dạng thời gian GTM+7
-        Calendar cld = Calendar.getInstance(TimeZone.getTimeZone("Etc/GMT+7"));
+        // Định dạng thời gian GMT+7 (Asia/Ho_Chi_Minh)
+        Calendar cld = Calendar.getInstance(TimeZone.getTimeZone("Asia/Ho_Chi_Minh"));
         SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss");
         String vnp_CreateDate = formatter.format(cld.getTime());
         vnp_Params.put("vnp_CreateDate", vnp_CreateDate);
@@ -82,16 +86,16 @@ public class PaymentController {
             String fieldName = itr.next();
             String fieldValue = vnp_Params.get(fieldName);
             if ((fieldValue != null) && (fieldValue.length() > 0)) {
-                // Build hash data (quan trọng: VNPay yêu cầu replace '+' bằng '%20' khi encode)
+                // Build hashData
                 hashData.append(fieldName);
                 hashData.append('=');
-                hashData.append(
-                        URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII.toString()).replace("+", "%20"));
+                hashData.append(URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII.toString()));
 
-                // Build query string
+                // Build query
                 query.append(URLEncoder.encode(fieldName, StandardCharsets.US_ASCII.toString()));
                 query.append('=');
                 query.append(URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII.toString()));
+
                 if (itr.hasNext()) {
                     query.append('&');
                     hashData.append('&');
@@ -137,7 +141,7 @@ public class PaymentController {
                 try {
                     sb.append(fieldName);
                     sb.append('=');
-                    sb.append(URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII.toString()).replace("+", "%20"));
+                    sb.append(URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII.toString()));
                     if (itr.hasNext()) {
                         sb.append('&');
                     }
@@ -153,10 +157,16 @@ public class PaymentController {
         if (signValue.equals(vnp_SecureHash)) {
             String responseCode = request.getParameter("vnp_ResponseCode");
             if ("00".equals(responseCode)) {
+                String orderCode = request.getParameter("vnp_TxnRef");
+                Order order = orderRepository.findByOrderCode(orderCode).orElse(null);
+                if (order != null && !"PAID".equalsIgnoreCase(order.getOrderStatus())) {
+                    order.setOrderStatus("PAID");
+                    orderRepository.save(order);
+                }
                 model.addAttribute("status", "SUCCESS");
                 model.addAttribute("message", "Thanh toán giao dịch thành công!");
                 model.addAttribute("amount", Double.parseDouble(request.getParameter("vnp_Amount")) / 100);
-                model.addAttribute("txnRef", request.getParameter("vnp_TxnRef"));
+                model.addAttribute("txnRef", orderCode);
                 model.addAttribute("orderInfo", request.getParameter("vnp_OrderInfo"));
             } else {
                 model.addAttribute("status", "FAILED");
@@ -168,5 +178,89 @@ public class PaymentController {
         }
 
         return "payment-result"; // View Thymeleaf hiển thị kết quả (payment-result.html)
+    }
+
+    @GetMapping("/vnpay/pay-order")
+    public String payOrder(HttpServletRequest req, @RequestParam("orderCode") String orderCode)
+            throws UnsupportedEncodingException {
+
+        // 1. Tìm đơn hàng trong CSDL theo orderCode
+        Order order = orderRepository.findByOrderCode(orderCode)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy đơn hàng: " + orderCode));
+
+        // 2. Lấy tổng chi phí thanh toán (đã bao gồm tiền cây + phí cẩu + phí ship)
+        long amount = order.getTotalAmount().longValue();
+        String vnp_Version = "2.1.0";
+        String vnp_Command = "pay";
+        String orderType = "other";
+
+        // VNPay quy định nhân 100
+        long totalAmount = amount * 100;
+        String vnp_TxnRef = orderCode; // Dùng trực tiếp orderCode làm mã tham chiếu giao dịch
+        String vnp_IpAddr = VNPayConfig.getIpAddress(req);
+        String vnp_TmnCode = VNPayConfig.vnp_TmnCode;
+
+        Map<String, String> vnp_Params = new HashMap<>();
+        vnp_Params.put("vnp_Version", vnp_Version);
+        vnp_Params.put("vnp_Command", vnp_Command);
+        vnp_Params.put("vnp_TmnCode", vnp_TmnCode);
+        vnp_Params.put("vnp_Amount", String.valueOf(totalAmount));
+        vnp_Params.put("vnp_CurrCode", "VND");
+        vnp_Params.put("vnp_TxnRef", vnp_TxnRef);
+        vnp_Params.put("vnp_OrderInfo", "Thanh toan don hang " + vnp_TxnRef);
+        vnp_Params.put("vnp_OrderType", orderType);
+        vnp_Params.put("vnp_Locale", "vn");
+        vnp_Params.put("vnp_ReturnUrl", VNPayConfig.vnp_ReturnUrl);
+        vnp_Params.put("vnp_IpAddr", vnp_IpAddr);
+
+        Calendar cld = Calendar.getInstance(TimeZone.getTimeZone("Asia/Ho_Chi_Minh"));
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss");
+        String vnp_CreateDate = formatter.format(cld.getTime());
+        vnp_Params.put("vnp_CreateDate", vnp_CreateDate);
+
+        List<String> fieldNames = new ArrayList<>(vnp_Params.keySet());
+        Collections.sort(fieldNames);
+
+        StringBuilder hashData = new StringBuilder();
+        StringBuilder query = new StringBuilder();
+        Iterator<String> itr = fieldNames.iterator();
+
+        while (itr.hasNext()) {
+            String fieldName = itr.next();
+            String fieldValue = vnp_Params.get(fieldName);
+            if ((fieldValue != null) && (fieldValue.length() > 0)) {
+                // Build hashData
+                hashData.append(fieldName);
+                hashData.append('=');
+                hashData.append(URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII.toString()));
+
+                // Build query
+                query.append(URLEncoder.encode(fieldName, StandardCharsets.US_ASCII.toString()));
+                query.append('=');
+                query.append(URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII.toString()));
+
+                if (itr.hasNext()) {
+                    query.append('&');
+                    hashData.append('&');
+                }
+            }
+        }
+
+        String queryUrl = query.toString();
+        String vnp_SecureHash = VNPayConfig.hmacSHA512(VNPayConfig.vnp_HashSecret, hashData.toString());
+        queryUrl += "&vnp_SecureHash=" + vnp_SecureHash;
+
+        String paymentUrl = VNPayConfig.vnp_PayUrl + "?" + queryUrl;
+        
+        System.out.println("==================================================");
+        System.out.println("=== VNPAY PAY-ORDER DIAGNOSTIC LOG ===");
+        System.out.println("vnp_TmnCode: " + vnp_TmnCode);
+        System.out.println("vnp_HashSecret: " + VNPayConfig.vnp_HashSecret);
+        System.out.println("hashData: " + hashData.toString());
+        System.out.println("vnp_SecureHash: " + vnp_SecureHash);
+        System.out.println("Generated Payment URL: " + paymentUrl);
+        System.out.println("==================================================");
+
+        return "redirect:" + paymentUrl;
     }
 }

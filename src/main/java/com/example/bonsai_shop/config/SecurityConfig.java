@@ -56,27 +56,33 @@ public class SecurityConfig {
                                                                 "/resend-otp-reset",
                                                                 "/vnpay/**", // ← cho phép thanh toán VNPAY
                                                                 "/avatars/**", // ← cho phép xem ảnh avatar
-                                                                "/community", // ← cho phép xem trang cộng đồng công khai
-                                                                "/community/post/**", // ← cho phép xem bài viết chi tiết
+                                                                "/community", // ← cho phép xem trang cộng đồng công
+                                                                              // khai
+                                                                "/community/post/**", // ← cho phép xem bài viết chi
+                                                                                      // tiết
                                                                 "/css/**", // ← cho phép CSS
                                                                 "/js/**", // ← cho phép JS
                                                                 "/images/**", // ← cho phép images
                                                                 "/lookup", // ← cho phép truy cập /lookup
                                                                 "/order/lookup", // ← cho phép khách tra cứu đơn hàng theo mã
                                                                 "/orders/lookup", // ← cho phép truy cập /orders/lookup
+                                                                "/cart", // ← cho phép khách xem giỏ hàng
+                                                                "/checkout", // ← cho phép khách vào trang checkout
+                                                                "/order/success", // ← cho phép khách xem thông báo thành công
+                                                                "/api/cart/**",
+                                                                "/api/products/**",
                                                                 "/api/orders", // ← tạm thời cho phép để test API chính
                                                                 "/api/orders/**", // ← tạm thời cho phép để test API con
-                                                                "/api/products/**", // ← cho phép lấy thông tin chi tiết sản phẩm
                                                                 "/api/notifications/**" // ← cho phép lấy thông tin thông báo nút chuông
                                                 ).permitAll()
-                                                 // Chỉ OWNER mới vào được /owner/**
-                                                 .requestMatchers("/owner/**").hasRole("OWNER")
-                                                 // Chỉ CONTENT_MODERATOR mới vào được /moderator/community/**
-                                                 .requestMatchers("/moderator/community/**").hasRole("CONTENT_MODERATOR")
-                                                 // Chỉ MODERATOR mới vào được /moderator/**
-                                                 .requestMatchers("/moderator/**").hasRole("MODERATOR")
-                                                 // Chỉ ARTISAN mới vào được /artisan/**
-                                                 .requestMatchers("/artisan/**").hasRole("ARTISAN")
+                                                // Chỉ OWNER mới vào được /owner/**
+                                                .requestMatchers("/owner/**").hasRole("OWNER")
+                                                // Chỉ CONTENT_MODERATOR mới vào được /moderator/community/**
+                                                .requestMatchers("/moderator/community/**").hasRole("CONTENT_MODERATOR")
+                                                // Chỉ MODERATOR mới vào được /moderator/**
+                                                .requestMatchers("/moderator/**").hasRole("MODERATOR")
+                                                // Chỉ ARTISAN mới vào được /artisan/**
+                                                .requestMatchers("/artisan/**").hasRole("ARTISAN")
                                                 // Chặn theo Action cụ thể (permission-based)
                                                 .requestMatchers("/products/create", "/products/edit/**",
                                                                 "/prodcuts/delete/**")
@@ -96,13 +102,11 @@ public class SecurityConfig {
                                                 .failureUrl("/login?error") // login sai về trang này
                                                 .permitAll())
                                 .oauth2Login(oauth2 -> oauth2
-                                                .loginPage("/login")               // dùng chung trang login
+                                                .loginPage("/login") // dùng chung trang login
                                                 .successHandler(roleBasedSuccessHandler())
                                                 .failureUrl("/login?error")
                                                 .userInfoEndpoint(userInfo -> userInfo
-                                                .userService(customOAuth2UserService)
-                                )
-                        )
+                                                                .userService(customOAuth2UserService)))
                                 .logout(logout -> logout
                                                 .logoutUrl("/logout")
                                                 .logoutSuccessUrl("/login?logout")
@@ -114,39 +118,39 @@ public class SecurityConfig {
                 return http.build();
         }
 
-    @Bean
-    public AuthenticationSuccessHandler roleBasedSuccessHandler() {
-        return (request, response, authentication) -> {
-            boolean isOwner = authentication.getAuthorities().stream()
-                    .anyMatch(authority -> "ROLE_OWNER".equals(authority.getAuthority()));
-            boolean isArtisan = authentication.getAuthorities().stream()
-                    .anyMatch(authority -> "ROLE_ARTISAN".equals(authority.getAuthority()));
-            boolean isContentModerator = authentication.getAuthorities().stream()
-                    .anyMatch(authority -> "ROLE_CONTENT_MODERATOR".equals(authority.getAuthority()));
-            boolean isModerator = authentication.getAuthorities().stream()
-                    .anyMatch(authority -> "ROLE_MODERATOR".equals(authority.getAuthority())
-                            || "ACTION_ORDER_VIEW_ALL".equals(authority.getAuthority()));
+        @Bean
+        public AuthenticationSuccessHandler roleBasedSuccessHandler() {
+                return (request, response, authentication) -> {
+                        boolean isOwner = authentication.getAuthorities().stream()
+                                        .anyMatch(authority -> "ROLE_OWNER".equals(authority.getAuthority()));
+                        boolean isArtisan = authentication.getAuthorities().stream()
+                                        .anyMatch(authority -> "ROLE_ARTISAN".equals(authority.getAuthority()));
+                        boolean isContentModerator = authentication.getAuthorities().stream()
+                                        .anyMatch(authority -> "ROLE_CONTENT_MODERATOR"
+                                                        .equals(authority.getAuthority()));
+                        boolean isModerator = authentication.getAuthorities().stream()
+                                        .anyMatch(authority -> "ROLE_MODERATOR".equals(authority.getAuthority())
+                                                        || "ACTION_ORDER_VIEW_ALL".equals(authority.getAuthority()));
 
-            if (isOwner) {
-                response.sendRedirect("/owner");
-            } else if (isContentModerator) {
-                response.sendRedirect("/moderator/community");
-            } else if (isModerator) {
-                response.sendRedirect("/moderator/orders");
-            } else if (isArtisan) {
-                response.sendRedirect("/artisan");
-            } else {
-                response.sendRedirect("/home");
-            }
-        };
-    }
-    @Bean
-    public AuthenticationManager authenticationManager(HttpSecurity http) throws Exception {
-        AuthenticationManagerBuilder builder =
-                http.getSharedObject(AuthenticationManagerBuilder.class);
-        builder.userDetailsService(customUserDetailsService)
-                .passwordEncoder(passwordEncoder());
-        return builder.build();
-    }
+                        if (isOwner) {
+                                response.sendRedirect("/owner");
+                        } else if (isContentModerator) {
+                                response.sendRedirect("/moderator/community");
+                        } else if (isModerator) {
+                                response.sendRedirect("/moderator/orders");
+                        } else if (isArtisan) {
+                                response.sendRedirect("/artisan");
+                        } else {
+                                response.sendRedirect("/home");
+                        }
+                };
+        }
+
+        @Bean
+        public AuthenticationManager authenticationManager(HttpSecurity http) throws Exception {
+                AuthenticationManagerBuilder builder = http.getSharedObject(AuthenticationManagerBuilder.class);
+                builder.userDetailsService(customUserDetailsService)
+                                .passwordEncoder(passwordEncoder());
+                return builder.build();
+        }
 }
-

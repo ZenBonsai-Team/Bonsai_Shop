@@ -35,6 +35,10 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import com.example.bonsai_shop.customer.repository.RegisterOtpRepository;
+import com.example.bonsai_shop.customer.service.EmailService;
+import com.example.bonsai_shop.entity.PasswordResetOtp;
+
 @RestController
 @RequestMapping("/api/orders")
 public class OrderApiController {
@@ -53,6 +57,43 @@ public class OrderApiController {
 
     @Autowired
     private CartService cartService;
+
+    @Autowired
+    private RegisterOtpRepository registerOtpRepository;
+
+    @Autowired
+    private EmailService emailService;
+
+    @PostMapping("/send-guest-otp")
+    public ResponseEntity<Map<String, Object>> sendGuestOtp(@RequestBody Map<String, String> payload) {
+        Map<String, Object> response = new HashMap<>();
+        String email = payload.get("email");
+        if (email == null || !email.matches("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$")) {
+            response.put("success", false);
+            response.put("message", "Địa chỉ Email không hợp lệ!");
+            return ResponseEntity.badRequest().body(response);
+        }
+
+        try {
+            registerOtpRepository.deleteByEmail(email);
+        } catch (Exception ignored) {}
+
+        String otpCode = String.format("%06d", new java.security.SecureRandom().nextInt(1000000));
+        PasswordResetOtp otp = PasswordResetOtp.builder()
+                .email(email)
+                .otpCode(otpCode)
+                .expiredAt(LocalDateTime.now().plusMinutes(5))
+                .isUsed(false)
+                .createdAt(LocalDateTime.now())
+                .build();
+
+        registerOtpRepository.save(otp);
+        emailService.sendGuestOrderOtp(email, otpCode);
+
+        response.put("success", true);
+        response.put("message", "Mã OTP xác nhận đơn hàng đã được gửi tới Email: " + email);
+        return ResponseEntity.ok(response);
+    }
 
     @GetMapping("/pool")
     public ResponseEntity<Map<String, Object>> getPoolOrders(
@@ -278,12 +319,6 @@ public class OrderApiController {
         Map<String, Object> response = new HashMap<>();
 
         User customer = SecurityUtils.getCurrentUser(principal, userRepository);
-        if (customer == null) {
-            response.put("success", false);
-            response.put("message", "Vui lòng đăng nhập trước khi thanh toán.");
-            return ResponseEntity.status(401).body(response);
-        }
-
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         boolean isStaffOrAdmin = auth != null && auth.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_OWNER") || a.getAuthority().equals("ROLE_ARTISAN")
@@ -296,23 +331,55 @@ public class OrderApiController {
                     "Tài khoản quản trị, nhà vườn hoặc kiểm duyệt viên không được phép thực hiện đặt hàng!");
             return ResponseEntity.status(403).body(response);
         }
+
+        // Xác thực mã OTP nếu là Khách vãng lai (Guest Checkout)
         if (customer == null) {
-            response.put("success", false);
-            response.put("message", "Tài khoản người dùng không hợp lệ.");
-            return ResponseEntity.badRequest().body(response);
+            String otpCode = dto.getOtpCode();
+            if (otpCode == null || otpCode.trim().isEmpty()) {
+                response.put("success", false);
+                response.put("requireOtp", true);
+                response.put("message", "Vui lòng nhập mã OTP xác nhận được gửi về Email.");
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            PasswordResetOtp otp = registerOtpRepository.findTopByEmailOrderByCreatedAtDesc(dto.getCustomerEmail())
+                    .orElse(null);
+            if (otp == null || Boolean.TRUE.equals(otp.getIsUsed()) || otp.getExpiredAt().isBefore(LocalDateTime.now())
+                    || !otp.getOtpCode().equals(otpCode.trim())) {
+                response.put("success", false);
+                response.put("message", "Mã OTP không hợp lệ hoặc đã hết hạn. Vui lòng lấy mã mới và thử lại!");
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            otp.setIsUsed(true);
+            registerOtpRepository.save(otp);
         }
 
-        // 1. Lấy toàn bộ các mặt hàng đang có trong giỏ của người dùng
-        List<CartItem> cartItems = cartService.getCartItems(customer.getUserId());
-        if (cartItems == null || cartItems.isEmpty()) {
+        // 1. Lấy danh sách sản phẩm cần đặt hàng (từ DTO hoặc từ Giỏ hàng trong DB)
+        List<Product> productsToBuy = new ArrayList<>();
+        if (dto.getProductIds() != null && !dto.getProductIds().isEmpty()) {
+            for (Integer pId : dto.getProductIds()) {
+                productRepository.findById(pId).ifPresent(productsToBuy::add);
+            }
+        } else if (dto.getProductId() != null) {
+            productRepository.findById(dto.getProductId()).ifPresent(productsToBuy::add);
+        } else if (customer != null) {
+            List<CartItem> cartItems = cartService.getCartItems(customer.getUserId());
+            if (cartItems != null) {
+                for (CartItem item : cartItems) {
+                    productsToBuy.add(item.getProduct());
+                }
+            }
+        }
+
+        if (productsToBuy.isEmpty()) {
             response.put("success", false);
             response.put("message", "Giỏ hàng của bạn đang trống! Vui lòng chọn sản phẩm trước.");
             return ResponseEntity.badRequest().body(response);
         }
 
-        // Kiểm tra tính khả dụng của tất cả các sản phẩm trong giỏ hàng
-        for (CartItem item : cartItems) {
-            Product prod = item.getProduct();
+        // 2. Kiểm tra tính khả dụng của tất cả các sản phẩm
+        for (Product prod : productsToBuy) {
             if (!"AVAILABLE".equalsIgnoreCase(prod.getProductStatus())) {
                 response.put("success", false);
                 response.put("message",
@@ -323,8 +390,8 @@ public class OrderApiController {
 
         // 3. Khởi tạo Đơn Hàng mới (Order)
         String orderCode = "BSMS-" + VNPayConfig.getRandomNumber(6).toUpperCase();
-        BigDecimal totalAmount = cartItems.stream()
-                .map(item -> item.getProduct().getPrice())
+        BigDecimal totalAmount = productsToBuy.stream()
+                .map(Product::getPrice)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         Order order = Order.builder()
@@ -342,8 +409,7 @@ public class OrderApiController {
                 .build();
 
         // 4. Liên kết các sản phẩm chi tiết (OrderDetail)
-        List<OrderDetail> details = cartItems.stream().map(item -> {
-            Product prod = item.getProduct();
+        List<OrderDetail> details = productsToBuy.stream().map(prod -> {
             int reserved = productRepository.reserveIfAvailable(prod.getProductId());
             if (reserved == 0) {
                 throw new IllegalStateException("Tác phẩm '" + prod.getProductName() + "' đã được bán hoặc giữ chỗ!");
@@ -359,8 +425,10 @@ public class OrderApiController {
         order.setOrderDetails(details);
         orderRepository.save(order);
 
-        // 5. Xóa sạch giỏ hàng của người dùng sau khi checkout thành công
-        cartService.clearCart(customer.getUserId());
+        // 5. Xóa sạch giỏ hàng DB nếu là User đã đăng nhập
+        if (customer != null) {
+            cartService.clearCart(customer.getUserId());
+        }
 
         // 6. Xử lý phân nhánh Phương thức thanh toán
         if ("VNPAY".equalsIgnoreCase(dto.getPaymentMethod())) {

@@ -51,7 +51,7 @@ public class MailService {
         }
         suppressionCache.put(orderCode, now);
 
-        String paymentLink = "http://localhost:8080/checkout?orderCode=" + orderCode;
+        String paymentLink = "http://localhost:8080/vnpay/pay-order?orderCode=" + orderCode;
         String emailContent = buildAprovedTemplate(order, paymentLink);
 
         sendHtmlEmailWithRetry(toEmail, "Xác nhân đơn hàng #" + orderCode + " - Bonsai Shop", emailContent, orderCode);

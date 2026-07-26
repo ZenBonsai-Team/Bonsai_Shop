@@ -69,6 +69,9 @@ public class VNPayConfig {
         } catch (Exception e) {
             ipAddress = "127.0.0.1";
         }
+        if (ipAddress == null || ipAddress.isEmpty() || "0:0:0:0:0:0:0:1".equals(ipAddress)) {
+            ipAddress = "127.0.0.1";
+        }
         return ipAddress;
     }
 
