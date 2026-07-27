@@ -8,7 +8,6 @@ import com.example.bonsai_shop.artisan.service.ArtisanProductService;
 import com.example.bonsai_shop.artisan.service.ProductJournalService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
@@ -214,7 +213,6 @@ public class ArtisanProductController {
     @PostMapping("/{productId}/journal")
     public String addJournalEvent(@AuthenticationPrincipal UserDetails userDetails,
                                   @PathVariable Integer productId,
-                                  @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate eventDate,
                                   @RequestParam(required = false) String eventType,
                                   @RequestParam String title,
                                   @RequestParam(required = false) String description,
@@ -222,7 +220,7 @@ public class ArtisanProductController {
                                   @RequestParam(required = false) List<MultipartFile> files,
                                   RedirectAttributes redirectAttributes) {
         try {
-            productJournalService.addEvent(userDetails.getUsername(), productId, eventDate, eventType, title, description, isPublic, files);
+            productJournalService.addEvent(userDetails.getUsername(), productId, LocalDate.now(), eventType, title, description, isPublic, files);
             redirectAttributes.addFlashAttribute("success", "Đã thêm cập nhật trạng thái cây.");
         } catch (RuntimeException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
@@ -238,6 +236,37 @@ public class ArtisanProductController {
         try {
             productJournalService.deleteEvent(userDetails.getUsername(), productId, eventId);
             redirectAttributes.addFlashAttribute("success", "Đã xóa cập nhật cây.");
+        } catch (RuntimeException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/artisan/products/" + productId + "/journal";
+    }
+
+    @PostMapping("/{productId}/journal/{eventId}")
+    public String updateJournalEventText(@AuthenticationPrincipal UserDetails userDetails,
+                                         @PathVariable Integer productId,
+                                         @PathVariable Integer eventId,
+                                         @RequestParam String title,
+                                         @RequestParam(required = false) String description,
+                                         RedirectAttributes redirectAttributes) {
+        try {
+            productJournalService.updateEventText(userDetails.getUsername(), productId, eventId, title, description);
+            redirectAttributes.addFlashAttribute("success", "Đã cập nhật tiêu đề và mô tả.");
+        } catch (RuntimeException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/artisan/products/" + productId + "/journal";
+    }
+
+    @PostMapping("/{productId}/journal/{eventId}/media")
+    public String addJournalEventMedia(@AuthenticationPrincipal UserDetails userDetails,
+                                       @PathVariable Integer productId,
+                                       @PathVariable Integer eventId,
+                                       @RequestParam(required = false) List<MultipartFile> files,
+                                       RedirectAttributes redirectAttributes) {
+        try {
+            productJournalService.addMediaToEvent(userDetails.getUsername(), productId, eventId, files);
+            redirectAttributes.addFlashAttribute("success", "Đã bổ sung ảnh/video cho cập nhật cây.");
         } catch (RuntimeException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
