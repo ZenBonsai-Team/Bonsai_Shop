@@ -26,6 +26,15 @@ public class LocaleConfig implements WebMvcConfigurer {
     }
 
     @Bean
+    public org.springframework.context.MessageSource messageSource() {
+        org.springframework.context.support.ResourceBundleMessageSource messageSource = new org.springframework.context.support.ResourceBundleMessageSource();
+        messageSource.setBasename("messages");
+        messageSource.setDefaultEncoding("UTF-8");
+        messageSource.setFallbackToSystemLocale(false);
+        return messageSource;
+    }
+
+    @Bean
     public LocaleChangeInterceptor localeChangeInterceptor() {
         LocaleChangeInterceptor interceptor = new LocaleChangeInterceptor();
         interceptor.setParamName("lang"); // Intercepts ?lang=en or ?lang=vi

@@ -236,6 +236,39 @@
     </div>
 </div>
 
+<!-- Guest OTP Verification Modal -->
+<div class="modal fade" id="guestOtpModal" tabindex="-1" aria-labelledby="guestOtpModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 12px;">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold text-success" id="guestOtpModalLabel">
+                    <i class="fa-solid fa-shield-halved me-2"></i> Xác thực mã OTP Đặt hàng
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body py-4 text-center">
+                <i class="fa-solid fa-envelope-circle-check text-success mb-3" style="font-size: 3rem;"></i>
+                <p class="text-dark mb-2">Mã OTP 6 số đã được gửi đến Email:</p>
+                <h6 class="fw-bold text-success mb-3" id="targetOtpEmail">name@example.com</h6>
+                
+                <div class="mb-3" style="max-width: 240px; margin: 0 auto;">
+                    <input type="text" id="guestOtpInput" class="form-control form-control-lg text-center fw-bold letter-spacing-2" placeholder="000000" maxlength="6" autocomplete="off">
+                    <div class="invalid-feedback text-start" id="guestOtpFeedback">Mã OTP không hợp lệ.</div>
+                </div>
+
+                <div class="text-muted small mb-0">
+                    Chưa nhận được mã? <a href="javascript:void(0)" id="btnResendGuestOtp" class="text-success fw-bold text-decoration-none">Gửi lại OTP</a>
+                </div>
+            </div>
+            <div class="modal-footer border-0 pt-0 px-4 pb-4">
+                <button type="button" class="btn btn-success w-100 py-2.5 fw-bold rounded-3 shadow-sm" id="btnConfirmGuestOtp">
+                    Xác nhận & Hoàn tất đặt hàng
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div th:replace="~{fragments/footer :: footer}"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
