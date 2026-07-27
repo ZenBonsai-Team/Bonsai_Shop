@@ -274,7 +274,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function createStatusBadge(status) {
         const statusLabels = {
-            OVERDUE: "QUÁ HẠN"
+            OVERDUE: "QUÁ HẠN",
+            PENDING: "CHỜ DUYỆT",
+            APPROVED: "ĐÃ DUYỆT",
+            REJECTED: "ĐÃ TỪ CHỐI",
+            COMPLETED: "HOÀN THÀNH"
         };
         const badge = createElement("span", `status-badge ${status.toLowerCase()}`, statusLabels[status] || status);
         return badge;

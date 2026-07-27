@@ -13,7 +13,7 @@
         .journal-layout { display: grid; grid-template-columns: 380px 1fr; gap: 24px; align-items: start; }
         .journal-form-grid { display: grid; gap: 14px; }
         .journal-form-grid label { display: grid; gap: 6px; font-weight: 600; color: #24352b; }
-        .journal-form-grid input, .journal-form-grid select, .journal-form-grid textarea { border: 1px solid #d7dfd8; border-radius: 12px; padding: 11px 12px; }
+        .journal-form-grid input, .journal-form-grid select, .journal-form-grid textarea { border: 1px solid #d7dfd8; border-radius: 12px; padding: 11px 12px; font-family: inherit; }
         .journal-form-grid textarea { min-height: 120px; resize: vertical; }
         .journal-timeline { display: grid; gap: 16px; }
         .journal-event { display: grid; grid-template-columns: 160px 1fr; gap: 18px; padding: 16px; border: 1px solid #e2e7e2; border-radius: 18px; background: #fff; }
@@ -39,8 +39,8 @@
                 <p th:text="${product.productName}">Product</p>
             </div>
             <div class="actions">
-                <a class="btn secondary" th:href="@{/artisan/products}">Back to My Products</a>
-                <a class="btn" th:href="@{/artisan/products/{id}/preview(id=${product.productId})}">Preview</a>
+                <a class="btn secondary" th:href="@{/artisan/products}">Quay lại sản phẩm</a>
+                <a class="btn" th:href="@{/artisan/products/{id}/preview(id=${product.productId})}">Xem trước</a>
             </div>
         </header>
 
@@ -102,7 +102,18 @@
                     <div>
                         <div class="journal-meta">
                             <span class="journal-date" th:text="${#temporals.format(event.eventDate, 'dd/MM/yyyy')}">26/07/2026</span>
-                            <span class="journal-type" th:text="${event.eventType}">PHOTO_UPDATE</span>
+                            <span class="journal-type">
+                                <span th:if="${#strings.toString(event.eventType) == 'PHOTO_UPDATE'}">Cập nhật ảnh</span>
+                                <span th:if="${#strings.toString(event.eventType) == 'GROWTH'}">Phát triển</span>
+                                <span th:if="${#strings.toString(event.eventType) == 'PRUNING'}">Cắt tỉa</span>
+                                <span th:if="${#strings.toString(event.eventType) == 'WIRING'}">Uốn/kẽm</span>
+                                <span th:if="${#strings.toString(event.eventType) == 'REPOTTING'}">Thay chậu</span>
+                                <span th:if="${#strings.toString(event.eventType) == 'FERTILIZING'}">Bón phân</span>
+                                <span th:if="${#strings.toString(event.eventType) == 'WATERING'}">Tưới nước</span>
+                                <span th:if="${#strings.toString(event.eventType) == 'PEST_TREATMENT'}">Xử lý sâu bệnh</span>
+                                <span th:if="${#strings.toString(event.eventType) == 'HEALTH_CHECK'}">Kiểm tra sức khỏe</span>
+                                <span th:if="${#strings.toString(event.eventType) == 'ACQUISITION'}">Nhập cây</span>
+                            </span>
                             <span class="journal-type journal-private" th:if="${!event.isPublic}">Riêng tư</span>
                         </div>
                         <h3 th:text="${event.title}">Tiêu đề</h3>

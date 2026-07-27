@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Taxonomy Management</title>
+    <title>Quản lý danh mục & thuộc tính - Bonsai Shop</title>
     <link rel="icon" type="image/png" th:href="@{/images/logo.png}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -21,13 +21,13 @@
 
     <main class="dashboard-main">
         <header th:replace="~{fragments/header :: header}"></header>
-    <header class="page-header">
-        <div>
-            <h1>Taxonomy Management</h1>
-            <p>Quản lý Category, Variety, Segment và Tag dùng khi tạo sản phẩm.</p>
-        </div>
-        <a class="btn secondary" th:href="@{/artisan/products/new}">Create Product</a>
-    </header>
+        <header class="page-header">
+            <div>
+                <h1>Quản lý danh mục & thuộc tính</h1>
+                <p>Quản lý Phân loại, Biến thể, Phân khúc và Thẻ nhãn dùng khi tạo sản phẩm.</p>
+            </div>
+            <a class="btn secondary" th:href="@{/artisan/products/new}">Thêm sản phẩm mới</a>
+        </header>
 
     <div th:if="${success}" class="alert success" th:text="${success}"></div>
     <div th:if="${error}" class="alert error" th:text="${error}"></div>
@@ -36,12 +36,12 @@
         <div class="taxonomy-panel">
             <div class="taxonomy-toolbar">
                 <div>
-                    <h2>Category</h2>
-                    <p>Chọn category để xem varieties.</p>
+                    <h2>Danh mục</h2>
+                    <p>Chọn danh mục để xem các loại cây.</p>
                 </div>
-                <button type="button" class="btn small" data-open-modal="category-modal" data-mode="create">+ Add Category</button>
+                <button type="button" class="btn small" data-open-modal="category-modal" data-mode="create">+ Thêm danh mục</button>
             </div>
-            <input class="catalog-search" data-search-target="category-master" placeholder="Search category...">
+            <input class="catalog-search" data-search-target="category-master" placeholder="Tìm kiếm danh mục...">
             <div id="category-master" class="master-list" data-page-size="6">
                 <div th:each="category, iter : ${categories}"
                      class="master-row"
@@ -57,10 +57,10 @@
                                 data-open-modal="category-modal"
                                 data-mode="edit"
                                 th:attr="data-action=@{/artisan/catalog/categories/{id}(id=${category.categoryId})},data-name=${category.categoryName},data-description=${category.description}">
-                            Edit
+                            Sửa
                         </button>
                         <form method="post" th:action="@{/artisan/catalog/categories/{id}/delete(id=${category.categoryId})}">
-                            <button type="submit" class="text-danger" onclick="return confirm('Xóa category này?')">Delete</button>
+                            <button type="submit" class="text-danger" onclick="return confirm('Xóa danh mục này?')">Xóa</button>
                         </form>
                     </div>
                 </div>
@@ -71,19 +71,19 @@
         <div class="taxonomy-panel">
             <div class="taxonomy-toolbar">
                 <div>
-                    <h2>Variety</h2>
-                    <p>Danh sách variety theo category.</p>
+                    <h2>Loại cây (Biến thể)</h2>
+                    <p>Danh sách loại cây theo danh mục.</p>
                 </div>
-                <button type="button" class="btn small" data-open-modal="variety-modal" data-mode="create">+ Add Variety</button>
+                <button type="button" class="btn small" data-open-modal="variety-modal" data-mode="create">+ Thêm loại cây</button>
             </div>
-            <input class="catalog-search" data-search-target="variety-detail" placeholder="Search variety...">
+            <input class="catalog-search" data-search-target="variety-detail" placeholder="Tìm kiếm loại cây...">
             <table class="compact-table">
                 <thead>
                 <tr>
-                    <th>Tên variety</th>
-                    <th>Category</th>
+                    <th>Tên loại cây</th>
+                    <th>Danh mục</th>
                     <th>Mô tả</th>
-                    <th>Actions</th>
+                    <th>Thao tác</th>
                 </tr>
                 </thead>
                 <tbody id="variety-detail" data-page-size="6">
@@ -98,10 +98,10 @@
                                 data-open-modal="variety-modal"
                                 data-mode="edit"
                                 th:attr="data-action=@{/artisan/catalog/varieties/{id}(id=${variety.varietyId})},data-category-id=${variety.category.categoryId},data-name=${variety.varietyName},data-description=${variety.description}">
-                            Edit
+                            Sửa
                         </button>
                         <form method="post" th:action="@{/artisan/catalog/varieties/{id}/delete(id=${variety.varietyId})}">
-                            <button type="submit" class="text-danger" onclick="return confirm('Xóa variety này?')">Delete</button>
+                            <button type="submit" class="text-danger" onclick="return confirm('Xóa loại cây này?')">Xóa</button>
                         </form>
                     </td>
                 </tr>
@@ -114,15 +114,15 @@
     <section class="taxonomy-layout">
         <div class="taxonomy-panel">
             <div class="taxonomy-toolbar">
-                <h2>Segment</h2>
-                <button type="button" class="btn small" data-open-modal="segment-modal" data-mode="create">+ Add Segment</button>
+                <h2>Phân khúc giá</h2>
+                <button type="button" class="btn small" data-open-modal="segment-modal" data-mode="create">+ Thêm phân khúc</button>
             </div>
-            <input class="catalog-search" data-search-target="segment-table" placeholder="Search segment...">
+            <input class="catalog-search" data-search-target="segment-table" placeholder="Tìm kiếm phân khúc...">
             <table class="compact-table">
                 <thead>
                 <tr>
-                    <th>Tên segment</th>
-                    <th>Actions</th>
+                    <th>Tên phân khúc</th>
+                    <th>Thao tác</th>
                 </tr>
                 </thead>
                 <tbody id="segment-table" data-page-size="5">
@@ -134,10 +134,10 @@
                                 data-open-modal="segment-modal"
                                 data-mode="edit"
                                 th:attr="data-action=@{/artisan/catalog/segments/{id}(id=${segment.segmentId})},data-name=${segment.segmentName}">
-                            Edit
+                            Sửa
                         </button>
                         <form method="post" th:action="@{/artisan/catalog/segments/{id}/delete(id=${segment.segmentId})}">
-                            <button type="submit" class="text-danger" onclick="return confirm('Xóa segment này?')">Delete</button>
+                            <button type="submit" class="text-danger" onclick="return confirm('Xóa phân khúc này?')">Xóa</button>
                         </form>
                     </td>
                 </tr>
@@ -148,15 +148,15 @@
 
         <div class="taxonomy-panel">
             <div class="taxonomy-toolbar">
-                <h2>Tag</h2>
-                <button type="button" class="btn small" data-open-modal="tag-modal" data-mode="create">+ Add Tag</button>
+                <h2>Thẻ nhãn</h2>
+                <button type="button" class="btn small" data-open-modal="tag-modal" data-mode="create">+ Thêm thẻ</button>
             </div>
-            <input class="catalog-search" data-search-target="tag-table" placeholder="Search tag...">
+            <input class="catalog-search" data-search-target="tag-table" placeholder="Tìm kiếm thẻ...">
             <table class="compact-table">
                 <thead>
                 <tr>
-                    <th>Tên tag</th>
-                    <th>Actions</th>
+                    <th>Tên thẻ</th>
+                    <th>Thao tác</th>
                 </tr>
                 </thead>
                 <tbody id="tag-table" data-page-size="5">
@@ -168,10 +168,10 @@
                                 data-open-modal="tag-modal"
                                 data-mode="edit"
                                 th:attr="data-action=@{/artisan/catalog/tags/{id}(id=${tag.tagId})},data-name=${tag.tagName}">
-                            Edit
+                            Sửa
                         </button>
                         <form method="post" th:action="@{/artisan/catalog/tags/{id}/delete(id=${tag.tagId})}">
-                            <button type="submit" class="text-danger" onclick="return confirm('Xóa tag này?')">Delete</button>
+                            <button type="submit" class="text-danger" onclick="return confirm('Xóa thẻ này?')">Xóa</button>
                         </form>
                     </td>
                 </tr>
@@ -186,64 +186,64 @@
 <div id="category-modal" class="modal-backdrop hidden">
     <form class="modal-card" method="post" th:action="@{/artisan/catalog/categories}" data-create-action="/artisan/catalog/categories">
         <header>
-            <h2 data-modal-title>Create Category</h2>
+            <h2 data-modal-title>Thêm danh mục mới</h2>
             <button type="button" class="modal-close">×</button>
         </header>
-        <label>Tên category
+        <label>Tên danh mục
             <input name="categoryName" required data-field="name">
         </label>
         <label>Mô tả
             <input name="description" data-field="description">
         </label>
-        <button type="submit">Save</button>
+        <button type="submit">Lưu lại</button>
     </form>
 </div>
 
 <div id="variety-modal" class="modal-backdrop hidden">
     <form class="modal-card" method="post" th:action="@{/artisan/catalog/varieties}" data-create-action="/artisan/catalog/varieties">
         <header>
-            <h2 data-modal-title>Create Variety</h2>
+            <h2 data-modal-title>Thêm loại cây mới</h2>
             <button type="button" class="modal-close">×</button>
         </header>
-        <label>Category
+        <label>Danh mục
             <select name="categoryId" required data-field="categoryId">
-                <option value="">-- Chọn category --</option>
+                <option value="">-- Chọn danh mục --</option>
                 <option th:each="category : ${categories}" th:value="${category.categoryId}" th:text="${category.categoryName}"></option>
             </select>
         </label>
-        <label>Tên variety
+        <label>Tên loại cây (Variety)
             <input name="varietyName" required data-field="name">
         </label>
         <label>Mô tả
             <input name="description" data-field="description">
         </label>
-        <button type="submit">Save</button>
+        <button type="submit">Lưu lại</button>
     </form>
 </div>
 
 <div id="segment-modal" class="modal-backdrop hidden">
     <form class="modal-card" method="post" th:action="@{/artisan/catalog/segments}" data-create-action="/artisan/catalog/segments">
         <header>
-            <h2 data-modal-title>Create Segment</h2>
+            <h2 data-modal-title>Thêm phân khúc mới</h2>
             <button type="button" class="modal-close">×</button>
         </header>
-        <label>Tên segment
+        <label>Tên phân khúc (Segment)
             <input name="segmentName" required data-field="name">
         </label>
-        <button type="submit">Save</button>
+        <button type="submit">Lưu lại</button>
     </form>
 </div>
 
 <div id="tag-modal" class="modal-backdrop hidden">
     <form class="modal-card" method="post" th:action="@{/artisan/catalog/tags}" data-create-action="/artisan/catalog/tags">
         <header>
-            <h2 data-modal-title>Create Tag</h2>
+            <h2 data-modal-title>Thêm thẻ nhãn mới</h2>
             <button type="button" class="modal-close">×</button>
         </header>
-        <label>Tên tag
+        <label>Tên thẻ (Tag)
             <input name="tagName" required data-field="name">
         </label>
-        <button type="submit">Save</button>
+        <button type="submit">Lưu lại</button>
     </form>
 </div>
 
@@ -316,7 +316,14 @@
 
             form.reset();
             form.action = mode === 'edit' ? button.dataset.action : form.dataset.createAction;
-            title.textContent = `${mode === 'edit' ? 'Edit' : 'Create'} ${title.textContent.split(' ').pop()}`;
+            
+            let itemType = 'thuộc tính';
+            if (button.dataset.openModal === 'category-modal') itemType = 'danh mục';
+            else if (button.dataset.openModal === 'variety-modal') itemType = 'loại cây';
+            else if (button.dataset.openModal === 'segment-modal') itemType = 'phân khúc';
+            else if (button.dataset.openModal === 'tag-modal') itemType = 'thẻ nhãn';
+            
+            title.textContent = mode === 'edit' ? `Chỉnh sửa ${itemType}` : `Thêm ${itemType} mới`;
 
             modal.querySelectorAll('[data-field]').forEach((field) => {
                 field.value = button.dataset[field.dataset.field] || '';

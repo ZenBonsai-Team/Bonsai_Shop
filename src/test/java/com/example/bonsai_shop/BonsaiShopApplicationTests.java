@@ -110,4 +110,18 @@ class BonsaiShopApplicationTests {
             e.printStackTrace();
         }
     }
+
+    @Test
+    void resetProductStatus() {
+        try (Connection conn = dataSource.getConnection();
+             Statement stmt = conn.createStatement()) {
+            int updated = stmt.executeUpdate("UPDATE PRODUCT SET ProductStatus = 'AVAILABLE'");
+            System.out.println("==========================================");
+            System.out.println(">>> SUCCESSFULLY RESET " + updated + " PRODUCTS TO 'AVAILABLE' STATUS.");
+            System.out.println("==========================================");
+        } catch (Exception e) {
+            System.err.println("Failed to reset product status: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
 }
