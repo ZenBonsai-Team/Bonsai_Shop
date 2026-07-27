@@ -18,8 +18,8 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
     List<Product> findByCreatedByUserIdAndProductStatusOrderByCreatedAtDesc(Integer artisanUserId, String productStatus);
     Optional<Product> findByProductIdAndCreatedByUserId(Integer productId, Integer artisanUserId);
     boolean existsByProductCode(String productCode);
+    boolean existsByVarietyCategoryCategoryId(Integer categoryId);
     boolean existsByVarietyVarietyId(Integer varietyId);
-    boolean existsBySegmentSegmentId(Integer segmentId);
     List<Product> findTop5ByProductStatusOrderByViewCountDesc(String productStatus);
    @Modifying
     @Query("""
