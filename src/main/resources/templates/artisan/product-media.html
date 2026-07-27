@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Media Upload</title>
+    <title>Tải lên hình ảnh & video - Artisan</title>
     <link rel="icon" type="image/png" th:href="@{/images/logo.png}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -19,15 +19,15 @@
     <div th:replace="~{fragments/sidebar :: sidebar('artisan-products')}"></div>
 
     <main class="dashboard-main">
-        <div th:replace="~{fragments/artisan-topbar :: topbar('Media Upload')}"></div>
+        <div th:replace="~{fragments/artisan-topbar :: topbar('Tải lên hình ảnh/video')}"></div>
     <header class="page-header">
         <div>
-            <h1>Step 2: Media Upload</h1>
+            <h1>Bước 2: Tải lên hình ảnh & video</h1>
             <p th:text="${product.productName}">Product</p>
         </div>
         <div class="actions">
-            <a class="btn secondary" th:href="@{/artisan/products}">Back to My Products</a>
-            <a class="btn" th:href="@{/artisan/products/{id}/preview(id=${product.productId})}">Preview</a>
+            <a class="btn secondary" th:href="@{/artisan/products}">Quay lại sản phẩm</a>
+            <a class="btn" th:href="@{/artisan/products/{id}/preview(id=${product.productId})}">Xem trước</a>
         </div>
     </header>
 
@@ -40,7 +40,7 @@
         <label>File ảnh/video
             <input id="mediaFileInput" type="file" name="file" accept="image/*,video/mp4,video/webm" required>
         </label>
-        <label>Shot type
+        <label>Góc chụp (Shot type)
             <select id="shotTypeSelect" name="slotType">
                 <option value="">-- Chọn góc chụp --</option>
                 <option value="FRONT">FRONT - Chính diện</option>
@@ -56,7 +56,7 @@
                 <option value="OVERVIEW">OVERVIEW - Tổng quan</option>
             </select>
         </label>
-        <label>Caption
+        <label>Chú thích (Caption)
             <input name="caption">
         </label>
         <p class="form-hint">Thứ tự ban đầu sẽ tự động theo thứ tự upload. Bạn có thể chỉnh lại ở danh sách media bên dưới.</p>
@@ -64,12 +64,12 @@
             <input type="checkbox" name="isThumbnail" value="true">
             Đặt làm thumbnail
         </label>
-        <button type="submit">Upload Media</button>
+        <button type="submit">Tải lên file</button>
     </form>
 
     <form id="mediaOrderForm" method="post" th:action="@{/artisan/products/{id}/media/order(id=${product.productId})}"></form>
     <div class="actions media-toolbar" th:if="${isEditable && !#lists.isEmpty(mediaList)}">
-        <button type="submit" form="mediaOrderForm">Save Display Order</button>
+        <button type="submit" form="mediaOrderForm">Lưu thứ tự hiển thị</button>
     </div>
 
     <section class="media-grid">
@@ -77,24 +77,24 @@
             <div class="media-preview-frame">
                 <img th:if="${media.mediaType == 'IMAGE'}" th:src="${media.mediaUrl}" alt="">
                 <video th:if="${media.mediaType == 'VIDEO'}" controls th:src="${media.mediaUrl}"></video>
-                <span th:if="${media.isThumbnail}" class="media-badge">Thumbnail</span>
+                <span th:if="${media.isThumbnail}" class="media-badge">Ảnh đại diện</span>
             </div>
             <div class="media-card-body">
                 <strong th:text="${media.mediaType}"></strong>
-                <span th:if="${media.slotType != null}" th:text="${'Shot: ' + media.slotType}"></span>
+                <span th:if="${media.slotType != null}" th:text="${'Góc chụp: ' + media.slotType}"></span>
                 <span th:if="${media.slotType == null}">Video</span>
                 <span th:if="${media.caption != null && !media.caption.isBlank()}" th:text="${media.caption}"></span>
-                <label>Display order
+                <label>Thứ tự hiển thị
                     <input type="hidden" name="mediaIds" th:value="${media.mediaId}" form="mediaOrderForm">
                     <input type="number" name="displayOrders" min="0" th:value="${media.displayOrder}" th:disabled="${!isEditable}" form="mediaOrderForm">
                 </label>
             </div>
             <div class="actions" th:if="${isEditable}">
                 <form method="post" th:action="@{/artisan/products/{productId}/media/{mediaId}/thumbnail(productId=${product.productId},mediaId=${media.mediaId})}">
-                    <button type="submit">Set thumbnail</button>
+                    <button type="submit">Đặt làm ảnh đại diện</button>
                 </form>
                 <form method="post" th:action="@{/artisan/products/{productId}/media/{mediaId}/delete(productId=${product.productId},mediaId=${media.mediaId})}">
-                    <button type="submit">Delete</button>
+                    <button type="submit">Xóa</button>
                 </form>
             </div>
         </article>

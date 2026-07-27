@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Product Info</title>
+    <title>Thông tin sản phẩm - Artisan</title>
     <link rel="icon" type="image/png" th:href="@{/images/logo.png}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -23,12 +23,12 @@
         <header th:replace="~{fragments/header :: header}"></header>
     <header class="page-header">
         <div>
-            <h1>Step 1: Product Info</h1>
+            <h1>Bước 1: Thông tin sản phẩm</h1>
             <p>Thông tin cơ bản của cây bonsai.</p>
         </div>
         <div class="actions">
-            <a class="btn secondary" th:href="@{/artisan/catalog}">Manage Catalog</a>
-            <a class="btn secondary" th:href="@{/artisan/products}">Back to My Products</a>
+            <a class="btn secondary" th:href="@{/artisan/catalog}">Quản lý phân loại</a>
+            <a class="btn secondary" th:href="@{/artisan/products}">Quay lại sản phẩm</a>
         </div>
     </header>
 
@@ -47,9 +47,9 @@
         </label>
 
         <div class="grid">
-            <label>Category
+            <label>Danh mục (Category)
                 <select id="categorySelect" required>
-                    <option value="">-- Chọn category --</option>
+                    <option value="">-- Chọn danh mục --</option>
                     <option th:each="category : ${categories}"
                             th:value="${category.categoryId}"
                             th:selected="${selectedCategoryId != null && selectedCategoryId == category.categoryId}"
@@ -57,9 +57,9 @@
                 </select>
             </label>
 
-            <label>Variety
+            <label>Loại cây (Variety)
                 <select id="varietySelect" name="varietyId" required>
-                    <option value="">-- Chọn variety --</option>
+                    <option value="">-- Chọn loại cây --</option>
                     <option th:each="variety : ${varieties}"
                             th:value="${variety.varietyId}"
                             th:attr="data-category-id=${variety.category.categoryId}"
@@ -69,9 +69,9 @@
                 <small th:if="${#fields.hasErrors('varietyId')}" th:errors="*{varietyId}" class="text-danger"></small>
             </label>
 
-            <label>Segment
+            <label>Phân khúc (Segment)
                 <select th:field="*{segmentId}" required>
-                    <option value="">-- Chọn segment --</option>
+                    <option value="">-- Chọn phân khúc --</option>
                     <option th:each="segment : ${segments}"
                             th:value="${segment.segmentId}"
                             th:text="${segment.segmentName}"></option>
@@ -81,8 +81,8 @@
         </div>
 
         <fieldset class="form-group">
-            <legend>Tags</legend>
-            <p th:if="${#lists.isEmpty(tags)}" class="form-hint">Chưa có tag nào trong hệ thống.</p>
+            <legend>Thẻ nhãn (Tags)</legend>
+            <p th:if="${#lists.isEmpty(tags)}" class="form-hint">Chưa có thẻ nhãn nào trong hệ thống.</p>
             <label class="checkbox" th:each="tag : ${tags}">
                 <input type="checkbox"
                        th:field="*{tagIds}"
@@ -119,7 +119,7 @@
             </label>
         </div>
 
-        <label>Style
+        <label>Dáng cây (Style/Dáng)
             <input th:field="*{style}" required>
             <small th:if="${#fields.hasErrors('style')}" th:errors="*{style}" class="text-danger"></small>
         </label>
@@ -137,7 +137,7 @@
             <small th:if="${#fields.hasErrors('price')}" th:errors="*{price}" class="text-danger"></small>
         </label>
         <input th:if="${product != null}" type="hidden" name="productStatus" th:value="${productForm.productStatus}">
-        <button type="submit">Save & Continue</button>
+        <button type="submit">Lưu & Tiếp tục</button>
     </form>
 </main>
 </div>

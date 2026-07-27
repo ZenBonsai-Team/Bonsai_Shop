@@ -23,7 +23,7 @@
 
         <nav class="sidebar-menu">
             <!-- Nút quay lại dashboard cho các vai trò đặc biệt -->
-            <a sec:authorize="hasRole('OWNER')" th:href="@{/templates/owner}" style="color: #2e7d32; font-weight: bold; background: #e8f5e9;">
+            <a sec:authorize="hasRole('OWNER')" th:href="@{/owner}" style="color: #2e7d32; font-weight: bold; background: #e8f5e9;">
                 <i class="fa-solid fa-gauge"></i>
                 Bảng điều khiển Chủ
             </a>

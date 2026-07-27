@@ -24,9 +24,9 @@
         <header class="page-header">
             <div>
                 <h1>Preview sản phẩm</h1>
-                <p>Kiểm tra lại thông tin sản phẩm trước khi quản lý trên marketplace.</p>
+                <p>Kiểm tra lại thông tin sản phẩm trước khi quản lý trên cửa hàng.</p>
             </div>
-            <a class="btn secondary" th:href="@{/artisan/products}">Quay lại My Products</a>
+            <a class="btn secondary" th:href="@{/artisan/products}">Quay lại danh sách sản phẩm</a>
         </header>
 
         <div th:if="${success}" class="alert success" th:text="${success}"></div>
@@ -63,7 +63,13 @@
                     <dd th:text="${product.productCode}"></dd>
 
                     <dt>Trạng thái</dt>
-                    <dd th:text="${product.productStatus}"></dd>
+                    <dd>
+                        <span th:if="${product.productStatus == 'AVAILABLE'}">Đang bán</span>
+                        <span th:if="${product.productStatus == 'DRAFT'}">Bản nháp</span>
+                        <span th:if="${product.productStatus == 'HIDDEN'}">Đang ẩn</span>
+                        <span th:if="${product.productStatus == 'RESERVED'}">Đã được đặt</span>
+                        <span th:if="${product.productStatus == 'SOLD'}">Đã bán</span>
+                    </dd>
 
                     <dt>Danh mục</dt>
                     <dd th:text="${product.variety.category.categoryName}"></dd>
@@ -76,7 +82,7 @@
 
                     <dt>Tags</dt>
                     <dd>
-                        <span th:if="${#lists.isEmpty(tags)}">Chưa có tag</span>
+                        <span th:if="${#lists.isEmpty(tags)}">Chưa có thẻ nhãn</span>
                         <span class="tag-pill" th:each="tag : ${tags}" th:text="${tag.tagName}"></span>
                     </dd>
                 </dl>
@@ -104,7 +110,7 @@
                     <dt>Đường kính thân</dt>
                     <dd th:text="${product.trunkDiameter != null ? product.trunkDiameter + ' cm' : 'N/A'}"></dd>
 
-                    <dt>Style</dt>
+                    <dt>Dáng cây (Style)</dt>
                     <dd th:text="${product.style != null && !product.style.isBlank() ? product.style : 'N/A'}"></dd>
                 </dl>
             </aside>
