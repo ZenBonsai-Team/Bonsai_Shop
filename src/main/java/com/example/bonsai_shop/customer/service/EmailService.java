@@ -26,7 +26,16 @@ public class EmailService {
                         "Mã này có hiệu lực trong 5 phút.\n" +
                         "Trân trọng,\nBonsai Shop"
         );
-        mailSender.send(message);
+        try {
+            mailSender.send(message);
+            System.out.println(">>> OTP Email sent successfully to " + toEmail);
+        } catch (org.springframework.mail.MailException e) {
+            System.err.println("==================================================");
+            System.err.println("=== EMAIL SENDING FAILED (SMTP Error) ===");
+            System.err.println("Error details: " + e.getMessage());
+            System.err.println("Generated SIGNUP OTP for " + toEmail + " is: " + otpCode);
+            System.err.println("==================================================");
+        }
     }
     public void sendOtpResetPassword(String toEmail, String otpCode) {
         SimpleMailMessage message = new SimpleMailMessage();
@@ -39,7 +48,16 @@ public class EmailService {
                         "Mã này có hiệu lực trong 5 phút.\n" +
                         "Trân trọng,\nBonsai Shop"
         );
-        mailSender.send(message);
+        try {
+            mailSender.send(message);
+            System.out.println(">>> Reset Password OTP Email sent successfully to " + toEmail);
+        } catch (org.springframework.mail.MailException e) {
+            System.err.println("==================================================");
+            System.err.println("=== EMAIL SENDING FAILED (SMTP Error) ===");
+            System.err.println("Error details: " + e.getMessage());
+            System.err.println("Generated RESET PASSWORD OTP for " + toEmail + " is: " + otpCode);
+            System.err.println("==================================================");
+        }
     }
 
     public void sendGuestOrderOtp(String toEmail, String otpCode) {
@@ -53,6 +71,15 @@ public class EmailService {
                         "Mã này có hiệu lực trong 5 phút.\n" +
                         "Trân trọng,\nBonsai Shop"
         );
-        mailSender.send(message);
+        try {
+            mailSender.send(message);
+            System.out.println(">>> Guest Order OTP Email sent successfully to " + toEmail);
+        } catch (org.springframework.mail.MailException e) {
+            System.err.println("==================================================");
+            System.err.println("=== EMAIL SENDING FAILED (SMTP Error) ===");
+            System.err.println("Error details: " + e.getMessage());
+            System.err.println("Generated GUEST ORDER OTP for " + toEmail + " is: " + otpCode);
+            System.err.println("==================================================");
+        }
     }
 }
