@@ -2,6 +2,7 @@ package com.example.bonsai_shop.product.controller;
 
 import com.example.bonsai_shop.entity.Product;
 import com.example.bonsai_shop.entity.ProductMedia;
+import com.example.bonsai_shop.artisan.service.ProductJournalService;
 import com.example.bonsai_shop.product.service.ProductService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -38,6 +39,7 @@ public class MarketplaceController {
     );
 
     private final ProductService productService;
+    private final ProductJournalService productJournalService;
 
     @GetMapping("/marketplace")
     public String marketplace(
@@ -127,6 +129,7 @@ public class MarketplaceController {
         model.addAttribute("productImageSlots", getImageSlots(product));
         model.addAttribute("productVideos", getMediaByType(product, "VIDEO"));
         model.addAttribute("productTags", productService.getProductTags(product));
+        model.addAttribute("journalEvents", product == null ? List.of() : productJournalService.getPublicEvents(product));
         model.addAttribute("activePage", "marketplace");
         return "product/product-detail";
     }
