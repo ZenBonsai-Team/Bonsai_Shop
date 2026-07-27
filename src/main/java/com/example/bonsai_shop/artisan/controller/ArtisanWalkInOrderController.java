@@ -20,7 +20,7 @@ import java.math.BigDecimal;
 import java.util.List;
 
 @Controller
-@RequestMapping("/artisan/walk-in-orders")
+@RequestMapping("/artisan/in-person-order")
 @RequiredArgsConstructor
 public class ArtisanWalkInOrderController {
 
@@ -40,7 +40,7 @@ public class ArtisanWalkInOrderController {
         model.addAttribute("pendingPaymentStatus", ArtisanWalkInOrderService.STATUS_PENDING_PAYMENT);
         model.addAttribute("completedStatus", ArtisanWalkInOrderService.STATUS_COMPLETED);
         model.addAttribute("cancelledStatus", ArtisanWalkInOrderService.STATUS_CANCELLED);
-        return "artisan/walk-in-orders";
+        return "artisan/in-person-order";
     }
 
     @PostMapping
@@ -68,11 +68,11 @@ public class ArtisanWalkInOrderController {
                     customerEmail,
                     notes
             );
-            redirectAttributes.addFlashAttribute("success", "Đã tạo in-person order " + order.getOrderCode() + " và reserve sản phẩm.");
+            redirectAttributes.addFlashAttribute("success", "Đã tạo In-person Order " + order.getOrderCode() + " và reserve sản phẩm.");
         } catch (RuntimeException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
-        return "redirect:/artisan/walk-in-orders";
+        return "redirect:/artisan/in-person-order";
     }
 
     @PostMapping("/{orderId}/confirm-payment")
@@ -85,7 +85,7 @@ public class ArtisanWalkInOrderController {
         } catch (RuntimeException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
-        return "redirect:/artisan/walk-in-orders";
+        return "redirect:/artisan/in-person-order";
     }
 
     @PostMapping("/{orderId}/cancel")
@@ -95,11 +95,11 @@ public class ArtisanWalkInOrderController {
                          RedirectAttributes redirectAttributes) {
         try {
             Order order = walkInOrderService.cancelWalkInOrder(userDetails.getUsername(), orderId, reason);
-            redirectAttributes.addFlashAttribute("success", "Đã hủy in-person order " + order.getOrderCode() + " và mở bán lại sản phẩm.");
+            redirectAttributes.addFlashAttribute("success", "Đã hủy In-person Order " + order.getOrderCode() + " và mở bán lại sản phẩm.");
         } catch (RuntimeException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
-        return "redirect:/artisan/walk-in-orders";
+        return "redirect:/artisan/in-person-order";
     }
 
     @PostMapping("/{orderId}/update")
@@ -127,10 +127,11 @@ public class ArtisanWalkInOrderController {
                     customerEmail,
                     notes
             );
-            redirectAttributes.addFlashAttribute("success", "Đã cập nhật in-person order " + order.getOrderCode() + ".");
+            redirectAttributes.addFlashAttribute("success", "Đã cập nhật In-person Order " + order.getOrderCode() + ".");
         } catch (RuntimeException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
-        return "redirect:/artisan/walk-in-orders";
+        return "redirect:/artisan/in-person-order";
     }
 }
+

@@ -2,7 +2,6 @@ package com.example.bonsai_shop.artisan.service;
 
 import com.example.bonsai_shop.artisan.dto.ArtisanProductFormDTO;
 import com.example.bonsai_shop.customer.repository.UserRepository;
-import com.example.bonsai_shop.entity.ArtisanProfile;
 import com.example.bonsai_shop.entity.Category;
 import com.example.bonsai_shop.entity.Product;
 import com.example.bonsai_shop.entity.ProductMedia;
@@ -49,20 +48,15 @@ public class ArtisanProductService {
     private final VarietyRepository varietyRepository;
     private final UserRepository userRepository;
     private final ArtisanMediaStorageService mediaStorageService;
-    private final ArtisanProfileService artisanProfileService;
 
     public User getArtisanUser(String email) {
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy artisan!"));
     }
 
-    public ArtisanProfile getArtisanProfile(String email) {
-        return artisanProfileService.getOrCreateProfile(email);
-    }
-
     public List<Product> getMyProducts(String artisanEmail) {
         Integer artisanUserId = getArtisanUserId(artisanEmail);
-        return productRepository.findByArtisanUserIdOrderByCreatedAtDesc(artisanUserId);
+        return productRepository.findByCreatedByUserIdOrderByCreatedAtDesc(artisanUserId);
     }
 
     public List<Product> getAllProducts() {
@@ -71,7 +65,7 @@ public class ArtisanProductService {
 
     public Product getMyProduct(String artisanEmail, Integer productId) {
         Integer artisanUserId = getArtisanUserId(artisanEmail);
-        return productRepository.findByProductIdAndArtisanUserId(productId, artisanUserId)
+        return productRepository.findByProductIdAndCreatedByUserId(productId, artisanUserId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm thuộc artisan này!"));
     }
 
@@ -82,7 +76,6 @@ public class ArtisanProductService {
     @Transactional
     public Product createProduct(String artisanEmail, ArtisanProductFormDTO form) {
         User artisanUser = getArtisanUser(artisanEmail);
-        ArtisanProfile artisanProfile = getArtisanProfile(artisanEmail);
         Variety variety = varietyRepository.findById(form.getVarietyId())
                 .orElseThrow(() -> new RuntimeException("Variety không tồn tại!"));
         ProductSegment segment = productSegmentRepository.findById(form.getSegmentId())
@@ -92,7 +85,6 @@ public class ArtisanProductService {
 
         Product product = Product.builder()
                 .createdBy(artisanUser)
-                .artisan(artisanProfile)
                 .variety(variety)
                 .segment(segment)
                 .productCode(createTemporaryProductCode())

@@ -5,22 +5,44 @@ document.addEventListener('DOMContentLoaded', () => {
 async function loadCart() {
     try {
         const response = await fetch('/api/cart');
-        if (response.status === 401) {
-            window.location.href = '/login';
-            return;
-        }
-        if (!response.ok) {
-            throw new Error('Failed to fetch cart');
-        }
-        
-        const items = await response.json();
-        renderCart(items);
-        
-        if (typeof window.updateCartBadge === 'function') {
-            window.updateCartBadge();
+        if (response.ok) {
+            const items = await response.json();
+            if (items && items.length > 0) {
+                renderCart(items);
+                if (typeof window.updateCartBadge === 'function') {
+                    window.updateCartBadge();
+                }
+                return;
+            }
         }
     } catch (error) {
-        console.error('Error loading cart:', error);
+    }
+
+    // Fallback cho Khách vãng lai (Guest Cart)
+    const guestCart = JSON.parse(localStorage.getItem('bonsai_guest_cart') || '[]');
+    if (guestCart.length > 0) {
+        const items = [];
+        for (const pId of guestCart) {
+            try {
+                const res = await fetch(`/api/products/${pId}`);
+                if (res.ok) {
+                    const prod = await res.json();
+                    items.push({
+                        productId: prod.productId,
+                        productName: prod.productName,
+                        productImage: prod.imageUrl,
+                        price: prod.price
+                    });
+                }
+            } catch (err) {}
+        }
+        renderCart(items);
+    } else {
+        renderCart([]);
+    }
+
+    if (typeof window.updateCartBadge === 'function') {
+        window.updateCartBadge();
     }
 }
 
@@ -94,11 +116,17 @@ async function removeItem(productId) {
         if (response.ok) {
             loadCart();
         } else {
-            alert("Lỗi khi xóa sản phẩm.");
+            // Xóa trong LocalStorage của Guest
+            let guestCart = JSON.parse(localStorage.getItem('bonsai_guest_cart') || '[]');
+            guestCart = guestCart.filter(id => id !== productId);
+            localStorage.setItem('bonsai_guest_cart', JSON.stringify(guestCart));
+            loadCart();
         }
     } catch (error) {
-        console.error('Error removing item:', error);
-        alert("Không thể kết nối đến máy chủ.");
+        let guestCart = JSON.parse(localStorage.getItem('bonsai_guest_cart') || '[]');
+        guestCart = guestCart.filter(id => id !== productId);
+        localStorage.setItem('bonsai_guest_cart', JSON.stringify(guestCart));
+        loadCart();
     }
 }
 

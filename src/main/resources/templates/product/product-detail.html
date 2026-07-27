@@ -23,6 +23,21 @@
     <!-- Checkout Modal CSS & JS -->
     <link rel="stylesheet" th:href="@{/css/checkout-modal.css}">
     <script th:src="@{/js/checkout-modal.js}"></script>
+    <style>
+        .product-journal-section { padding: 56px 0; background: #f7faf7; border-top: 1px solid #e3e9e3; border-bottom: 1px solid #e3e9e3; }
+        .product-journal-title { font-family: 'Cormorant Garamond', serif; font-size: 38px; font-weight: 700; color: #17251c; margin: 0; }
+        .product-journal-subtitle { color: #6b786f; margin: 6px 0 28px; max-width: 620px; }
+        .product-journal-list { display: grid; gap: 16px; }
+        .product-journal-event { display: grid; grid-template-columns: 150px 1fr; gap: 18px; background: #fff; border: 1px solid #e1e8e1; border-radius: 18px; padding: 16px; }
+        .product-journal-cover { width: 150px; height: 128px; border-radius: 14px; object-fit: cover; background: #edf2ee; }
+        .product-journal-placeholder { display: grid; place-items: center; color: #78907e; font-size: 30px; }
+        .product-journal-meta { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 8px; }
+        .product-journal-date { font-weight: 800; color: #17251c; }
+        .product-journal-type { border-radius: 999px; background: #eaf4eb; color: #2f6b3f; padding: 4px 10px; font-size: 12px; font-weight: 700; }
+        .product-journal-gallery { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+        .product-journal-gallery img, .product-journal-gallery video { width: 76px; height: 64px; object-fit: cover; border-radius: 10px; border: 1px solid #e1e8e1; }
+        @media (max-width: 768px) { .product-journal-event { grid-template-columns: 1fr; } .product-journal-cover { width: 100%; height: 220px; } }
+    </style>
 </head>
 <body>
 
@@ -215,9 +230,9 @@
 
             <!-- Artisan Brief Info -->
             <!-- HARDCODED: Chi tiết nghệ nhân/nhà vườn không có trong DB entity (User chỉ có thông tin cơ bản) -->
-            <div class="artisan-summary-box">
+            <!-- <div class="artisan-summary-box"> -->
                 <!-- HARDCODED -->
-                <div class="artisan-avatar-wrap">
+                <!-- <div class="artisan-avatar-wrap">
                     <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150" alt="Avatar">
                 </div>
                 <div class="artisan-summary-info">
@@ -227,7 +242,7 @@
                 <div class="artisan-summary-rating">
                     <i class="fa-solid fa-star"></i> 4.9
                 </div>
-            </div>
+            </div> -->
 
             <!-- Buying and Add to Cart Action buttons -->
             <div class="mt-4">
@@ -280,6 +295,42 @@
 
     </div>
 </main>
+
+<section class="product-journal-section" th:if="${journalEvents != null and !#lists.isEmpty(journalEvents)}">
+    <div class="container">
+        <span class="section-tag-gold" style="text-align:left;">Growth Journal</span>
+        <h2 class="product-journal-title">Nhật ký phát triển cây</h2>
+        <p class="product-journal-subtitle">Các lần artisan cập nhật hình ảnh và trạng thái thực tế của cây theo thời gian.</p>
+
+        <div class="product-journal-list">
+            <article class="product-journal-event" th:each="event : ${journalEvents}">
+                <img class="product-journal-cover"
+                     th:if="${event.firstMedia != null && event.firstMedia.mediaType == 'IMAGE'}"
+                     th:src="${event.firstMedia.mediaUrl}" alt="">
+                <video class="product-journal-cover"
+                       th:if="${event.firstMedia != null && event.firstMedia.mediaType == 'VIDEO'}"
+                       th:src="${event.firstMedia.mediaUrl}" controls></video>
+                <div class="product-journal-cover product-journal-placeholder" th:if="${event.firstMedia == null}">
+                    <i class="fa-solid fa-leaf"></i>
+                </div>
+                <div>
+                    <div class="product-journal-meta">
+                        <span class="product-journal-date" th:text="${#temporals.format(event.eventDate, 'dd/MM/yyyy')}">26/07/2026</span>
+                        <span class="product-journal-type" th:text="${event.eventType}">PHOTO_UPDATE</span>
+                    </div>
+                    <h3 th:text="${event.title}">Cập nhật cây</h3>
+                    <p th:if="${event.description != null && !event.description.isBlank()}" th:text="${event.description}">Mô tả</p>
+                    <div class="product-journal-gallery" th:if="${event.mediaList != null && !#lists.isEmpty(event.mediaList)}">
+                        <th:block th:each="media : ${event.mediaList}">
+                            <img th:if="${media.mediaType == 'IMAGE'}" th:src="${media.mediaUrl}" alt="">
+                            <video th:if="${media.mediaType == 'VIDEO'}" th:src="${media.mediaUrl}" controls></video>
+                        </th:block>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </div>
+</section>
 
 <!-- ===================================================== -->
 <!-- PRODUCT STORY / DESCRIPTION SECTION -->

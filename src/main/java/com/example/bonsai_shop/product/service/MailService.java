@@ -51,10 +51,34 @@ public class MailService {
         }
         suppressionCache.put(orderCode, now);
 
-        String paymentLink = "http://localhost:8080/checkout?orderCode=" + orderCode;
+        String paymentLink = "http://localhost:8080/vnpay/pay-order?orderCode=" + orderCode;
         String emailContent = buildAprovedTemplate(order, paymentLink);
 
         sendHtmlEmailWithRetry(toEmail, "Xác nhân đơn hàng #" + orderCode + " - Bonsai Shop", emailContent, orderCode);
+    }
+
+    public void sendOrderDepositedEmail(Order order) {
+        String orderCode = order.getOrderCode();
+        String toEmail = order.getCustomerEmail();
+
+        if (toEmail == null || toEmail.trim().isEmpty()) {
+            log.warn("Không tìm thấy email của khách hàng", orderCode);
+            return;
+        }
+        String emailContent = buildDepositedTemplate(order);
+        sendHtmlEmailWithRetry(toEmail, "Xác nhận đặt cọc thành công #" + orderCode + " - Bonsai Shop", emailContent, orderCode);
+    }
+
+    public void sendOrderFinalReceiptEmail(Order order) {
+        String orderCode = order.getOrderCode();
+        String toEmail = order.getCustomerEmail();
+
+        if (toEmail == null || toEmail.trim().isEmpty()) {
+            log.warn("Không tìm thấy email của khách hàng", orderCode);
+            return;
+        }
+        String emailContent = buildFinalReceiptTemplate(order);
+        sendHtmlEmailWithRetry(toEmail, "Hóa đơn hoàn tất thanh toán #" + orderCode + " - Bonsai Shop", emailContent, orderCode);
     }
 
     public void sendOrderRejectedEmail(Order order, String reason) {
@@ -153,6 +177,67 @@ public class MailService {
                 "  </div>" +
                 "  <div style=\"text-align: center; font-size: 12px; color: #a0aec0; border-top: 1px solid #edf2f7; padding-top: 15px;\">"
                 +
+                "    © " + java.time.LocalDate.now().getYear() + " Bonsai Shop. All rights reserved." +
+                "  </div>" +
+                "</div>";
+    }
+
+    private String buildDepositedTemplate(Order order) {
+        String customerName = order.getCustomerName() != null ? order.getCustomerName() : "Quý khách hàng";
+        java.math.BigDecimal deposit = order.getDepositAmount() != null ? order.getDepositAmount() : java.math.BigDecimal.ZERO;
+        java.math.BigDecimal total = order.getTotalAmount() != null ? order.getTotalAmount() : java.math.BigDecimal.ZERO;
+        java.math.BigDecimal remaining = total.subtract(deposit);
+
+        return "<div style=\"font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 25px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff;\">" +
+                "  <div style=\"text-align: center; background: linear-gradient(135deg, #2b6cb0, #3182ce); color: white; padding: 20px; border-radius: 8px 8px 0 0;\">" +
+                "    <h2 style=\"margin: 0;\">Xác Nhận Nhận Tiền Đặt Cọc</h2>" +
+                "    <p style=\"margin: 5px 0 0 0;\">Mã đơn hàng: #" + order.getOrderCode() + "</p>" +
+                "  </div>" +
+                "  <div style=\"padding: 20px 0; color: #1a202c; line-height: 1.6;\">" +
+                "    <p>Xin chào <strong>" + customerName + "</strong>,</p>" +
+                "    <p>Bonsai Shop đã nhận thành công khoản <strong>tiền đặt cọc (Giai đoạn 1)</strong> cho đơn hàng của bạn.</p>" +
+                "    <table style=\"width: 100%; border-collapse: collapse; margin: 20px 0;\">" +
+                "      <tr style=\"background-color: #f7fafc; border-bottom: 1px solid #edf2f7;\">" +
+                "        <td style=\"padding: 12px;\"><strong>Tổng giá trị đơn hàng:</strong></td>" +
+                "        <td style=\"text-align: right; padding: 12px;\">" + total + " VND</td>" +
+                "      </tr>" +
+                "      <tr style=\"border-bottom: 1px solid #edf2f7; color: #2b6cb0; font-weight: bold;\">" +
+                "        <td style=\"padding: 12px;\">Đã thanh toán (Cọc 30%):</td>" +
+                "        <td style=\"text-align: right; padding: 12px;\">" + deposit + " VND</td>" +
+                "      </tr>" +
+                "      <tr style=\"background-color: #fffaf0; font-weight: bold; color: #c05621;\">" +
+                "        <td style=\"padding: 12px;\">Số tiền còn lại (Thanh toán khi nhận cây):</td>" +
+                "        <td style=\"text-align: right; padding: 12px;\">" + remaining + " VND</td>" +
+                "      </tr>" +
+                "    </table>" +
+                "    <p>Đội ngũ Bonsai Shop đang tiến hành chèn bảo vệ và đóng bọc cây để cẩu đến địa chỉ của bạn. Vui lòng chuẩn bị số tiền còn lại (<strong>" + remaining + " VND</strong>) để thanh toán cho tài xế/Shipper khi nhận hàng.</p>" +
+                "  </div>" +
+                "  <div style=\"text-align: center; font-size: 12px; color: #a0aec0; border-top: 1px solid #edf2f7; padding-top: 15px;\">" +
+                "    © " + java.time.LocalDate.now().getYear() + " Bonsai Shop. All rights reserved." +
+                "  </div>" +
+                "</div>";
+    }
+
+    private String buildFinalReceiptTemplate(Order order) {
+        String customerName = order.getCustomerName() != null ? order.getCustomerName() : "Quý khách hàng";
+        java.math.BigDecimal total = order.getTotalAmount() != null ? order.getTotalAmount() : java.math.BigDecimal.ZERO;
+
+        return "<div style=\"font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 25px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff;\">" +
+                "  <div style=\"text-align: center; background: linear-gradient(135deg, #276749, #2f855a); color: white; padding: 20px; border-radius: 8px 8px 0 0;\">" +
+                "    <h2 style=\"margin: 0;\">Hóa Đơn Hoàn Tất Thanh Toán 100%</h2>" +
+                "    <p style=\"margin: 5px 0 0 0;\">Mã đơn hàng: #" + order.getOrderCode() + "</p>" +
+                "  </div>" +
+                "  <div style=\"padding: 20px 0; color: #1a202c; line-height: 1.6;\">" +
+                "    <p>Xin chào <strong>" + customerName + "</strong>,</p>" +
+                "    <p>Giao dịch đơn hàng <strong>#" + order.getOrderCode() + "</strong> đã hoàn thành thanh toán 100%. Cảm ơn bạn đã tin tưởng và chọn mua tác phẩm Bonsai tại cửa hàng của chúng tôi!</p>" +
+                "    <table style=\"width: 100%; border-collapse: collapse; margin: 20px 0;\">" +
+                "      <tr style=\"background-color: #f0fff4; font-weight: bold; color: #22543d;\">" +
+                "        <td style=\"padding: 12px;\">Tổng tiền đã thanh toán hoàn tất:</td>" +
+                "        <td style=\"text-align: right; padding: 12px;\">" + total + " VND</td>" +
+                "      </tr>" +
+                "    </table>" +
+                "  </div>" +
+                "  <div style=\"text-align: center; font-size: 12px; color: #a0aec0; border-top: 1px solid #edf2f7; padding-top: 15px;\">" +
                 "    © " + java.time.LocalDate.now().getYear() + " Bonsai Shop. All rights reserved." +
                 "  </div>" +
                 "</div>";
