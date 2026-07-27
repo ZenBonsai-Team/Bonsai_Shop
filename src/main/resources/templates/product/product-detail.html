@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="vi">
 <head>
@@ -27,16 +27,41 @@
         .product-journal-section { padding: 56px 0; background: #f7faf7; border-top: 1px solid #e3e9e3; border-bottom: 1px solid #e3e9e3; }
         .product-journal-title { font-family: 'Cormorant Garamond', serif; font-size: 38px; font-weight: 700; color: #17251c; margin: 0; }
         .product-journal-subtitle { color: #6b786f; margin: 6px 0 28px; max-width: 620px; }
-        .product-journal-list { display: grid; gap: 16px; }
-        .product-journal-event { display: grid; grid-template-columns: 150px 1fr; gap: 18px; background: #fff; border: 1px solid #e1e8e1; border-radius: 18px; padding: 16px; }
-        .product-journal-cover { width: 150px; height: 128px; border-radius: 14px; object-fit: cover; background: #edf2ee; }
+        .product-journal-panel { background: #fff; border: 1px solid #e2e7e2; border-radius: 18px; overflow: hidden; box-shadow: 0 10px 28px rgba(31, 45, 36, 0.05); }
+        .product-journal-panel-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 18px; border-bottom: 1px solid #e8eee8; }
+        .product-journal-panel-head h3 { margin: 0; color: #183322; font-size: 20px; font-weight: 800; }
+        .product-journal-count { border-radius: 999px; background: #eef6ef; color: #246b49; padding: 5px 10px; font-size: 12px; font-weight: 800; white-space: nowrap; }
+        .product-journal-list { display: grid; gap: 12px; max-height: 620px; overflow-y: auto; padding: 14px; scrollbar-width: thin; }
+        .product-journal-list::-webkit-scrollbar { width: 8px; }
+        .product-journal-list::-webkit-scrollbar-thumb { background: #cfd8d1; border-radius: 999px; }
+        .product-journal-event { display: grid; grid-template-columns: 120px minmax(0, 1fr) auto; gap: 14px; align-items: center; min-height: 110px; background: #fff; border: 1px solid #e1e8e1; border-radius: 10px; padding: 10px 14px 10px 10px; }
+        .product-journal-cover-link { display: block; width: 120px; height: 92px; border: 0; padding: 0; border-radius: 4px; overflow: hidden; background: #edf2ee; cursor: zoom-in; }
+        .product-journal-cover { width: 100%; height: 100%; object-fit: cover; display: block; background: #edf2ee; }
         .product-journal-placeholder { display: grid; place-items: center; color: #78907e; font-size: 30px; }
-        .product-journal-meta { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 8px; }
-        .product-journal-date { font-weight: 800; color: #17251c; }
-        .product-journal-type { border-radius: 999px; background: #eaf4eb; color: #2f6b3f; padding: 4px 10px; font-size: 12px; font-weight: 700; }
-        .product-journal-gallery { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
-        .product-journal-gallery img, .product-journal-gallery video { width: 76px; height: 64px; object-fit: cover; border-radius: 10px; border: 1px solid #e1e8e1; }
-        @media (max-width: 768px) { .product-journal-event { grid-template-columns: 1fr; } .product-journal-cover { width: 100%; height: 220px; } }
+        .product-journal-meta { display: flex; gap: 10px; align-items: center; margin-bottom: 0; }
+        .product-journal-date { font-weight: 900; color: #17251c; font-size: 15px; }
+        .product-journal-type { justify-self: end; border: 1px solid #e2e7e2; border-radius: 5px; background: #fff; color: #66736b; padding: 6px 9px; font-size: 12px; font-weight: 700; white-space: nowrap; }
+        .product-journal-body { min-width: 0; }
+        .product-journal-body h3 { margin: 4px 0 5px; color: #183322; font-size: 15px; line-height: 1.25; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .product-journal-body p { margin: 0; color: #29372f; line-height: 1.4; font-size: 13px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .product-journal-modal { display: none; position: fixed; inset: 0; z-index: 2000; background: rgba(15, 23, 18, 0.58); padding: 28px; overflow-y: auto; }
+        .product-journal-modal.is-open { display: block; }
+        .product-journal-modal-card { width: min(920px, 100%); margin: 0 auto; background: #fff; border-radius: 4px; padding: 16px; box-shadow: 0 24px 80px rgba(0,0,0,0.24); }
+        .product-journal-modal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+        .product-journal-modal-head strong { font-size: 19px; color: #0f1d15; }
+        .product-journal-modal-close { border: 0; background: transparent; color: #0f1d15; text-decoration: none; font-size: 24px; line-height: 1; padding: 2px 6px; }
+        .product-journal-modal-stage { position: relative; min-height: 520px; border-radius: 4px; background: #000; display: grid; place-items: center; overflow: hidden; }
+        .product-journal-slide { display: none; width: 100%; height: 100%; place-items: center; }
+        .product-journal-slide.active { display: grid; }
+        .product-journal-slide img, .product-journal-slide video { max-width: 100%; max-height: 70vh; object-fit: contain; display: block; }
+        .product-journal-control { position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 999px; background: rgba(20, 20, 20, 0.68); color: #fff; font-weight: 800; }
+        .product-journal-control button { width: 26px; height: 26px; border: 0; border-radius: 50%; display: grid; place-items: center; background: rgba(255,255,255,0.18); color: #fff; line-height: 1; padding: 0; }
+        .product-journal-modal-footer { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 16px; align-items: center; margin-top: 14px; }
+        .product-journal-thumbs { display: flex; gap: 8px; flex-wrap: nowrap; min-width: 0; max-width: 100%; overflow-x: auto; overflow-y: hidden; padding: 2px 2px 8px; scrollbar-width: thin; }
+        .product-journal-thumb-btn { flex: 0 0 auto; width: 64px; height: 52px; padding: 0; border: 2px solid transparent; border-radius: 6px; background: transparent; overflow: hidden; }
+        .product-journal-thumb-btn.active { border-color: #246b49; }
+        .product-journal-thumb-btn img, .product-journal-thumb-btn video { width: 100%; height: 100%; object-fit: cover; display: block; border-radius: 4px; }
+        @media (max-width: 768px) { .product-journal-event { grid-template-columns: 92px 1fr; } .product-journal-type { grid-column: 2; justify-self: start; } .product-journal-cover-link { width: 92px; height: 76px; } .product-journal-modal-stage { min-height: 360px; } }
     </style>
 </head>
 <body>
@@ -302,37 +327,90 @@
         <h2 class="product-journal-title">Nhật ký phát triển cây</h2>
         <p class="product-journal-subtitle">Các lần artisan cập nhật hình ảnh và trạng thái thực tế của cây theo thời gian.</p>
 
-        <div class="product-journal-list">
-            <article class="product-journal-event" th:each="event : ${journalEvents}">
-                <img class="product-journal-cover"
-                     th:if="${event.firstMedia != null && event.firstMedia.mediaType == 'IMAGE'}"
-                     th:src="${event.firstMedia.mediaUrl}" alt="">
-                <video class="product-journal-cover"
-                       th:if="${event.firstMedia != null && event.firstMedia.mediaType == 'VIDEO'}"
-                       th:src="${event.firstMedia.mediaUrl}" controls></video>
-                <div class="product-journal-cover product-journal-placeholder" th:if="${event.firstMedia == null}">
-                    <i class="fa-solid fa-leaf"></i>
-                </div>
-                <div>
-                    <div class="product-journal-meta">
-                        <span class="product-journal-date" th:text="${#temporals.format(event.eventDate, 'dd/MM/yyyy')}">26/07/2026</span>
-                        <span class="product-journal-type" th:text="${event.eventType}">PHOTO_UPDATE</span>
+        <div class="product-journal-panel">
+            <div class="product-journal-panel-head">
+                <h3>Lịch sử cập nhật</h3>
+                <span class="product-journal-count" th:text="${#lists.size(journalEvents) + ' cập nhật'}">0 cập nhật</span>
+            </div>
+            <div class="product-journal-list">
+                <article class="product-journal-event" th:each="event : ${journalEvents}">
+                    <button type="button" class="product-journal-cover-link" th:if="${event.firstMedia != null}" th:attr="data-open-product-journal-modal=${event.eventId}">
+                        <img class="product-journal-cover" th:if="${event.firstMedia.mediaType == 'IMAGE'}" th:src="${event.firstMedia.mediaUrl}" alt="">
+                        <video class="product-journal-cover" th:if="${event.firstMedia.mediaType == 'VIDEO'}" th:src="${event.firstMedia.mediaUrl}" muted></video>
+                    </button>
+                    <div class="product-journal-cover-link product-journal-placeholder" th:if="${event.firstMedia == null}">
+                        <i class="fa-solid fa-leaf"></i>
                     </div>
-                    <h3 th:text="${event.title}">Cập nhật cây</h3>
-                    <p th:if="${event.description != null && !event.description.isBlank()}" th:text="${event.description}">Mô tả</p>
-                    <div class="product-journal-gallery" th:if="${event.mediaList != null && !#lists.isEmpty(event.mediaList)}">
-                        <th:block th:each="media : ${event.mediaList}">
-                            <img th:if="${media.mediaType == 'IMAGE'}" th:src="${media.mediaUrl}" alt="">
-                            <video th:if="${media.mediaType == 'VIDEO'}" th:src="${media.mediaUrl}" controls></video>
-                        </th:block>
+                    <div class="product-journal-body">
+                        <div class="product-journal-meta">
+                            <span class="product-journal-date" th:text="${#temporals.format(event.eventDate, 'dd/MM/yyyy')}">26/07/2026</span>
+                        </div>
+                        <h3 th:text="${event.title}">Cập nhật cây</h3>
+                        <p th:if="${event.description != null && !event.description.isBlank()}" th:text="${event.description}">Mô tả</p>
                     </div>
-                </div>
-            </article>
+                    <span class="product-journal-type">
+                        <span th:if="${#strings.toString(event.eventType) == 'PHOTO_UPDATE'}">Cập nhật ảnh</span>
+                        <span th:if="${#strings.toString(event.eventType) == 'GROWTH'}">Phát triển</span>
+                        <span th:if="${#strings.toString(event.eventType) == 'PRUNING'}">Cắt tỉa</span>
+                        <span th:if="${#strings.toString(event.eventType) == 'WIRING'}">Uốn/kẽm</span>
+                        <span th:if="${#strings.toString(event.eventType) == 'REPOTTING'}">Thay chậu</span>
+                        <span th:if="${#strings.toString(event.eventType) == 'FERTILIZING'}">Bón phân</span>
+                        <span th:if="${#strings.toString(event.eventType) == 'WATERING'}">Tưới nước</span>
+                        <span th:if="${#strings.toString(event.eventType) == 'PEST_TREATMENT'}">Xử lý sâu bệnh</span>
+                        <span th:if="${#strings.toString(event.eventType) == 'HEALTH_CHECK'}">Kiểm tra sức khỏe</span>
+                        <span th:if="${#strings.toString(event.eventType) == 'ACQUISITION'}">Nhập cây</span>
+                    </span>
+                    <div class="product-journal-modal" th:if="${event.firstMedia != null}" th:id="|product-journal-modal-${event.eventId}|">
+                        <div class="product-journal-modal-card">
+                            <div class="product-journal-modal-head">
+                                <strong th:text="${#temporals.format(event.eventDate, 'dd/MM/yyyy')}">26/07/2026</strong>
+                                <button type="button" class="product-journal-modal-close" th:attr="data-close-product-journal-modal=${event.eventId}">&times;</button>
+                            </div>
+                            <div class="product-journal-modal-stage" th:attr="data-product-journal-event-id=${event.eventId}">
+                                <div class="product-journal-slide"
+                                     th:each="media, mediaStat : ${event.mediaList}"
+                                     th:classappend="${mediaStat.index == 0} ? ' active' : ''">
+                                    <img th:if="${media.mediaType == 'IMAGE'}" th:src="${media.mediaUrl}" alt="">
+                                    <video th:if="${media.mediaType == 'VIDEO'}" th:src="${media.mediaUrl}" controls></video>
+                                </div>
+                                <div class="product-journal-control" th:if="${event.mediaList != null && #lists.size(event.mediaList) > 1}">
+                                    <button type="button" th:attr="data-product-journal-prev=${event.eventId}" aria-label="Previous image">‹</button>
+                                    <span><span th:attr="data-product-journal-index=${event.eventId}">1</span>/<span th:text="${#lists.size(event.mediaList)}">1</span></span>
+                                    <button type="button" th:attr="data-product-journal-next=${event.eventId}" aria-label="Next image">›</button>
+                                </div>
+                            </div>
+                            <div class="product-journal-modal-footer">
+                                <div class="product-journal-thumbs" th:if="${event.mediaList != null && !#lists.isEmpty(event.mediaList)}">
+                                    <th:block th:each="media, mediaStat : ${event.mediaList}">
+                                        <button type="button"
+                                                class="product-journal-thumb-btn"
+                                                th:classappend="${mediaStat.index == 0} ? ' active' : ''"
+                                                th:attr="data-product-journal-thumb=${event.eventId},data-product-journal-thumb-index=${mediaStat.index}">
+                                            <img th:if="${media.mediaType == 'IMAGE'}" th:src="${media.mediaUrl}" alt="">
+                                            <video th:if="${media.mediaType == 'VIDEO'}" th:src="${media.mediaUrl}" muted></video>
+                                        </button>
+                                    </th:block>
+                                </div>
+                                <span class="product-journal-type">
+                                    <span th:if="${#strings.toString(event.eventType) == 'PHOTO_UPDATE'}">Cập nhật ảnh</span>
+                                    <span th:if="${#strings.toString(event.eventType) == 'GROWTH'}">Phát triển</span>
+                                    <span th:if="${#strings.toString(event.eventType) == 'PRUNING'}">Cắt tỉa</span>
+                                    <span th:if="${#strings.toString(event.eventType) == 'WIRING'}">Uốn/kẽm</span>
+                                    <span th:if="${#strings.toString(event.eventType) == 'REPOTTING'}">Thay chậu</span>
+                                    <span th:if="${#strings.toString(event.eventType) == 'FERTILIZING'}">Bón phân</span>
+                                    <span th:if="${#strings.toString(event.eventType) == 'WATERING'}">Tưới nước</span>
+                                    <span th:if="${#strings.toString(event.eventType) == 'PEST_TREATMENT'}">Xử lý sâu bệnh</span>
+                                    <span th:if="${#strings.toString(event.eventType) == 'HEALTH_CHECK'}">Kiểm tra sức khỏe</span>
+                                    <span th:if="${#strings.toString(event.eventType) == 'ACQUISITION'}">Nhập cây</span>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+            </div>
         </div>
     </div>
-</section>
-
-<!-- ===================================================== -->
+</section><!-- ===================================================== -->
 <!-- PRODUCT STORY / DESCRIPTION SECTION -->
 <!-- ===================================================== -->
 <article class="story-section">
@@ -691,7 +769,84 @@
             behavior: 'smooth'
         });
     }
+
+    function setProductJournalSlide(eventId, nextIndex) {
+        const stage = document.querySelector('.product-journal-modal-stage[data-product-journal-event-id="' + eventId + '"]');
+        if (!stage) return;
+
+        const slides = Array.from(stage.querySelectorAll('.product-journal-slide'));
+        if (!slides.length) return;
+
+        const normalizedIndex = (nextIndex + slides.length) % slides.length;
+        slides.forEach(slide => {
+            slide.classList.remove('active');
+            slide.querySelectorAll('video').forEach(video => video.pause());
+        });
+        slides[normalizedIndex].classList.add('active');
+
+        document.querySelectorAll('[data-product-journal-thumb="' + eventId + '"]').forEach((thumb, index) => {
+            thumb.classList.toggle('active', index === normalizedIndex);
+        });
+
+        const counter = document.querySelector('[data-product-journal-index="' + eventId + '"]');
+        if (counter) {
+            counter.textContent = String(normalizedIndex + 1);
+        }
+    }
+
+    document.addEventListener('click', function (event) {
+        const openButton = event.target.closest('[data-open-product-journal-modal]');
+        const closeButton = event.target.closest('[data-close-product-journal-modal]');
+        const previousButton = event.target.closest('[data-product-journal-prev]');
+        const nextButton = event.target.closest('[data-product-journal-next]');
+        const thumbButton = event.target.closest('[data-product-journal-thumb]');
+
+        if (openButton) {
+            const modal = document.getElementById('product-journal-modal-' + openButton.dataset.openProductJournalModal);
+            if (modal) {
+                modal.classList.add('is-open');
+                document.body.style.overflow = 'hidden';
+            }
+            return;
+        }
+
+        if (closeButton) {
+            const modal = document.getElementById('product-journal-modal-' + closeButton.dataset.closeProductJournalModal);
+            if (modal) {
+                modal.classList.remove('is-open');
+                modal.querySelectorAll('video').forEach(video => video.pause());
+                document.body.style.overflow = '';
+            }
+            return;
+        }
+
+        if (event.target.classList.contains('product-journal-modal')) {
+            event.target.classList.remove('is-open');
+            event.target.querySelectorAll('video').forEach(video => video.pause());
+            document.body.style.overflow = '';
+            return;
+        }
+
+        if (!previousButton && !nextButton && !thumbButton) return;
+
+        if (thumbButton) {
+            setProductJournalSlide(thumbButton.dataset.productJournalThumb, Number(thumbButton.dataset.productJournalThumbIndex));
+            return;
+        }
+
+        const eventId = previousButton ? previousButton.dataset.productJournalPrev : nextButton.dataset.productJournalNext;
+        const stage = document.querySelector('.product-journal-modal-stage[data-product-journal-event-id="' + eventId + '"]');
+        if (!stage) return;
+
+        const slides = Array.from(stage.querySelectorAll('.product-journal-slide'));
+        const currentIndex = Math.max(0, slides.findIndex(slide => slide.classList.contains('active')));
+        const targetIndex = previousButton
+            ? (currentIndex - 1 + slides.length) % slides.length
+            : (currentIndex + 1) % slides.length;
+        setProductJournalSlide(eventId, targetIndex);
+    });
 </script>
 <div th:replace="~{fragments/checkout-modal :: checkoutModal}"></div>
 </body>
 </html>
+

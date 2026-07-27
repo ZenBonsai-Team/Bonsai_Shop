@@ -103,44 +103,6 @@ public class ArtisanCatalogController {
         }
         return "redirect:/artisan/catalog";
     }
-
-    @PostMapping("/segments")
-    public String createSegment(@RequestParam String segmentName,
-                                RedirectAttributes redirectAttributes) {
-        try {
-            artisanCatalogService.createSegment(segmentName);
-            redirectAttributes.addFlashAttribute("success", "Đã tạo segment.");
-        } catch (RuntimeException e) {
-            redirectAttributes.addFlashAttribute("error", e.getMessage());
-        }
-        return "redirect:/artisan/catalog";
-    }
-
-    @PostMapping("/segments/{segmentId}")
-    public String updateSegment(@PathVariable Integer segmentId,
-                                @RequestParam String segmentName,
-                                RedirectAttributes redirectAttributes) {
-        try {
-            artisanCatalogService.updateSegment(segmentId, segmentName);
-            redirectAttributes.addFlashAttribute("success", "Đã cập nhật segment.");
-        } catch (RuntimeException e) {
-            redirectAttributes.addFlashAttribute("error", e.getMessage());
-        }
-        return "redirect:/artisan/catalog";
-    }
-
-    @PostMapping("/segments/{segmentId}/delete")
-    public String deleteSegment(@PathVariable Integer segmentId,
-                                RedirectAttributes redirectAttributes) {
-        try {
-            artisanCatalogService.deleteSegment(segmentId);
-            redirectAttributes.addFlashAttribute("success", "Đã xóa segment.");
-        } catch (RuntimeException e) {
-            redirectAttributes.addFlashAttribute("error", e.getMessage());
-        }
-        return "redirect:/artisan/catalog";
-    }
-
     @PostMapping("/tags")
     public String createTag(@RequestParam String tagName,
                             RedirectAttributes redirectAttributes) {
@@ -181,7 +143,10 @@ public class ArtisanCatalogController {
     private void addCatalogData(Model model) {
         model.addAttribute("categories", artisanCatalogService.getCategories());
         model.addAttribute("varieties", artisanCatalogService.getVarieties());
-        model.addAttribute("segments", artisanCatalogService.getSegments());
         model.addAttribute("tags", artisanCatalogService.getTags());
+        model.addAttribute("categoryIdsInUse", artisanCatalogService.getCategoryIdsInUse());
+        model.addAttribute("varietyIdsInUse", artisanCatalogService.getVarietyIdsInUse());
+        model.addAttribute("tagIdsInUse", artisanCatalogService.getTagIdsInUse());
     }
 }
+

@@ -1,11 +1,9 @@
 package com.example.bonsai_shop.artisan.service;
 
 import com.example.bonsai_shop.entity.Category;
-import com.example.bonsai_shop.entity.ProductSegment;
 import com.example.bonsai_shop.entity.Tag;
 import com.example.bonsai_shop.entity.Variety;
 import com.example.bonsai_shop.product.repository.CategoryRepository;
-import com.example.bonsai_shop.product.repository.ProductSegmentRepository;
 import com.example.bonsai_shop.product.repository.ProductRepository;
 import com.example.bonsai_shop.product.repository.ProductTagRepository;
 import com.example.bonsai_shop.product.repository.TagRepository;
@@ -15,6 +13,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -22,7 +22,6 @@ public class ArtisanCatalogService {
 
     private final CategoryRepository categoryRepository;
     private final VarietyRepository varietyRepository;
-    private final ProductSegmentRepository productSegmentRepository;
     private final ProductRepository productRepository;
     private final ProductTagRepository productTagRepository;
     private final TagRepository tagRepository;
@@ -35,12 +34,30 @@ public class ArtisanCatalogService {
         return varietyRepository.findAll();
     }
 
-    public List<ProductSegment> getSegments() {
-        return productSegmentRepository.findAll();
-    }
-
     public List<Tag> getTags() {
         return tagRepository.findAll();
+    }
+
+    public Set<Integer> getCategoryIdsInUse() {
+        return categoryRepository.findAll().stream()
+                .filter(category -> productRepository.existsByVarietyCategoryCategoryId(category.getCategoryId())
+                        || varietyRepository.existsByCategoryCategoryId(category.getCategoryId()))
+                .map(Category::getCategoryId)
+                .collect(Collectors.toSet());
+    }
+
+    public Set<Integer> getVarietyIdsInUse() {
+        return varietyRepository.findAll().stream()
+                .filter(variety -> productRepository.existsByVarietyVarietyId(variety.getVarietyId()))
+                .map(Variety::getVarietyId)
+                .collect(Collectors.toSet());
+    }
+
+    public Set<Integer> getTagIdsInUse() {
+        return tagRepository.findAll().stream()
+                .filter(tag -> productTagRepository.existsForTagId(tag.getTagId()))
+                .map(Tag::getTagId)
+                .collect(Collectors.toSet());
     }
 
     @Transactional
@@ -60,13 +77,6 @@ public class ArtisanCatalogService {
                 .category(category)
                 .varietyName(requireText(varietyName, "Tên variety không được để trống!"))
                 .description(blankToNull(description))
-                .build());
-    }
-
-    @Transactional
-    public void createSegment(String segmentName) {
-        productSegmentRepository.save(ProductSegment.builder()
-                .segmentName(requireText(segmentName, "Tên segment không được để trống!"))
                 .build());
     }
 
@@ -114,23 +124,6 @@ public class ArtisanCatalogService {
         }
         varietyRepository.deleteById(varietyId);
     }
-
-    @Transactional
-    public void updateSegment(Integer segmentId, String segmentName) {
-        ProductSegment segment = productSegmentRepository.findById(segmentId)
-                .orElseThrow(() -> new RuntimeException("Segment không tồn tại!"));
-        segment.setSegmentName(requireText(segmentName, "Tên segment không được để trống!"));
-        productSegmentRepository.save(segment);
-    }
-
-    @Transactional
-    public void deleteSegment(Integer segmentId) {
-        if (productRepository.existsBySegmentSegmentId(segmentId)) {
-            throw new RuntimeException("Không thể xóa segment đang được sản phẩm sử dụng.");
-        }
-        productSegmentRepository.deleteById(segmentId);
-    }
-
     @Transactional
     public void updateTag(Integer tagId, String tagName) {
         Tag tag = tagRepository.findById(tagId)
@@ -158,3 +151,4 @@ public class ArtisanCatalogService {
         return value == null || value.isBlank() ? null : value.trim();
     }
 }
+
