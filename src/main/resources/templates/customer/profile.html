@@ -25,7 +25,7 @@
 
         <nav class="sidebar-menu">
             <!-- Nút quay lại dashboard cho các vai trò đặc biệt -->
-            <a sec:authorize="hasRole('OWNER')" th:href="@{/templates/owner}" style="color: #2e7d32; font-weight: bold; background: #e8f5e9;">
+            <a sec:authorize="hasRole('OWNER')" th:href="@{/owner}" style="color: #2e7d32; font-weight: bold; background: #e8f5e9;">
                 <i class="fa-solid fa-gauge"></i>
                 Bảng điều khiển Chủ
             </a>
@@ -160,12 +160,12 @@
 
             </div>
 
-            <div class="d-flex flex-column gap-2 align-self-stretch justify-content-start">
-                <a th:href="@{/profile/update}" class="edit-btn text-decoration-none w-100">
-                    Chỉnh sửa hồ sơ
+            <div class="profile-btn-group">
+                <a th:href="@{/profile/update}" class="profile-action-btn profile-btn-primary">
+                    <i class="fa-solid fa-user-pen"></i> Cập nhật hồ sơ
                 </a>
-                <a th:href="@{/community/author/{id}(id=${user.userId})}" class="btn btn-outline-success btn-sm rounded-0 py-2 fw-semibold text-truncate d-flex align-items-center justify-content-center gap-1 w-100" style="border-color: #06210f; color: #06210f; font-size: 0.82rem;">
-                    <i class="fa-solid fa-eye" style="font-size: 0.75rem;"></i> Xem trang công khai
+                <a th:href="@{/community/author/{id}(id=${user.userId})}" class="profile-action-btn profile-btn-secondary">
+                    <i class="fa-solid fa-eye"></i> Hồ sơ công khai
                 </a>
             </div>
 
@@ -378,7 +378,7 @@
             <div class="section-title d-flex justify-content-between align-items-center mb-3">
                 <div>
                     <p class="text-uppercase text-muted small fw-bold mb-1">NHẬT KÝ VÀ SỰ PHÁT TRIỂN CÂY</p>
-                    <h2 class="h4 fw-bold text-dark mb-0"><i class="fa-solid fa-seedling text-success me-2"></i>Hành trình Bonsai của tôi</h2>
+                    <h2 class="h4 fw-bold text-dark mb-0"><i class="fa-solid fa-seedling text-success me-2"></i>Hành Trình Bonsai</h2>
                 </div>
                 <a th:href="@{/community/create?category=H%C3%A0nh%20tr%C3%ACnh%20Bonsai}" class="btn btn-success btn-sm rounded-pill px-3 py-2 fw-semibold">
                     <i class="fa-solid fa-plus me-1"></i> Đăng nhật ký cây mới

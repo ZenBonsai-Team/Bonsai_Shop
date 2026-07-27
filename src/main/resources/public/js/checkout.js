@@ -320,7 +320,11 @@ async function executeCheckoutApi(payload, confirmBtn = null) {
             if (typeof window.updateCartBadge === 'function') {
                 window.updateCartBadge();
             }
-            window.location.href = `/order/success?orderCode=${result.orderCode}`;
+            if (result.paymentMethod === 'VNPAY') {
+                window.location.href = `/vnpay/pay-order?orderCode=${result.orderCode}`;
+            } else {
+                window.location.href = `/order/success?orderCode=${result.orderCode}`;
+            }
         } else {
             if (confirmBtn) {
                 confirmBtn.disabled = false;

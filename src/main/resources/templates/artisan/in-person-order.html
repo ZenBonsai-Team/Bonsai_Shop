@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>In-person Order</title>
+    <title>Đơn hàng tại vườn - Bonsai Shop</title>
     <link rel="icon" type="image/png" th:href="@{/images/logo.png}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -18,14 +18,14 @@
     <div th:replace="~{fragments/sidebar :: sidebar('artisan-in-person-order')}"></div>
 
     <main class="dashboard-main">
-        <div th:replace="~{fragments/artisan-topbar :: topbar('In-person Order')}"></div>
+        <div th:replace="~{fragments/artisan-topbar :: topbar('Đơn tại vườn')}"></div>
 
         <header class="page-header">
             <div>
-                <h1>In-person Order</h1>
-                <p>Artisan tạo đơn khách mua trực tiếp tại vườn, reserve cây, xác nhận nhận tiền và hoàn tất.</p>
+                <h1>Đơn tại vườn</h1>
+                <p>Nghệ nhân tạo đơn khách mua trực tiếp tại vườn, giữ cây, xác nhận thanh toán và hoàn tất.</p>
             </div>
-            <a class="btn secondary" th:href="@{/artisan/products}">My Products</a>
+            <a class="btn secondary" th:href="@{/artisan/products}">Sản phẩm của tôi</a>
         </header>
 
         <div th:if="${success}" class="alert success" th:text="${success}"></div>
@@ -34,8 +34,8 @@
         <section class="portal-card mb-4">
             <div class="taxonomy-toolbar">
                 <div>
-                    <h2>Tạo In-person Order</h2>
-                    <p>Chỉ hiển thị sản phẩm đang AVAILABLE thuộc artisan hiện tại.</p>
+                    <h2>Tạo đơn tại vườn</h2>
+                    <p>Chỉ hiển thị sản phẩm đang sẵn sàng bán thuộc nghệ nhân hiện tại.</p>
                 </div>
             </div>
 
@@ -82,7 +82,7 @@
                 <div class="walk-in-customer-grid">
                     <label>
                         <span>Tên khách</span>
-                        <input name="customerName" required placeholder="Khách in-person">
+                        <input name="customerName" required placeholder="Tên khách hàng">
                     </label>
 
                     <label>
@@ -133,23 +133,22 @@
 
                     <div class="actions walk-in-form-actions">
                         <button class="btn" type="submit" th:disabled="${#lists.isEmpty(availableProducts)}">
-                            Tạo order & reserve sản phẩm
+                            Tạo đơn &amp; giữ cây
                         </button>
                     </div>
                 </div>
             </form>
         </section>
 
-        <section class="management-card">
-            <div class="toolbar-header">
-                <div class="toolbar-search-row">
+        <section class="portal-card">
+            <div class="product-toolbar">
+                <div class="product-toolbar-top">
                     <div>
-                        <h2 class="mb-1">Danh sách In-person Order</h2>
-                        <p class="text-muted mb-0">Luồng: PENDING_PAYMENT → Payment SUCCESS → COMPLETED → Product SOLD.</p>
+                        <h2 style="font-size:1.1rem;font-weight:700;color:#1C3322;margin:0 0 2px;">Danh sách Đơn tại vườn</h2>
+                        <p style="font-size:0.78rem;color:#536257;margin:0;">Luồng: Chờ nhận tiền → Hoàn tất → Đã bán</p>
                     </div>
                 </div>
-
-                <div class="filter-tabs">
+                <div class="filter-tabs product-filter-chips" style="margin:0;">
                     <a class="tab-btn text-decoration-none"
                        th:classappend="${selectedStatus == 'ALL'} ? ' active'"
                        th:href="@{/artisan/in-person-order(status='ALL')}">Tất cả</a>

@@ -6,6 +6,18 @@ const DashboardState = {
     pageSize: 8
 };
 
+const orderStatusLabels = {
+    'PENDING': 'Chờ xử lý',
+    'APPROVED': 'Đã duyệt',
+    'PAID': 'Đã thanh toán',
+    'REJECTED': 'Đã từ chối',
+    'COMPLETED': 'Hoàn thành',
+    'CANCELLED': 'Đã hủy',
+    'CONFIRMED': 'Đã xác nhận',
+    'SHIPPING': 'Đang giao',
+    'DELIVERED': 'Đã giao'
+};
+
 let activeOrderCode = null;
 let currentActiveOrder = null;
 const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
@@ -120,7 +132,7 @@ function renderTable(orders) {
             <td><span class="fw-bold text-dark">${order.items ? order.items.length : 1} cây</span></td>
             <td class="col-price">${formatVND(order.totalAmount || 0)}</td>
             <td>${new Date(order.orderDate).toLocaleString('vi-VN')}</td>
-            <td><span class="status-badge ${order.orderStatus.toLowerCase()}">${order.orderStatus}</span></td>
+            <td><span class="status-badge ${order.orderStatus.toLowerCase()}">${orderStatusLabels[order.orderStatus] || order.orderStatus}</span></td>
             <td class="text-center">
                 <button class="btn btn-sm btn-outline-primary"><i class="fa-solid fa-eye"></i> Chi tiết</button>
             </td>
@@ -216,7 +228,7 @@ function openDrawer(order) {
     
     const badge = document.getElementById('drawerStatusBadge');
     if (badge) {
-        badge.textContent = order.orderStatus || 'PENDING';
+        badge.textContent = orderStatusLabels[order.orderStatus] || order.orderStatus || 'Chờ xử lý';
         badge.className = `status-badge ${(order.orderStatus || 'PENDING').toLowerCase()}`;
     }
 

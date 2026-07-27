@@ -89,7 +89,7 @@
                         <i class="fa-solid fa-circle-check"></i>
                         <div>
                             <span>Trạng thái</span>
-                            <strong th:text="${artisan.status}">ACTIVE</strong>
+                            <strong th:text="${artisan.status == 'ACTIVE' ? 'Đang hoạt động' : (artisan.status == 'INACTIVE' ? 'Tạm khóa' : artisan.status)}">Đang hoạt động</strong>
                         </div>
                     </div>
                 </div>
