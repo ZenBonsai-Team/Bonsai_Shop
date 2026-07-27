@@ -43,13 +43,13 @@
                    class="sidebar-nav-item" 
                    th:classappend="${activePage == 'pool' or activePage == 'orders-pool' ? 'active' : ''}">
                     <span class="nav-icon"><i class="fa-solid fa-box"></i></span>
-                    <span>Kho Đơn Hàng (Pool)</span>
+                    <span>Kho đơn hàng</span>
                 </a>
                 <a th:href="@{/moderator/orders/my}" 
                    class="sidebar-nav-item" 
                    th:classappend="${activePage == 'my' or activePage == 'my-orders' ? 'active' : ''}">
                     <span class="nav-icon"><i class="fa-solid fa-clipboard-list"></i></span>
-                    <span>Đơn Của Tôi (My Orders)</span>
+                    <span>Đơn của tôi</span>
                 </a>
             </th:block>
 
@@ -87,7 +87,7 @@
                    class="sidebar-nav-item" 
                    th:classappend="${activePage == 'in-person-order' or activePage == 'artisan-in-person-order' ? 'active' : ''}">
                     <span class="nav-icon"><i class="fa-solid fa-cash-register"></i></span>
-                    <span>In-person Order</span>
+                    <span>Đơn tại vườn</span>
                 </a>                <a th:href="@{/artisan/appointments}" 
                    class="sidebar-nav-item" 
                    th:classappend="${activePage == 'appointments' ? 'active' : ''}">

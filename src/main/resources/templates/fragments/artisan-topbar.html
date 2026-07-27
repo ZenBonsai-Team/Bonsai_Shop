@@ -3,9 +3,9 @@
 <body>
 <header th:fragment="topbar(pageTitle)" class="artisan-topbar">
     <div class="artisan-breadcrumb">
-        <a th:href="@{/home}">Home</a>
+        <a th:href="@{/home}">Trang chủ</a>
         <span>/</span>
-        <strong th:text="${pageTitle}">Artisan Portal</strong>
+        <strong th:text="${pageTitle}">Kênh Nghệ nhân</strong>
     </div>
 
     <div class="artisan-topbar-right">
@@ -114,7 +114,7 @@
         </a>
         <div class="artisan-user-meta">
             <strong th:text="${#authentication.principal != null and #authentication.principal.fullName != null ? #authentication.principal.fullName : #authentication.name}">Nghệ nhân</strong>
-            <span th:text="${#authentication.principal != null and #authentication.principal.roleName != null ? #authentication.principal.roleName : 'ARTISAN'}">ARTISAN</span>
+            <span>Nghệ nhân</span>
         </div>
     </div>
 </header>

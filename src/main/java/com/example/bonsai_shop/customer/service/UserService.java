@@ -37,6 +37,10 @@ public class UserService {
             throw new RuntimeException("Email đã được sử dụng!");
         }
 
+        if (userRepository.existsByUsername(username)) {
+            throw new RuntimeException("Tên đăng nhập đã được sử dụng!");
+        }
+
         // Lấy role mặc định
         Role role = roleRepository.findByRoleName("ROLE_CUSTOMER")
                 .orElseThrow(() -> new RuntimeException("Role không tồn tại!"));

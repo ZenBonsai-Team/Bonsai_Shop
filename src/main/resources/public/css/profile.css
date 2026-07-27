@@ -430,3 +430,51 @@ a {
     border: 2px solid white;
     font-size: 12px;
 }
+
+/* Balanced Profile Action Buttons */
+.profile-btn-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+}
+
+.profile-action-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 11px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    text-align: center;
+    transition: all 0.2s ease-in-out;
+    border-radius: 6px;
+    width: 100%;
+    cursor: pointer;
+    text-decoration: none;
+    text-transform: none;
+    line-height: 1.2;
+}
+
+.profile-btn-primary {
+    background: #06210f;
+    color: #ffffff !important;
+    border: 1px solid #06210f;
+}
+
+.profile-btn-primary:hover {
+    background: #11381d;
+    border-color: #11381d;
+}
+
+.profile-btn-secondary {
+    background: transparent;
+    color: #06210f !important;
+    border: 1px solid #06210f;
+}
+
+.profile-btn-secondary:hover {
+    background: #06210f;
+    color: #ffffff !important;
+}

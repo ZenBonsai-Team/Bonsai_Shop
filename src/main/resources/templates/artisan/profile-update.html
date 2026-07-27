@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Edit Artisan Profile</title>
+    <title>Chỉnh sửa hồ sơ Nghệ nhân</title>
     <link rel="icon" type="image/png" th:href="@{/images/logo.png}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -23,10 +23,10 @@
         <header th:replace="~{fragments/header :: header}"></header>
         <header class="page-header">
             <div>
-                <h1>Edit Profile</h1>
-                <p>Cập nhật thông tin tài khoản artisan.</p>
+                <h1>Chỉnh sửa hồ sơ</h1>
+                <p>Cập nhật thông tin tài khoản nghệ nhân.</p>
             </div>
-            <a class="btn secondary" th:href="@{/artisan/profile}">Back to My Profile</a>
+            <a class="btn secondary" th:href="@{/artisan/profile}">Quay lại Hồ sơ</a>
         </header>
 
         <div th:if="${error}" class="alert error" th:text="${error}"></div>
@@ -87,8 +87,8 @@
                 </div>
 
                 <div class="actions artisan-profile-actions">
-                    <button type="submit">Save Changes</button>
-                    <a class="btn secondary" th:href="@{/artisan/profile}">Cancel</a>
+                    <button type="submit">Lưu thay đổi</button>
+                    <a class="btn secondary" th:href="@{/artisan/profile}">Hủy</a>
                 </div>
             </form>
         </section>

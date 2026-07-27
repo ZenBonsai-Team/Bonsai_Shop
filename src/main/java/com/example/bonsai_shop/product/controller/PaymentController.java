@@ -27,6 +27,8 @@ public class PaymentController {
     private ProductRepository productRepository;
     @Autowired
     private OrderRepository orderRepository;
+    @Autowired
+    private com.example.bonsai_shop.product.service.MailService mailService;
 
     // Tạo link thanh toán VNPay
     @GetMapping("/vnpay/create-payment")
@@ -162,6 +164,11 @@ public class PaymentController {
                 if (order != null && !"PAID".equalsIgnoreCase(order.getOrderStatus())) {
                     order.setOrderStatus("PAID");
                     orderRepository.save(order);
+                    try {
+                        mailService.sendOrderFinalReceiptEmail(order);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                 }
                 model.addAttribute("status", "SUCCESS");
                 model.addAttribute("message", "Thanh toán giao dịch thành công!");

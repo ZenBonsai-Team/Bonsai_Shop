@@ -23,9 +23,8 @@
         <header class="page-header">
             <div>
                 <h1>Sản phẩm của tôi</h1>
-                <p>Quản lý sản phẩm thuộc artisan đang đăng nhập.</p>
+                <p>Quản lý sản phẩm thuộc nghệ nhân đang đăng nhập.</p>
             </div>
-            <a class="btn" th:href="@{/artisan/products/new}">Tạo sản phẩm mới</a>
         </header>
 
         <div th:if="${success}" class="alert success" th:text="${success}"></div>
@@ -33,8 +32,11 @@
 
         <section class="portal-card">
             <div class="product-toolbar">
-                <input id="productSearch" placeholder="Tìm theo tên hoặc mã sản phẩm...">
-                <div class="filter-chips">
+                <div class="product-toolbar-top">
+                    <input id="productSearch" placeholder="Tìm theo tên hoặc mã sản phẩm...">
+                    <a class="btn" th:href="@{/artisan/products/new}">+ Tạo sản phẩm mới</a>
+                </div>
+                <div class="filter-chips product-filter-chips">
                     <button type="button" class="filter-chip active" data-status="ALL">Tất cả</button>
                     <button type="button" class="filter-chip" data-status="AVAILABLE">Đang bán</button>
                     <button type="button" class="filter-chip" data-status="DRAFT">Bản nháp</button>
@@ -84,8 +86,8 @@
                         <span th:if="${product.productStatus != 'AVAILABLE' && product.productStatus != 'DRAFT' && product.productStatus != 'HIDDEN' && product.productStatus != 'RESERVED' && product.productStatus != 'SOLD'}" class="badge bg-light text-dark px-2 py-1 rounded-pill small" th:text="${product.productStatus}"></span>
                     </td>
                     <td class="table-actions">
-                        <a th:if="${product.productStatus == 'DRAFT' || product.productStatus == 'HIDDEN'}" th:href="@{/artisan/products/{id}/edit(id=${product.productId})}">Sửa info</a>
-                        <a th:if="${product.productStatus == 'DRAFT' || product.productStatus == 'HIDDEN'}" th:href="@{/artisan/products/{id}/media(id=${product.productId})}">Sửa media</a>
+                        <a th:if="${product.productStatus == 'DRAFT' || product.productStatus == 'HIDDEN'}" th:href="@{/artisan/products/{id}/edit(id=${product.productId})}">Chỉnh sửa</a>
+                        <a th:if="${product.productStatus == 'DRAFT' || product.productStatus == 'HIDDEN'}" th:href="@{/artisan/products/{id}/media(id=${product.productId})}">Hình ảnh</a>
                         <a th:href="@{/artisan/products/{id}/journal(id=${product.productId})}">Nhật ký cây</a>
                         <a th:href="@{/artisan/products/{id}/preview(id=${product.productId})}">Xem trước</a>
                         <form th:if="${product.productStatus == 'DRAFT' || product.productStatus == 'HIDDEN'}" method="post" th:action="@{/artisan/products/{id}/publish(id=${product.productId})}">
@@ -111,7 +113,7 @@
                                 Xóa
                             </button>
                         </form>
-                        <span th:if="${product.productStatus != 'DRAFT' && product.productStatus != 'HIDDEN' && product.productStatus != 'AVAILABLE'}" class="muted-text">Đã khóa</span>
+                        <span th:if="${product.productStatus != 'DRAFT' && product.productStatus != 'HIDDEN' && product.productStatus != 'AVAILABLE'}" class="badge bg-secondary-subtle text-secondary px-2 py-1 rounded-pill"><i class="fa-solid fa-lock me-1"></i>Đã khóa</span>
                     </td>
                 </tr>
                 </tbody>
@@ -123,7 +125,7 @@
 <div id="artisanPublishModal" class="artisan-action-modal-backdrop hidden">
     <div class="artisan-action-modal" role="dialog" aria-modal="true" aria-labelledby="artisanPublishModalTitle">
         <header>
-            <h2 id="artisanPublishModalTitle">Xác nhận publish sản phẩm</h2>
+            <h2 id="artisanPublishModalTitle">Xác nhận đăng bán sản phẩm</h2>
             <button type="button" class="artisan-action-modal-close" aria-label="Đóng">×</button>
         </header>
         <div class="artisan-action-modal-body">
@@ -133,8 +135,8 @@
             <div class="artisan-action-warning">
                 <i class="fa-solid fa-triangle-exclamation"></i>
                 <div>
-                    <strong>Kiểm tra trước khi publish</strong>
-                    <p>Sản phẩm cần đủ thông tin bắt buộc, giá và media. Nếu thiếu, hệ thống sẽ không cho publish.</p>
+                    <strong>Kiểm tra trước khi đăng bán</strong>
+                    <p>Sản phẩm cần đủ thông tin bắt buộc, giá và hình ảnh. Nếu thiếu, hệ thống sẽ không cho đăng bán.</p>
                 </div>
             </div>
         </div>
@@ -158,8 +160,8 @@
             <div class="artisan-action-warning">
                 <i class="fa-solid fa-eye-slash"></i>
                 <div>
-                    <strong>Ẩn khỏi marketplace</strong>
-                    <p>Sản phẩm sẽ không còn hiển thị với khách hàng, nhưng artisan vẫn có thể chỉnh sửa và publish lại sau.</p>
+                    <strong>Ẩn khỏi cửa hàng công khai</strong>
+                    <p>Sản phẩm sẽ không còn hiển thị với khách hàng, nhưng nghệ nhân vẫn có thể chỉnh sửa và đăng bán lại sau.</p>
                 </div>
             </div>
         </div>
