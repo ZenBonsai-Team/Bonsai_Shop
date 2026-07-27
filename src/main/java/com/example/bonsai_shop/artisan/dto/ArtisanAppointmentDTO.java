@@ -16,9 +16,6 @@ public class ArtisanAppointmentDTO {
     private String status;
     private String note;
 
-    private String productCode;
-    private String productName;
-
     private String customerName;
     private String customerPhone;
     private String customerEmail;

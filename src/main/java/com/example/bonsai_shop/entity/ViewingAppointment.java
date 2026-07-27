@@ -18,10 +18,6 @@ public class ViewingAppointment {
     @JoinColumn(name = "CustomerID", nullable = false)
     private User customer;
 
-    @ManyToOne
-    @JoinColumn(name = "ProductID", nullable = false)
-    private Product product;
-
     @Column(name = "AppointmentDate", nullable = false)
     private LocalDateTime appointmentDate;
 

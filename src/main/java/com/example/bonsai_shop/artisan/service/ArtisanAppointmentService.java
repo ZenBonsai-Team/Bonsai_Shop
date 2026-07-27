@@ -19,12 +19,12 @@ public class ArtisanAppointmentService {
     private final NotificationService notificationService;
 
     public List<ArtisanAppointmentDTO> findAllAppointmentsByArtisan(User artisan) {
-        return viewingAppointmentRepository.findAllAppointmentsByArtisan(artisan);
+        return viewingAppointmentRepository.findAllAppointmentsByArtisan();
     }
 
     public void updateAppointmentStatus(Integer appointmentId, String status, String message, User artisan) {
         ViewingAppointment appointment =
-                viewingAppointmentRepository.findByAppointmentIdAndArtisan(appointmentId, artisan)
+                viewingAppointmentRepository.findById(appointmentId)
                         .orElseThrow(() -> new RuntimeException("Không có lịch."));
 
         String currentStatus = appointment.getStatus();
@@ -47,7 +47,7 @@ public class ArtisanAppointmentService {
 
     public void checkAppointment(Integer appointmentId, User artisan) {
         ViewingAppointment appointment =
-                viewingAppointmentRepository.findByAppointmentIdAndArtisan(appointmentId, artisan)
+                viewingAppointmentRepository.findById(appointmentId)
                         .orElseThrow(() -> new RuntimeException("Không có lịch."));
 
         if (!"APPROVED".equalsIgnoreCase(appointment.getStatus())) {
@@ -66,7 +66,7 @@ public class ArtisanAppointmentService {
 
     public void markAppointmentOverdue(Integer appointmentId, User artisan) {
         ViewingAppointment appointment =
-                viewingAppointmentRepository.findByAppointmentIdAndArtisan(appointmentId, artisan)
+                viewingAppointmentRepository.findById(appointmentId)
                         .orElseThrow(() -> new RuntimeException("Không có lịch."));
 
         if (!"PENDING".equalsIgnoreCase(appointment.getStatus())) {

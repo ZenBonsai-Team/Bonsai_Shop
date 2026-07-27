@@ -1,17 +1,18 @@
 package com.example.bonsai_shop.customer.controller;
 
-
 import com.example.bonsai_shop.customer.dto.AppointmentDetailDTO;
 import com.example.bonsai_shop.customer.service.UserService;
 import com.example.bonsai_shop.customer.service.ViewingAppointmentService;
-import com.example.bonsai_shop.entity.Product;
 import com.example.bonsai_shop.entity.User;
 import com.example.bonsai_shop.entity.ViewingAppointment;
-import com.example.bonsai_shop.product.repository.ProductRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
-import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.security.Principal;
@@ -25,101 +26,76 @@ import java.util.List;
 public class ViewingAppointmentController {
 
     private final UserService userService;
-    private final ProductRepository productRepository;
     private final ViewingAppointmentService viewingAppointmentService;
 
     @PostMapping("/appointments/create")
     public String createAppointment(
-            @RequestParam Integer productId,
             @RequestParam LocalDate appointmentDate,
             @RequestParam String appointmentTime,
             @RequestParam(required = false) String note,
             Principal principal,
-            RedirectAttributes redirectAttributes){
-        // Lấy khách hàng
+            RedirectAttributes redirectAttributes) {
         User user = userService.findByEmail(principal.getName());
 
         if (user != null && user.getRole() != null) {
             String roleName = user.getRole().getRoleName();
-            if ("ROLE_OWNER".equals(roleName) || "ROLE_ARTISAN".equals(roleName) 
+            if ("ROLE_OWNER".equals(roleName) || "ROLE_ARTISAN".equals(roleName)
                     || "ROLE_MODERATOR".equals(roleName) || "ROLE_CONTENT_MODERATOR".equals(roleName)
                     || "ROLE_ADMIN".equals(roleName) || "ROLE_SELLER".equals(roleName)) {
-                redirectAttributes.addFlashAttribute("error", "Tài khoản quản trị / nhà vườn / kiểm duyệt viên không được phép đặt lịch hẹn xem cây!");
-                return "redirect:/bonsai_luxury_detail/" + productId;
+                redirectAttributes.addFlashAttribute("error", "Tài khoản quản trị / nhà vườn / kiểm duyệt viên không được phép đặt lịch thăm vườn!");
+                return "redirect:/appointments";
             }
         }
 
-        // Lấy sản phẩm
-        Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm!"));
-
-        // Tạo ngày giờ hẹn
         LocalDateTime finalAppointmentDate = LocalDateTime.of(
                 appointmentDate,
                 LocalTime.parse(appointmentTime)
         );
 
-        // Tạo lịch hẹn
         ViewingAppointment appointment = new ViewingAppointment();
         appointment.setCustomer(user);
-        appointment.setProduct(product);
         appointment.setAppointmentDate(finalAppointmentDate);
         appointment.setNote(note);
         appointment.setStatus("PENDING");
 
         try {
-
             viewingAppointmentService.createViewingAppointment(appointment);
-
             redirectAttributes.addFlashAttribute(
                     "success",
-                    "🎉 Đặt lịch xem thành công! Chúng tôi sẽ sớm liên hệ với bạn."
+                    "Đặt lịch thăm vườn thành công! Chúng tôi sẽ sớm liên hệ với bạn."
             );
-
         } catch (RuntimeException e) {
-
-            redirectAttributes.addFlashAttribute(
-                    "error",
-                    e.getMessage()
-            );
-
-            // Lưu lại dữ liệu nếu muốn hiển thị lại form
-            redirectAttributes.addFlashAttribute("productId", productId);
-            redirectAttributes.addFlashAttribute("productTitle", product.getProductName());
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
             redirectAttributes.addFlashAttribute("appointmentDate", appointmentDate);
             redirectAttributes.addFlashAttribute("appointmentTime", appointmentTime);
             redirectAttributes.addFlashAttribute("note", note);
         }
 
-        return "redirect:/bonsai_luxury_detail/" + productId;
+        return "redirect:/appointments";
     }
 
     @GetMapping("/appointments")
-    public String myAppointment(Model model,
-                                Principal principal){
-    User user = userService.findByEmail(principal.getName());
-    List <ViewingAppointment> viewingAppointments = viewingAppointmentService.findByCustomer(user);
-    model.addAttribute("viewingAppointments", viewingAppointments);
-    return "customer/view-appointment";
+    public String myAppointment(Model model, Principal principal) {
+        User user = userService.findByEmail(principal.getName());
+        List<ViewingAppointment> viewingAppointments = viewingAppointmentService.findByCustomer(user);
+        model.addAttribute("viewingAppointments", viewingAppointments);
+        return "customer/view-appointment";
     }
 
     @GetMapping("/appointments/detail/{id}")
     @ResponseBody
-    public AppointmentDetailDTO viewingAppointmentDetail(@PathVariable Integer id,
-                                                         Principal principal){
+    public AppointmentDetailDTO viewingAppointmentDetail(@PathVariable Integer id, Principal principal) {
         User user = userService.findByEmail(principal.getName());
-       return  viewingAppointmentService.findByIdAndCustomer(id, user);
-
+        return viewingAppointmentService.findByIdAndCustomer(id, user);
     }
 
     @PostMapping("/appointments/update/{id}")
-        public String updateAppointment(@PathVariable Integer id,
-                                        @RequestParam LocalDate appointmentDate,
-                                        @RequestParam String appointmentTime,
-                                        @RequestParam(required = false) String note,
-                                        RedirectAttributes redirectAttributes,
-                                        Principal principal){
-
+    public String updateAppointment(@PathVariable Integer id,
+                                    @RequestParam LocalDate appointmentDate,
+                                    @RequestParam String appointmentTime,
+                                    @RequestParam(required = false) String note,
+                                    RedirectAttributes redirectAttributes,
+                                    Principal principal) {
         User user = userService.findByEmail(principal.getName());
 
         LocalDateTime finalAppointmentDate = LocalDateTime.of(
@@ -133,32 +109,24 @@ public class ViewingAppointmentController {
                     finalAppointmentDate,
                     note
             );
-            redirectAttributes.addFlashAttribute("success",
-                    "Cập nhật lịch hẹn thành công.");
-        }catch(RuntimeException e){
-            redirectAttributes.addFlashAttribute("error",
-                    e.getMessage());
+            redirectAttributes.addFlashAttribute("success", "Cập nhật lịch hẹn thành công.");
+        } catch (RuntimeException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
         return "redirect:/appointments";
     }
-   @PostMapping("/appointments/cancel/{id}")
+
+    @PostMapping("/appointments/cancel/{id}")
     public String cancelAppointment(@PathVariable Integer id,
                                     Principal principal,
-                                    RedirectAttributes redirectAttributes){
+                                    RedirectAttributes redirectAttributes) {
         User user = userService.findByEmail(principal.getName());
-        try{
+        try {
             viewingAppointmentService.cancelViewAppointment(id, user);
-
-            redirectAttributes.addFlashAttribute(
-                    "success",
-                    "Đã hủy lịch hẹn thành công."
-            );
-        }catch(RuntimeException e){
-            redirectAttributes.addFlashAttribute(
-                    "error",
-                    e.getMessage()
-            );
+            redirectAttributes.addFlashAttribute("success", "Đã hủy lịch hẹn thành công.");
+        } catch (RuntimeException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
         return "redirect:/appointments";
-   }
+    }
 }

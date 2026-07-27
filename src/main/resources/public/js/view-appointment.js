@@ -131,8 +131,8 @@ document.addEventListener("DOMContentLoaded", () => {
                     const data = await response.json();
                     const dateTime = formatDateTime(data.appointmentDate);
 
-                    $("#detailName").textContent = data.productName || "Bonsai Luxury";
-                    $("#detailCode").textContent = data.productCode || "BL-COLLECTOR";
+                    $("#detailName").textContent = "Lịch thăm vườn Bonsai Luxury";
+                    $("#detailCode").textContent = `APT-${data.appointmentId || id}`;
                     $("#detailDate").textContent = dateTime.date;
                     $("#detailTime").textContent = dateTime.time || data.appointmentTime || "";
                     $("#detailStatus").textContent = data.status || "PENDING";
@@ -182,8 +182,8 @@ document.addEventListener("DOMContentLoaded", () => {
                     const data = await response.json();
                     const dateTime = formatDateTime(data.appointmentDate);
 
-                    $("#updateName").textContent = data.productName || "Bonsai Luxury";
-                    $("#updateCode").textContent = data.productCode || "BL-COLLECTOR";
+                    $("#updateName").textContent = "Lịch thăm vườn Bonsai Luxury";
+                    $("#updateCode").textContent = `APT-${data.appointmentId || id}`;
                     $("#updateNote").value = data.note || "";
                     form.setAttribute("action", `/appointments/update/${id}`);
 
@@ -228,7 +228,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const initCancelModal = () => {
         const modal = $("#cancelAppointmentModal");
         const form = $("#cancelAppointmentForm");
-        const productName = $("#cancelProductName");
         if (!modal || !form) return { close: () => {} };
 
         const close = () => closeModal(modal);
@@ -245,7 +244,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 const id = button.dataset.id;
                 if (!id) return;
 
-                productName.textContent = button.dataset.product || "Tác phẩm Bonsai Luxury";
                 form.setAttribute("action", `/appointments/cancel/${id}`);
                 openModal(modal);
             });

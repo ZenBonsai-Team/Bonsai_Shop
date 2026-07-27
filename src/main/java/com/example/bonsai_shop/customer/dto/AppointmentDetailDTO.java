@@ -13,10 +13,6 @@ public class AppointmentDetailDTO {
 
     private Integer appointmentId;
 
-    private String productName;
-
-    private String productCode;
-
     private LocalDateTime appointmentDate;
 
     private String status;

@@ -69,13 +69,13 @@
                         <span class="appointment-status-tag"
                               th:text="${appointment.status}"
                               th:data-status="${appointment.status}">PENDING</span>
-                        <span class="product-code-tag" th:text="${appointment.product != null ? appointment.product.productCode : 'BL-COLLECTOR'}">BL-COLLECTOR</span>
+                        <span class="product-code-tag">GARDEN-VISIT</span>
                     </div>
 
                     <div class="appointment-main">
                         <div>
                             <p class="card-eyebrow">Private appointment</p>
-                            <h3 th:text="${appointment.product != null ? appointment.product.productName : 'Tác phẩm Bonsai Luxury'}">Bonsai Luxury</h3>
+                            <h3>Lịch thăm vườn Bonsai Luxury</h3>
                         </div>
                         <div class="appointment-date-block">
                             <span th:text="${#temporals.format(appointment.appointmentDate,'dd')}">12</span>
@@ -111,8 +111,7 @@
                         <button class="btn-apt-luxury type-cancel trigger-cancel-modal"
                                 type="button"
                                 th:if="${appointment.status == 'PENDING'}"
-                                th:data-id="${appointment.appointmentId}"
-                                th:data-product="${appointment.product != null ? appointment.product.productName : 'Tác phẩm Bonsai Luxury'}">
+                                th:data-id="${appointment.appointmentId}">
                             Hủy lịch
                         </button>
                         <button class="btn-apt-luxury type-locked"
@@ -146,8 +145,8 @@
             <h2 id="detailModalTitle">Chi tiết lịch hẹn</h2>
         </div>
         <div class="modal-body-details">
-            <div><strong>Tên Bonsai</strong><span id="detailName"></span></div>
-            <div><strong>Mã cây</strong><span id="detailCode"></span></div>
+            <div><strong>Loại lịch</strong><span id="detailName"></span></div>
+            <div><strong>Mã lịch</strong><span id="detailCode"></span></div>
             <div><strong>Ngày</strong><span id="detailDate"></span></div>
             <div><strong>Giờ</strong><span id="detailTime"></span></div>
             <div><strong>Trạng thái</strong><span id="detailStatus"></span></div>
@@ -174,8 +173,8 @@
             <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
 
             <div class="modal-info-static">
-                <div><strong>Tên Bonsai</strong><span id="updateName"></span></div>
-                <div><strong>Mã cây</strong><span id="updateCode"></span></div>
+                <div><strong>Loại lịch</strong><span id="updateName"></span></div>
+                <div><strong>Mã lịch</strong><span id="updateCode"></span></div>
             </div>
 
             <div class="form-grid">
@@ -235,7 +234,7 @@
             <span>Cancel appointment</span>
             <h2 id="cancelModalTitle">Xác nhận hủy lịch hẹn</h2>
         </div>
-        <p class="cancel-message">Bạn có chắc chắn muốn hủy lịch xem tác phẩm <strong id="cancelProductName">...</strong> tại Bonsai Luxury?</p>
+        <p class="cancel-message">Bạn có chắc chắn muốn hủy lịch thăm vườn tại Bonsai Luxury?</p>
 
         <form id="cancelAppointmentForm" method="post">
             <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">

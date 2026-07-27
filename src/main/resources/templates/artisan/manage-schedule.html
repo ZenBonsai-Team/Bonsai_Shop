@@ -140,7 +140,7 @@
                      th:data-note="${appointment.note}"
                      th:data-appointment-at="${#temporals.format(appointment.appointmentDate,'yyyy-MM-dd''T''HH:mm')}"
                      th:data-client="${appointment.customerName}"
-                     th:data-bonsai="${appointment.productCode + ' - ' + appointment.productName}"
+                     data-bonsai="Lịch thăm vườn"
                      th:data-date="${#temporals.format(appointment.appointmentDate,'dd/MM/yyyy')}"
                      th:data-time="${#temporals.format(appointment.appointmentDate,'HH:mm')}"
                      th:data-status="${appointment.status}">
@@ -183,7 +183,7 @@
                     <span id="infoEmail">-</span>
                 </div>
                 <div class="sch-info-row sch-info-full">
-                    <label>Bonsai</label>
+                    <label>Nội dung</label>
                     <span id="infoBonsai">-</span>
                 </div>
                 <div class="sch-info-row sch-info-full">
