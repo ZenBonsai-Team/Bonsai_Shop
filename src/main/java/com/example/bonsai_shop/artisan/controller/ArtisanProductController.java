@@ -5,8 +5,10 @@ import com.example.bonsai_shop.entity.Product;
 import com.example.bonsai_shop.entity.ProductMedia;
 import com.example.bonsai_shop.entity.Variety;
 import com.example.bonsai_shop.artisan.service.ArtisanProductService;
+import com.example.bonsai_shop.artisan.service.ProductJournalService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
@@ -21,6 +23,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Controller
@@ -29,6 +32,7 @@ import java.util.List;
 public class ArtisanProductController {
 
     private final ArtisanProductService artisanProductService;
+    private final ProductJournalService productJournalService;
 
     @GetMapping
     public String myProducts(@AuthenticationPrincipal UserDetails userDetails, Model model) {
@@ -194,6 +198,50 @@ public class ArtisanProductController {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
         return "redirect:/artisan/products/" + productId + "/media";
+    }
+
+    @GetMapping("/{productId}/journal")
+    public String journal(@AuthenticationPrincipal UserDetails userDetails,
+                          @PathVariable Integer productId,
+                          Model model) {
+        Product product = artisanProductService.getMyProduct(userDetails.getUsername(), productId);
+        model.addAttribute("product", product);
+        model.addAttribute("journalEvents", productJournalService.getMyProductEvents(userDetails.getUsername(), productId));
+        model.addAttribute("today", LocalDate.now());
+        return "artisan/product-journal";
+    }
+
+    @PostMapping("/{productId}/journal")
+    public String addJournalEvent(@AuthenticationPrincipal UserDetails userDetails,
+                                  @PathVariable Integer productId,
+                                  @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate eventDate,
+                                  @RequestParam(required = false) String eventType,
+                                  @RequestParam String title,
+                                  @RequestParam(required = false) String description,
+                                  @RequestParam(defaultValue = "false") Boolean isPublic,
+                                  @RequestParam(required = false) List<MultipartFile> files,
+                                  RedirectAttributes redirectAttributes) {
+        try {
+            productJournalService.addEvent(userDetails.getUsername(), productId, eventDate, eventType, title, description, isPublic, files);
+            redirectAttributes.addFlashAttribute("success", "Đã thêm cập nhật trạng thái cây.");
+        } catch (RuntimeException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/artisan/products/" + productId + "/journal";
+    }
+
+    @PostMapping("/{productId}/journal/{eventId}/delete")
+    public String deleteJournalEvent(@AuthenticationPrincipal UserDetails userDetails,
+                                     @PathVariable Integer productId,
+                                     @PathVariable Integer eventId,
+                                     RedirectAttributes redirectAttributes) {
+        try {
+            productJournalService.deleteEvent(userDetails.getUsername(), productId, eventId);
+            redirectAttributes.addFlashAttribute("success", "Đã xóa cập nhật cây.");
+        } catch (RuntimeException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/artisan/products/" + productId + "/journal";
     }
 
     @GetMapping("/{productId}/preview")

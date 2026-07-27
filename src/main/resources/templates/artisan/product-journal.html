@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nhật ký cây</title>
+    <link rel="icon" type="image/png" th:href="@{/images/logo.png}">
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+    <link rel="stylesheet" th:href="@{/css/artisan.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        .journal-layout { display: grid; grid-template-columns: 380px 1fr; gap: 24px; align-items: start; }
+        .journal-form-grid { display: grid; gap: 14px; }
+        .journal-form-grid label { display: grid; gap: 6px; font-weight: 600; color: #24352b; }
+        .journal-form-grid input, .journal-form-grid select, .journal-form-grid textarea { border: 1px solid #d7dfd8; border-radius: 12px; padding: 11px 12px; }
+        .journal-form-grid textarea { min-height: 120px; resize: vertical; }
+        .journal-timeline { display: grid; gap: 16px; }
+        .journal-event { display: grid; grid-template-columns: 160px 1fr; gap: 18px; padding: 16px; border: 1px solid #e2e7e2; border-radius: 18px; background: #fff; }
+        .journal-cover { width: 160px; height: 130px; border-radius: 14px; object-fit: cover; background: #edf2ee; }
+        .journal-placeholder { display: grid; place-items: center; color: #67806d; font-size: 34px; }
+        .journal-meta { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }
+        .journal-date { font-weight: 800; color: #17251c; }
+        .journal-type { border-radius: 999px; background: #eaf4eb; color: #2f6b3f; padding: 4px 10px; font-size: 12px; font-weight: 700; }
+        .journal-private { background: #fff3cd; color: #8a6200; }
+        .journal-gallery { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+        .journal-gallery img, .journal-gallery video { width: 82px; height: 68px; object-fit: cover; border-radius: 10px; border: 1px solid #e2e7e2; }
+        @media (max-width: 992px) { .journal-layout { grid-template-columns: 1fr; } .journal-event { grid-template-columns: 1fr; } .journal-cover { width: 100%; height: 220px; } }
+    </style>
+</head>
+<body>
+<div class="dashboard-layout">
+    <div th:replace="~{fragments/sidebar :: sidebar('artisan-products')}"></div>
+    <main class="dashboard-main">
+        <div th:replace="~{fragments/artisan-topbar :: topbar('Nhật ký cây')}"></div>
+        <header class="page-header">
+            <div>
+                <h1>Nhật ký cây</h1>
+                <p th:text="${product.productName}">Product</p>
+            </div>
+            <div class="actions">
+                <a class="btn secondary" th:href="@{/artisan/products}">Back to My Products</a>
+                <a class="btn" th:href="@{/artisan/products/{id}/preview(id=${product.productId})}">Preview</a>
+            </div>
+        </header>
+
+        <div th:if="${success}" class="alert success" th:text="${success}"></div>
+        <div th:if="${error}" class="alert error" th:text="${error}"></div>
+
+        <div class="journal-layout">
+            <section class="form-card">
+                <h2>Thêm cập nhật mới</h2>
+                <form class="journal-form-grid" method="post" enctype="multipart/form-data"
+                      th:action="@{/artisan/products/{id}/journal(id=${product.productId})}">
+                    <label>Ngày cập nhật
+                        <input type="date" name="eventDate" th:value="${today}" required>
+                    </label>
+                    <label>Loại cập nhật
+                        <select name="eventType">
+                            <option value="PHOTO_UPDATE">Cập nhật ảnh</option>
+                            <option value="GROWTH">Phát triển</option>
+                            <option value="PRUNING">Cắt tỉa</option>
+                            <option value="WIRING">Uốn/kẽm</option>
+                            <option value="REPOTTING">Thay chậu</option>
+                            <option value="FERTILIZING">Bón phân</option>
+                            <option value="WATERING">Tưới nước</option>
+                            <option value="PEST_TREATMENT">Xử lý sâu bệnh</option>
+                            <option value="HEALTH_CHECK">Kiểm tra sức khỏe</option>
+                            <option value="ACQUISITION">Nhập cây</option>
+                        </select>
+                    </label>
+                    <label>Tiêu đề
+                        <input name="title" maxlength="255" placeholder="VD: Cập nhật tán lá tuần này" required>
+                    </label>
+                    <label>Mô tả
+                        <textarea name="description" placeholder="Ghi chú thay đổi, thao tác chăm sóc, tình trạng cây..."></textarea>
+                    </label>
+                    <label>Ảnh/video trạng thái
+                        <input type="file" name="files" accept="image/*,video/mp4,video/webm" multiple>
+                    </label>
+                    <label class="checkbox">
+                        <input type="checkbox" name="isPublic" value="true" checked>
+                        Hiển thị cho khách trên trang sản phẩm
+                    </label>
+                    <button type="submit">Lưu cập nhật</button>
+                </form>
+            </section>
+
+            <section class="journal-timeline">
+                <article class="journal-event" th:if="${journalEvents == null or #lists.isEmpty(journalEvents)}">
+                    <div class="journal-cover journal-placeholder"><i class="fa-solid fa-seedling"></i></div>
+                    <div>
+                        <div class="journal-meta"><span class="journal-date">Chưa có cập nhật</span></div>
+                        <p class="muted-text">Thêm ảnh và ghi chú đầu tiên để tạo hồ sơ phát triển cho cây.</p>
+                    </div>
+                </article>
+
+                <article class="journal-event" th:each="event : ${journalEvents}">
+                    <img class="journal-cover" th:if="${event.firstMedia != null && event.firstMedia.mediaType == 'IMAGE'}" th:src="${event.firstMedia.mediaUrl}" alt="">
+                    <video class="journal-cover" th:if="${event.firstMedia != null && event.firstMedia.mediaType == 'VIDEO'}" th:src="${event.firstMedia.mediaUrl}" controls></video>
+                    <div class="journal-cover journal-placeholder" th:if="${event.firstMedia == null}"><i class="fa-solid fa-leaf"></i></div>
+                    <div>
+                        <div class="journal-meta">
+                            <span class="journal-date" th:text="${#temporals.format(event.eventDate, 'dd/MM/yyyy')}">26/07/2026</span>
+                            <span class="journal-type" th:text="${event.eventType}">PHOTO_UPDATE</span>
+                            <span class="journal-type journal-private" th:if="${!event.isPublic}">Riêng tư</span>
+                        </div>
+                        <h3 th:text="${event.title}">Tiêu đề</h3>
+                        <p th:if="${event.description != null && !event.description.isBlank()}" th:text="${event.description}">Mô tả</p>
+                        <div class="journal-gallery" th:if="${event.mediaList != null && !#lists.isEmpty(event.mediaList)}">
+                            <th:block th:each="media : ${event.mediaList}">
+                                <img th:if="${media.mediaType == 'IMAGE'}" th:src="${media.mediaUrl}" alt="">
+                                <video th:if="${media.mediaType == 'VIDEO'}" th:src="${media.mediaUrl}" controls></video>
+                            </th:block>
+                        </div>
+                        <form method="post" th:action="@{/artisan/products/{productId}/journal/{eventId}/delete(productId=${product.productId},eventId=${event.eventId})}">
+                            <button type="submit" class="text-danger">Xóa cập nhật</button>
+                        </form>
+                    </div>
+                </article>
+            </section>
+        </div>
+    </main>
+</div>
+</body>
+</html>
