@@ -258,6 +258,23 @@ public class ArtisanProductController {
         return "redirect:/artisan/products/" + productId + "/journal";
     }
 
+    @PostMapping("/{productId}/journal/{eventId}/visibility")
+    public String updateJournalEventVisibility(@AuthenticationPrincipal UserDetails userDetails,
+                                               @PathVariable Integer productId,
+                                               @PathVariable Integer eventId,
+                                               @RequestParam(defaultValue = "false") Boolean isPublic,
+                                               RedirectAttributes redirectAttributes) {
+        try {
+            productJournalService.updateEventVisibility(userDetails.getUsername(), productId, eventId, isPublic);
+            redirectAttributes.addFlashAttribute("success", Boolean.TRUE.equals(isPublic)
+                    ? "Đã hiển thị nhật ký cho khách."
+                    : "Đã ẩn nhật ký khỏi trang khách.");
+        } catch (RuntimeException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/artisan/products/" + productId + "/journal";
+    }
+
     @PostMapping("/{productId}/journal/{eventId}/media")
     public String addJournalEventMedia(@AuthenticationPrincipal UserDetails userDetails,
                                        @PathVariable Integer productId,

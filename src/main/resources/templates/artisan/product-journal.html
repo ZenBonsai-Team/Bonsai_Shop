@@ -37,7 +37,7 @@
         .journal-timeline::-webkit-scrollbar { width: 8px; }
         .journal-timeline::-webkit-scrollbar-thumb { background: #cfd8d1; border-radius: 999px; }
         .journal-event { display: grid; grid-template-columns: 104px minmax(0, 1fr) auto; gap: 14px; align-items: center; min-height: 104px; padding: 10px 14px 10px 10px; border: 1px solid #e2e7e2; border-radius: 10px; background: #fff; box-shadow: none; }
-        .journal-cover-link { display: block; width: 104px; height: 84px; border-radius: 4px; overflow: hidden; background: #edf2ee; cursor: zoom-in; }
+        .journal-cover-link { display: block; width: 104px; height: 84px; border: 0; padding: 0; border-radius: 4px; overflow: hidden; background: #edf2ee; cursor: zoom-in; }
         .journal-cover { width: 100%; height: 100%; border-radius: 0; object-fit: cover; background: #edf2ee; display: block; }
         .journal-event h3 { margin: 0 0 5px; color: #183322; font-size: 15px; line-height: 1.25; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .journal-event p { margin: 0; color: #29372f; line-height: 1.4; font-size: 13px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
@@ -47,6 +47,9 @@
         .journal-add-media { display: flex; align-items: center; gap: 8px; min-width: 0; }
         .journal-add-media input[type="file"] { width: 150px; max-width: 42vw; border: 1px solid #dfe6df; border-radius: 8px; padding: 5px; font-size: 12px; }
         .journal-add-media button { color: #246b49; white-space: nowrap; }
+        .journal-visibility button { color: #536257; white-space: nowrap; }
+        .journal-visibility button.is-public { color: #8a6200; }
+        .journal-visibility button.is-private { color: #246b49; }
         .journal-edit-toggle summary { cursor: pointer; color: #246b49; font-weight: 800; list-style: none; }
         .journal-edit-toggle summary::-webkit-details-marker { display: none; }
         .journal-edit-form { display: grid; gap: 8px; grid-column: 1 / -1; width: 100%; margin-top: 4px; padding: 10px; border: 1px solid #e2e7e2; border-radius: 10px; background: #f8fbf8; }
@@ -62,11 +65,11 @@
         .journal-card-tags { display: grid; gap: 8px; justify-items: end; }
         .journal-gallery { display: none; }
         .journal-modal { display: none; position: fixed; inset: 0; z-index: 2000; background: rgba(15, 23, 18, 0.58); padding: 28px; overflow-y: auto; }
-        .journal-modal:target { display: block; }
+        .journal-modal.is-open { display: block; }
         .journal-modal-card { width: min(920px, 100%); margin: 0 auto; background: #fff; border-radius: 4px; padding: 16px; box-shadow: 0 24px 80px rgba(0,0,0,0.24); }
         .journal-modal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
         .journal-modal-head strong { font-size: 19px; color: #0f1d15; }
-        .journal-modal-close { color: #0f1d15; text-decoration: none; font-size: 24px; line-height: 1; }
+        .journal-modal-close { border: 0; background: transparent; color: #0f1d15; text-decoration: none; font-size: 24px; line-height: 1; padding: 2px 6px; }
         .journal-modal-stage { position: relative; min-height: 520px; border-radius: 4px; background: #000; display: grid; place-items: center; overflow: hidden; }
         .journal-slide { display: none; width: 100%; height: 100%; place-items: center; }
         .journal-slide.active { display: grid; }
@@ -160,10 +163,10 @@
                 </article>
 
                 <article class="journal-event" th:each="event : ${journalEvents}">
-                    <a class="journal-cover-link" th:if="${event.firstMedia != null}" th:href="${'#journal-modal-' + event.eventId}">
+                    <button type="button" class="journal-cover-link" th:if="${event.firstMedia != null}" th:attr="data-open-journal-modal=${event.eventId}">
                         <img class="journal-cover" th:if="${event.firstMedia.mediaType == 'IMAGE'}" th:src="${event.firstMedia.mediaUrl}" alt="">
                         <video class="journal-cover" th:if="${event.firstMedia.mediaType == 'VIDEO'}" th:src="${event.firstMedia.mediaUrl}" muted></video>
-                    </a>
+                    </button>
                     <div class="journal-cover-link journal-placeholder" th:if="${event.firstMedia == null}"><i class="fa-solid fa-leaf"></i></div>
                     <div class="journal-card-body">
                         <div class="journal-meta">
@@ -199,6 +202,13 @@
                                     <button type="submit">Lưu chỉnh sửa</button>
                                 </form>
                             </details>
+                            <form class="journal-visibility" method="post"
+                                  th:action="@{/artisan/products/{productId}/journal/{eventId}/visibility(productId=${product.productId},eventId=${event.eventId})}">
+                                <input type="hidden" name="isPublic" th:value="${!event.isPublic}">
+                                <button type="submit"
+                                        th:classappend="${event.isPublic} ? ' is-public' : ' is-private'"
+                                        th:text="${event.isPublic} ? 'Ẩn với khách' : 'Hiển thị với khách'">Ẩn với khách</button>
+                            </form>
                             <form class="journal-add-media" method="post" enctype="multipart/form-data"
                                   th:action="@{/artisan/products/{productId}/journal/{eventId}/media(productId=${product.productId},eventId=${event.eventId})}">
                                 <input type="file" name="files" accept="image/*,video/mp4,video/webm" multiple required>
@@ -213,7 +223,7 @@
                         <div class="journal-modal-card">
                             <div class="journal-modal-head">
                                 <strong th:text="${#temporals.format(event.eventDate, 'dd/MM/yyyy')}">26/07/2026</strong>
-                                <a class="journal-modal-close" href="#">&times;</a>
+                                <button type="button" class="journal-modal-close" th:attr="data-close-journal-modal=${event.eventId}">&times;</button>
                             </div>
                             <div class="journal-modal-stage" th:attr="data-event-id=${event.eventId}">
                                 <div class="journal-slide"
@@ -292,9 +302,38 @@
     }
 
     document.addEventListener('click', function (event) {
+        const openButton = event.target.closest('[data-open-journal-modal]');
+        const closeButton = event.target.closest('[data-close-journal-modal]');
         const previousButton = event.target.closest('[data-gallery-prev]');
         const nextButton = event.target.closest('[data-gallery-next]');
         const thumbButton = event.target.closest('[data-gallery-thumb]');
+
+        if (openButton) {
+            const modal = document.getElementById('journal-modal-' + openButton.dataset.openJournalModal);
+            if (modal) {
+                modal.classList.add('is-open');
+                document.body.style.overflow = 'hidden';
+            }
+            return;
+        }
+
+        if (closeButton) {
+            const modal = document.getElementById('journal-modal-' + closeButton.dataset.closeJournalModal);
+            if (modal) {
+                modal.classList.remove('is-open');
+                modal.querySelectorAll('video').forEach(video => video.pause());
+                document.body.style.overflow = '';
+            }
+            return;
+        }
+
+        if (event.target.classList.contains('journal-modal')) {
+            event.target.classList.remove('is-open');
+            event.target.querySelectorAll('video').forEach(video => video.pause());
+            document.body.style.overflow = '';
+            return;
+        }
+
         if (!previousButton && !nextButton && !thumbButton) {
             return;
         }

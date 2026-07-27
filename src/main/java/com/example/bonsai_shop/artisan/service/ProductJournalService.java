@@ -114,6 +114,17 @@ public class ProductJournalService {
     }
 
     @Transactional
+    public void updateEventVisibility(String artisanEmail, Integer productId, Integer eventId, Boolean isPublic) {
+        Product product = artisanProductService.getMyProduct(artisanEmail, productId);
+        ProductJournalEvent event = journalEventRepository.findByEventIdAndProduct(eventId, product)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy cập nhật cây."));
+
+        event.setIsPublic(Boolean.TRUE.equals(isPublic));
+        event.setUpdatedAt(LocalDateTime.now());
+        journalEventRepository.save(event);
+    }
+
+    @Transactional
     public void addMediaToEvent(String artisanEmail, Integer productId, Integer eventId, List<MultipartFile> files) {
         Product product = artisanProductService.getMyProduct(artisanEmail, productId);
         ProductJournalEvent event = journalEventRepository.findByEventIdAndProduct(eventId, product)
@@ -127,6 +138,7 @@ public class ProductJournalService {
         event.setUpdatedAt(LocalDateTime.now());
         journalEventRepository.save(event);
     }
+
     private void addUploadedMedia(ProductJournalEvent event, List<MultipartFile> files) {
         if (files == null || files.isEmpty()) {
             return;
