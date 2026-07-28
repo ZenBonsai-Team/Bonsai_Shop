@@ -92,7 +92,7 @@
                     <td class="table-actions">
                         <a th:if="${product.productStatus == 'DRAFT' || (product.isVisible == false && product.productStatus != 'SOLD' && product.productStatus != 'RESERVED')}" th:href="@{/artisan/products/{id}/edit(id=${product.productId})}">Chỉnh sửa</a>
                         <a th:if="${product.productStatus == 'DRAFT' || (product.isVisible == false && product.productStatus != 'SOLD' && product.productStatus != 'RESERVED')}" th:href="@{/artisan/products/{id}/media(id=${product.productId})}">Hình ảnh</a>
-                        <a th:href="@{/artisan/products/{id}/journal(id=${product.productId})}">Nhật ký cây</a>
+                        <a th:if="${product.productStatus != 'SOLD'}" th:href="@{/artisan/products/{id}/journal(id=${product.productId})}">Nhật ký cây</a>
                         <a th:href="@{/artisan/products/{id}/preview(id=${product.productId})}">Xem trước</a>
                         <form th:if="${product.productStatus == 'DRAFT'}" method="post" th:action="@{/artisan/products/{id}/publish(id=${product.productId})}">
                             <button type="button"

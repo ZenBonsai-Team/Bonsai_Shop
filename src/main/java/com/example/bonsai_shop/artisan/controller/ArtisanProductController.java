@@ -202,8 +202,13 @@ public class ArtisanProductController {
     @GetMapping("/{productId}/journal")
     public String journal(@AuthenticationPrincipal UserDetails userDetails,
                           @PathVariable Integer productId,
-                          Model model) {
+                          Model model,
+                          RedirectAttributes redirectAttributes) {
         Product product = artisanProductService.getMyProduct(userDetails.getUsername(), productId);
+        if (artisanProductService.isSold(product)) {
+            redirectAttributes.addFlashAttribute("error", "Sản phẩm đã bán nên không hiển thị nhật ký cây.");
+            return "redirect:/artisan/products/" + productId + "/preview";
+        }
         model.addAttribute("product", product);
         model.addAttribute("journalEvents", productJournalService.getMyProductEvents(userDetails.getUsername(), productId));
         model.addAttribute("today", LocalDate.now());
