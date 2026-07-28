@@ -39,8 +39,11 @@ import com.example.bonsai_shop.customer.repository.RegisterOtpRepository;
 import com.example.bonsai_shop.customer.service.EmailService;
 import com.example.bonsai_shop.entity.PasswordResetOtp;
 
+import lombok.extern.slf4j.Slf4j;
+
 @RestController
 @RequestMapping("/api/orders")
+@Slf4j
 public class OrderApiController {
 
     @Autowired
@@ -67,6 +70,8 @@ public class OrderApiController {
     @PostMapping("/send-guest-otp")
     public ResponseEntity<Map<String, Object>> sendGuestOtp(@RequestBody Map<String, Object> payload) {
         Map<String, Object> response = new HashMap<>();
+
+        // [1] Validate email format
         String email = payload.get("email") != null ? payload.get("email").toString() : null;
         if (email == null || !email.matches("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$")) {
             response.put("success", false);
@@ -74,23 +79,93 @@ public class OrderApiController {
             return ResponseEntity.badRequest().body(response);
         }
 
+        // [2] Parse productIds an toàn — không tin dữ liệu từ client
+        List<Integer> productIds = new ArrayList<>();
         if (payload.containsKey("productIds") && payload.get("productIds") instanceof List<?>) {
             try {
-                List<?> list = (List<?>) payload.get("productIds");
-                List<Integer> productIds = list.stream().map(item -> Integer.valueOf(item.toString())).toList();
-                orderService.validateProductIdsLimit(productIds);
+                List<?> rawList = (List<?>) payload.get("productIds");
+                productIds = rawList.stream()
+                        .map(item -> Integer.valueOf(item.toString()))
+                        .collect(Collectors.toList());
+            } catch (NumberFormatException | ClassCastException e) {
+                log.warn("[sendGuestOtp] productIds format không hợp lệ từ client: {}", e.getMessage());
+                response.put("success", false);
+                response.put("message", "Định dạng danh sách sản phẩm không hợp lệ.");
+                return ResponseEntity.badRequest().body(response);
+            }
+        }
+
+        // [3] Pre-validate: load products từ DB + kiểm tra limit + kiểm tra availability
+        // Mục đích: Fail Fast — không gửi OTP khi biết chắc sản phẩm không còn khả dụng
+        if (!productIds.isEmpty()) {
+            List<Product> products = orderService.getProductsByIds(productIds);
+
+            try {
+                orderService.validateOrderLimit(products);
             } catch (IllegalArgumentException e) {
                 response.put("success", false);
                 response.put("message", e.getMessage());
                 return ResponseEntity.badRequest().body(response);
-            } catch (Exception ignored) {}
+            }
+
+            // UX Validation Layer — kiểm tra trạng thái sản phẩm
+            // LƯU Ý: đây KHÔNG phải data guard. reserveIfAvailable() trong createOrder() mới là lớp bảo vệ cuối cùng.
+            List<Product> unavailableProducts = orderService.validateProductAvailability(products);
+            if (!unavailableProducts.isEmpty()) {
+                List<String> unavailableNames = unavailableProducts.stream()
+                        .map(Product::getProductName)
+                        .collect(Collectors.toList());
+                List<Map<String, Object>> unavailableDetails = unavailableProducts.stream()
+                        .map(p -> {
+                            Map<String, Object> detail = new HashMap<>();
+                            detail.put("productId", p.getProductId());
+                            detail.put("productName", p.getProductName());
+                            detail.put("status", p.getProductStatus());
+                            return detail;
+                        })
+                        .collect(Collectors.toList());
+                response.put("success", false);
+                response.put("errorType", "PRODUCTS_UNAVAILABLE");
+                response.put("message", "Một số tác phẩm không còn khả dụng: " + String.join(", ", unavailableNames)
+                        + ". Vui lòng làm mới giỏ hàng và thử lại.");
+                response.put("unavailableProducts", unavailableDetails);
+                return ResponseEntity.badRequest().body(response);
+            }
         }
 
+        // [4] Rate limit — cooldown 60 giây (không cần Redis ở quy mô hiện tại)
+        PasswordResetOtp latestOtp = registerOtpRepository
+                .findTopByEmailOrderByCreatedAtDesc(email).orElse(null);
+        if (latestOtp != null && latestOtp.getCreatedAt().isAfter(LocalDateTime.now().minusSeconds(60))) {
+            long secondsElapsed = java.time.Duration
+                    .between(latestOtp.getCreatedAt(), LocalDateTime.now()).getSeconds();
+            long secondsRemaining = 60 - secondsElapsed;
+            response.put("success", false);
+            response.put("message", "Vui lòng đợi " + secondsRemaining + " giây trước khi gửi lại mã OTP.");
+            response.put("retryAfterSeconds", secondsRemaining);
+            return ResponseEntity.status(429).body(response);
+        }
+
+        // [5] Generate OTP code
+        String otpCode = String.format("%06d", new java.security.SecureRandom().nextInt(1000000));
+
+        // [6] Gửi email TRƯỚC — nếu fail thì không lưu DB (tránh OTP "ma")
+        try {
+            emailService.sendGuestOrderOtpOrThrow(email, otpCode);
+        } catch (Exception e) {
+            log.error("[sendGuestOtp] Không thể gửi OTP đến {}: {}", email, e.getMessage());
+            response.put("success", false);
+            response.put("message", "Không thể gửi mã xác nhận. Vui lòng thử lại sau.");
+            return ResponseEntity.internalServerError().body(response);
+        }
+
+        // [7] Lưu OTP vào DB SAU KHI email đã gửi thành công
         try {
             registerOtpRepository.deleteByEmail(email);
-        } catch (Exception ignored) {}
+        } catch (Exception e) {
+            log.warn("[sendGuestOtp] Không thể xóa OTP cũ cho {}: {}", email, e.getMessage());
+        }
 
-        String otpCode = String.format("%06d", new java.security.SecureRandom().nextInt(1000000));
         PasswordResetOtp otp = PasswordResetOtp.builder()
                 .email(email)
                 .otpCode(otpCode)
@@ -98,9 +173,7 @@ public class OrderApiController {
                 .isUsed(false)
                 .createdAt(LocalDateTime.now())
                 .build();
-
         registerOtpRepository.save(otp);
-        emailService.sendGuestOrderOtp(email, otpCode);
 
         response.put("success", true);
         response.put("message", "Mã OTP xác nhận đơn hàng đã được gửi tới Email: " + email);
@@ -350,6 +423,35 @@ public class OrderApiController {
             response.put("success", false);
             response.put("message", e.getMessage());
             return ResponseEntity.badRequest().body(response);
+        }
+
+        // [MỚI] Pre-validate trạng thái sản phẩm cho Logged-in User
+        // Guest: đã được validate trong /send-guest-otp trước khi gửi OTP
+        // LƯU Ý: đây là UX layer — không thay thế được reserveIfAvailable() trong createOrder()
+        if (customer != null) {
+            List<Product> productsToCheck = orderService.loadProductsForOrder(dto, customer);
+            List<Product> unavailableProducts = orderService.validateProductAvailability(productsToCheck);
+            if (!unavailableProducts.isEmpty()) {
+                List<String> unavailableNames = unavailableProducts.stream()
+                        .map(Product::getProductName)
+                        .collect(Collectors.toList());
+                List<Map<String, Object>> unavailableDetails = unavailableProducts.stream()
+                        .map(p -> {
+                            Map<String, Object> detail = new HashMap<>();
+                            detail.put("productId", p.getProductId());
+                            detail.put("productName", p.getProductName());
+                            detail.put("status", p.getProductStatus());
+                            return detail;
+                        })
+                        .collect(Collectors.toList());
+                response.put("success", false);
+                response.put("errorType", "PRODUCTS_UNAVAILABLE");
+                response.put("message", "Một số tác phẩm không còn khả dụng: "
+                        + String.join(", ", unavailableNames)
+                        + ". Vui lòng xóa khỏi giỏ hàng và chọn sản phẩm khác.");
+                response.put("unavailableProducts", unavailableDetails);
+                return ResponseEntity.badRequest().body(response);
+            }
         }
 
         // Xác thực mã OTP nếu là Khách vãng lai (Guest Checkout)

@@ -334,12 +334,19 @@ public class OrderService {
         return true;
     }
 
-    public void validateOrderLimit(PurchaseOrderRequestDTO dto, User customer) {
+    // =========================================================================
+    // VALIDATION & PRODUCT RESOLUTION — Refactored (Phương Án B)
+    // =========================================================================
+
+    /**
+     * [PRIVATE] Nguồn duy nhất để đọc danh sách Product cần mua — Single Source of Truth.
+     * Ưu tiên: productIds list > productId đơn > Cart của logged-in user.
+     * Luôn đọc từ DB, không tin dữ liệu từ client.
+     */
+    private List<Product> resolveProductsToBuy(PurchaseOrderRequestDTO dto, User customer) {
         List<Product> productsToBuy = new ArrayList<>();
         if (dto.getProductIds() != null && !dto.getProductIds().isEmpty()) {
-            for (Integer pId : dto.getProductIds()) {
-                productRepository.findById(pId).ifPresent(productsToBuy::add);
-            }
+            productsToBuy.addAll(productRepository.findAllById(dto.getProductIds()));
         } else if (dto.getProductId() != null) {
             productRepository.findById(dto.getProductId()).ifPresent(productsToBuy::add);
         } else if (customer != null) {
@@ -350,57 +357,94 @@ public class OrderService {
                 }
             }
         }
+        return productsToBuy;
+    }
 
-        BigDecimal totalAmount = productsToBuy.stream()
+    /**
+     * [PUBLIC] Kiểm tra tổng giá trị đơn hàng không vượt 200 triệu.
+     * Nhận List<Product> đã resolve — KHÔNG đọc DB thêm lần nào.
+     */
+    public void validateOrderLimit(List<Product> products) {
+        BigDecimal totalAmount = products.stream()
                 .map(Product::getPrice)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
-
         if (totalAmount.compareTo(MAX_ORDER_AMOUNT) > 0) {
-            throw new IllegalArgumentException("Tổng giá trị đơn hàng vượt quá giới hạn tối đa cho phép (tối đa 200.000.000 VNĐ)!");
+            throw new IllegalArgumentException(
+                    "Tổng giá trị đơn hàng vượt quá giới hạn tối đa cho phép (tối đa 200.000.000 VNĐ)!");
         }
     }
 
+    /**
+     * [PUBLIC] Overload cũ — resolve products rồi delegate xuống validateOrderLimit(List).
+     * Giữ nguyên signature để không phá vỡ các caller hiện tại (Controller).
+     */
+    public void validateOrderLimit(PurchaseOrderRequestDTO dto, User customer) {
+        validateOrderLimit(resolveProductsToBuy(dto, customer));
+    }
+
+    /**
+     * [PUBLIC] Kiểm tra danh sách product IDs theo giới hạn tiền.
+     * Giữ nguyên để tương thích ngược. Delegate xuống validateOrderLimit(List).
+     */
     public void validateProductIdsLimit(List<Integer> productIds) {
         if (productIds == null || productIds.isEmpty()) {
             return;
         }
-        List<Product> productsToBuy = new ArrayList<>();
-        for (Integer pId : productIds) {
-            productRepository.findById(pId).ifPresent(productsToBuy::add);
-        }
-        BigDecimal totalAmount = productsToBuy.stream()
-                .map(Product::getPrice)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-        if (totalAmount.compareTo(MAX_ORDER_AMOUNT) > 0) {
-            throw new IllegalArgumentException("Tổng giá trị đơn hàng vượt quá giới hạn tối đa cho phép (tối đa 200.000.000 VNĐ)!");
-        }
+        validateOrderLimit(productRepository.findAllById(productIds));
     }
+
+    /**
+     * [PUBLIC] Tải danh sách Product từ list IDs — đọc từ DB.
+     * Dùng khi chỉ có productIds (ví dụ: Guest OTP endpoint).
+     */
+    public List<Product> getProductsByIds(List<Integer> productIds) {
+        if (productIds == null || productIds.isEmpty()) {
+            return new ArrayList<>();
+        }
+        return productRepository.findAllById(productIds);
+    }
+
+    /**
+     * [PUBLIC] Tải danh sách Product cho một checkout request.
+     * Dùng cho pre-validation ở Controller trước khi tạo Order.
+     * Ủy quyền cho resolveProductsToBuy() — Single Source of Truth.
+     */
+    public List<Product> loadProductsForOrder(PurchaseOrderRequestDTO dto, User customer) {
+        return resolveProductsToBuy(dto, customer);
+    }
+
+    /**
+     * [PUBLIC] UX Validation Layer — kiểm tra trạng thái từng sản phẩm.
+     * Trả về danh sách Product KHÔNG khả dụng (không throw — để caller quyết định).
+     *
+     * QUAN TRỌNG: Đây CHỈ là UX layer — giảm thất bại chắc chắn.
+     * KHÔNG đảm bảo data integrity.
+     * reserveIfAvailable() bên trong createOrder() mới là lớp bảo vệ cuối cùng.
+     */
+    public List<Product> validateProductAvailability(List<Product> products) {
+        return products.stream()
+                .filter(p -> !"AVAILABLE".equalsIgnoreCase(p.getProductStatus()))
+                .collect(Collectors.toList());
+    }
+
+    // =========================================================================
+    // ORDER CREATION
+    // =========================================================================
 
     @Transactional
     public Order createOrder(PurchaseOrderRequestDTO dto, User customer) {
-        validateOrderLimit(dto, customer);
-
-        List<Product> productsToBuy = new ArrayList<>();
-        if (dto.getProductIds() != null && !dto.getProductIds().isEmpty()) {
-            for (Integer pId : dto.getProductIds()) {
-                productRepository.findById(pId).ifPresent(productsToBuy::add);
-            }
-        } else if (dto.getProductId() != null) {
-            productRepository.findById(dto.getProductId()).ifPresent(productsToBuy::add);
-        } else if (customer != null) {
-            List<CartItem> cartItems = cartService.getCartItems(customer.getUserId());
-            if (cartItems != null) {
-                for (CartItem item : cartItems) {
-                    productsToBuy.add(item.getProduct());
-                }
-            }
-        }
+        // Bước 1: Resolve danh sách Product từ nguồn duy nhất — đọc tươi từ DB
+        List<Product> productsToBuy = resolveProductsToBuy(dto, customer);
 
         if (productsToBuy.isEmpty()) {
             throw new IllegalArgumentException("Giỏ hàng của bạn đang trống! Vui lòng chọn sản phẩm trước.");
         }
 
+        // Bước 2: Kiểm tra giới hạn tổng tiền (không đọc DB lại)
+        validateOrderLimit(productsToBuy);
+
+        // Bước 3: Soft-check trạng thái (informational — có thể bị stale do Hibernate session cache)
+        // LƯU Ý: Đây không phải data guard — reserveIfAvailable() bên dưới mới là lớp bảo vệ thực sự
         for (Product prod : productsToBuy) {
             if (!"AVAILABLE".equalsIgnoreCase(prod.getProductStatus())) {
                 throw new IllegalStateException("Tác phẩm '" + prod.getProductName() + "' đã được bán hoặc giữ chỗ!");
@@ -426,6 +470,9 @@ public class OrderService {
                 .orderType("ONLINE")
                 .build();
 
+        // Bước 4: DATA INTEGRITY LAYER — Atomic Reserve
+        // UPDATE WHERE status='AVAILABLE': chỉ 1 thread thắng, thread thua rollback toàn bộ @Transactional
+        // KHÔNG ĐƯỢC BỎ — đây là lớp bảo vệ duy nhất đảm bảo không có 2 Order cho cùng 1 sản phẩm
         List<OrderDetail> details = productsToBuy.stream().map(prod -> {
             int reserved = productRepository.reserveIfAvailable(prod.getProductId());
             if (reserved == 0) {
