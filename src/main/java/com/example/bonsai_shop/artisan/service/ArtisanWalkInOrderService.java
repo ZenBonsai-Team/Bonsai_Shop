@@ -37,7 +37,7 @@ public class ArtisanWalkInOrderService {
     public static final String PRODUCT_SOLD = "SOLD";
     public static final String PAYMENT_METHOD_CASH = "CASH";
     public static final String PAYMENT_METHOD_VNPAY = "VNPAY";
-    public static final String PAYMENT_TYPE_IN_PERSON = "IN_PERSON";
+    public static final String PAYMENT_TYPE_FULL_PAYMENT = "FULL_PAYMENT";
 
     private final ArtisanProductService artisanProductService;
     private final ProductRepository productRepository;
@@ -117,7 +117,7 @@ public class ArtisanWalkInOrderService {
                 .order(order)
                 .paymentMethod(normalizedPaymentMethod)
                 .paymentStatus("PENDING")
-                .paymentType(PAYMENT_TYPE_IN_PERSON)
+                .paymentType(PAYMENT_TYPE_FULL_PAYMENT)
                 .amount(totalAmount)
                 .build();
         order.setPayment(payment);
@@ -210,7 +210,7 @@ public class ArtisanWalkInOrderService {
             payment = Payment.builder()
                     .order(order)
                     .paymentStatus("PENDING")
-                    .paymentType(PAYMENT_TYPE_IN_PERSON)
+                    .paymentType(PAYMENT_TYPE_FULL_PAYMENT)
                     .build();
         }
         payment.setPaymentMethod(normalizedPaymentMethod);
@@ -241,7 +241,7 @@ public class ArtisanWalkInOrderService {
             payment = Payment.builder()
                     .order(order)
                     .paymentMethod(PAYMENT_METHOD_CASH)
-                    .paymentType(PAYMENT_TYPE_IN_PERSON)
+                    .paymentType(PAYMENT_TYPE_FULL_PAYMENT)
                     .amount(order.getTotalAmount())
                     .build();
         }
