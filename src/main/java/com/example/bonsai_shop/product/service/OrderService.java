@@ -14,12 +14,20 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
+import java.util.stream.Collectors;
+
+import com.example.bonsai_shop.config.VNPayConfig;
+import com.example.bonsai_shop.entity.CartItem;
 import com.example.bonsai_shop.entity.Order;
 import com.example.bonsai_shop.entity.OrderDetail;
 import com.example.bonsai_shop.entity.OrderHandling;
 import com.example.bonsai_shop.entity.OrderLog;
 import com.example.bonsai_shop.entity.Product;
 import com.example.bonsai_shop.entity.User;
+import com.example.bonsai_shop.product.dto.PurchaseOrderRequestDTO;
+import com.example.bonsai_shop.product.event.OrderCreatedEvent;
+import com.example.bonsai_shop.product.event.OrderPaidEvent;
 import com.example.bonsai_shop.product.event.OrderRejectedEvent;
 import com.example.bonsai_shop.product.event.OrderVerifiedEvent;
 import com.example.bonsai_shop.product.repository.OrderHandlingRepository;
@@ -39,6 +47,7 @@ public class OrderService {
     private final OrderHandlingRepository orderHandlingRepository;
     private final ApplicationEventPublisher eventPublisher;
     private final MailService mailService;
+    private final CartService cartService;
 
     @Transactional(readOnly = true)
     public Page<Order> getFilteredOrders(String search, String status, String sort, int page, int limit) {
@@ -324,6 +333,105 @@ public class OrderService {
     }
 
     @Transactional
+    public Order createOrder(PurchaseOrderRequestDTO dto, User customer) {
+        List<Product> productsToBuy = new ArrayList<>();
+        if (dto.getProductIds() != null && !dto.getProductIds().isEmpty()) {
+            for (Integer pId : dto.getProductIds()) {
+                productRepository.findById(pId).ifPresent(productsToBuy::add);
+            }
+        } else if (dto.getProductId() != null) {
+            productRepository.findById(dto.getProductId()).ifPresent(productsToBuy::add);
+        } else if (customer != null) {
+            List<CartItem> cartItems = cartService.getCartItems(customer.getUserId());
+            if (cartItems != null) {
+                for (CartItem item : cartItems) {
+                    productsToBuy.add(item.getProduct());
+                }
+            }
+        }
+
+        if (productsToBuy.isEmpty()) {
+            throw new IllegalArgumentException("Giỏ hàng của bạn đang trống! Vui lòng chọn sản phẩm trước.");
+        }
+
+        for (Product prod : productsToBuy) {
+            if (!"AVAILABLE".equalsIgnoreCase(prod.getProductStatus())) {
+                throw new IllegalStateException("Tác phẩm '" + prod.getProductName() + "' đã được bán hoặc giữ chỗ!");
+            }
+        }
+
+        String orderCode = "BSMS-" + VNPayConfig.getRandomNumber(6).toUpperCase();
+        BigDecimal totalAmount = productsToBuy.stream()
+                .map(Product::getPrice)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        Order order = Order.builder()
+                .customer(customer)
+                .orderCode(orderCode)
+                .customerName(dto.getCustomerName())
+                .customerPhone(dto.getCustomerPhone())
+                .customerEmail(dto.getCustomerEmail())
+                .shippingAddress(dto.getShippingAddress())
+                .orderDate(LocalDateTime.now())
+                .totalAmount(totalAmount)
+                .depositAmount(BigDecimal.ZERO)
+                .orderStatus("PENDING")
+                .orderType("ONLINE")
+                .build();
+
+        List<OrderDetail> details = productsToBuy.stream().map(prod -> {
+            int reserved = productRepository.reserveIfAvailable(prod.getProductId());
+            if (reserved == 0) {
+                throw new IllegalStateException("Tác phẩm '" + prod.getProductName() + "' đã được bán hoặc giữ chỗ!");
+            }
+            prod.setProductStatus("RESERVED");
+            return OrderDetail.builder()
+                    .order(order)
+                    .product(prod)
+                    .priceAtPurchase(prod.getPrice())
+                    .build();
+        }).collect(Collectors.toList());
+
+        order.setOrderDetails(details);
+        Order savedOrder = orderRepository.save(order);
+
+        if (customer != null) {
+            cartService.clearCart(customer.getUserId());
+        }
+
+        eventPublisher.publishEvent(new OrderCreatedEvent(savedOrder));
+        return savedOrder;
+    }
+
+    @Transactional
+    public boolean processPaymentSuccess(String orderCode) {
+        Order order = orderRepository.findByOrderCode(orderCode).orElse(null);
+        if (order == null) {
+            return false;
+        }
+
+        if ("PAID".equalsIgnoreCase(order.getOrderStatus())) {
+            return true;
+        }
+
+        order.setOrderStatus("PAID");
+        orderRepository.save(order);
+
+        if (order.getOrderDetails() != null) {
+            for (OrderDetail detail : order.getOrderDetails()) {
+                Product prod = detail.getProduct();
+                if (prod != null) {
+                    prod.setProductStatus("SOLD");
+                    productRepository.save(prod);
+                }
+            }
+        }
+
+        eventPublisher.publishEvent(new OrderPaidEvent(order));
+        return true;
+    }
+
+    @Transactional
     public boolean recordFinalPayment(String orderCode, User moderator) {
         Order order = orderRepository.findByOrderCode(orderCode).orElse(null);
         if (order == null) {
@@ -331,26 +439,21 @@ public class OrderService {
         }
 
         String oldStatus = order.getOrderStatus();
-        order.setOrderStatus("PAID");
-        orderRepository.save(order);
+        boolean result = processPaymentSuccess(orderCode);
 
-        OrderLog log = OrderLog.builder()
-                .order(order)
-                .actionBy(moderator)
-                .actionType("PAID")
-                .fromStatus(oldStatus)
-                .toStatus("PAID")
-                .actionAt(LocalDateTime.now())
-                .build();
-        orderLogRepository.save(log);
-
-        try {
-            mailService.sendOrderFinalReceiptEmail(order);
-        } catch (Exception e) {
-            // Log warning if email fail
+        if (result) {
+            OrderLog log = OrderLog.builder()
+                    .order(order)
+                    .actionBy(moderator)
+                    .actionType("PAID")
+                    .fromStatus(oldStatus)
+                    .toStatus("PAID")
+                    .actionAt(LocalDateTime.now())
+                    .build();
+            orderLogRepository.save(log);
         }
 
-        return true;
+        return result;
     }
 }
 

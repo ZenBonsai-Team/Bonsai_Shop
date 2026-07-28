@@ -29,6 +29,9 @@ public class IPNController {
     @Autowired
     private com.example.bonsai_shop.product.service.MailService mailService;
 
+    @Autowired
+    private com.example.bonsai_shop.product.service.OrderService orderService;
+
     @GetMapping("/vnpay/ipn")
     @Transactional
     public Map<String, String> receiveIPN(HttpServletRequest request) {
@@ -87,24 +90,7 @@ public class IPNController {
                     if (checkOrderStatus) {
                         String responseCode = request.getParameter("vnp_ResponseCode");
                         if ("00".equals(responseCode)) {
-                            order.setOrderStatus("PAID");
-                            orderRepository.save(order);
-
-                            try {
-                                mailService.sendOrderFinalReceiptEmail(order);
-                            } catch (Exception e) {
-                                e.printStackTrace();
-                            }
-
-                            if (order.getOrderDetails() != null) {
-                                for (OrderDetail detail : order.getOrderDetails()) {
-                                    Product prod = detail.getProduct();
-                                    if (prod != null) {
-                                        prod.setProductStatus("SOLD");
-                                        productRepository.save(prod);
-                                    }
-                                }
-                            }
+                            orderService.processPaymentSuccess(orderCode);
                         }
 
                         response.put("RspCode", "00");

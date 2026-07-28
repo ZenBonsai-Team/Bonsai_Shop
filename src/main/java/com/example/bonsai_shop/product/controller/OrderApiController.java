@@ -355,93 +355,21 @@ public class OrderApiController {
             registerOtpRepository.save(otp);
         }
 
-        // 1. Lấy danh sách sản phẩm cần đặt hàng (từ DTO hoặc từ Giỏ hàng trong DB)
-        List<Product> productsToBuy = new ArrayList<>();
-        if (dto.getProductIds() != null && !dto.getProductIds().isEmpty()) {
-            for (Integer pId : dto.getProductIds()) {
-                productRepository.findById(pId).ifPresent(productsToBuy::add);
-            }
-        } else if (dto.getProductId() != null) {
-            productRepository.findById(dto.getProductId()).ifPresent(productsToBuy::add);
-        } else if (customer != null) {
-            List<CartItem> cartItems = cartService.getCartItems(customer.getUserId());
-            if (cartItems != null) {
-                for (CartItem item : cartItems) {
-                    productsToBuy.add(item.getProduct());
-                }
-            }
-        }
-
-        if (productsToBuy.isEmpty()) {
+        try {
+            Order createdOrder = orderService.createOrder(dto, customer);
+            response.put("success", true);
+            response.put("paymentMethod", dto.getPaymentMethod() != null ? dto.getPaymentMethod() : "COD");
+            response.put("orderCode", createdOrder.getOrderCode());
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException | IllegalStateException e) {
             response.put("success", false);
-            response.put("message", "Giỏ hàng của bạn đang trống! Vui lòng chọn sản phẩm trước.");
+            response.put("message", e.getMessage());
             return ResponseEntity.badRequest().body(response);
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", "Lỗi tạo đơn hàng: " + e.getMessage());
+            return ResponseEntity.internalServerError().body(response);
         }
-
-        // 2. Kiểm tra tính khả dụng của tất cả các sản phẩm
-        for (Product prod : productsToBuy) {
-            if (!"AVAILABLE".equalsIgnoreCase(prod.getProductStatus())) {
-                response.put("success", false);
-                response.put("message",
-                        "Tác phẩm '" + prod.getProductName() + "' đã được bán hoặc giữ chỗ bởi khách hàng khác!");
-                return ResponseEntity.badRequest().body(response);
-            }
-        }
-
-        // 3. Khởi tạo Đơn Hàng mới (Order)
-        String orderCode = "BSMS-" + VNPayConfig.getRandomNumber(6).toUpperCase();
-        BigDecimal totalAmount = productsToBuy.stream()
-                .map(Product::getPrice)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-        Order order = Order.builder()
-                .customer(customer)
-                .orderCode(orderCode)
-                .customerName(dto.getCustomerName())
-                .customerPhone(dto.getCustomerPhone())
-                .customerEmail(dto.getCustomerEmail())
-                .shippingAddress(dto.getShippingAddress())
-                .orderDate(LocalDateTime.now())
-                .totalAmount(totalAmount)
-                .depositAmount(BigDecimal.ZERO)
-                .orderStatus("PENDING")
-                .orderType("ONLINE")
-                .build();
-
-        // 4. Liên kết các sản phẩm chi tiết (OrderDetail)
-        List<OrderDetail> details = productsToBuy.stream().map(prod -> {
-            int reserved = productRepository.reserveIfAvailable(prod.getProductId());
-            if (reserved == 0) {
-                throw new IllegalStateException("Tác phẩm '" + prod.getProductName() + "' đã được bán hoặc giữ chỗ!");
-            }
-            prod.setProductStatus("RESERVED");
-            return OrderDetail.builder()
-                    .order(order)
-                    .product(prod)
-                    .priceAtPurchase(prod.getPrice())
-                    .build();
-        }).collect(Collectors.toList());
-
-        order.setOrderDetails(details);
-        orderRepository.save(order);
-
-        // 5. Xóa sạch giỏ hàng DB nếu là User đã đăng nhập
-        if (customer != null) {
-            cartService.clearCart(customer.getUserId());
-        }
-
-        // 6. Xử lý phân nhánh Phương thức thanh toán
-        if ("VNPAY".equalsIgnoreCase(dto.getPaymentMethod())) {
-            response.put("success", true);
-            response.put("paymentMethod", "VNPAY");
-            response.put("orderCode", orderCode);
-        } else {
-            response.put("success", true);
-            response.put("paymentMethod", "COD");
-            response.put("orderCode", orderCode);
-        }
-
-        return ResponseEntity.ok(response);
     }
 
     private String buildVNPayUrl(HttpServletRequest req, String orderCode, BigDecimal amount)

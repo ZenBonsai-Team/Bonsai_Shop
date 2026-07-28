@@ -29,6 +29,8 @@ public class PaymentController {
     private OrderRepository orderRepository;
     @Autowired
     private com.example.bonsai_shop.product.service.MailService mailService;
+    @Autowired
+    private com.example.bonsai_shop.product.service.OrderService orderService;
 
     // Tạo link thanh toán VNPay
     @GetMapping("/vnpay/create-payment")
@@ -160,16 +162,7 @@ public class PaymentController {
             String responseCode = request.getParameter("vnp_ResponseCode");
             if ("00".equals(responseCode)) {
                 String orderCode = request.getParameter("vnp_TxnRef");
-                Order order = orderRepository.findByOrderCode(orderCode).orElse(null);
-                if (order != null && !"PAID".equalsIgnoreCase(order.getOrderStatus())) {
-                    order.setOrderStatus("PAID");
-                    orderRepository.save(order);
-                    try {
-                        mailService.sendOrderFinalReceiptEmail(order);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }
+                orderService.processPaymentSuccess(orderCode);
                 model.addAttribute("status", "SUCCESS");
                 model.addAttribute("message", "Thanh toán giao dịch thành công!");
                 model.addAttribute("amount", Double.parseDouble(request.getParameter("vnp_Amount")) / 100);
