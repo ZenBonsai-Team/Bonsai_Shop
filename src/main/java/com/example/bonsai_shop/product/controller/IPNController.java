@@ -32,6 +32,9 @@ public class IPNController {
     @Autowired
     private com.example.bonsai_shop.product.service.OrderService orderService;
 
+    @Autowired
+    private com.example.bonsai_shop.product.repository.PaymentRepository paymentRepository;
+
     @GetMapping("/vnpay/ipn")
     @Transactional
     public Map<String, String> receiveIPN(HttpServletRequest request) {
@@ -80,9 +83,21 @@ public class IPNController {
             boolean checkOrderStatus = false;
 
             if (checkOrderId) {
-                long expectedAmount = order.getTotalAmount().longValue() * 100;
+                com.example.bonsai_shop.entity.Payment pendingPayment = paymentRepository
+                        .findTopByOrderOrderIdAndPaymentStatusOrderByPaymentIdDesc(order.getOrderId(), "PENDING")
+                        .orElse(null);
+
+                long expectedAmount = (pendingPayment != null && pendingPayment.getAmount() != null)
+                        ? pendingPayment.getAmount().longValue() * 100
+                        : order.getTotalAmount().longValue() * 100;
+
                 checkAmount = Math.abs(vnpAmount - expectedAmount) < 1000;
+                
                 checkOrderStatus = !"PAID".equalsIgnoreCase(order.getOrderStatus());
+                if (pendingPayment != null && "DEPOSIT".equalsIgnoreCase(pendingPayment.getPaymentType())) {
+                    checkOrderStatus = !"DEPOSITED".equalsIgnoreCase(order.getOrderStatus())
+                            && !"PAID".equalsIgnoreCase(order.getOrderStatus());
+                }
             }
 
             if (checkOrderId) {

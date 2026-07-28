@@ -31,6 +31,8 @@ public class PaymentController {
     private com.example.bonsai_shop.product.service.MailService mailService;
     @Autowired
     private com.example.bonsai_shop.product.service.OrderService orderService;
+    @Autowired
+    private com.example.bonsai_shop.product.repository.PaymentRepository paymentRepository;
 
     // Tạo link thanh toán VNPay
     @GetMapping("/vnpay/create-payment")
@@ -188,8 +190,15 @@ public class PaymentController {
         Order order = orderRepository.findByOrderCode(orderCode)
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy đơn hàng: " + orderCode));
 
-        // 2. Lấy tổng chi phí thanh toán (đã bao gồm tiền cây + phí cẩu + phí ship)
-        long amount = order.getTotalAmount().longValue();
+        // 2. Lấy số tiền từ Payment record PENDING gần nhất (nếu có, ví dụ: Đặt cọc = Deposit + Crane + Ship)
+        com.example.bonsai_shop.entity.Payment pendingPayment = paymentRepository
+                .findTopByOrderOrderIdAndPaymentStatusOrderByPaymentIdDesc(order.getOrderId(), "PENDING")
+                .orElse(null);
+
+        long amount = (pendingPayment != null && pendingPayment.getAmount() != null)
+                ? pendingPayment.getAmount().longValue()
+                : order.getTotalAmount().longValue();
+
         String vnp_Version = "2.1.0";
         String vnp_Command = "pay";
         String orderType = "other";

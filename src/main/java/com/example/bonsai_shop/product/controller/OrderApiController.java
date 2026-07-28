@@ -334,7 +334,7 @@ public class OrderApiController {
     }
 
     /**
-     * API Duyệt đơn hàng (Cập nhật phí cẩu, phí ship)
+     * API Duyệt đơn hàng (Cập nhật phí cẩu, phí ship, số tiền đặt cọc nếu có)
      */
     @PostMapping("/{orderCode}/verify")
     public ResponseEntity<Map<String, Object>> verifyOrder(
@@ -352,12 +352,55 @@ public class OrderApiController {
 
         BigDecimal craneFee = new BigDecimal(payload.getOrDefault("craneFee", 0).toString());
         BigDecimal shippingFee = new BigDecimal(payload.getOrDefault("shippingFee", 0).toString());
+        BigDecimal depositAmount = null;
+        if (payload.containsKey("depositAmount") && payload.get("depositAmount") != null) {
+            depositAmount = new BigDecimal(payload.get("depositAmount").toString());
+        }
 
-        boolean success = orderService.verifyOrder(orderCode, craneFee, shippingFee, moderator);
+        boolean success = orderService.verifyOrder(orderCode, craneFee, shippingFee, depositAmount, moderator);
         response.put("success", success);
         response.put("message", success ? "Duyệt đơn hàng thành công." : "Duyệt đơn hàng thất bại.");
 
         return ResponseEntity.ok(response);
+    }
+
+    /**
+     * API Moderator xác nhận đã thu đủ tiền phần còn lại (Chuyển Order từ DEPOSITED -> PAID, Product -> SOLD)
+     */
+    @PostMapping("/{orderCode}/confirm-remaining-payment")
+    public ResponseEntity<Map<String, Object>> confirmRemainingPayment(
+            @PathVariable String orderCode,
+            @RequestBody(required = false) Map<String, String> payload,
+            @AuthenticationPrincipal Object principal) {
+
+        Map<String, Object> response = new HashMap<>();
+        User moderator = SecurityUtils.getCurrentUser(principal, userRepository);
+        if (moderator == null) {
+            response.put("success", false);
+            response.put("message", "Chưa đăng nhập hệ thống.");
+            return ResponseEntity.status(401).body(response);
+        }
+
+        String notes = (payload != null) ? payload.getOrDefault("notes", "") : "";
+        try {
+            boolean success = orderService.confirmRemainingPayment(orderCode, notes, moderator);
+            response.put("success", success);
+            response.put("message", success ? "Xác nhận đã thanh toán đầy đủ thành công!" : "Xác nhận thất bại.");
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            response.put("success", false);
+            response.put("message", e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        } catch (IllegalStateException e) {
+            response.put("success", false);
+            response.put("message", e.getMessage());
+            return ResponseEntity.status(409).body(response);
+        } catch (Exception e) {
+            log.error("Lỗi khi xác nhận thanh toán đủ đơn {}", orderCode, e);
+            response.put("success", false);
+            response.put("message", "Lỗi hệ thống: " + e.getMessage());
+            return ResponseEntity.internalServerError().body(response);
+        }
     }
 
     /**
@@ -595,6 +638,56 @@ public class OrderApiController {
                     .collect(Collectors.toList());
         }
 
+        List<com.example.bonsai_shop.product.dto.PaymentDTO> paymentDTOs = null;
+        if (order.getPayments() != null && !order.getPayments().isEmpty()) {
+            paymentDTOs = order.getPayments().stream()
+                    .map(p -> com.example.bonsai_shop.product.dto.PaymentDTO.builder()
+                            .paymentId(p.getPaymentId())
+                            .paymentType(p.getPaymentType())
+                            .paymentMethod(p.getPaymentMethod())
+                            .paymentStatus(p.getPaymentStatus())
+                            .amount(p.getAmount())
+                            .paymentDate(p.getPaymentDate())
+                            .notes(p.getNotes())
+                            .build())
+                    .collect(Collectors.toList());
+        }
+
+        BigDecimal craneFee = order.getCraneFee() != null ? order.getCraneFee() : BigDecimal.ZERO;
+        BigDecimal shippingFee = order.getShippingFee() != null ? order.getShippingFee() : BigDecimal.ZERO;
+        BigDecimal totalAmount = order.getTotalAmount() != null ? order.getTotalAmount() : BigDecimal.ZERO;
+        BigDecimal depositAmount = order.getDepositAmount() != null ? order.getDepositAmount() : BigDecimal.ZERO;
+
+        BigDecimal treePrice = BigDecimal.ZERO;
+        if (order.getOrderDetails() != null && !order.getOrderDetails().isEmpty()) {
+            treePrice = order.getOrderDetails().stream()
+                    .map(d -> (d.getPriceAtPurchase() != null ? d.getPriceAtPurchase() : BigDecimal.ZERO)
+                            .multiply(BigDecimal.valueOf(d.getQuantity() != null ? d.getQuantity() : 1)))
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+        } else {
+            treePrice = totalAmount.subtract(craneFee).subtract(shippingFee);
+            if (treePrice.compareTo(BigDecimal.ZERO) < 0) treePrice = BigDecimal.ZERO;
+        }
+
+        boolean isDepositFlow = "DEPOSIT".equalsIgnoreCase(order.getPaymentMethod()) || "COD".equalsIgnoreCase(order.getPaymentMethod());
+
+        BigDecimal immediatePaymentAmount;
+        BigDecimal remainingPaymentAmount;
+
+        if (isDepositFlow) {
+            // Thanh toán ngay Nấc 1 = Deposit + Shipping + Crane
+            immediatePaymentAmount = depositAmount.add(craneFee).add(shippingFee);
+            // Thanh toán khi nhận cây Nấc 2 = Tree Price - Deposit
+            remainingPaymentAmount = treePrice.subtract(depositAmount);
+            if (remainingPaymentAmount.compareTo(BigDecimal.ZERO) < 0) {
+                remainingPaymentAmount = BigDecimal.ZERO;
+            }
+        } else {
+            // Thanh toán toàn bộ 1 lần = Total Amount (Tree Price + Shipping + Crane)
+            immediatePaymentAmount = totalAmount;
+            remainingPaymentAmount = BigDecimal.ZERO;
+        }
+
         return OrderResponseDTO.builder()
                 .orderId(order.getOrderId())
                 .orderCode(order.getOrderCode())
@@ -607,14 +700,19 @@ public class OrderApiController {
                 .product(productDTO)
                 .items(itemsDTO)
                 .quantity(itemsDTO.stream().mapToInt(OrderResponseDTO.OrderItemDTO::getQuantity).sum())
-                .totalAmount(order.getTotalAmount())
-                .depositAmount(order.getDepositAmount())
+                .treePrice(treePrice)
+                .totalAmount(totalAmount)
+                .depositAmount(depositAmount)
+                .immediatePaymentAmount(immediatePaymentAmount)
+                .remainingPaymentAmount(remainingPaymentAmount)
                 .orderDate(order.getOrderDate())
                 .orderStatus(order.getOrderStatus())
                 .orderType(order.getOrderType())
-                .craneFee(order.getCraneFee())
-                .shippingFee(order.getShippingFee())
+                .paymentMethod(order.getPaymentMethod())
+                .craneFee(craneFee)
+                .shippingFee(shippingFee)
                 .notes(order.getNotes())
+                .payments(paymentDTOs)
                 .assignedToUsername(order.getAssignedTo() != null ? order.getAssignedTo().getUsername() : null)
                 .assignedToFullName(order.getAssignedTo() != null ? order.getAssignedTo().getFullName() : null)
                 .assignedAt(order.getAssignedAt())

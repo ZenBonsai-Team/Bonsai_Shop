@@ -54,6 +54,20 @@ public class Order {
     @Column(name = "OrderType", length = 50, nullable = false)
     private String orderType = "ONLINE";
 
+    /**
+     * Phương thức thanh toán khách đã chọn lúc checkout.
+     * Giá trị: "DEPOSIT" hoặc "FULL"
+     *
+     * Dùng bởi Moderator để biết flow nào khi approve:
+     *   - DEPOSIT → form nhập depositAmount + craneFee + shippingFee → tạo Payment DEPOSIT qua VNPay
+     *   - FULL    → form chỉ cần craneFee + shippingFee → tạo Payment FULL_PAYMENT qua VNPay
+     *
+     * Khác với orderType (ONLINE/OFFLINE): paymentMethod là về cách trả tiền,
+     * orderType là về kênh bán hàng.
+     */
+    @Column(name = "PaymentMethod", length = 50)
+    private String paymentMethod;
+
     @Column(name = "CraneFee", precision = 15, scale = 2)
     private BigDecimal craneFee = BigDecimal.ZERO;
 
@@ -77,8 +91,21 @@ public class Order {
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
     private List<OrderDetail> orderDetails;
 
-    @OneToOne(mappedBy = "order", cascade = CascadeType.ALL)
-    private Payment payment;
+    /**
+     * Danh sách tất cả Payment của đơn hàng này.
+     *
+     * Quan hệ 1-N: 1 Order có thể có nhiều Payment records:
+     *   - Flow Đặt Cọc:    Payment #1 DEPOSIT (VNPay) + Payment #2 REMAINING_PAYMENT (Cash)
+     *   - Flow Thanh Đủ:   Payment #1 FULL_PAYMENT (VNPay)
+     *
+     * cascade=ALL: khi xóa Order thì xóa Payment liên quan (ON DELETE CASCADE đã có ở DB)
+     * orphanRemoval=true: Payment không còn thuộc Order nào sẽ bị xóa khỏi DB
+     *
+     * TRƯỚC ĐÂY: @OneToOne — bị giới hạn 1 Payment/Order
+     * SAU KHI REFACTOR: @OneToMany — không giới hạn
+     */
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Payment> payments;
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
     private List<OrderLog> orderLogs;

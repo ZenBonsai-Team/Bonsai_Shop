@@ -4,6 +4,8 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import com.example.bonsai_shop.product.dto.PaymentDTO;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -28,6 +30,37 @@ public class OrderResponseDTO {
     private BigDecimal shippingFee;
     private String notes;
     private List<OrderItemDTO> items;
+
+    /**
+     * Phương thức thanh toán khách chọn lúc checkout: "DEPOSIT" hoặc "FULL".
+     * Dùng để hiển thị label đúng trên giao diện Moderator.
+     */
+    private String paymentMethod;
+
+    /**
+     * Giá trị gốc của các cây trong đơn hàng (không bao gồm phụ phí).
+     */
+    private BigDecimal treePrice;
+
+    /**
+     * Số tiền khách cần thanh toán ngay qua VNPay (Nấc 1):
+     *  - Đặt cọc: depositAmount + craneFee + shippingFee
+     *  - Thanh toán 100%: totalAmount (treePrice + craneFee + shippingFee)
+     */
+    private BigDecimal immediatePaymentAmount;
+
+    /**
+     * Số tiền khách sẽ thanh toán khi nhận cây (Nấc 2):
+     *  - Đặt cọc: treePrice - depositAmount
+     *  - Thanh toán 100%: 0 VND
+     */
+    private BigDecimal remainingPaymentAmount;
+
+    /**
+     * Lịch sử thanh toán của đơn hàng (có thể có nhiều records).
+     * Ví dụ: [DEPOSIT/PENDING, REMAINING_PAYMENT/SUCCESS]
+     */
+    private List<PaymentDTO> payments;
 
     /*
      * --- THÔNG TIN PHÂN BỔ & TIMELINE ---

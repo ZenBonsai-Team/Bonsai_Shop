@@ -159,6 +159,8 @@ function initDrawerEvents() {
 
     if (craneInput) craneInput.addEventListener('input', updateLiveTotals);
     if (shipInput) shipInput.addEventListener('input', updateLiveTotals);
+    const depositInput = document.getElementById('inputDepositAmount');
+    if (depositInput) depositInput.addEventListener('input', updateLiveTotals);
 
     if (unclaimBtn) {
         unclaimBtn.addEventListener('click', () => {
@@ -207,15 +209,58 @@ function initDrawerEvents() {
 
 function updateLiveTotals() {
     if (!currentActiveOrder) return;
-    const basePrice = currentActiveOrder.items ? 
-        currentActiveOrder.items.reduce((sum, item) => sum + ((item.price || 0) * (item.quantity || 1)), 0) : 
-        (currentActiveOrder.totalAmount || 0);
-    const craneFee = parseFloat(document.getElementById('inputCraneFee').value) || 0;
-    const shippingFee = parseFloat(document.getElementById('inputShippingFee').value) || 0;
+    const basePrice = currentActiveOrder.treePrice !== undefined ? currentActiveOrder.treePrice : 
+        (currentActiveOrder.items ? 
+            currentActiveOrder.items.reduce((sum, item) => sum + ((item.price || 0) * (item.quantity || 1)), 0) : 
+            (currentActiveOrder.totalAmount || 0));
+
+    const craneFee = parseFloat(document.getElementById('inputCraneFee')?.value) || 0;
+    const shippingFee = parseFloat(document.getElementById('inputShippingFee')?.value) || 0;
+
+    const isDeposit = (currentActiveOrder.paymentMethod === 'DEPOSIT' || currentActiveOrder.paymentMethod === 'COD');
+    const depositInput = document.getElementById('inputDepositAmount');
+    let depositVal = 0;
+    if (isDeposit) {
+        depositVal = (depositInput && depositInput.value !== '') ? 
+            (parseFloat(depositInput.value) || 0) : Math.round(basePrice * 0.3);
+    }
 
     const finalTotal = basePrice + craneFee + shippingFee;
+    const payment1Amount = isDeposit ? (depositVal + craneFee + shippingFee) : finalTotal;
+    const remainingPay = isDeposit ? Math.max(0, basePrice - depositVal) : 0;
+
+    // Nhóm 1: GIÁ TRỊ ĐƠN HÀNG
+    const basePriceEl = document.getElementById('drawerBasePrice');
+    if (basePriceEl) basePriceEl.textContent = formatVND(basePrice);
+
+    const shipValEl = document.getElementById('drawerShippingFeeVal');
+    if (shipValEl) shipValEl.textContent = formatVND(shippingFee);
+
+    const craneValEl = document.getElementById('drawerCraneFeeVal');
+    if (craneValEl) craneValEl.textContent = formatVND(craneFee);
+
     const finalTotalEl = document.getElementById('drawerFinalTotal');
     if (finalTotalEl) finalTotalEl.textContent = formatVND(finalTotal);
+
+    // Nhóm 2: THANH TOÁN NGAY (VNPAY)
+    const depositEl = document.getElementById('drawerDeposit');
+    if (depositEl) depositEl.textContent = isDeposit ? formatVND(depositVal) : "Không (Trả 100%)";
+
+    const payNowShipEl = document.getElementById('drawerPayNowShip');
+    if (payNowShipEl) payNowShipEl.textContent = formatVND(shippingFee);
+
+    const payNowCraneEl = document.getElementById('drawerPayNowCrane');
+    if (payNowCraneEl) payNowCraneEl.textContent = formatVND(craneFee);
+
+    const pay1El = document.getElementById('drawerPayment1Total');
+    if (pay1El) pay1El.textContent = formatVND(payment1Amount);
+
+    // Nhóm 3: THANH TOÁN KHI NHẬN CÂY
+    const remSection = document.getElementById('groupRemainingSection');
+    if (remSection) remSection.style.display = isDeposit ? 'block' : 'none';
+
+    const remEl = document.getElementById('drawerRemainingPay');
+    if (remEl) remEl.textContent = formatVND(remainingPay);
 }
 
 function openDrawer(order) {
@@ -285,6 +330,26 @@ function openDrawer(order) {
     if (document.getElementById('drawerDeposit')) document.getElementById('drawerDeposit').textContent = formatVND(deposit);
 
     const isPending = order.orderStatus === 'PENDING';
+    const isDeposit = (order.paymentMethod === 'DEPOSIT' || order.paymentMethod === 'COD');
+    const groupDeposit = document.getElementById('groupDepositAmount');
+    const depositInput = document.getElementById('inputDepositAmount');
+
+    if (groupDeposit) {
+        groupDeposit.style.display = isDeposit ? 'block' : 'none';
+    }
+
+    if (depositInput) {
+        if (isDeposit) {
+            const defaultDeposit = (order.depositAmount && order.depositAmount > 0) ? 
+                order.depositAmount : Math.round(basePrice * 0.3);
+            depositInput.value = defaultDeposit;
+            depositInput.disabled = !isPending;
+        } else {
+            depositInput.value = 0;
+            depositInput.disabled = true;
+        }
+    }
+
     const craneInput = document.getElementById('inputCraneFee');
     const shipInput = document.getElementById('inputShippingFee');
 
@@ -375,6 +440,8 @@ async function unclaimOrder(orderCode) {
 async function verifyOrder(orderCode) {
     const craneFee = parseFloat(document.getElementById('inputCraneFee').value) || 0;
     const shippingFee = parseFloat(document.getElementById('inputShippingFee').value) || 0;
+    const depositInput = document.getElementById('inputDepositAmount');
+    const depositAmount = (depositInput && depositInput.value !== '') ? parseFloat(depositInput.value) : null;
 
     const headers = { 'Content-Type': 'application/json' };
     if (csrfHeader && csrfToken) headers[csrfHeader] = csrfToken;
@@ -383,7 +450,7 @@ async function verifyOrder(orderCode) {
         const response = await fetch(`/api/orders/${orderCode}/verify`, {
             method: 'POST',
             headers: headers,
-            body: JSON.stringify({ craneFee, shippingFee })
+            body: JSON.stringify({ craneFee, shippingFee, depositAmount })
         });
         const result = await response.json();
 
