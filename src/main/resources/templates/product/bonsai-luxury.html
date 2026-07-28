@@ -299,8 +299,9 @@
                              th:data-id="${item.productId}">
 
                         <div class="card-media">
-                            <img th:src="${item.thumbnailUrl != null ? item.thumbnailUrl : 'https://images.unsplash.com/photo-1599599810769-bcde5a160d32?auto=format&fit=crop&q=80&w=600'}"
-                                 th:alt="${item.productName}" loading="lazy">
+                            <img th:if="${item.thumbnailUrl != null && !#strings.isEmpty(item.thumbnailUrl)}"
+                                 th:src="${item.thumbnailUrl}"
+                                  th:alt="${item.productName}" loading="lazy">
                             <span class="card-status" th:text="${item.status}"></span>
                         </div>
 
@@ -336,14 +337,20 @@
                             </div>
 
                             <div class="card-footer">
-                                <div class="price-copy"
+                                <div class="price-copy price-copy-visible"
                                      sec:authorize="hasAnyRole('OWNER', 'ARTISAN')"
-                                     th:text="${item.price != null ? #numbers.formatDecimal(item.price, 0, 'POINT', 0, 'POINT') + ' đ' : 'Đang cập nhật'}">
-                                    Đang cập nhật
+                                     aria-label="Giá nội bộ">
+                                    <span>Giá nội bộ</span>
+                                    <strong th:text="${item.price != null ? #numbers.formatDecimal(item.price, 0, 'POINT', 0, 'POINT') + ' đ' : 'Đang cập nhật'}">
+                                        Đang cập nhật
+                                    </strong>
                                 </div>
-                                <div class="price-copy" sec:authorize="!hasAnyRole('OWNER', 'ARTISAN')">Giá theo yêu cầu</div>
+                                <div class="price-copy price-copy-private" sec:authorize="!hasAnyRole('OWNER', 'ARTISAN')">
+                                    <span>Giá tác phẩm</span>
+                                    <strong>Giá theo yêu cầu</strong>
+                                </div>
                                 <div class="card-actions">
-                                    <a th:href="@{'/bonsai_luxury_detail/' + ${item.productId}}" class="btn-detail-luxury">
+                                    <a th:href="@{'/bonsai-luxury-detail/' + ${item.productId}}" class="btn-detail-luxury">
                                         <span class="btn-text">Xem chi tiết</span>
                                         <span class="btn-arrow" aria-hidden="true">→</span>
                                     </a>

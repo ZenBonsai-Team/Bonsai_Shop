@@ -1,6 +1,6 @@
 .sch-kpi-grid {
     display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 16px;
     margin-bottom: 24px;
 }
@@ -120,6 +120,150 @@
     white-space: nowrap;
 }
 
+.sch-setting-panel {
+    background:
+            radial-gradient(circle at 12% 0%, rgba(209, 250, 229, 0.62), transparent 26%),
+            linear-gradient(135deg, #fff 0%, #f8fbf7 100%);
+    border: 1px solid #d6e5d8;
+    box-shadow: 0 18px 42px rgba(28, 51, 34, 0.08);
+    font-family: var(--font-sans, "Plus Jakarta Sans", sans-serif);
+    margin-bottom: 24px;
+    padding: 24px;
+    position: relative;
+    overflow: hidden;
+}
+
+.sch-setting-panel::before {
+    background: linear-gradient(180deg, #1c5f3a, #b8926a);
+    border-radius: 999px;
+    content: "";
+    inset: 22px auto 22px 0;
+    position: absolute;
+    width: 5px;
+}
+
+.sch-setting-head {
+    align-items: center;
+    display: flex;
+    gap: 16px;
+    justify-content: space-between;
+    margin-bottom: 16px;
+}
+
+.sch-setting-head h2 {
+    color: #1c3322;
+    font-size: 1.12rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+.sch-setting-subtitle {
+    color: #657066;
+    display: block;
+    font-size: 0.82rem;
+    font-weight: 500;
+    margin-top: 6px;
+}
+
+.sch-setting-status {
+    background: #ecfdf3;
+    border: 1px solid #bbf7d0;
+    border-radius: 999px;
+    color: #166534;
+    font-size: 0.78rem;
+    font-weight: 700;
+    padding: 6px 12px;
+    white-space: nowrap;
+}
+
+.sch-setting-status.pause {
+    background: #f8faf8;
+    border-color: #dfe8dd;
+    color: #536257;
+}
+
+.sch-setting-status.pause.active {
+    background: #fff7ed;
+    border-color: #fed7aa;
+    color: #9a3412;
+}
+
+.sch-setting-grid {
+    display: grid;
+    gap: 14px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.sch-setting-field {
+    display: grid;
+    gap: 8px;
+}
+
+.sch-setting-field span {
+    color: #536257;
+    font-size: 0.82rem;
+    font-weight: 700;
+}
+
+.sch-setting-field input,
+.sch-setting-field textarea {
+    border: 1px solid #dce5dd;
+    border-radius: 12px;
+    color: #1c3322;
+    font: inherit;
+    padding: 11px 12px;
+    transition: border-color 0.18s ease, box-shadow 0.18s ease, background-color 0.18s ease;
+    width: 100%;
+}
+
+.sch-setting-field input:focus,
+.sch-setting-field textarea:focus {
+    background: #fff;
+    border-color: #1c5f3a;
+    box-shadow: 0 0 0 4px rgba(28, 95, 58, 0.12);
+    outline: 0;
+}
+
+.sch-setting-field textarea {
+    min-height: 112px;
+    resize: vertical;
+}
+
+.sch-setting-reason-card {
+    background: rgba(255, 255, 255, 0.78);
+    border: 1px solid #e4ecdf;
+    border-radius: 16px;
+    margin-top: 14px;
+    padding: 14px;
+}
+
+.sch-setting-reason-footer {
+    align-items: center;
+    color: #657066;
+    display: flex;
+    font-size: 0.76rem;
+    font-weight: 600;
+    gap: 12px;
+    justify-content: space-between;
+    margin-top: 8px;
+}
+
+.sch-setting-reason-footer i {
+    color: #b8926a;
+}
+
+.sch-setting-help {
+    color: #657066;
+    font-size: 0.82rem;
+    margin: 12px 0 0;
+}
+
+.sch-setting-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 14px;
+}
+
 .sch-reminder-list {
     display: grid;
     gap: 16px;
@@ -181,8 +325,7 @@
     width: 100%;
 }
 
-.sch-reminder-content strong,
-.sch-reminder-meta {
+.sch-reminder-content strong {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -201,31 +344,15 @@
     font-weight: 700;
 }
 
-.sch-reminder-deadline,
-.sch-reminder-exact,
 .sch-reminder-note {
     display: block;
     line-height: 1.45;
 }
 
-.sch-reminder-deadline {
-    background: rgba(184, 146, 106, 0.12);
-    border-radius: 8px;
-    color: #7c5b34;
-    font-size: 0.76rem;
-    font-weight: 600;
-    padding: 6px 8px;
-}
-
-.sch-reminder-exact {
-    color: #8a6d45;
-    font-size: 0.76rem;
-    font-weight: 500;
-}
-
 .sch-reminder-meta {
     color: #536257;
     font-size: 0.82rem;
+    line-height: 1.45;
 }
 
 .sch-reminder-note {
@@ -449,6 +576,10 @@
 .calendar-day.today {
     border-color: #1c3322;
     box-shadow: inset 0 0 0 1px #1c3322;
+}
+
+.calendar-day.has-appointment {
+    border-color: rgba(184, 146, 106, 0.7);
 }
 
 .calendar-day.selected {
@@ -683,45 +814,6 @@
     color: #6b7280;
 }
 
-.status-badge.overdue {
-    background: #ffe4e6;
-    color: #9f1239;
-}
-
-.sch-overdue-action {
-    background: #fff1f2;
-    border: 1px solid #fecdd3;
-    border-radius: 999px;
-    color: #9f1239;
-    display: inline-flex;
-    font-size: 0.76rem;
-    font-weight: 800;
-    letter-spacing: 0.2px;
-    padding: 5px 10px;
-    white-space: nowrap;
-}
-
-.btn-overdue {
-    background: #9f1239;
-    border: 1px solid #9f1239;
-    border-radius: 999px;
-    color: #fff;
-    cursor: pointer;
-    font-size: 0.76rem;
-    font-weight: 800;
-    letter-spacing: 0.2px;
-    padding: 7px 12px;
-    transition: all 0.18s ease;
-    white-space: nowrap;
-}
-
-.btn-overdue:hover {
-    background: #7f1d1d;
-    border-color: #7f1d1d;
-    box-shadow: 0 8px 20px rgba(159, 18, 57, 0.2);
-    transform: translateY(-1px);
-}
-
 .sch-edit-btn {
     align-items: center;
     background: #faf8f5;
@@ -849,81 +941,6 @@
     grid-column: 1 / -1;
 }
 
-.sch-status-area {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.sch-status-area.readonly > label {
-    color: #b8926a;
-}
-
-.sch-status-area.readonly .sch-status-msg {
-    background: #f8fafc;
-    border-color: #dbe3eb;
-    color: #334155;
-}
-
-.sch-status-area > label,
-.sch-reject-label {
-    color: #1e221f;
-    font-size: 0.84rem;
-    font-weight: 700;
-}
-
-.sch-reject-label {
-    display: block;
-    margin-bottom: 6px;
-}
-
-.sch-reject-label span {
-    color: #dc2626;
-    font-weight: 900;
-}
-
-.sch-status-area select,
-.sch-status-area textarea {
-    background: #faf8f5;
-    border: 1px solid #e8e4dd;
-    border-radius: 8px;
-    color: #1e221f;
-    font-family: inherit;
-    font-size: 0.86rem;
-    outline: 0;
-    padding: 9px 12px;
-    width: 100%;
-}
-
-.sch-status-area select:focus,
-.sch-status-area textarea:focus {
-    border-color: #1c3322;
-}
-
-.sch-status-area textarea {
-    resize: vertical;
-}
-
-.sch-status-area textarea.sch-field-error {
-    background: #fff7f7;
-    border-color: #dc2626;
-    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
-}
-
-.sch-status-msg {
-    background: #fef3c7;
-    border: 1px solid #f4d49b;
-    border-radius: 8px;
-    color: #92400e;
-    display: none;
-    font-size: 0.82rem;
-    padding: 9px 12px;
-}
-
-.sch-status-msg.visible {
-    display: block;
-}
-
 .sch-modal-footer {
     background: #f8f9fa;
     border-top: 1px solid #e8e4dd;
@@ -931,75 +948,6 @@
     gap: 12px;
     justify-content: flex-end;
     padding: 16px 22px;
-}
-
-.sch-confirm-backdrop {
-    align-items: center;
-    background: rgba(22, 24, 24, 0.58);
-    display: none;
-    inset: 0;
-    justify-content: center;
-    padding: 24px;
-    position: fixed;
-    z-index: 3100;
-}
-
-.sch-confirm-backdrop.show {
-    display: flex;
-}
-
-.sch-confirm-dialog {
-    background: #fff;
-    border: 1px solid #e8e4dd;
-    border-radius: 18px;
-    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.28);
-    max-width: 430px;
-    padding: 26px;
-    text-align: center;
-    width: 100%;
-}
-
-.sch-confirm-icon {
-    align-items: center;
-    background: #d1fae5;
-    border-radius: 999px;
-    color: #065f46;
-    display: inline-flex;
-    font-size: 1.45rem;
-    height: 56px;
-    justify-content: center;
-    margin-bottom: 16px;
-    width: 56px;
-}
-
-.sch-confirm-kicker {
-    color: #b8926a;
-    font-size: 0.72rem;
-    font-weight: 900;
-    letter-spacing: 1.4px;
-    margin: 0 0 6px;
-    text-transform: uppercase;
-}
-
-.sch-confirm-content h2 {
-    color: #1c3322;
-    font-size: 1.2rem;
-    font-weight: 900;
-    margin: 0 0 8px;
-}
-
-.sch-confirm-content p:last-child {
-    color: #536257;
-    font-size: 0.9rem;
-    line-height: 1.55;
-    margin: 0;
-}
-
-.sch-confirm-actions {
-    display: flex;
-    gap: 12px;
-    justify-content: center;
-    margin-top: 22px;
 }
 
 .sch-hidden {

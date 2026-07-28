@@ -18,7 +18,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" th:href="@{/css/common.css}">
-    <link rel="stylesheet" th:href="@{/css/bonsai_luxury_detail.css}">
+    <link rel="stylesheet" th:href="@{/css/bonsai-luxury-detail.css}">
 </head>
 <body class="luxury-shell luxury-detail-shell" th:data-authenticated="${#authorization.expression('isAuthenticated()')}">
 <div th:replace="~{fragments/navbar :: navbar}" th:with="activePage='luxury'"></div>
@@ -55,23 +55,83 @@
 
         <div class="lux-container hero-grid">
             <div class="media-column">
-                <div class="main-image-wrap">
+                <div class="main-image-wrap"
+                     th:with="hasVideo=${videoMediaList != null && !#lists.isEmpty(videoMediaList)}, firstVideo=${hasVideo ? videoMediaList[0] : null}, hasImageMedia=${imageMediaList != null && !#lists.isEmpty(imageMediaList)}, firstImage=${hasImageMedia ? imageMediaList[0] : null}, hasThumbnail=${product != null && product.thumbnailUrl != null && !#strings.isEmpty(product.thumbnailUrl)}">
                     <span class="collection-label">Hồ sơ sưu tầm</span>
+                    <button class="main-media-nav main-media-prev"
+                            type="button"
+                            aria-label="Media trước"
+                            th:if="${hasVideo || hasImageMedia}">
+                        <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
+                    </button>
+                    <button class="main-media-nav main-media-next"
+                            type="button"
+                            aria-label="Media sau"
+                            th:if="${hasVideo || hasImageMedia}">
+                        <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+                    </button>
+                    <div class="media-control-row" th:if="${hasVideo || hasImageMedia || hasThumbnail}">
+                        <button id="expandMediaBtn"
+                                class="media-control-btn"
+                                type="button"
+                                aria-label="Phóng to media"
+                                th:attr="data-src=${hasVideo ? firstVideo.mediaUrl : (hasImageMedia ? firstImage.mediaUrl : product.thumbnailUrl)},data-type=${hasVideo ? 'VIDEO' : 'IMAGE'},data-alt=${product != null && product.productName != null ? product.productName : 'Bonsai Luxury'}">
+                            <i class="fa-solid fa-up-right-and-down-left-from-center" aria-hidden="true"></i>
+                        </button>
+                        <button id="toggleSoundBtn"
+                                class="media-control-btn"
+                                type="button"
+                                th:if="${hasVideo}"
+                                aria-label="Bật tiếng video">
+                            <i class="fa-solid fa-volume-xmark" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                    <video id="mainVideo"
+                           class="main-video"
+                           th:if="${hasVideo}"
+                           th:src="${firstVideo.mediaUrl}"
+                           controls
+                           muted
+                           playsinline
+                           preload="metadata"></video>
                     <img id="mainImage"
-                         th:src="${product != null && product.thumbnailUrl != null && !#strings.isEmpty(product.thumbnailUrl) ? product.thumbnailUrl : 'https://images.unsplash.com/photo-1599599810769-bcde5a160d32?auto=format&fit=crop&q=85&w=1400'}"
+                         th:if="${hasImageMedia || hasThumbnail}"
+                         th:classappend="${hasVideo ? 'is-hidden' : ''}"
+                         th:src="${hasImageMedia ? firstImage.mediaUrl : product.thumbnailUrl}"
                          th:alt="${product != null && product.productName != null ? product.productName : 'Bonsai Luxury'}">
                 </div>
-                <div class="thumb-row" aria-label="Ảnh chi tiết">
-                    <button class="thumb-item is-active" type="button"
-                            th:attr="data-src=${product != null && product.thumbnailUrl != null && !#strings.isEmpty(product.thumbnailUrl) ? product.thumbnailUrl : 'https://images.unsplash.com/photo-1599599810769-bcde5a160d32?auto=format&fit=crop&q=85&w=1400'}">
-                        <img th:src="${product != null && product.thumbnailUrl != null && !#strings.isEmpty(product.thumbnailUrl) ? product.thumbnailUrl : 'https://images.unsplash.com/photo-1599599810769-bcde5a160d32?auto=format&fit=crop&q=85&w=360'}"
-                             alt="Ảnh chính của tác phẩm">
+                <div class="thumb-carousel" th:if="${imageMediaList != null && !#lists.isEmpty(imageMediaList)}">
+                    <button class="thumb-nav thumb-nav-prev" type="button" aria-label="Ảnh trước">
+                        <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
                     </button>
-                    <button class="thumb-item" type="button" data-src="https://images.unsplash.com/photo-1613143521251-512c0192e276?auto=format&fit=crop&q=85&w=1400">
-                        <img src="https://images.unsplash.com/photo-1613143521251-512c0192e276?auto=format&fit=crop&q=85&w=360" alt="Chi tiết dáng cây">
+                    <div class="thumb-row" aria-label="Ảnh chi tiết">
+                        <button class="thumb-item"
+                                th:each="media, mediaStat : ${imageMediaList}"
+                                th:classappend="${!#lists.isEmpty(videoMediaList) ? '' : (mediaStat.index == 0 ? 'is-active' : '')}"
+                                type="button"
+                                th:attr="data-src=${media.mediaUrl},data-type='IMAGE',data-alt=${media.caption != null && !#strings.isEmpty(media.caption) ? media.caption : (product != null ? product.productName : 'Bonsai Luxury')}">
+                            <img th:src="${media.mediaUrl}"
+                                 th:alt="${media.caption != null && !#strings.isEmpty(media.caption) ? media.caption : 'Ảnh chi tiết tác phẩm'}">
+                        </button>
+                    </div>
+                    <button class="thumb-nav thumb-nav-next" type="button" aria-label="Ảnh sau">
+                        <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
                     </button>
-                    <button class="thumb-item" type="button" data-src="https://images.unsplash.com/photo-1620188527376-7848bc8f7c9b?auto=format&fit=crop&q=85&w=1400">
-                        <img src="https://images.unsplash.com/photo-1620188527376-7848bc8f7c9b?auto=format&fit=crop&q=85&w=360" alt="Không gian trưng bày">
+                </div>
+                <div class="thumb-carousel"
+                     th:if="${(imageMediaList == null || #lists.isEmpty(imageMediaList)) && product != null && product.thumbnailUrl != null && !#strings.isEmpty(product.thumbnailUrl)}">
+                    <button class="thumb-nav thumb-nav-prev" type="button" aria-label="Ảnh trước">
+                        <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
+                    </button>
+                    <div class="thumb-row" aria-label="Ảnh chi tiết">
+                        <button class="thumb-item is-active" type="button" data-type="IMAGE"
+                                th:attr="data-src=${product.thumbnailUrl}">
+                            <img th:src="${product.thumbnailUrl}"
+                                 alt="Ảnh chính của tác phẩm">
+                        </button>
+                    </div>
+                    <button class="thumb-nav thumb-nav-next" type="button" aria-label="Ảnh sau">
+                        <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
                     </button>
                 </div>
                 <div class="media-note">
@@ -427,6 +487,6 @@
     </div>
 </div>
 
-<script th:src="@{/js/bonsai_luxury_detail.js}"></script>
+<script th:src="@{/js/bonsai-luxury-detail.js}"></script>
 </body>
 </html>

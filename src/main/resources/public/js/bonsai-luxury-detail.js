@@ -69,31 +69,144 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     };
 
-    const initGallery = () => {
+    const initGallery = (lightbox) => {
         const mainImage = $("#mainImage");
+        const mainVideo = $("#mainVideo");
         const thumbnailButtons = $$(".thumb-item");
-        if (!mainImage || !thumbnailButtons.length) return;
+        const thumbnailRows = $$(".thumb-row");
+        const mainPreviousButton = $(".main-media-prev");
+        const mainNextButton = $(".main-media-next");
+        const expandMediaButton = $("#expandMediaBtn");
+        const toggleSoundButton = $("#toggleSoundBtn");
+        const galleryItems = [
+            ...(mainVideo?.src ? [{
+                src: mainVideo.src,
+                type: "VIDEO",
+                alt: mainImage?.alt || "Bonsai Luxury",
+                button: null
+            }] : []),
+            ...thumbnailButtons.map((button) => ({
+                src: button.dataset.src,
+                type: (button.dataset.type || "IMAGE").toUpperCase(),
+                alt: button.dataset.alt || mainImage?.alt || "Bonsai Luxury",
+                button
+            })).filter((item) => item.src)
+        ];
+        let activeMediaIndex = galleryItems.findIndex((item) => item.type === "VIDEO" && !mainVideo?.classList.contains("is-hidden"));
+        if (activeMediaIndex < 0) {
+            activeMediaIndex = Math.max(0, galleryItems.findIndex((item) => item.button?.classList.contains("is-active")));
+        }
+
+        const syncExpandButton = (mediaUrl, mediaType, mediaAlt) => {
+            if (!expandMediaButton || !mediaUrl) return;
+            expandMediaButton.dataset.src = mediaUrl;
+            expandMediaButton.dataset.type = mediaType || "IMAGE";
+            expandMediaButton.dataset.alt = mediaAlt || "Bonsai Luxury";
+        };
+
+        const showImage = (imageUrl, imageAlt) => {
+            if (!mainImage || !imageUrl) return;
+            mainVideo?.pause();
+            if (mainVideo) {
+                mainVideo.classList.add("is-hidden");
+                mainVideo.removeAttribute("src");
+                mainVideo.load();
+            }
+            mainImage.alt = imageAlt || mainImage.alt || "Bonsai Luxury";
+            mainImage.classList.remove("is-hidden");
+            mainImage.classList.add("is-switching");
+            const clearState = () => mainImage.classList.remove("is-switching");
+            mainImage.addEventListener("load", clearState, { once: true });
+            mainImage.src = imageUrl;
+            syncExpandButton(imageUrl, "IMAGE", mainImage.alt);
+            window.setTimeout(clearState, 600);
+        };
+
+        const showVideo = (videoUrl) => {
+            if (!mainVideo || !videoUrl) return;
+            mainImage?.classList.add("is-hidden");
+            mainVideo.src = videoUrl;
+            mainVideo.classList.remove("is-hidden");
+            mainVideo.load();
+            syncExpandButton(videoUrl, "VIDEO", mainImage?.alt || "Bonsai Luxury");
+        };
+
+        const activateMedia = (index) => {
+            if (!galleryItems.length) return;
+            activeMediaIndex = (index + galleryItems.length) % galleryItems.length;
+            const item = galleryItems[activeMediaIndex];
+
+            thumbnailButtons.forEach((button) => button.classList.remove("is-active"));
+            item.button?.classList.add("is-active");
+            item.button?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+
+            if (item.type === "VIDEO") {
+                showVideo(item.src);
+                return;
+            }
+            showImage(item.src, item.alt);
+        };
 
         thumbnailButtons.forEach((button) => {
             button.addEventListener("click", () => {
-                const nextImageUrl = button.dataset.src;
-                if (!nextImageUrl || mainImage.src === nextImageUrl) return;
+                const nextMediaUrl = button.dataset.src;
+                const nextMediaType = (button.dataset.type || "IMAGE").toUpperCase();
+                if (!nextMediaUrl) return;
 
-                thumbnailButtons.forEach((item) => item.classList.remove("is-active"));
-                button.classList.add("is-active");
-                mainImage.classList.add("is-switching");
-
-                const clearState = () => mainImage.classList.remove("is-switching");
-                mainImage.addEventListener("load", clearState, { once: true });
-                mainImage.src = nextImageUrl;
-                window.setTimeout(clearState, 600);
+                const nextIndex = galleryItems.findIndex((item) => item.button === button);
+                if (nextIndex >= 0) {
+                    activateMedia(nextIndex);
+                    return;
+                }
+                if (nextMediaType === "VIDEO") showVideo(nextMediaUrl);
+                else showImage(nextMediaUrl, button.dataset.alt);
             });
+        });
+
+        mainPreviousButton?.addEventListener("click", () => {
+            activateMedia(activeMediaIndex - 1);
+        });
+
+        mainNextButton?.addEventListener("click", () => {
+            activateMedia(activeMediaIndex + 1);
+        });
+
+        thumbnailRows.forEach((row) => {
+            const carousel = row.closest(".thumb-carousel");
+            if (!carousel) return;
+            const previousButton = $(".thumb-nav-prev", carousel);
+            const nextButton = $(".thumb-nav-next", carousel);
+            const getScrollDistance = () => row.querySelector(".thumb-item")?.offsetWidth
+                    ? row.querySelector(".thumb-item").offsetWidth + 12
+                    : row.clientWidth;
+
+            previousButton?.addEventListener("click", () => {
+                row.scrollBy({ left: -getScrollDistance(), behavior: "smooth" });
+            });
+
+            nextButton?.addEventListener("click", () => {
+                row.scrollBy({ left: getScrollDistance(), behavior: "smooth" });
+            });
+        });
+
+        expandMediaButton?.addEventListener("click", () => {
+            lightbox?.open(expandMediaButton.dataset.src, expandMediaButton.dataset.alt, expandMediaButton.dataset.type);
+        });
+
+        toggleSoundButton?.addEventListener("click", () => {
+            if (!mainVideo) return;
+            mainVideo.muted = !mainVideo.muted;
+            const icon = $("i", toggleSoundButton);
+            if (icon) {
+                icon.className = mainVideo.muted ? "fa-solid fa-volume-xmark" : "fa-solid fa-volume-high";
+            }
+            toggleSoundButton.setAttribute("aria-label", mainVideo.muted ? "Bật tiếng video" : "Tắt tiếng video");
         });
     };
 
     const initLightbox = () => {
         const overlayRoot = $("#overlayRoot");
-        if (!overlayRoot) return { close: () => {} };
+        if (!overlayRoot) return { close: () => {}, open: () => {} };
 
         let activeLightbox = null;
 
@@ -110,26 +223,35 @@ document.addEventListener("DOMContentLoaded", () => {
             }, 180);
         };
 
-        const open = (imageUrl, imageAlt) => {
-            if (!imageUrl) return;
+        const open = (mediaUrl, mediaAlt, mediaType = "IMAGE") => {
+            if (!mediaUrl) return;
             close();
 
+            const normalizedMediaType = (mediaType || "IMAGE").toUpperCase();
             const lightbox = createElement("div", "lightbox");
             lightbox.setAttribute("role", "dialog");
             lightbox.setAttribute("aria-modal", "true");
-            lightbox.setAttribute("aria-label", "Ảnh chi tiết Bonsai");
+            lightbox.setAttribute("aria-label", normalizedMediaType === "VIDEO" ? "Video chi tiết Bonsai" : "Ảnh chi tiết Bonsai");
 
             const panel = createElement("div", "lightbox-panel");
             const closeButton = createElement("button", "lightbox-close");
             closeButton.type = "button";
-            closeButton.setAttribute("aria-label", "Đóng ảnh lớn");
+            closeButton.setAttribute("aria-label", "Đóng media lớn");
             closeButton.appendChild(createIcon("fa-solid fa-xmark"));
 
-            const image = createElement("img", "lightbox-image");
-            image.src = imageUrl;
-            image.alt = imageAlt || "Ảnh chi tiết Bonsai Luxury";
+            const mediaElement = normalizedMediaType === "VIDEO"
+                    ? createElement("video", "lightbox-image lightbox-video")
+                    : createElement("img", "lightbox-image");
+            mediaElement.src = mediaUrl;
+            if (normalizedMediaType === "VIDEO") {
+                mediaElement.controls = true;
+                mediaElement.autoplay = true;
+                mediaElement.playsInline = true;
+            } else {
+                mediaElement.alt = mediaAlt || "Ảnh chi tiết Bonsai Luxury";
+            }
 
-            panel.append(closeButton, image);
+            panel.append(closeButton, mediaElement);
             lightbox.appendChild(panel);
             overlayRoot.appendChild(lightbox);
             overlayRoot.removeAttribute("aria-hidden");
@@ -146,17 +268,15 @@ document.addEventListener("DOMContentLoaded", () => {
         $$(".gallery-item").forEach((item) => {
             item.addEventListener("click", () => {
                 const image = $("img", item);
-                open(item.dataset.src || image?.src, image?.alt);
+                open(item.dataset.src || image?.src, image?.alt, "IMAGE");
             });
         });
 
-        return { close };
+        return { close, open };
     };
 
     const initBooking = () => {
         const bookingModal = $("#bookingModal");
-        const modalProductId = $("#modalProductId");
-        const modalProductTitle = $("#modalProductTitle");
         const bookingForm = $("#actualBookingForm");
         const closeBookingButton = $("#closeBookingBtn");
         const cancelBookingButton = $("#cancelBookingBtn");
@@ -200,16 +320,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 window.location.href = "/login";
                 return;
             }
-
-            const productId = trigger.dataset.id || modalProductId?.value;
-            const productTitle = trigger.dataset.title || $("#productTitle")?.textContent?.trim() || "Tác phẩm Bonsai Luxury";
-            if (!productId) {
-                showToast("Không tìm thấy mã tác phẩm để đặt lịch.", "error");
-                return;
-            }
-
-            if (modalProductId) modalProductId.value = productId;
-            if (modalProductTitle) modalProductTitle.textContent = productTitle;
 
             const tomorrowValue = getTomorrowValue();
             if (dateInput) {
@@ -285,8 +395,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     initReveal();
     initPointerGlow();
-    initGallery();
     const lightbox = initLightbox();
+    initGallery(lightbox);
     const booking = initBooking();
     updateYear();
 

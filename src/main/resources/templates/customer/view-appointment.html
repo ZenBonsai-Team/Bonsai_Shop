@@ -59,7 +59,7 @@
                     <p class="section-kicker" th:text="${#locale.language == 'en' ? 'Viewing Requests' : 'Yêu cầu thưởng lãm'}">Viewing requests</p>
                     <h2 th:text="${#locale.language == 'en' ? 'Appointment List' : 'Danh sách lịch hẹn'}">Danh sách lịch hẹn</h2>
                 </div>
-                <p th:text="${#locale.language == 'en' ? 'Each appointment is tied to a specific masterpiece. You can view details, update timing, or cancel.' : 'Mỗi lịch hẹn gắn với một tác phẩm cụ thể. Bạn có thể xem chi tiết, cập nhật thời gian hoặc hủy nếu chưa thể đến showroom.'}">Mỗi lịch hẹn gắn với một tác phẩm cụ thể. Bạn có thể xem chi tiết, cập nhật thời gian hoặc hủy nếu chưa thể đến showroom.</p>
+                <p th:text="${#locale.language == 'en' ? 'Each appointment is for a private showroom visit. You can view details, update timing, or cancel.' : 'Mỗi lịch hẹn dành cho một buổi thăm showroom riêng. Bạn có thể xem chi tiết, cập nhật thời gian hoặc hủy nếu chưa thể đến showroom.'}">Mỗi lịch hẹn dành cho một buổi thăm showroom riêng. Bạn có thể xem chi tiết, cập nhật thời gian hoặc hủy nếu chưa thể đến showroom.</p>
             </div>
 
             <div class="appointment-grid" th:if="${viewingAppointments != null && !#lists.isEmpty(viewingAppointments)}">
@@ -69,7 +69,7 @@
                         <span class="appointment-status-tag"
                               th:text="${appointment.status}"
                               th:data-status="${appointment.status}">PENDING</span>
-                        <span class="product-code-tag">GARDEN-VISIT</span>
+                        <span class="appointment-code-tag">GARDEN-VISIT</span>
                     </div>
 
                     <div class="appointment-main">

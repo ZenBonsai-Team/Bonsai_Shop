@@ -36,6 +36,9 @@ public class AppointmentSetting {
     @Column(name = "PauseTo")
     private LocalDateTime pauseTo;
 
+    @Column(name = "PauseReason", length = 500)
+    private String pauseReason;
+
     @Column(name = "AutoComplete", nullable = false)
     @Builder.Default
     private Boolean autoComplete = true;

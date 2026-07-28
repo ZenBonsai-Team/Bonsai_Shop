@@ -1,12 +1,9 @@
-document.addEventListener("DOMContentLoaded", () => {
+﻿﻿﻿document.addEventListener("DOMContentLoaded", () => {
     const state = {
         appointments: [],
         currentMonth: new Date().getMonth(),
         currentYear: new Date().getFullYear(),
-        selectedDate: "",
-        editingAppointmentId: null,
-        completingAppointmentId: null,
-        completeSubmitMode: ""
+        selectedDate: ""
     };
 
     const monthNames = [
@@ -14,16 +11,22 @@ document.addEventListener("DOMContentLoaded", () => {
         "Tháng 7", "Tháng 8", "Tháng 9", "Tháng 10", "Tháng 11", "Tháng 12"
     ];
 
+    const statusLabels = {
+        PENDING: "CHỜ DUYỆT",
+        APPROVED: "ĐÃ DUYỆT",
+        REJECTED: "ĐÃ TỪ CHỐI",
+        CANCELLED: "ĐÃ HỦY",
+        COMPLETED: "HOÀN THÀNH"
+    };
+
     const elements = {
         statTotal: document.getElementById("statTotal"),
         statToday: document.getElementById("statToday"),
         statApproved: document.getElementById("statApproved"),
         statPending: document.getElementById("statPending"),
-        statOverdue: document.getElementById("statOverdue"),
         totalPercent: document.getElementById("totalPercent"),
         approvedPercent: document.getElementById("approvedPercent"),
         pendingPercent: document.getElementById("pendingPercent"),
-        overduePercent: document.getElementById("overduePercent"),
         reminderCount: document.getElementById("reminderCount"),
         pendingReminders: document.getElementById("pendingReminders"),
         currentMonth: document.querySelector(".current-month"),
@@ -32,36 +35,28 @@ document.addEventListener("DOMContentLoaded", () => {
         calendarGrid: document.querySelector(".calendar-grid"),
         todayAppointments: document.getElementById("todayAppointments"),
         todayPanelTitle: document.getElementById("todayPanelTitle"),
+        appointmentListCount: document.getElementById("appointmentListCount"),
+        appointmentRows: document.getElementById("appointmentRows"),
         appointmentData: document.getElementById("appointmentData"),
-        editModal: document.getElementById("editModal"),
+        detailModal: document.getElementById("editModal"),
         closeModal: document.getElementById("closeModal"),
         closeModalFooter: document.getElementById("closeModalFooter"),
-        saveStatus: document.getElementById("saveStatus"),
-        statusArea: document.querySelector(".sch-status-area"),
-        statusSelectLabel: document.getElementById("statusSelectLabel"),
-        statusSelect: document.getElementById("statusSelect"),
-        rejectReason: document.getElementById("rejectReason"),
-        rejectReasonGroup: document.getElementById("rejectReasonGroup"),
-        statusMessage: document.getElementById("statusMessage"),
-        updateStatusForm: document.getElementById("updateStatusForm"),
-        completeForm: document.getElementById("globalCompleteForm"),
-        overdueForm: document.getElementById("globalOverdueForm"),
-        confirmCompleteModal: document.getElementById("confirmCompleteModal"),
-        confirmCompleteMessage: document.getElementById("confirmCompleteMessage"),
-        cancelCompleteConfirm: document.getElementById("cancelCompleteConfirm"),
-        acceptCompleteConfirm: document.getElementById("acceptCompleteConfirm"),
-        statusInput: document.getElementById("statusInput"),
-        messageInput: document.getElementById("messageInput"),
         infoId: document.getElementById("infoId"),
         infoClient: document.getElementById("infoClient"),
-        infoBonsai: document.getElementById("infoBonsai"),
+        infoAppointmentType: document.getElementById("infoAppointmentType"),
+        infoStatus: document.getElementById("infoStatus"),
         infoDate: document.getElementById("infoDate"),
         infoTime: document.getElementById("infoTime"),
         infoPhone: document.getElementById("infoPhone"),
         infoEmail: document.getElementById("infoEmail"),
         infoNote: document.getElementById("infoNote"),
         notificationBtn: document.getElementById("notificationBtn"),
-        notificationPopup: document.getElementById("notificationPopup")
+        notificationPopup: document.getElementById("notificationPopup"),
+        settingForm: document.querySelector(".sch-setting-form"),
+        pauseFromInput: document.getElementById("pauseFromInput"),
+        pauseToInput: document.getElementById("pauseToInput"),
+        pauseReasonInput: document.getElementById("pauseReasonInput"),
+        pauseReasonCount: document.getElementById("pauseReasonCount")
     };
 
     function padZero(value) {
@@ -78,10 +73,22 @@ document.addEventListener("DOMContentLoaded", () => {
         return `${day}/${month}/${year}`;
     }
 
-    function parseDateInput(displayString) {
-        if (!displayString) return "";
-        const [day, month, year] = displayString.split("/");
-        return `${year}-${month}-${day}`;
+    function parseDateInput(value) {
+        if (!value) return "";
+
+        const normalizedValue = value.trim();
+        const isoDateMatch = normalizedValue.match(/^(\d{4})-(\d{2})-(\d{2})/);
+        if (isoDateMatch) {
+            return `${isoDateMatch[1]}-${isoDateMatch[2]}-${isoDateMatch[3]}`;
+        }
+
+        const displayDateMatch = normalizedValue.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
+        if (displayDateMatch) {
+            return `${displayDateMatch[3]}-${displayDateMatch[2]}-${displayDateMatch[1]}`;
+        }
+
+        const parsedDate = new Date(normalizedValue);
+        return Number.isNaN(parsedDate.getTime()) ? "" : getLocalDateString(parsedDate);
     }
 
     function parseAppointmentDateTime(appointment) {
@@ -99,76 +106,59 @@ document.addEventListener("DOMContentLoaded", () => {
         return Number.isNaN(parsedDate.getTime()) ? null : parsedDate;
     }
 
-    function parseAppointmentDecisionDeadline(appointment) {
-        if (!appointment.date) return null;
-        const [year, month, day] = appointment.date.split("-").map(Number);
-        const deadline = new Date(year, month - 1, day, 0, 0, 0, 0);
-        return Number.isNaN(deadline.getTime()) ? null : deadline;
+    function parseAppointmentProcessingDeadline(appointment) {
+        const dateString = appointment.date || parseDateInput(appointment.appointmentAt);
+        if (!dateString) return null;
+
+        const dateMatch = dateString.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+        if (!dateMatch) return null;
+
+        return new Date(
+                Number(dateMatch[1]),
+                Number(dateMatch[2]) - 1,
+                Number(dateMatch[3]),
+                0,
+                0,
+                0,
+                0
+        );
     }
 
-    function isOverduePending(appointment) {
-        if (appointment.status !== "PENDING") return false;
-        const decisionDeadline = parseAppointmentDecisionDeadline(appointment);
-        return decisionDeadline ? decisionDeadline.getTime() <= Date.now() : false;
-    }
-
-    function getEffectiveStatus(appointment) {
-        return isOverduePending(appointment) ? "OVERDUE" : appointment.status;
-    }
-
-    function getMinutesUntilAppointment(appointment) {
-        const decisionDeadline = parseAppointmentDecisionDeadline(appointment);
-        return decisionDeadline ? Math.ceil((decisionDeadline.getTime() - Date.now()) / 60000) : null;
+    function getMinutesUntilProcessingDeadline(appointment) {
+        const processingDeadline = parseAppointmentProcessingDeadline(appointment);
+        return processingDeadline ? Math.ceil((processingDeadline.getTime() - Date.now()) / 60000) : null;
     }
 
     function getReminderLevel(minutesUntil) {
         if (minutesUntil === null) {
-            return {
-                className: "neutral",
-                label: "Cần kiểm tra",
-                priority: 4
-            };
+            return { className: "neutral", label: "Cần kiểm tra", priority: 5 };
         }
-
+        if (minutesUntil <= 0) {
+            return { className: "urgent", label: "Đến mốc auto", priority: 1 };
+        }
         if (minutesUntil <= 30) {
-            return {
-                className: "urgent",
-                label: "Cần xử lý ngay",
-                priority: 1
-            };
+            return { className: "urgent", label: "Sắp auto", priority: 1 };
         }
-
         if (minutesUntil <= 120) {
-            return {
-                className: "soon",
-                label: "Sắp đến giờ hẹn",
-                priority: 2
-            };
+            return { className: "soon", label: "Gần mốc auto", priority: 2 };
         }
-
+        if (minutesUntil <= 480) {
+            return { className: "high", label: "Sắp tới mốc", priority: 3 };
+        }
         if (minutesUntil <= 1440) {
-            return {
-                className: "today",
-                label: "Trong 24 giờ",
-                priority: 3
-            };
+            return { className: "today", label: "Trong ngày", priority: 4 };
         }
-
-        return {
-            className: "neutral",
-            label: "Chờ duyệt",
-            priority: 4
-        };
+        return { className: "neutral", label: "Chờ duyệt", priority: 5 };
     }
 
     function formatTimeUntil(minutesUntil) {
-        if (minutesUntil === null) return "Chưa xác định thời gian";
-        if (minutesUntil <= 0) return "Đã tới giờ hẹn";
+        if (minutesUntil === null) return "Chưa xác định mốc auto";
+        if (minutesUntil <= 0) return "Đã tới mốc auto";
         if (minutesUntil < 60) return `Còn ${minutesUntil} phút`;
 
         const hours = Math.floor(minutesUntil / 60);
         const minutes = minutesUntil % 60;
-        if (hours < 24) {
+        if (minutesUntil < 1440) {
             return minutes > 0 ? `Còn ${hours} giờ ${minutes} phút` : `Còn ${hours} giờ`;
         }
 
@@ -177,92 +167,70 @@ document.addEventListener("DOMContentLoaded", () => {
         return remainingHours > 0 ? `Còn ${days} ngày ${remainingHours} giờ` : `Còn ${days} ngày`;
     }
 
-    function getReminderLevelV2(minutesUntil) {
-        if (minutesUntil === null) {
-            return {
-                className: "neutral",
-                label: "Cần kiểm tra",
-                priority: 5
-            };
-        }
-
-        if (minutesUntil <= 30) {
-            return {
-                className: "urgent",
-                label: "Hết hạn sớm",
-                priority: 1
-            };
-        }
-
-        if (minutesUntil <= 120) {
-            return {
-                className: "soon",
-                label: "Rất gần hạn",
-                priority: 2
-            };
-        }
-
-        if (minutesUntil <= 480) {
-            return {
-                className: "high",
-                label: "Ưu tiên cao",
-                priority: 3
-            };
-        }
-
-        if (minutesUntil <= 1440) {
-            return {
-                className: "today",
-                label: "Trong 24 giờ",
-                priority: 4
-            };
-        }
-
-        return {
-            className: "neutral",
-                label: "Chờ duyệt",
-            priority: 5
-        };
-    }
-
-    function formatTimeUntilV2(minutesUntil) {
-        if (minutesUntil === null) return "Chưa xác định thời gian";
-        if (minutesUntil <= 0) return "Đã hết hạn xử lý";
-        if (minutesUntil < 60) return `Còn ${minutesUntil} phút để xử lý`;
-
-        const hours = Math.floor(minutesUntil / 60);
-        const minutes = minutesUntil % 60;
-        if (minutesUntil < 1440) {
-            return minutes > 0 ? `Còn ${hours} giờ ${minutes} phút để xử lý` : `Còn ${hours} giờ để xử lý`;
-        }
-
-        const days = Math.floor(hours / 24);
-        const remainingHours = hours % 24;
-        return remainingHours > 0 ? `Còn ${days} ngày ${remainingHours} giờ để xử lý` : `Còn ${days} ngày để xử lý`;
-    }
-
-    function formatTimeUntilExact(minutesUntil) {
-        return "";
-    }
-
     function formatAppointmentLabel(appointment) {
         return `${formatDateDisplay(appointment.date)} lúc ${appointment.time}`;
     }
 
-    function formatDecisionDeadlineLabel(appointment) {
-        return `Hạn xử lý: trước 00:00 ngày ${formatDateDisplay(appointment.date)}`;
-    }
-
     function getReminderActionLabel(reminderLevel) {
-        return reminderLevel.priority <= 2 ? "Xử lý ngay" : "Xem và xử lý";
+        return reminderLevel.priority <= 2 ? "Kiểm tra" : "Xem chi tiết";
     }
 
     function getReminderNote(reminderLevel) {
-        if (reminderLevel.className === "urgent") return "Sắp hết hạn chỉnh, cần duyệt hoặc từ chối ngay.";
-        if (reminderLevel.className === "soon") return "Nên xử lý trước khi sang ngày xem lịch.";
-        if (reminderLevel.className === "high") return "Hạn xử lý còn trong 8 giờ, ưu tiên kiểm tra trước.";
-        if (reminderLevel.className === "today") return "Hạn xử lý nằm trong 24 giờ tới.";
-        return "Lịch đang chờ duyệt.";
+        if (reminderLevel.className === "urgent") {
+            return "Hệ thống tự duyệt hoặc từ chối theo lịch bận.";
+        }
+        return "Auto chạy lúc 00:00 ngày hẹn.";
+    }
+
+    function updatePauseReasonCount() {
+        if (!elements.pauseReasonInput || !elements.pauseReasonCount) return;
+        elements.pauseReasonCount.textContent = `${elements.pauseReasonInput.value.length}/500`;
+    }
+
+    function formatDateTimeLocal(date) {
+        return `${date.getFullYear()}-${padZero(date.getMonth() + 1)}-${padZero(date.getDate())}T${padZero(date.getHours())}:${padZero(date.getMinutes())}`;
+    }
+
+    function updatePauseInputBounds() {
+        const minDateTime = formatDateTimeLocal(new Date());
+        [elements.pauseFromInput, elements.pauseToInput].forEach(input => {
+            if (!input) return;
+            input.min = minDateTime;
+            input.step = "60";
+        });
+    }
+
+    function isBusinessHourDateTime(value) {
+        if (!value) return true;
+        const dateTime = new Date(value);
+        if (Number.isNaN(dateTime.getTime())) return false;
+
+        const hours = dateTime.getHours();
+        const minutes = dateTime.getMinutes();
+        return (hours > 8 || (hours === 8 && minutes >= 0))
+                && (hours < 17 || (hours === 17 && minutes === 0));
+    }
+
+    function validatePauseSettingForm(event) {
+        updatePauseInputBounds();
+        const pauseInputs = [elements.pauseFromInput, elements.pauseToInput].filter(Boolean);
+
+        for (const input of pauseInputs) {
+            if (!input.value) continue;
+            if (new Date(input.value).getTime() < Date.now()) {
+                input.setCustomValidity("Chỉ chọn thời gian từ hiện tại hoặc tương lai.");
+                input.reportValidity();
+                event.preventDefault();
+                return;
+            }
+            if (!isBusinessHourDateTime(input.value)) {
+                input.setCustomValidity("Chỉ chọn giờ hành chính từ 08:00 đến 17:00.");
+                input.reportValidity();
+                event.preventDefault();
+                return;
+            }
+            input.setCustomValidity("");
+        }
     }
 
     function createElement(tagName, className, text) {
@@ -273,70 +241,13 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function createStatusBadge(status) {
-        const statusLabels = {
-            OVERDUE: "QUÁ HẠN",
-            PENDING: "CHỜ DUYỆT",
-            APPROVED: "ĐÃ DUYỆT",
-            REJECTED: "ĐÃ TỪ CHỐI",
-            COMPLETED: "HOÀN THÀNH"
-        };
-        const badge = createElement("span", `status-badge ${status.toLowerCase()}`, statusLabels[status] || status);
-        return badge;
-    }
-
-    function setStatusMessage(message) {
-        elements.statusMessage.textContent = message;
-        elements.statusMessage.classList.toggle("visible", Boolean(message));
-    }
-
-    function toggleRejectReason(show) {
-        elements.rejectReasonGroup.classList.toggle("sch-hidden", !show);
-        elements.rejectReason.required = show;
-        if (!show) {
-            elements.rejectReason.classList.remove("sch-field-error");
-        }
-    }
-
-    function validateRejectReason() {
-        if (elements.statusSelect.value !== "REJECTED") return true;
-
-        const reason = elements.rejectReason.value.trim();
-        if (reason.length >= 5) {
-            elements.rejectReason.classList.remove("sch-field-error");
-            return true;
-        }
-
-        elements.rejectReason.classList.add("sch-field-error");
-        setStatusMessage("Vui lòng nhập lý do từ chối tối thiểu 5 ký tự trước khi lưu.");
-        elements.rejectReason.focus();
-        return false;
-    }
-
-    function setModalEditMode(canEdit) {
-        elements.statusArea?.classList.toggle("readonly", !canEdit);
-        elements.statusSelect.classList.toggle("sch-hidden", !canEdit);
-        elements.saveStatus.classList.toggle("sch-hidden", !canEdit);
-        elements.closeModalFooter.textContent = canEdit ? "Hủy" : "Đóng";
-
-        if (elements.statusSelectLabel) {
-            elements.statusSelectLabel.textContent = canEdit ? "Cập nhật trạng thái" : "Trạng thái hiện tại";
-        }
-    }
-
-    function setStatusOptions(options) {
-        elements.statusSelect.innerHTML = "";
-        options.forEach(option => {
-            const optionElement = document.createElement("option");
-            optionElement.value = option.value;
-            optionElement.textContent = option.label;
-            elements.statusSelect.appendChild(optionElement);
-        });
+        return createElement("span", `status-badge ${status.toLowerCase()}`, statusLabels[status] || status);
     }
 
     function extractAppointmentsFromDOM() {
         state.appointments = [];
         elements.appointmentData.querySelectorAll(".appointment-data-row").forEach(row => {
-            const dateText = row.dataset.date || "";
+            const dateText = row.dataset.date || row.dataset.appointmentAt || "";
             const status = row.dataset.status ? row.dataset.status.trim().toUpperCase() : "PENDING";
 
             state.appointments.push({
@@ -346,7 +257,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 note: row.dataset.note || "",
                 appointmentAt: row.dataset.appointmentAt || "",
                 client: row.dataset.client || "",
-                bonsai: row.dataset.bonsai || "",
+                appointmentType: row.dataset.appointmentType || "",
                 date: parseDateInput(dateText),
                 time: row.dataset.time || "",
                 status
@@ -358,20 +269,16 @@ document.addEventListener("DOMContentLoaded", () => {
         const total = state.appointments.length;
         const todayString = getLocalDateString();
         const today = state.appointments.filter(appointment => appointment.date === todayString).length;
-        const approved = state.appointments.filter(appointment => getEffectiveStatus(appointment) === "APPROVED").length;
-        const pending = state.appointments.filter(appointment => getEffectiveStatus(appointment) === "PENDING").length;
-        const overdue = state.appointments.filter(appointment => getEffectiveStatus(appointment) === "OVERDUE").length;
+        const approved = state.appointments.filter(appointment => appointment.status === "APPROVED").length;
+        const pending = state.appointments.filter(appointment => appointment.status === "PENDING").length;
+
         elements.statTotal.textContent = total;
         elements.statToday.textContent = today;
         elements.statApproved.textContent = approved;
         elements.statPending.textContent = pending;
-        if (elements.statOverdue) elements.statOverdue.textContent = overdue;
         elements.totalPercent.textContent = total > 0 ? `+${total}` : "0";
         elements.approvedPercent.textContent = approved;
         elements.pendingPercent.textContent = pending;
-        if (elements.overduePercent) {
-            elements.overduePercent.textContent = overdue;
-        }
     }
 
     function renderCalendar() {
@@ -387,6 +294,10 @@ document.addEventListener("DOMContentLoaded", () => {
             elements.calendarGrid.appendChild(createElement("div", "calendar-day empty"));
         }
 
+        const appointmentDates = new Set(state.appointments
+                .map(appointment => appointment.date)
+                .filter(Boolean));
+
         for (let day = 1; day <= totalDays; day += 1) {
             const dayButton = createElement("button", "calendar-day current-month-day", String(day));
             const dateString = `${state.currentYear}-${padZero(state.currentMonth + 1)}-${padZero(day)}`;
@@ -396,8 +307,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
             if (dateString === getLocalDateString()) dayButton.classList.add("today");
             if (dateString === state.selectedDate) dayButton.classList.add("selected");
-
-            if (state.appointments.some(appointment => appointment.date === dateString)) {
+            if (appointmentDates.has(dateString)) {
+                dayButton.classList.add("has-appointment");
                 dayButton.appendChild(createElement("span", "appointment-dot"));
             }
 
@@ -407,14 +318,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function selectCalendarDate(dateString) {
-        if (state.selectedDate === dateString) {
-            state.selectedDate = "";
-            elements.todayPanelTitle.textContent = "Lịch hẹn hôm nay";
-        } else {
-            state.selectedDate = dateString;
-            elements.todayPanelTitle.textContent = `Lịch hẹn ngày ${formatDateDisplay(dateString)}`;
-        }
-
+        state.selectedDate = dateString;
         renderCalendar();
         renderDayPanel();
     }
@@ -425,11 +329,10 @@ document.addEventListener("DOMContentLoaded", () => {
         const dayAppointments = state.appointments
                 .filter(appointment => appointment.date === targetDate)
                 .sort((first, second) => first.time.localeCompare(second.time));
+        elements.todayPanelTitle.textContent = `Lịch hẹn ngày ${formatDateDisplay(targetDate)}`;
 
         if (dayAppointments.length === 0) {
-            elements.todayAppointments.appendChild(
-                    createElement("li", "no-appointments", "Không có lịch hẹn.")
-            );
+            elements.todayAppointments.appendChild(createElement("li", "no-appointments", "Không có lịch hẹn."));
             return;
         }
 
@@ -442,14 +345,62 @@ document.addEventListener("DOMContentLoaded", () => {
             item.dataset.id = appointment.id;
             item.setAttribute("role", "button");
             item.tabIndex = 0;
-            left.appendChild(createElement("span", "item-title", appointment.client));
-            left.appendChild(createElement("span", "item-subtitle", `${appointment.bonsai} (${appointment.id})`));
+            left.appendChild(createElement("span", "item-title", appointment.client || "Khách hàng"));
+            left.appendChild(createElement("span", "item-subtitle", `${appointment.appointmentType} (${appointment.id})`));
             time.appendChild(createElement("i", "fa-regular fa-clock"));
             time.append(` ${appointment.time}`);
             right.appendChild(time);
-            right.appendChild(createStatusBadge(getEffectiveStatus(appointment)));
+            right.appendChild(createStatusBadge(appointment.status));
             item.append(left, right);
             elements.todayAppointments.appendChild(item);
+        });
+    }
+
+    function renderAppointmentList() {
+        if (!elements.appointmentRows) return;
+
+        const sortedAppointments = [...state.appointments].sort((first, second) => {
+            const firstDate = parseAppointmentDateTime(first);
+            const secondDate = parseAppointmentDateTime(second);
+            const firstTime = firstDate ? firstDate.getTime() : 0;
+            const secondTime = secondDate ? secondDate.getTime() : 0;
+            return secondTime - firstTime;
+        });
+
+        if (elements.appointmentListCount) {
+            elements.appointmentListCount.textContent = `${sortedAppointments.length} lịch`;
+        }
+
+        elements.appointmentRows.innerHTML = "";
+
+        if (sortedAppointments.length === 0) {
+            const emptyRow = document.createElement("tr");
+            const emptyCell = createElement("td", "sch-empty-table", "Chưa có lịch tham quan vườn.");
+            emptyCell.colSpan = 5;
+            emptyRow.appendChild(emptyCell);
+            elements.appointmentRows.appendChild(emptyRow);
+            return;
+        }
+
+        sortedAppointments.forEach(appointment => {
+            const row = document.createElement("tr");
+            const contact = appointment.phone || appointment.email || "-";
+
+            row.dataset.id = appointment.id;
+            row.tabIndex = 0;
+            row.setAttribute("role", "button");
+            row.setAttribute("aria-label", `Xem chi tiết lịch ${appointment.id}`);
+            row.append(
+                    createElement("td", "", `#${appointment.id}`),
+                    createElement("td", "", appointment.client || "Khách hàng"),
+                    createElement("td", "", `${formatDateDisplay(appointment.date)} ${appointment.time}`),
+                    createElement("td", "", contact)
+            );
+
+            const statusCell = document.createElement("td");
+            statusCell.appendChild(createStatusBadge(appointment.status));
+            row.appendChild(statusCell);
+            elements.appointmentRows.appendChild(row);
         });
     }
 
@@ -457,17 +408,15 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!elements.pendingReminders || !elements.reminderCount) return;
 
         const pendingAppointments = state.appointments
-                .filter(appointment => getEffectiveStatus(appointment) === "PENDING")
+                .filter(appointment => appointment.status === "PENDING")
                 .map(appointment => ({
                     ...appointment,
-                    minutesUntil: getMinutesUntilAppointment(appointment)
+                    minutesUntil: getMinutesUntilProcessingDeadline(appointment)
                 }))
                 .sort((first, second) => {
-                    const firstLevel = getReminderLevelV2(first.minutesUntil);
-                    const secondLevel = getReminderLevelV2(second.minutesUntil);
-                    if (firstLevel.priority !== secondLevel.priority) {
-                        return firstLevel.priority - secondLevel.priority;
-                    }
+                    const firstLevel = getReminderLevel(first.minutesUntil);
+                    const secondLevel = getReminderLevel(second.minutesUntil);
+                    if (firstLevel.priority !== secondLevel.priority) return firstLevel.priority - secondLevel.priority;
                     if (first.minutesUntil === null) return 1;
                     if (second.minutesUntil === null) return -1;
                     return first.minutesUntil - second.minutesUntil;
@@ -477,192 +426,50 @@ document.addEventListener("DOMContentLoaded", () => {
         elements.pendingReminders.innerHTML = "";
 
         if (pendingAppointments.length === 0) {
-            const emptyItem = createElement("li", "sch-reminder-empty", "Không có lịch chờ xử lý.");
-            elements.pendingReminders.appendChild(emptyItem);
+            elements.pendingReminders.appendChild(createElement("li", "sch-reminder-empty", "Không có lịch chờ xử lý."));
             return;
         }
 
         pendingAppointments.slice(0, 4).forEach((appointment, index) => {
-            const reminderLevel = getReminderLevelV2(appointment.minutesUntil);
+            const reminderLevel = getReminderLevel(appointment.minutesUntil);
             const item = createElement("li", `sch-reminder-item ${reminderLevel.className}`);
             const button = createElement("button", "sch-reminder-btn");
             const priority = createElement("span", "sch-reminder-priority", `#${index + 1}`);
             const content = createElement("div", "sch-reminder-content");
-            const title = createElement("strong", "", appointment.client);
-            const due = createElement("span", "sch-reminder-due", formatTimeUntilV2(appointment.minutesUntil));
-            const exactDue = createElement("small", "sch-reminder-exact", formatTimeUntilExact(appointment.minutesUntil));
-            const deadline = createElement("small", "sch-reminder-deadline", formatDecisionDeadlineLabel(appointment));
-            const meta = createElement(
-                    "span",
-                    "sch-reminder-meta",
-                    `${appointment.bonsai} • ${formatAppointmentLabel(appointment)}`
-            );
+            const title = createElement("strong", "", appointment.client || "Khách hàng");
+            const due = createElement("span", "sch-reminder-due", formatTimeUntil(appointment.minutesUntil));
+            const meta = createElement("span", "sch-reminder-meta", `${appointment.appointmentType} • Hẹn ${formatAppointmentLabel(appointment)} • Xử lý 00:00`);
             const note = createElement("small", "sch-reminder-note", getReminderNote(reminderLevel));
             const badge = createElement("span", `sch-reminder-badge ${reminderLevel.className}`, reminderLevel.label);
             const action = createElement("span", "sch-reminder-action", getReminderActionLabel(reminderLevel));
 
             button.type = "button";
             button.dataset.id = appointment.id;
-            content.append(title, due);
-            if (exactDue.textContent) content.appendChild(exactDue);
-            content.append(deadline, meta, note);
+            content.append(title, due, meta, note);
             button.append(priority, content, badge, action);
             item.appendChild(button);
             elements.pendingReminders.appendChild(item);
         });
     }
 
-    function openEditModal(id) {
+    function openDetailModal(id) {
         const appointment = state.appointments.find(item => item.id === String(id));
         if (!appointment) return;
 
-        state.editingAppointmentId = appointment.id;
         elements.infoId.textContent = appointment.id;
-        elements.infoClient.textContent = appointment.client;
-        elements.infoBonsai.textContent = appointment.bonsai;
+        elements.infoClient.textContent = appointment.client || "-";
+        elements.infoAppointmentType.textContent = appointment.appointmentType || "-";
+        elements.infoStatus.textContent = statusLabels[appointment.status] || appointment.status || "-";
         elements.infoDate.textContent = formatDateDisplay(appointment.date);
-        elements.infoTime.textContent = appointment.time;
+        elements.infoTime.textContent = appointment.time || "-";
         elements.infoPhone.textContent = appointment.phone || "-";
         elements.infoEmail.textContent = appointment.email || "-";
         elements.infoNote.textContent = appointment.note || "-";
-        elements.rejectReason.value = "";
-        const effectiveStatus = getEffectiveStatus(appointment);
-        const canEdit = effectiveStatus === "PENDING" || effectiveStatus === "APPROVED";
-        setModalEditMode(canEdit);
-
-        if (effectiveStatus === "OVERDUE") {
-            elements.statusSelect.disabled = true;
-            elements.saveStatus.disabled = true;
-            elements.statusSelect.value = "APPROVED";
-            setStatusMessage("Lịch PENDING này đã qua hạn xử lý trước 00:00 ngày xem lịch, không thể duyệt từ giao diện.");
-        } else if (effectiveStatus === "PENDING") {
-            setStatusOptions([
-                { value: "APPROVED", label: "APPROVED" },
-                { value: "REJECTED", label: "REJECTED" }
-            ]);
-            elements.statusSelect.disabled = false;
-            elements.saveStatus.disabled = false;
-            elements.statusSelect.value = "APPROVED";
-            setStatusMessage("");
-        } else if (effectiveStatus === "APPROVED") {
-            setStatusOptions([
-                { value: "COMPLETED", label: "COMPLETED" }
-            ]);
-            elements.statusSelect.disabled = false;
-            elements.saveStatus.disabled = false;
-            elements.statusSelect.value = "COMPLETED";
-            setStatusMessage("Lịch đã duyệt. Cập nhật COMPLETED khi khách đã xem cây xong.");
-        } else {
-            elements.statusSelect.disabled = true;
-            elements.saveStatus.disabled = true;
-            elements.statusSelect.value = effectiveStatus === "REJECTED" ? "REJECTED" : "APPROVED";
-            setStatusMessage(`Lịch hẹn này đã được xử lý (${effectiveStatus}).`);
-        }
-
-        toggleRejectReason(canEdit && elements.statusSelect.value === "REJECTED");
-        elements.editModal.classList.add("show");
+        elements.detailModal.classList.add("show");
     }
 
-    function closeEditModal() {
-        elements.editModal.classList.remove("show");
-        state.editingAppointmentId = null;
-        setStatusMessage("");
-        setModalEditMode(true);
-    }
-
-    function saveStatusChange() {
-        if (!state.editingAppointmentId) return;
-        const appointment = state.appointments.find(item => item.id === String(state.editingAppointmentId));
-        const effectiveStatus = appointment ? getEffectiveStatus(appointment) : "";
-
-        if (!appointment || (effectiveStatus !== "PENDING" && effectiveStatus !== "APPROVED")) {
-            setStatusMessage("Chỉ lịch PENDING hợp lệ hoặc APPROVED mới được cập nhật.");
-            return;
-        }
-
-        if (effectiveStatus === "PENDING" && !validateRejectReason()) return;
-
-        if (elements.statusSelect.value === "COMPLETED") {
-            state.completeSubmitMode = "status-update";
-            state.completingAppointmentId = state.editingAppointmentId;
-
-            if (elements.confirmCompleteMessage) {
-                elements.confirmCompleteMessage.textContent =
-                        `Lịch hẹn mã #${state.editingAppointmentId} sẽ được chuyển sang trạng thái COMPLETED. Khách hàng sẽ nhận thông báo hoàn thành.`;
-            }
-
-            if (elements.confirmCompleteModal) {
-                elements.confirmCompleteModal.classList.add("show");
-                elements.confirmCompleteModal.setAttribute("aria-hidden", "false");
-                elements.acceptCompleteConfirm?.focus();
-                return;
-            }
-        }
-
-        submitStatusChangeForm();
-    }
-
-    function submitStatusChangeForm() {
-        if (!state.editingAppointmentId) return;
-
-        elements.updateStatusForm.setAttribute(
-                "action",
-                `/artisan/appointments/update/${state.editingAppointmentId}/status`
-        );
-        elements.statusInput.value = elements.statusSelect.value;
-        elements.messageInput.value = elements.statusSelect.value === "REJECTED"
-                ? elements.rejectReason.value.trim()
-                : "";
-        elements.updateStatusForm.submit();
-    }
-
-    function completeAppointment(id) {
-        if (!id) return;
-        state.completingAppointmentId = id;
-        state.completeSubmitMode = "legacy-check";
-
-        if (elements.confirmCompleteMessage) {
-            elements.confirmCompleteMessage.textContent =
-                    `Lịch hẹn mã #${id} sẽ được chuyển sang trạng thái COMPLETED. Thao tác này không thể chỉnh lại từ màn hình này.`;
-        }
-
-        if (elements.confirmCompleteModal) {
-            elements.confirmCompleteModal.classList.add("show");
-            elements.confirmCompleteModal.setAttribute("aria-hidden", "false");
-            elements.acceptCompleteConfirm?.focus();
-            return;
-        }
-
-        submitCompleteAppointment();
-    }
-
-    function closeCompleteConfirm() {
-        if (!elements.confirmCompleteModal) return;
-        elements.confirmCompleteModal.classList.remove("show");
-        elements.confirmCompleteModal.setAttribute("aria-hidden", "true");
-        state.completingAppointmentId = null;
-        state.completeSubmitMode = "";
-    }
-
-    function submitCompleteAppointment() {
-        if (state.completeSubmitMode === "status-update") {
-            submitStatusChangeForm();
-            return;
-        }
-
-        const id = state.completingAppointmentId;
-        if (!id) return;
-
-        elements.completeForm.setAttribute("action", `/artisan/appointments/check/${id}`);
-        elements.completeForm.submit();
-    }
-
-    function markAppointmentOverdue(id) {
-        if (!id || !elements.overdueForm) return;
-        if (!confirm(`Cập nhật lịch hẹn mã #${id} sang trạng thái QUÁ HẠN trong database?`)) return;
-
-        elements.overdueForm.setAttribute("action", `/artisan/appointments/overdue/${id}`);
-        elements.overdueForm.submit();
+    function closeDetailModal() {
+        elements.detailModal.classList.remove("show");
     }
 
     function bindEvents() {
@@ -686,7 +493,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         elements.todayAppointments.addEventListener("click", event => {
             const item = event.target.closest(".appointment-item");
-            if (item) openEditModal(item.dataset.id);
+            if (item) openDetailModal(item.dataset.id);
         });
 
         elements.todayAppointments.addEventListener("keydown", event => {
@@ -694,49 +501,36 @@ document.addEventListener("DOMContentLoaded", () => {
             const item = event.target.closest(".appointment-item");
             if (!item) return;
             event.preventDefault();
-            openEditModal(item.dataset.id);
+            openDetailModal(item.dataset.id);
         });
 
-        if (elements.pendingReminders) {
-            elements.pendingReminders.addEventListener("click", event => {
-                const button = event.target.closest(".sch-reminder-btn");
-                if (button) openEditModal(button.dataset.id);
-            });
-        }
+        elements.pendingReminders?.addEventListener("click", event => {
+            const button = event.target.closest(".sch-reminder-btn");
+            if (button) openDetailModal(button.dataset.id);
+        });
 
-        elements.statusSelect.addEventListener("change", () => {
-            toggleRejectReason(elements.statusSelect.value === "REJECTED");
-            setStatusMessage("");
+        elements.appointmentRows?.addEventListener("click", event => {
+            const row = event.target.closest("tr[data-id]");
+            if (row) openDetailModal(row.dataset.id);
         });
-        elements.rejectReason.addEventListener("input", () => {
-            if (elements.rejectReason.value.trim().length >= 5) {
-                elements.rejectReason.classList.remove("sch-field-error");
-                setStatusMessage("");
-            }
+
+        elements.appointmentRows?.addEventListener("keydown", event => {
+            if (event.key !== "Enter" && event.key !== " ") return;
+            const row = event.target.closest("tr[data-id]");
+            if (!row) return;
+            event.preventDefault();
+            openDetailModal(row.dataset.id);
         });
-        elements.saveStatus.addEventListener("click", saveStatusChange);
-        elements.closeModal.addEventListener("click", closeEditModal);
-        elements.closeModalFooter.addEventListener("click", closeEditModal);
-        elements.editModal.addEventListener("click", event => {
-            if (event.target === elements.editModal) closeEditModal();
+
+        elements.closeModal?.addEventListener("click", closeDetailModal);
+        elements.closeModalFooter?.addEventListener("click", closeDetailModal);
+        elements.detailModal?.addEventListener("click", event => {
+            if (event.target === elements.detailModal) closeDetailModal();
         });
-        if (elements.cancelCompleteConfirm) {
-            elements.cancelCompleteConfirm.addEventListener("click", closeCompleteConfirm);
-        }
-        if (elements.acceptCompleteConfirm) {
-            elements.acceptCompleteConfirm.addEventListener("click", submitCompleteAppointment);
-        }
-        if (elements.confirmCompleteModal) {
-            elements.confirmCompleteModal.addEventListener("click", event => {
-                if (event.target === elements.confirmCompleteModal) closeCompleteConfirm();
-            });
-        }
+
         document.addEventListener("keydown", event => {
-            if (event.key === "Escape" && elements.editModal.classList.contains("show")) {
-                closeEditModal();
-            }
-            if (event.key === "Escape" && elements.confirmCompleteModal?.classList.contains("show")) {
-                closeCompleteConfirm();
+            if (event.key === "Escape" && elements.detailModal.classList.contains("show")) {
+                closeDetailModal();
             }
         });
 
@@ -751,21 +545,29 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             });
         }
+
+        elements.pauseReasonInput?.addEventListener("input", updatePauseReasonCount);
+        elements.settingForm?.addEventListener("submit", validatePauseSettingForm);
+        elements.pauseFromInput?.addEventListener("input", () => elements.pauseFromInput.setCustomValidity(""));
+        elements.pauseToInput?.addEventListener("input", () => elements.pauseToInput.setCustomValidity(""));
     }
 
-    function init() {
-        extractAppointmentsFromDOM();
-        bindEvents();
+    function renderAll() {
         renderStats();
         renderReminderPanel();
         renderCalendar();
         renderDayPanel();
-        setInterval(() => {
-            renderStats();
-            renderReminderPanel();
-            renderCalendar();
-            renderDayPanel();
-        }, 60000);
+        renderAppointmentList();
+    }
+
+    function init() {
+        extractAppointmentsFromDOM();
+        state.selectedDate = getLocalDateString();
+        updatePauseReasonCount();
+        updatePauseInputBounds();
+        bindEvents();
+        renderAll();
+        setInterval(renderAll, 60000);
     }
 
     init();

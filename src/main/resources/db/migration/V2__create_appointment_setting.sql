@@ -53,3 +53,5 @@ SELECT
     SELECT 1
     FROM appointment_setting
 );
+ALTER TABLE appointment_setting
+    ADD COLUMN PauseReason TEXT NULL;

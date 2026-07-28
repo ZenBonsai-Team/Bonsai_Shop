@@ -9,9 +9,12 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
 import com.example.bonsai_shop.entity.Product;
+import com.example.bonsai_shop.entity.ProductMedia;
 import com.example.bonsai_shop.entity.ProductTag;
 import com.example.bonsai_shop.entity.Tag;
 import com.example.bonsai_shop.product.dto.ProductCardDTO;
+import com.example.bonsai_shop.product.dto.ProductMediaDTO;
+import com.example.bonsai_shop.product.repository.ProductMediaRepository;
 import com.example.bonsai_shop.product.repository.ProductRepository;
 import com.example.bonsai_shop.product.repository.ProductSpecifications;
 import com.example.bonsai_shop.product.repository.ProductTagRepository;
@@ -22,6 +25,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class ProductService {
     private final ProductRepository productRepository;
+    private final ProductMediaRepository productMediaRepository;
     private final ProductTagRepository productTagRepository;
 
     public Page<ProductCardDTO> getMarketplaceProducts(Pageable pageable) {
@@ -63,6 +67,23 @@ public class ProductService {
 
     public ProductCardDTO getPremiumProductsById(Integer productId) {
         return productRepository.findPremiumProductById(productId);
+    }
+
+    @Transactional(readOnly = true)
+    public List<ProductMediaDTO> getPremiumProductMedia(Integer productId) {
+        Product product = productRepository.findById(productId).orElse(null);
+        if (product == null
+                || product.getSegment() == null
+                || product.getSegment().getSegmentId() == null
+                || product.getSegment().getSegmentId() != 3
+                || "DRAFT".equalsIgnoreCase(product.getProductStatus())
+                || "HIDDEN".equalsIgnoreCase(product.getProductStatus())) {
+            return List.of();
+        }
+
+        return productMediaRepository.findByProductOrderByDisplayOrderAscMediaIdAsc(product).stream()
+                .map(this::toProductMediaDTO)
+                .toList();
     }
 
     @Transactional(readOnly = true)
@@ -108,5 +129,17 @@ public class ProductService {
     public List<Product> getTop5MostViewed() {
         return productRepository
                 .findTop5ByProductStatusOrderByViewCountDesc("AVAILABLE");
+    }
+
+    private ProductMediaDTO toProductMediaDTO(ProductMedia media) {
+        return new ProductMediaDTO(
+                media.getMediaId(),
+                media.getMediaUrl(),
+                media.getMediaType(),
+                media.getSlotType(),
+                media.getCaption(),
+                media.getIsThumbnail(),
+                media.getDisplayOrder()
+        );
     }
 }

@@ -1846,9 +1846,9 @@ section {
 }
 
 .card-footer {
-    display: flex;
+    display: grid;
     align-items: center;
-    justify-content: space-between;
+    grid-template-columns: minmax(0, 1fr) auto;
     gap: 12px;
     margin-top: 16px;
     padding: 15px 0 0;
@@ -1857,16 +1857,47 @@ section {
 }
 
 .price-copy {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 3px;
     color: var(--lux-muted);
-    font-size: 0.76rem;
+    font-size: 0.62rem;
     font-weight: 850;
     letter-spacing: 0.08em;
     line-height: 1.35;
     text-transform: uppercase;
 }
 
+.price-copy span {
+    color: rgba(77, 87, 75, 0.72);
+    font-size: 0.58rem;
+    letter-spacing: 0.12em;
+}
+
+.price-copy strong {
+    display: block;
+    overflow-wrap: anywhere;
+    color: var(--lux-muted);
+    font-size: clamp(0.86rem, 0.8vw, 1rem);
+    font-weight: 900;
+    letter-spacing: 0.1em;
+    line-height: 1.28;
+}
+
+.price-copy-visible strong {
+    color: #7b8580;
+    font-variant-numeric: tabular-nums;
+}
+
+.price-copy-private strong {
+    color: var(--lux-green);
+    letter-spacing: 0.06em;
+}
+
 .card-actions {
     flex: 0 0 auto;
+    justify-self: end;
 }
 
 .btn-detail-luxury {
@@ -1884,6 +1915,7 @@ section {
     letter-spacing: 0.08em;
     text-decoration: none;
     text-transform: uppercase;
+    white-space: nowrap;
 }
 
 .btn-detail-luxury:hover {
@@ -2604,7 +2636,7 @@ section {
 
     .card-footer {
         align-items: stretch;
-        flex-direction: column;
+        grid-template-columns: 1fr;
     }
 
     .card-actions,

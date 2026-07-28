@@ -1,120 +1,171 @@
 package com.example.bonsai_shop.artisan.service;
 
+import com.example.bonsai_shop.appointmentSetting.reponsitory.AppointmentSettingRepository;
 import com.example.bonsai_shop.artisan.dto.ArtisanAppointmentDTO;
+import com.example.bonsai_shop.entity.AppointmentSetting;
 import com.example.bonsai_shop.entity.User;
 import com.example.bonsai_shop.entity.ViewingAppointment;
 import com.example.bonsai_shop.notification.service.NotificationService;
 import com.example.bonsai_shop.viewappointment.repository.ViewingAppointmentRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class ArtisanAppointmentService {
 
+    private static final int AUTO_COMPLETE_MINUTES = 60;
+    private static final String STATUS_PENDING = "PENDING";
+    private static final String STATUS_APPROVED = "APPROVED";
+    private static final String STATUS_REJECTED = "REJECTED";
+    private static final String STATUS_COMPLETED = "COMPLETED";
+    private static final LocalTime BUSINESS_START_TIME = LocalTime.of(8, 0);
+    private static final LocalTime BUSINESS_END_TIME = LocalTime.of(17, 0);
+
     private final ViewingAppointmentRepository viewingAppointmentRepository;
     private final NotificationService notificationService;
+    private final AppointmentSettingRepository appointmentSettingRepository;
 
-    public List<ArtisanAppointmentDTO> findAllAppointmentsByArtisan(User artisan) {
-        return viewingAppointmentRepository.findAllAppointmentsByArtisan();
+    public List<ArtisanAppointmentDTO> findAllAppointments() {
+        return viewingAppointmentRepository.findAllAppointmentSummaries();
     }
 
-    public void updateAppointmentStatus(Integer appointmentId, String status, String message, User artisan) {
-        ViewingAppointment appointment =
-                viewingAppointmentRepository.findById(appointmentId)
-                        .orElseThrow(() -> new RuntimeException("Không có lịch."));
+    @Transactional
+    public int processAutomaticAppointmentStatusUpdates() {
+        LocalDateTime now = LocalDateTime.now();
+        AppointmentSetting setting = getAppointmentSetting();
 
-        String currentStatus = appointment.getStatus();
-        String nextStatus = status == null ? "" : status.trim().toUpperCase();
+        int updatedCount = autoDecidePendingAppointments(setting, now);
+        updatedCount += autoCompleteApprovedAppointments(now);
 
-
-        if ("PENDING".equalsIgnoreCase(currentStatus)) {
-            validatePendingTransition(nextStatus, message);
-        } else if ("APPROVED".equalsIgnoreCase(currentStatus)) {
-            validateApprovedTransition(nextStatus, appointment.getAppointmentDate());
-        } else {
-            throw new RuntimeException("Lịch hẹn đã được xử lý.");
-        }
-
-        appointment.setStatus(nextStatus);
-        appointment.setUpdatedAt(LocalDateTime.now());
-        viewingAppointmentRepository.save(appointment);
-        notifyCustomerIfNeeded(appointment, nextStatus, message);
+        return updatedCount;
     }
 
-    public void checkAppointment(Integer appointmentId, User artisan) {
-        ViewingAppointment appointment =
-                viewingAppointmentRepository.findById(appointmentId)
-                        .orElseThrow(() -> new RuntimeException("Không có lịch."));
-
-        if (!"APPROVED".equalsIgnoreCase(appointment.getStatus())) {
-            throw new RuntimeException("Không thể hoàn thành lịch khi đang ở trạng thái " + appointment.getStatus());
-        }
-        LocalDateTime appointmentTime =appointment.getAppointmentDate();
-        if (LocalDateTime.now().isBefore(appointmentTime)) {
-            throw new RuntimeException(
-                    "Chưa đến thời gian diễn ra lịch hẹn nên không thể hoàn thành."
-            );
-        }
-        appointment.setStatus("COMPLETED");
-        appointment.setUpdatedAt(LocalDateTime.now());
-        viewingAppointmentRepository.save(appointment);
+    public AppointmentSetting getAppointmentSetting() {
+       return appointmentSettingRepository.findFirstByOrderBySettingIdAsc()
+               .orElseThrow(() -> new RuntimeException("Không tìm thấy cấu hình lịch hẹn."));
     }
 
-    public void markAppointmentOverdue(Integer appointmentId, User artisan) {
-        ViewingAppointment appointment =
-                viewingAppointmentRepository.findById(appointmentId)
-                        .orElseThrow(() -> new RuntimeException("Không có lịch."));
+    public void updateAppointmentSetting(
+            LocalDateTime pauseFrom,
+            LocalDateTime pauseTo,
+            String pauseReason,
+            User updatedBy
+    ) {
+        AppointmentSetting setting = getAppointmentSetting();
 
-        if (!"PENDING".equalsIgnoreCase(appointment.getStatus())) {
-            throw new RuntimeException("Chỉ lịch PENDING mới có thể chuyển quá hạn.");
+        if (pauseFrom != null && pauseTo != null && pauseFrom.isAfter(pauseTo)) {
+            throw new RuntimeException("Thời gian bắt đầu phải trước thời gian kết thúc.");
         }
 
-        LocalDateTime deadline = appointment.getAppointmentDate().toLocalDate().atStartOfDay();
-        if (LocalDateTime.now().isBefore(deadline)) {
-            throw new RuntimeException("Lịch này chưa tới hạn quá hạn.");
+        validatePauseDateTime(pauseFrom);
+        validatePauseDateTime(pauseTo);
+
+        String normalizedPauseReason = normalizePauseReason(pauseReason);
+        if (pauseFrom != null && pauseTo != null && normalizedPauseReason == null) {
+            throw new RuntimeException("Vui lòng nhập lý do tạm ngừng.");
         }
 
-        appointment.setStatus("OVERDUE");
-        appointment.setUpdatedAt(LocalDateTime.now());
-        viewingAppointmentRepository.save(appointment);
+        setting.setPauseFrom(pauseFrom);
+        setting.setPauseTo(pauseTo);
+        setting.setPauseReason(normalizedPauseReason);
+        setting.setAutoComplete(true);
+        setting.setUpdatedBy(updatedBy);
+        setting.setUpdatedAt(LocalDateTime.now());
+
+        appointmentSettingRepository.save(setting);
     }
 
-    private void validatePendingTransition(String nextStatus, String message) {
-        if (!"APPROVED".equals(nextStatus) && !"REJECTED".equals(nextStatus)) {
-            throw new RuntimeException("Trạng thái không hợp lệ.");
+    private int autoDecidePendingAppointments(AppointmentSetting setting, LocalDateTime now) {
+        LocalDateTime start  = now.toLocalDate().atStartOfDay();
+        LocalDateTime end = start.plusDays(1);
+        List<ViewingAppointment> appointments = viewingAppointmentRepository
+                .findByStatusAndAppointmentDateGreaterThanEqualAndAppointmentDateLessThan(STATUS_PENDING, start, end);
+
+        int updatedCount = 0;
+        for (ViewingAppointment appointment : appointments) {
+            if(isPausedAt(setting, appointment.getAppointmentDate())){
+                  applyAutomaticStatus(appointment,STATUS_REJECTED, setting.getPauseReason());
+            }else{
+                applyAutomaticStatus(appointment,STATUS_APPROVED, null);
+            }
+            updatedCount++;
         }
 
-        if ("REJECTED".equals(nextStatus) && (message == null || message.trim().length() < 5)) {
-            throw new RuntimeException("Vui lòng nhập lý do từ chối tối thiểu 5 ký tự.");
-        }
+        return updatedCount;
     }
 
-    private void validateApprovedTransition(String nextStatus, LocalDateTime appointmentTime) {
-        if (!"COMPLETED".equals(nextStatus)) {
-            throw new RuntimeException("Lịch đã duyệt chỉ có thể chuyển sang COMPLETED.");
+    private int autoCompleteApprovedAppointments(LocalDateTime now) {
+        LocalDateTime completeTime = now.minusMinutes(AUTO_COMPLETE_MINUTES);
+
+        List<ViewingAppointment> appointments = viewingAppointmentRepository
+                .findByStatusAndAppointmentDateLessThanEqual(STATUS_APPROVED, completeTime);
+
+        int updatedCount = 0;
+        for (ViewingAppointment appointment : appointments) {
+            applyAutomaticStatus(appointment, STATUS_COMPLETED,null);
+            updatedCount++;
         }
-        if (LocalDateTime.now().isBefore(appointmentTime)) {
-            throw new RuntimeException(
-                    "Chưa đến thời gian hẹn. Không thể hoàn thành lịch hẹn."
-            );
-        }
+
+        return updatedCount;
     }
 
-    private void notifyCustomerIfNeeded(ViewingAppointment appointment, String nextStatus, String message) {
-        if ("APPROVED".equals(nextStatus)) {
+    private boolean isPausedAt(AppointmentSetting setting, LocalDateTime appointmentDate) {
+        if(appointmentDate == null){
+            return false;
+        }
+        LocalDateTime pauseFrom = setting.getPauseFrom();
+        LocalDateTime pauseTo = setting.getPauseTo();
+
+        if (pauseFrom == null || pauseTo == null) {
+            return false;
+        }
+        if (appointmentDate.isBefore(pauseFrom)) {
+            return false;
+        }
+        return !appointmentDate.isAfter(pauseTo);
+    }
+
+    private void applyAutomaticStatus(ViewingAppointment appointment, String nextStatus, String message) {
+       appointment.setStatus(nextStatus);
+       appointment.setUpdatedAt(LocalDateTime.now());
+       viewingAppointmentRepository.save(appointment);
+        if (STATUS_APPROVED.equals(nextStatus)) {
             notificationService.createNotification(
                     appointment.getCustomer(),
-                    "Lịch hẹn xem cây của bạn đã được chấp nhận."
+                    "Lịch hẹn tham quan vườn của bạn đã được chấp nhận."
             );
-        } else if ("REJECTED".equals(nextStatus)) {
+        } else if (STATUS_REJECTED.equals(nextStatus)) {
             notificationService.createNotification(
                     appointment.getCustomer(),
-                    "Lịch hẹn xem cây của bạn đã bị từ chối.\nLý do: " + message.trim()
+                    "Lịch hẹn tham quan vườn của bạn đã bị từ chối.\nLý do: " + message
             );
+        }
+    }
+
+    private String normalizePauseReason(String pauseReason) {
+        if (pauseReason == null || pauseReason.isBlank()) {
+            return null;
+        }
+        return pauseReason.trim();
+    }
+
+    private void validatePauseDateTime(LocalDateTime pauseDateTime) {
+        if (pauseDateTime == null) {
+            return;
+        }
+        if (pauseDateTime.isBefore(LocalDateTime.now())) {
+            throw new RuntimeException("Thoi gian ban khong duoc truoc thoi diem hien tai.");
+        }
+
+        LocalTime pauseTime = pauseDateTime.toLocalTime();
+        if (pauseTime.isBefore(BUSINESS_START_TIME) || pauseTime.isAfter(BUSINESS_END_TIME)) {
+            throw new RuntimeException("Thoi gian ban phai nam trong gio hanh chinh 08:00 - 17:00.");
         }
     }
 }

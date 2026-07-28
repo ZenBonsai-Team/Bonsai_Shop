@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿﻿<!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
 
 <head>
@@ -29,12 +29,77 @@
             <header class="page-header">
                 <div>
                     <h1>Quản lý lịch hẹn</h1>
-                    <p>Theo dõi và cập nhật trạng thái các lịch hẹn xem bonsai từ khách hàng.</p>
+                    <p>Theo dõi và cập nhật trạng thái các lịch hẹn thăm showroom từ khách hàng.</p>
                 </div>
             </header>
 
             <div th:if="${success}" class="alert success" th:text="${success}"></div>
             <div th:if="${error}" class="alert error" th:text="${error}"></div>
+
+            <section class="portal-card sch-setting-panel" aria-label="Cấu hình lịch bận cho auto duyệt lịch hẹn">
+                <div class="sch-setting-head">
+                    <div>
+                        <p class="sch-reminder-kicker">Auto lịch hẹn</p>
+                        <h2><i class="fa-solid fa-gear me-2"></i>Cấu hình lịch bận</h2>
+                        <span class="sch-setting-subtitle">Hệ thống luôn tự duyệt lịch hẹn; phần này chỉ dùng để khai báo thời gian bận và lý do từ chối.</span>
+                    </div>
+                    <span class="sch-setting-status pause"
+                          th:classappend="${appointmentSetting != null && appointmentSetting.pauseFrom != null && appointmentSetting.pauseTo != null ? ' active' : ''}"
+                          th:text="${appointmentSetting != null && appointmentSetting.pauseFrom != null && appointmentSetting.pauseTo != null ? 'Đang có lịch bận' : 'Chưa đặt lịch bận'}">
+                        Chưa đặt lịch bận
+                    </span>
+                </div>
+
+                <form class="sch-setting-form" th:action="@{/artisan/appointments/settings}" method="post">
+                    <input type="hidden" name="_csrf" th:value="${_csrf?.token}">
+
+                    <div class="sch-setting-grid">
+                        <label class="sch-setting-field">
+                            <span>Bận từ</span>
+                            <input type="datetime-local"
+                                   id="pauseFromInput"
+                                   name="pauseFrom"
+                                   step="60"
+                                   th:value="${appointmentSetting != null && appointmentSetting.pauseFrom != null ? #temporals.format(appointmentSetting.pauseFrom, 'yyyy-MM-dd''T''HH:mm') : ''}">
+                        </label>
+
+                        <label class="sch-setting-field">
+                            <span>Bận đến</span>
+                            <input type="datetime-local"
+                                   id="pauseToInput"
+                                   name="pauseTo"
+                                   step="60"
+                                   th:value="${appointmentSetting != null && appointmentSetting.pauseTo != null ? #temporals.format(appointmentSetting.pauseTo, 'yyyy-MM-dd''T''HH:mm') : ''}">
+                        </label>
+                    </div>
+
+                    <div class="sch-setting-reason-card">
+                        <label class="sch-setting-field">
+                            <span>Lý do tạm ngưng</span>
+                            <textarea id="pauseReasonInput"
+                                      name="pauseReason"
+                                      rows="4"
+                                      maxlength="500"
+                                      placeholder="Ví dụ: Nghệ nhân bận workshop, showroom tạm đóng để bảo dưỡng khu trưng bày..."
+                                      th:text="${appointmentSetting != null ? appointmentSetting.pauseReason : ''}"></textarea>
+                        </label>
+                        <div class="sch-setting-reason-footer">
+                            <span><i class="fa-regular fa-message me-1"></i>Lý do này được gửi cho khách khi lịch rơi vào thời gian bận.</span>
+                            <span id="pauseReasonCount">0/500</span>
+                        </div>
+                    </div>
+
+                    <p class="sch-setting-help">
+                        Auto chạy cố định lúc 00:00 ngày hẹn: nếu trùng lịch bận thì từ chối kèm lý do, còn lại hệ thống tự duyệt.
+                    </p>
+
+                    <div class="sch-setting-actions">
+                        <button type="submit" class="btn-modal-confirm">
+                            <i class="fa-solid fa-floppy-disk me-1"></i>Lưu cấu hình
+                        </button>
+                    </div>
+                </form>
+            </section>
 
             <section class="sch-kpi-grid">
                 <article class="sch-kpi-card">
@@ -81,16 +146,6 @@
                     </div>
                 </article>
 
-                <article class="sch-kpi-card">
-                    <div class="sch-kpi-top">
-                        <div class="sch-kpi-icon rose"><i class="fa-solid fa-triangle-exclamation"></i></div>
-                        <span class="sch-kpi-badge rose" id="overduePercent">0</span>
-                    </div>
-                    <div>
-                        <p class="sch-kpi-val" id="statOverdue">0</p>
-                        <p class="sch-kpi-label">Quá hạn xử lý</p>
-                    </div>
-                </article>
             </section>
 
             <section class="portal-card sch-reminder-panel" aria-label="Nhắc việc cần xử lý">
@@ -113,7 +168,7 @@
                                 <i class="fa-solid fa-chevron-left"></i>
                             </button>
                             <span class="current-month"></span>
-                            <button id="nextMonth" class="sch-nav-btn" type="button" aria-label="Tháng sau">
+                            <button id="nextMonth" class="sch-nav-btn" type="button" aria-label="ThĂ¡ng sau">
                                 <i class="fa-solid fa-chevron-right"></i>
                             </button>
                         </div>
@@ -140,8 +195,8 @@
                      th:data-note="${appointment.note}"
                      th:data-appointment-at="${#temporals.format(appointment.appointmentDate,'yyyy-MM-dd''T''HH:mm')}"
                      th:data-client="${appointment.customerName}"
-                     data-bonsai="Lịch thăm vườn"
-                     th:data-date="${#temporals.format(appointment.appointmentDate,'dd/MM/yyyy')}"
+                     data-appointment-type="Lịch tham quan vườn"
+                     th:data-date="${#temporals.format(appointment.appointmentDate,'yyyy-MM-dd')}"
                      th:data-time="${#temporals.format(appointment.appointmentDate,'HH:mm')}"
                      th:data-status="${appointment.status}">
                 </div>
@@ -152,7 +207,7 @@
 <div id="editModal" class="sch-modal-backdrop">
     <div class="sch-modal">
         <div class="sch-modal-header">
-            <h2><i class="fa-solid fa-calendar-pen me-2"></i>Cập nhật trạng thái lịch hẹn</h2>
+            <h2><i class="fa-solid fa-calendar-days me-2"></i>Chi tiết lịch hẹn</h2>
             <button type="button" id="closeModal" class="sch-modal-close" aria-label="Đóng">&times;</button>
         </div>
 
@@ -183,73 +238,25 @@
                     <span id="infoEmail">-</span>
                 </div>
                 <div class="sch-info-row sch-info-full">
-                    <label>Nội dung</label>
-                    <span id="infoBonsai">-</span>
+                    <label>Trạng thái</label>
+                    <span id="infoStatus">-</span>
+                </div>
+                <div class="sch-info-row sch-info-full">
+                    <label>Loại lịch</label>
+                    <span id="infoAppointmentType">-</span>
                 </div>
                 <div class="sch-info-row sch-info-full">
                     <label>Ghi chú</label>
                     <span id="infoNote">-</span>
                 </div>
             </div>
-
-            <div class="sch-status-area">
-                <label id="statusSelectLabel" for="statusSelect">Cập nhật trạng thái</label>
-                <select id="statusSelect">
-                    <option value="APPROVED">Duyệt lịch hẹn</option>
-                    <option value="REJECTED">Từ chối lịch hẹn</option>
-                </select>
-
-                <div id="rejectReasonGroup" class="sch-hidden">
-                    <label for="rejectReason" class="sch-reject-label">Lý do từ chối <span aria-hidden="true">*</span></label>
-                    <textarea id="rejectReason" rows="3" placeholder="Nhập lý do từ chối để khách hiểu và đặt lại lịch phù hợp hơn..."></textarea>
-                </div>
-
-                <p id="statusMessage" class="sch-status-msg"></p>
-            </div>
         </div>
 
-        <form id="updateStatusForm" method="post">
-            <input type="hidden" name="_csrf" th:value="${_csrf?.token}">
-            <input type="hidden" id="statusInput" name="status">
-            <input type="hidden" id="messageInput" name="message">
-
-            <div class="sch-modal-footer">
-                <button type="button" id="closeModalFooter" class="btn-modal-cancel">Hủy</button>
-                <button id="saveStatus" type="button" class="btn-modal-confirm">
-                    <i class="fa-solid fa-floppy-disk me-1"></i>Lưu thay đổi
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<form id="globalCompleteForm" method="post" class="sch-hidden">
-    <input type="hidden" name="_csrf" th:value="${_csrf?.token}">
-</form>
-
-<form id="globalOverdueForm" method="post" class="sch-hidden">
-    <input type="hidden" name="_csrf" th:value="${_csrf?.token}">
-</form>
-
-<div id="confirmCompleteModal" class="sch-confirm-backdrop" aria-hidden="true">
-    <div class="sch-confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="confirmCompleteTitle">
-        <div class="sch-confirm-icon">
-            <i class="fa-solid fa-circle-check"></i>
-        </div>
-        <div class="sch-confirm-content">
-            <p class="sch-confirm-kicker">Xác nhận hoàn thành</p>
-            <h2 id="confirmCompleteTitle">Hoàn thành lịch hẹn?</h2>
-            <p id="confirmCompleteMessage">Lịch hẹn này sẽ được chuyển sang trạng thái Hoàn thành.</p>
-        </div>
-        <div class="sch-confirm-actions">
-            <button type="button" id="cancelCompleteConfirm" class="btn-modal-cancel">Hủy</button>
-            <button type="button" id="acceptCompleteConfirm" class="btn-modal-confirm">
-                <i class="fa-solid fa-check me-1"></i>Xác nhận
-            </button>
+        <div class="sch-modal-footer">
+            <button type="button" id="closeModalFooter" class="btn-modal-confirm">Đóng</button>
         </div>
     </div>
 </div>
-
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script th:src="@{/js/manage_schedule.js}"></script>
 </body>

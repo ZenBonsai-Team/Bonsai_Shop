@@ -1,5 +1,7 @@
 package com.example.bonsai_shop.product.controller;
+
 import com.example.bonsai_shop.product.dto.ProductCardDTO;
+import com.example.bonsai_shop.product.dto.ProductMediaDTO;
 import com.example.bonsai_shop.product.service.ProductService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -10,32 +12,42 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
+
+import java.util.List;
+
 @Controller
 @RequiredArgsConstructor
-
 public class PreniumBonsaiController {
-   private final ProductService productService;
+    private final ProductService productService;
 
-   @GetMapping("/bonsai-luxury")
+    @GetMapping("/bonsai-luxury")
     public String premium(
-            @RequestParam(defaultValue = "0") int page
-           ,Model model) {
-       Page<ProductCardDTO> product = productService.getPremiumProducts(PageRequest.of(page, 8));
-       model.addAttribute("product", product);
-       return "product/bonsai-luxury";
-   }
+            @RequestParam(defaultValue = "0") int page,
+            Model model) {
+        Page<ProductCardDTO> product = productService.getPremiumProducts(PageRequest.of(page, 8));
+        model.addAttribute("product", product);
+        return "product/bonsai-luxury";
+    }
 
-   @GetMapping("/bonsai_luxury_detail/{productId}")
-   public String premiumDetail(
-           @PathVariable Integer productId,
-           Authentication authentication,
-           Model model) {
-      ProductCardDTO product =
-              productService.getPremiumProductsById(productId);
-      if (product != null) {
-         productService.incrementViewCountForCustomer(productId, authentication);
-      }
-   model.addAttribute("product", product);
-   return "product/bonsai_luxury_detail";
-   }
+    @GetMapping("/bonsai-luxury-detail/{productId}")
+    public String premiumDetail(
+            @PathVariable Integer productId,
+            Authentication authentication,
+            Model model) {
+        ProductCardDTO product =
+                productService.getPremiumProductsById(productId);
+        if (product != null) {
+            productService.incrementViewCountForCustomer(productId, authentication);
+        }
+        List<ProductMediaDTO> mediaList = productService.getPremiumProductMedia(productId);
+        model.addAttribute("product", product);
+        model.addAttribute("mediaList", mediaList);
+        model.addAttribute("imageMediaList", mediaList.stream()
+                .filter(media -> !"VIDEO".equalsIgnoreCase(media.getMediaType()))
+                .toList());
+        model.addAttribute("videoMediaList", mediaList.stream()
+                .filter(media -> "VIDEO".equalsIgnoreCase(media.getMediaType()))
+                .toList());
+        return "product/bonsai-luxury-detail";
+    }
 }
