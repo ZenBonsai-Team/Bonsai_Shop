@@ -52,7 +52,7 @@ public class ArtisanDashboardController {
 
         model.addAttribute("totalProducts", products.size());
         model.addAttribute("publishedProducts", products.stream()
-                .filter(product -> "AVAILABLE".equals(product.getProductStatus()))
+                .filter(product -> "AVAILABLE".equals(product.getProductStatus()) && !Boolean.FALSE.equals(product.getIsVisible()))
                 .count());
         model.addAttribute("soldProducts", products.stream()
                 .filter(product -> "SOLD".equals(product.getProductStatus()))
@@ -68,7 +68,7 @@ public class ArtisanDashboardController {
                 .filter(product -> "DRAFT".equals(product.getProductStatus()))
                 .count());
         model.addAttribute("hiddenProducts", products.stream()
-                .filter(product -> "HIDDEN".equals(product.getProductStatus()))
+                .filter(product -> Boolean.FALSE.equals(product.getIsVisible()))
                 .count());
         model.addAttribute("reservedProducts", products.stream()
                 .filter(product -> "RESERVED".equals(product.getProductStatus()))

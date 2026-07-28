@@ -380,7 +380,7 @@ public class OrderApiController {
 
         // 2. Kiểm tra tính khả dụng của tất cả các sản phẩm
         for (Product prod : productsToBuy) {
-            if (!"AVAILABLE".equalsIgnoreCase(prod.getProductStatus())) {
+            if (!"AVAILABLE".equalsIgnoreCase(prod.getProductStatus()) || Boolean.FALSE.equals(prod.getIsVisible())) {
                 response.put("success", false);
                 response.put("message",
                         "Tác phẩm '" + prod.getProductName() + "' đã được bán hoặc giữ chỗ bởi khách hàng khác!");

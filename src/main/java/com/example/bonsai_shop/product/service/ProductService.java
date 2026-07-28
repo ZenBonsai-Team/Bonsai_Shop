@@ -78,6 +78,9 @@ public class ProductService {
     @Transactional(readOnly = true)
     public Product getProductById(Integer id) {
         Product product = productRepository.findById(id).orElse(null);
+        if (product != null && Boolean.FALSE.equals(product.getIsVisible())) {
+            return null;
+        }
         if (product != null) {
             if (product.getProductMedias() != null) {
                 product.getProductMedias().size();
@@ -107,6 +110,6 @@ public class ProductService {
 
     public List<Product> getTop5MostViewed() {
         return productRepository
-                .findTop5ByProductStatusOrderByViewCountDesc("AVAILABLE");
+                .findTop5ByProductStatusAndIsVisibleTrueOrderByViewCountDesc("AVAILABLE");
     }
 }

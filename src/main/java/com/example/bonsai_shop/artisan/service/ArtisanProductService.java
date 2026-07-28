@@ -97,6 +97,7 @@ public class ArtisanProductService {
                 .price(form.getPrice())
                 .isPublicPrice(isPublicPriceForSegment(segment))
                 .productStatus("DRAFT")
+                .isVisible(true)
                 .viewCount(0)
                 .createdAt(LocalDateTime.now())
                 .build();
@@ -251,10 +252,11 @@ public class ArtisanProductService {
     @Transactional
     public void publish(String artisanEmail, Integer productId) {
         Product product = getMyProduct(artisanEmail, productId);
-        ensureEditable(product);
+        ensureDraft(product);
         ensurePublishReady(product);
         product.setIsPublicPrice(isPublicPriceForSegment(product.getSegment()));
         product.setProductStatus("AVAILABLE");
+        product.setIsVisible(true);
         productRepository.save(product);
     }
 
@@ -262,7 +264,14 @@ public class ArtisanProductService {
     public void hideProduct(String artisanEmail, Integer productId) {
         Product product = getMyProduct(artisanEmail, productId);
         ensureHideable(product);
-        product.setProductStatus("HIDDEN");
+        product.setIsVisible(false);
+        productRepository.save(product);
+    }
+
+    @Transactional
+    public void showProduct(String artisanEmail, Integer productId) {
+        Product product = getMyProduct(artisanEmail, productId);
+        product.setIsVisible(true);
         productRepository.save(product);
     }
 
@@ -360,13 +369,28 @@ public class ArtisanProductService {
     }
 
     public boolean isEditable(Product product) {
-        return product != null
-                && ("DRAFT".equalsIgnoreCase(product.getProductStatus())
-                || "HIDDEN".equalsIgnoreCase(product.getProductStatus()));
+        if (product == null) {
+            return false;
+        }
+
+        String status = product.getProductStatus();
+        if ("SOLD".equalsIgnoreCase(status) || "RESERVED".equalsIgnoreCase(status)) {
+            return false;
+        }
+
+        return "DRAFT".equalsIgnoreCase(status)
+                || Boolean.FALSE.equals(product.getIsVisible());
     }
 
     public boolean isHideable(Product product) {
-        return product != null && "AVAILABLE".equalsIgnoreCase(product.getProductStatus());
+        return product != null
+                && Boolean.TRUE.equals(product.getIsVisible())
+                && ("AVAILABLE".equalsIgnoreCase(product.getProductStatus())
+                || "SOLD".equalsIgnoreCase(product.getProductStatus()));
+    }
+
+    public boolean isVisible(Product product) {
+        return product == null || product.getIsVisible() == null || Boolean.TRUE.equals(product.getIsVisible());
     }
 
     private void ensureNotSold(Product product) {

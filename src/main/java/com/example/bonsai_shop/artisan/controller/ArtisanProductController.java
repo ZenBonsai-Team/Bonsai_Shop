@@ -310,6 +310,7 @@ public class ArtisanProductController {
         model.addAttribute("isSold", artisanProductService.isSold(product));
         model.addAttribute("isEditable", artisanProductService.isEditable(product));
         model.addAttribute("isHideable", artisanProductService.isHideable(product));
+        model.addAttribute("isVisible", artisanProductService.isVisible(product));
         return "artisan/product-preview";
     }
 
@@ -333,6 +334,19 @@ public class ArtisanProductController {
                        RedirectAttributes redirectAttributes) {
         try {
             artisanProductService.hideProduct(userDetails.getUsername(), productId);
+            redirectAttributes.addFlashAttribute("success", "Đã ẩn sản phẩm khỏi marketplace.");
+        } catch (RuntimeException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/artisan/products";
+    }
+
+    @PostMapping("/{productId}/show")
+    public String show(@AuthenticationPrincipal UserDetails userDetails,
+                       @PathVariable Integer productId,
+                       RedirectAttributes redirectAttributes) {
+        try {
+            artisanProductService.showProduct(userDetails.getUsername(), productId);
             redirectAttributes.addFlashAttribute("success", "Đã ẩn sản phẩm khỏi marketplace.");
         } catch (RuntimeException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
