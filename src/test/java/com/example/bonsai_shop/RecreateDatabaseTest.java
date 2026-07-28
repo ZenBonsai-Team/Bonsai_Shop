@@ -15,9 +15,16 @@ class RecreateDatabaseTest {
     void cleanAndRecreateDb() {
         Properties props = new Properties();
         try {
-            // Read application.properties to get the DB credentials dynamically
-            try (InputStream input = Files.newInputStream(Paths.get("src/main/resources/application.properties"))) {
-                props.load(input);
+            // Read application-local.properties if exists, otherwise application.properties
+            java.nio.file.Path localPath = Paths.get("src/main/resources/application-local.properties");
+            if (Files.exists(localPath)) {
+                try (InputStream input = Files.newInputStream(localPath)) {
+                    props.load(input);
+                }
+            } else {
+                try (InputStream input = Files.newInputStream(Paths.get("src/main/resources/application.properties"))) {
+                    props.load(input);
+                }
             }
 
             String url = props.getProperty("spring.datasource.url");

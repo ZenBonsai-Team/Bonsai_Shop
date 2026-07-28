@@ -4,11 +4,13 @@
 -- An toàn: không xóa dữ liệu, không thay đổi kiểu cột, data cũ vẫn valid
 
 -- 1. Bỏ UNIQUE constraint trên OrderID trong bảng payment
---    (MySQL đặt tên index trùng với tên cột khi dùng `NOT NULL UNIQUE`)
+--    (MySQL đặt tên index trùng với tên cột khi dùng `NOT NULL UNIQUE`. 
+--    Ta cần tạm thời drop foreign key trước khi drop index này).
+ALTER TABLE `payment` DROP FOREIGN KEY `fk_pay_order`;
 ALTER TABLE `payment` DROP INDEX `OrderID`;
 
--- 2. Thêm index bình thường để query theo OrderID vẫn nhanh
---    (không có UNIQUE → nhiều Payment cùng OrderID được phép)
+-- 2. Thêm lại foreign key và index thường để query theo OrderID vẫn nhanh
+ALTER TABLE `payment` ADD CONSTRAINT `fk_pay_order` FOREIGN KEY (`OrderID`) REFERENCES `order` (`OrderID`) ON DELETE CASCADE;
 ALTER TABLE `payment` ADD INDEX `idx_payment_order_id` (`OrderID`);
 
 -- 3. Thêm cột Notes để Moderator ghi chú khi xác nhận thanh toán tiền mặt
