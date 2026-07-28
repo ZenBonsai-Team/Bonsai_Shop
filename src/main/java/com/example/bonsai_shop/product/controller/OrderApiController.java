@@ -65,13 +65,25 @@ public class OrderApiController {
     private EmailService emailService;
 
     @PostMapping("/send-guest-otp")
-    public ResponseEntity<Map<String, Object>> sendGuestOtp(@RequestBody Map<String, String> payload) {
+    public ResponseEntity<Map<String, Object>> sendGuestOtp(@RequestBody Map<String, Object> payload) {
         Map<String, Object> response = new HashMap<>();
-        String email = payload.get("email");
+        String email = payload.get("email") != null ? payload.get("email").toString() : null;
         if (email == null || !email.matches("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$")) {
             response.put("success", false);
             response.put("message", "Địa chỉ Email không hợp lệ!");
             return ResponseEntity.badRequest().body(response);
+        }
+
+        if (payload.containsKey("productIds") && payload.get("productIds") instanceof List<?>) {
+            try {
+                List<?> list = (List<?>) payload.get("productIds");
+                List<Integer> productIds = list.stream().map(item -> Integer.valueOf(item.toString())).toList();
+                orderService.validateProductIdsLimit(productIds);
+            } catch (IllegalArgumentException e) {
+                response.put("success", false);
+                response.put("message", e.getMessage());
+                return ResponseEntity.badRequest().body(response);
+            } catch (Exception ignored) {}
         }
 
         try {
@@ -310,7 +322,6 @@ public class OrderApiController {
     }
 
     @PostMapping("/checkout")
-    @Transactional
     public ResponseEntity<Map<String, Object>> checkout(
             @Valid @RequestBody PurchaseOrderRequestDTO dto,
             @AuthenticationPrincipal Object principal,
@@ -330,6 +341,15 @@ public class OrderApiController {
             response.put("message",
                     "Tài khoản quản trị, nhà vườn hoặc kiểm duyệt viên không được phép thực hiện đặt hàng!");
             return ResponseEntity.status(403).body(response);
+        }
+
+        // Kiểm tra giới hạn đơn hàng (≤ 200 triệu VNĐ) sớm trước khi yêu cầu/xác thực OTP
+        try {
+            orderService.validateOrderLimit(dto, customer);
+        } catch (IllegalArgumentException e) {
+            response.put("success", false);
+            response.put("message", e.getMessage());
+            return ResponseEntity.badRequest().body(response);
         }
 
         // Xác thực mã OTP nếu là Khách vãng lai (Guest Checkout)

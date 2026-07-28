@@ -107,92 +107,135 @@ public class MailService {
                 orderCode);
     }
 
-    private String buildRejectedTemplate(Order order, String reason) {
-        String customerName = order.getCustomerName() != null ? order.getCustomerName() : "Quý khách hàng";
-        String productName = "";
-        if (order.getOrderDetails() != null && !order.getOrderDetails().isEmpty()) {
-            OrderDetail detail = order.getOrderDetails().get(0);
+    private String buildProductNamesSummary(Order order) {
+        if (order.getOrderDetails() == null || order.getOrderDetails().isEmpty()) {
+            return "N/A";
+        }
+        StringBuilder sb = new StringBuilder();
+        for (OrderDetail detail : order.getOrderDetails()) {
             if (detail.getProduct() != null) {
-                productName = detail.getProduct().getProductName();
+                if (sb.length() > 0) {
+                    sb.append(", ");
+                }
+                sb.append(detail.getProduct().getProductName());
+                if (detail.getQuantity() != null && detail.getQuantity() > 1) {
+                    sb.append(" (x").append(detail.getQuantity()).append(")");
+                }
             }
         }
+        return sb.length() > 0 ? sb.toString() : "N/A";
+    }
+
+    private String buildProductTableRows(Order order) {
+        if (order.getOrderDetails() == null || order.getOrderDetails().isEmpty()) {
+            return "<tr><td colspan=\"4\" style=\"padding: 10px; text-align: center; color: #a0aec0;\">Không có thông tin chi tiết sản phẩm</td></tr>";
+        }
+        StringBuilder sb = new StringBuilder();
+        int stt = 1;
+        for (OrderDetail detail : order.getOrderDetails()) {
+            String pName = (detail.getProduct() != null && detail.getProduct().getProductName() != null)
+                    ? detail.getProduct().getProductName()
+                    : "Tác phẩm Bonsai";
+            java.math.BigDecimal price = detail.getPriceAtPurchase() != null
+                    ? detail.getPriceAtPurchase()
+                    : (detail.getProduct() != null ? detail.getProduct().getPrice() : java.math.BigDecimal.ZERO);
+            int qty = detail.getQuantity() != null ? detail.getQuantity() : 1;
+
+            sb.append("<tr style=\"border-bottom: 1px solid #edf2f7;\">")
+              .append("<td style=\"padding: 10px 12px; color: #4a5568;\">").append(stt++).append("</td>")
+              .append("<td style=\"padding: 10px 12px; color: #2d3748;\"><strong>").append(pName).append("</strong></td>")
+              .append("<td style=\"padding: 10px 12px; text-align: center; color: #4a5568;\">").append(qty).append("</td>")
+              .append("<td style=\"padding: 10px 12px; text-align: right; color: #2d3748; font-weight: 500;\">").append(price).append(" VND</td>")
+              .append("</tr>");
+        }
+        return sb.toString();
+    }
+
+    private String buildRejectedTemplate(Order order, String reason) {
+        String customerName = order.getCustomerName() != null ? order.getCustomerName() : "Quý khách hàng";
+        String productSummary = buildProductNamesSummary(order);
+        String productTable = buildProductTableRows(order);
 
         return "<div style=\"font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 25px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff;\">"
-                +
-                "  <div style=\"text-align: center; background: linear-gradient(135deg, #c53030, #e53e3e); color: white; padding: 20px; border-radius: 8px 8px 0 0;\">"
-                +
-                "    <h2 style=\"margin: 0;\">Thông Báo Từ Chối Đơn Hàng</h2>" +
-                "    <p style=\"margin: 5px 0 0 0;\">Mã đơn hàng: #" + order.getOrderCode() + "</p>" +
-                "  </div>" +
-                "  <div style=\"padding: 20px 0; color: #1a202c; line-height: 1.6;\">" +
-                "    <p>Xin chào <strong>" + customerName + "</strong>,</p>" +
-                "    <p>Rất tiếc, đơn đặt hàng sản phẩm <strong>" + productName + "</strong> (Mã đơn hàng: <strong>#"
-                + order.getOrderCode() + "</strong>) của bạn đã bị từ chối duyệt.</p>" +
-                "    <div style=\"background-color: #fff5f5; border-left: 4px solid #e53e3e; padding: 15px; border-radius: 4px; margin: 20px 0;\">"
-                +
-                "      <h4 style=\"margin: 0 0 5px 0; color: #9b2c2c;\">Lý do từ chối:</h4>" +
-                "      <p style=\"margin: 0; color: #c53030;\">" + reason + "</p>" +
-                "    </div>" +
-                "  <div style=\"text-align: center; font-size: 12px; color: #a0aec0; border-top: 1px solid #edf2f7; padding-top: 15px;\">"
-                +
-                "    © " + java.time.LocalDate.now().getYear() + " Bonsai Shop. All rights reserved." +
-                "  </div>" +
-                "</div>";
+                + "  <div style=\"text-align: center; background: linear-gradient(135deg, #c53030, #e53e3e); color: white; padding: 20px; border-radius: 8px 8px 0 0;\">"
+                + "    <h2 style=\"margin: 0;\">Thông Báo Từ Chối Đơn Hàng</h2>"
+                + "    <p style=\"margin: 5px 0 0 0;\">Mã đơn hàng: #" + order.getOrderCode() + "</p>"
+                + "  </div>"
+                + "  <div style=\"padding: 20px 0; color: #1a202c; line-height: 1.6;\">"
+                + "    <p>Xin chào <strong>" + customerName + "</strong>,</p>"
+                + "    <p>Rất tiếc, đơn đặt hàng sản phẩm <strong>" + productSummary + "</strong> (Mã đơn hàng: <strong>#" + order.getOrderCode() + "</strong>) của bạn đã bị từ chối duyệt.</p>"
+                + "    <div style=\"background-color: #fff5f5; border-left: 4px solid #e53e3e; padding: 15px; border-radius: 4px; margin: 20px 0;\">"
+                + "      <h4 style=\"margin: 0 0 5px 0; color: #9b2c2c;\">Lý do từ chối:</h4>"
+                + "      <p style=\"margin: 0; color: #c53030;\">" + reason + "</p>"
+                + "    </div>"
+                + "    <h4 style=\"color: #2d3748; margin: 20px 0 10px 0;\">Danh sách sản phẩm trong đơn hàng:</h4>"
+                + "    <table style=\"width: 100%; border-collapse: collapse; margin-bottom: 20px;\">"
+                + "      <thead>"
+                + "        <tr style=\"background-color: #edf2f7; color: #4a5568; font-size: 13px;\">"
+                + "          <th style=\"padding: 8px 12px; text-align: left;\">STT</th>"
+                + "          <th style=\"padding: 8px 12px; text-align: left;\">Tên tác phẩm</th>"
+                + "          <th style=\"padding: 8px 12px; text-align: center;\">SL</th>"
+                + "          <th style=\"padding: 8px 12px; text-align: right;\">Đơn giá</th>"
+                + "        </tr>"
+                + "      </thead>"
+                + "      <tbody>" + productTable + "</tbody>"
+                + "    </table>"
+                + "  </div>"
+                + "  <div style=\"text-align: center; font-size: 12px; color: #a0aec0; border-top: 1px solid #edf2f7; padding-top: 15px;\">"
+                + "    © " + java.time.LocalDate.now().getYear() + " Bonsai Shop. All rights reserved."
+                + "  </div>"
+                + "</div>";
     }
 
     private String buildAprovedTemplate(Order order, String paymentLink) {
         String customerName = order.getCustomerName() != null ? order.getCustomerName() : "Quý khách hàng";
-        String productName = "";
-        if (order.getOrderDetails() != null && !order.getOrderDetails().isEmpty()) {
-            OrderDetail detail = order.getOrderDetails().get(0);
-            if (detail.getProduct() != null) {
-                productName = detail.getProduct().getProductName();
-            }
-        }
+        String productTable = buildProductTableRows(order);
 
         return "<div style=\"font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 25px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff;\">"
-                +
-                "  <div style=\"text-align: center; background: linear-gradient(135deg, #2e7d32, #4caf50); color: white; padding: 20px; border-radius: 8px 8px 0 0;\">"
-                +
-                "    <h2 style=\"margin: 0;\">Đơn Hàng Đã Được Phê Duyệt!</h2>" +
-                "    <p style=\"margin: 5px 0 0 0;\">Mã đơn hàng: #" + order.getOrderCode() + "</p>" +
-                "  </div>" +
-                "  <div style=\"padding: 20px 0; color: #1a202c; line-height: 1.6;\">" +
-                "    <p>Xin chào <strong>" + customerName + "</strong>,</p>" +
-                "    <p>Đơn hàng đặt mua cây cảnh của bạn đã được kiểm duyệt thành công. Dưới đây là thông tin chi phí chi tiết:</p>"
-                +
-                "    <table style=\"width: 100%; border-collapse: collapse; margin: 20px 0;\">" +
-                "      <tr style=\"background-color: #f7fafc; border-bottom: 1px solid #edf2f7;\">" +
-                "        <td style=\"padding: 12px;\"><strong>Sản phẩm:</strong></td>" +
-                "        <td style=\"text-align: right; padding: 12px;\">" + productName + "</td>" +
-                "      </tr>" +
-                "      <tr style=\"border-bottom: 1px solid #edf2f7;\">" +
-                "        <td style=\"padding: 12px;\"><strong>Phí cẩu hạ cây:</strong></td>" +
-                "        <td style=\"text-align: right; padding: 12px;\">" + order.getCraneFee() + " VND</td>" +
-                "      </tr>" +
-                "      <tr style=\"border-bottom: 1px solid #edf2f7;\">" +
-                "        <td style=\"padding: 12px;\"><strong>Phí vận chuyển:</strong></td>" +
-                "        <td style=\"text-align: right; padding: 12px;\">" + order.getShippingFee() + " VND</td>" +
-                "      </tr>" +
-                "      <tr style=\"background-color: #f0fff4; font-weight: bold; color: #276749;\">" +
-                "        <td style=\"padding: 12px;\">Tổng chi phí thanh toán:</td>" +
-                "        <td style=\"text-align: right; padding: 12px;\">" + order.getTotalAmount() + " VND</td>" +
-                "      </tr>" +
-                "    </table>" +
-                "    <p>Vui lòng nhấp vào nút bên dưới để tiến hành thanh toán trực tuyến trong vòng 24 giờ:</p>" +
-                "    <div style=\"text-align: center; margin: 30px 0;\">" +
-                "      <a href=\"" + paymentLink
-                + "\" style=\"background-color: #2e7d32; color: white; padding: 14px 30px; text-decoration: none; font-weight: bold; border-radius: 6px; display: inline-block;\">"
-                +
-                "        TIẾN HÀNH THANH TOÁN" +
-                "      </a>" +
-                "    </div>" +
-                "  </div>" +
-                "  <div style=\"text-align: center; font-size: 12px; color: #a0aec0; border-top: 1px solid #edf2f7; padding-top: 15px;\">"
-                +
-                "    © " + java.time.LocalDate.now().getYear() + " Bonsai Shop. All rights reserved." +
-                "  </div>" +
-                "</div>";
+                + "  <div style=\"text-align: center; background: linear-gradient(135deg, #2e7d32, #4caf50); color: white; padding: 20px; border-radius: 8px 8px 0 0;\">"
+                + "    <h2 style=\"margin: 0;\">Đơn Hàng Đã Được Phê Duyệt!</h2>"
+                + "    <p style=\"margin: 5px 0 0 0;\">Mã đơn hàng: #" + order.getOrderCode() + "</p>"
+                + "  </div>"
+                + "  <div style=\"padding: 20px 0; color: #1a202c; line-height: 1.6;\">"
+                + "    <p>Xin chào <strong>" + customerName + "</strong>,</p>"
+                + "    <p>Đơn hàng đặt mua cây cảnh của bạn đã được kiểm duyệt thành công. Dưới đây là thông tin chi tiết danh sách tác phẩm và chi phí:</p>"
+                + "    <h4 style=\"color: #2d3748; margin: 20px 0 10px 0;\">Danh sách tác phẩm Bonsai:</h4>"
+                + "    <table style=\"width: 100%; border-collapse: collapse; margin-bottom: 20px;\">"
+                + "      <thead>"
+                + "        <tr style=\"background-color: #edf2f7; color: #4a5568; font-size: 13px;\">"
+                + "          <th style=\"padding: 8px 12px; text-align: left;\">STT</th>"
+                + "          <th style=\"padding: 8px 12px; text-align: left;\">Tên tác phẩm</th>"
+                + "          <th style=\"padding: 8px 12px; text-align: center;\">SL</th>"
+                + "          <th style=\"padding: 8px 12px; text-align: right;\">Đơn giá</th>"
+                + "        </tr>"
+                + "      </thead>"
+                + "      <tbody>" + productTable + "</tbody>"
+                + "    </table>"
+                + "    <table style=\"width: 100%; border-collapse: collapse; margin: 20px 0;\">"
+                + "      <tr style=\"border-bottom: 1px solid #edf2f7;\">"
+                + "        <td style=\"padding: 12px;\"><strong>Phí cẩu hạ cây:</strong></td>"
+                + "        <td style=\"text-align: right; padding: 12px;\">" + order.getCraneFee() + " VND</td>"
+                + "      </tr>"
+                + "      <tr style=\"border-bottom: 1px solid #edf2f7;\">"
+                + "        <td style=\"padding: 12px;\"><strong>Phí vận chuyển:</strong></td>"
+                + "        <td style=\"text-align: right; padding: 12px;\">" + order.getShippingFee() + " VND</td>"
+                + "      </tr>"
+                + "      <tr style=\"background-color: #f0fff4; font-weight: bold; color: #276749;\">"
+                + "        <td style=\"padding: 12px;\">Tổng chi phí thanh toán:</td>"
+                + "        <td style=\"text-align: right; padding: 12px;\">" + order.getTotalAmount() + " VND</td>"
+                + "      </tr>"
+                + "    </table>"
+                + "    <p>Vui lòng nhấp vào nút bên dưới để tiến hành thanh toán trực tuyến trong vòng 24 giờ:</p>"
+                + "    <div style=\"text-align: center; margin: 30px 0;\">"
+                + "      <a href=\"" + paymentLink + "\" style=\"background-color: #2e7d32; color: white; padding: 14px 30px; text-decoration: none; font-weight: bold; border-radius: 6px; display: inline-block;\">"
+                + "        TIẾN HÀNH THANH TOÁN"
+                + "      </a>"
+                + "    </div>"
+                + "  </div>"
+                + "  <div style=\"text-align: center; font-size: 12px; color: #a0aec0; border-top: 1px solid #edf2f7; padding-top: 15px;\">"
+                + "    © " + java.time.LocalDate.now().getYear() + " Bonsai Shop. All rights reserved."
+                + "  </div>"
+                + "</div>";
     }
 
     private String buildDepositedTemplate(Order order) {
@@ -200,6 +243,7 @@ public class MailService {
         java.math.BigDecimal deposit = order.getDepositAmount() != null ? order.getDepositAmount() : java.math.BigDecimal.ZERO;
         java.math.BigDecimal total = order.getTotalAmount() != null ? order.getTotalAmount() : java.math.BigDecimal.ZERO;
         java.math.BigDecimal remaining = total.subtract(deposit);
+        String productTable = buildProductTableRows(order);
 
         return "<div style=\"font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 25px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff;\">" +
                 "  <div style=\"text-align: center; background: linear-gradient(135deg, #2b6cb0, #3182ce); color: white; padding: 20px; border-radius: 8px 8px 0 0;\">" +
@@ -209,6 +253,18 @@ public class MailService {
                 "  <div style=\"padding: 20px 0; color: #1a202c; line-height: 1.6;\">" +
                 "    <p>Xin chào <strong>" + customerName + "</strong>,</p>" +
                 "    <p>Bonsai Shop đã nhận thành công khoản <strong>tiền đặt cọc (Giai đoạn 1)</strong> cho đơn hàng của bạn.</p>" +
+                "    <h4 style=\"color: #2d3748; margin: 20px 0 10px 0;\">Danh sách tác phẩm Bonsai:</h4>" +
+                "    <table style=\"width: 100%; border-collapse: collapse; margin-bottom: 20px;\">" +
+                "      <thead>" +
+                "        <tr style=\"background-color: #edf2f7; color: #4a5568; font-size: 13px;\">" +
+                "          <th style=\"padding: 8px 12px; text-align: left;\">STT</th>" +
+                "          <th style=\"padding: 8px 12px; text-align: left;\">Tên tác phẩm</th>" +
+                "          <th style=\"padding: 8px 12px; text-align: center;\">SL</th>" +
+                "          <th style=\"padding: 8px 12px; text-align: right;\">Đơn giá</th>" +
+                "        </tr>" +
+                "      </thead>" +
+                "      <tbody>" + productTable + "</tbody>" +
+                "    </table>" +
                 "    <table style=\"width: 100%; border-collapse: collapse; margin: 20px 0;\">" +
                 "      <tr style=\"background-color: #f7fafc; border-bottom: 1px solid #edf2f7;\">" +
                 "        <td style=\"padding: 12px;\"><strong>Tổng giá trị đơn hàng:</strong></td>" +
@@ -234,6 +290,7 @@ public class MailService {
     private String buildFinalReceiptTemplate(Order order) {
         String customerName = order.getCustomerName() != null ? order.getCustomerName() : "Quý khách hàng";
         java.math.BigDecimal total = order.getTotalAmount() != null ? order.getTotalAmount() : java.math.BigDecimal.ZERO;
+        String productTable = buildProductTableRows(order);
 
         return "<div style=\"font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 25px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff;\">" +
                 "  <div style=\"text-align: center; background: linear-gradient(135deg, #276749, #2f855a); color: white; padding: 20px; border-radius: 8px 8px 0 0;\">" +
@@ -243,6 +300,18 @@ public class MailService {
                 "  <div style=\"padding: 20px 0; color: #1a202c; line-height: 1.6;\">" +
                 "    <p>Xin chào <strong>" + customerName + "</strong>,</p>" +
                 "    <p>Giao dịch đơn hàng <strong>#" + order.getOrderCode() + "</strong> đã hoàn thành thanh toán 100%. Cảm ơn bạn đã tin tưởng và chọn mua tác phẩm Bonsai tại cửa hàng của chúng tôi!</p>" +
+                "    <h4 style=\"color: #2d3748; margin: 20px 0 10px 0;\">Danh sách tác phẩm Bonsai đã mua:</h4>" +
+                "    <table style=\"width: 100%; border-collapse: collapse; margin-bottom: 20px;\">" +
+                "      <thead>" +
+                "        <tr style=\"background-color: #edf2f7; color: #4a5568; font-size: 13px;\">" +
+                "          <th style=\"padding: 8px 12px; text-align: left;\">STT</th>" +
+                "          <th style=\"padding: 8px 12px; text-align: left;\">Tên tác phẩm</th>" +
+                "          <th style=\"padding: 8px 12px; text-align: center;\">SL</th>" +
+                "          <th style=\"padding: 8px 12px; text-align: right;\">Đơn giá</th>" +
+                "        </tr>" +
+                "      </thead>" +
+                "      <tbody>" + productTable + "</tbody>" +
+                "    </table>" +
                 "    <table style=\"width: 100%; border-collapse: collapse; margin: 20px 0;\">" +
                 "      <tr style=\"background-color: #f0fff4; font-weight: bold; color: #22543d;\">" +
                 "        <td style=\"padding: 12px;\">Tổng tiền đã thanh toán hoàn tất:</td>" +
@@ -259,13 +328,7 @@ public class MailService {
     private String buildCreatedTemplate(Order order) {
         String customerName = order.getCustomerName() != null ? order.getCustomerName() : "Quý khách hàng";
         java.math.BigDecimal total = order.getTotalAmount() != null ? order.getTotalAmount() : java.math.BigDecimal.ZERO;
-        String productName = "";
-        if (order.getOrderDetails() != null && !order.getOrderDetails().isEmpty()) {
-            OrderDetail detail = order.getOrderDetails().get(0);
-            if (detail.getProduct() != null) {
-                productName = detail.getProduct().getProductName();
-            }
-        }
+        String productTable = buildProductTableRows(order);
 
         return "<div style=\"font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 25px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff;\">" +
                 "  <div style=\"text-align: center; background: linear-gradient(135deg, #319795, #3182ce); color: white; padding: 20px; border-radius: 8px 8px 0 0;\">" +
@@ -279,11 +342,19 @@ public class MailService {
                 "      <h4 style=\"margin: 0 0 5px 0; color: #2b6cb0;\">Lưu ý quan trọng:</h4>" +
                 "      <p style=\"margin: 0; color: #2c5282;\">Đây là email xác nhận hệ thống đã ghi nhận đơn hàng. Đội ngũ Moderator sẽ kiểm tra tình trạng cây, tính toán chi phí cẩu/vận chuyển và phê duyệt đơn hàng trong thời gian sớm nhất. Bạn sẽ nhận được email hướng dẫn thanh toán ngay khi đơn hàng được duyệt.</p>" +
                 "    </div>" +
-                "    <table style=\"width: 100%; border-collapse: collapse; margin: 20px 0;\">" +
-                "      <tr style=\"background-color: #f7fafc; border-bottom: 1px solid #edf2f7;\">" +
-                "        <td style=\"padding: 12px;\"><strong>Sản phẩm đặt mua:</strong></td>" +
-                "        <td style=\"text-align: right; padding: 12px;\">" + productName + "</td>" +
-                "      </tr>" +
+                "    <h4 style=\"color: #2d3748; margin: 20px 0 10px 0;\">Chi tiết danh sách cây cảnh đặt mua:</h4>" +
+                "    <table style=\"width: 100%; border-collapse: collapse; margin: 10px 0 20px 0;\">" +
+                "      <thead>" +
+                "        <tr style=\"background-color: #edf2f7; color: #4a5568; font-size: 13px;\">" +
+                "          <th style=\"padding: 8px 12px; text-align: left;\">STT</th>" +
+                "          <th style=\"padding: 8px 12px; text-align: left;\">Tên tác phẩm</th>" +
+                "          <th style=\"padding: 8px 12px; text-align: center;\">SL</th>" +
+                "          <th style=\"padding: 8px 12px; text-align: right;\">Đơn giá</th>" +
+                "        </tr>" +
+                "      </thead>" +
+                "      <tbody>" + productTable + "</tbody>" +
+                "    </table>" +
+                "    <table style=\"width: 100%; border-collapse: collapse;\">" +
                 "      <tr style=\"border-bottom: 1px solid #edf2f7;\">" +
                 "        <td style=\"padding: 12px;\"><strong>Địa chỉ giao hàng:</strong></td>" +
                 "        <td style=\"text-align: right; padding: 12px;\">" + (order.getShippingAddress() != null ? order.getShippingAddress() : "N/A") + "</td>" +

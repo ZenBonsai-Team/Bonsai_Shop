@@ -237,7 +237,10 @@ async function sendGuestOtpAndShowModal(email) {
         const response = await fetch('/api/orders/send-guest-otp', {
             method: 'POST',
             headers: headers,
-            body: JSON.stringify({ email: email })
+            body: JSON.stringify({
+                email: email,
+                productIds: window.guestProductIdsToBuy || null
+            })
         });
         const result = await response.json();
 

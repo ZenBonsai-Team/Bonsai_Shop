@@ -41,6 +41,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class OrderService {
 
+    public static final BigDecimal MAX_ORDER_AMOUNT = new BigDecimal("200000000");
+
     private final OrderRepository orderRepository;
     private final ProductRepository productRepository;
     private final OrderLogRepository orderLogRepository;
@@ -191,7 +193,7 @@ public class OrderService {
 
     @Transactional
     public boolean verifyOrder(String orderCode, BigDecimal craneFee, BigDecimal shippingFee, BigDecimal depositAmount, User moderator) {
-        Order order = orderRepository.findByOrderCode(orderCode).orElse(null);
+        Order order = orderRepository.findByOrderCodeWithDetails(orderCode).orElse(null);
         if (order == null || !"PENDING".equalsIgnoreCase(order.getOrderStatus())) {
             return false;
         }
@@ -241,7 +243,7 @@ public class OrderService {
 
     @Transactional
     public boolean rejectOrder(String orderCode, String reason, User moderator) {
-        Order order = orderRepository.findByOrderCode(orderCode).orElse(null);
+        Order order = orderRepository.findByOrderCodeWithDetails(orderCode).orElse(null);
         if (order == null || !"PENDING".equalsIgnoreCase(order.getOrderStatus())) {
             return false;
         }
@@ -332,8 +334,53 @@ public class OrderService {
         return true;
     }
 
+    public void validateOrderLimit(PurchaseOrderRequestDTO dto, User customer) {
+        List<Product> productsToBuy = new ArrayList<>();
+        if (dto.getProductIds() != null && !dto.getProductIds().isEmpty()) {
+            for (Integer pId : dto.getProductIds()) {
+                productRepository.findById(pId).ifPresent(productsToBuy::add);
+            }
+        } else if (dto.getProductId() != null) {
+            productRepository.findById(dto.getProductId()).ifPresent(productsToBuy::add);
+        } else if (customer != null) {
+            List<CartItem> cartItems = cartService.getCartItems(customer.getUserId());
+            if (cartItems != null) {
+                for (CartItem item : cartItems) {
+                    productsToBuy.add(item.getProduct());
+                }
+            }
+        }
+
+        BigDecimal totalAmount = productsToBuy.stream()
+                .map(Product::getPrice)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        if (totalAmount.compareTo(MAX_ORDER_AMOUNT) > 0) {
+            throw new IllegalArgumentException("Tổng giá trị đơn hàng vượt quá giới hạn tối đa cho phép (tối đa 200.000.000 VNĐ)!");
+        }
+    }
+
+    public void validateProductIdsLimit(List<Integer> productIds) {
+        if (productIds == null || productIds.isEmpty()) {
+            return;
+        }
+        List<Product> productsToBuy = new ArrayList<>();
+        for (Integer pId : productIds) {
+            productRepository.findById(pId).ifPresent(productsToBuy::add);
+        }
+        BigDecimal totalAmount = productsToBuy.stream()
+                .map(Product::getPrice)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        if (totalAmount.compareTo(MAX_ORDER_AMOUNT) > 0) {
+            throw new IllegalArgumentException("Tổng giá trị đơn hàng vượt quá giới hạn tối đa cho phép (tối đa 200.000.000 VNĐ)!");
+        }
+    }
+
     @Transactional
     public Order createOrder(PurchaseOrderRequestDTO dto, User customer) {
+        validateOrderLimit(dto, customer);
+
         List<Product> productsToBuy = new ArrayList<>();
         if (dto.getProductIds() != null && !dto.getProductIds().isEmpty()) {
             for (Integer pId : dto.getProductIds()) {
@@ -399,6 +446,7 @@ public class OrderService {
             cartService.clearCart(customer.getUserId());
         }
 
+        initializeOrderDetails(savedOrder);
         eventPublisher.publishEvent(new OrderCreatedEvent(savedOrder));
         return savedOrder;
     }
