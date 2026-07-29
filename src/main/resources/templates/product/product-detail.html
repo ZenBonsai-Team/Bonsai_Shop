@@ -416,39 +416,12 @@
 <article class="story-section">
     <div class="container">
         <span class="section-tag-gold">Câu chuyện tác phẩm</span>
-        <h2 class="story-heading">Một đời cây — một đời nghệ nhân</h2>
         
-        <!-- CALL DB: product.description -->
+        <!-- CALL DB: product.treeStory -->
         <p class="story-intro-para"
-           th:text="${product.description != null && !product.description.isBlank() ? product.description : 'Sản phẩm hiện chưa có mô tả chi tiết.'}">
+           th:text="${product.treeStory != null && !product.treeStory.isBlank() ? product.treeStory : 'Sản phẩm hiện chưa có câu chuyện cây.'}">
             Tùng được uốn nắn qua hơn 18 năm dưới bàn tay của nghệ nhân Nguyễn Văn Thành tại vùng đất Nam Định — cái nôi của nghệ thuật bonsai Bắc Bộ.
         </p>
-
-        <!-- Chronological Story Bullet Nodes -->
-        <!-- HARDCODED: Các phần cốt truyện chi tiết không lưu trong DB (được giữ làm text tĩnh) -->
-        <div class="story-timeline-wrap">
-            <div class="story-timeline-node">
-                <!-- HARDCODED -->
-                <h3 class="story-node-title">Nguồn gốc</h3>
-                <p class="story-node-desc">
-                    Cây gốc khai thác từ vùng đồi trung du, được dưỡng và tạo thế tại vườn Thành Cổ từ năm 2012. Đất trồng pha trộn theo công thức truyền thức của làng nghề, giúp bộ rễ phát triển bền bỉ và lá xanh quanh năm.
-                </p>
-            </div>
-            <div class="story-timeline-node">
-                <!-- HARDCODED: Lịch sử tác phẩm không lưu trong DB -->
-                <h3 class="story-node-title">Lịch sử</h3>
-                <p class="story-node-desc">
-                    Tác phẩm đã từng tham gia triển lãm Bonsai Việt Nam 2022 và được hội đồng nghệ nhân đánh giá cao về thế dáng cân đối và bộ thân chi tiết.
-                </p>
-            </div>
-            <div class="story-timeline-node">
-                <!-- HARDCODED: Nghệ thuật chế tác không lưu trong DB -->
-                <h3 class="story-node-title">Nghệ thuật chế tác</h3>
-                <p class="story-node-desc">
-                    Mỗi đường chỉ, mỗi nét thân đều được uốn tỉ mỉ bằng kỹ thuật truyền thống, tôn vinh vẻ đẹp tự nhiên thay vì ép buộc dáng cây theo khuôn mẫu.
-                </p>
-            </div>
-        </div>
     </div>
 </article>
 

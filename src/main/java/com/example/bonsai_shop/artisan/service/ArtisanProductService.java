@@ -90,6 +90,7 @@ public class ArtisanProductService {
                 .productCode(createTemporaryProductCode())
                 .productName(form.getProductName())
                 .description(form.getDescription())
+                .treeStory(form.getTreeStory())
                 .age(form.getAge())
                 .height(form.getHeight())
                 .trunkDiameter(form.getTrunkDiameter())
@@ -124,6 +125,7 @@ public class ArtisanProductService {
         product.setSegment(segment);
         product.setProductName(form.getProductName());
         product.setDescription(form.getDescription());
+        product.setTreeStory(form.getTreeStory());
         product.setAge(form.getAge());
         product.setHeight(form.getHeight());
         product.setTrunkDiameter(form.getTrunkDiameter());
@@ -146,6 +148,7 @@ public class ArtisanProductService {
                 .segmentId(product.getSegment() == null ? null : product.getSegment().getSegmentId())
                 .productName(product.getProductName())
                 .description(product.getDescription())
+                .treeStory(product.getTreeStory())
                 .age(product.getAge())
                 .height(product.getHeight())
                 .trunkDiameter(product.getTrunkDiameter())
