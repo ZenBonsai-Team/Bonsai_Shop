@@ -14,6 +14,13 @@
     <link rel="stylesheet" th:href="@{/css/dashboard-layout.css}">
     <link rel="stylesheet" th:href="@{/css/dashboard.css}">
     <link rel="stylesheet" th:href="@{/css/artisan.css}">
+    <style>
+        .catalog-delete-disabled {
+            cursor: not-allowed;
+            opacity: 0.45;
+            text-decoration: none;
+        }
+    </style>
 </head>
 <body>
 <div class="dashboard-layout">
@@ -24,7 +31,7 @@
         <header class="page-header">
             <div>
                 <h1>Quản lý danh mục & thuộc tính</h1>
-                <p>Quản lý Phân loại, Biến thể, Phân khúc và Thẻ nhãn dùng khi tạo sản phẩm.</p>
+                <p>Quản lý Phân loại, Biến thể và Thẻ nhãn dùng khi tạo sản phẩm.</p>
             </div>
             <a class="btn secondary" th:href="@{/artisan/products/new}">Thêm sản phẩm mới</a>
         </header>
@@ -59,7 +66,14 @@
                                 th:attr="data-action=@{/artisan/catalog/categories/{id}(id=${category.categoryId})},data-name=${category.categoryName},data-description=${category.description}">
                             Sửa
                         </button>
-                        <form method="post" th:action="@{/artisan/catalog/categories/{id}/delete(id=${category.categoryId})}">
+                        <button th:if="${categoryIdsInUse.contains(category.categoryId)}"
+                                type="button"
+                                class="text-danger catalog-delete-disabled"
+                                disabled
+                                title="Danh mục đang được sử dụng nên không thể xóa">Xóa</button>
+                        <form th:unless="${categoryIdsInUse.contains(category.categoryId)}"
+                              method="post"
+                              th:action="@{/artisan/catalog/categories/{id}/delete(id=${category.categoryId})}">
                             <button type="submit" class="text-danger" onclick="return confirm('Xóa danh mục này?')">Xóa</button>
                         </form>
                     </div>
@@ -100,7 +114,14 @@
                                 th:attr="data-action=@{/artisan/catalog/varieties/{id}(id=${variety.varietyId})},data-category-id=${variety.category.categoryId},data-name=${variety.varietyName},data-description=${variety.description}">
                             Sửa
                         </button>
-                        <form method="post" th:action="@{/artisan/catalog/varieties/{id}/delete(id=${variety.varietyId})}">
+                        <button th:if="${varietyIdsInUse.contains(variety.varietyId)}"
+                                type="button"
+                                class="text-danger catalog-delete-disabled"
+                                disabled
+                                title="Loại cây đang được sử dụng nên không thể xóa">Xóa</button>
+                        <form th:unless="${varietyIdsInUse.contains(variety.varietyId)}"
+                              method="post"
+                              th:action="@{/artisan/catalog/varieties/{id}/delete(id=${variety.varietyId})}">
                             <button type="submit" class="text-danger" onclick="return confirm('Xóa loại cây này?')">Xóa</button>
                         </form>
                     </td>
@@ -112,40 +133,6 @@
     </section>
 
     <section class="taxonomy-layout">
-        <div class="taxonomy-panel">
-            <div class="taxonomy-toolbar">
-                <h2>Phân khúc giá</h2>
-                <button type="button" class="btn small" data-open-modal="segment-modal" data-mode="create">+ Thêm phân khúc</button>
-            </div>
-            <input class="catalog-search" data-search-target="segment-table" placeholder="Tìm kiếm phân khúc...">
-            <table class="compact-table">
-                <thead>
-                <tr>
-                    <th>Tên phân khúc</th>
-                    <th>Thao tác</th>
-                </tr>
-                </thead>
-                <tbody id="segment-table" data-page-size="5">
-                <tr th:each="segment : ${segments}" th:attr="data-search-text=${segment.segmentName}">
-                    <td th:text="${segment.segmentName}"></td>
-                    <td class="actions">
-                        <button type="button"
-                                class="btn small"
-                                data-open-modal="segment-modal"
-                                data-mode="edit"
-                                th:attr="data-action=@{/artisan/catalog/segments/{id}(id=${segment.segmentId})},data-name=${segment.segmentName}">
-                            Sửa
-                        </button>
-                        <form method="post" th:action="@{/artisan/catalog/segments/{id}/delete(id=${segment.segmentId})}">
-                            <button type="submit" class="text-danger" onclick="return confirm('Xóa phân khúc này?')">Xóa</button>
-                        </form>
-                    </td>
-                </tr>
-                </tbody>
-            </table>
-            <div class="pagination" data-pagination-for="segment-table"></div>
-        </div>
-
         <div class="taxonomy-panel">
             <div class="taxonomy-toolbar">
                 <h2>Thẻ nhãn</h2>
@@ -170,7 +157,14 @@
                                 th:attr="data-action=@{/artisan/catalog/tags/{id}(id=${tag.tagId})},data-name=${tag.tagName}">
                             Sửa
                         </button>
-                        <form method="post" th:action="@{/artisan/catalog/tags/{id}/delete(id=${tag.tagId})}">
+                        <button th:if="${tagIdsInUse.contains(tag.tagId)}"
+                                type="button"
+                                class="text-danger catalog-delete-disabled"
+                                disabled
+                                title="Thẻ đang được sử dụng nên không thể xóa">Xóa</button>
+                        <form th:unless="${tagIdsInUse.contains(tag.tagId)}"
+                              method="post"
+                              th:action="@{/artisan/catalog/tags/{id}/delete(id=${tag.tagId})}">
                             <button type="submit" class="text-danger" onclick="return confirm('Xóa thẻ này?')">Xóa</button>
                         </form>
                     </td>
@@ -216,19 +210,6 @@
         </label>
         <label>Mô tả
             <input name="description" data-field="description">
-        </label>
-        <button type="submit">Lưu lại</button>
-    </form>
-</div>
-
-<div id="segment-modal" class="modal-backdrop hidden">
-    <form class="modal-card" method="post" th:action="@{/artisan/catalog/segments}" data-create-action="/artisan/catalog/segments">
-        <header>
-            <h2 data-modal-title>Thêm phân khúc mới</h2>
-            <button type="button" class="modal-close">×</button>
-        </header>
-        <label>Tên phân khúc (Segment)
-            <input name="segmentName" required data-field="name">
         </label>
         <button type="submit">Lưu lại</button>
     </form>
@@ -320,7 +301,6 @@
             let itemType = 'thuộc tính';
             if (button.dataset.openModal === 'category-modal') itemType = 'danh mục';
             else if (button.dataset.openModal === 'variety-modal') itemType = 'loại cây';
-            else if (button.dataset.openModal === 'segment-modal') itemType = 'phân khúc';
             else if (button.dataset.openModal === 'tag-modal') itemType = 'thẻ nhãn';
             
             title.textContent = mode === 'edit' ? `Chỉnh sửa ${itemType}` : `Thêm ${itemType} mới`;
@@ -349,4 +329,6 @@
 </script>
 </body>
 </html>
+
+
 

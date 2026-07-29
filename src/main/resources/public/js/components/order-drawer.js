@@ -28,6 +28,8 @@ const OrderDrawer = {
     // Inputs & Forms
     inputCraneFee: null,
     inputShippingFee: null,
+    inputDepositAmount: null,
+    groupDepositAmount: null,
     btnVerify: null,
     btnReject: null,
     
@@ -63,6 +65,8 @@ const OrderDrawer = {
         // Map Inputs & Buttons
         this.inputCraneFee = document.getElementById('inputCraneFee');
         this.inputShippingFee = document.getElementById('inputShippingFee');
+        this.inputDepositAmount = document.getElementById('inputDepositAmount');
+        this.groupDepositAmount = document.getElementById('groupDepositAmount');
         this.btnVerify = document.getElementById('btnVerifyOrder');
         this.btnReject = document.getElementById('btnRejectOrder');
         
@@ -83,8 +87,9 @@ const OrderDrawer = {
         this.btnRejectConfirm.addEventListener('click', () => this.handleRejectConfirm());
 
         // Automatically format fees while typing
-        this.inputCraneFee.addEventListener('input', (e) => this.sanitizeNumericInput(e.target));
-        this.inputShippingFee.addEventListener('input', (e) => this.sanitizeNumericInput(e.target));
+        if (this.inputCraneFee) this.inputCraneFee.addEventListener('input', (e) => this.sanitizeNumericInput(e.target));
+        if (this.inputShippingFee) this.inputShippingFee.addEventListener('input', (e) => this.sanitizeNumericInput(e.target));
+        if (this.inputDepositAmount) this.inputDepositAmount.addEventListener('input', (e) => this.sanitizeNumericInput(e.target));
     },
 
     /**
@@ -100,11 +105,50 @@ const OrderDrawer = {
      */
     calculateFinalTotalOnTheFly() {
         if (!this.currentOrder) return;
-        const base = this.currentOrder.product.price * this.currentOrder.quantity;
-        const crane = Number(this.inputCraneFee.value) || 0;
-        const shipping = Number(this.inputShippingFee.value) || 0;
+        const base = this.currentOrder.treePrice !== undefined ? this.currentOrder.treePrice : 
+            ((this.currentOrder.product ? this.currentOrder.product.price : 0) * (this.currentOrder.quantity || 1));
+        const crane = Number(this.inputCraneFee ? this.inputCraneFee.value : 0) || 0;
+        const shipping = Number(this.inputShippingFee ? this.inputShippingFee.value : 0) || 0;
+        const isDeposit = (this.currentOrder.paymentMethod === 'DEPOSIT' || this.currentOrder.paymentMethod === 'COD');
+        let depositVal = 0;
+        if (isDeposit) {
+            depositVal = (this.inputDepositAmount && this.inputDepositAmount.value !== '') ? 
+                (Number(this.inputDepositAmount.value) || 0) : Math.round(base * 0.3);
+        }
+
         const total = base + crane + shipping;
-        this.elFinalTotal.textContent = this.formatVND(total);
+        const payment1Total = isDeposit ? (depositVal + crane + shipping) : total;
+        const remainingPay = isDeposit ? Math.max(0, base - depositVal) : 0;
+
+        // Nhóm 1: GIÁ TRỊ ĐƠN HÀNG
+        if (this.elBasePrice) this.elBasePrice.textContent = this.formatVND(base);
+
+        const shipValEl = document.getElementById('drawerShippingFeeVal');
+        if (shipValEl) shipValEl.textContent = this.formatVND(shipping);
+
+        const craneValEl = document.getElementById('drawerCraneFeeVal');
+        if (craneValEl) craneValEl.textContent = this.formatVND(crane);
+
+        if (this.elFinalTotal) this.elFinalTotal.textContent = this.formatVND(total);
+
+        // Nhóm 2: THANH TOÁN NGAY (VNPAY)
+        if (this.elDeposit) this.elDeposit.textContent = isDeposit ? this.formatVND(depositVal) : "Không (Trả 100%)";
+
+        const payNowShipEl = document.getElementById('drawerPayNowShip');
+        if (payNowShipEl) payNowShipEl.textContent = this.formatVND(shipping);
+
+        const payNowCraneEl = document.getElementById('drawerPayNowCrane');
+        if (payNowCraneEl) payNowCraneEl.textContent = this.formatVND(crane);
+
+        const pay1El = document.getElementById('drawerPayment1Total');
+        if (pay1El) pay1El.textContent = this.formatVND(payment1Total);
+
+        // Nhóm 3: THANH TOÁN KHI NHẬN CÂY
+        const remSection = document.getElementById('groupRemainingSection');
+        if (remSection) remSection.style.display = isDeposit ? 'block' : 'none';
+
+        const remEl = document.getElementById('drawerRemainingPay');
+        if (remEl) remEl.textContent = this.formatVND(remainingPay);
     },
 
     /**
@@ -149,33 +193,56 @@ const OrderDrawer = {
         this.elQty.textContent = order.quantity;
         
         // Financial Details
-        this.elBasePrice.textContent = this.formatVND(order.product.price * order.quantity);
+        const basePrice = (order.product ? order.product.price : 0) * (order.quantity || 1);
+        this.elBasePrice.textContent = this.formatVND(basePrice);
         this.elDeposit.textContent = this.formatVND(order.depositAmount);
         this.elFinalTotal.textContent = this.formatVND(order.totalAmount);
         
+        const isPending = order.orderStatus === 'PENDING';
+        const isDeposit = (order.paymentMethod === 'DEPOSIT' || order.paymentMethod === 'COD');
+
+        if (this.groupDepositAmount) {
+            this.groupDepositAmount.style.display = isDeposit ? 'block' : 'none';
+        }
+        if (this.inputDepositAmount) {
+            if (isDeposit) {
+                const defaultDeposit = (order.depositAmount && order.depositAmount > 0) ? 
+                    order.depositAmount : Math.round(basePrice * 0.3);
+                this.inputDepositAmount.value = defaultDeposit;
+                this.inputDepositAmount.disabled = !isPending;
+            } else {
+                this.inputDepositAmount.value = 0;
+                this.inputDepositAmount.disabled = true;
+            }
+        }
+
         // Control fields state based on Order Status
-        if (order.orderStatus === 'PENDING') {
-            this.inputCraneFee.disabled = false;
-            this.inputShippingFee.disabled = false;
-            
-            // Default input values
-            this.inputCraneFee.value = order.craneFee !== null ? order.craneFee : '';
-            this.inputShippingFee.value = order.shippingFee !== null ? order.shippingFee : '';
+        if (isPending) {
+            if (this.inputCraneFee) {
+                this.inputCraneFee.disabled = false;
+                this.inputCraneFee.value = order.craneFee !== null ? order.craneFee : '';
+            }
+            if (this.inputShippingFee) {
+                this.inputShippingFee.disabled = false;
+                this.inputShippingFee.value = order.shippingFee !== null ? order.shippingFee : '';
+            }
             
             // Show verification action footer bar
-            this.btnVerify.style.display = 'block';
-            this.btnReject.style.display = 'block';
+            if (this.btnVerify) this.btnVerify.style.display = 'block';
+            if (this.btnReject) this.btnReject.style.display = 'block';
         } else {
-            this.inputCraneFee.disabled = true;
-            this.inputShippingFee.disabled = true;
-            
-            // Display locked values
-            this.inputCraneFee.value = order.craneFee !== null ? order.craneFee : 0;
-            this.inputShippingFee.value = order.shippingFee !== null ? order.shippingFee : 0;
+            if (this.inputCraneFee) {
+                this.inputCraneFee.disabled = true;
+                this.inputCraneFee.value = order.craneFee !== null ? order.craneFee : 0;
+            }
+            if (this.inputShippingFee) {
+                this.inputShippingFee.disabled = true;
+                this.inputShippingFee.value = order.shippingFee !== null ? order.shippingFee : 0;
+            }
             
             // Hide verification actions if already verified/cancelled/rejected
-            this.btnVerify.style.display = 'none';
-            this.btnReject.style.display = 'none';
+            if (this.btnVerify) this.btnVerify.style.display = 'none';
+            if (this.btnReject) this.btnReject.style.display = 'none';
         }
 
         this.calculateFinalTotalOnTheFly();
@@ -189,21 +256,28 @@ const OrderDrawer = {
      * Triggers verification flow
      */
     handleVerifyClick() {
-        const crane = Number(this.inputCraneFee.value) || 0;
-        const shipping = Number(this.inputShippingFee.value) || 0;
+        const base = (this.currentOrder.product ? this.currentOrder.product.price : 0) * (this.currentOrder.quantity || 1);
+        const crane = Number(this.inputCraneFee ? this.inputCraneFee.value : 0) || 0;
+        const shipping = Number(this.inputShippingFee ? this.inputShippingFee.value : 0) || 0;
+        const isDeposit = (this.currentOrder.paymentMethod === 'DEPOSIT' || this.currentOrder.paymentMethod === 'COD');
+        const depositAmount = isDeposit && this.inputDepositAmount ? (Number(this.inputDepositAmount.value) || 0) : null;
+        const effectiveDeposit = isDeposit ? (depositAmount || Math.round(base * 0.3)) : 0;
+        const pay1 = isDeposit ? (effectiveDeposit + crane + shipping) : (base + crane + shipping);
 
         ConfirmDialog.show({
             title: "Xác nhận duyệt đơn hàng",
-            message: `Bạn có chắc chắn muốn duyệt đơn hàng ${this.currentOrder.orderCode} với các khoản chi phí bổ sung sau không?`,
+            message: `Bạn có chắc chắn muốn duyệt đơn hàng ${this.currentOrder.orderCode} không?`,
             summary: [
                 { label: "Mã đơn hàng", value: this.currentOrder.orderCode },
-                { label: "Phí xe cẩu (Crane Fee)", value: this.formatVND(crane) },
-                { label: "Phí vận chuyển (Shipping)", value: this.formatVND(shipping) },
-                { label: "Tổng tiền đơn hàng", value: this.elFinalTotal.textContent }
+                { label: "Phương thức thanh toán", value: isDeposit ? "Đặt cọc (COD / DEPOSIT)" : "Thanh toán 100% toàn bộ" },
+                ...(isDeposit ? [{ label: "Tiền đặt cọc cây", value: this.formatVND(effectiveDeposit) }] : []),
+                { label: "Phí xe cẩu", value: this.formatVND(crane) },
+                { label: "Phí vận chuyển", value: this.formatVND(shipping) },
+                { label: "Tổng giá trị đơn hàng", value: this.formatVND(base + crane + shipping) },
+                { label: "THANH TOÁN NẤC 1 (Đợt duyệt)", value: this.formatVND(pay1) }
             ],
             onConfirm: async () => {
-                // Call Mock API to verify
-                const res = await apiVerifyOrder(this.currentOrder.orderCode, crane, shipping);
+                const res = await apiVerifyOrder(this.currentOrder.orderCode, crane, shipping, depositAmount);
                 if (res.success) {
                     alert('Duyệt đơn hàng thành công!');
                     this.close();

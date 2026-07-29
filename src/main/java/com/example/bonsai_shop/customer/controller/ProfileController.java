@@ -1,27 +1,27 @@
 package com.example.bonsai_shop.customer.controller;
 
-import com.example.bonsai_shop.entity.User;
+import com.example.bonsai_shop.config.SecurityUtils;
+import com.example.bonsai_shop.customer.repository.CommunityPostBookmarkRepository;
+import com.example.bonsai_shop.customer.repository.CommunityPostRepository;
+import com.example.bonsai_shop.customer.repository.UserRepository;
 import com.example.bonsai_shop.customer.service.UserService;
+import com.example.bonsai_shop.entity.CommunityPost;
+import com.example.bonsai_shop.entity.CommunityPostBookmark;
+import com.example.bonsai_shop.entity.Order;
+import com.example.bonsai_shop.entity.User;
+import com.example.bonsai_shop.product.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.security.oauth2.core.user.OAuth2User;
-import com.example.bonsai_shop.customer.repository.UserRepository;
 
-import com.example.bonsai_shop.customer.repository.CommunityPostRepository;
-import com.example.bonsai_shop.entity.CommunityPost;
 import java.util.List;
-
-import com.example.bonsai_shop.customer.repository.CommunityPostBookmarkRepository;
-import com.example.bonsai_shop.entity.CommunityPostBookmark;
-import com.example.bonsai_shop.entity.Order;
-import com.example.bonsai_shop.product.service.OrderService;
 import java.util.stream.Collectors;
 
 @Controller
@@ -115,7 +115,7 @@ public class ProfileController {
         try {
             userService.updateUserProfile(email, fullName, username, phone, address, avatarFile);
             User user = userService.getCurrentUserProfile(email);
-            com.example.bonsai_shop.config.SecurityUtils.updateSecurityContext(user);
+            SecurityUtils.updateSecurityContext(user);
             model.addAttribute("user", user);
             model.addAttribute("success", "Cập nhật thông tin thành công!");
         } catch (RuntimeException e) {

@@ -82,4 +82,25 @@ public class EmailService {
             System.err.println("==================================================");
         }
     }
+
+    /**
+     * Phiên bản throw — dùng khi caller cần biết mail có gửi thành công không.
+     * Không catch MailException — để nó bubble up lên caller.
+     * Mục đích: tránh lưu OTP "ma" vào DB khi email thất bại.
+     */
+    public void sendGuestOrderOtpOrThrow(String toEmail, String otpCode) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        if (fromEmail != null) message.setFrom(fromEmail);
+        message.setTo(toEmail);
+        message.setSubject("🌿 Bonsai Shop - Mã OTP xác nhận đặt hàng");
+        message.setText(
+                "Xin chào!\n\n" +
+                        "Mã OTP để xác nhận đặt hàng của bạn là: " + otpCode + "\n\n" +
+                        "Mã này có hiệu lực trong 5 phút.\n" +
+                        "Trân trọng,\nBonsai Shop"
+        );
+        // Không catch — để MailException propagate lên caller
+        mailSender.send(message);
+        System.out.println(">>> Guest Order OTP Email sent successfully to " + toEmail);
+    }
 }

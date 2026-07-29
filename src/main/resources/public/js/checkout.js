@@ -237,7 +237,10 @@ async function sendGuestOtpAndShowModal(email) {
         const response = await fetch('/api/orders/send-guest-otp', {
             method: 'POST',
             headers: headers,
-            body: JSON.stringify({ email: email })
+            body: JSON.stringify({
+                email: email,
+                productIds: window.guestProductIdsToBuy || null
+            })
         });
         const result = await response.json();
 
@@ -320,11 +323,9 @@ async function executeCheckoutApi(payload, confirmBtn = null) {
             if (typeof window.updateCartBadge === 'function') {
                 window.updateCartBadge();
             }
-            if (result.paymentMethod === 'VNPAY') {
-                window.location.href = `/vnpay/pay-order?orderCode=${result.orderCode}`;
-            } else {
-                window.location.href = `/order/success?orderCode=${result.orderCode}`;
-            }
+            // Tất cả các đơn hàng (COD hoặc Thanh toán 1 lần) đều chuyển hướng đến trang xác nhận tạo đơn thành công
+            // Chờ Moderator kiểm duyệt và nhập phụ phí cẩu & vận chuyển trước khi thanh toán
+            window.location.href = `/order/success?orderCode=${result.orderCode}`;
         } else {
             if (confirmBtn) {
                 confirmBtn.disabled = false;

@@ -120,7 +120,7 @@ public class ArtisanWalkInOrderService {
                 .paymentType(PAYMENT_TYPE_IN_PERSON)
                 .amount(totalAmount)
                 .build();
-        order.setPayment(payment);
+        paymentRepository.save(payment);
 
         int reserved = productRepository.reserveIfAvailable(product.getProductId());
         if (reserved == 0) {
@@ -151,7 +151,7 @@ public class ArtisanWalkInOrderService {
         order.setOrderStatus(STATUS_CANCELLED);
         order.setNotes(appendCancelReason(order.getNotes(), reason));
 
-        Payment payment = order.getPayment();
+        Payment payment = getFirstPayment(order);
         if (payment != null) {
             payment.setPaymentStatus(STATUS_CANCELLED);
             paymentRepository.save(payment);
@@ -205,7 +205,7 @@ public class ArtisanWalkInOrderService {
         order.setTotalAmount(totalAmount);
         order.setNotes(blankToNull(notes));
 
-        Payment payment = order.getPayment();
+        Payment payment = getFirstPayment(order);
         if (payment == null) {
             payment = Payment.builder()
                     .order(order)
@@ -216,7 +216,6 @@ public class ArtisanWalkInOrderService {
         payment.setPaymentMethod(normalizedPaymentMethod);
         payment.setAmount(totalAmount);
         paymentRepository.save(payment);
-        order.setPayment(payment);
 
         Order savedOrder = orderRepository.save(order);
         log(savedOrder, artisanUser, "IN_PERSON_UPDATE", STATUS_PENDING_PAYMENT, STATUS_PENDING_PAYMENT);
@@ -236,7 +235,7 @@ public class ArtisanWalkInOrderService {
         }
 
         String oldStatus = order.getOrderStatus();
-        Payment payment = order.getPayment();
+        Payment payment = getFirstPayment(order);
         if (payment == null) {
             payment = Payment.builder()
                     .order(order)
@@ -249,7 +248,6 @@ public class ArtisanWalkInOrderService {
         payment.setPaymentDate(LocalDateTime.now());
         paymentRepository.save(payment);
 
-        order.setPayment(payment);
         order.setOrderStatus(STATUS_COMPLETED);
         product.setProductStatus(PRODUCT_SOLD);
         productRepository.save(product);
@@ -335,9 +333,16 @@ public class ArtisanWalkInOrderService {
                 ? PAYMENT_METHOD_CASH
                 : paymentMethod.trim().toUpperCase(Locale.ROOT);
         if (!PAYMENT_METHOD_CASH.equals(normalized) && !PAYMENT_METHOD_VNPAY.equals(normalized)) {
-            throw new RuntimeException("PhÆ°Æ¡ng thá»©c thanh toÃ¡n khÃ´ng há»£p lá»‡.");
+            throw new RuntimeException("Phương thức thanh toán không hợp lệ.");
         }
         return normalized;
+    }
+
+    private Payment getFirstPayment(Order order) {
+        if (order.getPayments() != null && !order.getPayments().isEmpty()) {
+            return order.getPayments().get(0);
+        }
+        return paymentRepository.findTopByOrderOrderIdAndPaymentStatusOrderByPaymentIdDesc(order.getOrderId(), "PENDING").orElse(null);
     }
 }
 

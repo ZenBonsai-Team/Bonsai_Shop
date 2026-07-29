@@ -49,7 +49,7 @@ function apiFetchOrderDetail(orderCode) {
 /**
  * Gửi yêu cầu Phê duyệt đơn hàng (APPROVED) kèm theo phụ phí xe cẩu, phí vận chuyển
  */
-function apiVerifyOrder(orderCode, craneFee, shippingFee) {
+function apiVerifyOrder(orderCode, craneFee, shippingFee, depositAmount) {
     // Đọc CSRF token từ các thẻ meta đã được nhúng trong orders.html
     const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
     const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content');
@@ -66,7 +66,8 @@ function apiVerifyOrder(orderCode, craneFee, shippingFee) {
         headers: headers,
         body: JSON.stringify({
             craneFee: craneFee,
-            shippingFee: shippingFee
+            shippingFee: shippingFee,
+            depositAmount: depositAmount
         })
     })
     .then(response => response.json())

@@ -82,7 +82,12 @@ public class ArtisanDashboardController {
         
         // Get up to 5 most recent products for the dynamic dashboard view
         List<Product> recentProducts = products.stream()
-                .sorted((p1, p2) -> p2.getCreatedAt().compareTo(p1.getCreatedAt()))
+                .sorted((p1, p2) -> {
+                    if (p1.getCreatedAt() == null && p2.getCreatedAt() == null) return 0;
+                    if (p1.getCreatedAt() == null) return 1;
+                    if (p2.getCreatedAt() == null) return -1;
+                    return p2.getCreatedAt().compareTo(p1.getCreatedAt());
+                })
                 .limit(5)
                 .collect(java.util.stream.Collectors.toList());
         model.addAttribute("recentProducts", recentProducts);
