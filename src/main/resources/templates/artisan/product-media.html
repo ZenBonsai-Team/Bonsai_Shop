@@ -26,9 +26,9 @@
             <p th:text="${product.productName}">Product</p>
         </div>
         <div class="actions">
-            <a class="btn secondary" th:href="@{/artisan/products/{id}/edit(id=${product.productId})}">Quay lại chỉnh thông tin</a>
-            <a class="btn secondary" th:href="@{/artisan/products}">Quay lại sản phẩm</a>
-            <a class="btn" th:href="@{/artisan/products/{id}/preview(id=${product.productId})}">Xem trước</a>
+            <a class="btn secondary" th:href="@{/artisan/products/{id}/edit(id=${product.productId})}">Sửa thông tin</a>
+            <a class="btn secondary" th:href="@{/artisan/products}">Danh sách sản phẩm</a>
+            <a class="btn" th:href="@{/artisan/products/{id}/preview(id=${product.productId})}">Tiếp tục xem preview</a>
         </div>
     </header>
 
@@ -58,7 +58,7 @@
         <label>Chú thích (Caption)
             <input name="caption">
         </label>
-        <p class="form-hint">Thứ tự ban đầu sẽ tự động theo thứ tự upload. Bạn có thể chỉnh lại ở danh sách media bên dưới.</p>
+        <p class="form-hint">Sau khi tải lên, bạn có thể kiểm tra ảnh, đặt thumbnail, chỉnh thứ tự và caption trước khi sang preview.</p>
         <label class="checkbox">
             <input type="checkbox" name="isThumbnail" value="true">
             Đặt làm thumbnail

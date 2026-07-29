@@ -150,11 +150,10 @@ public class ArtisanProductController {
                     isThumbnail
             );
             redirectAttributes.addFlashAttribute("success", "Đã thêm media.");
-            return "redirect:/artisan/products/" + productId + "/preview";
         } catch (RuntimeException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
-            return "redirect:/artisan/products/" + productId + "/media";
         }
+        return "redirect:/artisan/products/" + productId + "/media";
     }
 
     @PostMapping("/{productId}/media/{mediaId}/thumbnail")

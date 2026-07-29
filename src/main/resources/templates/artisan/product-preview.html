@@ -26,7 +26,14 @@
                 <h1>Preview sản phẩm</h1>
                 <p>Kiểm tra lại thông tin sản phẩm trước khi quản lý trên cửa hàng.</p>
             </div>
-            <a class="btn secondary" th:href="@{/artisan/products}">Quay lại danh sách sản phẩm</a>
+            <div class="actions">
+                <form th:if="${product.productStatus == 'DRAFT'}" method="post" th:action="@{/artisan/products/{id}/publish(id=${product.productId})}">
+                    <button type="submit" class="btn">Đăng bán</button>
+                </form>
+                <a th:if="${isEditable}" class="btn secondary" th:href="@{/artisan/products/{id}/media(id=${product.productId})}">Sửa ảnh/video</a>
+                <a th:if="${isEditable}" class="btn secondary" th:href="@{/artisan/products/{id}/edit(id=${product.productId})}">Sửa thông tin</a>
+                <a class="btn secondary" th:href="@{/artisan/products}">Danh sách sản phẩm</a>
+            </div>
         </header>
 
         <div th:if="${success}" class="alert success" th:text="${success}"></div>
@@ -135,13 +142,6 @@
             </p>
         </section>
 
-        <section class="actions publish-actions">
-            <a th:if="${isEditable}" class="btn secondary" th:href="@{/artisan/products/{id}/media(id=${product.productId})}">Quay lại Media</a>
-            <a th:if="${isEditable}" class="btn secondary" th:href="@{/artisan/products/{id}/edit(id=${product.productId})}">Sửa thông tin</a>
-            <form th:if="${product.productStatus == 'DRAFT'}" method="post" th:action="@{/artisan/products/{id}/publish(id=${product.productId})}">
-                <button type="submit" class="btn">Đăng bán</button>
-            </form>
-        </section>
     </main>
 </div>
 
