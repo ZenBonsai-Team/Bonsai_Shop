@@ -39,9 +39,11 @@ public class CartMvcController {
     }
 
     @GetMapping("/order/success")
-    public String viewOrderSuccess(@RequestParam String orderCode, Model model) {
+    public String viewOrderSuccess(@RequestParam String orderCode, @AuthenticationPrincipal Object principal, Model model) {
         model.addAttribute("activePage", "orders");
         model.addAttribute("orderCode", orderCode);
+        boolean isLoggedIn = (principal != null && SecurityUtils.extractEmail(principal) != null);
+        model.addAttribute("isLoggedIn", isLoggedIn);
         return "customer/order_success";
     }
 

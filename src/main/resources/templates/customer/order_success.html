@@ -123,7 +123,8 @@
         
         <div class="d-grid gap-2 d-sm-flex justify-content-sm-center">
             <a href="/marketplace" class="btn btn-action btn-primary-action px-4 me-sm-2">Tiếp tục mua sắm</a>
-            <a href="/profile" class="btn btn-action btn-outline-secondary px-4">Xem đơn hàng của tôi</a>
+            <a th:if="${isLoggedIn}" th:href="@{/profile}" class="btn btn-action btn-outline-secondary px-4">Xem đơn hàng của tôi</a>
+            <a th:unless="${isLoggedIn}" th:href="@{/order/lookup(orderCode=${orderCode})}" class="btn btn-action btn-outline-secondary px-4">Xem đơn hàng</a>
         </div>
     </div>
 </div>
