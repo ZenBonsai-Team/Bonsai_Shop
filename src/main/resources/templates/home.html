@@ -9,6 +9,15 @@
 <!-- HEADER GIỐNG MARKETPLACE -->
 <div th:replace="~{fragments/navbar :: navbar}" th:with="activePage='home'"></div>
 
+<div th:replace="~{fragments/navbar :: navbar}"
+     th:with="activePage='home'"
+     id="mainNavbar">
+</div>
+
+<button id="toggleNavbarBtn" class="toggle-navbar-btn">
+    ⬆
+</button>
+
 <!-- THÔNG BÁO ĐĂNG KÝ THÀNH CÔNG (Toast Notification) -->
 <div th:if="${registrationSuccess}" class="toast-notification toast-success" id="registrationToast">
     <div class="toast-content">
@@ -129,53 +138,107 @@
         </div>
     </div>
 </section>
-<section class="about">
-    <div class="about-image"></div>
+<section class="masters">
 
-    <div class="about-content">
-        <p th:text="#{home.about.tag}">TRIẾT LÝ CỦA CHÚNG TÔI</p>
-        <h2 th:utext="#{home.about.title}">Tại sao là<br>Bonsai Shop?</h2>
-        <h4 th:text="#{home.about.quote}">“Bonsai không chỉ là một cái cây, đó là một cuộc hành trình vượt thời gian.”</h4>
-        <span th:text="#{home.about.desc}">
-            Tại Bonsai Shop, chúng tôi không chỉ cung cấp những tác phẩm nghệ thuật sống.
-            Chúng tôi chia sẻ tri thức, kinh nghiệm và sự tận tâm trong từng dáng cây.
-        </span>
-        <a th:href="@{/marketplace}" class="outline-btn" th:text="#{home.about.more}">Tìm hiểu thêm</a>
+    <p class="masters-tag">ĐỘI NGŨ CHUYÊN GIA</p>
+
+    <h2 class="masters-title">
+        Nghệ Nhân Di Sản
+    </h2>
+
+    <div class="masters-grid">
+
+        <div class="master-card">
+            <div class="master-icon">
+                <i class="fa-regular fa-user"></i>
+            </div>
+
+            <div>
+                <h3>Master Kenji Tanaka</h3>
+
+                <p>
+                    Với hơn 40 năm kinh nghiệm, Master Tanaka là người giữ lửa
+                    cho phong cách Shimpaku truyền thống tại vườn Omiya.
+                </p>
+            </div>
+        </div>
+
+        <div class="master-card">
+            <div class="master-icon">
+                <i class="fa-regular fa-user"></i>
+            </div>
+
+            <div>
+                <h3>Master Hiroshi Sato</h3>
+
+                <p>
+                    Chuyên gia về các dòng thông đen (Kuro-Matsu), ông nổi tiếng
+                    với kỹ thuật tạo hình "Wabi-Sabi" đầy chiều sâu.
+                </p>
+            </div>
+        </div>
+
     </div>
 </section>
 
+<section class="about">
+
+    <div class="about-container">
+
+        <p class="about-tag">
+            TRIẾT LÝ CỦA CHÚNG TÔI
+        </p>
+
+        <h2 class="about-title">
+            Tại sao là Bonsai?
+        </h2>
+
+        <h4 class="about-quote">
+            "Bonsai không chỉ là một cái cây, đó là một cuộc hành trình vượt thời
+            gian, là sự đối thoại tĩnh lặng giữa con người và thiên nhiên."
+        </h4>
+
+        <p class="about-description">
+            Tại Bonsai Shop, chúng tôi không chỉ cung cấp những tác phẩm nghệ thuật
+            sống. Chúng tôi chia sẻ triết lý bonsai về sự tối giản, lòng kiên nhẫn và
+            sự trân trọng vẻ đẹp của sự bất toàn. Mỗi gốc cây tại đây đều được tuyển
+            chọn và chăm sóc bởi các nghệ nhân bậc thầy, mang trong mình câu chuyện
+            của hàng chục năm rèn giũa.
+        </p>
+
+    </div>
+
+</section>
+
 <section class="standard">
+
     <div class="standard-img">
-        <img src="/images/tools.png" alt="Bonsai tools">
+        <img src="/images/tools.png" alt="Bonsai Garden">
     </div>
 
     <div class="standard-info">
-        <h2 th:text="#{home.standard.title}">Tiêu chuẩn Bonsai Shop</h2>
 
-        <div class="info-row">
-            <span th:text="#{home.standard.origin}">Nguồn gốc</span>
-            <strong th:text="#{home.standard.origin.val}">Vườn ươm Omiya, Nhật Bản</strong>
+        <h2>
+            Di Sản Nhà Vườn Bonsai
+        </h2>
+
+        <p class="standard-desc">
+            Trải rộng trên diện tích hàng ngàn mét vuông, nhà vườn Bonsai là nơi lưu giữ
+            những kiệt tác bonsai trăm tuổi trong không gian kiến trúc Nhật Bản truyền thống.
+
+            Mỗi góc vườn đều được thiết kế tỉ mỉ để tạo ra sự giao thoa hoàn hảo giữa thiên
+            nhiên và nghệ thuật, mang đến trải nghiệm tĩnh lặng tuyệt đối cho khách tham quan.
+        </p>
+
+        <div class="quote-box">
+            <blockquote>
+                "Mỗi tác phẩm đều đi kèm chứng nhận định danh và bộ hướng dẫn chăm sóc
+                chuyên biệt từ nghệ nhân."
+            </blockquote>
         </div>
 
-        <div class="info-row">
-            <span th:text="#{home.standard.artisan}">Chế tác</span>
-            <strong th:text="#{home.standard.artisan.val}">Nghệ nhân cấp quốc gia</strong>
-        </div>
-
-        <div class="info-row">
-            <span th:text="#{home.standard.tool}">Dụng cụ</span>
-            <strong th:text="#{home.standard.tool.val}">Thép Masakuni rèn tay</strong>
-        </div>
-
-        <div class="info-row">
-            <span th:text="#{home.standard.warranty}">Hậu mãi</span>
-            <strong th:text="#{home.standard.warranty.val}">Bảo hành sinh trưởng 12 tháng</strong>
-        </div>
-
-        <blockquote th:text="#{home.standard.quote}">
-            “Một tác phẩm luôn đi kèm chứng nhận danh tính và bộ hướng dẫn chăm sóc chuyên biệt.”
-        </blockquote>
     </div>
+
 </section>
 
 <div th:replace="~{fragments/footer :: footer}"></div>

@@ -166,7 +166,7 @@ const OrderDrawer = {
         // Fetch Detail Mock API
         const order = await apiFetchOrderDetail(orderCode);
         if (!order) {
-            alert('Không tìm thấy thông tin chi tiết đơn hàng!');
+            BSMSToast.error('Không tìm thấy thông tin chi tiết đơn hàng!');
             return;
         }
 
@@ -279,11 +279,11 @@ const OrderDrawer = {
             onConfirm: async () => {
                 const res = await apiVerifyOrder(this.currentOrder.orderCode, crane, shipping, depositAmount);
                 if (res.success) {
-                    alert('Duyệt đơn hàng thành công!');
+                    BSMSToast.success('Duyệt đơn hàng thành công!');
                     this.close();
                     if (this.onSuccessCallback) this.onSuccessCallback();
                 } else {
-                    alert(res.message || 'Có lỗi xảy ra khi duyệt đơn hàng!');
+                    BSMSToast.error(res.message || 'Có lỗi xảy ra khi duyệt đơn hàng!');
                 }
             }
         });
@@ -312,7 +312,7 @@ const OrderDrawer = {
     async handleRejectConfirm() {
         const reason = this.textareaRejectReason.value.trim();
         if (!reason) {
-            alert('Vui lòng nhập lý do từ chối!');
+            BSMSToast.warning('Vui lòng nhập lý do từ chối!');
             return;
         }
 
@@ -326,11 +326,11 @@ const OrderDrawer = {
             onConfirm: async () => {
                 const res = await apiRejectOrder(this.currentOrder.orderCode, reason);
                 if (res.success) {
-                    alert('Đơn hàng đã bị từ chối duyệt.');
+                    BSMSToast.success('Đơn hàng đã bị từ chối duyệt.');
                     this.close();
                     if (this.onSuccessCallback) this.onSuccessCallback();
                 } else {
-                    alert(res.message);
+                    BSMSToast.error(res.message || 'Lỗi khi từ chối đơn hàng!');
                 }
             }
         });

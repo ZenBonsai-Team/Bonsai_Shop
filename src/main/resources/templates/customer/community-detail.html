@@ -549,9 +549,14 @@
                 .then(res => {
                     if (res.status === 401) {
                         // Chưa đăng nhập
-                        if (confirm('Bạn cần đăng nhập để thích bài viết. Đăng nhập ngay?')) {
-                            window.location.href = '/login';
-                        }
+                        BSMSConfirm({
+                            title: 'Yêu cầu đăng nhập',
+                            message: 'Bạn cần đăng nhập để thích bài viết này. Bạn có muốn tới trang Đăng nhập ngay không?',
+                            type: 'primary',
+                            confirmText: 'Đăng nhập',
+                            cancelText: 'Bỏ qua',
+                            onConfirm: () => { window.location.href = '/login'; }
+                        });
                         return null;
                     }
                     return res.json();
@@ -580,7 +585,7 @@
                         const toast = new bootstrap.Toast(toastElement);
                         toast.show();
                     } else {
-                        alert("Đã sao chép liên kết bài viết!");
+                        BSMSToast.success("Đã sao chép liên kết bài viết!");
                     }
                 });
             });
@@ -604,8 +609,8 @@
                 })
                 .then(res => {
                     if (res.status === 401) {
-                        alert('Bạn cần đăng nhập để lưu bài viết.');
-                        window.location.href = '/login';
+                        BSMSToast.warning('Bạn cần đăng nhập để lưu bài viết.');
+                        setTimeout(() => { window.location.href = '/login'; }, 1200);
                         return null;
                     }
                     return res.json();
@@ -632,8 +637,9 @@
                                 }
                             }
                         });
+                        BSMSToast.success(data.bookmarked ? 'Đã lưu bài viết!' : 'Đã bỏ lưu bài viết!');
                     } else {
-                        alert(data.message || 'Có lỗi xảy ra khi lưu bài viết.');
+                        BSMSToast.error(data.message || 'Có lỗi xảy ra khi lưu bài viết.');
                     }
                 })
                 .catch(err => console.error('Error toggling bookmark:', err));
@@ -680,8 +686,8 @@
                 })
                 .then(res => {
                     if (res.status === 401) {
-                        alert('Bạn cần đăng nhập để viết bình luận.');
-                        window.location.href = '/login';
+                        BSMSToast.warning('Bạn cần đăng nhập để viết bình luận.');
+                        setTimeout(() => { window.location.href = '/login'; }, 1200);
                         return null;
                     }
                     return res.json();
@@ -733,8 +739,9 @@
                                 span.textContent = data.commentsCount;
                             });
                         }
+                        BSMSToast.success('Đăng bình luận thành công!');
                     } else {
-                        alert(data.message || 'Có lỗi xảy ra khi gửi bình luận.');
+                        BSMSToast.error(data.message || 'Có lỗi xảy ra khi gửi bình luận.');
                     }
                 })
                 .catch(err => console.error('Error submitting comment:', err));

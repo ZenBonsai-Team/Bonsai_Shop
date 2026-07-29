@@ -97,7 +97,7 @@ public class ArtisanProductService {
                 .price(form.getPrice())
                 .isPublicPrice(isPublicPriceForSegment(segment))
                 .productStatus("DRAFT")
-                .isVisible(true)
+                .isVisible(false)
                 .viewCount(0)
                 .createdAt(LocalDateTime.now())
                 .build();
@@ -271,6 +271,9 @@ public class ArtisanProductService {
     @Transactional
     public void showProduct(String artisanEmail, Integer productId) {
         Product product = getMyProduct(artisanEmail, productId);
+        ensureShowable(product);
+        ensurePublishReady(product);
+        product.setIsPublicPrice(isPublicPriceForSegment(product.getSegment()));
         product.setIsVisible(true);
         productRepository.save(product);
     }
@@ -414,6 +417,15 @@ public class ArtisanProductService {
     private void ensureHideable(Product product) {
         if (!isHideable(product)) {
             throw new RuntimeException("Chỉ có thể ẩn sản phẩm đang được bán.");
+        }
+    }
+
+    private void ensureShowable(Product product) {
+        if (product == null || "DRAFT".equalsIgnoreCase(product.getProductStatus())) {
+            throw new RuntimeException("Sản phẩm nháp cần đăng bán, không thể chỉ bật hiển thị.");
+        }
+        if ("RESERVED".equalsIgnoreCase(product.getProductStatus())) {
+            throw new RuntimeException("Không thể hiện sản phẩm đang được đặt.");
         }
     }
 

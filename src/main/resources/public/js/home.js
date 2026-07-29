@@ -194,3 +194,24 @@ function prevHeroImage() {
     startAuto();
 
 })();
+
+const navbar = document.querySelector(".navbar");
+const btn = document.getElementById("toggleNavbarBtn");
+
+let isHidden = false;
+
+btn.addEventListener("click", function () {
+
+    if (isHidden) {
+
+        navbar.style.transform = "translateY(0)";
+        btn.innerHTML = "⬆";
+
+    } else {
+
+        navbar.style.transform = "translateY(-100%)";
+        btn.innerHTML = "⬇";
+    }
+
+    isHidden = !isHidden;
+});

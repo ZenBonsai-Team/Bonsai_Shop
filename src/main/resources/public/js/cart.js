@@ -99,35 +99,46 @@ function renderCart(items) {
 }
 
 async function removeItem(productId) {
-    if (!confirm("Bạn có chắc chắn muốn xóa tác phẩm này khỏi giỏ hàng?")) return;
-    
-    const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
-    const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content');
-    
-    const headers = { 'Content-Type': 'application/json' };
-    if (csrfHeader && csrfToken) headers[csrfHeader] = csrfToken;
-    
-    try {
-        const response = await fetch(`/api/cart/items/${productId}`, {
-            method: 'DELETE',
-            headers: headers
-        });
-        
-        if (response.ok) {
-            loadCart();
-        } else {
-            // Xóa trong LocalStorage của Guest
-            let guestCart = JSON.parse(localStorage.getItem('bonsai_guest_cart') || '[]');
-            guestCart = guestCart.filter(id => id !== productId);
-            localStorage.setItem('bonsai_guest_cart', JSON.stringify(guestCart));
-            loadCart();
+    BSMSConfirm({
+        title: "Xóa khỏi giỏ hàng?",
+        message: "Bạn có chắc chắn muốn xóa tác phẩm này khỏi giỏ hàng?",
+        type: "danger",
+        confirmText: "Xóa tác phẩm",
+        cancelText: "Bỏ qua",
+        onConfirm: async () => {
+            const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
+            const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content');
+            
+            const headers = { 'Content-Type': 'application/json' };
+            if (csrfHeader && csrfToken) headers[csrfHeader] = csrfToken;
+            
+            try {
+                const response = await fetch(`/api/cart/items/${productId}`, {
+                    method: 'DELETE',
+                    headers: headers
+                });
+                
+                if (response.ok) {
+                    loadCart();
+                    BSMSToast.success("Đã xóa tác phẩm khỏi giỏ hàng.");
+                } else {
+                    // Xóa trong LocalStorage của Guest
+                    let guestCart = JSON.parse(localStorage.getItem('bonsai_guest_cart') || '[]');
+                    guestCart = guestCart.filter(id => id !== productId);
+                    localStorage.setItem('bonsai_guest_cart', JSON.stringify(guestCart));
+                    loadCart();
+                    BSMSToast.success("Đã xóa tác phẩm khỏi giỏ hàng.");
+                }
+            } catch (err) {
+                console.error("Lỗi khi xóa sản phẩm:", err);
+                let guestCart = JSON.parse(localStorage.getItem('bonsai_guest_cart') || '[]');
+                guestCart = guestCart.filter(id => id !== productId);
+                localStorage.setItem('bonsai_guest_cart', JSON.stringify(guestCart));
+                loadCart();
+                BSMSToast.success("Đã xóa tác phẩm khỏi giỏ hàng.");
+            }
         }
-    } catch (error) {
-        let guestCart = JSON.parse(localStorage.getItem('bonsai_guest_cart') || '[]');
-        guestCart = guestCart.filter(id => id !== productId);
-        localStorage.setItem('bonsai_guest_cart', JSON.stringify(guestCart));
-        loadCart();
-    }
+    });
 }
 
 function formatVND(value) {
