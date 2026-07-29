@@ -225,14 +225,9 @@ function processOrderSubmit() {
  * Xử lý khi Backend phản hồi thành công
  */
 function handleOrderSuccess(data) {
-    if (data.paymentMethod === 'VNPAY' && data.redirectUrl) {
-        // Chuyển hướng ngay lập tức sang VNPay sandbox để tiếp tục thanh toán
-        window.location.href = data.redirectUrl;
-    } else {
-        // Hiển thị Overlay thành công đối với giao dịch COD
-        document.getElementById('successOrderCode').innerText = data.orderCode;
-        document.getElementById('modalSuccessOverlay').classList.remove('d-none');
-    }
+    // Tất cả các đơn hàng đều tạo ở trạng thái PENDING và hiển thị màn hình thành công chờ Moderator kiểm duyệt
+    document.getElementById('successOrderCode').innerText = data.orderCode;
+    document.getElementById('modalSuccessOverlay').classList.remove('d-none');
 }
 
 /**

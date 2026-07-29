@@ -29,6 +29,10 @@ public class PaymentController {
     private OrderRepository orderRepository;
     @Autowired
     private com.example.bonsai_shop.product.service.MailService mailService;
+    @Autowired
+    private com.example.bonsai_shop.product.service.OrderService orderService;
+    @Autowired
+    private com.example.bonsai_shop.product.repository.PaymentRepository paymentRepository;
 
     // Tạo link thanh toán VNPay
     @GetMapping("/vnpay/create-payment")
@@ -160,16 +164,7 @@ public class PaymentController {
             String responseCode = request.getParameter("vnp_ResponseCode");
             if ("00".equals(responseCode)) {
                 String orderCode = request.getParameter("vnp_TxnRef");
-                Order order = orderRepository.findByOrderCode(orderCode).orElse(null);
-                if (order != null && !"PAID".equalsIgnoreCase(order.getOrderStatus())) {
-                    order.setOrderStatus("PAID");
-                    orderRepository.save(order);
-                    try {
-                        mailService.sendOrderFinalReceiptEmail(order);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }
+                orderService.processPaymentSuccess(orderCode);
                 model.addAttribute("status", "SUCCESS");
                 model.addAttribute("message", "Thanh toán giao dịch thành công!");
                 model.addAttribute("amount", Double.parseDouble(request.getParameter("vnp_Amount")) / 100);
@@ -195,8 +190,15 @@ public class PaymentController {
         Order order = orderRepository.findByOrderCode(orderCode)
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy đơn hàng: " + orderCode));
 
-        // 2. Lấy tổng chi phí thanh toán (đã bao gồm tiền cây + phí cẩu + phí ship)
-        long amount = order.getTotalAmount().longValue();
+        // 2. Lấy số tiền từ Payment record PENDING gần nhất (nếu có, ví dụ: Đặt cọc = Deposit + Crane + Ship)
+        com.example.bonsai_shop.entity.Payment pendingPayment = paymentRepository
+                .findTopByOrderOrderIdAndPaymentStatusOrderByPaymentIdDesc(order.getOrderId(), "PENDING")
+                .orElse(null);
+
+        long amount = (pendingPayment != null && pendingPayment.getAmount() != null)
+                ? pendingPayment.getAmount().longValue()
+                : order.getTotalAmount().longValue();
+
         String vnp_Version = "2.1.0";
         String vnp_Command = "pay";
         String orderType = "other";

@@ -7,6 +7,11 @@
     <link rel="stylesheet" th:href="@{/css/register.css}">
     <link rel="stylesheet"
           href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&display=swap"
+          rel="stylesheet">
 </head>
 <body>
 
@@ -19,7 +24,7 @@
                 <i class="fa-solid fa-leaf"></i>
             </div>
 
-            <h1>Tham gia Cộng đồng Zen</h1>
+            <h1>Tham Gia Cộng Đồng BonSai</h1>
             <p>Nơi nghệ thuật và sự kiên nhẫn hội tụ.</p>
         </div>
 
@@ -38,6 +43,7 @@
                        id="fullName"
                        name="fullName"
                        placeholder="Nhập họ và tên của bạn"
+                       th:value="${formData?.fullName ?: ''}"
                        required>
                 <div class="error-msg" id="fullNameError"></div>
             </div>
@@ -51,6 +57,7 @@
                        id="username"
                        name="username"
                        placeholder="Nhập tên người dùng"
+                       th:value="${formData?.username ?: ''}"
                        required>
                 <div class="error-msg" id="usernameError"></div>
             </div>
@@ -64,6 +71,7 @@
                        id="email"
                        name="email"
                        placeholder="Nhập email của bạn"
+                       th:value="${formData?.email ?: ''}"
                        required>
                 <div class="error-msg" id="emailError"></div>
             </div>
@@ -82,8 +90,8 @@
                            required>
 
                     <span class="toggle-password" id="togglePassword">
-                        <i class="fa-regular fa-eye"></i>
-                    </span>
+                         <i class="fa-regular fa-eye"></i>
+                     </span>
                 </div>
 
                 <div class="password-strength">
@@ -101,7 +109,8 @@
                 <input type="text"
                        id="phone"
                        name="phone"
-                       placeholder="Nhập số điện thoại">
+                       placeholder="Nhập số điện thoại"
+                       th:value="${formData?.phone ?: ''}">
                 <div class="error-msg" id="phoneError"></div>
             </div>
 

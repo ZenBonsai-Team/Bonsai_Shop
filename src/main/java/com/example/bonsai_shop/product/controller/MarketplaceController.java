@@ -103,25 +103,42 @@ public class MarketplaceController {
         return "product/marketplace";
     }
 
-    @GetMapping({ "/products/detail", "/product/{id}" })
-    public String productDetail(
-            @PathVariable(value = "id", required = false) Integer id,
+    @GetMapping("/product/{id}")
+    public String productDetailById(
+            @PathVariable("id") Integer id,
             Authentication authentication,
             Model model) {
+        return processProductDetail(id, authentication, model);
+    }
+
+    @GetMapping("/products/detail")
+    public String productDetailByParam(
+            @RequestParam(value = "id", required = false) Integer id,
+            Authentication authentication,
+            Model model) {
+        return processProductDetail(id, authentication, model);
+    }
+
+    private String processProductDetail(Integer id, Authentication authentication, Model model) {
         Product product = null;
         if (id != null) {
             product = productService.getProductById(id);
-        } else {
+        }
+
+        if (product == null) {
             Page<Product> products = productService.getAllActiveProducts(PageRequest.of(0, 1));
             if (!products.isEmpty()) {
                 product = productService.getProductById(products.getContent().get(0).getProductId());
             }
         }
-        if (product != null) {
-            boolean viewCountIncremented = productService.incrementViewCountForCustomer(product.getProductId(), authentication);
-            if (viewCountIncremented) {
-                product.setViewCount((product.getViewCount() == null ? 0 : product.getViewCount()) + 1);
-            }
+
+        if (product == null) {
+            return "redirect:/marketplace";
+        }
+
+        boolean viewCountIncremented = productService.incrementViewCountForCustomer(product.getProductId(), authentication);
+        if (viewCountIncremented) {
+            product.setViewCount((product.getViewCount() == null ? 0 : product.getViewCount()) + 1);
         }
 
         model.addAttribute("product", product);
@@ -129,7 +146,7 @@ public class MarketplaceController {
         model.addAttribute("productImageSlots", getImageSlots(product));
         model.addAttribute("productVideos", getMediaByType(product, "VIDEO"));
         model.addAttribute("productTags", productService.getProductTags(product));
-        model.addAttribute("journalEvents", product == null ? List.of() : productJournalService.getPublicEvents(product));
+        model.addAttribute("journalEvents", productJournalService.getPublicEvents(product));
         model.addAttribute("activePage", "marketplace");
         return "product/product-detail";
     }

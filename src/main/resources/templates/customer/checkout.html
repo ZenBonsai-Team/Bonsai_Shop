@@ -79,23 +79,30 @@
         }
         .payment-method-card {
             border: 1px solid var(--border-color);
-            border-radius: 6px;
+            border-radius: 8px;
             padding: 16px;
             display: flex;
-            align-items: center;
-            gap: 12px;
+            align-items: flex-start;
+            gap: 14px;
             cursor: pointer;
-            transition: var(--transition);
-            margin-bottom: 12px;
+            transition: all 0.2s ease;
+            margin-bottom: 14px;
+            background-color: #fff;
         }
-        .payment-method-card:hover {
+        .payment-method-card:hover,
+        .payment-method-card.active,
+        .payment-method-card:has(input[type="radio"]:checked) {
             border-color: var(--primary-color);
-            background-color: var(--bg-washi);
+            background-color: #f4f8f5;
+            box-shadow: 0 2px 8px rgba(46, 125, 50, 0.08);
         }
         .payment-method-card input[type="radio"] {
             accent-color: var(--primary-color);
-            width: 18px;
-            height: 18px;
+            width: 20px;
+            height: 20px;
+            margin-top: 2px;
+            flex-shrink: 0;
+            cursor: pointer;
         }
         .btn-place-order {
             background-color: var(--primary-color);
@@ -173,16 +180,16 @@
                 <div class="payment-method-card" onclick="document.getElementById('payCOD').checked = true">
                     <input type="radio" name="paymentMethod" id="payCOD" value="COD" checked>
                     <div>
-                        <strong class="d-block text-dark">COD (Thanh toán khi nhận hàng)</strong>
-                        <span class="text-secondary small">Sau khi Moderator xác nhận chi phí vận chuyển xe cẩu, bạn sẽ thanh toán 30% cọc trực tiếp hoặc chuyển khoản theo hướng dẫn.</span>
+                        <strong class="d-block text-dark"><i class="fa-solid fa-hand-holding-dollar me-1 text-success"></i> COD (Thanh toán khi nhận hàng / Đặt cọc trước)</strong>
+                        <span class="text-secondary small">Sau khi Moderator duyệt đơn và nhập chi phí xe cẩu, vận chuyển & số tiền đặt cọc (mặc định 30% giá cây), bạn sẽ tiến hành đặt cọc và thanh toán nấc còn lại khi giao nhận cây.</span>
                     </div>
                 </div>
 
                 <div class="payment-method-card" onclick="document.getElementById('payVNPay').checked = true">
                     <input type="radio" name="paymentMethod" id="payVNPay" value="VNPAY">
                     <div>
-                        <strong class="d-block text-dark">Thanh toán qua cổng VNPay</strong>
-                        <span class="text-secondary small">Chuyển hướng sang VNPay để thanh toán an toàn, bảo mật.</span>
+                        <strong class="d-block text-dark"><i class="fa-solid fa-credit-card me-1 text-primary"></i> Thanh toán toàn bộ 1 lần</strong>
+                        <span class="text-secondary small">Sau khi Moderator duyệt đơn và nhập chi phí xe cẩu & vận chuyển, bạn sẽ thanh toán 100% toàn bộ giá trị đơn hàng một lần duy nhất.</span>
                     </div>
                 </div>
             </div>

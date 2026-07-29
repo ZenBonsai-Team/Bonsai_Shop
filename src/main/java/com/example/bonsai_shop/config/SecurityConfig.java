@@ -43,6 +43,8 @@ public class SecurityConfig {
                                                                 "/privacy",
                                                                 "/error",
                                                                 "/product/**",
+                                                                "/products/detail",
+                                                                "/products/detail/**",
                                                                 "/marketplace",
                                                                 "/register",
                                                                 "/login",
@@ -75,14 +77,14 @@ public class SecurityConfig {
                                                                 "/api/orders/**", // ← tạm thời cho phép để test API con
                                                                 "/api/notifications/**" // ← cho phép lấy thông tin thông báo nút chuông
                                                 ).permitAll()
-                                                // Chỉ OWNER mới vào được /owner/**
-                                                .requestMatchers("/owner/**").hasRole("OWNER")
-                                                // Chỉ CONTENT_MODERATOR mới vào được /moderator/community/**
-                                                .requestMatchers("/moderator/community/**").hasRole("CONTENT_MODERATOR")
-                                                // Chỉ MODERATOR mới vào được /moderator/**
-                                                .requestMatchers("/moderator/**").hasRole("MODERATOR")
-                                                // Chỉ ARTISAN mới vào được /artisan/**
-                                                .requestMatchers("/artisan/**").hasRole("ARTISAN")
+                                                // Chỉ OWNER mới vào được /owner và /owner/**
+                                                .requestMatchers("/owner", "/owner/**").hasRole("OWNER")
+                                                // Chỉ CONTENT_MODERATOR mới vào được /moderator/community và /moderator/community/**
+                                                .requestMatchers("/moderator/community", "/moderator/community/**").hasRole("CONTENT_MODERATOR")
+                                                // Chỉ MODERATOR mới vào được /moderator và /moderator/**
+                                                .requestMatchers("/moderator", "/moderator/**").hasRole("MODERATOR")
+                                                // Chỉ ARTISAN hoặc SELLER mới vào được /artisan và /artisan/**
+                                                .requestMatchers("/artisan", "/artisan/**").hasAnyRole("ARTISAN", "SELLER")
                                                 // Chặn theo Action cụ thể (permission-based)
                                                 .requestMatchers("/products/create", "/products/edit/**",
                                                                 "/prodcuts/delete/**")

@@ -5,6 +5,8 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.ArrayList;
+import java.util.stream.Collectors;
 
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
@@ -14,31 +16,46 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.example.bonsai_shop.config.VNPayConfig;
+import com.example.bonsai_shop.entity.CartItem;
 import com.example.bonsai_shop.entity.Order;
 import com.example.bonsai_shop.entity.OrderDetail;
 import com.example.bonsai_shop.entity.OrderHandling;
 import com.example.bonsai_shop.entity.OrderLog;
+import com.example.bonsai_shop.entity.Payment;
 import com.example.bonsai_shop.entity.Product;
 import com.example.bonsai_shop.entity.User;
+import com.example.bonsai_shop.product.dto.PurchaseOrderRequestDTO;
+import com.example.bonsai_shop.product.enums.PaymentMethod;
+import com.example.bonsai_shop.product.enums.PaymentType;
+import com.example.bonsai_shop.product.event.OrderCreatedEvent;
+import com.example.bonsai_shop.product.event.OrderPaidEvent;
 import com.example.bonsai_shop.product.event.OrderRejectedEvent;
 import com.example.bonsai_shop.product.event.OrderVerifiedEvent;
 import com.example.bonsai_shop.product.repository.OrderHandlingRepository;
 import com.example.bonsai_shop.product.repository.OrderLogRepository;
 import com.example.bonsai_shop.product.repository.OrderRepository;
+import com.example.bonsai_shop.product.repository.PaymentRepository;
 import com.example.bonsai_shop.product.repository.ProductRepository;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class OrderService {
+
+    public static final BigDecimal MAX_ORDER_AMOUNT = new BigDecimal("200000000");
 
     private final OrderRepository orderRepository;
     private final ProductRepository productRepository;
     private final OrderLogRepository orderLogRepository;
     private final OrderHandlingRepository orderHandlingRepository;
+    private final PaymentRepository paymentRepository;
     private final ApplicationEventPublisher eventPublisher;
     private final MailService mailService;
+    private final CartService cartService;
 
     @Transactional(readOnly = true)
     public Page<Order> getFilteredOrders(String search, String status, String sort, int page, int limit) {
@@ -182,7 +199,7 @@ public class OrderService {
 
     @Transactional
     public boolean verifyOrder(String orderCode, BigDecimal craneFee, BigDecimal shippingFee, BigDecimal depositAmount, User moderator) {
-        Order order = orderRepository.findByOrderCode(orderCode).orElse(null);
+        Order order = orderRepository.findByOrderCodeWithDetails(orderCode).orElse(null);
         if (order == null || !"PENDING".equalsIgnoreCase(order.getOrderStatus())) {
             return false;
         }
@@ -193,16 +210,63 @@ public class OrderService {
         }
 
         String oldStatus = order.getOrderStatus();
+        
+        // Tính chính xác giá gốc các cây trong đơn hàng (không bao gồm phụ phí)
+        BigDecimal treePrice = BigDecimal.ZERO;
+        if (order.getOrderDetails() != null && !order.getOrderDetails().isEmpty()) {
+            treePrice = order.getOrderDetails().stream()
+                    .map(d -> d.getPriceAtPurchase().multiply(BigDecimal.valueOf(d.getQuantity())))
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+        } else {
+            treePrice = order.getTotalAmount()
+                    .subtract(order.getCraneFee() != null ? order.getCraneFee() : BigDecimal.ZERO)
+                    .subtract(order.getShippingFee() != null ? order.getShippingFee() : BigDecimal.ZERO);
+        }
+
         order.setCraneFee(craneFee != null ? craneFee : BigDecimal.ZERO);
         order.setShippingFee(shippingFee != null ? shippingFee : BigDecimal.ZERO);
-        if (depositAmount != null) {
-            order.setDepositAmount(depositAmount);
-        }
-        order.setOrderStatus("APPROVED");
 
-        BigDecimal originalAmount = order.getTotalAmount();
-        BigDecimal newTotal = originalAmount.add(order.getCraneFee()).add(order.getShippingFee());
+        // Tong gia tri thuc te cua toan bo don hang = Tree Price + Crane Fee + Shipping Fee
+        BigDecimal newTotal = treePrice.add(order.getCraneFee()).add(order.getShippingFee());
         order.setTotalAmount(newTotal);
+
+        boolean isDepositFlow = "DEPOSIT".equalsIgnoreCase(order.getPaymentMethod()) 
+                || "COD".equalsIgnoreCase(order.getPaymentMethod())
+                || (depositAmount != null && depositAmount.compareTo(BigDecimal.ZERO) > 0);
+
+        if (isDepositFlow) {
+            BigDecimal finalDeposit = depositAmount;
+            if (finalDeposit == null || finalDeposit.compareTo(BigDecimal.ZERO) <= 0) {
+                // Tự động tính 30% giá cây gốc nếu Moderator chưa nhập thủ công
+                finalDeposit = treePrice.multiply(new BigDecimal("0.30")).setScale(0, java.math.RoundingMode.HALF_UP);
+            }
+            order.setDepositAmount(finalDeposit);
+
+            // Số tiền cần thanh toán lần 1 = deposit + phí cẩu + phí ship
+            BigDecimal amountToPay = finalDeposit.add(order.getCraneFee()).add(order.getShippingFee());
+
+            Payment depositPayment = Payment.builder()
+                    .order(order)
+                    .paymentType(PaymentType.DEPOSIT.name())
+                    .paymentMethod(PaymentMethod.VNPAY.name())
+                    .paymentStatus("PENDING")
+                    .amount(amountToPay)
+                    .build();
+            paymentRepository.save(depositPayment);
+        } else {
+            // Thanh toán toàn bộ 1 lần = treePrice + phí cẩu + phí ship
+            order.setDepositAmount(BigDecimal.ZERO);
+            Payment fullPayment = Payment.builder()
+                    .order(order)
+                    .paymentType(PaymentType.FULL_PAYMENT.name())
+                    .paymentMethod(PaymentMethod.VNPAY.name())
+                    .paymentStatus("PENDING")
+                    .amount(newTotal)
+                    .build();
+            paymentRepository.save(fullPayment);
+        }
+
+        order.setOrderStatus("APPROVED");
         orderRepository.save(order);
 
         OrderLog log = OrderLog.builder()
@@ -232,7 +296,7 @@ public class OrderService {
 
     @Transactional
     public boolean rejectOrder(String orderCode, String reason, User moderator) {
-        Order order = orderRepository.findByOrderCode(orderCode).orElse(null);
+        Order order = orderRepository.findByOrderCodeWithDetails(orderCode).orElse(null);
         if (order == null || !"PENDING".equalsIgnoreCase(order.getOrderStatus())) {
             return false;
         }
@@ -304,7 +368,7 @@ public class OrderService {
         order.setOrderStatus("DEPOSITED");
         orderRepository.save(order);
 
-        OrderLog log = OrderLog.builder()
+        OrderLog logEntry = OrderLog.builder()
                 .order(order)
                 .actionBy(moderator)
                 .actionType("DEPOSIT")
@@ -312,14 +376,241 @@ public class OrderService {
                 .toStatus("DEPOSITED")
                 .actionAt(LocalDateTime.now())
                 .build();
-        orderLogRepository.save(log);
+        orderLogRepository.save(logEntry);
 
         try {
             mailService.sendOrderDepositedEmail(order);
         } catch (Exception e) {
-            // Log warning if email fail
+            log.warn("Không thể gửi email thông báo đặt cọc đơn {}: {}", orderCode, e.getMessage());
         }
 
+        return true;
+    }
+
+    // =========================================================================
+    // VALIDATION & PRODUCT RESOLUTION — Refactored (Phương Án B)
+    // =========================================================================
+
+    private List<Product> resolveProductsToBuy(PurchaseOrderRequestDTO dto, User customer) {
+        List<Product> productsToBuy = new ArrayList<>();
+        if (dto.getProductIds() != null && !dto.getProductIds().isEmpty()) {
+            productsToBuy.addAll(productRepository.findAllById(dto.getProductIds()));
+        } else if (dto.getProductId() != null) {
+            productRepository.findById(dto.getProductId()).ifPresent(productsToBuy::add);
+        } else if (customer != null) {
+            List<CartItem> cartItems = cartService.getCartItems(customer.getUserId());
+            if (cartItems != null) {
+                for (CartItem item : cartItems) {
+                    productsToBuy.add(item.getProduct());
+                }
+            }
+        }
+        return productsToBuy;
+    }
+
+    public void validateOrderLimit(List<Product> products) {
+        BigDecimal totalAmount = products.stream()
+                .map(Product::getPrice)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        if (totalAmount.compareTo(MAX_ORDER_AMOUNT) > 0) {
+            throw new IllegalArgumentException(
+                    "Tổng giá trị đơn hàng vượt quá giới hạn tối đa cho phép (tối đa 200.000.000 VNĐ)!");
+        }
+    }
+
+    public void validateOrderLimit(PurchaseOrderRequestDTO dto, User customer) {
+        validateOrderLimit(resolveProductsToBuy(dto, customer));
+    }
+
+    public void validateProductIdsLimit(List<Integer> productIds) {
+        if (productIds == null || productIds.isEmpty()) {
+            return;
+        }
+        validateOrderLimit(productRepository.findAllById(productIds));
+    }
+
+    public List<Product> getProductsByIds(List<Integer> productIds) {
+        if (productIds == null || productIds.isEmpty()) {
+            return new ArrayList<>();
+        }
+        return productRepository.findAllById(productIds);
+    }
+
+    public List<Product> loadProductsForOrder(PurchaseOrderRequestDTO dto, User customer) {
+        return resolveProductsToBuy(dto, customer);
+    }
+
+    public List<Product> validateProductAvailability(List<Product> products) {
+        return products.stream()
+                .filter(p -> !"AVAILABLE".equalsIgnoreCase(p.getProductStatus()))
+                .collect(Collectors.toList());
+    }
+
+    // =========================================================================
+    // ORDER CREATION
+    // =========================================================================
+
+    @Transactional
+    public Order createOrder(PurchaseOrderRequestDTO dto, User customer) {
+        List<Product> productsToBuy = resolveProductsToBuy(dto, customer);
+
+        if (productsToBuy.isEmpty()) {
+            throw new IllegalArgumentException("Giỏ hàng của bạn đang trống! Vui lòng chọn sản phẩm trước.");
+        }
+
+        validateOrderLimit(productsToBuy);
+
+        for (Product prod : productsToBuy) {
+            if (!"AVAILABLE".equalsIgnoreCase(prod.getProductStatus())) {
+                throw new IllegalStateException("Tác phẩm '" + prod.getProductName() + "' đã được bán hoặc giữ chỗ!");
+            }
+        }
+
+        String orderCode = "BSMS-" + VNPayConfig.getRandomNumber(6).toUpperCase();
+        BigDecimal totalAmount = productsToBuy.stream()
+                .map(Product::getPrice)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        // Chuẩn hóa paymentMethod ("DEPOSIT" hoặc "FULL")
+        String pMethod = ("DEPOSIT".equalsIgnoreCase(dto.getPaymentMethod()) || "COD".equalsIgnoreCase(dto.getPaymentMethod())) ? "DEPOSIT" : "FULL";
+
+        Order order = Order.builder()
+                .customer(customer)
+                .orderCode(orderCode)
+                .customerName(dto.getCustomerName())
+                .customerPhone(dto.getCustomerPhone())
+                .customerEmail(dto.getCustomerEmail())
+                .shippingAddress(dto.getShippingAddress())
+                .orderDate(LocalDateTime.now())
+                .totalAmount(totalAmount)
+                .depositAmount(BigDecimal.ZERO)
+                .orderStatus("PENDING")
+                .orderType("ONLINE")
+                .paymentMethod(pMethod)
+                .build();
+
+        List<OrderDetail> details = productsToBuy.stream().map(prod -> {
+            int reserved = productRepository.reserveIfAvailable(prod.getProductId());
+            if (reserved == 0) {
+                throw new IllegalStateException("Tác phẩm '" + prod.getProductName() + "' đã được bán hoặc giữ chỗ!");
+            }
+            prod.setProductStatus("RESERVED");
+            return OrderDetail.builder()
+                    .order(order)
+                    .product(prod)
+                    .priceAtPurchase(prod.getPrice())
+                    .build();
+        }).collect(Collectors.toList());
+
+        order.setOrderDetails(details);
+        Order savedOrder = orderRepository.save(order);
+
+        if (customer != null) {
+            cartService.clearCart(customer.getUserId());
+        }
+
+        initializeOrderDetails(savedOrder);
+        eventPublisher.publishEvent(new OrderCreatedEvent(savedOrder));
+        return savedOrder;
+    }
+
+    // =========================================================================
+    // PAYMENT PROCESSING REFACTOR (1-N Model)
+    // =========================================================================
+
+    @Transactional
+    public boolean processPaymentSuccess(String orderCode) {
+        Order order = orderRepository.findByOrderCode(orderCode).orElse(null);
+        if (order == null) {
+            return false;
+        }
+
+        if ("PAID".equalsIgnoreCase(order.getOrderStatus())) {
+            return true;
+        }
+
+        // Tìm Payment record PENDING gần nhất
+        Payment pendingPayment = paymentRepository
+                .findTopByOrderOrderIdAndPaymentStatusOrderByPaymentIdDesc(order.getOrderId(), "PENDING")
+                .orElse(null);
+
+        if (pendingPayment != null) {
+            pendingPayment.setPaymentStatus("SUCCESS");
+            pendingPayment.setPaymentDate(LocalDateTime.now());
+            paymentRepository.save(pendingPayment);
+
+            if (PaymentType.DEPOSIT.name().equalsIgnoreCase(pendingPayment.getPaymentType())) {
+                order.setOrderStatus("DEPOSITED");
+                orderRepository.save(order);
+                try {
+                    mailService.sendOrderDepositedEmail(order);
+                } catch (Exception e) {
+                    log.warn("Không thể gửi email thông báo đặt cọc đơn {}: {}", orderCode, e.getMessage());
+                }
+                return true;
+            }
+        }
+
+        // Trường hợp FULL_PAYMENT hoặc fallback
+        order.setOrderStatus("PAID");
+        orderRepository.save(order);
+        markProductsAsSold(order);
+
+        eventPublisher.publishEvent(new OrderPaidEvent(order));
+        return true;
+    }
+
+    @Transactional
+    public boolean confirmRemainingPayment(String orderCode, String notes, User moderator) {
+        Order order = orderRepository.findByOrderCode(orderCode).orElse(null);
+        if (order == null) {
+            throw new IllegalArgumentException("Không tìm thấy đơn hàng: " + orderCode);
+        }
+
+        if (!"DEPOSITED".equalsIgnoreCase(order.getOrderStatus())) {
+            throw new IllegalStateException("Đơn hàng phải ở trạng thái ĐÃ ĐẶT CỌC (DEPOSITED) mới được xác nhận thanh toán phần còn lại!");
+        }
+
+        // Tính tổng tiền deposit đã thanh toán thành công
+        List<Payment> depositPayments = paymentRepository.findByOrderOrderIdAndPaymentType(order.getOrderId(), PaymentType.DEPOSIT.name());
+        BigDecimal depositPaid = depositPayments.stream()
+                .filter(p -> "SUCCESS".equalsIgnoreCase(p.getPaymentStatus()))
+                .map(Payment::getAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal remainingAmount = order.getTotalAmount().subtract(depositPaid);
+        if (remainingAmount.compareTo(BigDecimal.ZERO) < 0) {
+            remainingAmount = BigDecimal.ZERO;
+        }
+
+        // Tạo Payment record #2: REMAINING_PAYMENT
+        Payment remainingPayment = Payment.builder()
+                .order(order)
+                .paymentType(PaymentType.REMAINING_PAYMENT.name())
+                .paymentMethod(PaymentMethod.CASH.name())
+                .paymentStatus("SUCCESS")
+                .amount(remainingAmount)
+                .paymentDate(LocalDateTime.now())
+                .notes(notes)
+                .build();
+        paymentRepository.save(remainingPayment);
+
+        String oldStatus = order.getOrderStatus();
+        order.setOrderStatus("PAID");
+        orderRepository.save(order);
+        markProductsAsSold(order);
+
+        OrderLog logEntry = OrderLog.builder()
+                .order(order)
+                .actionBy(moderator)
+                .actionType("REMAINING_PAYMENT_CONFIRMED")
+                .fromStatus(oldStatus)
+                .toStatus("PAID")
+                .actionAt(LocalDateTime.now())
+                .build();
+        orderLogRepository.save(logEntry);
+
+        eventPublisher.publishEvent(new OrderPaidEvent(order));
         return true;
     }
 
@@ -331,26 +622,32 @@ public class OrderService {
         }
 
         String oldStatus = order.getOrderStatus();
-        order.setOrderStatus("PAID");
-        orderRepository.save(order);
+        boolean result = processPaymentSuccess(orderCode);
 
-        OrderLog log = OrderLog.builder()
-                .order(order)
-                .actionBy(moderator)
-                .actionType("PAID")
-                .fromStatus(oldStatus)
-                .toStatus("PAID")
-                .actionAt(LocalDateTime.now())
-                .build();
-        orderLogRepository.save(log);
-
-        try {
-            mailService.sendOrderFinalReceiptEmail(order);
-        } catch (Exception e) {
-            // Log warning if email fail
+        if (result) {
+            OrderLog logEntry = OrderLog.builder()
+                    .order(order)
+                    .actionBy(moderator)
+                    .actionType("PAID")
+                    .fromStatus(oldStatus)
+                    .toStatus("PAID")
+                    .actionAt(LocalDateTime.now())
+                    .build();
+            orderLogRepository.save(logEntry);
         }
 
-        return true;
+        return result;
+    }
+
+    private void markProductsAsSold(Order order) {
+        if (order.getOrderDetails() != null) {
+            for (OrderDetail detail : order.getOrderDetails()) {
+                Product prod = detail.getProduct();
+                if (prod != null) {
+                    prod.setProductStatus("SOLD");
+                    productRepository.save(prod);
+                }
+            }
+        }
     }
 }
-
