@@ -311,8 +311,8 @@ document.addEventListener("DOMContentLoaded", function() {
             })
             .then(res => {
                 if (res.status === 401) {
-                    alert('Bạn cần đăng nhập để thích bài viết.');
-                    window.location.href = '/login';
+                    BSMSToast.warning('Bạn cần đăng nhập để thích bài viết.');
+                    setTimeout(() => { window.location.href = '/login'; }, 1200);
                     return null;
                 }
                 return res.json();
@@ -352,8 +352,8 @@ document.addEventListener("DOMContentLoaded", function() {
             })
             .then(res => {
                 if (res.status === 401) {
-                    alert('Bạn cần đăng nhập để lưu bài viết.');
-                    window.location.href = '/login';
+                    BSMSToast.warning('Bạn cần đăng nhập để lưu bài viết.');
+                    setTimeout(() => { window.location.href = '/login'; }, 1200);
                     return null;
                 }
                 return res.json();

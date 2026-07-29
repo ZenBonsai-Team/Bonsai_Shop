@@ -2,6 +2,8 @@
 <html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <body>
 <div th:fragment="navbar">
+    <link rel="stylesheet" th:href="@{/css/bsms-notification.css}">
+    <script th:src="@{/js/bsms-notification.js}"></script>
     <nav class="navbar navbar-expand-lg navbar-custom sticky-top">
         <div class="container">
             <!-- Brand Logo -->
@@ -319,13 +321,14 @@
             })
             .then(response => {
                 if (response.status === 401 || response.redirected || response.url.includes('/login')) {
-                    // Xử lý giỏ hàng cho khách vãng lai (Guest Cart)
                     let guestCart = JSON.parse(localStorage.getItem('bonsai_guest_cart') || '[]');
                     if (!guestCart.includes(productId)) {
                         guestCart.push(productId);
                         localStorage.setItem('bonsai_guest_cart', JSON.stringify(guestCart));
                     }
-                    alert("Đã thêm tác phẩm vào giỏ hàng!");
+                    if (typeof window.BSMSToast !== 'undefined') {
+                        BSMSToast.success("Đã thêm tác phẩm vào giỏ hàng!");
+                    }
                     if (typeof window.updateCartBadge === 'function') {
                         window.updateCartBadge();
                     }
@@ -336,12 +339,16 @@
             .then(result => {
                 if (!result) return;
                 if (result.success) {
-                    alert(result.message || "Đã thêm vào giỏ hàng!");
+                    if (typeof window.BSMSToast !== 'undefined') {
+                        BSMSToast.success(result.message || "Đã thêm vào giỏ hàng!");
+                    }
                     if (typeof window.updateCartBadge === 'function') {
                         window.updateCartBadge();
                     }
                 } else {
-                    alert(result.message || "Lỗi khi thêm vào giỏ hàng.");
+                    if (typeof window.BSMSToast !== 'undefined') {
+                        BSMSToast.error(result.message || "Lỗi khi thêm vào giỏ hàng.");
+                    }
                 }
             })
             .catch(err => {
@@ -350,7 +357,9 @@
                     guestCart.push(productId);
                     localStorage.setItem('bonsai_guest_cart', JSON.stringify(guestCart));
                 }
-                alert("Đã thêm tác phẩm vào giỏ hàng!");
+                if (typeof window.BSMSToast !== 'undefined') {
+                    BSMSToast.success("Đã thêm tác phẩm vào giỏ hàng!");
+                }
                 if (typeof window.updateCartBadge === 'function') {
                     window.updateCartBadge();
                 }
@@ -385,7 +394,9 @@
                 if (result.success) {
                     window.location.href = "/checkout?productId=" + productId;
                 } else {
-                    alert(result.message || "Lỗi khi thêm vào giỏ hàng.");
+                    if (typeof window.BSMSToast !== 'undefined') {
+                        BSMSToast.error(result.message || "Lỗi khi thêm vào giỏ hàng.");
+                    }
                 }
             })
             .catch(err => {

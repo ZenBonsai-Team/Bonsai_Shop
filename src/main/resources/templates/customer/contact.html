@@ -405,7 +405,7 @@
                         <!-- Contact Form -->
                         <div class="col-md-7">
                             <h5 class="fw-bold mb-3 text-dark" th:text="#{contact.form.heading}">Gửi tin nhắn phản hồi</h5>
-                            <form action="#" method="post" onsubmit="event.preventDefault(); alert('Cảm ơn bạn đã phản hồi! Chúng tôi sẽ liên hệ lại sớm nhất.'); this.reset();">
+                            <form action="#" method="post" onsubmit="event.preventDefault(); BSMSToast.success('Cảm ơn bạn đã phản hồi! Chúng tôi sẽ liên hệ lại sớm nhất.'); this.reset();">
                                 <div class="mb-3">
                                     <label for="contactName" class="form-label small fw-bold text-secondary" th:text="#{contact.form.name}">Họ và tên</label>
                                     <input type="text" class="form-control form-control-info" id="contactName" th:placeholder="#{contact.form.name_placeholder}" required>
@@ -460,13 +460,13 @@
                                 <a href="https://www.youtube.com/@HaihauGarden" target="_blank" class="social-channel-btn btn-youtube">
                                     <i class="fa-brands fa-youtube fs-5"></i> YouTube
                                 </a>
-                                <a href="#" class="social-channel-btn btn-facebook" onclick="alert('Kênh Facebook đang được thiết lập và sẽ cập nhật sau.')">
+                                <a href="#" class="social-channel-btn btn-facebook" onclick="event.preventDefault(); BSMSToast.info('Kênh Facebook đang được thiết lập và sẽ cập nhật sau.');">
                                     <i class="fa-brands fa-facebook-f fs-5"></i> Facebook
                                 </a>
-                                <a href="#" class="social-channel-btn btn-tiktok" onclick="alert('Kênh Tiktok đang được thiết lập và sẽ cập nhật sau.')">
+                                <a href="#" class="social-channel-btn btn-tiktok" onclick="event.preventDefault(); BSMSToast.info('Kênh Tiktok đang được thiết lập và sẽ cập nhật sau.');">
                                     <i class="fa-brands fa-tiktok fs-5"></i> Tiktok
                                 </a>
-                                <a href="#" class="social-channel-btn btn-zalo" onclick="alert('Số Zalo đang được thiết lập và sẽ cập nhật sau.')">
+                                <a href="#" class="social-channel-btn btn-zalo" onclick="event.preventDefault(); BSMSToast.info('Số Zalo đang được thiết lập và sẽ cập nhật sau.');">
                                     <i class="fa-solid fa-comment-dots fs-5"></i> Zalo
                                 </a>
                             </div>

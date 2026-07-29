@@ -165,9 +165,14 @@ function initDrawerEvents() {
 
     if (unclaimBtn) {
         unclaimBtn.addEventListener('click', () => {
-            if (confirm("Bạn có chắc chắn muốn trả lại đơn hàng này về Kho đơn chung (Pool)?")) {
-                unclaimOrder(activeOrderCode);
-            }
+            BSMSConfirm({
+                title: "Xác nhận trả đơn hàng?",
+                message: "Bạn có chắc chắn muốn trả lại đơn hàng này về Kho đơn chung (Pool)?",
+                type: "warning",
+                confirmText: "Trả đơn",
+                cancelText: "Hủy bỏ",
+                onConfirm: () => { unclaimOrder(activeOrderCode); }
+            });
         });
     }
 
@@ -200,7 +205,7 @@ function initDrawerEvents() {
         rejectConfirmBtn.addEventListener('click', () => {
             const reason = document.getElementById('textareaRejectReason').value.trim();
             if (!reason) {
-                alert("Vui lòng nhập lý do từ chối!");
+                BSMSToast.warning("Vui lòng nhập lý do từ chối!");
                 return;
             }
             rejectOrder(activeOrderCode, reason);
@@ -218,21 +223,16 @@ function initDrawerEvents() {
             const depositVal = currentActiveOrder.depositAmount || Math.round(basePrice * 0.3);
             const remainingPay = Math.max(0, basePrice - depositVal);
 
-            const confirmMsg = 
-                "====================================================\n" +
-                "XÁC NHẬN HOÀN THÀNH ĐƠN HÀNG?\n" +
-                "====================================================\n" +
-                "Thao tác này xác nhận rằng khách hàng đã thanh toán đầy đủ phần tiền còn lại của đơn hàng ngoài thực tế.\n\n" +
-                "Hệ thống sẽ:\n" +
-                "• Số tiền thanh toán nấc 2 (Tiền mặt): " + formatVND(remainingPay) + "\n" +
-                "• Chuyển trạng thái Order sang PAID (Đã thanh toán)\n" +
-                "• Tạo Payment cuối cùng cho phần tiền còn lại (REMAINING_PAYMENT / CASH)\n" +
-                "• Đánh dấu giao dịch hoàn tất (Product -> SOLD)\n\n" +
-                "Lưu ý: Đây là thao tác KHÔNG THỂ HOÀN TÁC. Hãy chắc chắn rằng khách hàng đã thanh toán đầy đủ.";
+            const confirmMsg = `Xác nhận rằng khách hàng đã thanh toán đầy đủ phần tiền còn lại (${formatVND(remainingPay)}) của đơn hàng ngoài thực tế? Thao tác này sẽ chuyển trạng thái đơn sang ĐÃ THANH TOÁN (PAID) và KHÔNG thể hoàn tác.`;
 
-            if (confirm(confirmMsg)) {
-                confirmRemainingPayment(activeOrderCode);
-            }
+            BSMSConfirm({
+                title: "Xác nhận thanh toán nấc 2 (COD)?",
+                message: confirmMsg,
+                type: "warning",
+                confirmText: "Xác nhận đã thu tiền",
+                cancelText: "Hủy bỏ",
+                onConfirm: () => { confirmRemainingPayment(activeOrderCode); }
+            });
         });
     }
 }
@@ -458,14 +458,15 @@ async function unclaimOrder(orderCode) {
         const result = await response.json();
 
         if (response.ok && result.success) {
-            alert("Đã trả đơn về Kho đơn chung!");
+            BSMSToast.success("Đã trả đơn về Kho đơn chung!");
             closeDrawer();
             renderDashboard();
         } else {
-            alert(result.message || "Lỗi khi trả đơn.");
+            BSMSToast.error(result.message || "Lỗi khi trả đơn.");
         }
     } catch (err) {
         console.error("Lỗi khi trả đơn:", err);
+        BSMSToast.error("Có lỗi kết nối khi trả đơn.");
     }
 }
 
@@ -487,11 +488,11 @@ async function verifyOrder(orderCode) {
         const result = await response.json();
 
         if (response.ok && result.success) {
-            alert("Phê duyệt đơn hàng thành công!");
+            BSMSToast.success("Phê duyệt đơn hàng thành công!");
             closeDrawer();
             renderDashboard();
         } else {
-            alert(result.message || "Không thể phê duyệt đơn hàng.");
+            BSMSToast.error(result.message || "Không thể phê duyệt đơn hàng.");
         }
     } catch (err) {
         console.error("Lỗi khi phê duyệt:", err);
@@ -511,11 +512,11 @@ async function rejectOrder(orderCode, reason) {
         const result = await response.json();
 
         if (response.ok && result.success) {
-            alert("Từ chối đơn hàng thành công!");
+            BSMSToast.success("Từ chối đơn hàng thành công!");
             closeDrawer();
             renderDashboard();
         } else {
-            alert(result.message || "Lỗi khi từ chối đơn hàng.");
+            BSMSToast.error(result.message || "Lỗi khi từ chối đơn hàng.");
         }
     } catch (err) {
         console.error("Lỗi từ chối:", err);
@@ -534,11 +535,11 @@ async function confirmRemainingPayment(orderCode) {
         const result = await response.json();
 
         if (response.ok && result.success) {
-            alert("Xác nhận đã thanh toán đầy đủ thành công! Đơn hàng đã chuyển sang trạng thái ĐÃ THANH TOÁN (PAID).");
+            BSMSToast.success("Xác nhận thanh toán đầy đủ thành công! Đơn hàng đã chuyển sang ĐÃ THANH TOÁN (PAID).");
             closeDrawer();
             renderDashboard();
         } else {
-            alert(result.message || "Lỗi khi xác nhận thanh toán.");
+            BSMSToast.error(result.message || "Lỗi khi xác nhận thanh toán.");
         }
     } catch (err) {
         console.error("Lỗi xác nhận thanh toán nấc 2:", err);

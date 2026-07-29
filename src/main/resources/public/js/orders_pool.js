@@ -128,17 +128,33 @@ async function claimOrder(orderCode) {
 
         const result = await response.json();
         if (response.ok && result.success) {
-            alert("Nhận đơn hàng thành công! Đơn hàng đã được chuyển vào mục Đơn Của Tôi.");
+            if (typeof BSMSToast !== 'undefined') {
+                BSMSToast.success("Nhận đơn hàng thành công! Đơn hàng đã được chuyển vào mục Đơn Của Tôi.");
+            } else {
+                alert("Nhận đơn hàng thành công! Đơn hàng đã được chuyển vào mục Đơn Của Tôi.");
+            }
             renderPool();
         } else if (response.status === 409) {
-            alert("Xung đột: Đơn hàng này đã bị một Moderator khác nhận trước đó!");
+            if (typeof BSMSToast !== 'undefined') {
+                BSMSToast.error("Xung đột: Đơn hàng này đã bị một Moderator khác nhận trước đó!");
+            } else {
+                alert("Xung đột: Đơn hàng này đã bị một Moderator khác nhận trước đó!");
+            }
             renderPool();
         } else {
-            alert(result.message || "Lỗi khi nhận đơn hàng.");
+            if (typeof BSMSToast !== 'undefined') {
+                BSMSToast.error(result.message || "Lỗi khi nhận đơn hàng.");
+            } else {
+                alert(result.message || "Lỗi khi nhận đơn hàng.");
+            }
         }
     } catch (err) {
         console.error("Error claiming order:", err);
-        alert("Có lỗi kết nối đến máy chủ.");
+        if (typeof BSMSToast !== 'undefined') {
+            BSMSToast.error("Có lỗi kết nối đến máy chủ.");
+        } else {
+            alert("Có lỗi kết nối đến máy chủ.");
+        }
     }
 }
 

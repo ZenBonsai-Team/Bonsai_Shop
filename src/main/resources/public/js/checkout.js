@@ -95,8 +95,8 @@ function renderSummary(items) {
             const modal = new bootstrap.Modal(modalEl);
             modal.show();
         } else {
-            alert("Giỏ hàng của bạn đang trống! Không thể thanh toán.");
-            window.location.href = '/cart';
+            BSMSToast.warning("Giỏ hàng của bạn đang trống! Không thể thanh toán.");
+            setTimeout(() => { window.location.href = '/cart'; }, 1500);
         }
         return;
     }
@@ -361,8 +361,8 @@ async function executeCheckoutApi(payload, confirmBtn = null) {
 function showBusinessErrorModal(message) {
     const modalEl = document.getElementById('businessErrorModal');
     if (!modalEl) {
-        alert(message);
-        window.location.href = '/cart';
+        BSMSToast.error(message);
+        setTimeout(() => { window.location.href = '/cart'; }, 1500);
         return;
     }
     

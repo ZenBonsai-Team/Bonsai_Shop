@@ -14,6 +14,8 @@
     <link rel="stylesheet" th:href="@{/css/dashboard-layout.css}">
     <link rel="stylesheet" th:href="@{/css/dashboard.css}">
     <link rel="stylesheet" th:href="@{/css/artisan.css}">
+    <link rel="stylesheet" th:href="@{/css/bsms-notification.css}">
+    <script th:src="@{/js/bsms-notification.js}"></script>
     <style>
         .catalog-delete-disabled {
             cursor: not-allowed;
@@ -74,7 +76,7 @@
                         <form th:unless="${categoryIdsInUse.contains(category.categoryId)}"
                               method="post"
                               th:action="@{/artisan/catalog/categories/{id}/delete(id=${category.categoryId})}">
-                            <button type="submit" class="text-danger" onclick="return confirm('Xóa danh mục này?')">Xóa</button>
+                            <button type="submit" class="text-danger" onclick="handleCatalogDelete(event, this, 'danh mục')">Xóa</button>
                         </form>
                     </div>
                 </div>
@@ -122,7 +124,7 @@
                         <form th:unless="${varietyIdsInUse.contains(variety.varietyId)}"
                               method="post"
                               th:action="@{/artisan/catalog/varieties/{id}/delete(id=${variety.varietyId})}">
-                            <button type="submit" class="text-danger" onclick="return confirm('Xóa loại cây này?')">Xóa</button>
+                            <button type="submit" class="text-danger" onclick="handleCatalogDelete(event, this, 'loại cây')">Xóa</button>
                         </form>
                     </td>
                 </tr>
@@ -165,7 +167,7 @@
                         <form th:unless="${tagIdsInUse.contains(tag.tagId)}"
                               method="post"
                               th:action="@{/artisan/catalog/tags/{id}/delete(id=${tag.tagId})}">
-                            <button type="submit" class="text-danger" onclick="return confirm('Xóa thẻ này?')">Xóa</button>
+                            <button type="submit" class="text-danger" onclick="handleCatalogDelete(event, this, 'thẻ nhãn')">Xóa</button>
                         </form>
                     </td>
                 </tr>
@@ -320,6 +322,19 @@
             }
         });
     });
+
+    function handleCatalogDelete(e, btn, itemType) {
+        e.preventDefault();
+        const form = btn.closest('form');
+        BSMSConfirm({
+            title: `Xóa ${itemType}?`,
+            message: `Bạn có chắc chắn muốn xóa ${itemType} này không?`,
+            type: 'danger',
+            confirmText: 'Xóa',
+            cancelText: 'Hủy bỏ',
+            onConfirm: () => form.submit()
+        });
+    }
 
     document.querySelectorAll('[data-page-size]').forEach((container) => paginate(container.id));
     const firstCategory = document.querySelector('#category-master .master-row');
