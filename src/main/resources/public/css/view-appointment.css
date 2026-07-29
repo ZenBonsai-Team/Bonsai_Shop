@@ -615,39 +615,39 @@ a {
    Appointment cards
    -------------------------------------------------------------------------- */
 .appointment-section {
-    padding: 28px 0 112px;
+    padding: 18px 0 80px;
 }
 
 .section-heading-row {
     display: flex;
     align-items: end;
     justify-content: space-between;
-    gap: 36px;
-    margin-bottom: 28px;
+    gap: 24px;
+    margin-bottom: 20px;
 }
 
 .section-heading-row h2 {
     margin: 0;
     color: var(--lux-green);
     font-family: var(--lux-serif);
-    font-size: clamp(2.3rem, 4vw, 3.6rem);
+    font-size: clamp(2rem, 3vw, 3rem);
     font-weight: 600;
     line-height: 0.98;
     letter-spacing: -0.035em;
 }
 
 .section-heading-row > p {
-    max-width: 560px;
+    max-width: 520px;
     margin: 0;
     color: var(--lux-muted);
-    font-size: 0.95rem;
-    line-height: 1.78;
+    font-size: 0.88rem;
+    line-height: 1.62;
 }
 
 .appointment-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 18px;
+    gap: 14px;
 }
 
 .appointment-card {
@@ -655,20 +655,42 @@ a {
     overflow: hidden;
     isolation: isolate;
     min-height: 100%;
-    padding: 24px;
+    padding: 18px;
     border: 1px solid rgba(16, 47, 33, 0.1);
-    border-radius: 28px;
+    border-radius: 22px;
     background:
         linear-gradient(180deg, rgba(255, 250, 241, 0.9), rgba(255, 255, 255, 0.76)),
         radial-gradient(circle at 100% 0%, rgba(185, 145, 75, 0.12), transparent 18rem);
-    box-shadow: var(--lux-shadow);
+    box-shadow: 0 16px 38px rgba(16, 47, 33, 0.1);
     transition: transform var(--lux-ease), border-color var(--lux-ease), box-shadow var(--lux-ease);
+}
+
+.appointment-card::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background:
+        radial-gradient(circle at 18% 22%, rgba(255, 250, 241, 0.9) 0 1px, transparent 2px),
+        radial-gradient(circle at 82% 18%, rgba(234, 219, 192, 0.72) 0 1px, transparent 2px),
+        radial-gradient(circle at 72% 72%, rgba(185, 145, 75, 0.5) 0 1px, transparent 2px),
+        linear-gradient(112deg, transparent 8%, rgba(255, 250, 241, 0.28) 42%, transparent 56%);
+    background-size: 180px 180px, 220px 220px, 260px 260px, 240% 100%;
+    opacity: 0.34;
+    mix-blend-mode: screen;
+    pointer-events: none;
+    transform: translateX(-18%);
+    animation: appointmentSoftSparkle 7.5s ease-in-out infinite;
 }
 
 .appointment-card:hover {
     border-color: rgba(185, 145, 75, 0.5);
-    transform: translateY(-4px);
-    box-shadow: 0 30px 76px rgba(16, 47, 33, 0.16);
+    transform: translateY(-2px);
+    box-shadow: 0 22px 52px rgba(16, 47, 33, 0.14);
+}
+
+.appointment-card:hover::after {
+    opacity: 0.52;
 }
 
 .appointment-card-accent {
@@ -684,23 +706,23 @@ a {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 16px;
+    gap: 12px;
 }
 
 .appointment-card-top {
-    margin-bottom: 20px;
+    margin-bottom: 14px;
 }
 
 .appointment-status-tag {
     display: inline-flex;
     align-items: center;
-    gap: 7px;
-    padding: 7px 11px;
+    gap: 6px;
+    padding: 5px 9px;
     border: 1px solid rgba(185, 145, 75, 0.28);
     border-radius: 999px;
     background: rgba(185, 145, 75, 0.12);
     color: #8a692f;
-    font-size: 0.66rem;
+    font-size: 0.62rem;
     font-weight: 900;
     letter-spacing: 0.12em;
     text-transform: uppercase;
@@ -708,8 +730,8 @@ a {
 
 .appointment-status-tag::before {
     content: "";
-    width: 7px;
-    height: 7px;
+    width: 6px;
+    height: 6px;
     border-radius: 50%;
     background: currentColor;
 }
@@ -731,7 +753,7 @@ a {
 
 .appointment-code-tag {
     color: var(--lux-muted);
-    font-size: 0.74rem;
+    font-size: 0.68rem;
     font-weight: 850;
     letter-spacing: 0.1em;
     text-transform: uppercase;
@@ -739,14 +761,14 @@ a {
 
 .appointment-main {
     align-items: flex-start;
-    padding-bottom: 22px;
+    padding-bottom: 14px;
     border-bottom: 1px solid rgba(16, 47, 33, 0.08);
 }
 
 .card-eyebrow {
-    margin: 0 0 8px;
+    margin: 0 0 5px;
     color: var(--lux-gold);
-    font-size: 0.68rem;
+    font-size: 0.62rem;
     font-weight: 900;
     letter-spacing: 0.16em;
     text-transform: uppercase;
@@ -756,47 +778,47 @@ a {
     margin: 0;
     color: var(--lux-green);
     font-family: var(--lux-serif);
-    font-size: clamp(1.65rem, 3vw, 2.35rem);
-    font-weight: 600;
-    line-height: 1.02;
+    font-size: clamp(1.28rem, 2vw, 1.72rem);
+    font-weight: 650;
+    line-height: 1.08;
     letter-spacing: -0.025em;
 }
 
 .appointment-date-block {
-    flex: 0 0 96px;
+    flex: 0 0 74px;
     display: grid;
     place-items: center;
-    min-height: 92px;
+    min-height: 70px;
     border: 1px solid rgba(185, 145, 75, 0.28);
-    border-radius: 20px;
+    border-radius: 16px;
     background: rgba(255, 255, 255, 0.58);
 }
 
 .appointment-date-block span {
     color: var(--lux-green);
     font-family: var(--lux-serif);
-    font-size: 2.5rem;
+    font-size: 1.9rem;
     font-weight: 650;
     line-height: 0.9;
 }
 
 .appointment-date-block small {
     color: var(--lux-muted);
-    font-size: 0.72rem;
+    font-size: 0.66rem;
     font-weight: 850;
 }
 
 .appointment-details-list {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 10px;
-    margin: 18px 0 24px;
+    gap: 8px;
+    margin: 12px 0 16px;
 }
 
 .appointment-details-list div {
-    padding: 14px;
+    padding: 10px 11px;
     border: 1px solid rgba(16, 47, 33, 0.08);
-    border-radius: 16px;
+    border-radius: 13px;
     background: rgba(255, 255, 255, 0.5);
 }
 
@@ -805,9 +827,9 @@ a {
 }
 
 .appointment-details-list dt {
-    margin-bottom: 7px;
+    margin-bottom: 4px;
     color: var(--lux-muted);
-    font-size: 0.68rem;
+    font-size: 0.62rem;
     font-weight: 900;
     letter-spacing: 0.1em;
     text-transform: uppercase;
@@ -820,31 +842,32 @@ a {
 .appointment-details-list dd {
     margin: 0;
     color: var(--lux-green);
-    font-size: 0.9rem;
+    font-size: 0.82rem;
     font-weight: 850;
 }
 
 .note-paragraph {
     color: var(--lux-ink-soft) !important;
     font-weight: 650 !important;
-    line-height: 1.65;
+    line-height: 1.45;
 }
 
 .appointment-actions {
     flex-wrap: wrap;
     justify-content: flex-start;
+    gap: 8px;
 }
 
 .btn-apt-luxury {
-    min-height: 42px;
+    min-height: 36px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
-    padding: 0 18px;
+    gap: 6px;
+    padding: 0 13px;
     border: 1px solid transparent;
     border-radius: 999px;
-    font-size: 0.7rem;
+    font-size: 0.64rem;
     font-weight: 900;
     letter-spacing: 0.1em;
     text-decoration: none;
@@ -1252,9 +1275,31 @@ select.input-luxury {
 }
 
 @media (max-width: 1180px) {
-    .appointment-hero-grid,
+    .appointment-hero-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 900px) {
     .appointment-grid {
         grid-template-columns: 1fr;
+    }
+}
+
+@keyframes appointmentSoftSparkle {
+    0%,
+    100% {
+        background-position: 0 0, 0 0, 0 0, 120% 0;
+        opacity: 0.28;
+    }
+
+    45% {
+        opacity: 0.48;
+    }
+
+    60% {
+        background-position: 18px -14px, -16px 12px, 10px 18px, -20% 0;
+        opacity: 0.4;
     }
 }
 
@@ -1275,6 +1320,7 @@ select.input-luxury {
 
     .appointment-date-block {
         width: 100%;
+        min-height: 64px;
     }
 
     .appointment-details-list,
@@ -1300,7 +1346,7 @@ select.input-luxury {
     .appointment-summary-card,
     .appointment-card,
     .appointment-modal-card {
-        padding: 24px;
+        padding: 20px;
     }
 
     .hero-actions,
