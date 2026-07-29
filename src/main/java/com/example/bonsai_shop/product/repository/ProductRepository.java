@@ -15,6 +15,7 @@ import java.util.Optional;
 
 public interface ProductRepository extends JpaRepository<Product, Integer>, JpaSpecificationExecutor<Product> {
     List<Product> findByCreatedByUserIdOrderByCreatedAtDesc(Integer artisanUserId);
+    long countByCreatedByUserId(Integer artisanUserId);
     List<Product> findByCreatedByUserIdAndProductStatusOrderByCreatedAtDesc(Integer artisanUserId, String productStatus);
     Optional<Product> findByProductIdAndCreatedByUserId(Integer productId, Integer artisanUserId);
     boolean existsByProductCode(String productCode);
@@ -93,7 +94,12 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
       AND p.productStatus <> 'DRAFT'
       AND COALESCE(p.isVisible, true) = true
       AND (
-          m.isThumbnail = true
+          m.mediaId = (
+              SELECT MIN(mt.mediaId)
+              FROM ProductMedia mt
+              WHERE mt.product = p
+                AND mt.isThumbnail = true
+          )
           OR (
               m.mediaId = (
                   SELECT MIN(m2.mediaId)
@@ -135,7 +141,12 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
       AND COALESCE(p.isVisible, true) = true
       AND p.productId = :productId
       AND (
-          m.isThumbnail = true
+          m.mediaId = (
+              SELECT MIN(mt.mediaId)
+              FROM ProductMedia mt
+              WHERE mt.product = p
+                AND mt.isThumbnail = true
+          )
           OR (
               m.mediaId = (
                   SELECT MIN(m2.mediaId)

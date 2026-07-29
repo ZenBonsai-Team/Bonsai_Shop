@@ -259,21 +259,19 @@
                 </p>
             </div>
 
-            <!-- Artisan Brief Info -->
-            <!-- HARDCODED: Chi tiết nghệ nhân/nhà vườn không có trong DB entity (User chỉ có thông tin cơ bản) -->
-            <!-- <div class="artisan-summary-box"> -->
-                <!-- HARDCODED -->
-                <!-- <div class="artisan-avatar-wrap">
-                    <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150" alt="Avatar">
+            <div class="artisan-summary-box" th:if="${product.createdBy != null}">
+                <div class="artisan-avatar-wrap">
+                    <img th:src="${product.createdBy.avatar != null && !product.createdBy.avatar.isBlank() ? product.createdBy.avatar : '/images/logo.png'}"
+                         th:alt="${product.createdBy.fullName != null ? product.createdBy.fullName : 'Nghệ nhân'}">
                 </div>
                 <div class="artisan-summary-info">
-                    <div class="artisan-summary-name">Nghệ nhân Nguyễn Văn Thành</div>
-                    <div class="artisan-summary-meta">Vườn Thành Cổ • Nam Định</div>
+                    <div class="artisan-summary-name" th:text="${product.createdBy.fullName != null ? product.createdBy.fullName : 'Nghệ nhân'}">Nghệ nhân</div>
+                    <div class="artisan-summary-meta">
+                        <strong th:text="${artisanManagedProductCount}">0</strong>
+                        <span> sản phẩm đang quản lý</span>
+                    </div>
                 </div>
-                <div class="artisan-summary-rating">
-                    <i class="fa-solid fa-star"></i> 4.9
-                </div>
-            </div> -->
+            </div>
 
             <!-- Buying and Add to Cart Action buttons -->
             <div class="mt-4">
@@ -521,37 +519,6 @@
                 </table>
             </div>
 
-        </div>
-    </div>
-</section>
-
-<!-- ===================================================== -->
-<!-- SELLER BANNER ROW -->
-<!-- ===================================================== -->
-<section class="container py-5">
-    <!-- Detailed Artisan Profile Box -->
-    <!-- HARDCODED: Chi tiết nghệ nhân/nhà vườn không có trong DB entity (User chỉ có thông tin cơ bản) -->
-    <div class="artisan-profile-banner">
-        <!-- HARDCODED -->
-        <div class="artisan-profile-left">
-            <div class="artisan-large-avatar">
-                <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150" alt="Nghệ nhân Nguyễn Văn Thành">
-            </div>
-            <div>
-                <span class="artisan-badge-gold">Verified Artisan • Nghệ nhân Bắc Bộ</span>
-                <h3 class="artisan-large-name">Nghệ nhân Nguyễn Văn Thành</h3>
-                <p class="artisan-large-location"><i class="fa-solid fa-location-dot me-1"></i> Vườn Thành Cổ • Nam Định, Việt Nam</p>
-                <div class="artisan-large-stats">
-                    <span><i class="fa-solid fa-star text-warning me-1"></i><strong>4.9</strong> (218 đánh giá)</span>
-                    <span class="text-muted">•</span>
-                    <span><strong>42</strong> tác phẩm đang niêm yết</span>
-                    <span class="text-muted">•</span>
-                    <span>Tham gia từ 2021</span>
-                </div>
-            </div>
-        </div>
-        <div class="artisan-profile-right">
-            <a href="#" class="btn-view-profile-outline">View Artisan Profile</a>
         </div>
     </div>
 </section>

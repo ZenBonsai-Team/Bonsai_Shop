@@ -144,6 +144,9 @@ public class MarketplaceController {
         model.addAttribute("productImageSlots", getImageSlots(product));
         model.addAttribute("productVideos", getMediaByType(product, "VIDEO"));
         model.addAttribute("productTags", productService.getProductTags(product));
+        model.addAttribute("artisanManagedProductCount", productService.countManagedProductsByArtisan(
+                product.getCreatedBy() == null ? null : product.getCreatedBy().getUserId()
+        ));
         model.addAttribute("journalEvents", productJournalService.getPublicEvents(product));
         model.addAttribute("activePage", "marketplace");
         return "product/product-detail";
