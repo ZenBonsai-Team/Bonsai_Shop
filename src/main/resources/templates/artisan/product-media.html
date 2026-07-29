@@ -26,6 +26,7 @@
             <p th:text="${product.productName}">Product</p>
         </div>
         <div class="actions">
+            <a class="btn secondary" th:href="@{/artisan/products/{id}/edit(id=${product.productId})}">Quay lại chỉnh thông tin</a>
             <a class="btn secondary" th:href="@{/artisan/products}">Quay lại sản phẩm</a>
             <a class="btn" th:href="@{/artisan/products/{id}/preview(id=${product.productId})}">Xem trước</a>
         </div>

@@ -138,6 +138,9 @@
         <section class="actions publish-actions">
             <a th:if="${isEditable}" class="btn secondary" th:href="@{/artisan/products/{id}/media(id=${product.productId})}">Quay lại Media</a>
             <a th:if="${isEditable}" class="btn secondary" th:href="@{/artisan/products/{id}/edit(id=${product.productId})}">Sửa thông tin</a>
+            <form th:if="${product.productStatus == 'DRAFT'}" method="post" th:action="@{/artisan/products/{id}/publish(id=${product.productId})}">
+                <button type="submit" class="btn">Đăng bán</button>
+            </form>
         </section>
     </main>
 </div>
