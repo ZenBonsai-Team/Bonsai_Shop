@@ -206,6 +206,7 @@
 }
 
 .sch-setting-field input,
+.sch-setting-field select,
 .sch-setting-field textarea {
     border: 1px solid #dce5dd;
     border-radius: 12px;
@@ -217,11 +218,26 @@
 }
 
 .sch-setting-field input:focus,
+.sch-setting-field select:focus,
 .sch-setting-field textarea:focus {
     background: #fff;
     border-color: #1c5f3a;
     box-shadow: 0 0 0 4px rgba(28, 95, 58, 0.12);
     outline: 0;
+}
+
+.sch-datetime-row {
+    display: grid;
+    gap: 10px;
+    grid-template-columns: minmax(0, 1fr) 150px;
+}
+
+.sch-time-select {
+    appearance: none;
+    background:
+            linear-gradient(45deg, transparent 50%, #536257 50%) calc(100% - 18px) 50% / 7px 7px no-repeat,
+            linear-gradient(135deg, #fff 0%, #f8fbf7 100%);
+    cursor: pointer;
 }
 
 .sch-setting-field textarea {
@@ -978,6 +994,10 @@
     .sch-overview {
         grid-template-columns: 1fr;
     }
+
+    .sch-setting-grid {
+        grid-template-columns: 1fr;
+    }
 }
 
 @media (max-width: 520px) {
@@ -992,6 +1012,10 @@
     }
 
     .sch-info-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .sch-datetime-row {
         grid-template-columns: 1fr;
     }
 

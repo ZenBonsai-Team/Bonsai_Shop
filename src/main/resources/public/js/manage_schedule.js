@@ -54,7 +54,11 @@
         notificationPopup: document.getElementById("notificationPopup"),
         settingForm: document.querySelector(".sch-setting-form"),
         pauseFromInput: document.getElementById("pauseFromInput"),
+        pauseFromDate: document.getElementById("pauseFromDate"),
+        pauseFromTime: document.getElementById("pauseFromTime"),
         pauseToInput: document.getElementById("pauseToInput"),
+        pauseToDate: document.getElementById("pauseToDate"),
+        pauseToTime: document.getElementById("pauseToTime"),
         pauseReasonInput: document.getElementById("pauseReasonInput"),
         pauseReasonCount: document.getElementById("pauseReasonCount")
     };
@@ -107,21 +111,10 @@
     }
 
     function parseAppointmentProcessingDeadline(appointment) {
-        const dateString = appointment.date || parseDateInput(appointment.appointmentAt);
-        if (!dateString) return null;
-
-        const dateMatch = dateString.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-        if (!dateMatch) return null;
-
-        return new Date(
-                Number(dateMatch[1]),
-                Number(dateMatch[2]) - 1,
-                Number(dateMatch[3]),
-                0,
-                0,
-                0,
-                0
-        );
+        if (!appointment.createdAt) return null;
+        const createdAt = new Date(appointment.createdAt);
+        if (Number.isNaN(createdAt.getTime())) return null;
+        return new Date(createdAt.getTime() + 5 * 60000);
     }
 
     function getMinutesUntilProcessingDeadline(appointment) {
@@ -179,7 +172,7 @@
         if (reminderLevel.className === "urgent") {
             return "Hệ thống tự duyệt hoặc từ chối theo lịch bận.";
         }
-        return "Auto chạy lúc 00:00 ngày hẹn.";
+        return "Auto xử lý sau 5 phút kể từ khi khách đặt lịch.";
     }
 
     function updatePauseReasonCount() {
@@ -187,16 +180,42 @@
         elements.pauseReasonCount.textContent = `${elements.pauseReasonInput.value.length}/500`;
     }
 
-    function formatDateTimeLocal(date) {
-        return `${date.getFullYear()}-${padZero(date.getMonth() + 1)}-${padZero(date.getDate())}T${padZero(date.getHours())}:${padZero(date.getMinutes())}`;
+    function splitDateTimeLocal(value) {
+        const dateTimeMatch = value ? value.match(/^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})/) : null;
+        return dateTimeMatch ? { date: dateTimeMatch[1], time: dateTimeMatch[2] } : { date: "", time: "" };
+    }
+
+    function syncPausePickerFromHidden(hiddenInput, dateInput, timeSelect) {
+        if (!hiddenInput || !dateInput || !timeSelect) return;
+        const dateTime = splitDateTimeLocal(hiddenInput.value);
+        if (!dateInput.value) dateInput.value = dateTime.date;
+        if (!timeSelect.value) timeSelect.value = dateTime.time;
+    }
+
+    function syncPauseHiddenInput(hiddenInput, dateInput, timeSelect) {
+        if (!hiddenInput || !dateInput || !timeSelect) return;
+        hiddenInput.value = dateInput.value && timeSelect.value ? `${dateInput.value}T${timeSelect.value}` : "";
+    }
+
+    function syncPauseHiddenInputs() {
+        syncPauseHiddenInput(elements.pauseFromInput, elements.pauseFromDate, elements.pauseFromTime);
+        syncPauseHiddenInput(elements.pauseToInput, elements.pauseToDate, elements.pauseToTime);
+    }
+
+    function clearPausePickerValidity() {
+        [
+            elements.pauseFromDate,
+            elements.pauseFromTime,
+            elements.pauseToDate,
+            elements.pauseToTime
+        ].forEach(input => input?.setCustomValidity(""));
     }
 
     function updatePauseInputBounds() {
-        const minDateTime = formatDateTimeLocal(new Date());
-        [elements.pauseFromInput, elements.pauseToInput].forEach(input => {
+        const minDate = getLocalDateString();
+        [elements.pauseFromDate, elements.pauseToDate].forEach(input => {
             if (!input) return;
-            input.min = minDateTime;
-            input.step = "60";
+            input.min = minDate;
         });
     }
 
@@ -213,23 +232,45 @@
 
     function validatePauseSettingForm(event) {
         updatePauseInputBounds();
-        const pauseInputs = [elements.pauseFromInput, elements.pauseToInput].filter(Boolean);
+        syncPauseHiddenInputs();
+        clearPausePickerValidity();
 
-        for (const input of pauseInputs) {
-            if (!input.value) continue;
-            if (new Date(input.value).getTime() < Date.now()) {
-                input.setCustomValidity("Chỉ chọn thời gian từ hiện tại hoặc tương lai.");
-                input.reportValidity();
+        const pausePickers = [
+            {
+                hiddenInput: elements.pauseFromInput,
+                dateInput: elements.pauseFromDate,
+                timeSelect: elements.pauseFromTime
+            },
+            {
+                hiddenInput: elements.pauseToInput,
+                dateInput: elements.pauseToDate,
+                timeSelect: elements.pauseToTime
+            }
+        ].filter(picker => picker.hiddenInput && picker.dateInput && picker.timeSelect);
+
+        for (const picker of pausePickers) {
+            const hasDate = Boolean(picker.dateInput.value);
+            const hasTime = Boolean(picker.timeSelect.value);
+            if (!hasDate && !hasTime) continue;
+            if (hasDate !== hasTime) {
+                const invalidInput = hasDate ? picker.timeSelect : picker.dateInput;
+                invalidInput.setCustomValidity("Vui lòng chọn đủ ngày và giờ.");
+                invalidInput.reportValidity();
                 event.preventDefault();
                 return;
             }
-            if (!isBusinessHourDateTime(input.value)) {
-                input.setCustomValidity("Chỉ chọn giờ hành chính từ 08:00 đến 17:00.");
-                input.reportValidity();
+            if (new Date(picker.hiddenInput.value).getTime() < Date.now()) {
+                picker.dateInput.setCustomValidity("Chỉ chọn thời gian từ hiện tại hoặc tương lai.");
+                picker.dateInput.reportValidity();
                 event.preventDefault();
                 return;
             }
-            input.setCustomValidity("");
+            if (!isBusinessHourDateTime(picker.hiddenInput.value)) {
+                picker.timeSelect.setCustomValidity("Chỉ chọn giờ hành chính từ 08:00 đến 17:00.");
+                picker.timeSelect.reportValidity();
+                event.preventDefault();
+                return;
+            }
         }
     }
 
@@ -256,6 +297,7 @@
                 email: row.dataset.email || "",
                 note: row.dataset.note || "",
                 appointmentAt: row.dataset.appointmentAt || "",
+                createdAt: row.dataset.createdAt || "",
                 client: row.dataset.client || "",
                 appointmentType: row.dataset.appointmentType || "",
                 date: parseDateInput(dateText),
@@ -438,7 +480,7 @@
             const content = createElement("div", "sch-reminder-content");
             const title = createElement("strong", "", appointment.client || "Khách hàng");
             const due = createElement("span", "sch-reminder-due", formatTimeUntil(appointment.minutesUntil));
-            const meta = createElement("span", "sch-reminder-meta", `${appointment.appointmentType} • Hẹn ${formatAppointmentLabel(appointment)} • Xử lý 00:00`);
+            const meta = createElement("span", "sch-reminder-meta", `${appointment.appointmentType} • Hẹn ${formatAppointmentLabel(appointment)} • Auto sau 5 phút đặt lịch`);
             const note = createElement("small", "sch-reminder-note", getReminderNote(reminderLevel));
             const badge = createElement("span", `sch-reminder-badge ${reminderLevel.className}`, reminderLevel.label);
             const action = createElement("span", "sch-reminder-action", getReminderActionLabel(reminderLevel));
@@ -548,8 +590,19 @@
 
         elements.pauseReasonInput?.addEventListener("input", updatePauseReasonCount);
         elements.settingForm?.addEventListener("submit", validatePauseSettingForm);
-        elements.pauseFromInput?.addEventListener("input", () => elements.pauseFromInput.setCustomValidity(""));
-        elements.pauseToInput?.addEventListener("input", () => elements.pauseToInput.setCustomValidity(""));
+        [
+            elements.pauseFromDate,
+            elements.pauseFromTime,
+            elements.pauseToDate,
+            elements.pauseToTime
+        ].forEach(input => {
+            const syncPicker = () => {
+                clearPausePickerValidity();
+                syncPauseHiddenInputs();
+            };
+            input?.addEventListener("input", syncPicker);
+            input?.addEventListener("change", syncPicker);
+        });
     }
 
     function renderAll() {
@@ -563,6 +616,9 @@
     function init() {
         extractAppointmentsFromDOM();
         state.selectedDate = getLocalDateString();
+        syncPausePickerFromHidden(elements.pauseFromInput, elements.pauseFromDate, elements.pauseFromTime);
+        syncPausePickerFromHidden(elements.pauseToInput, elements.pauseToDate, elements.pauseToTime);
+        syncPauseHiddenInputs();
         updatePauseReasonCount();
         updatePauseInputBounds();
         bindEvents();

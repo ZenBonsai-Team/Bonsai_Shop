@@ -12,7 +12,7 @@ import java.util.Optional;
 
 public interface ViewingAppointmentRepository extends JpaRepository<ViewingAppointment, Integer> {
 
-    List<ViewingAppointment> findByCustomer(User customer);
+    List<ViewingAppointment> findByCustomerOrderByCreatedAtDesc(User customer);
 
     Optional<ViewingAppointment> findByAppointmentIdAndCustomer(Integer appointmentId, User customer);
 
@@ -24,6 +24,7 @@ public interface ViewingAppointmentRepository extends JpaRepository<ViewingAppoi
 SELECT new com.example.bonsai_shop.artisan.dto.ArtisanAppointmentDTO(
     a.appointmentId,
     a.appointmentDate,
+    a.createdAt,
     a.status,
     a.note,
     c.fullName,
@@ -42,4 +43,6 @@ ORDER BY a.appointmentDate DESC
 //            LocalDateTime start,
 //            LocalDateTime end
 //    );
+
+    boolean existsByCustomerAndStatusIn(User customer, List<String> status);
 }

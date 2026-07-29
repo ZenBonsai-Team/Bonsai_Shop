@@ -1,4 +1,4 @@
-﻿﻿<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
 
 <head>
@@ -54,23 +54,75 @@
                     <input type="hidden" name="_csrf" th:value="${_csrf?.token}">
 
                     <div class="sch-setting-grid">
-                        <label class="sch-setting-field">
+                        <div class="sch-setting-field">
                             <span>Bận từ</span>
-                            <input type="datetime-local"
+                            <input type="hidden"
                                    id="pauseFromInput"
                                    name="pauseFrom"
-                                   step="60"
                                    th:value="${appointmentSetting != null && appointmentSetting.pauseFrom != null ? #temporals.format(appointmentSetting.pauseFrom, 'yyyy-MM-dd''T''HH:mm') : ''}">
-                        </label>
+                            <div class="sch-datetime-row">
+                                <input type="date"
+                                       id="pauseFromDate"
+                                       class="sch-date-input"
+                                       aria-label="Ngày bắt đầu bận"
+                                       th:value="${appointmentSetting != null && appointmentSetting.pauseFrom != null ? #temporals.format(appointmentSetting.pauseFrom, 'yyyy-MM-dd') : ''}">
+                                <select id="pauseFromTime" class="sch-time-select" aria-label="Giờ bắt đầu bận">
+                                    <option value="">Chọn giờ</option>
+                                    <option value="08:00">08:00</option>
+                                    <option value="08:30">08:30</option>
+                                    <option value="09:00">09:00</option>
+                                    <option value="09:30">09:30</option>
+                                    <option value="10:00">10:00</option>
+                                    <option value="10:30">10:30</option>
+                                    <option value="11:00">11:00</option>
+                                    <option value="11:30">11:30</option>
+                                    <option value="13:00">13:00</option>
+                                    <option value="13:30">13:30</option>
+                                    <option value="14:00">14:00</option>
+                                    <option value="14:30">14:30</option>
+                                    <option value="15:00">15:00</option>
+                                    <option value="15:30">15:30</option>
+                                    <option value="16:00">16:00</option>
+                                    <option value="16:30">16:30</option>
+                                    <option value="17:00">17:00</option>
+                                </select>
+                            </div>
+                        </div>
 
-                        <label class="sch-setting-field">
+                        <div class="sch-setting-field">
                             <span>Bận đến</span>
-                            <input type="datetime-local"
+                            <input type="hidden"
                                    id="pauseToInput"
                                    name="pauseTo"
-                                   step="60"
                                    th:value="${appointmentSetting != null && appointmentSetting.pauseTo != null ? #temporals.format(appointmentSetting.pauseTo, 'yyyy-MM-dd''T''HH:mm') : ''}">
-                        </label>
+                            <div class="sch-datetime-row">
+                                <input type="date"
+                                       id="pauseToDate"
+                                       class="sch-date-input"
+                                       aria-label="Ngày kết thúc bận"
+                                       th:value="${appointmentSetting != null && appointmentSetting.pauseTo != null ? #temporals.format(appointmentSetting.pauseTo, 'yyyy-MM-dd') : ''}">
+                                <select id="pauseToTime" class="sch-time-select" aria-label="Giờ kết thúc bận">
+                                    <option value="">Chọn giờ</option>
+                                    <option value="08:00">08:00</option>
+                                    <option value="08:30">08:30</option>
+                                    <option value="09:00">09:00</option>
+                                    <option value="09:30">09:30</option>
+                                    <option value="10:00">10:00</option>
+                                    <option value="10:30">10:30</option>
+                                    <option value="11:00">11:00</option>
+                                    <option value="11:30">11:30</option>
+                                    <option value="13:00">13:00</option>
+                                    <option value="13:30">13:30</option>
+                                    <option value="14:00">14:00</option>
+                                    <option value="14:30">14:30</option>
+                                    <option value="15:00">15:00</option>
+                                    <option value="15:30">15:30</option>
+                                    <option value="16:00">16:00</option>
+                                    <option value="16:30">16:30</option>
+                                    <option value="17:00">17:00</option>
+                                </select>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="sch-setting-reason-card">
@@ -90,7 +142,7 @@
                     </div>
 
                     <p class="sch-setting-help">
-                        Auto chạy cố định lúc 00:00 ngày hẹn: nếu trùng lịch bận thì từ chối kèm lý do, còn lại hệ thống tự duyệt.
+                        Auto xử lý sau 5 phút kể từ khi khách đặt lịch: nếu trùng lịch bận thì từ chối kèm lý do, còn lại hệ thống tự duyệt.
                     </p>
 
                     <div class="sch-setting-actions">
@@ -192,9 +244,10 @@
                      th:data-id="${appointment.appointmentId}"
                      th:data-phone="${appointment.customerPhone}"
                      th:data-email="${appointment.customerEmail}"
-                     th:data-note="${appointment.note}"
-                     th:data-appointment-at="${#temporals.format(appointment.appointmentDate,'yyyy-MM-dd''T''HH:mm')}"
-                     th:data-client="${appointment.customerName}"
+                      th:data-note="${appointment.note}"
+                      th:data-appointment-at="${#temporals.format(appointment.appointmentDate,'yyyy-MM-dd''T''HH:mm')}"
+                      th:data-created-at="${appointment.createdAt != null ? #temporals.format(appointment.createdAt,'yyyy-MM-dd''T''HH:mm') : ''}"
+                      th:data-client="${appointment.customerName}"
                      data-appointment-type="Lịch tham quan vườn"
                      th:data-date="${#temporals.format(appointment.appointmentDate,'yyyy-MM-dd')}"
                      th:data-time="${#temporals.format(appointment.appointmentDate,'HH:mm')}"
