@@ -226,6 +226,7 @@
 /* Soft colors matching marketplace aesthetic */
 .status-badge.pending { background: #FAF3E6; color: #C07F37; } /* Gold-orange */
 .status-badge.approved { background: #E8F3EB; color: #1C3322; } /* Forest Green */
+.status-badge.deposited { background: #E0F2FE; color: #0369A1; } /* Soft Cyan */
 .status-badge.paid { background: #E6F0FA; color: #2B6CB0; } /* Soft Blue */
 .status-badge.cancelled { background: #F1EFEA; color: #70706B; } /* Muted Grey */
 .status-badge.rejected { background: #FDF2F2; color: #9C2A2A; } /* Crimson */

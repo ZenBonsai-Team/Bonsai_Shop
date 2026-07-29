@@ -8,7 +8,8 @@ const DashboardState = {
 
 const orderStatusLabels = {
     'PENDING': 'Chờ xử lý',
-    'APPROVED': 'Đã duyệt',
+    'APPROVED': 'Chờ thanh toán',
+    'DEPOSITED': 'Đã đặt cọc',
     'PAID': 'Đã thanh toán',
     'REJECTED': 'Đã từ chối',
     'COMPLETED': 'Hoàn thành',
@@ -205,6 +206,35 @@ function initDrawerEvents() {
             rejectOrder(activeOrderCode, reason);
         });
     }
+
+    const confirmRemainingBtn = document.getElementById('btnConfirmRemainingPayment');
+    if (confirmRemainingBtn) {
+        confirmRemainingBtn.addEventListener('click', () => {
+            if (!currentActiveOrder) return;
+            const basePrice = currentActiveOrder.treePrice !== undefined ? currentActiveOrder.treePrice : 
+                (currentActiveOrder.items ? 
+                    currentActiveOrder.items.reduce((sum, item) => sum + ((item.price || 0) * (item.quantity || 1)), 0) : 
+                    (currentActiveOrder.totalAmount || 0));
+            const depositVal = currentActiveOrder.depositAmount || Math.round(basePrice * 0.3);
+            const remainingPay = Math.max(0, basePrice - depositVal);
+
+            const confirmMsg = 
+                "====================================================\n" +
+                "XÁC NHẬN HOÀN THÀNH ĐƠN HÀNG?\n" +
+                "====================================================\n" +
+                "Thao tác này xác nhận rằng khách hàng đã thanh toán đầy đủ phần tiền còn lại của đơn hàng ngoài thực tế.\n\n" +
+                "Hệ thống sẽ:\n" +
+                "• Số tiền thanh toán nấc 2 (Tiền mặt): " + formatVND(remainingPay) + "\n" +
+                "• Chuyển trạng thái Order sang PAID (Đã thanh toán)\n" +
+                "• Tạo Payment cuối cùng cho phần tiền còn lại (REMAINING_PAYMENT / CASH)\n" +
+                "• Đánh dấu giao dịch hoàn tất (Product -> SOLD)\n\n" +
+                "Lưu ý: Đây là thao tác KHÔNG THỂ HOÀN TÁC. Hãy chắc chắn rằng khách hàng đã thanh toán đầy đủ.";
+
+            if (confirm(confirmMsg)) {
+                confirmRemainingPayment(activeOrderCode);
+            }
+        });
+    }
 }
 
 function updateLiveTotals() {
@@ -367,9 +397,11 @@ function openDrawer(order) {
     // Render Handling Timeline Log
     renderTimeline(order.handlingHistory);
 
+    const isDeposited = order.orderStatus === 'DEPOSITED';
     if (document.getElementById('btnUnclaimOrder')) document.getElementById('btnUnclaimOrder').style.display = isPending ? 'block' : 'none';
     if (document.getElementById('btnVerifyOrder')) document.getElementById('btnVerifyOrder').style.display = isPending ? 'block' : 'none';
     if (document.getElementById('btnRejectOrder')) document.getElementById('btnRejectOrder').style.display = isPending ? 'block' : 'none';
+    if (document.getElementById('btnConfirmRemainingPayment')) document.getElementById('btnConfirmRemainingPayment').style.display = isDeposited ? 'block' : 'none';
     if (document.getElementById('rejectReasonBox')) document.getElementById('rejectReasonBox').style.display = 'none';
 
     const backdrop = document.getElementById('drawerBackdrop');
@@ -487,6 +519,29 @@ async function rejectOrder(orderCode, reason) {
         }
     } catch (err) {
         console.error("Lỗi từ chối:", err);
+    }
+}
+
+async function confirmRemainingPayment(orderCode) {
+    const headers = { 'Content-Type': 'application/json' };
+    if (csrfHeader && csrfToken) headers[csrfHeader] = csrfToken;
+
+    try {
+        const response = await fetch(`/api/orders/${orderCode}/confirm-remaining-payment`, {
+            method: 'POST',
+            headers: headers
+        });
+        const result = await response.json();
+
+        if (response.ok && result.success) {
+            alert("Xác nhận đã thanh toán đầy đủ thành công! Đơn hàng đã chuyển sang trạng thái ĐÃ THANH TOÁN (PAID).");
+            closeDrawer();
+            renderDashboard();
+        } else {
+            alert(result.message || "Lỗi khi xác nhận thanh toán.");
+        }
+    } catch (err) {
+        console.error("Lỗi xác nhận thanh toán nấc 2:", err);
     }
 }
 

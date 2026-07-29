@@ -233,17 +233,23 @@
                                 <span th:if="${order.orderStatus == 'PENDING'}" class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill px-3 py-1">
                                     <i class="fa-solid fa-clock me-1"></i>Chờ xác nhận
                                 </span>
-                                <span th:if="${order.orderStatus == 'VERIFIED'}" class="badge bg-info-subtle text-info-emphasis border border-info-subtle rounded-pill px-3 py-1">
-                                    <i class="fa-solid fa-circle-check me-1"></i>Đã duyệt
+                                <span th:if="${order.orderStatus == 'APPROVED' or order.orderStatus == 'VERIFIED'}" class="badge bg-info-subtle text-info-emphasis border border-info-subtle rounded-pill px-3 py-1">
+                                    <i class="fa-solid fa-clock me-1"></i>Chờ thanh toán
                                 </span>
-                                <span th:if="${order.orderStatus == 'PAID'}" class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-3 py-1">
+                                <span th:if="${order.orderStatus == 'DEPOSITED'}" class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-3 py-1">
+                                    <i class="fa-solid fa-hand-holding-dollar me-1"></i>Đã đặt cọc
+                                </span>
+                                <span th:if="${order.orderStatus == 'PAID'}" class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-1">
                                     <i class="fa-solid fa-credit-card me-1"></i>Đã thanh toán
                                 </span>
                                 <span th:if="${order.orderStatus == 'PROCESSING'}" class="badge bg-info-subtle text-info-emphasis border border-info-subtle rounded-pill px-3 py-1">
                                     <i class="fa-solid fa-gears me-1"></i>Đang xử lý
                                 </span>
-                                <span th:if="${order.orderStatus == 'SHIPPED'}" class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill px-3 py-1">
+                                <span th:if="${order.orderStatus == 'SHIPPED' or order.orderStatus == 'SHIPPING'}" class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill px-3 py-1">
                                     <i class="fa-solid fa-truck me-1"></i>Đang giao hàng
+                                </span>
+                                <span th:if="${order.orderStatus == 'DELIVERED'}" class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-3 py-1">
+                                    <i class="fa-solid fa-box-open me-1"></i>Đã giao
                                 </span>
                                 <span th:if="${order.orderStatus == 'COMPLETED'}" class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-1">
                                     <i class="fa-solid fa-circle-check me-1"></i>Hoàn thành
@@ -303,7 +309,17 @@
                                         <p class="mb-1 text-dark"><strong>Ngày đặt:</strong> <span th:text="${#temporals.format(order.orderDate, 'dd/MM/yyyy HH:mm')}">12/06/2025</span></p>
                                         <p class="mb-1 text-dark"><strong>Hình thức:</strong> <span class="badge bg-secondary" th:text="${order.orderType}">ONLINE</span></p>
                                         <p class="mb-1 text-dark"><strong>Trạng thái:</strong> 
-                                            <span th:text="${order.orderStatus}" class="fw-bold text-success">PENDING</span>
+                                            <span th:if="${order.orderStatus == 'PENDING'}" class="badge bg-warning-subtle text-warning-emphasis">Chờ xác nhận</span>
+                                            <span th:if="${order.orderStatus == 'APPROVED' or order.orderStatus == 'VERIFIED'}" class="badge bg-info-subtle text-info-emphasis">Chờ thanh toán</span>
+                                            <span th:if="${order.orderStatus == 'DEPOSITED'}" class="badge bg-primary-subtle text-primary">Đã đặt cọc</span>
+                                            <span th:if="${order.orderStatus == 'PAID'}" class="badge bg-success-subtle text-success">Đã thanh toán</span>
+                                            <span th:if="${order.orderStatus == 'PROCESSING'}" class="badge bg-info-subtle text-info-emphasis">Đang xử lý</span>
+                                            <span th:if="${order.orderStatus == 'SHIPPED' or order.orderStatus == 'SHIPPING'}" class="badge bg-warning-subtle text-warning-emphasis">Đang giao hàng</span>
+                                            <span th:if="${order.orderStatus == 'DELIVERED'}" class="badge bg-primary-subtle text-primary">Đã giao</span>
+                                            <span th:if="${order.orderStatus == 'COMPLETED'}" class="badge bg-success-subtle text-success">Hoàn thành</span>
+                                            <span th:if="${order.orderStatus == 'CANCELLED'}" class="badge bg-danger-subtle text-danger">Đã hủy</span>
+                                            <span th:if="${order.orderStatus == 'REJECTED'}" class="badge bg-danger-subtle text-danger">Từ chối</span>
+                                            <span th:if="${order.orderStatus != 'PENDING' and order.orderStatus != 'APPROVED' and order.orderStatus != 'VERIFIED' and order.orderStatus != 'DEPOSITED' and order.orderStatus != 'PAID' and order.orderStatus != 'PROCESSING' and order.orderStatus != 'SHIPPED' and order.orderStatus != 'SHIPPING' and order.orderStatus != 'DELIVERED' and order.orderStatus != 'COMPLETED' and order.orderStatus != 'CANCELLED' and order.orderStatus != 'REJECTED'}" th:text="${order.orderStatus}" class="fw-bold text-success">PENDING</span>
                                         </p>
                                         <p class="mb-0 text-muted small" th:if="${order.notes != null and !order.notes.isEmpty()}">
                                             <strong>Ghi chú:</strong> <span th:text="${order.notes}">Ghi chú đơn hàng...</span>

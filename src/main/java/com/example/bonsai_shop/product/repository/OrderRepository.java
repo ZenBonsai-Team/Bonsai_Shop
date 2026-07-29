@@ -88,7 +88,7 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
             Pageable pageable);
 
     // 3. Expired Orders Queries (Online 15m & Offline 48h)
-    @Query("SELECT DISTINCT o FROM Order o LEFT JOIN FETCH o.orderDetails od LEFT JOIN FETCH od.product WHERE o.orderStatus = 'PENDING' AND LOWER(o.orderType) = 'online' AND o.orderDate <= :cutoffTime")
+    @Query("SELECT DISTINCT o FROM Order o LEFT JOIN FETCH o.orderDetails od LEFT JOIN FETCH od.product WHERE (o.orderStatus = 'PENDING' OR o.orderStatus = 'APPROVED') AND LOWER(o.orderType) = 'online' AND (o.assignedAt <= :cutoffTime OR (o.assignedAt IS NULL AND o.orderDate <= :cutoffTime))")
     List<Order> findExpiredOnlineOrders(@Param("cutoffTime") java.time.LocalDateTime cutoffTime);
 
     @Query("SELECT DISTINCT o FROM Order o LEFT JOIN FETCH o.orderDetails od LEFT JOIN FETCH od.product WHERE (o.orderStatus = 'PENDING' OR o.orderStatus = 'APPROVED') AND (o.depositAmount IS NULL OR o.depositAmount = 0) AND (o.orderType IS NULL OR LOWER(o.orderType) != 'online') AND o.orderDate <= :cutoffTime")
