@@ -13,6 +13,7 @@
 
     <!-- BÊN TRÁI: ẢNH + TAGLINE -->
     <div class="login-left">
+
         <div class="brand">
             <img th:src="@{/images/logo.png}" alt="Logo" style="width: 32px; height: 32px; border-radius: 6px; object-fit: contain;">
             <span class="brand-name" style="font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; color: #ffffff;">Bonsai Shop</span>
@@ -20,8 +21,15 @@
 
         <div class="tagline">
             <div class="tagline-line"></div>
-            <h2>Patience, simplicity, and the art of becoming.</h2>
-            <p class="tagline-sub">THE WAY OF BONSAI</p>
+
+            <h2 th:text="#{auth.login.tagline}">
+                Patience, simplicity, and the art of becoming.
+            </h2>
+
+            <p class="tagline-sub"
+               th:text="#{auth.login.tagline.sub}">
+                THE WAY OF BONSAI
+            </p>
         </div>
     </div>
 
@@ -46,6 +54,9 @@
             </div>
             <div th:if="${param.logout}" class="alert alert-success">
                 ✅ Đăng xuất thành công!
+            </div>
+            <div th:if="${param.resetSuccess}" class="alert alert-success">
+                ✅ Đặt lại mật khẩu thành công! Vui lòng đăng nhập với mật khẩu mới.
             </div>
 
             <!-- FORM -->
@@ -95,6 +106,20 @@
 
 </div>
 
+</div>
+
 <script th:src="@{/js/login.js}"></script>
+    // Loại bỏ query parameter resetSuccess khỏi URL sau khi trang load
+    // Điều này khiến alert biến mất khi user reload trang
+    document.addEventListener('DOMContentLoaded', function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('resetSuccess')) {
+            // Xóa query parameter khỏi URL mà không reload trang
+            const newUrl = window.location.pathname;
+            window.history.replaceState({}, document.title, newUrl);
+        }
+    });
+</script>
+
 </body>
 </html>

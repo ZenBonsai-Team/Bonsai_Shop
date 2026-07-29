@@ -74,8 +74,7 @@ public class ForgotPasswordController {
         }
         try {
             userService.resetPassword(email, newPassword);
-            model.addAttribute("success", "Đặt lại mật khẩu thành công! Vui lòng đăng nhập.");
-            return "customer/login";
+            return "redirect:/login?resetSuccess=true";
         } catch (RuntimeException e) {
             model.addAttribute("email", email);
             model.addAttribute("error", e.getMessage());

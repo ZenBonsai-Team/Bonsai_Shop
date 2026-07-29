@@ -34,3 +34,6 @@ if (window.location.search.includes("logout")) {
 if (window.location.search.includes("error")) {
     window.history.replaceState({}, document.title, window.location.pathname);
 }
+if (window.location.search.includes("resetSuccess")) {
+    window.history.replaceState({}, document.title, window.location.pathname);
+}
