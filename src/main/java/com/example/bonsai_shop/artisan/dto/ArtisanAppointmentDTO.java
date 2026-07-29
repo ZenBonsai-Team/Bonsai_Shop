@@ -13,6 +13,7 @@ public class ArtisanAppointmentDTO {
 
     private Integer appointmentId;
     private LocalDateTime appointmentDate;
+    private LocalDateTime createdAt;
     private String status;
     private String note;
 

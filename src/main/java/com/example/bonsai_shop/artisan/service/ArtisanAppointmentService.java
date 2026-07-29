@@ -24,7 +24,6 @@ public class ArtisanAppointmentService {
     private static final int AUTO_COMPLETE_MINUTES = 5;
     private static final String STATUS_PENDING = "PENDING";
     private static final String STATUS_APPROVED = "APPROVED";
-    private static final String STATUS_REJECTED = "REJECTED";
     private static final String STATUS_COMPLETED = "COMPLETED";
     private static final LocalTime BUSINESS_START_TIME = LocalTime.of(8, 0);
     private static final LocalTime BUSINESS_END_TIME = LocalTime.of(17, 0);
@@ -40,9 +39,8 @@ public class ArtisanAppointmentService {
     @Transactional
     public int processAutomaticAppointmentStatusUpdates() {
         LocalDateTime now = LocalDateTime.now();
-        AppointmentSetting setting = getAppointmentSetting();
 
-        int updatedCount = autoDecidePendingAppointments(setting, now);
+        int updatedCount = autoDecidePendingAppointments(now);
         updatedCount += autoCompleteApprovedAppointments(now);
 
         return updatedCount;
@@ -73,6 +71,17 @@ public class ArtisanAppointmentService {
             throw new RuntimeException("Vui lòng nhập lý do tạm ngừng.");
         }
 
+        if (pauseFrom != null && pauseTo != null) {
+            if (pauseFrom.isBefore(LocalDateTime.now())) {
+                throw new RuntimeException("Thời gian tạm nghỉ phải sau thời điểm hiện tại.");
+            }
+
+            if (pauseFrom.isAfter(pauseTo)) {
+                throw new RuntimeException("Thời gian bắt đầu phải trước thời gian kết thúc.");
+            }
+        }
+
+
         setting.setPauseFrom(pauseFrom);
         setting.setPauseTo(pauseTo);
         setting.setPauseReason(normalizedPauseReason);
@@ -83,7 +92,7 @@ public class ArtisanAppointmentService {
         appointmentSettingRepository.save(setting);
     }
 
-    private int autoDecidePendingAppointments(AppointmentSetting setting, LocalDateTime now) {
+    private int autoDecidePendingAppointments(LocalDateTime now) {
 //        LocalDateTime start  = now.toLocalDate().atStartOfDay();
 //        LocalDateTime end = start.plusDays(1);
 //        List<ViewingAppointment> appointments = viewingAppointmentRepository
@@ -95,11 +104,8 @@ public class ArtisanAppointmentService {
 
         int updatedCount = 0;
         for (ViewingAppointment appointment : appointments) {
-            if(isPausedAt(setting, appointment.getAppointmentDate())){
-                  applyAutomaticStatus(appointment,STATUS_REJECTED, setting.getPauseReason());
-            }else{
-                applyAutomaticStatus(appointment,STATUS_APPROVED, null);
-            }
+
+                applyAutomaticStatus(appointment,STATUS_APPROVED);
             updatedCount++;
         }
 
@@ -114,30 +120,14 @@ public class ArtisanAppointmentService {
 
         int updatedCount = 0;
         for (ViewingAppointment appointment : appointments) {
-            applyAutomaticStatus(appointment, STATUS_COMPLETED,null);
+            applyAutomaticStatus(appointment, STATUS_COMPLETED);
             updatedCount++;
         }
 
         return updatedCount;
     }
 
-    private boolean isPausedAt(AppointmentSetting setting, LocalDateTime appointmentDate) {
-        if(appointmentDate == null){
-            return false;
-        }
-        LocalDateTime pauseFrom = setting.getPauseFrom();
-        LocalDateTime pauseTo = setting.getPauseTo();
-
-        if (pauseFrom == null || pauseTo == null) {
-            return false;
-        }
-        if (appointmentDate.isBefore(pauseFrom)) {
-            return false;
-        }
-        return !appointmentDate.isAfter(pauseTo);
-    }
-
-    private void applyAutomaticStatus(ViewingAppointment appointment, String nextStatus, String message) {
+    private void applyAutomaticStatus(ViewingAppointment appointment, String nextStatus) {
        appointment.setStatus(nextStatus);
        appointment.setUpdatedAt(LocalDateTime.now());
        viewingAppointmentRepository.save(appointment);
@@ -145,11 +135,6 @@ public class ArtisanAppointmentService {
             notificationService.createNotification(
                     appointment.getCustomer(),
                     "Lịch hẹn tham quan vườn của bạn đã được chấp nhận."
-            );
-        } else if (STATUS_REJECTED.equals(nextStatus)) {
-            notificationService.createNotification(
-                    appointment.getCustomer(),
-                    "Lịch hẹn tham quan vườn của bạn đã bị từ chối.\nLý do: " + message
             );
         }
     }

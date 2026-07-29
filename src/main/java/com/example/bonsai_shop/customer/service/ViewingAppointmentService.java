@@ -1,6 +1,9 @@
 package com.example.bonsai_shop.customer.service;
 
+import com.example.bonsai_shop.appointmentSetting.reponsitory.AppointmentSettingRepository;
+import com.example.bonsai_shop.appointmentSetting.service.AppointmentSettingService;
 import com.example.bonsai_shop.customer.dto.AppointmentDetailDTO;
+import com.example.bonsai_shop.entity.AppointmentSetting;
 import com.example.bonsai_shop.entity.User;
 import com.example.bonsai_shop.entity.ViewingAppointment;
 import com.example.bonsai_shop.notification.service.NotificationService;
@@ -19,10 +22,23 @@ public class ViewingAppointmentService {
     private final ViewingAppointmentRepository viewingAppointmentRepository;
     private final UserService userService;
     private final NotificationService notificationService;
+    private final AppointmentSettingService appointmentSettingService;
 
     @Transactional
     public void createViewingAppointment(ViewingAppointment viewingAppointment) {
         userService.checkProfileEmailAndPhone(viewingAppointment.getCustomer());
+
+        if(appointmentSettingService.isPausedAt(viewingAppointment.getAppointmentDate())){
+            AppointmentSetting setting = appointmentSettingService.getAppointmentSetting();
+
+            throw new RuntimeException("Nhà vườn đang tạm ngừng nhận lịch trong khoảng thời gian này.\n"
+                                       + "Lý do : " + setting.getPauseReason());
+        }
+        if(viewingAppointmentRepository.existsByCustomerAndStatusIn(viewingAppointment.getCustomer(),List.of("PENDING","APPROVED"))){
+            throw new RuntimeException(
+                    "Bạn đã có một lịch hẹn đang diễn ra. Vui lòng hoàn thành lịch hẹn hiện tại trước khi đặt lịch mới."
+            );
+        }
 
         viewingAppointmentRepository.save(viewingAppointment);
 
@@ -33,7 +49,7 @@ public class ViewingAppointmentService {
     }
 
     public List<ViewingAppointment> findByCustomer(User customer) {
-        return viewingAppointmentRepository.findByCustomer(customer);
+        return viewingAppointmentRepository.findByCustomerOrderByCreatedAtDesc(customer);
     }
 
     public AppointmentDetailDTO findByIdAndCustomer(Integer appointmentId, User customer) {
