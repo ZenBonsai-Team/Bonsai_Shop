@@ -220,7 +220,7 @@ function initDrawerEvents() {
                 (currentActiveOrder.items ? 
                     currentActiveOrder.items.reduce((sum, item) => sum + ((item.price || 0) * (item.quantity || 1)), 0) : 
                     (currentActiveOrder.totalAmount || 0));
-            const depositVal = currentActiveOrder.depositAmount || Math.round(basePrice * 0.3);
+            const depositVal = currentActiveOrder.depositAmount || 0;
             const remainingPay = Math.max(0, basePrice - depositVal);
 
             const confirmMsg = `Xác nhận rằng khách hàng đã thanh toán đầy đủ phần tiền còn lại (${formatVND(remainingPay)}) của đơn hàng ngoài thực tế? Thao tác này sẽ chuyển trạng thái đơn sang ĐÃ THANH TOÁN (PAID) và KHÔNG thể hoàn tác.`;
@@ -252,7 +252,7 @@ function updateLiveTotals() {
     let depositVal = 0;
     if (isDeposit) {
         depositVal = (depositInput && depositInput.value !== '') ? 
-            (parseFloat(depositInput.value) || 0) : Math.round(basePrice * 0.3);
+            (parseFloat(depositInput.value) || 0) : 0;
     }
 
     const finalTotal = basePrice + craneFee + shippingFee;
@@ -371,7 +371,7 @@ function openDrawer(order) {
     if (depositInput) {
         if (isDeposit) {
             const defaultDeposit = (order.depositAmount && order.depositAmount > 0) ? 
-                order.depositAmount : Math.round(basePrice * 0.3);
+                order.depositAmount : '';
             depositInput.value = defaultDeposit;
             depositInput.disabled = !isPending;
         } else {
@@ -471,10 +471,17 @@ async function unclaimOrder(orderCode) {
 }
 
 async function verifyOrder(orderCode) {
+    const isDeposit = (currentActiveOrder && (currentActiveOrder.paymentMethod === 'DEPOSIT' || currentActiveOrder.paymentMethod === 'COD'));
     const craneFee = parseFloat(document.getElementById('inputCraneFee').value) || 0;
     const shippingFee = parseFloat(document.getElementById('inputShippingFee').value) || 0;
     const depositInput = document.getElementById('inputDepositAmount');
     const depositAmount = (depositInput && depositInput.value !== '') ? parseFloat(depositInput.value) : null;
+
+    if (isDeposit && (!depositAmount || depositAmount <= 0)) {
+        BSMSToast.error("Vui lòng nhập số tiền đặt cọc.");
+        if (depositInput) depositInput.focus();
+        return;
+    }
 
     const headers = { 'Content-Type': 'application/json' };
     if (csrfHeader && csrfToken) headers[csrfHeader] = csrfToken;

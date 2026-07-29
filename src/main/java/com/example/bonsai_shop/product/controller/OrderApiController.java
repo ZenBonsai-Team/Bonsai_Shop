@@ -357,11 +357,25 @@ public class OrderApiController {
             depositAmount = new BigDecimal(payload.get("depositAmount").toString());
         }
 
-        boolean success = orderService.verifyOrder(orderCode, craneFee, shippingFee, depositAmount, moderator);
-        response.put("success", success);
-        response.put("message", success ? "Duyá»‡t Ä‘Æ¡n hÃ ng thÃ nh cÃ´ng." : "Duyá»‡t Ä‘Æ¡n hÃ ng tháº¥t báº¡i.");
-
-        return ResponseEntity.ok(response);
+        try {
+            boolean success = orderService.verifyOrder(orderCode, craneFee, shippingFee, depositAmount, moderator);
+            response.put("success", success);
+            response.put("message", success ? "Duyệt đơn hàng thành công." : "Duyệt đơn hàng thất bại.");
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            response.put("success", false);
+            response.put("message", e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        } catch (SecurityException e) {
+            response.put("success", false);
+            response.put("message", e.getMessage());
+            return ResponseEntity.status(403).body(response);
+        } catch (Exception e) {
+            log.error("Lỗi khi duyệt đơn hàng {}", orderCode, e);
+            response.put("success", false);
+            response.put("message", "Lỗi hệ thống: " + e.getMessage());
+            return ResponseEntity.internalServerError().body(response);
+        }
     }
 
     /**

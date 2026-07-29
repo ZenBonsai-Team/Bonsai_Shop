@@ -113,7 +113,7 @@ const OrderDrawer = {
         let depositVal = 0;
         if (isDeposit) {
             depositVal = (this.inputDepositAmount && this.inputDepositAmount.value !== '') ? 
-                (Number(this.inputDepositAmount.value) || 0) : Math.round(base * 0.3);
+                (Number(this.inputDepositAmount.value) || 0) : 0;
         }
 
         const total = base + crane + shipping;
@@ -207,7 +207,7 @@ const OrderDrawer = {
         if (this.inputDepositAmount) {
             if (isDeposit) {
                 const defaultDeposit = (order.depositAmount && order.depositAmount > 0) ? 
-                    order.depositAmount : Math.round(basePrice * 0.3);
+                    order.depositAmount : '';
                 this.inputDepositAmount.value = defaultDeposit;
                 this.inputDepositAmount.disabled = !isPending;
             } else {
@@ -260,8 +260,16 @@ const OrderDrawer = {
         const crane = Number(this.inputCraneFee ? this.inputCraneFee.value : 0) || 0;
         const shipping = Number(this.inputShippingFee ? this.inputShippingFee.value : 0) || 0;
         const isDeposit = (this.currentOrder.paymentMethod === 'DEPOSIT' || this.currentOrder.paymentMethod === 'COD');
-        const depositAmount = isDeposit && this.inputDepositAmount ? (Number(this.inputDepositAmount.value) || 0) : null;
-        const effectiveDeposit = isDeposit ? (depositAmount || Math.round(base * 0.3)) : 0;
+        const depositAmount = (isDeposit && this.inputDepositAmount && this.inputDepositAmount.value !== '') ? 
+            Number(this.inputDepositAmount.value) : null;
+
+        if (isDeposit && (!depositAmount || depositAmount <= 0)) {
+            BSMSToast.error('Vui lòng nhập số tiền đặt cọc.');
+            if (this.inputDepositAmount) this.inputDepositAmount.focus();
+            return;
+        }
+
+        const effectiveDeposit = isDeposit ? depositAmount : 0;
         const pay1 = isDeposit ? (effectiveDeposit + crane + shipping) : (base + crane + shipping);
 
         ConfirmDialog.show({

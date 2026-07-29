@@ -231,19 +231,19 @@ public class OrderService {
         order.setTotalAmount(newTotal);
 
         boolean isDepositFlow = "DEPOSIT".equalsIgnoreCase(order.getPaymentMethod()) 
-                || "COD".equalsIgnoreCase(order.getPaymentMethod())
-                || (depositAmount != null && depositAmount.compareTo(BigDecimal.ZERO) > 0);
+                || "COD".equalsIgnoreCase(order.getPaymentMethod());
 
         if (isDepositFlow) {
-            BigDecimal finalDeposit = depositAmount;
-            if (finalDeposit == null || finalDeposit.compareTo(BigDecimal.ZERO) <= 0) {
-                // Tự động tính 30% giá cây gốc nếu Moderator chưa nhập thủ công
-                finalDeposit = treePrice.multiply(new BigDecimal("0.30")).setScale(0, java.math.RoundingMode.HALF_UP);
+            if (depositAmount == null || depositAmount.compareTo(BigDecimal.ZERO) <= 0) {
+                throw new IllegalArgumentException("Vui lòng nhập số tiền đặt cọc.");
             }
-            order.setDepositAmount(finalDeposit);
+            if (depositAmount.compareTo(treePrice) > 0) {
+                throw new IllegalArgumentException("Số tiền đặt cọc không được vượt quá tổng giá trị cây.");
+            }
+            order.setDepositAmount(depositAmount);
 
             // Số tiền cần thanh toán lần 1 = deposit + phí cẩu + phí ship
-            BigDecimal amountToPay = finalDeposit.add(order.getCraneFee()).add(order.getShippingFee());
+            BigDecimal amountToPay = depositAmount.add(order.getCraneFee()).add(order.getShippingFee());
 
             Payment depositPayment = Payment.builder()
                     .order(order)
