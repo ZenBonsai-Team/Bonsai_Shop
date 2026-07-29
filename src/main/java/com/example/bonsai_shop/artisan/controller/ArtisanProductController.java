@@ -175,10 +175,11 @@ public class ArtisanProductController {
                                    @PathVariable Integer productId,
                                    @RequestParam(required = false) List<Integer> mediaIds,
                                    @RequestParam(required = false) List<Integer> displayOrders,
+                                   @RequestParam(required = false) List<String> captions,
                                    RedirectAttributes redirectAttributes) {
         try {
-            artisanProductService.updateMediaOrder(userDetails.getUsername(), productId, mediaIds, displayOrders);
-            redirectAttributes.addFlashAttribute("success", "Đã cập nhật thứ tự media.");
+            artisanProductService.updateMediaOrder(userDetails.getUsername(), productId, mediaIds, displayOrders, captions);
+            redirectAttributes.addFlashAttribute("success", "Đã cập nhật media.");
         } catch (RuntimeException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }

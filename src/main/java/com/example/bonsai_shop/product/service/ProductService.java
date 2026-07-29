@@ -77,7 +77,7 @@ public class ProductService {
                 || product.getSegment().getSegmentId() == null
                 || product.getSegment().getSegmentId() != 3
                 || "DRAFT".equalsIgnoreCase(product.getProductStatus())
-                || "HIDDEN".equalsIgnoreCase(product.getProductStatus())) {
+                || Boolean.FALSE.equals(product.getIsVisible())) {
             return List.of();
         }
 
@@ -94,6 +94,14 @@ public class ProductService {
         return productTagRepository.findByProduct(product).stream()
                 .map(ProductTag::getTag)
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public long countManagedProductsByArtisan(Integer artisanUserId) {
+        if (artisanUserId == null) {
+            return 0;
+        }
+        return productRepository.countByCreatedByUserId(artisanUserId);
     }
 
     @Transactional(readOnly = true)

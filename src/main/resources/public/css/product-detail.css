@@ -54,6 +54,16 @@
             object-fit: cover;
             transition: var(--transition);
         }
+        .product-image-caption {
+            margin: -4px 0 18px;
+            padding: 10px 14px;
+            border-left: 3px solid var(--accent-color);
+            background: rgba(193, 142, 93, 0.1);
+            color: var(--primary-color);
+            font-size: 0.92rem;
+            font-weight: 700;
+            line-height: 1.5;
+        }
         .gallery-thumbnails-shell {
             position: relative;
             margin-bottom: 12px;

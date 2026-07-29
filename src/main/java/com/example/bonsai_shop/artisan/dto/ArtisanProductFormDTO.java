@@ -34,6 +34,8 @@ public class ArtisanProductFormDTO {
 
     private String description;
 
+    private String treeStory;
+
     @NotNull(message = "Vui lòng nhập tuổi cây.")
     @Min(value = 0, message = "Tuổi cây không được âm.")
     private Integer age;

@@ -101,6 +101,11 @@
             <div class="gallery-main-wrap">
                 <img id="mainGalleryImg" th:src="${product.firstImageUrl != null ? product.firstImageUrl : 'https://images.unsplash.com/photo-1599599810769-bcde5a160d32?auto=format&fit=crop&q=80&w=800'}" th:alt="${product.productName != null ? product.productName : 'Bonsai'}" class="gallery-main-img">
             </div>
+            <p id="mainGalleryCaption"
+               class="product-image-caption"
+               th:with="primaryMedia=${product.primaryMedia}"
+               th:classappend="${primaryMedia == null || primaryMedia.caption == null || primaryMedia.caption.isBlank()} ? ' d-none'"
+               th:text="${primaryMedia != null && primaryMedia.caption != null ? primaryMedia.caption : ''}">Chú thích ảnh</p>
 
             <!-- Thumbnail Selector Strip -->
             <div class="gallery-thumbnails-shell">
@@ -116,6 +121,7 @@
                              th:classappend="${media != null && media.mediaUrl != null && media.mediaUrl == product.firstImageUrl ? 'active' : ''}"
                              class="gallery-thumb-item"
                              th:data-image-url="${media != null ? media.mediaUrl : ''}"
+                             th:data-caption="${media != null && media.caption != null ? media.caption : ''}"
                              onclick="switchMainImage(this, this.getAttribute('data-image-url'))">
                             <img th:src="${media != null ? media.mediaUrl : ''}" th:alt="${product.productName != null ? product.productName : 'Bonsai'}">
                             <span class="gallery-thumb-label" th:text="${slot.label}">Overview</span>
@@ -253,21 +259,19 @@
                 </p>
             </div>
 
-            <!-- Artisan Brief Info -->
-            <!-- HARDCODED: Chi tiết nghệ nhân/nhà vườn không có trong DB entity (User chỉ có thông tin cơ bản) -->
-            <!-- <div class="artisan-summary-box"> -->
-                <!-- HARDCODED -->
-                <!-- <div class="artisan-avatar-wrap">
-                    <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150" alt="Avatar">
+            <div class="artisan-summary-box" th:if="${product.createdBy != null}">
+                <div class="artisan-avatar-wrap">
+                    <img th:src="${product.createdBy.avatar != null && !product.createdBy.avatar.isBlank() ? product.createdBy.avatar : '/images/logo.png'}"
+                         th:alt="${product.createdBy.fullName != null ? product.createdBy.fullName : 'Nghệ nhân'}">
                 </div>
                 <div class="artisan-summary-info">
-                    <div class="artisan-summary-name">Nghệ nhân Nguyễn Văn Thành</div>
-                    <div class="artisan-summary-meta">Vườn Thành Cổ • Nam Định</div>
+                    <div class="artisan-summary-name" th:text="${product.createdBy.fullName != null ? product.createdBy.fullName : 'Nghệ nhân'}">Nghệ nhân</div>
+                    <div class="artisan-summary-meta">
+                        <strong th:text="${artisanManagedProductCount}">0</strong>
+                        <span> sản phẩm đang quản lý</span>
+                    </div>
                 </div>
-                <div class="artisan-summary-rating">
-                    <i class="fa-solid fa-star"></i> 4.9
-                </div>
-            </div> -->
+            </div>
 
             <!-- Buying and Add to Cart Action buttons -->
             <div class="mt-4">
@@ -416,39 +420,12 @@
 <article class="story-section">
     <div class="container">
         <span class="section-tag-gold">Câu chuyện tác phẩm</span>
-        <h2 class="story-heading">Một đời cây — một đời nghệ nhân</h2>
         
-        <!-- CALL DB: product.description -->
+        <!-- CALL DB: product.treeStory -->
         <p class="story-intro-para"
-           th:text="${product.description != null && !product.description.isBlank() ? product.description : 'Sản phẩm hiện chưa có mô tả chi tiết.'}">
+           th:text="${product.treeStory != null && !product.treeStory.isBlank() ? product.treeStory : 'Sản phẩm hiện chưa có câu chuyện cây.'}">
             Tùng được uốn nắn qua hơn 18 năm dưới bàn tay của nghệ nhân Nguyễn Văn Thành tại vùng đất Nam Định — cái nôi của nghệ thuật bonsai Bắc Bộ.
         </p>
-
-        <!-- Chronological Story Bullet Nodes -->
-        <!-- HARDCODED: Các phần cốt truyện chi tiết không lưu trong DB (được giữ làm text tĩnh) -->
-        <div class="story-timeline-wrap">
-            <div class="story-timeline-node">
-                <!-- HARDCODED -->
-                <h3 class="story-node-title">Nguồn gốc</h3>
-                <p class="story-node-desc">
-                    Cây gốc khai thác từ vùng đồi trung du, được dưỡng và tạo thế tại vườn Thành Cổ từ năm 2012. Đất trồng pha trộn theo công thức truyền thức của làng nghề, giúp bộ rễ phát triển bền bỉ và lá xanh quanh năm.
-                </p>
-            </div>
-            <div class="story-timeline-node">
-                <!-- HARDCODED: Lịch sử tác phẩm không lưu trong DB -->
-                <h3 class="story-node-title">Lịch sử</h3>
-                <p class="story-node-desc">
-                    Tác phẩm đã từng tham gia triển lãm Bonsai Việt Nam 2022 và được hội đồng nghệ nhân đánh giá cao về thế dáng cân đối và bộ thân chi tiết.
-                </p>
-            </div>
-            <div class="story-timeline-node">
-                <!-- HARDCODED: Nghệ thuật chế tác không lưu trong DB -->
-                <h3 class="story-node-title">Nghệ thuật chế tác</h3>
-                <p class="story-node-desc">
-                    Mỗi đường chỉ, mỗi nét thân đều được uốn tỉ mỉ bằng kỹ thuật truyền thống, tôn vinh vẻ đẹp tự nhiên thay vì ép buộc dáng cây theo khuôn mẫu.
-                </p>
-            </div>
-        </div>
     </div>
 </article>
 
@@ -542,37 +519,6 @@
                 </table>
             </div>
 
-        </div>
-    </div>
-</section>
-
-<!-- ===================================================== -->
-<!-- SELLER BANNER ROW -->
-<!-- ===================================================== -->
-<section class="container py-5">
-    <!-- Detailed Artisan Profile Box -->
-    <!-- HARDCODED: Chi tiết nghệ nhân/nhà vườn không có trong DB entity (User chỉ có thông tin cơ bản) -->
-    <div class="artisan-profile-banner">
-        <!-- HARDCODED -->
-        <div class="artisan-profile-left">
-            <div class="artisan-large-avatar">
-                <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150" alt="Nghệ nhân Nguyễn Văn Thành">
-            </div>
-            <div>
-                <span class="artisan-badge-gold">Verified Artisan • Nghệ nhân Bắc Bộ</span>
-                <h3 class="artisan-large-name">Nghệ nhân Nguyễn Văn Thành</h3>
-                <p class="artisan-large-location"><i class="fa-solid fa-location-dot me-1"></i> Vườn Thành Cổ • Nam Định, Việt Nam</p>
-                <div class="artisan-large-stats">
-                    <span><i class="fa-solid fa-star text-warning me-1"></i><strong>4.9</strong> (218 đánh giá)</span>
-                    <span class="text-muted">•</span>
-                    <span><strong>42</strong> tác phẩm đang niêm yết</span>
-                    <span class="text-muted">•</span>
-                    <span>Tham gia từ 2021</span>
-                </div>
-            </div>
-        </div>
-        <div class="artisan-profile-right">
-            <a href="#" class="btn-view-profile-outline">View Artisan Profile</a>
         </div>
     </div>
 </section>
@@ -747,6 +693,13 @@
         const mainImg = document.getElementById('mainGalleryImg');
         if (mainImg) {
             mainImg.src = imageUrl;
+        }
+
+        const caption = thumbElement ? (thumbElement.getAttribute('data-caption') || '').trim() : '';
+        const captionElement = document.getElementById('mainGalleryCaption');
+        if (captionElement) {
+            captionElement.textContent = caption;
+            captionElement.classList.toggle('d-none', !caption);
         }
 
         // Toggle active border styling on thumbnail list items

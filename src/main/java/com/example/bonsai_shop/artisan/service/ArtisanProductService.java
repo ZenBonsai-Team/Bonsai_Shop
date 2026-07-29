@@ -37,7 +37,7 @@ public class ArtisanProductService {
 
     private static final SecureRandom RANDOM = new SecureRandom();
     private static final String CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-    private static final Set<String> VALID_SHOT_TYPES = Set.of("FRONT", "BACK", "LEFT", "RIGHT", "TOP", "DETAIL", "ROOT", "TRUNK", "BRANCH", "POT", "OVERVIEW");
+    private static final Set<String> VALID_SHOT_TYPES = Set.of("FRONT", "BACK", "LEFT", "RIGHT", "DETAIL", "TRUNK", "BRANCH", "POT", "OVERVIEW");
 
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
@@ -90,6 +90,7 @@ public class ArtisanProductService {
                 .productCode(createTemporaryProductCode())
                 .productName(form.getProductName())
                 .description(form.getDescription())
+                .treeStory(form.getTreeStory())
                 .age(form.getAge())
                 .height(form.getHeight())
                 .trunkDiameter(form.getTrunkDiameter())
@@ -124,6 +125,7 @@ public class ArtisanProductService {
         product.setSegment(segment);
         product.setProductName(form.getProductName());
         product.setDescription(form.getDescription());
+        product.setTreeStory(form.getTreeStory());
         product.setAge(form.getAge());
         product.setHeight(form.getHeight());
         product.setTrunkDiameter(form.getTrunkDiameter());
@@ -146,6 +148,7 @@ public class ArtisanProductService {
                 .segmentId(product.getSegment() == null ? null : product.getSegment().getSegmentId())
                 .productName(product.getProductName())
                 .description(product.getDescription())
+                .treeStory(product.getTreeStory())
                 .age(product.getAge())
                 .height(product.getHeight())
                 .trunkDiameter(product.getTrunkDiameter())
@@ -223,17 +226,24 @@ public class ArtisanProductService {
     public void updateMediaOrder(String artisanEmail,
                                  Integer productId,
                                  List<Integer> mediaIds,
-                                 List<Integer> displayOrders) {
+                                 List<Integer> displayOrders,
+                                 List<String> captions) {
         Product product = getMyProduct(artisanEmail, productId);
         ensureEditable(product);
         if (mediaIds == null || displayOrders == null || mediaIds.size() != displayOrders.size()) {
             throw new RuntimeException("Dữ liệu thứ tự media không hợp lệ!");
         }
+        if (captions != null && captions.size() != mediaIds.size()) {
+            throw new RuntimeException("Dữ liệu caption media không hợp lệ!");
+        }
 
         for (int index = 0; index < mediaIds.size(); index++) {
             ProductMedia media = productMediaRepository.findByMediaIdAndProduct(mediaIds.get(index), product)
                     .orElseThrow(() -> new RuntimeException("Media không tồn tại!"));
-            media.setDisplayOrder(displayOrders.get(index) == null ? 0 : displayOrders.get(index));
+            media.setDisplayOrder(displayOrders.get(index) == null ? 1 : Math.max(displayOrders.get(index), 1));
+            if (captions != null) {
+                media.setCaption(blankToNull(captions.get(index)));
+            }
             productMediaRepository.save(media);
         }
     }
@@ -433,13 +443,17 @@ public class ArtisanProductService {
         return "TMP-" + UUID.randomUUID();
     }
 
+    private String blankToNull(String value) {
+        return value == null || value.isBlank() ? null : value.trim();
+    }
+
     private Integer getNextDisplayOrder(List<ProductMedia> existingMedia) {
         return existingMedia.stream()
                 .map(ProductMedia::getDisplayOrder)
                 .filter(displayOrder -> displayOrder != null)
                 .max(Integer::compareTo)
                 .map(displayOrder -> displayOrder + 1)
-                .orElse(0);
+                .orElse(1);
     }
 
     private String normalizeShotType(String shotType, String mediaType) {

@@ -42,6 +42,9 @@ public class Product {
     @Column(name = "Description", columnDefinition = "TEXT")
     private String description;
 
+    @Column(name = "TreeStory", columnDefinition = "TEXT")
+    private String treeStory;
+
     @Column(name = "Age")
     private Integer age;
 

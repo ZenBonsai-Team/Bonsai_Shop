@@ -30,8 +30,6 @@ public class MarketplaceController {
             new ImageSlotDefinition("BACK", "Mặt sau"),
             new ImageSlotDefinition("LEFT", "Bên trái"),
             new ImageSlotDefinition("RIGHT", "Bên phải"),
-            new ImageSlotDefinition("TOP", "Từ trên"),
-            new ImageSlotDefinition("ROOT", "Bộ rễ"),
             new ImageSlotDefinition("TRUNK", "Thân cây"),
             new ImageSlotDefinition("BRANCH", "Cành"),
             new ImageSlotDefinition("POT", "Chậu"),
@@ -146,6 +144,9 @@ public class MarketplaceController {
         model.addAttribute("productImageSlots", getImageSlots(product));
         model.addAttribute("productVideos", getMediaByType(product, "VIDEO"));
         model.addAttribute("productTags", productService.getProductTags(product));
+        model.addAttribute("artisanManagedProductCount", productService.countManagedProductsByArtisan(
+                product.getCreatedBy() == null ? null : product.getCreatedBy().getUserId()
+        ));
         model.addAttribute("journalEvents", productJournalService.getPublicEvents(product));
         model.addAttribute("activePage", "marketplace");
         return "product/product-detail";
