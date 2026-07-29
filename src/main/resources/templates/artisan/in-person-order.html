@@ -140,7 +140,7 @@
             </form>
         </section>
 
-        <section class="portal-card">
+        <section class="portal-card" id="walkInOrdersSection">
             <div class="product-toolbar">
                 <div class="product-toolbar-top">
                     <div>
@@ -207,7 +207,7 @@
                                     th:data-product-image="${(!#lists.isEmpty(order.orderDetails) && order.orderDetails[0].product.firstImageUrl != null) ? order.orderDetails[0].product.firstImageUrl : ''}"
                                     th:data-crane-fee="${order.craneFee}"
                                     th:data-shipping-fee="${order.shippingFee}"
-                                    th:data-payment-method="${order.payment != null ? order.payment.paymentMethod : 'CASH'}"
+                                    th:data-payment-method="${order.paymentMethod != null ? order.paymentMethod : 'CASH'}"
                                     th:data-edit-customer-email="${order.customerEmail != null ? order.customerEmail : ''}"
                                     th:data-edit-notes="${order.notes != null ? order.notes : ''}"
                                     th:data-total-amount="${order.totalAmount}"

@@ -72,7 +72,7 @@ public class ArtisanWalkInOrderController {
         } catch (RuntimeException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
-        return "redirect:/artisan/in-person-order";
+        return "redirect:/artisan/in-person-order#walkInOrdersSection";
     }
 
     @PostMapping("/{orderId}/confirm-payment")
@@ -85,7 +85,7 @@ public class ArtisanWalkInOrderController {
         } catch (RuntimeException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
-        return "redirect:/artisan/in-person-order";
+        return "redirect:/artisan/in-person-order#walkInOrdersSection";
     }
 
     @PostMapping("/{orderId}/cancel")
@@ -99,7 +99,7 @@ public class ArtisanWalkInOrderController {
         } catch (RuntimeException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
-        return "redirect:/artisan/in-person-order";
+        return "redirect:/artisan/in-person-order#walkInOrdersSection";
     }
 
     @PostMapping("/{orderId}/update")
@@ -131,7 +131,7 @@ public class ArtisanWalkInOrderController {
         } catch (RuntimeException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
-        return "redirect:/artisan/in-person-order";
+        return "redirect:/artisan/in-person-order#walkInOrdersSection";
     }
 }
 

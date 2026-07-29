@@ -103,6 +103,7 @@ public class ArtisanWalkInOrderService {
                 .shippingFee(normalizedShippingFee)
                 .orderStatus(STATUS_PENDING_PAYMENT)
                 .orderType(ORDER_TYPE_IN_PERSON)
+                .paymentMethod(normalizedPaymentMethod)
                 .notes(blankToNull(notes))
                 .build();
 
@@ -113,21 +114,21 @@ public class ArtisanWalkInOrderService {
                 .build();
         order.setOrderDetails(List.of(detail));
 
-        Payment payment = Payment.builder()
-                .order(order)
-                .paymentMethod(normalizedPaymentMethod)
-                .paymentStatus("PENDING")
-                .paymentType(PAYMENT_TYPE_FULL_PAYMENT)
-                .amount(totalAmount)
-                .build();
-        paymentRepository.save(payment);
-
         int reserved = productRepository.reserveIfAvailable(product.getProductId());
         if (reserved == 0) {
             throw new RuntimeException("Sáº£n pháº©m Ä‘Ã£ Ä‘Æ°á»£c Ä‘áº·t hoáº·c khÃ´ng cÃ²n kháº£ dá»¥ng.");
         }
         product.setProductStatus(PRODUCT_RESERVED);
         Order savedOrder = orderRepository.save(order);
+
+        Payment payment = Payment.builder()
+                .order(savedOrder)
+                .paymentMethod(normalizedPaymentMethod)
+                .paymentStatus("PENDING")
+                .paymentType(PAYMENT_TYPE_FULL_PAYMENT)
+                .amount(totalAmount)
+                .build();
+        paymentRepository.save(payment);
         log(savedOrder, artisanUser, "IN_PERSON_CREATE", null, STATUS_PENDING_PAYMENT);
         return savedOrder;
     }
