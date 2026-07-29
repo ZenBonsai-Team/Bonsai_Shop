@@ -94,6 +94,19 @@ public class MailService {
         sendHtmlEmailWithRetry(toEmail, "Hóa đơn hoàn tất thanh toán #" + orderCode + " - Bonsai Shop", emailContent, orderCode);
     }
 
+    public void sendInPersonOrderPaidEmail(Order order) {
+        String orderCode = order.getOrderCode();
+        String toEmail = order.getCustomerEmail();
+
+        if (toEmail == null || toEmail.trim().isEmpty()) {
+            log.warn("Không tìm thấy email của khách hàng cho in-person order {}", orderCode);
+            return;
+        }
+
+        String emailContent = buildInPersonPaidTemplate(order);
+        sendHtmlEmailWithRetry(toEmail, "Xác nhận thanh toán tại cửa hàng #" + orderCode + " - Bonsai Shop", emailContent, orderCode);
+    }
+
     public void sendOrderRejectedEmail(Order order, String reason) {
         String orderCode = order.getOrderCode();
         String toEmail = order.getCustomerEmail();
@@ -393,6 +406,51 @@ public class MailService {
                 "        <td style=\"text-align: right; padding: 12px;\">" + total + " VND</td>" +
                 "      </tr>" +
                 "    </table>" +
+                "  </div>" +
+                "  <div style=\"text-align: center; font-size: 12px; color: #a0aec0; border-top: 1px solid #edf2f7; padding-top: 15px;\">" +
+                "    © " + java.time.LocalDate.now().getYear() + " Bonsai Shop. All rights reserved." +
+                "  </div>" +
+                "</div>";
+    }
+
+    private String buildInPersonPaidTemplate(Order order) {
+        String customerName = order.getCustomerName() != null ? order.getCustomerName() : "Quý khách hàng";
+        java.math.BigDecimal total = order.getTotalAmount() != null ? order.getTotalAmount() : java.math.BigDecimal.ZERO;
+        java.math.BigDecimal craneFee = order.getCraneFee() != null ? order.getCraneFee() : java.math.BigDecimal.ZERO;
+        java.math.BigDecimal shippingFee = order.getShippingFee() != null ? order.getShippingFee() : java.math.BigDecimal.ZERO;
+        java.math.BigDecimal treePrice = total.subtract(craneFee).subtract(shippingFee);
+        if (treePrice.compareTo(java.math.BigDecimal.ZERO) < 0) {
+            treePrice = java.math.BigDecimal.ZERO;
+        }
+        String productTable = buildProductTableRows(order);
+
+        return "<div style=\"font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 25px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff;\">" +
+                "  <div style=\"text-align: center; background: linear-gradient(135deg, #276749, #2f855a); color: white; padding: 20px; border-radius: 8px 8px 0 0;\">" +
+                "    <h2 style=\"margin: 0;\">Thanh Toán Tại Cửa Hàng Thành Công</h2>" +
+                "    <p style=\"margin: 5px 0 0 0;\">Mã đơn hàng: #" + order.getOrderCode() + "</p>" +
+                "  </div>" +
+                "  <div style=\"padding: 20px 0; color: #1a202c; line-height: 1.6;\">" +
+                "    <p>Xin chào <strong>" + customerName + "</strong>,</p>" +
+                "    <p>Bonsai Shop xác nhận đơn hàng <strong>#" + order.getOrderCode() + "</strong> đã được thanh toán thành công tại cửa hàng.</p>" +
+                "    <h4 style=\"color: #2d3748; margin: 20px 0 10px 0;\">Danh sách tác phẩm Bonsai đã mua:</h4>" +
+                "    <table style=\"width: 100%; border-collapse: collapse; margin-bottom: 20px;\">" +
+                "      <thead>" +
+                "        <tr style=\"background-color: #edf2f7; color: #4a5568; font-size: 13px;\">" +
+                "          <th style=\"padding: 8px 12px; text-align: left;\">STT</th>" +
+                "          <th style=\"padding: 8px 12px; text-align: left;\">Tên tác phẩm</th>" +
+                "          <th style=\"padding: 8px 12px; text-align: center;\">SL</th>" +
+                "          <th style=\"padding: 8px 12px; text-align: right;\">Đơn giá</th>" +
+                "        </tr>" +
+                "      </thead>" +
+                "      <tbody>" + productTable + "</tbody>" +
+                "    </table>" +
+                "    <table style=\"width: 100%; border-collapse: collapse; margin: 20px 0; border: 1px solid #e2e8f0; border-radius: 8px;\">" +
+                "      <tr style=\"border-bottom: 1px solid #edf2f7;\"><td style=\"padding: 12px;\">Giá cây:</td><td style=\"text-align: right; padding: 12px;\">" + formatVND(treePrice) + "</td></tr>" +
+                "      <tr style=\"border-bottom: 1px solid #edf2f7;\"><td style=\"padding: 12px;\">Phí cẩu hạ cây:</td><td style=\"text-align: right; padding: 12px;\">" + formatVND(craneFee) + "</td></tr>" +
+                "      <tr style=\"border-bottom: 1px solid #edf2f7;\"><td style=\"padding: 12px;\">Phí vận chuyển:</td><td style=\"text-align: right; padding: 12px;\">" + formatVND(shippingFee) + "</td></tr>" +
+                "      <tr style=\"background-color: #f0fff4; font-weight: bold; color: #22543d;\"><td style=\"padding: 12px;\">Tổng tiền đã thanh toán:</td><td style=\"text-align: right; padding: 12px; font-size: 16px;\">" + formatVND(total) + "</td></tr>" +
+                "    </table>" +
+                "    <p>Cảm ơn bạn đã mua hàng trực tiếp tại Bonsai Shop. Vui lòng giữ email này để đối chiếu thông tin đơn hàng khi cần.</p>" +
                 "  </div>" +
                 "  <div style=\"text-align: center; font-size: 12px; color: #a0aec0; border-top: 1px solid #edf2f7; padding-top: 15px;\">" +
                 "    © " + java.time.LocalDate.now().getYear() + " Bonsai Shop. All rights reserved." +

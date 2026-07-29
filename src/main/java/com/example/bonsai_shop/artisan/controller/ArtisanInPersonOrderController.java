@@ -52,7 +52,7 @@ public class ArtisanInPersonOrderController {
                          @RequestParam(defaultValue = ArtisanInPersonOrderService.PAYMENT_METHOD_CASH) String paymentMethod,
                          @RequestParam(defaultValue = "0") BigDecimal craneFee,
                          @RequestParam(defaultValue = "0") BigDecimal shippingFee,
-                         @RequestParam(required = false) String customerEmail,
+                         @RequestParam String customerEmail,
                          @RequestParam(required = false) String notes,
                          RedirectAttributes redirectAttributes) {
         try {
@@ -111,7 +111,7 @@ public class ArtisanInPersonOrderController {
                          @RequestParam(defaultValue = ArtisanInPersonOrderService.PAYMENT_METHOD_CASH) String paymentMethod,
                          @RequestParam(defaultValue = "0") BigDecimal craneFee,
                          @RequestParam(defaultValue = "0") BigDecimal shippingFee,
-                         @RequestParam(required = false) String customerEmail,
+                         @RequestParam String customerEmail,
                          @RequestParam(required = false) String notes,
                          RedirectAttributes redirectAttributes) {
         try {
