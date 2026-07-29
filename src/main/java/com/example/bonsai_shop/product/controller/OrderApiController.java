@@ -75,11 +75,11 @@ public class OrderApiController {
         String email = payload.get("email") != null ? payload.get("email").toString() : null;
         if (email == null || !email.matches("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$")) {
             response.put("success", false);
-            response.put("message", "Địa chỉ Email không hợp lệ!");
+            response.put("message", "Äá»‹a chá»‰ Email khÃ´ng há»£p lá»‡!");
             return ResponseEntity.badRequest().body(response);
         }
 
-        // [2] Parse productIds an toàn — không tin dữ liệu từ client
+        // [2] Parse productIds an toÃ n â€” khÃ´ng tin dá»¯ liá»‡u tá»« client
         List<Integer> productIds = new ArrayList<>();
         if (payload.containsKey("productIds") && payload.get("productIds") instanceof List<?>) {
             try {
@@ -88,15 +88,15 @@ public class OrderApiController {
                         .map(item -> Integer.valueOf(item.toString()))
                         .collect(Collectors.toList());
             } catch (NumberFormatException | ClassCastException e) {
-                log.warn("[sendGuestOtp] productIds format không hợp lệ từ client: {}", e.getMessage());
+                log.warn("[sendGuestOtp] productIds format khÃ´ng há»£p lá»‡ tá»« client: {}", e.getMessage());
                 response.put("success", false);
-                response.put("message", "Định dạng danh sách sản phẩm không hợp lệ.");
+                response.put("message", "Äá»‹nh dáº¡ng danh sÃ¡ch sáº£n pháº©m khÃ´ng há»£p lá»‡.");
                 return ResponseEntity.badRequest().body(response);
             }
         }
 
-        // [3] Pre-validate: load products từ DB + kiểm tra limit + kiểm tra availability
-        // Mục đích: Fail Fast — không gửi OTP khi biết chắc sản phẩm không còn khả dụng
+        // [3] Pre-validate: load products tá»« DB + kiá»ƒm tra limit + kiá»ƒm tra availability
+        // Má»¥c Ä‘Ã­ch: Fail Fast â€” khÃ´ng gá»­i OTP khi biáº¿t cháº¯c sáº£n pháº©m khÃ´ng cÃ²n kháº£ dá»¥ng
         if (!productIds.isEmpty()) {
             List<Product> products = orderService.getProductsByIds(productIds);
 
@@ -108,8 +108,8 @@ public class OrderApiController {
                 return ResponseEntity.badRequest().body(response);
             }
 
-            // UX Validation Layer — kiểm tra trạng thái sản phẩm
-            // LƯU Ý: đây KHÔNG phải data guard. reserveIfAvailable() trong createOrder() mới là lớp bảo vệ cuối cùng.
+            // UX Validation Layer â€” kiá»ƒm tra tráº¡ng thÃ¡i sáº£n pháº©m
+            // LÆ¯U Ã: Ä‘Ã¢y KHÃ”NG pháº£i data guard. reserveIfAvailable() trong createOrder() má»›i lÃ  lá»›p báº£o vá»‡ cuá»‘i cÃ¹ng.
             List<Product> unavailableProducts = orderService.validateProductAvailability(products);
             if (!unavailableProducts.isEmpty()) {
                 List<String> unavailableNames = unavailableProducts.stream()
@@ -126,14 +126,14 @@ public class OrderApiController {
                         .collect(Collectors.toList());
                 response.put("success", false);
                 response.put("errorType", "PRODUCTS_UNAVAILABLE");
-                response.put("message", "Một số tác phẩm không còn khả dụng: " + String.join(", ", unavailableNames)
-                        + ". Vui lòng làm mới giỏ hàng và thử lại.");
+                response.put("message", "Má»™t sá»‘ tÃ¡c pháº©m khÃ´ng cÃ²n kháº£ dá»¥ng: " + String.join(", ", unavailableNames)
+                        + ". Vui lÃ²ng lÃ m má»›i giá» hÃ ng vÃ  thá»­ láº¡i.");
                 response.put("unavailableProducts", unavailableDetails);
                 return ResponseEntity.badRequest().body(response);
             }
         }
 
-        // [4] Rate limit — cooldown 60 giây (không cần Redis ở quy mô hiện tại)
+        // [4] Rate limit â€” cooldown 60 giÃ¢y (khÃ´ng cáº§n Redis á»Ÿ quy mÃ´ hiá»‡n táº¡i)
         PasswordResetOtp latestOtp = registerOtpRepository
                 .findTopByEmailOrderByCreatedAtDesc(email).orElse(null);
         if (latestOtp != null && latestOtp.getCreatedAt().isAfter(LocalDateTime.now().minusSeconds(60))) {
@@ -141,7 +141,7 @@ public class OrderApiController {
                     .between(latestOtp.getCreatedAt(), LocalDateTime.now()).getSeconds();
             long secondsRemaining = 60 - secondsElapsed;
             response.put("success", false);
-            response.put("message", "Vui lòng đợi " + secondsRemaining + " giây trước khi gửi lại mã OTP.");
+            response.put("message", "Vui lÃ²ng Ä‘á»£i " + secondsRemaining + " giÃ¢y trÆ°á»›c khi gá»­i láº¡i mÃ£ OTP.");
             response.put("retryAfterSeconds", secondsRemaining);
             return ResponseEntity.status(429).body(response);
         }
@@ -149,21 +149,21 @@ public class OrderApiController {
         // [5] Generate OTP code
         String otpCode = String.format("%06d", new java.security.SecureRandom().nextInt(1000000));
 
-        // [6] Gửi email TRƯỚC — nếu fail thì không lưu DB (tránh OTP "ma")
+        // [6] Gá»­i email TRÆ¯á»šC â€” náº¿u fail thÃ¬ khÃ´ng lÆ°u DB (trÃ¡nh OTP "ma")
         try {
             emailService.sendGuestOrderOtpOrThrow(email, otpCode);
         } catch (Exception e) {
-            log.error("[sendGuestOtp] Không thể gửi OTP đến {}: {}", email, e.getMessage());
+            log.error("[sendGuestOtp] KhÃ´ng thá»ƒ gá»­i OTP Ä‘áº¿n {}: {}", email, e.getMessage());
             response.put("success", false);
-            response.put("message", "Không thể gửi mã xác nhận. Vui lòng thử lại sau.");
+            response.put("message", "KhÃ´ng thá»ƒ gá»­i mÃ£ xÃ¡c nháº­n. Vui lÃ²ng thá»­ láº¡i sau.");
             return ResponseEntity.internalServerError().body(response);
         }
 
-        // [7] Lưu OTP vào DB SAU KHI email đã gửi thành công
+        // [7] LÆ°u OTP vÃ o DB SAU KHI email Ä‘Ã£ gá»­i thÃ nh cÃ´ng
         try {
             registerOtpRepository.deleteByEmail(email);
         } catch (Exception e) {
-            log.warn("[sendGuestOtp] Không thể xóa OTP cũ cho {}: {}", email, e.getMessage());
+            log.warn("[sendGuestOtp] KhÃ´ng thá»ƒ xÃ³a OTP cÅ© cho {}: {}", email, e.getMessage());
         }
 
         PasswordResetOtp otp = PasswordResetOtp.builder()
@@ -176,7 +176,7 @@ public class OrderApiController {
         registerOtpRepository.save(otp);
 
         response.put("success", true);
-        response.put("message", "Mã OTP xác nhận đơn hàng đã được gửi tới Email: " + email);
+        response.put("message", "MÃ£ OTP xÃ¡c nháº­n Ä‘Æ¡n hÃ ng Ä‘Ã£ Ä‘Æ°á»£c gá»­i tá»›i Email: " + email);
         return ResponseEntity.ok(response);
     }
 
@@ -268,14 +268,14 @@ public class OrderApiController {
         User moderator = SecurityUtils.getCurrentUser(principal, userRepository);
         if (moderator == null) {
             response.put("success", false);
-            response.put("message", "Chưa đăng nhập.");
+            response.put("message", "ChÆ°a Ä‘Äƒng nháº­p.");
             return ResponseEntity.status(401).body(response);
         }
 
         try {
             boolean success = orderService.claimOrder(orderCode, moderator);
             response.put("success", success);
-            response.put("message", "Nhận đơn hàng thành công.");
+            response.put("message", "Nháº­n Ä‘Æ¡n hÃ ng thÃ nh cÃ´ng.");
             return ResponseEntity.ok(response);
         } catch (IllegalStateException e) {
             response.put("success", false);
@@ -283,7 +283,7 @@ public class OrderApiController {
             return ResponseEntity.status(409).body(response);
         } catch (Exception e) {
             response.put("success", false);
-            response.put("message", "Lỗi máy chủ khi xử lý: " + e.getMessage());
+            response.put("message", "Lá»—i mÃ¡y chá»§ khi xá»­ lÃ½: " + e.getMessage());
             return ResponseEntity.internalServerError().body(response);
         }
     }
@@ -297,14 +297,14 @@ public class OrderApiController {
         User moderator = SecurityUtils.getCurrentUser(principal, userRepository);
         if (moderator == null) {
             response.put("success", false);
-            response.put("message", "Chưa đăng nhập.");
+            response.put("message", "ChÆ°a Ä‘Äƒng nháº­p.");
             return ResponseEntity.status(401).body(response);
         }
 
         try {
             boolean success = orderService.unclaimOrder(orderCode, moderator);
             response.put("success", success);
-            response.put("message", "Đã trả đơn hàng về Pool thành công.");
+            response.put("message", "ÄÃ£ tráº£ Ä‘Æ¡n hÃ ng vá» Pool thÃ nh cÃ´ng.");
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             response.put("success", false);
@@ -314,7 +314,7 @@ public class OrderApiController {
     }
 
     /**
-     * API Lấy thống kê số lượng đơn hàng theo các trạng thái (KPIs)
+     * API Láº¥y thá»‘ng kÃª sá»‘ lÆ°á»£ng Ä‘Æ¡n hÃ ng theo cÃ¡c tráº¡ng thÃ¡i (KPIs)
      */
     @GetMapping("/kpis")
     public ResponseEntity<Map<String, Long>> getKPIs() {
@@ -322,7 +322,7 @@ public class OrderApiController {
     }
 
     /**
-     * API Lấy chi tiết một đơn hàng theo mã đơn
+     * API Láº¥y chi tiáº¿t má»™t Ä‘Æ¡n hÃ ng theo mÃ£ Ä‘Æ¡n
      */
     @GetMapping("/{orderCode}")
     public ResponseEntity<OrderResponseDTO> getOrderDetail(@PathVariable String orderCode) {
@@ -334,7 +334,7 @@ public class OrderApiController {
     }
 
     /**
-     * API Duyệt đơn hàng (Cập nhật phí cẩu, phí ship, số tiền đặt cọc nếu có)
+     * API Duyá»‡t Ä‘Æ¡n hÃ ng (Cáº­p nháº­t phÃ­ cáº©u, phÃ­ ship, sá»‘ tiá»n Ä‘áº·t cá»c náº¿u cÃ³)
      */
     @PostMapping("/{orderCode}/verify")
     public ResponseEntity<Map<String, Object>> verifyOrder(
@@ -346,7 +346,7 @@ public class OrderApiController {
         User moderator = SecurityUtils.getCurrentUser(principal, userRepository);
         if (moderator == null) {
             response.put("success", false);
-            response.put("message", "Chưa đăng nhập hệ thống.");
+            response.put("message", "ChÆ°a Ä‘Äƒng nháº­p há»‡ thá»‘ng.");
             return ResponseEntity.status(401).body(response);
         }
 
@@ -359,13 +359,13 @@ public class OrderApiController {
 
         boolean success = orderService.verifyOrder(orderCode, craneFee, shippingFee, depositAmount, moderator);
         response.put("success", success);
-        response.put("message", success ? "Duyệt đơn hàng thành công." : "Duyệt đơn hàng thất bại.");
+        response.put("message", success ? "Duyá»‡t Ä‘Æ¡n hÃ ng thÃ nh cÃ´ng." : "Duyá»‡t Ä‘Æ¡n hÃ ng tháº¥t báº¡i.");
 
         return ResponseEntity.ok(response);
     }
 
     /**
-     * API Moderator xác nhận đã thu đủ tiền phần còn lại (Chuyển Order từ DEPOSITED -> PAID, Product -> SOLD)
+     * API Moderator xÃ¡c nháº­n Ä‘Ã£ thu Ä‘á»§ tiá»n pháº§n cÃ²n láº¡i (Chuyá»ƒn Order tá»« DEPOSITED -> PAID, Product -> SOLD)
      */
     @PostMapping("/{orderCode}/confirm-remaining-payment")
     public ResponseEntity<Map<String, Object>> confirmRemainingPayment(
@@ -377,7 +377,7 @@ public class OrderApiController {
         User moderator = SecurityUtils.getCurrentUser(principal, userRepository);
         if (moderator == null) {
             response.put("success", false);
-            response.put("message", "Chưa đăng nhập hệ thống.");
+            response.put("message", "ChÆ°a Ä‘Äƒng nháº­p há»‡ thá»‘ng.");
             return ResponseEntity.status(401).body(response);
         }
 
@@ -385,7 +385,7 @@ public class OrderApiController {
         try {
             boolean success = orderService.confirmRemainingPayment(orderCode, notes, moderator);
             response.put("success", success);
-            response.put("message", success ? "Xác nhận đã thanh toán đầy đủ thành công!" : "Xác nhận thất bại.");
+            response.put("message", success ? "XÃ¡c nháº­n Ä‘Ã£ thanh toÃ¡n Ä‘áº§y Ä‘á»§ thÃ nh cÃ´ng!" : "XÃ¡c nháº­n tháº¥t báº¡i.");
             return ResponseEntity.ok(response);
         } catch (IllegalArgumentException e) {
             response.put("success", false);
@@ -396,15 +396,15 @@ public class OrderApiController {
             response.put("message", e.getMessage());
             return ResponseEntity.status(409).body(response);
         } catch (Exception e) {
-            log.error("Lỗi khi xác nhận thanh toán đủ đơn {}", orderCode, e);
+            log.error("Lá»—i khi xÃ¡c nháº­n thanh toÃ¡n Ä‘á»§ Ä‘Æ¡n {}", orderCode, e);
             response.put("success", false);
-            response.put("message", "Lỗi hệ thống: " + e.getMessage());
+            response.put("message", "Lá»—i há»‡ thá»‘ng: " + e.getMessage());
             return ResponseEntity.internalServerError().body(response);
         }
     }
 
     /**
-     * API Từ chối duyệt đơn hàng (Có lý do)
+     * API Tá»« chá»‘i duyá»‡t Ä‘Æ¡n hÃ ng (CÃ³ lÃ½ do)
      */
     @PostMapping("/{orderCode}/reject")
     public ResponseEntity<Map<String, Object>> rejectOrder(
@@ -416,7 +416,7 @@ public class OrderApiController {
         User moderator = SecurityUtils.getCurrentUser(principal, userRepository);
         if (moderator == null) {
             response.put("success", false);
-            response.put("message", "Chưa đăng nhập hệ thống.");
+            response.put("message", "ChÆ°a Ä‘Äƒng nháº­p há»‡ thá»‘ng.");
             return ResponseEntity.status(401).body(response);
         }
 
@@ -424,7 +424,7 @@ public class OrderApiController {
         try {
             boolean success = orderService.rejectOrder(orderCode, reason, moderator);
             response.put("success", success);
-            response.put("message", success ? "Từ chối duyệt đơn hàng thành công." : "Thao tác thất bại.");
+            response.put("message", success ? "Tá»« chá»‘i duyá»‡t Ä‘Æ¡n hÃ ng thÃ nh cÃ´ng." : "Thao tÃ¡c tháº¥t báº¡i.");
             return ResponseEntity.ok(response);
         } catch (SecurityException e) {
             response.put("success", false);
@@ -432,7 +432,7 @@ public class OrderApiController {
             return ResponseEntity.status(403).body(response);
         } catch (Exception e) {
             response.put("success", false);
-            response.put("message", "Lỗi xử lý từ chối: " + e.getMessage());
+            response.put("message", "Lá»—i xá»­ lÃ½ tá»« chá»‘i: " + e.getMessage());
             return ResponseEntity.badRequest().body(response);
         }
     }
@@ -455,11 +455,11 @@ public class OrderApiController {
         if (isStaffOrAdmin) {
             response.put("success", false);
             response.put("message",
-                    "Tài khoản quản trị, nhà vườn hoặc kiểm duyệt viên không được phép thực hiện đặt hàng!");
+                    "TÃ i khoáº£n quáº£n trá»‹, nhÃ  vÆ°á»n hoáº·c kiá»ƒm duyá»‡t viÃªn khÃ´ng Ä‘Æ°á»£c phÃ©p thá»±c hiá»‡n Ä‘áº·t hÃ ng!");
             return ResponseEntity.status(403).body(response);
         }
 
-        // Kiểm tra giới hạn đơn hàng (≤ 200 triệu VNĐ) sớm trước khi yêu cầu/xác thực OTP
+        // Kiá»ƒm tra giá»›i háº¡n Ä‘Æ¡n hÃ ng (â‰¤ 200 triá»‡u VNÄ) sá»›m trÆ°á»›c khi yÃªu cáº§u/xÃ¡c thá»±c OTP
         try {
             orderService.validateOrderLimit(dto, customer);
         } catch (IllegalArgumentException e) {
@@ -468,9 +468,9 @@ public class OrderApiController {
             return ResponseEntity.badRequest().body(response);
         }
 
-        // [MỚI] Pre-validate trạng thái sản phẩm cho Logged-in User
-        // Guest: đã được validate trong /send-guest-otp trước khi gửi OTP
-        // LƯU Ý: đây là UX layer — không thay thế được reserveIfAvailable() trong createOrder()
+        // [Má»šI] Pre-validate tráº¡ng thÃ¡i sáº£n pháº©m cho Logged-in User
+        // Guest: Ä‘Ã£ Ä‘Æ°á»£c validate trong /send-guest-otp trÆ°á»›c khi gá»­i OTP
+        // LÆ¯U Ã: Ä‘Ã¢y lÃ  UX layer â€” khÃ´ng thay tháº¿ Ä‘Æ°á»£c reserveIfAvailable() trong createOrder()
         if (customer != null) {
             List<Product> productsToCheck = orderService.loadProductsForOrder(dto, customer);
             List<Product> unavailableProducts = orderService.validateProductAvailability(productsToCheck);
@@ -489,21 +489,21 @@ public class OrderApiController {
                         .collect(Collectors.toList());
                 response.put("success", false);
                 response.put("errorType", "PRODUCTS_UNAVAILABLE");
-                response.put("message", "Một số tác phẩm không còn khả dụng: "
+                response.put("message", "Má»™t sá»‘ tÃ¡c pháº©m khÃ´ng cÃ²n kháº£ dá»¥ng: "
                         + String.join(", ", unavailableNames)
-                        + ". Vui lòng xóa khỏi giỏ hàng và chọn sản phẩm khác.");
+                        + ". Vui lÃ²ng xÃ³a khá»i giá» hÃ ng vÃ  chá»n sáº£n pháº©m khÃ¡c.");
                 response.put("unavailableProducts", unavailableDetails);
                 return ResponseEntity.badRequest().body(response);
             }
         }
 
-        // Xác thực mã OTP nếu là Khách vãng lai (Guest Checkout)
+        // XÃ¡c thá»±c mÃ£ OTP náº¿u lÃ  KhÃ¡ch vÃ£ng lai (Guest Checkout)
         if (customer == null) {
             String otpCode = dto.getOtpCode();
             if (otpCode == null || otpCode.trim().isEmpty()) {
                 response.put("success", false);
                 response.put("requireOtp", true);
-                response.put("message", "Vui lòng nhập mã OTP xác nhận được gửi về Email.");
+                response.put("message", "Vui lÃ²ng nháº­p mÃ£ OTP xÃ¡c nháº­n Ä‘Æ°á»£c gá»­i vá» Email.");
                 return ResponseEntity.badRequest().body(response);
             }
 
@@ -512,7 +512,7 @@ public class OrderApiController {
             if (otp == null || Boolean.TRUE.equals(otp.getIsUsed()) || otp.getExpiredAt().isBefore(LocalDateTime.now())
                     || !otp.getOtpCode().equals(otpCode.trim())) {
                 response.put("success", false);
-                response.put("message", "Mã OTP không hợp lệ hoặc đã hết hạn. Vui lòng lấy mã mới và thử lại!");
+                response.put("message", "MÃ£ OTP khÃ´ng há»£p lá»‡ hoáº·c Ä‘Ã£ háº¿t háº¡n. Vui lÃ²ng láº¥y mÃ£ má»›i vÃ  thá»­ láº¡i!");
                 return ResponseEntity.badRequest().body(response);
             }
 
@@ -532,7 +532,7 @@ public class OrderApiController {
             return ResponseEntity.badRequest().body(response);
         } catch (Exception e) {
             response.put("success", false);
-            response.put("message", "Lỗi tạo đơn hàng: " + e.getMessage());
+            response.put("message", "Lá»—i táº¡o Ä‘Æ¡n hÃ ng: " + e.getMessage());
             return ResponseEntity.internalServerError().body(response);
         }
     }
@@ -675,15 +675,15 @@ public class OrderApiController {
         BigDecimal remainingPaymentAmount;
 
         if (isDepositFlow) {
-            // Thanh toán ngay Nấc 1 = Deposit + Shipping + Crane
+            // Thanh toÃ¡n ngay Náº¥c 1 = Deposit + Shipping + Crane
             immediatePaymentAmount = depositAmount.add(craneFee).add(shippingFee);
-            // Thanh toán khi nhận cây Nấc 2 = Tree Price - Deposit
+            // Thanh toÃ¡n khi nháº­n cÃ¢y Náº¥c 2 = Tree Price - Deposit
             remainingPaymentAmount = treePrice.subtract(depositAmount);
             if (remainingPaymentAmount.compareTo(BigDecimal.ZERO) < 0) {
                 remainingPaymentAmount = BigDecimal.ZERO;
             }
         } else {
-            // Thanh toán toàn bộ 1 lần = Total Amount (Tree Price + Shipping + Crane)
+            // Thanh toÃ¡n toÃ n bá»™ 1 láº§n = Total Amount (Tree Price + Shipping + Crane)
             immediatePaymentAmount = totalAmount;
             remainingPaymentAmount = BigDecimal.ZERO;
         }

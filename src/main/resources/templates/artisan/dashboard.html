@@ -68,6 +68,7 @@
                         <th>Tên sản phẩm</th>
                         <th>Giá bán</th>
                         <th>Trạng thái</th>
+                        <th>Hiển thị</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -87,13 +88,16 @@
                         <td>
                             <span th:if="${prod.productStatus == 'AVAILABLE'}" class="badge bg-success-subtle text-success px-2 py-1 rounded-pill small">Đang bán</span>
                             <span th:if="${prod.productStatus == 'SOLD'}" class="badge bg-secondary-subtle text-secondary px-2 py-1 rounded-pill small">Đã bán</span>
-                            <span th:if="${prod.productStatus == 'HIDDEN'}" class="badge bg-danger-subtle text-danger px-2 py-1 rounded-pill small">Đang ẩn</span>
                             <span th:if="${prod.productStatus == 'RESERVED'}" class="badge bg-info-subtle text-info px-2 py-1 rounded-pill small">Đã được đặt</span>
                             <span th:if="${prod.productStatus == 'DRAFT'}" class="badge bg-warning-subtle text-warning px-2 py-1 rounded-pill small">Bản nháp</span>
                         </td>
+                        <td>
+                            <span th:if="${prod.isVisible != false}" class="badge bg-success-subtle text-success px-2 py-1 rounded-pill small">Đang hiển thị</span>
+                            <span th:if="${prod.isVisible == false}" class="badge bg-danger-subtle text-danger px-2 py-1 rounded-pill small">Đang ẩn</span>
+                        </td>
                     </tr>
                     <tr th:if="${#lists.isEmpty(recentProducts)}">
-                        <td colspan="5" class="text-center py-4 text-muted small">Bạn chưa đăng sản phẩm nào.</td>
+                        <td colspan="6" class="text-center py-4 text-muted small">Bạn chưa đăng sản phẩm nào.</td>
                     </tr>
                     </tbody>
                 </table>

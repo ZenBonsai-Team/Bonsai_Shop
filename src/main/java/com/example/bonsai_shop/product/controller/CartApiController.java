@@ -102,7 +102,7 @@ public class CartApiController {
         int addedCount = 0;
         for (Integer pId : productIds) {
             Product product = productRepository.findById(pId).orElse(null);
-            if (product != null && "AVAILABLE".equalsIgnoreCase(product.getProductStatus())) {
+            if (product != null && "AVAILABLE".equalsIgnoreCase(product.getProductStatus()) && !Boolean.FALSE.equals(product.getIsVisible())) {
                 try {
                     cartService.addToCart(user.getUserId(), pId, user);
                     addedCount++;
