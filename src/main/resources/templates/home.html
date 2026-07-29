@@ -9,6 +9,23 @@
 <!-- HEADER GIỐNG MARKETPLACE -->
 <div th:replace="~{fragments/navbar :: navbar}" th:with="activePage='home'"></div>
 
+<!-- THÔNG BÁO ĐĂNG KÝ THÀNH CÔNG (Toast Notification) -->
+<div th:if="${registrationSuccess}" class="toast-notification toast-success" id="registrationToast">
+    <div class="toast-content">
+        <span class="toast-icon">✅</span>
+        <span class="toast-message" th:text="${registrationSuccess}">Đăng ký tài khoản thành công!</span>
+    </div>
+    <button class="toast-close" onclick="closeToast('registrationToast')">✕</button>
+</div>
+
+<!--&lt;!&ndash; THÔNG BÁO ĐĂNG KÝ THÀNH CÔNG &ndash;&gt;-->
+<!--<div th:if="${registrationSuccess}" class="alert alert-success-banner">-->
+<!--    <div class="alert-content">-->
+<!--        <span class="alert-icon">✅</span>-->
+<!--        <span th:text="${registrationSuccess}">Đăng ký tài khoản thành công!</span>-->
+<!--    </div>-->
+<!--</div>-->
+
 <section class="hero" id="heroSlider">
     <button class="hero-arrow hero-arrow-left" type="button" onclick="prevHeroImage()">
         <i class="fa-solid fa-chevron-left"></i>
@@ -164,5 +181,22 @@
 <div th:replace="~{fragments/footer :: footer}"></div>
 
 <script th:src="@{/js/home.js}"></script>
+<script>
+    function closeToast(id) {
+        const toast = document.getElementById(id);
+        if (toast) {
+            toast.classList.add('hide');
+            setTimeout(() => toast.remove(), 300);
+        }
+    }
+    
+    // Auto-dismiss after 5 seconds
+    window.addEventListener('load', () => {
+        const toast = document.getElementById('registrationToast');
+        if (toast) {
+            setTimeout(() => closeToast('registrationToast'), 5000);
+        }
+    });
+</script>
 </body>
 </html>
