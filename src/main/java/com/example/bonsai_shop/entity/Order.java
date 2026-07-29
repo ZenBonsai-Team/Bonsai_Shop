@@ -54,20 +54,6 @@ public class Order {
     @Column(name = "OrderType", length = 50, nullable = false)
     private String orderType = "ONLINE";
 
-    /**
-     * Phương thức thanh toán khách đã chọn lúc checkout.
-     * Giá trị: "DEPOSIT" hoặc "FULL"
-     *
-     * Dùng bởi Moderator để biết flow nào khi approve:
-     *   - DEPOSIT → form nhập depositAmount + craneFee + shippingFee → tạo Payment DEPOSIT qua VNPay
-     *   - FULL    → form chỉ cần craneFee + shippingFee → tạo Payment FULL_PAYMENT qua VNPay
-     *
-     * Khác với orderType (ONLINE/OFFLINE): paymentMethod là về cách trả tiền,
-     * orderType là về kênh bán hàng.
-     */
-    @Column(name = "PaymentMethod", length = 50)
-    private String paymentMethod;
-
     @Column(name = "CraneFee", precision = 15, scale = 2)
     private BigDecimal craneFee = BigDecimal.ZERO;
 

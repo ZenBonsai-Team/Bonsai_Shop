@@ -16,7 +16,3 @@ ALTER TABLE `payment` ADD INDEX `idx_payment_order_id` (`OrderID`);
 -- 3. Thêm cột Notes để Moderator ghi chú khi xác nhận thanh toán tiền mặt
 ALTER TABLE `payment` ADD COLUMN `Notes` VARCHAR(500) DEFAULT NULL AFTER `PaymentDate`;
 
--- 4. Thêm cột PaymentMethod vào bảng order
---    Lưu phương thức thanh toán khách chọn lúc checkout: DEPOSIT | FULL
---    Cần thiết để Moderator biết flow nào khi approve đơn
-ALTER TABLE `order` ADD COLUMN `PaymentMethod` VARCHAR(50) DEFAULT NULL AFTER `OrderType`;

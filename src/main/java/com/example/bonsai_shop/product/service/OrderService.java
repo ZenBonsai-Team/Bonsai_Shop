@@ -230,8 +230,13 @@ public class OrderService {
         BigDecimal newTotal = treePrice.add(order.getCraneFee()).add(order.getShippingFee());
         order.setTotalAmount(newTotal);
 
-        boolean isDepositFlow = "DEPOSIT".equalsIgnoreCase(order.getPaymentMethod()) 
-                || "COD".equalsIgnoreCase(order.getPaymentMethod());
+        List<Payment> existingPayments = paymentRepository.findByOrderOrderIdOrderByPaymentIdAsc(order.getOrderId());
+        
+        boolean isDepositFlow = existingPayments.stream().anyMatch(p -> 
+                PaymentType.DEPOSIT.name().equalsIgnoreCase(p.getPaymentType()) ||
+                "DEPOSIT".equalsIgnoreCase(p.getPaymentMethod()) ||
+                "COD".equalsIgnoreCase(p.getPaymentMethod())
+        );
 
         if (isDepositFlow) {
             if (depositAmount == null || depositAmount.compareTo(BigDecimal.ZERO) <= 0) {
@@ -245,25 +250,46 @@ public class OrderService {
             // Số tiền cần thanh toán lần 1 = deposit + phí cẩu + phí ship
             BigDecimal amountToPay = depositAmount.add(order.getCraneFee()).add(order.getShippingFee());
 
-            Payment depositPayment = Payment.builder()
-                    .order(order)
-                    .paymentType(PaymentType.DEPOSIT.name())
-                    .paymentMethod(PaymentMethod.VNPAY.name())
-                    .paymentStatus("PENDING")
-                    .amount(amountToPay)
-                    .build();
-            paymentRepository.save(depositPayment);
+            Payment depositPayment = existingPayments.stream()
+                    .filter(p -> PaymentType.DEPOSIT.name().equalsIgnoreCase(p.getPaymentType()))
+                    .findFirst()
+                    .orElse(null);
+
+            if (depositPayment != null) {
+                depositPayment.setAmount(amountToPay);
+                paymentRepository.save(depositPayment);
+            } else {
+                depositPayment = Payment.builder()
+                        .order(order)
+                        .paymentType(PaymentType.DEPOSIT.name())
+                        .paymentMethod(PaymentMethod.VNPAY.name())
+                        .paymentStatus("PENDING")
+                        .amount(amountToPay)
+                        .build();
+                paymentRepository.save(depositPayment);
+            }
         } else {
             // Thanh toán toàn bộ 1 lần = treePrice + phí cẩu + phí ship
             order.setDepositAmount(BigDecimal.ZERO);
-            Payment fullPayment = Payment.builder()
-                    .order(order)
-                    .paymentType(PaymentType.FULL_PAYMENT.name())
-                    .paymentMethod(PaymentMethod.VNPAY.name())
-                    .paymentStatus("PENDING")
-                    .amount(newTotal)
-                    .build();
-            paymentRepository.save(fullPayment);
+
+            Payment fullPayment = existingPayments.stream()
+                    .filter(p -> PaymentType.FULL_PAYMENT.name().equalsIgnoreCase(p.getPaymentType()))
+                    .findFirst()
+                    .orElse(null);
+
+            if (fullPayment != null) {
+                fullPayment.setAmount(newTotal);
+                paymentRepository.save(fullPayment);
+            } else {
+                fullPayment = Payment.builder()
+                        .order(order)
+                        .paymentType(PaymentType.FULL_PAYMENT.name())
+                        .paymentMethod(PaymentMethod.VNPAY.name())
+                        .paymentStatus("PENDING")
+                        .amount(newTotal)
+                        .build();
+                paymentRepository.save(fullPayment);
+            }
         }
 
         order.setOrderStatus("APPROVED");
@@ -471,9 +497,6 @@ public class OrderService {
                 .map(Product::getPrice)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        // Chuẩn hóa paymentMethod ("DEPOSIT" hoặc "FULL")
-        String pMethod = ("DEPOSIT".equalsIgnoreCase(dto.getPaymentMethod()) || "COD".equalsIgnoreCase(dto.getPaymentMethod())) ? "DEPOSIT" : "FULL";
-
         Order order = Order.builder()
                 .customer(customer)
                 .orderCode(orderCode)
@@ -486,7 +509,6 @@ public class OrderService {
                 .depositAmount(BigDecimal.ZERO)
                 .orderStatus("PENDING")
                 .orderType("ONLINE")
-                .paymentMethod(pMethod)
                 .build();
 
         List<OrderDetail> details = productsToBuy.stream().map(prod -> {
@@ -504,6 +526,21 @@ public class OrderService {
 
         order.setOrderDetails(details);
         Order savedOrder = orderRepository.save(order);
+
+        // Khởi tạo bản ghi Payment PENDING ban đầu duy nhất theo 1-N Model
+        String rawMethod = dto.getPaymentMethod() != null ? dto.getPaymentMethod() : "COD";
+        String pType = ("DEPOSIT".equalsIgnoreCase(rawMethod) || "COD".equalsIgnoreCase(rawMethod)) 
+                ? PaymentType.DEPOSIT.name() 
+                : PaymentType.FULL_PAYMENT.name();
+
+        Payment initialPayment = Payment.builder()
+                .order(savedOrder)
+                .paymentType(pType)
+                .paymentMethod(rawMethod)
+                .paymentStatus("PENDING")
+                .amount(totalAmount)
+                .build();
+        paymentRepository.save(initialPayment);
 
         if (customer != null) {
             cartService.clearCart(customer.getUserId());

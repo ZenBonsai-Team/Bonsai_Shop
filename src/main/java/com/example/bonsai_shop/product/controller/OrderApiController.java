@@ -683,21 +683,37 @@ public class OrderApiController {
             if (treePrice.compareTo(BigDecimal.ZERO) < 0) treePrice = BigDecimal.ZERO;
         }
 
-        boolean isDepositFlow = "DEPOSIT".equalsIgnoreCase(order.getPaymentMethod()) || "COD".equalsIgnoreCase(order.getPaymentMethod());
+        String resolvedPaymentMethod = null;
+        boolean isDepositFlow = false;
+
+        if (order.getPayments() != null && !order.getPayments().isEmpty()) {
+            resolvedPaymentMethod = order.getPayments().get(0).getPaymentMethod();
+            isDepositFlow = order.getPayments().stream().anyMatch(p -> 
+                "DEPOSIT".equalsIgnoreCase(p.getPaymentType()) ||
+                "DEPOSIT".equalsIgnoreCase(p.getPaymentMethod()) ||
+                "COD".equalsIgnoreCase(p.getPaymentMethod())
+            );
+        } else {
+            isDepositFlow = depositAmount.compareTo(BigDecimal.ZERO) > 0;
+        }
+
+        if (resolvedPaymentMethod == null) {
+            resolvedPaymentMethod = isDepositFlow ? "COD" : "VNPAY";
+        }
 
         BigDecimal immediatePaymentAmount;
         BigDecimal remainingPaymentAmount;
 
         if (isDepositFlow) {
-            // Thanh toÃ¡n ngay Náº¥c 1 = Deposit + Shipping + Crane
+            // Thanh toán ngay Nấc 1 = Deposit + Shipping + Crane
             immediatePaymentAmount = depositAmount.add(craneFee).add(shippingFee);
-            // Thanh toÃ¡n khi nháº­n cÃ¢y Náº¥c 2 = Tree Price - Deposit
+            // Thanh toán khi nhận cây Nấc 2 = Tree Price - Deposit
             remainingPaymentAmount = treePrice.subtract(depositAmount);
             if (remainingPaymentAmount.compareTo(BigDecimal.ZERO) < 0) {
                 remainingPaymentAmount = BigDecimal.ZERO;
             }
         } else {
-            // Thanh toÃ¡n toÃ n bá»™ 1 láº§n = Total Amount (Tree Price + Shipping + Crane)
+            // Thanh toán toàn bộ 1 lần = Total Amount (Tree Price + Shipping + Crane)
             immediatePaymentAmount = totalAmount;
             remainingPaymentAmount = BigDecimal.ZERO;
         }
@@ -722,7 +738,7 @@ public class OrderApiController {
                 .orderDate(order.getOrderDate())
                 .orderStatus(order.getOrderStatus())
                 .orderType(order.getOrderType())
-                .paymentMethod(order.getPaymentMethod())
+                .paymentMethod(resolvedPaymentMethod)
                 .craneFee(craneFee)
                 .shippingFee(shippingFee)
                 .notes(order.getNotes())

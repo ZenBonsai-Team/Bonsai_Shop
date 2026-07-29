@@ -103,7 +103,6 @@ public class ArtisanInPersonOrderService {
                 .shippingFee(normalizedShippingFee)
                 .orderStatus(STATUS_PENDING_PAYMENT)
                 .orderType(ORDER_TYPE_IN_PERSON)
-                .paymentMethod(normalizedPaymentMethod)
                 .notes(blankToNull(notes))
                 .build();
 

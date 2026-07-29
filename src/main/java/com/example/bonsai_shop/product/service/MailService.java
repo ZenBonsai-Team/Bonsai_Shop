@@ -212,7 +212,11 @@ public class MailService {
             if (treePrice.compareTo(java.math.BigDecimal.ZERO) < 0) treePrice = java.math.BigDecimal.ZERO;
         }
 
-        boolean isDeposit = "DEPOSIT".equalsIgnoreCase(order.getPaymentMethod()) || "COD".equalsIgnoreCase(order.getPaymentMethod());
+        boolean isDeposit = (depositAmount.compareTo(java.math.BigDecimal.ZERO) > 0)
+                || (order.getPayments() != null && order.getPayments().stream().anyMatch(p -> 
+                        "DEPOSIT".equalsIgnoreCase(p.getPaymentType()) ||
+                        "DEPOSIT".equalsIgnoreCase(p.getPaymentMethod()) ||
+                        "COD".equalsIgnoreCase(p.getPaymentMethod())));
 
         java.math.BigDecimal immediatePayment = isDeposit ? depositAmount.add(craneFee).add(shippingFee) : totalAmount;
         java.math.BigDecimal remainingPayment = isDeposit ? treePrice.subtract(depositAmount) : java.math.BigDecimal.ZERO;
