@@ -23,7 +23,7 @@
         <header class="page-header">
             <div>
                 <h1>Đơn tại vườn</h1>
-                <p>Nghệ nhân tạo đơn khách mua trực tiếp tại vườn, giữ cây, xác nhận thanh toán và hoàn tất.</p>
+                <p>Nghệ nhân tạo đơn khách mua trực tiếp tại vườn, giữ cây, xác nhận thanh toán và đánh dấu đã thanh toán.</p>
             </div>
             <a class="btn secondary" th:href="@{/artisan/products}">Sản phẩm của tôi</a>
         </header>
@@ -145,7 +145,7 @@
                 <div class="product-toolbar-top">
                     <div>
                         <h2 style="font-size:1.1rem;font-weight:700;color:#1C3322;margin:0 0 2px;">Danh sách Đơn tại vườn</h2>
-                        <p style="font-size:0.78rem;color:#536257;margin:0;">Luồng: Chờ nhận tiền → Hoàn tất → Đã bán</p>
+                        <p style="font-size:0.78rem;color:#536257;margin:0;">Luồng: Chờ nhận tiền → Đã thanh toán → Đã bán</p>
                     </div>
                 </div>
                 <div class="filter-tabs product-filter-chips" style="margin:0;">
@@ -156,8 +156,8 @@
                        th:classappend="${selectedStatus == pendingPaymentStatus} ? ' active'"
                        th:href="@{/artisan/in-person-order(status=${pendingPaymentStatus})}">Chờ nhận tiền</a>
                     <a class="tab-btn text-decoration-none"
-                       th:classappend="${selectedStatus == completedStatus} ? ' active'"
-                       th:href="@{/artisan/in-person-order(status=${completedStatus})}">Hoàn tất</a>
+                       th:classappend="${selectedStatus == paidStatus} ? ' active'"
+                       th:href="@{/artisan/in-person-order(status=${paidStatus})}">Đã thanh toán</a>
                     <a class="tab-btn text-decoration-none"
                        th:classappend="${selectedStatus == cancelledStatus} ? ' active'"
                        th:href="@{/artisan/in-person-order(status=${cancelledStatus})}">Đã hủy</a>
@@ -189,9 +189,9 @@
                         <td th:text="${#temporals.format(order.orderDate, 'dd/MM/yyyy HH:mm')}">18/07/2026</td>
                         <td>
                             <span th:if="${order.orderStatus == pendingPaymentStatus}" class="status-badge pending">Chờ nhận tiền</span>
-                            <span th:if="${order.orderStatus == completedStatus}" class="status-badge approved">Hoàn tất</span>
+                            <span th:if="${order.orderStatus == paidStatus}" class="status-badge approved">Đã thanh toán</span>
                             <span th:if="${order.orderStatus == cancelledStatus}" class="status-badge cancelled">Đã hủy</span>
-                            <span th:if="${order.orderStatus != pendingPaymentStatus && order.orderStatus != completedStatus && order.orderStatus != cancelledStatus}" class="status-badge cancelled" th:text="${order.orderStatus}"></span>
+                            <span th:if="${order.orderStatus != pendingPaymentStatus && order.orderStatus != paidStatus && order.orderStatus != cancelledStatus}" class="status-badge cancelled" th:text="${order.orderStatus}"></span>
                         </td>
                         <td>
                             <button type="button"
@@ -436,8 +436,8 @@
             <div class="artisan-action-warning">
                 <i class="fa-solid fa-circle-check"></i>
                 <div>
-                    <strong>Order sẽ được hoàn tất</strong>
-                    <p>Payment sẽ chuyển sang SUCCESS, order chuyển sang COMPLETED và sản phẩm sẽ được đánh dấu SOLD.</p>
+                    <strong>Order sẽ được đánh dấu đã thanh toán</strong>
+                    <p>Payment sẽ chuyển sang SUCCESS, order chuyển sang PAID và sản phẩm sẽ được đánh dấu SOLD.</p>
                 </div>
             </div>
         </div>

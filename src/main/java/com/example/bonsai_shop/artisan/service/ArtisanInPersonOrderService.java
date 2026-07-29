@@ -25,10 +25,10 @@ import java.util.concurrent.ThreadLocalRandom;
 
 @Service
 @RequiredArgsConstructor
-public class ArtisanWalkInOrderService {
+public class ArtisanInPersonOrderService {
 
     public static final String STATUS_PENDING_PAYMENT = "PENDING_PAYMENT";
-    public static final String STATUS_COMPLETED = "COMPLETED";
+    public static final String STATUS_PAID = "PAID";
     public static final String STATUS_CANCELLED = "CANCELLED";
     public static final String ORDER_TYPE_IN_PERSON = "IN_PERSON";
     public static final String ORDER_TYPE_ONLINE = "ONLINE";
@@ -53,7 +53,7 @@ public class ArtisanWalkInOrderService {
         );
     }
 
-    public Page<Order> getWalkInOrders(String artisanEmail, String status, int page, int size) {
+    public Page<Order> getInPersonOrders(String artisanEmail, String status, int page, int size) {
         Integer artisanUserId = artisanProductService.getArtisanUser(artisanEmail).getUserId();
         Pageable pageable = PageRequest.of(Math.max(page, 0), Math.max(size, 1));
         return orderRepository.findByArtisanUserIdAndTypeAndStatus(
@@ -65,7 +65,7 @@ public class ArtisanWalkInOrderService {
     }
 
     @Transactional
-    public Order createWalkInOrder(String artisanEmail,
+    public Order createInPersonOrder(String artisanEmail,
                                    Integer productId,
                                    String customerName,
                                    String customerPhone,
@@ -134,7 +134,7 @@ public class ArtisanWalkInOrderService {
     }
 
     @Transactional
-    public Order cancelWalkInOrder(String artisanEmail, Integer orderId, String reason) {
+    public Order cancelInPersonOrder(String artisanEmail, Integer orderId, String reason) {
         User artisanUser = artisanProductService.getArtisanUser(artisanEmail);
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("KhÃ´ng tÃ¬m tháº¥y in-person order."));
@@ -167,7 +167,7 @@ public class ArtisanWalkInOrderService {
     }
 
     @Transactional
-    public Order updateWalkInOrder(String artisanEmail,
+    public Order updateInPersonOrder(String artisanEmail,
                                    Integer orderId,
                                    String customerName,
                                    String customerPhone,
@@ -249,11 +249,11 @@ public class ArtisanWalkInOrderService {
         payment.setPaymentDate(LocalDateTime.now());
         paymentRepository.save(payment);
 
-        order.setOrderStatus(STATUS_COMPLETED);
+        order.setOrderStatus(STATUS_PAID);
         product.setProductStatus(PRODUCT_SOLD);
         productRepository.save(product);
         Order savedOrder = orderRepository.save(order);
-        log(savedOrder, artisanUser, "IN_PERSON_PAYMENT_CONFIRMED", oldStatus, STATUS_COMPLETED);
+        log(savedOrder, artisanUser, "IN_PERSON_PAYMENT_CONFIRMED", oldStatus, STATUS_PAID);
         return savedOrder;
     }
 

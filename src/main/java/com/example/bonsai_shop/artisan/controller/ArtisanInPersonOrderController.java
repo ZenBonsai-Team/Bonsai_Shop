@@ -1,6 +1,6 @@
 package com.example.bonsai_shop.artisan.controller;
 
-import com.example.bonsai_shop.artisan.service.ArtisanWalkInOrderService;
+import com.example.bonsai_shop.artisan.service.ArtisanInPersonOrderService;
 import com.example.bonsai_shop.entity.Order;
 import com.example.bonsai_shop.entity.Product;
 import lombok.RequiredArgsConstructor;
@@ -22,24 +22,24 @@ import java.util.List;
 @Controller
 @RequestMapping("/artisan/in-person-order")
 @RequiredArgsConstructor
-public class ArtisanWalkInOrderController {
+public class ArtisanInPersonOrderController {
 
-    private final ArtisanWalkInOrderService walkInOrderService;
+    private final ArtisanInPersonOrderService inPersonOrderService;
 
     @GetMapping
     public String index(@AuthenticationPrincipal UserDetails userDetails,
                         @RequestParam(defaultValue = "ALL") String status,
                         @RequestParam(defaultValue = "0") int page,
                         Model model) {
-        List<Product> availableProducts = walkInOrderService.getAvailableProducts(userDetails.getUsername());
-        Page<Order> orders = walkInOrderService.getWalkInOrders(userDetails.getUsername(), status, page, 10);
+        List<Product> availableProducts = inPersonOrderService.getAvailableProducts(userDetails.getUsername());
+        Page<Order> orders = inPersonOrderService.getInPersonOrders(userDetails.getUsername(), status, page, 10);
 
         model.addAttribute("availableProducts", availableProducts);
         model.addAttribute("orders", orders);
         model.addAttribute("selectedStatus", status);
-        model.addAttribute("pendingPaymentStatus", ArtisanWalkInOrderService.STATUS_PENDING_PAYMENT);
-        model.addAttribute("completedStatus", ArtisanWalkInOrderService.STATUS_COMPLETED);
-        model.addAttribute("cancelledStatus", ArtisanWalkInOrderService.STATUS_CANCELLED);
+        model.addAttribute("pendingPaymentStatus", ArtisanInPersonOrderService.STATUS_PENDING_PAYMENT);
+        model.addAttribute("paidStatus", ArtisanInPersonOrderService.STATUS_PAID);
+        model.addAttribute("cancelledStatus", ArtisanInPersonOrderService.STATUS_CANCELLED);
         return "artisan/in-person-order";
     }
 
@@ -49,14 +49,14 @@ public class ArtisanWalkInOrderController {
                          @RequestParam String customerName,
                          @RequestParam String customerPhone,
                          @RequestParam String shippingAddress,
-                         @RequestParam(defaultValue = ArtisanWalkInOrderService.PAYMENT_METHOD_CASH) String paymentMethod,
+                         @RequestParam(defaultValue = ArtisanInPersonOrderService.PAYMENT_METHOD_CASH) String paymentMethod,
                          @RequestParam(defaultValue = "0") BigDecimal craneFee,
                          @RequestParam(defaultValue = "0") BigDecimal shippingFee,
                          @RequestParam(required = false) String customerEmail,
                          @RequestParam(required = false) String notes,
                          RedirectAttributes redirectAttributes) {
         try {
-            Order order = walkInOrderService.createWalkInOrder(
+            Order order = inPersonOrderService.createInPersonOrder(
                     userDetails.getUsername(),
                     productId,
                     customerName,
@@ -80,8 +80,8 @@ public class ArtisanWalkInOrderController {
                                  @PathVariable Integer orderId,
                                  RedirectAttributes redirectAttributes) {
         try {
-            Order order = walkInOrderService.confirmPayment(userDetails.getUsername(), orderId);
-            redirectAttributes.addFlashAttribute("success", "Đã xác nhận nhận tiền, hoàn tất order " + order.getOrderCode() + " và chuyển sản phẩm sang SOLD.");
+            Order order = inPersonOrderService.confirmPayment(userDetails.getUsername(), orderId);
+            redirectAttributes.addFlashAttribute("success", "Đã xác nhận nhận tiền, order " + order.getOrderCode() + " đã chuyển sang PAID và sản phẩm sang SOLD.");
         } catch (RuntimeException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
@@ -94,7 +94,7 @@ public class ArtisanWalkInOrderController {
                          @RequestParam(required = false) String reason,
                          RedirectAttributes redirectAttributes) {
         try {
-            Order order = walkInOrderService.cancelWalkInOrder(userDetails.getUsername(), orderId, reason);
+            Order order = inPersonOrderService.cancelInPersonOrder(userDetails.getUsername(), orderId, reason);
             redirectAttributes.addFlashAttribute("success", "Đã hủy In-person Order " + order.getOrderCode() + " và mở bán lại sản phẩm.");
         } catch (RuntimeException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
@@ -108,14 +108,14 @@ public class ArtisanWalkInOrderController {
                          @RequestParam String customerName,
                          @RequestParam String customerPhone,
                          @RequestParam String shippingAddress,
-                         @RequestParam(defaultValue = ArtisanWalkInOrderService.PAYMENT_METHOD_CASH) String paymentMethod,
+                         @RequestParam(defaultValue = ArtisanInPersonOrderService.PAYMENT_METHOD_CASH) String paymentMethod,
                          @RequestParam(defaultValue = "0") BigDecimal craneFee,
                          @RequestParam(defaultValue = "0") BigDecimal shippingFee,
                          @RequestParam(required = false) String customerEmail,
                          @RequestParam(required = false) String notes,
                          RedirectAttributes redirectAttributes) {
         try {
-            Order order = walkInOrderService.updateWalkInOrder(
+            Order order = inPersonOrderService.updateInPersonOrder(
                     userDetails.getUsername(),
                     orderId,
                     customerName,
