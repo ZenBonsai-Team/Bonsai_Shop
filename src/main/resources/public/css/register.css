@@ -45,9 +45,16 @@ body {
 }
 
 .register-header h1 {
-    font-size: 38px;
-    font-weight: 400;
-    margin-bottom: 12px;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 48px;
+    font-weight: 600;
+    line-height: 1.2;
+    letter-spacing: 0.5px;
+    color: #06210f;
+    margin-bottom: 16px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .register-header p {
