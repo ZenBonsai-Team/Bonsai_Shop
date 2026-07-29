@@ -414,3 +414,43 @@ body {
     .login-title { font-size: 26px; }
     body { overflow-y: auto; }
 }
+
+/* ================================================ */
+/* LANGUAGE SWITCHER IN LOGIN */
+/* ================================================ */
+.login-lang-switch {
+    position: absolute;
+    top: 24px;
+    right: 32px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: #4a5568;
+    text-transform: uppercase;
+}
+
+.login-lang-switch a {
+    color: #4a5568;
+    text-decoration: none;
+    cursor: pointer;
+    transition: opacity 0.2s, color 0.2s;
+}
+
+.login-lang-switch a:hover {
+    color: #2d6a4f;
+    text-decoration: underline;
+    opacity: 1;
+}
+
+.login-lang-switch a.active {
+    color: #2d6a4f;
+    text-decoration: underline;
+    opacity: 1;
+}
+
+.login-lang-switch a:not(.active) {
+    opacity: 0.65;
+}

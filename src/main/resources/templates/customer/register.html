@@ -2,7 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org" lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Đăng ký - ZenBonsai</title>
+    <title>Đăng ký - BSMS</title>
 
     <link rel="stylesheet" th:href="@{/css/register.css}">
     <link rel="stylesheet"
@@ -20,12 +20,9 @@
     <div class="register-card">
 
         <div class="register-header">
-            <div class="leaf-icon">
-                <i class="fa-solid fa-leaf"></i>
-            </div>
-
-            <h1>Tham Gia Cộng Đồng BonSai</h1>
-            <p>Nơi nghệ thuật và sự kiên nhẫn hội tụ.</p>
+            <img th:src="@{/images/logo.png}" alt="Logo" class="register-logo" style="width: 80px; height: 80px; border-radius: 16px; object-fit: contain; margin-bottom: 14px; box-shadow: 0 4px 12px rgba(0,0,0,0.08);">
+            <h1 th:text="#{auth.register.heading}">BSMS</h1>
+            <p th:text="#{auth.register.subheading}">Nơi nghệ thuật và đam mê hội tụ.</p>
         </div>
 
         <div th:if="${error}" th:text="${error}" class="alert alert-error"></div>
@@ -37,12 +34,12 @@
             <div class="form-group">
                 <label>
                     <i class="fa-regular fa-user"></i>
-                    Họ tên
+                    <span th:text="#{auth.register.fullname}">Họ tên</span>
                 </label>
                 <input type="text"
                        id="fullName"
                        name="fullName"
-                       placeholder="Nhập họ và tên của bạn"
+                       th:placeholder="#{auth.register.fullname}"
                        th:value="${formData?.fullName ?: ''}"
                        required>
                 <div class="error-msg" id="fullNameError"></div>
@@ -51,12 +48,12 @@
             <div class="form-group">
                 <label>
                     <i class="fa-regular fa-address-card"></i>
-                    Tên người dùng
+                    <span th:text="#{auth.register.username}">Tên đăng nhập</span>
                 </label>
                 <input type="text"
                        id="username"
                        name="username"
-                       placeholder="Nhập tên người dùng"
+                       th:placeholder="#{auth.register.username}"
                        th:value="${formData?.username ?: ''}"
                        required>
                 <div class="error-msg" id="usernameError"></div>
@@ -65,12 +62,12 @@
             <div class="form-group">
                 <label>
                     <i class="fa-regular fa-envelope"></i>
-                    Email
+                    <span th:text="#{auth.register.email}">Email</span>
                 </label>
                 <input type="email"
                        id="email"
                        name="email"
-                       placeholder="Nhập email của bạn"
+                       th:placeholder="#{auth.register.email}"
                        th:value="${formData?.email ?: ''}"
                        required>
                 <div class="error-msg" id="emailError"></div>
@@ -79,14 +76,14 @@
             <div class="form-group">
                 <label>
                     <i class="fa-solid fa-lock"></i>
-                    Mật khẩu
+                    <span th:text="#{auth.register.password}">Mật khẩu</span>
                 </label>
 
                 <div class="password-wrapper">
                     <input type="password"
                            id="password"
                            name="password"
-                           placeholder="Nhập mật khẩu"
+                           th:placeholder="#{auth.register.password}"
                            required>
 
                     <span class="toggle-password" id="togglePassword">
@@ -103,40 +100,44 @@
             <div class="form-group">
                 <label>
                     <i class="fa-solid fa-phone"></i>
-                    Số điện thoại
-                    <span>(Không bắt buộc)</span>
+                    <span th:text="#{auth.register.phone}">Số điện thoại</span>
                 </label>
                 <input type="text"
                        id="phone"
                        name="phone"
-                       placeholder="Nhập số điện thoại"
+                       th:placeholder="#{auth.register.phone}"
                        th:value="${formData?.phone ?: ''}">
                 <div class="error-msg" id="phoneError"></div>
             </div>
 
             <p class="terms">
-                Bằng cách đăng ký, bạn đồng ý với
-                <a href="#">Điều khoản dịch vụ</a>
-                và
-                <a href="#">Chính sách bảo mật</a>
-                của ZenBonsai.
+                <span th:text="#{auth.register.terms_prefix}">Bằng cách đăng ký, bạn đồng ý với</span>
+                <a th:href="@{/terms}" th:text="#{auth.register.terms_link}">Điều khoản dịch vụ</a>
+                <span th:text="#{auth.register.terms_and}">và</span>
+                <a th:href="@{/privacy}" th:text="#{auth.register.privacy_link}">Chính sách bảo mật</a>
+                <span th:text="#{auth.register.terms_suffix}">của BSMS.</span>
             </p>
 
-            <button type="submit" class="btn-register">
+            <button type="submit" class="btn-register" th:text="#{auth.register.submit}">
                 Đăng ký ngay
             </button>
         </form>
 
         <div class="login-link">
-            Đã có tài khoản?
-            <a th:href="@{/login}">Đăng nhập ngay</a>
+            <span th:text="#{auth.register.has_account}">Đã có tài khoản?</span>
+            <a th:href="@{/login}" th:text="#{auth.register.login_link}">Đăng nhập ngay</a>
         </div>
 
     </div>
 
     <div class="bottom-tools">
-        <span><i class="fa-solid fa-globe"></i> VI / EN</span>
-        <span>Hỗ trợ</span>
+        <span class="lang-switcher">
+            <i class="fa-solid fa-globe"></i>
+            <a th:href="@{/register(lang='vi')}" th:classappend="${#locale.language == 'vi' or #locale.language == 'vi_VN'} ? 'active' : ''" style="color: white; text-decoration: none; cursor: pointer; font-weight: bold;">VI</a>
+            <span style="opacity: 0.5;">/</span>
+            <a th:href="@{/register(lang='en')}" th:classappend="${#locale.language == 'en'} ? 'active' : ''" style="color: white; text-decoration: none; cursor: pointer; font-weight: bold;">EN</a>
+        </span>
+        <a th:href="@{/contact}" th:text="#{auth.register.support}" style="color: white; text-decoration: none;">Hỗ trợ</a>
     </div>
 
 </div>

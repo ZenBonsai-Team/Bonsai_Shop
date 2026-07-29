@@ -230,6 +230,28 @@ body {
     gap: 8px;
 }
 
+.bottom-tools a {
+    color: white;
+    text-decoration: none;
+    cursor: pointer;
+    transition: opacity 0.2s, text-decoration 0.2s;
+}
+
+.bottom-tools a:hover {
+    text-decoration: underline;
+    opacity: 1;
+}
+
+.bottom-tools a.active {
+    text-decoration: underline;
+    opacity: 1;
+    font-weight: 800;
+}
+
+.bottom-tools a:not(.active) {
+    opacity: 0.65;
+}
+
 @media (max-width: 650px) {
     .register-card {
         width: 100%;
