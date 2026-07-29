@@ -101,6 +101,11 @@
             <div class="gallery-main-wrap">
                 <img id="mainGalleryImg" th:src="${product.firstImageUrl != null ? product.firstImageUrl : 'https://images.unsplash.com/photo-1599599810769-bcde5a160d32?auto=format&fit=crop&q=80&w=800'}" th:alt="${product.productName != null ? product.productName : 'Bonsai'}" class="gallery-main-img">
             </div>
+            <p id="mainGalleryCaption"
+               class="product-image-caption"
+               th:with="primaryMedia=${product.primaryMedia}"
+               th:classappend="${primaryMedia == null || primaryMedia.caption == null || primaryMedia.caption.isBlank()} ? ' d-none'"
+               th:text="${primaryMedia != null && primaryMedia.caption != null ? primaryMedia.caption : ''}">Chú thích ảnh</p>
 
             <!-- Thumbnail Selector Strip -->
             <div class="gallery-thumbnails-shell">
@@ -116,6 +121,7 @@
                              th:classappend="${media != null && media.mediaUrl != null && media.mediaUrl == product.firstImageUrl ? 'active' : ''}"
                              class="gallery-thumb-item"
                              th:data-image-url="${media != null ? media.mediaUrl : ''}"
+                             th:data-caption="${media != null && media.caption != null ? media.caption : ''}"
                              onclick="switchMainImage(this, this.getAttribute('data-image-url'))">
                             <img th:src="${media != null ? media.mediaUrl : ''}" th:alt="${product.productName != null ? product.productName : 'Bonsai'}">
                             <span class="gallery-thumb-label" th:text="${slot.label}">Overview</span>
@@ -720,6 +726,13 @@
         const mainImg = document.getElementById('mainGalleryImg');
         if (mainImg) {
             mainImg.src = imageUrl;
+        }
+
+        const caption = thumbElement ? (thumbElement.getAttribute('data-caption') || '').trim() : '';
+        const captionElement = document.getElementById('mainGalleryCaption');
+        if (captionElement) {
+            captionElement.textContent = caption;
+            captionElement.classList.toggle('d-none', !caption);
         }
 
         // Toggle active border styling on thumbnail list items

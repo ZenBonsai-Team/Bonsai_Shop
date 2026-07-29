@@ -217,6 +217,33 @@ textarea {
     margin: 0;
 }
 
+.media-order-stepper {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 4px;
+}
+
+.media-order-btn {
+    width: 34px;
+    height: 34px;
+    border: 1px solid #d9dfd8;
+    border-radius: 8px;
+    background: #f7f5ef;
+    color: #1C3322;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.media-order-btn:hover:not(:disabled) {
+    background: #e9efe7;
+}
+
+.media-order-input {
+    width: 64px;
+    text-align: center;
+}
+
 .media-card > .actions {
     margin-top: auto;
 }

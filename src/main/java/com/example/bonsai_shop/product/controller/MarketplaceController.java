@@ -30,8 +30,6 @@ public class MarketplaceController {
             new ImageSlotDefinition("BACK", "Mặt sau"),
             new ImageSlotDefinition("LEFT", "Bên trái"),
             new ImageSlotDefinition("RIGHT", "Bên phải"),
-            new ImageSlotDefinition("TOP", "Từ trên"),
-            new ImageSlotDefinition("ROOT", "Bộ rễ"),
             new ImageSlotDefinition("TRUNK", "Thân cây"),
             new ImageSlotDefinition("BRANCH", "Cành"),
             new ImageSlotDefinition("POT", "Chậu"),

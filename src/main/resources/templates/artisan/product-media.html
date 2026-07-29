@@ -47,12 +47,10 @@
                 <option value="BACK">BACK - Mặt sau</option>
                 <option value="LEFT">LEFT - Bên trái</option>
                 <option value="RIGHT">RIGHT - Bên phải</option>
-                <option value="TOP">TOP - Từ trên xuống</option>
                 <option value="DETAIL">DETAIL - Cận cảnh chi tiết</option>
-                <option value="ROOT">ROOT - Cận cảnh bộ rễ</option>
                 <option value="TRUNK">TRUNK - Cận cảnh thân cây</option>
                 <option value="BRANCH">BRANCH - Cận cảnh cành</option>
-                <option value="POT">POT - Cận cảnh chậu bonsai</option>
+                <option value="POT">POT - Mặt bệ</option>
                 <option value="OVERVIEW">OVERVIEW - Tổng quan</option>
             </select>
         </label>
@@ -69,7 +67,7 @@
 
     <form id="mediaOrderForm" method="post" th:action="@{/artisan/products/{id}/media/order(id=${product.productId})}"></form>
     <div class="actions media-toolbar" th:if="${isEditable && !#lists.isEmpty(mediaList)}">
-        <button type="submit" form="mediaOrderForm">Lưu thứ tự hiển thị</button>
+        <button type="submit" form="mediaOrderForm">Lưu thứ tự & caption</button>
     </div>
 
     <section class="media-grid">
@@ -83,10 +81,16 @@
                 <strong th:text="${media.mediaType}"></strong>
                 <span th:if="${media.slotType != null}" th:text="${'Góc chụp: ' + media.slotType}"></span>
                 <span th:if="${media.slotType == null}">Video</span>
-                <span th:if="${media.caption != null && !media.caption.isBlank()}" th:text="${media.caption}"></span>
+                <label>Caption
+                    <input type="text" name="captions" th:value="${media.caption}" th:disabled="${!isEditable}" form="mediaOrderForm" placeholder="Nhập chú thích ảnh/video">
+                </label>
                 <label>Thứ tự hiển thị
                     <input type="hidden" name="mediaIds" th:value="${media.mediaId}" form="mediaOrderForm">
-                    <input type="number" name="displayOrders" min="0" th:value="${media.displayOrder}" th:disabled="${!isEditable}" form="mediaOrderForm">
+                    <span class="media-order-stepper">
+                        <button type="button" class="media-order-btn" data-order-step="-1" th:disabled="${!isEditable}">−</button>
+                        <input class="media-order-input" type="number" name="displayOrders" min="1" th:value="${media.displayOrder}" readonly th:disabled="${!isEditable}" form="mediaOrderForm">
+                        <button type="button" class="media-order-btn" data-order-step="1" th:disabled="${!isEditable}">+</button>
+                    </span>
                 </label>
             </div>
             <div class="actions" th:if="${isEditable}">
@@ -119,6 +123,19 @@
 
     mediaFileInput.addEventListener('change', syncShotTypeRequirement);
     syncShotTypeRequirement();
+
+    document.querySelectorAll('.media-order-btn').forEach(button => {
+        button.addEventListener('click', function () {
+            const stepper = button.closest('.media-order-stepper');
+            const input = stepper ? stepper.querySelector('.media-order-input') : null;
+            if (!input) {
+                return;
+            }
+            const step = Number(button.dataset.orderStep || 0);
+            const currentValue = Number(input.value || 1);
+            input.value = Math.max(1, currentValue + step);
+        });
+    });
 </script>
 </body>
 </html>
