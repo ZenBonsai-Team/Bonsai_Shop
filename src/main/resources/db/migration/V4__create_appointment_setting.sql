@@ -53,5 +53,23 @@ SELECT
     SELECT 1
     FROM appointment_setting
 );
-ALTER TABLE appointment_setting
-    ADD COLUMN PauseReason TEXT NULL;
+DROP PROCEDURE IF EXISTS add_appointment_setting_pause_reason;
+
+DELIMITER //
+CREATE PROCEDURE add_appointment_setting_pause_reason()
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_schema = DATABASE()
+          AND table_name = 'appointment_setting'
+          AND column_name = 'PauseReason'
+    ) THEN
+        ALTER TABLE `appointment_setting`
+            ADD COLUMN `PauseReason` TEXT NULL;
+    END IF;
+END //
+DELIMITER ;
+
+CALL add_appointment_setting_pause_reason();
+DROP PROCEDURE IF EXISTS add_appointment_setting_pause_reason;

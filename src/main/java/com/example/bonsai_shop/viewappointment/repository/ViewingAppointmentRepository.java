@@ -18,6 +18,8 @@ public interface ViewingAppointmentRepository extends JpaRepository<ViewingAppoi
 
     List<ViewingAppointment> findByStatusAndAppointmentDateLessThanEqual(String status, LocalDateTime appointmentDate);
 
+    List<ViewingAppointment> findByStatusAndCreatedAtLessThanEqual(String status, LocalDateTime createdAt);
+
     @Query("""
 SELECT new com.example.bonsai_shop.artisan.dto.ArtisanAppointmentDTO(
     a.appointmentId,
@@ -34,10 +36,10 @@ ORDER BY a.appointmentDate DESC
 """)
     List<ArtisanAppointmentDTO> findAllAppointmentSummaries();
 
-    List<ViewingAppointment>
-    findByStatusAndAppointmentDateGreaterThanEqualAndAppointmentDateLessThan(
-            String status,
-            LocalDateTime start,
-            LocalDateTime end
-    );
+//     List<ViewingAppointment>
+//    findByStatusAndAppointmentDateGreaterThanEqualAndAppointmentDateLessThan(
+//            String status,
+//            LocalDateTime start,
+//            LocalDateTime end
+//    );
 }

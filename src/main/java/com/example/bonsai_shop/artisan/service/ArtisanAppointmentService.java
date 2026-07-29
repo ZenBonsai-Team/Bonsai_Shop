@@ -19,7 +19,9 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ArtisanAppointmentService {
 
-    private static final int AUTO_COMPLETE_MINUTES = 60;
+    // Demo: 5 phút (Production: 60 phút)
+    private static final int AUTO_DECIDE_PENDING_MINUTES = 5;
+    private static final int AUTO_COMPLETE_MINUTES = 5;
     private static final String STATUS_PENDING = "PENDING";
     private static final String STATUS_APPROVED = "APPROVED";
     private static final String STATUS_REJECTED = "REJECTED";
@@ -82,10 +84,14 @@ public class ArtisanAppointmentService {
     }
 
     private int autoDecidePendingAppointments(AppointmentSetting setting, LocalDateTime now) {
-        LocalDateTime start  = now.toLocalDate().atStartOfDay();
-        LocalDateTime end = start.plusDays(1);
-        List<ViewingAppointment> appointments = viewingAppointmentRepository
-                .findByStatusAndAppointmentDateGreaterThanEqualAndAppointmentDateLessThan(STATUS_PENDING, start, end);
+//        LocalDateTime start  = now.toLocalDate().atStartOfDay();
+//        LocalDateTime end = start.plusDays(1);
+//        List<ViewingAppointment> appointments = viewingAppointmentRepository
+//                 .findByStatusAndAppointmentDateGreaterThanEqualAndAppointmentDateLessThan(STATUS_PENDING, start, end);
+
+
+        LocalDateTime deadline = now.minusMinutes(AUTO_DECIDE_PENDING_MINUTES);
+        List<ViewingAppointment> appointments = viewingAppointmentRepository.findByStatusAndCreatedAtLessThanEqual(STATUS_PENDING, deadline);
 
         int updatedCount = 0;
         for (ViewingAppointment appointment : appointments) {
