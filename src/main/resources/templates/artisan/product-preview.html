@@ -66,9 +66,9 @@
                     <dd>
                         <span th:if="${product.productStatus == 'AVAILABLE'}">Đang bán</span>
                         <span th:if="${product.productStatus == 'DRAFT'}">Bản nháp</span>
-                        <span th:if="${product.productStatus == 'HIDDEN'}">Đang ẩn</span>
                         <span th:if="${product.productStatus == 'RESERVED'}">Đã được đặt</span>
                         <span th:if="${product.productStatus == 'SOLD'}">Đã bán</span>
+                        <span th:if="${!isVisible}">(đang ẩn khỏi marketplace)</span>
                     </dd>
 
                     <dt>Danh mục</dt>

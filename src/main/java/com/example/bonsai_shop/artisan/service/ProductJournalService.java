@@ -38,10 +38,14 @@ public class ProductJournalService {
 
     public List<ProductJournalEvent> getMyProductEvents(String artisanEmail, Integer productId) {
         Product product = artisanProductService.getMyProduct(artisanEmail, productId);
+        ensureNotSold(product);
         return journalEventRepository.findByProductOrderByEventDateDescEventIdDesc(product);
     }
 
     public List<ProductJournalEvent> getPublicEvents(Product product) {
+        if (artisanProductService.isSold(product)) {
+            return List.of();
+        }
         return journalEventRepository.findByProductAndIsPublicTrueOrderByEventDateDescEventIdDesc(product);
     }
 
@@ -55,6 +59,7 @@ public class ProductJournalService {
                          Boolean isPublic,
                          List<MultipartFile> files) {
         Product product = artisanProductService.getMyProduct(artisanEmail, productId);
+        ensureNotSold(product);
         User artisan = artisanProductService.getArtisanUser(artisanEmail);
 
         LocalDate today = LocalDate.now();
@@ -84,6 +89,7 @@ public class ProductJournalService {
     @Transactional
     public void deleteEvent(String artisanEmail, Integer productId, Integer eventId) {
         Product product = artisanProductService.getMyProduct(artisanEmail, productId);
+        ensureNotSold(product);
         ProductJournalEvent event = journalEventRepository.findByEventIdAndProduct(eventId, product)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy cập nhật cây."));
 
@@ -100,6 +106,7 @@ public class ProductJournalService {
                                 String title,
                                 String description) {
         Product product = artisanProductService.getMyProduct(artisanEmail, productId);
+        ensureNotSold(product);
         ProductJournalEvent event = journalEventRepository.findByEventIdAndProduct(eventId, product)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy cập nhật cây."));
 
@@ -116,6 +123,7 @@ public class ProductJournalService {
     @Transactional
     public void updateEventVisibility(String artisanEmail, Integer productId, Integer eventId, Boolean isPublic) {
         Product product = artisanProductService.getMyProduct(artisanEmail, productId);
+        ensureNotSold(product);
         ProductJournalEvent event = journalEventRepository.findByEventIdAndProduct(eventId, product)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy cập nhật cây."));
 
@@ -127,6 +135,7 @@ public class ProductJournalService {
     @Transactional
     public void addMediaToEvent(String artisanEmail, Integer productId, Integer eventId, List<MultipartFile> files) {
         Product product = artisanProductService.getMyProduct(artisanEmail, productId);
+        ensureNotSold(product);
         ProductJournalEvent event = journalEventRepository.findByEventIdAndProduct(eventId, product)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy cập nhật cây."));
 
@@ -162,6 +171,12 @@ public class ProductJournalService {
                     .mediaType(mediaType)
                     .displayOrder(displayOrder++)
                     .build());
+        }
+    }
+
+    private void ensureNotSold(Product product) {
+        if (artisanProductService.isSold(product)) {
+            throw new RuntimeException("Sản phẩm đã bán nên không thể thao tác nhật ký cây.");
         }
     }
 

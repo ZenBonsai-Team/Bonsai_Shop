@@ -63,6 +63,10 @@ public class Product {
     @Column(name = "ProductStatus", length = 50)
     private String productStatus = "AVAILABLE";
 
+    @Builder.Default
+    @Column(name = "IsVisible")
+    private Boolean isVisible = true;
+
     @Column(name = "ViewCount")
     private Integer viewCount = 0;
 

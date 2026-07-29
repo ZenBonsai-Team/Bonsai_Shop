@@ -20,7 +20,7 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
     boolean existsByProductCode(String productCode);
     boolean existsByVarietyCategoryCategoryId(Integer categoryId);
     boolean existsByVarietyVarietyId(Integer varietyId);
-    List<Product> findTop5ByProductStatusOrderByViewCountDesc(String productStatus);
+    List<Product> findTop5ByProductStatusAndIsVisibleTrueOrderByViewCountDesc(String productStatus);
    @Modifying
     @Query("""
         UPDATE Product p
@@ -36,6 +36,7 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
         SET p.productStatus = 'RESERVED'
         WHERE p.productId = :productId
           AND p.productStatus = 'AVAILABLE'
+          AND COALESCE(p.isVisible, true) = true
     """)
     int reserveIfAvailable(@Param("productId") Integer productId);
 
@@ -59,14 +60,15 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
         LEFT JOIN p.productMedias m
         WHERE
                 p.productStatus = 'AVAILABLE'
+                AND COALESCE(p.isVisible, true) = true
                 AND (m.isThumbnail = true OR m IS NULL)
     """)
     Page<ProductCardDTO> findMarketplaceProducts(Pageable pageable);
 
-    @Query("SELECT p FROM Product p JOIN FETCH p.variety LEFT JOIN FETCH p.createdBy WHERE p.productStatus <> 'HIDDEN'")
+    @Query("SELECT p FROM Product p JOIN FETCH p.variety LEFT JOIN FETCH p.createdBy WHERE COALESCE(p.isVisible, true) = true")
     Page<Product> findAllActiveProducts(Pageable pageable);
 
-    @Query("SELECT p FROM Product p JOIN FETCH p.variety LEFT JOIN FETCH p.createdBy WHERE p.productStatus = 'AVAILABLE'")
+    @Query("SELECT p FROM Product p JOIN FETCH p.variety LEFT JOIN FETCH p.createdBy WHERE p.productStatus = 'AVAILABLE' AND COALESCE(p.isVisible, true) = true")
     Page<Product> findAvailableProductsOnly(Pageable pageable);
 
     @Query("""
@@ -88,7 +90,8 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
     JOIN p.createdBy a
     LEFT JOIN p.productMedias m
     WHERE p.segment.segmentId = 3
-      AND p.productStatus NOT IN ('DRAFT', 'HIDDEN')
+      AND p.productStatus <> 'DRAFT'
+      AND COALESCE(p.isVisible, true) = true
       AND (
           m.isThumbnail = true
           OR (
@@ -128,7 +131,8 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
     JOIN p.createdBy a
     LEFT JOIN p.productMedias m
     WHERE p.segment.segmentId = 3
-      AND p.productStatus NOT IN ('DRAFT', 'HIDDEN')
+      AND p.productStatus <> 'DRAFT'
+      AND COALESCE(p.isVisible, true) = true
       AND p.productId = :productId
       AND (
           m.isThumbnail = true

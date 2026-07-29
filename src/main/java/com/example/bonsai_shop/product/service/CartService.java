@@ -41,7 +41,7 @@ public class CartService {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new IllegalArgumentException("Sản phẩm không tồn tại!"));
 
-        if (!"AVAILABLE".equalsIgnoreCase(product.getProductStatus())) {
+        if (!"AVAILABLE".equalsIgnoreCase(product.getProductStatus()) || Boolean.FALSE.equals(product.getIsVisible())) {
             throw new IllegalStateException("Sản phẩm đã được bán hoặc giữ chỗ!");
         }
 
