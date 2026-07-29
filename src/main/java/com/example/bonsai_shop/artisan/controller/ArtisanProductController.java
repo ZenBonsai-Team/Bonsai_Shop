@@ -352,7 +352,7 @@ public class ArtisanProductController {
                        RedirectAttributes redirectAttributes) {
         try {
             artisanProductService.showProduct(userDetails.getUsername(), productId);
-            redirectAttributes.addFlashAttribute("success", "Đã ẩn sản phẩm khỏi marketplace.");
+            redirectAttributes.addFlashAttribute("success", "Đã hiện sản phẩm trên marketplace.");
         } catch (RuntimeException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }

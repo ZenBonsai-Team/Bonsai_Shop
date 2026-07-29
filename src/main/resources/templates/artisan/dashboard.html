@@ -92,8 +92,9 @@
                             <span th:if="${prod.productStatus == 'DRAFT'}" class="badge bg-warning-subtle text-warning px-2 py-1 rounded-pill small">Bản nháp</span>
                         </td>
                         <td>
-                            <span th:if="${prod.isVisible != false}" class="badge bg-success-subtle text-success px-2 py-1 rounded-pill small">Đang hiển thị</span>
-                            <span th:if="${prod.isVisible == false}" class="badge bg-danger-subtle text-danger px-2 py-1 rounded-pill small">Đang ẩn</span>
+                            <span th:if="${prod.productStatus == 'DRAFT'}" class="badge bg-warning-subtle text-warning px-2 py-1 rounded-pill small">Chưa đăng bán</span>
+                            <span th:if="${prod.productStatus != 'DRAFT' && prod.isVisible != false}" class="badge bg-success-subtle text-success px-2 py-1 rounded-pill small">Đang hiển thị</span>
+                            <span th:if="${prod.productStatus != 'DRAFT' && prod.isVisible == false}" class="badge bg-danger-subtle text-danger px-2 py-1 rounded-pill small">Đang ẩn</span>
                         </td>
                     </tr>
                     <tr th:if="${#lists.isEmpty(recentProducts)}">

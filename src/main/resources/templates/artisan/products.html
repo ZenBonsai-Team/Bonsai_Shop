@@ -60,7 +60,7 @@
                 </thead>
                 <tbody id="productTableBody">
                 <tr th:each="product : ${products}"
-                    th:attr="data-status=${product.productStatus},data-visibility=${product.isVisible == false ? 'INVISIBLE' : 'VISIBLE'},data-search-text=${product.productCode + ' ' + product.productName}">
+                    th:attr="data-status=${product.productStatus},data-visibility=${product.productStatus == 'DRAFT' || product.isVisible == false ? 'INVISIBLE' : 'VISIBLE'},data-search-text=${product.productCode + ' ' + product.productName}">
                     <td>
                         <a class="product-preview-link" th:href="@{/artisan/products/{id}/preview(id=${product.productId})}">
                             <img class="product-table-thumb"
@@ -86,8 +86,9 @@
                         <span th:if="${product.productStatus != 'AVAILABLE' && product.productStatus != 'DRAFT' && product.productStatus != 'RESERVED' && product.productStatus != 'SOLD'}" class="badge bg-light text-dark px-2 py-1 rounded-pill small" th:text="${product.productStatus}"></span>
                     </td>
                     <td>
-                        <span th:if="${product.isVisible != false}" class="badge bg-success-subtle text-success px-2 py-1 rounded-pill small">Đang hiển thị</span>
-                        <span th:if="${product.isVisible == false}" class="badge bg-danger-subtle text-danger px-2 py-1 rounded-pill small">Đang ẩn</span>
+                        <span th:if="${product.productStatus == 'DRAFT'}" class="badge bg-warning-subtle text-warning px-2 py-1 rounded-pill small">Chưa đăng bán</span>
+                        <span th:if="${product.productStatus != 'DRAFT' && product.isVisible != false}" class="badge bg-success-subtle text-success px-2 py-1 rounded-pill small">Đang hiển thị</span>
+                        <span th:if="${product.productStatus != 'DRAFT' && product.isVisible == false}" class="badge bg-danger-subtle text-danger px-2 py-1 rounded-pill small">Đang ẩn</span>
                     </td>
                     <td class="table-actions">
                         <a th:if="${product.productStatus == 'DRAFT' || (product.isVisible == false && product.productStatus != 'SOLD' && product.productStatus != 'RESERVED')}" th:href="@{/artisan/products/{id}/edit(id=${product.productId})}">Chỉnh sửa</a>
@@ -109,7 +110,7 @@
                                 Ẩn
                             </button>
                         </form>
-                        <form th:if="${product.isVisible == false}" method="post" th:action="@{/artisan/products/{id}/show(id=${product.productId})}">
+                        <form th:if="${product.isVisible == false && product.productStatus != 'DRAFT' && product.productStatus != 'RESERVED'}" method="post" th:action="@{/artisan/products/{id}/show(id=${product.productId})}">
                             <button type="button"
                                     class="text-success"
                                     data-open-show-modal
