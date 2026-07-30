@@ -420,6 +420,42 @@ public class OrderApiController {
     /**
      * API Tá»« chá»‘i duyá»‡t Ä‘Æ¡n hÃ ng (CÃ³ lÃ½ do)
      */
+    @PostMapping("/{orderCode}/customer-no-show")
+    public ResponseEntity<Map<String, Object>> markCustomerNoShow(
+            @PathVariable String orderCode,
+            @RequestBody(required = false) Map<String, String> payload,
+            @AuthenticationPrincipal Object principal) {
+
+        Map<String, Object> response = new HashMap<>();
+        User moderator = SecurityUtils.getCurrentUser(principal, userRepository);
+        if (moderator == null) {
+            response.put("success", false);
+            response.put("message", "Chưa đăng nhập hệ thống.");
+            return ResponseEntity.status(401).body(response);
+        }
+
+        String notes = payload != null ? payload.getOrDefault("notes", "") : "";
+        try {
+            boolean success = orderService.markDepositedOrderCustomerNoShow(orderCode, notes, moderator);
+            response.put("success", success);
+            response.put("message", success ? "Đã hủy đơn vì khách không nhận. Tiền cọc không hoàn." : "Thao tác thất bại.");
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            response.put("success", false);
+            response.put("message", e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        } catch (IllegalStateException e) {
+            response.put("success", false);
+            response.put("message", e.getMessage());
+            return ResponseEntity.status(409).body(response);
+        } catch (Exception e) {
+            log.error("Lỗi khi hủy đơn vì khách không nhận {}", orderCode, e);
+            response.put("success", false);
+            response.put("message", "Lỗi hệ thống: " + e.getMessage());
+            return ResponseEntity.internalServerError().body(response);
+        }
+    }
+
     @PostMapping("/{orderCode}/reject")
     public ResponseEntity<Map<String, Object>> rejectOrder(
             @PathVariable String orderCode,

@@ -641,7 +641,7 @@ public class OrderService {
         paymentRepository.save(remainingPayment);
 
         String oldStatus = order.getOrderStatus();
-        order.setOrderStatus("PAID");
+        order.setOrderStatus("COMPLETED");
         orderRepository.save(order);
         markProductsAsSold(order);
 
@@ -650,12 +650,46 @@ public class OrderService {
                 .actionBy(moderator)
                 .actionType("REMAINING_PAYMENT_CONFIRMED")
                 .fromStatus(oldStatus)
-                .toStatus("PAID")
+                .toStatus("COMPLETED")
                 .actionAt(LocalDateTime.now())
                 .build();
         orderLogRepository.save(logEntry);
 
         eventPublisher.publishEvent(new OrderPaidEvent(order));
+        return true;
+    }
+
+    @Transactional
+    public boolean markDepositedOrderCustomerNoShow(String orderCode, String notes, User moderator) {
+        Order order = orderRepository.findByOrderCode(orderCode).orElse(null);
+        if (order == null) {
+            throw new IllegalArgumentException("Không tìm thấy đơn hàng: " + orderCode);
+        }
+        if (!"DEPOSITED".equalsIgnoreCase(order.getOrderStatus())) {
+            throw new IllegalStateException("Chỉ có thể hủy vì khách không nhận khi đơn hàng đang ở trạng thái DEPOSITED.");
+        }
+
+        String oldStatus = order.getOrderStatus();
+        String reason = notes == null || notes.isBlank()
+                ? "Khách không nhận hàng / không thanh toán phần còn lại. Tiền cọc không hoàn."
+                : notes.trim() + " Tiền cọc không hoàn.";
+        String currentNotes = order.getNotes();
+        order.setNotes(currentNotes == null || currentNotes.isBlank() ? reason : currentNotes + " | " + reason);
+        order.setOrderStatus("CANCELLED");
+        orderRepository.save(order);
+        releaseProducts(order);
+
+        OrderLog logEntry = OrderLog.builder()
+                .order(order)
+                .actionBy(moderator)
+                .actionType("CUSTOMER_NO_SHOW")
+                .fromStatus(oldStatus)
+                .toStatus("CANCELLED")
+                .actionAt(LocalDateTime.now())
+                .build();
+        orderLogRepository.save(logEntry);
+
+        eventPublisher.publishEvent(new OrderRejectedEvent(order, reason));
         return true;
     }
 
@@ -690,6 +724,18 @@ public class OrderService {
                 Product prod = detail.getProduct();
                 if (prod != null) {
                     prod.setProductStatus("SOLD");
+                    productRepository.save(prod);
+                }
+            }
+        }
+    }
+
+    private void releaseProducts(Order order) {
+        if (order.getOrderDetails() != null) {
+            for (OrderDetail detail : order.getOrderDetails()) {
+                Product prod = detail.getProduct();
+                if (prod != null) {
+                    prod.setProductStatus("AVAILABLE");
                     productRepository.save(prod);
                 }
             }

@@ -222,7 +222,7 @@ function initDrawerEvents() {
             const depositVal = currentActiveOrder.depositAmount || 0;
             const remainingPay = Math.max(0, basePrice - depositVal);
 
-            const confirmMsg = `Xác nhận rằng khách hàng đã thanh toán đầy đủ phần tiền còn lại (${formatVND(remainingPay)}) của đơn hàng ngoài thực tế? Thao tác này sẽ chuyển trạng thái đơn sang ĐÃ THANH TOÁN (PAID) và KHÔNG thể hoàn tác.`;
+            const confirmMsg = `Xác nhận rằng khách hàng đã thanh toán đầy đủ phần tiền còn lại (${formatVND(remainingPay)}) của đơn hàng ngoài thực tế? Thao tác này sẽ chuyển trạng thái đơn sang HOÀN THÀNH (COMPLETED) và không thể hoàn tác.`;
 
             BSMSConfirm({
                 title: "Xác nhận thanh toán nấc 2 (COD)?",
@@ -231,6 +231,21 @@ function initDrawerEvents() {
                 confirmText: "Xác nhận đã thu tiền",
                 cancelText: "Hủy bỏ",
                 onConfirm: () => { confirmRemainingPayment(activeOrderCode); }
+            });
+        });
+    }
+
+    const customerNoShowBtn = document.getElementById('btnCustomerNoShow');
+    if (customerNoShowBtn) {
+        customerNoShowBtn.addEventListener('click', () => {
+            if (!currentActiveOrder) return;
+            BSMSConfirm({
+                title: "Xác nhận khách không nhận?",
+                message: "Đơn hàng sẽ bị hủy, sản phẩm được mở bán lại. Tiền cọc đã thu sẽ không hoàn và không tạo thanh toán phần còn lại.",
+                type: "warning",
+                confirmText: "Xác nhận hủy đơn",
+                cancelText: "Hủy bỏ",
+                onConfirm: () => { markCustomerNoShow(activeOrderCode); }
             });
         });
     }
@@ -401,6 +416,7 @@ function openDrawer(order) {
     if (document.getElementById('btnVerifyOrder')) document.getElementById('btnVerifyOrder').style.display = isPending ? 'block' : 'none';
     if (document.getElementById('btnRejectOrder')) document.getElementById('btnRejectOrder').style.display = isPending ? 'block' : 'none';
     if (document.getElementById('btnConfirmRemainingPayment')) document.getElementById('btnConfirmRemainingPayment').style.display = isDeposited ? 'block' : 'none';
+    if (document.getElementById('btnCustomerNoShow')) document.getElementById('btnCustomerNoShow').style.display = isDeposited ? 'block' : 'none';
     if (document.getElementById('rejectReasonBox')) document.getElementById('rejectReasonBox').style.display = 'none';
 
     const backdrop = document.getElementById('drawerBackdrop');
@@ -541,7 +557,7 @@ async function confirmRemainingPayment(orderCode) {
         const result = await response.json();
 
         if (response.ok && result.success) {
-            BSMSToast.success("Xác nhận thanh toán đầy đủ thành công! Đơn hàng đã chuyển sang ĐÃ THANH TOÁN (PAID).");
+            BSMSToast.success("Xác nhận thanh toán đầy đủ thành công! Đơn hàng đã chuyển sang HOÀN THÀNH (COMPLETED).");
             closeDrawer();
             renderDashboard();
         } else {
@@ -549,6 +565,31 @@ async function confirmRemainingPayment(orderCode) {
         }
     } catch (err) {
         console.error("Lỗi xác nhận thanh toán nấc 2:", err);
+    }
+}
+
+async function markCustomerNoShow(orderCode) {
+    if (!orderCode) return;
+    const headers = { 'Content-Type': 'application/json' };
+    if (csrfHeader && csrfToken) headers[csrfHeader] = csrfToken;
+
+    try {
+        const response = await fetch(`/api/orders/${orderCode}/customer-no-show`, {
+            method: 'POST',
+            headers: headers,
+            body: JSON.stringify({ notes: "Khách không nhận hàng / không thanh toán phần còn lại." })
+        });
+        const result = await response.json();
+
+        if (response.ok && result.success) {
+            BSMSToast.success("Đã hủy đơn vì khách không nhận. Sản phẩm đã được mở bán lại.");
+            closeDrawer();
+            renderDashboard();
+        } else {
+            BSMSToast.error(result.message || "Lỗi khi hủy đơn vì khách không nhận.");
+        }
+    } catch (err) {
+        console.error("Lỗi hủy đơn vì khách không nhận:", err);
     }
 }
 

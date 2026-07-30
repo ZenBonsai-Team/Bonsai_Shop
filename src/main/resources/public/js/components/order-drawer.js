@@ -32,6 +32,7 @@ const OrderDrawer = {
     groupDepositAmount: null,
     btnVerify: null,
     btnReject: null,
+    btnCustomerNoShow: null,
     
     // Reject Box
     rejectBox: null,
@@ -69,6 +70,7 @@ const OrderDrawer = {
         this.groupDepositAmount = document.getElementById('groupDepositAmount');
         this.btnVerify = document.getElementById('btnVerifyOrder');
         this.btnReject = document.getElementById('btnRejectOrder');
+        this.btnCustomerNoShow = document.getElementById('btnCustomerNoShow');
         
         // Rejection Section
         this.rejectBox = document.getElementById('rejectReasonBox');
@@ -83,6 +85,7 @@ const OrderDrawer = {
         // Setup Event Listeners
         this.btnVerify.addEventListener('click', () => this.handleVerifyClick());
         this.btnReject.addEventListener('click', () => this.showRejectReasonInput());
+        if (this.btnCustomerNoShow) this.btnCustomerNoShow.addEventListener('click', () => this.handleCustomerNoShow());
         this.btnRejectCancel.addEventListener('click', () => this.hideRejectReasonInput());
         this.btnRejectConfirm.addEventListener('click', () => this.handleRejectConfirm());
 
@@ -199,6 +202,7 @@ const OrderDrawer = {
         this.elFinalTotal.textContent = this.formatVND(order.totalAmount);
         
         const isPending = order.orderStatus === 'PENDING';
+        const isDeposited = order.orderStatus === 'DEPOSITED';
         const isDeposit = (order.paymentMethod === 'DEPOSIT' || order.paymentMethod === 'COD');
 
         if (this.groupDepositAmount) {
@@ -230,6 +234,7 @@ const OrderDrawer = {
             // Show verification action footer bar
             if (this.btnVerify) this.btnVerify.style.display = 'block';
             if (this.btnReject) this.btnReject.style.display = 'block';
+            if (this.btnCustomerNoShow) this.btnCustomerNoShow.style.display = 'none';
         } else {
             if (this.inputCraneFee) {
                 this.inputCraneFee.disabled = true;
@@ -243,6 +248,7 @@ const OrderDrawer = {
             // Hide verification actions if already verified/cancelled/rejected
             if (this.btnVerify) this.btnVerify.style.display = 'none';
             if (this.btnReject) this.btnReject.style.display = 'none';
+            if (this.btnCustomerNoShow) this.btnCustomerNoShow.style.display = isDeposited ? 'block' : 'none';
         }
 
         this.calculateFinalTotalOnTheFly();
@@ -339,6 +345,27 @@ const OrderDrawer = {
                     if (this.onSuccessCallback) this.onSuccessCallback();
                 } else {
                     BSMSToast.error(res.message || 'Lỗi khi từ chối đơn hàng!');
+                }
+            }
+        });
+    },
+
+    handleCustomerNoShow() {
+        ConfirmDialog.show({
+            title: "Xác nhận khách không nhận?",
+            message: "Đơn hàng sẽ bị hủy, sản phẩm được mở bán lại. Tiền cọc đã thu sẽ không hoàn và không tạo thanh toán phần còn lại.",
+            summary: [
+                { label: "Mã đơn hàng", value: this.currentOrder.orderCode },
+                { label: "Lý do", value: "Khách không nhận hàng / không thanh toán phần còn lại" }
+            ],
+            onConfirm: async () => {
+                const res = await apiCustomerNoShow(this.currentOrder.orderCode, "Khách không nhận hàng / không thanh toán phần còn lại.");
+                if (res.success) {
+                    BSMSToast.success("Đã hủy đơn vì khách không nhận. Sản phẩm đã được mở bán lại.");
+                    this.close();
+                    if (this.onSuccessCallback) this.onSuccessCallback();
+                } else {
+                    BSMSToast.error(res.message || "Lỗi khi hủy đơn vì khách không nhận.");
                 }
             }
         });
