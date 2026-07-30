@@ -16,7 +16,7 @@ public interface OrderDetailRepository extends JpaRepository<OrderDetail, Intege
             WHERE od.product.createdBy.userId = :artisanUserId
               AND od.order.orderDate >= :startDate
               AND od.order.orderDate < :endDate
-              AND UPPER(COALESCE(od.order.orderStatus, '')) = 'PAID'
+              AND UPPER(COALESCE(od.order.orderStatus, '')) = 'COMPLETED'
             """)
     BigDecimal sumMonthlyRevenueByArtisan(@Param("artisanUserId") Integer artisanUserId,
                                           @Param("startDate") LocalDateTime startDate,
@@ -28,7 +28,7 @@ public interface OrderDetailRepository extends JpaRepository<OrderDetail, Intege
             WHERE od.product.createdBy.userId = :artisanUserId
               AND od.order.orderDate >= :startDate
               AND od.order.orderDate < :endDate
-              AND UPPER(COALESCE(od.order.orderStatus, '')) = 'PAID'
+              AND UPPER(COALESCE(od.order.orderStatus, '')) = 'COMPLETED'
             """)
     long countMonthlySoldItemsByArtisan(@Param("artisanUserId") Integer artisanUserId,
                                         @Param("startDate") LocalDateTime startDate,
@@ -39,7 +39,7 @@ public interface OrderDetailRepository extends JpaRepository<OrderDetail, Intege
             FROM OrderDetail od
             WHERE od.order.orderDate >= :startDate
               AND od.order.orderDate < :endDate
-              AND UPPER(COALESCE(od.order.orderStatus, '')) = 'PAID'
+              AND UPPER(COALESCE(od.order.orderStatus, '')) = 'COMPLETED'
             """)
     BigDecimal sumMonthlyRevenue(@Param("startDate") LocalDateTime startDate,
                                  @Param("endDate") LocalDateTime endDate);
@@ -49,7 +49,7 @@ public interface OrderDetailRepository extends JpaRepository<OrderDetail, Intege
             FROM OrderDetail od
             WHERE od.order.orderDate >= :startDate
               AND od.order.orderDate < :endDate
-              AND UPPER(COALESCE(od.order.orderStatus, '')) = 'PAID'
+              AND UPPER(COALESCE(od.order.orderStatus, '')) = 'COMPLETED'
             """)
     long countMonthlySoldItems(@Param("startDate") LocalDateTime startDate,
                                @Param("endDate") LocalDateTime endDate);
