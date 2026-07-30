@@ -7,7 +7,7 @@ const DashboardState = {
 
 const orderStatusLabels = {
     'PENDING': 'Chờ xử lý',
-    'APPROVED': 'Chờ thanh toán',
+    'PENDING_PAYMENT': 'Chờ thanh toán',
     'DEPOSITED': 'Đã đặt cọc',
     'PAID': 'Đã thanh toán',
     'REJECTED': 'Đã từ chối',

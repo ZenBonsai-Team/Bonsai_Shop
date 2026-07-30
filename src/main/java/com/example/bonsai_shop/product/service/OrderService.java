@@ -47,6 +47,7 @@ import lombok.extern.slf4j.Slf4j;
 public class OrderService {
 
     public static final BigDecimal MAX_ORDER_AMOUNT = new BigDecimal("200000000");
+    private static final String STATUS_PENDING_PAYMENT = "PENDING_PAYMENT";
 
     private final OrderRepository orderRepository;
     private final ProductRepository productRepository;
@@ -61,7 +62,7 @@ public class OrderService {
     public Page<Order> getFilteredOrders(String search, String status, String sort, int page, int limit) {
         Sort springSort = resolveSort(sort);
         Pageable pageable = PageRequest.of(page - 1, limit, springSort);
-        return orderRepository.searchOrdersForModerator(status, search, pageable);
+        return orderRepository.searchOrdersForModerator(resolveStatusFilter(status), search, pageable);
     }
 
     @Transactional(readOnly = true)
@@ -75,7 +76,7 @@ public class OrderService {
     public Page<Order> getMyOrders(Integer moderatorId, String search, String status, String sort, int page, int limit) {
         Sort springSort = resolveSort(sort);
         Pageable pageable = PageRequest.of(page - 1, limit, springSort);
-        return orderRepository.searchMyOrders(moderatorId, status, search, pageable);
+        return orderRepository.searchMyOrders(moderatorId, resolveStatusFilter(status), search, pageable);
     }
 
     @Transactional(readOnly = true)
@@ -93,6 +94,13 @@ public class OrderService {
         } else {
             return Sort.by(Sort.Direction.DESC, "orderDate"); // default: date_desc (Từ mới nhất)
         }
+    }
+
+    private List<String> resolveStatusFilter(String status) {
+        if (status == null || status.isBlank() || "ALL".equalsIgnoreCase(status)) {
+            return null;
+        }
+        return List.of(status);
     }
 
     @Transactional(readOnly = true)
@@ -113,7 +121,7 @@ public class OrderService {
         Map<String, Long> kpis = new HashMap<>();
         kpis.put("total", orderRepository.count());
         kpis.put("pending", orderRepository.countByOrderStatus("PENDING"));
-        kpis.put("approved", orderRepository.countByOrderStatus("APPROVED"));
+        kpis.put("approved", orderRepository.countByOrderStatus(STATUS_PENDING_PAYMENT));
         kpis.put("paid", orderRepository.countByOrderStatus("PAID"));
         kpis.put("cancelled", orderRepository.countByOrderStatus("CANCELLED"));
         kpis.put("rejected", orderRepository.countByOrderStatus("REJECTED"));
@@ -125,7 +133,7 @@ public class OrderService {
         Map<String, Long> kpis = new HashMap<>();
         kpis.put("total", orderRepository.countByAssignedToUserId(moderatorId));
         kpis.put("pending", orderRepository.countByAssignedToUserIdAndOrderStatus(moderatorId, "PENDING"));
-        kpis.put("approved", orderRepository.countByAssignedToUserIdAndOrderStatus(moderatorId, "APPROVED"));
+        kpis.put("approved", orderRepository.countByAssignedToUserIdAndOrderStatus(moderatorId, STATUS_PENDING_PAYMENT));
         kpis.put("paid", orderRepository.countByAssignedToUserIdAndOrderStatus(moderatorId, "PAID"));
         kpis.put("rejected", orderRepository.countByAssignedToUserIdAndOrderStatus(moderatorId, "REJECTED"));
         return kpis;
@@ -292,7 +300,7 @@ public class OrderService {
             }
         }
 
-        order.setOrderStatus("APPROVED");
+        order.setOrderStatus(STATUS_PENDING_PAYMENT);
         orderRepository.save(order);
 
         OrderLog log = OrderLog.builder()
@@ -300,7 +308,7 @@ public class OrderService {
                 .actionBy(moderator)
                 .actionType("VERIFY")
                 .fromStatus(oldStatus)
-                .toStatus("APPROVED")
+                .toStatus(STATUS_PENDING_PAYMENT)
                 .actionAt(LocalDateTime.now())
                 .build();
         orderLogRepository.save(log);
@@ -385,7 +393,7 @@ public class OrderService {
     @Transactional
     public boolean recordDepositPayment(String orderCode, BigDecimal depositAmount, User moderator) {
         Order order = orderRepository.findByOrderCode(orderCode).orElse(null);
-        if (order == null || (!"PENDING".equalsIgnoreCase(order.getOrderStatus()) && !"APPROVED".equalsIgnoreCase(order.getOrderStatus()))) {
+        if (order == null || (!"PENDING".equalsIgnoreCase(order.getOrderStatus()) && !STATUS_PENDING_PAYMENT.equalsIgnoreCase(order.getOrderStatus()))) {
             return false;
         }
 

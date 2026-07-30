@@ -48,13 +48,13 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
     @Query("SELECT DISTINCT o FROM Order o " +
             "LEFT JOIN o.orderDetails od " +
             "LEFT JOIN od.product p " +
-            "WHERE (:status = 'ALL' OR o.orderStatus = :status) AND " +
+            "WHERE (:statuses IS NULL OR o.orderStatus IN :statuses) AND " +
             "(:search IS NULL OR :search = '' OR " +
             " LOWER(o.orderCode) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
             " LOWER(o.customerName) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
             " LOWER(p.productName) LIKE LOWER(CONCAT('%', :search, '%')))")
     Page<Order> searchOrdersForModerator(
-            @Param("status") String status,
+            @Param("statuses") List<String> statuses,
             @Param("search") String search,
             Pageable pageable);
 
@@ -76,22 +76,22 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
             "LEFT JOIN o.orderDetails od " +
             "LEFT JOIN od.product p " +
             "WHERE o.assignedTo.userId = :moderatorId AND " +
-            "(:status = 'ALL' OR o.orderStatus = :status) AND " +
+            "(:statuses IS NULL OR o.orderStatus IN :statuses) AND " +
             "(:search IS NULL OR :search = '' OR " +
             " LOWER(o.orderCode) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
             " LOWER(o.customerName) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
             " LOWER(p.productName) LIKE LOWER(CONCAT('%', :search, '%')))")
     Page<Order> searchMyOrders(
             @Param("moderatorId") Integer moderatorId,
-            @Param("status") String status,
+            @Param("statuses") List<String> statuses,
             @Param("search") String search,
             Pageable pageable);
 
     // 3. Expired Orders Queries (Online 15m & Offline 48h)
-    @Query("SELECT DISTINCT o FROM Order o LEFT JOIN FETCH o.orderDetails od LEFT JOIN FETCH od.product WHERE (o.orderStatus = 'PENDING' OR o.orderStatus = 'APPROVED') AND LOWER(o.orderType) = 'online' AND (o.assignedAt <= :cutoffTime OR (o.assignedAt IS NULL AND o.orderDate <= :cutoffTime))")
+    @Query("SELECT DISTINCT o FROM Order o LEFT JOIN FETCH o.orderDetails od LEFT JOIN FETCH od.product WHERE (o.orderStatus = 'PENDING' OR o.orderStatus = 'PENDING_PAYMENT') AND LOWER(o.orderType) = 'online' AND (o.assignedAt <= :cutoffTime OR (o.assignedAt IS NULL AND o.orderDate <= :cutoffTime))")
     List<Order> findExpiredOnlineOrders(@Param("cutoffTime") java.time.LocalDateTime cutoffTime);
 
-    @Query("SELECT DISTINCT o FROM Order o LEFT JOIN FETCH o.orderDetails od LEFT JOIN FETCH od.product WHERE (o.orderStatus = 'PENDING' OR o.orderStatus = 'APPROVED') AND (o.depositAmount IS NULL OR o.depositAmount = 0) AND (o.orderType IS NULL OR LOWER(o.orderType) != 'online') AND o.orderDate <= :cutoffTime")
+    @Query("SELECT DISTINCT o FROM Order o LEFT JOIN FETCH o.orderDetails od LEFT JOIN FETCH od.product WHERE (o.orderStatus = 'PENDING' OR o.orderStatus = 'PENDING_PAYMENT') AND (o.depositAmount IS NULL OR o.depositAmount = 0) AND (o.orderType IS NULL OR LOWER(o.orderType) != 'online') AND o.orderDate <= :cutoffTime")
     List<Order> findExpiredOfflineOrders(@Param("cutoffTime") java.time.LocalDateTime cutoffTime);
 
     @Query("SELECT DISTINCT o FROM Order o LEFT JOIN FETCH o.orderDetails od LEFT JOIN FETCH od.product WHERE o.orderStatus = 'PENDING_PAYMENT' AND LOWER(o.orderType) = 'in_person' AND o.orderDate <= :cutoffTime")
