@@ -131,6 +131,28 @@ function apiCustomerNoShow(orderCode, notes) {
     });
 }
 
+function apiCompletePaidOrder(orderCode) {
+    const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
+    const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content');
+
+    const headers = {
+        'Content-Type': 'application/json'
+    };
+    if (csrfToken && csrfHeader) {
+        headers[csrfHeader] = csrfToken;
+    }
+
+    return fetch(`/api/orders/${orderCode}/complete`, {
+        method: 'POST',
+        headers: headers
+    })
+    .then(response => response.json())
+    .catch(error => {
+        console.error("Lỗi hoàn thành đơn:", error);
+        return { success: false, message: "Lỗi kết nối máy chủ khi hoàn thành đơn." };
+    });
+}
+
 function apiSimulatePayment(orderCode) {
     return Promise.resolve({ success: true });
 }

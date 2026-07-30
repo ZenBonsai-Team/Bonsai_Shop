@@ -239,13 +239,31 @@ function initDrawerEvents() {
     if (customerNoShowBtn) {
         customerNoShowBtn.addEventListener('click', () => {
             if (!currentActiveOrder) return;
+            const isPaid = currentActiveOrder.orderStatus === 'PAID';
             BSMSConfirm({
                 title: "Xác nhận khách không nhận?",
-                message: "Đơn hàng sẽ bị hủy, sản phẩm được mở bán lại. Tiền cọc đã thu sẽ không hoàn và không tạo thanh toán phần còn lại.",
+                message: isPaid
+                    ? "Đơn hàng đã thanh toán toàn bộ sẽ bị hủy, sản phẩm được mở bán lại. Payment giữ nguyên và ghi chú cần hoàn tiền ngoài hệ thống."
+                    : "Đơn hàng sẽ bị hủy, sản phẩm được mở bán lại. Tiền cọc đã thu sẽ không hoàn và không tạo thanh toán phần còn lại.",
                 type: "warning",
                 confirmText: "Xác nhận hủy đơn",
                 cancelText: "Hủy bỏ",
                 onConfirm: () => { markCustomerNoShow(activeOrderCode); }
+            });
+        });
+    }
+
+    const completePaidOrderBtn = document.getElementById('btnCompletePaidOrder');
+    if (completePaidOrderBtn) {
+        completePaidOrderBtn.addEventListener('click', () => {
+            if (!currentActiveOrder) return;
+            BSMSConfirm({
+                title: "Xác nhận khách đã nhận?",
+                message: "Đơn hàng sẽ chuyển từ PAID sang COMPLETED. Thao tác này xác nhận khách đã nhận cây và đơn hàng đã hoàn tất.",
+                type: "success",
+                confirmText: "Hoàn thành đơn",
+                cancelText: "Hủy bỏ",
+                onConfirm: () => { completePaidOrder(activeOrderCode); }
             });
         });
     }
@@ -412,11 +430,13 @@ function openDrawer(order) {
     renderTimeline(order.handlingHistory);
 
     const isDeposited = order.orderStatus === 'DEPOSITED';
+    const isPaid = order.orderStatus === 'PAID';
     if (document.getElementById('btnUnclaimOrder')) document.getElementById('btnUnclaimOrder').style.display = isPending ? 'block' : 'none';
     if (document.getElementById('btnVerifyOrder')) document.getElementById('btnVerifyOrder').style.display = isPending ? 'block' : 'none';
     if (document.getElementById('btnRejectOrder')) document.getElementById('btnRejectOrder').style.display = isPending ? 'block' : 'none';
     if (document.getElementById('btnConfirmRemainingPayment')) document.getElementById('btnConfirmRemainingPayment').style.display = isDeposited ? 'block' : 'none';
-    if (document.getElementById('btnCustomerNoShow')) document.getElementById('btnCustomerNoShow').style.display = isDeposited ? 'block' : 'none';
+    if (document.getElementById('btnCompletePaidOrder')) document.getElementById('btnCompletePaidOrder').style.display = isPaid ? 'block' : 'none';
+    if (document.getElementById('btnCustomerNoShow')) document.getElementById('btnCustomerNoShow').style.display = (isDeposited || isPaid) ? 'block' : 'none';
     if (document.getElementById('rejectReasonBox')) document.getElementById('rejectReasonBox').style.display = 'none';
 
     const backdrop = document.getElementById('drawerBackdrop');
@@ -572,12 +592,16 @@ async function markCustomerNoShow(orderCode) {
     if (!orderCode) return;
     const headers = { 'Content-Type': 'application/json' };
     if (csrfHeader && csrfToken) headers[csrfHeader] = csrfToken;
+    const isPaid = currentActiveOrder && currentActiveOrder.orderStatus === 'PAID';
+    const notes = isPaid
+        ? "Khách không nhận do lỗi nhà vườn. Cần hoàn tiền ngoài hệ thống."
+        : "Khách không nhận hàng / không thanh toán phần còn lại.";
 
     try {
         const response = await fetch(`/api/orders/${orderCode}/customer-no-show`, {
             method: 'POST',
             headers: headers,
-            body: JSON.stringify({ notes: "Khách không nhận hàng / không thanh toán phần còn lại." })
+            body: JSON.stringify({ notes: notes })
         });
         const result = await response.json();
 
@@ -590,6 +614,30 @@ async function markCustomerNoShow(orderCode) {
         }
     } catch (err) {
         console.error("Lỗi hủy đơn vì khách không nhận:", err);
+    }
+}
+
+async function completePaidOrder(orderCode) {
+    if (!orderCode) return;
+    const headers = { 'Content-Type': 'application/json' };
+    if (csrfHeader && csrfToken) headers[csrfHeader] = csrfToken;
+
+    try {
+        const response = await fetch(`/api/orders/${orderCode}/complete`, {
+            method: 'POST',
+            headers: headers
+        });
+        const result = await response.json();
+
+        if (response.ok && result.success) {
+            BSMSToast.success("Đơn hàng đã hoàn thành.");
+            closeDrawer();
+            renderDashboard();
+        } else {
+            BSMSToast.error(result.message || "Lỗi khi hoàn thành đơn.");
+        }
+    } catch (err) {
+        console.error("Lỗi hoàn thành đơn:", err);
     }
 }
 

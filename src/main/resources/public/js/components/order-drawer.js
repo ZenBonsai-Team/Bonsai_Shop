@@ -33,6 +33,7 @@ const OrderDrawer = {
     btnVerify: null,
     btnReject: null,
     btnCustomerNoShow: null,
+    btnCompletePaidOrder: null,
     
     // Reject Box
     rejectBox: null,
@@ -71,6 +72,7 @@ const OrderDrawer = {
         this.btnVerify = document.getElementById('btnVerifyOrder');
         this.btnReject = document.getElementById('btnRejectOrder');
         this.btnCustomerNoShow = document.getElementById('btnCustomerNoShow');
+        this.btnCompletePaidOrder = document.getElementById('btnCompletePaidOrder');
         
         // Rejection Section
         this.rejectBox = document.getElementById('rejectReasonBox');
@@ -86,6 +88,7 @@ const OrderDrawer = {
         this.btnVerify.addEventListener('click', () => this.handleVerifyClick());
         this.btnReject.addEventListener('click', () => this.showRejectReasonInput());
         if (this.btnCustomerNoShow) this.btnCustomerNoShow.addEventListener('click', () => this.handleCustomerNoShow());
+        if (this.btnCompletePaidOrder) this.btnCompletePaidOrder.addEventListener('click', () => this.handleCompletePaidOrder());
         this.btnRejectCancel.addEventListener('click', () => this.hideRejectReasonInput());
         this.btnRejectConfirm.addEventListener('click', () => this.handleRejectConfirm());
 
@@ -203,6 +206,7 @@ const OrderDrawer = {
         
         const isPending = order.orderStatus === 'PENDING';
         const isDeposited = order.orderStatus === 'DEPOSITED';
+        const isPaid = order.orderStatus === 'PAID';
         const isDeposit = (order.paymentMethod === 'DEPOSIT' || order.paymentMethod === 'COD');
 
         if (this.groupDepositAmount) {
@@ -235,6 +239,7 @@ const OrderDrawer = {
             if (this.btnVerify) this.btnVerify.style.display = 'block';
             if (this.btnReject) this.btnReject.style.display = 'block';
             if (this.btnCustomerNoShow) this.btnCustomerNoShow.style.display = 'none';
+            if (this.btnCompletePaidOrder) this.btnCompletePaidOrder.style.display = 'none';
         } else {
             if (this.inputCraneFee) {
                 this.inputCraneFee.disabled = true;
@@ -248,7 +253,8 @@ const OrderDrawer = {
             // Hide verification actions if already verified/cancelled/rejected
             if (this.btnVerify) this.btnVerify.style.display = 'none';
             if (this.btnReject) this.btnReject.style.display = 'none';
-            if (this.btnCustomerNoShow) this.btnCustomerNoShow.style.display = isDeposited ? 'block' : 'none';
+            if (this.btnCustomerNoShow) this.btnCustomerNoShow.style.display = (isDeposited || isPaid) ? 'block' : 'none';
+            if (this.btnCompletePaidOrder) this.btnCompletePaidOrder.style.display = isPaid ? 'block' : 'none';
         }
 
         this.calculateFinalTotalOnTheFly();
@@ -351,21 +357,47 @@ const OrderDrawer = {
     },
 
     handleCustomerNoShow() {
+        const isPaid = this.currentOrder && this.currentOrder.orderStatus === 'PAID';
         ConfirmDialog.show({
             title: "Xác nhận khách không nhận?",
-            message: "Đơn hàng sẽ bị hủy, sản phẩm được mở bán lại. Tiền cọc đã thu sẽ không hoàn và không tạo thanh toán phần còn lại.",
+            message: isPaid
+                ? "Đơn hàng đã thanh toán toàn bộ sẽ bị hủy, sản phẩm được mở bán lại. Payment giữ nguyên và ghi chú cần hoàn tiền ngoài hệ thống."
+                : "Đơn hàng sẽ bị hủy, sản phẩm được mở bán lại. Tiền cọc đã thu sẽ không hoàn và không tạo thanh toán phần còn lại.",
             summary: [
                 { label: "Mã đơn hàng", value: this.currentOrder.orderCode },
                 { label: "Lý do", value: "Khách không nhận hàng / không thanh toán phần còn lại" }
             ],
             onConfirm: async () => {
-                const res = await apiCustomerNoShow(this.currentOrder.orderCode, "Khách không nhận hàng / không thanh toán phần còn lại.");
+                const notes = isPaid
+                    ? "Khách không nhận do lỗi nhà vườn. Cần hoàn tiền ngoài hệ thống."
+                    : "Khách không nhận hàng / không thanh toán phần còn lại.";
+                const res = await apiCustomerNoShow(this.currentOrder.orderCode, notes);
                 if (res.success) {
                     BSMSToast.success("Đã hủy đơn vì khách không nhận. Sản phẩm đã được mở bán lại.");
                     this.close();
                     if (this.onSuccessCallback) this.onSuccessCallback();
                 } else {
                     BSMSToast.error(res.message || "Lỗi khi hủy đơn vì khách không nhận.");
+                }
+            }
+        });
+    },
+
+    handleCompletePaidOrder() {
+        ConfirmDialog.show({
+            title: "Xác nhận khách đã nhận?",
+            message: "Đơn hàng sẽ chuyển từ PAID sang COMPLETED. Thao tác này xác nhận khách đã nhận cây và đơn hàng đã hoàn tất.",
+            summary: [
+                { label: "Mã đơn hàng", value: this.currentOrder.orderCode }
+            ],
+            onConfirm: async () => {
+                const res = await apiCompletePaidOrder(this.currentOrder.orderCode);
+                if (res.success) {
+                    BSMSToast.success("Đơn hàng đã hoàn thành.");
+                    this.close();
+                    if (this.onSuccessCallback) this.onSuccessCallback();
+                } else {
+                    BSMSToast.error(res.message || "Lỗi khi hoàn thành đơn.");
                 }
             }
         });

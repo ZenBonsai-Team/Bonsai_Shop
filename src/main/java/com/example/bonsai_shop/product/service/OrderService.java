@@ -665,7 +665,9 @@ public class OrderService {
         if (order == null) {
             throw new IllegalArgumentException("Không tìm thấy đơn hàng: " + orderCode);
         }
-        if (!"DEPOSITED".equalsIgnoreCase(order.getOrderStatus())) {
+        boolean isDeposited = "DEPOSITED".equalsIgnoreCase(order.getOrderStatus());
+        boolean isPaid = "PAID".equalsIgnoreCase(order.getOrderStatus());
+        if (!isDeposited && !isPaid) {
             throw new IllegalStateException("Chỉ có thể hủy vì khách không nhận khi đơn hàng đang ở trạng thái DEPOSITED.");
         }
 
@@ -682,7 +684,7 @@ public class OrderService {
         OrderLog logEntry = OrderLog.builder()
                 .order(order)
                 .actionBy(moderator)
-                .actionType("CUSTOMER_NO_SHOW")
+                .actionType(isDeposited ? "CUSTOMER_NO_SHOW" : "CUSTOMER_NO_SHOW_AFTER_FULL_PAYMENT")
                 .fromStatus(oldStatus)
                 .toStatus("CANCELLED")
                 .actionAt(LocalDateTime.now())
@@ -690,6 +692,32 @@ public class OrderService {
         orderLogRepository.save(logEntry);
 
         eventPublisher.publishEvent(new OrderRejectedEvent(order, reason));
+        return true;
+    }
+
+    @Transactional
+    public boolean completePaidOrder(String orderCode, User moderator) {
+        Order order = orderRepository.findByOrderCode(orderCode).orElse(null);
+        if (order == null) {
+            throw new IllegalArgumentException("Không tìm thấy đơn hàng: " + orderCode);
+        }
+        if (!"PAID".equalsIgnoreCase(order.getOrderStatus())) {
+            throw new IllegalStateException("Chỉ có thể hoàn thành đơn hàng đang ở trạng thái PAID.");
+        }
+
+        String oldStatus = order.getOrderStatus();
+        order.setOrderStatus("COMPLETED");
+        orderRepository.save(order);
+
+        OrderLog logEntry = OrderLog.builder()
+                .order(order)
+                .actionBy(moderator)
+                .actionType("ORDER_COMPLETED")
+                .fromStatus(oldStatus)
+                .toStatus("COMPLETED")
+                .actionAt(LocalDateTime.now())
+                .build();
+        orderLogRepository.save(logEntry);
         return true;
     }
 
