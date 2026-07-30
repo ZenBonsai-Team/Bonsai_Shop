@@ -9,9 +9,9 @@ import com.example.bonsai_shop.product.repository.OrderHandlingRepository;
 import com.example.bonsai_shop.product.repository.OrderRepository;
 import com.example.bonsai_shop.product.repository.PaymentRepository;
 import com.example.bonsai_shop.product.repository.ProductRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,96 +19,107 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
+@Slf4j
 public class OrderExpirationService {
 
-    private static final Logger log = LoggerFactory.getLogger(OrderExpirationService.class);
+    private final OrderRepository orderRepository;
+    private final ProductRepository productRepository;
+    private final PaymentRepository paymentRepository;
+    private final OrderHandlingRepository orderHandlingRepository;
+    private final MailService mailService;
 
-    @Autowired
-    private OrderRepository orderRepository;
-
-    @Autowired
-    private ProductRepository productRepository;
-
-    @Autowired
-    private PaymentRepository paymentRepository;
-
-    @Autowired
-    private OrderHandlingRepository orderHandlingRepository;
-
-    @Autowired
-    private MailService mailService;
+    @Value("${order.expiration.in-person-minutes:1440}")
+    private long inPersonExpirationMinutes;
 
     @Transactional
     public void cancelExpiredOrders() {
         LocalDateTime now = LocalDateTime.now();
 
-        // 1. Xử lý đơn Online (VNPay) quá 15 phút chưa thanh toán
         LocalDateTime onlineCutoff = now.minusMinutes(15);
         List<Order> expiredOnlineOrders = orderRepository.findExpiredOnlineOrders(onlineCutoff);
         for (Order order : expiredOnlineOrders) {
-            cancelSingleOrder(order, "Tự động từ chối: Đơn hàng Online quá hạn 15 phút chưa thanh toán qua VNPay");
+            cancelSingleOrder(order, "Tự động từ chối: Đơn hàng online quá hạn 15 phút chưa thanh toán qua VNPay", "REJECTED");
         }
 
-        // 2. Xử lý đơn Offline quá 48 giờ chưa thanh toán / hoàn tất tiền
         LocalDateTime offlineCutoff = now.minusHours(48);
         List<Order> expiredOfflineOrders = orderRepository.findExpiredOfflineOrders(offlineCutoff);
         for (Order order : expiredOfflineOrders) {
-            cancelSingleOrder(order, "Tự động từ chối: Đơn hàng quá hạn 48 giờ chưa chuẩn bị/thanh toán tiền");
+            cancelSingleOrder(order, "Tự động từ chối: Đơn hàng quá hạn 48 giờ chưa chuẩn bị/thanh toán tiền", "REJECTED");
+        }
+
+        LocalDateTime inPersonCutoff = now.minusMinutes(inPersonExpirationMinutes);
+        List<Order> expiredInPersonOrders = orderRepository.findExpiredInPersonOrders(inPersonCutoff);
+        for (Order order : expiredInPersonOrders) {
+            cancelSingleOrder(order, "Tự động hủy: In-person order quá hạn " + inPersonExpirationMinutes + " phút chưa xác nhận thanh toán", "CANCELLED");
         }
     }
 
-    private void cancelSingleOrder(Order order, String reason) {
-        log.info("Tự động từ chối đơn hàng quá hạn [{}]: {}", order.getOrderCode(), reason);
+    private void cancelSingleOrder(Order order, String reason, String expiredStatus) {
+        log.info("Tự động xử lý đơn hàng quá hạn [{}]: {}", order.getOrderCode(), reason);
 
-        // 1. Cập nhật Order Status -> REJECTED
-        order.setOrderStatus("REJECTED");
+        order.setOrderStatus(expiredStatus);
         String currentNotes = order.getNotes();
         order.setNotes(currentNotes != null && !currentNotes.isEmpty() ? currentNotes + " | " + reason : reason);
         orderRepository.save(order);
 
-        // 2. Cập nhật các bản ghi Payment PENDING thành EXPIRED
-        if (order.getOrderId() != null) {
-            List<Payment> payments = paymentRepository.findByOrderOrderIdOrderByPaymentIdAsc(order.getOrderId());
-            if (payments != null) {
-                for (Payment p : payments) {
-                    if ("PENDING".equalsIgnoreCase(p.getPaymentStatus())) {
-                        p.setPaymentStatus("EXPIRED");
-                        paymentRepository.save(p);
-                        log.info("Cập nhật Payment [#{} - {}] -> EXPIRED", p.getPaymentId(), p.getPaymentType());
-                    }
-                }
+        expirePendingPayments(order);
+        releaseOrderHandlings(order);
+        releaseProducts(order);
+        sendExpirationEmail(order, reason);
+    }
+
+    private void expirePendingPayments(Order order) {
+        if (order.getOrderId() == null) {
+            return;
+        }
+        List<Payment> payments = paymentRepository.findByOrderOrderIdOrderByPaymentIdAsc(order.getOrderId());
+        if (payments == null) {
+            return;
+        }
+        for (Payment payment : payments) {
+            if ("PENDING".equalsIgnoreCase(payment.getPaymentStatus())) {
+                payment.setPaymentStatus("EXPIRED");
+                paymentRepository.save(payment);
+                log.info("Cập nhật Payment [#{} - {}] -> EXPIRED", payment.getPaymentId(), payment.getPaymentType());
             }
         }
+    }
 
-        // 3. Giải phóng OrderHandling (gán isActive = false, releasedAt = now)
-        if (order.getOrderId() != null) {
-            List<OrderHandling> handlings = orderHandlingRepository.findByOrderOrderIdOrderByHandledAtDesc(order.getOrderId());
-            if (handlings != null) {
-                for (OrderHandling h : handlings) {
-                    if (Boolean.TRUE.equals(h.getIsActive())) {
-                        h.setIsActive(false);
-                        h.setReleasedAt(LocalDateTime.now());
-                        orderHandlingRepository.save(h);
-                        log.info("Giải phóng OrderHandling [#{} - Mod: {}]", h.getOrderHandlingId(),
-                                h.getModerator() != null ? h.getModerator().getUsername() : "N/A");
-                    }
-                }
+    private void releaseOrderHandlings(Order order) {
+        if (order.getOrderId() == null) {
+            return;
+        }
+        List<OrderHandling> handlings = orderHandlingRepository.findByOrderOrderIdOrderByHandledAtDesc(order.getOrderId());
+        if (handlings == null) {
+            return;
+        }
+        for (OrderHandling handling : handlings) {
+            if (Boolean.TRUE.equals(handling.getIsActive())) {
+                handling.setIsActive(false);
+                handling.setReleasedAt(LocalDateTime.now());
+                orderHandlingRepository.save(handling);
+                log.info("Giải phóng OrderHandling [#{} - Mod: {}]", handling.getOrderHandlingId(),
+                        handling.getModerator() != null ? handling.getModerator().getUsername() : "N/A");
             }
         }
+    }
 
-        // 4. Giải phóng sản phẩm cây cảnh về trạng thái AVAILABLE
-        if (order.getOrderDetails() != null) {
-            for (OrderDetail detail : order.getOrderDetails()) {
-                Product product = detail.getProduct();
-                if (product != null && !"AVAILABLE".equalsIgnoreCase(product.getProductStatus())) {
-                    product.setProductStatus("AVAILABLE");
-                    productRepository.save(product);
-                    log.info("Giải phóng sản phẩm [ID: {} - {}] về trạng thái AVAILABLE", product.getProductId(), product.getProductName());
-                }
+    private void releaseProducts(Order order) {
+        if (order.getOrderDetails() == null) {
+            return;
+        }
+        for (OrderDetail detail : order.getOrderDetails()) {
+            Product product = detail.getProduct();
+            if (product != null && !"AVAILABLE".equalsIgnoreCase(product.getProductStatus())) {
+                product.setProductStatus("AVAILABLE");
+                productRepository.save(product);
+                log.info("Giải phóng sản phẩm [ID: {} - {}] về trạng thái AVAILABLE", product.getProductId(), product.getProductName());
             }
         }
+    }
 
-        // 5. Gửi Email thông báo hết hạn thanh toán cho khách hàng
+    private void sendExpirationEmail(Order order, String reason) {
         try {
             mailService.sendOrderRejectedEmail(order, reason);
             log.info("Đã gửi email thông báo hết hạn/từ chối đơn hàng [{}] tới email [{}]", order.getOrderCode(), order.getCustomerEmail());

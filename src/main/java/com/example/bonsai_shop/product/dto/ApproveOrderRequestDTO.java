@@ -16,7 +16,7 @@ import java.math.BigDecimal;
  * Sau khi nhận request này, OrderService.verifyOrder() sẽ:
  *   1. Tính totalAmount mới = treePrice + craneFee + shippingFee
  *   2. Tạo Payment record (DEPOSIT hoặc FULL_PAYMENT)
- *   3. Cập nhật Order.status = APPROVED
+ *   3. Cập nhật Order.status = PENDING_PAYMENT
  *   4. Ghi OrderLog
  */
 @Data

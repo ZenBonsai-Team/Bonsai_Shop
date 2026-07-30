@@ -588,7 +588,7 @@ public class OrderApiController {
             String fieldValue = vnp_Params.get(fieldName);
             if ((fieldValue != null) && (fieldValue.length() > 0)) {
                 hashData.append(fieldName).append('=').append(
-                        URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII.toString()).replace("+", "%20"));
+                        URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII.toString()));
                 query.append(URLEncoder.encode(fieldName, StandardCharsets.US_ASCII.toString())).append('=')
                         .append(URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII.toString()));
                 if (i < fieldNames.size() - 1) {
