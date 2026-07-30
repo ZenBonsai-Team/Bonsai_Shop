@@ -26,6 +26,9 @@ public class MailService {
     @Value("${spring.mail.username}")
     private String fromEmail;
 
+    @Value("${app.base-url:http://localhost:8080}")
+    private String baseUrl;
+
     private final Map<String, Instant> suppressionCache = new ConcurrentHashMap<>();
     private static final long SUPPRESSION_TIME_SECONDS = 60;
     private static final int MAX_RETRIES = 3;
@@ -64,7 +67,7 @@ public class MailService {
         }
         suppressionCache.put(orderCode, now);
 
-        String paymentLink = "http://localhost:8080/vnpay/pay-order?orderCode=" + orderCode;
+        String paymentLink = baseUrl + "/vnpay/pay-order?orderCode=" + orderCode;
         String emailContent = buildAprovedTemplate(order, paymentLink);
 
         sendHtmlEmailWithRetry(toEmail, "Xác nhân đơn hàng #" + orderCode + " - Bonsai Shop", emailContent, orderCode);
