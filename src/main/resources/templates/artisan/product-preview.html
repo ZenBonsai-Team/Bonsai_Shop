@@ -14,6 +14,8 @@
     <link rel="stylesheet" th:href="@{/css/dashboard-layout.css}">
     <link rel="stylesheet" th:href="@{/css/dashboard.css}">
     <link rel="stylesheet" th:href="@{/css/artisan.css}">
+    <link rel="stylesheet" th:href="@{/css/bsms-notification.css}">
+    <script th:src="@{/js/bsms-notification.js}"></script>
 </head>
 <body>
 <div class="dashboard-layout">
@@ -28,7 +30,12 @@
             </div>
             <div class="actions">
                 <form th:if="${product.productStatus == 'DRAFT'}" method="post" th:action="@{/artisan/products/{id}/publish(id=${product.productId})}">
-                    <button type="submit" class="btn">Đăng bán</button>
+                    <button type="button"
+                            class="btn"
+                            data-open-publish-modal
+                            th:attr="data-product-name=${product.productName}">
+                        Đăng bán
+                    </button>
                 </form>
                 <a th:if="${isEditable}" class="btn secondary" th:href="@{/artisan/products/{id}/media(id=${product.productId})}">Sửa ảnh/video</a>
                 <a th:if="${isEditable}" class="btn secondary" th:href="@{/artisan/products/{id}/edit(id=${product.productId})}">Sửa thông tin</a>
@@ -36,8 +43,8 @@
             </div>
         </header>
 
-        <div th:if="${success}" class="alert success" th:text="${success}"></div>
-        <div th:if="${error}" class="alert error" th:text="${error}"></div>
+        <div id="artisanFlashSuccess" th:if="${success}" th:attr="data-message=${success}" hidden></div>
+        <div id="artisanFlashError" th:if="${error}" th:attr="data-message=${error}" hidden></div>
         <div th:if="${isSold}" class="alert warning">Sản phẩm đã bán nên chỉ được xem lại thông tin.</div>
 
         <section class="publish-preview-layout">
@@ -145,5 +152,77 @@
     </main>
 </div>
 
+<div id="artisanPublishModal" class="artisan-action-modal-backdrop hidden">
+    <div class="artisan-action-modal" role="dialog" aria-modal="true" aria-labelledby="artisanPublishModalTitle">
+        <header>
+            <h2 id="artisanPublishModalTitle">Xác nhận đăng bán sản phẩm</h2>
+            <button type="button" class="artisan-action-modal-close" aria-label="Đóng">×</button>
+        </header>
+        <div class="artisan-action-modal-body">
+            <p class="artisan-action-target">
+                Sản phẩm: <strong id="artisanPublishProductName">-</strong>
+            </p>
+            <div class="artisan-action-warning">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+                <div>
+                    <strong>Kiểm tra trước khi đăng bán</strong>
+                    <p>Sản phẩm cần đủ thông tin bắt buộc, giá và hình ảnh. Nếu thiếu, hệ thống sẽ không cho đăng bán.</p>
+                </div>
+            </div>
+        </div>
+        <footer>
+            <button type="button" class="btn-modal-cancel">Hủy</button>
+            <button type="button" class="btn-modal-confirm">Đăng bán</button>
+        </footer>
+    </div>
+</div>
+
+<script>
+    const artisanPublishModal = document.getElementById('artisanPublishModal');
+    const artisanPublishProductName = document.getElementById('artisanPublishProductName');
+    let pendingPublishForm = null;
+
+    function closeArtisanPublishModal() {
+        artisanPublishModal.classList.add('hidden');
+        pendingPublishForm = null;
+    }
+
+    document.querySelectorAll('[data-open-publish-modal]').forEach((button) => {
+        button.addEventListener('click', () => {
+            pendingPublishForm = button.closest('form');
+            artisanPublishProductName.textContent = button.dataset.productName || '-';
+            artisanPublishModal.classList.remove('hidden');
+        });
+    });
+
+    artisanPublishModal.querySelector('.artisan-action-modal-close').addEventListener('click', closeArtisanPublishModal);
+    artisanPublishModal.querySelector('.btn-modal-cancel').addEventListener('click', closeArtisanPublishModal);
+    artisanPublishModal.addEventListener('click', (event) => {
+        if (event.target === artisanPublishModal) {
+            closeArtisanPublishModal();
+        }
+    });
+
+    artisanPublishModal.querySelector('.btn-modal-confirm').addEventListener('click', () => {
+        if (pendingPublishForm) {
+            pendingPublishForm.submit();
+        }
+    });
+</script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const successFlash = document.getElementById('artisanFlashSuccess');
+        const errorFlash = document.getElementById('artisanFlashError');
+
+        if (successFlash?.dataset.message && window.BSMSToast) {
+            BSMSToast.success(successFlash.dataset.message);
+        }
+
+        if (errorFlash?.dataset.message && window.BSMSToast) {
+            BSMSToast.error(errorFlash.dataset.message);
+        }
+    });
+</script>
 </body>
 </html>
+

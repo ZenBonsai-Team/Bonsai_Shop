@@ -13,6 +13,8 @@
     <link rel="stylesheet" th:href="@{/css/common.css}">
     <link rel="stylesheet" th:href="@{/css/dashboard.css}">
     <link rel="stylesheet" th:href="@{/css/artisan.css}">
+    <link rel="stylesheet" th:href="@{/css/bsms-notification.css}">
+    <script th:src="@{/js/bsms-notification.js}"></script>
 </head>
 <body>
 <div class="dashboard-layout">
@@ -32,8 +34,8 @@
         </div>
     </header>
 
-    <div th:if="${success}" class="alert success" th:text="${success}"></div>
-    <div th:if="${error}" class="alert error" th:text="${error}"></div>
+    <div id="artisanFlashSuccess" th:if="${success}" th:attr="data-message=${success}" hidden></div>
+    <div id="artisanFlashError" th:if="${error}" th:attr="data-message=${error}" hidden></div>
     <div th:if="${!isEditable}" class="alert warning">Chỉ có thể sửa media của sản phẩm nháp hoặc đã ẩn.</div>
 
     <form th:if="${isEditable}" class="form-card" method="post" enctype="multipart/form-data"
@@ -136,6 +138,20 @@
             const currentValue = Number(input.value || 1);
             input.value = Math.max(1, currentValue + step);
         });
+    });
+</script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const successFlash = document.getElementById('artisanFlashSuccess');
+        const errorFlash = document.getElementById('artisanFlashError');
+
+        if (successFlash?.dataset.message && window.BSMSToast) {
+            BSMSToast.success(successFlash.dataset.message);
+        }
+
+        if (errorFlash?.dataset.message && window.BSMSToast) {
+            BSMSToast.error(errorFlash.dataset.message);
+        }
     });
 </script>
 </body>
