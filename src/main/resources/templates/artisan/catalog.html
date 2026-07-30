@@ -38,8 +38,8 @@
             <a class="btn secondary" th:href="@{/artisan/products/new}">Thêm sản phẩm mới</a>
         </header>
 
-    <div th:if="${success}" class="alert success" th:text="${success}"></div>
-    <div th:if="${error}" class="alert error" th:text="${error}"></div>
+    <div id="artisanFlashSuccess" th:if="${success}" th:attr="data-message=${success}" hidden></div>
+    <div id="artisanFlashError" th:if="${error}" th:attr="data-message=${error}" hidden></div>
 
     <section class="taxonomy-layout">
         <div class="taxonomy-panel">
@@ -341,6 +341,20 @@
     if (firstCategory) {
         filterVarietiesByCategory(firstCategory.dataset.categoryId);
     }
+</script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const successFlash = document.getElementById('artisanFlashSuccess');
+        const errorFlash = document.getElementById('artisanFlashError');
+
+        if (successFlash?.dataset.message && window.BSMSToast) {
+            BSMSToast.success(successFlash.dataset.message);
+        }
+
+        if (errorFlash?.dataset.message && window.BSMSToast) {
+            BSMSToast.error(errorFlash.dataset.message);
+        }
+    });
 </script>
 </body>
 </html>

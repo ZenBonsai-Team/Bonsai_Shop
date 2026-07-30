@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
@@ -88,6 +88,8 @@
         @media (max-width: 992px) { .journal-event { grid-template-columns: 88px 1fr; } .journal-card-tags { grid-column: 2; justify-items: start; } .journal-cover-link { width: 88px; height: 72px; } .journal-modal-stage { min-height: 360px; } }
         @media (max-width: 576px) { .journal-page { padding: 22px 18px; } .journal-page .page-header { display: block; } .journal-page .actions { margin-top: 14px; } }
     </style>
+    <link rel="stylesheet" th:href="@{/css/bsms-notification.css}">
+    <script th:src="@{/js/bsms-notification.js}"></script>
 </head>
 <body>
 <div class="dashboard-layout">
@@ -106,8 +108,8 @@
             </div>
         </header>
 
-        <div th:if="${success}" class="alert success" th:text="${success}"></div>
-        <div th:if="${error}" class="alert error" th:text="${error}"></div>
+        <div id="artisanFlashSuccess" th:if="${success}" th:attr="data-message=${success}" hidden></div>
+        <div id="artisanFlashError" th:if="${error}" th:attr="data-message=${error}" hidden></div>
 
         <div class="journal-layout">
             <section class="form-card">
@@ -359,6 +361,20 @@
             ? (currentIndex - 1 + slides.length) % slides.length
             : (currentIndex + 1) % slides.length;
         setJournalSlide(eventId, targetIndex);
+    });
+</script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const successFlash = document.getElementById('artisanFlashSuccess');
+        const errorFlash = document.getElementById('artisanFlashError');
+
+        if (successFlash?.dataset.message && window.BSMSToast) {
+            BSMSToast.success(successFlash.dataset.message);
+        }
+
+        if (errorFlash?.dataset.message && window.BSMSToast) {
+            BSMSToast.error(errorFlash.dataset.message);
+        }
     });
 </script>
 </body>
