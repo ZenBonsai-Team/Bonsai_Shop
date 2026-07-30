@@ -124,7 +124,7 @@ public class OrderService {
         kpis.put("approved", orderRepository.countByOrderStatus(STATUS_PENDING_PAYMENT));
         kpis.put("paid", orderRepository.countByOrderStatus("PAID"));
         kpis.put("cancelled", orderRepository.countByOrderStatus("CANCELLED"));
-        kpis.put("rejected", orderRepository.countByOrderStatus("REJECTED"));
+        kpis.put("rejected", orderRepository.countByOrderStatus("CANCELLED"));
         return kpis;
     }
 
@@ -135,7 +135,7 @@ public class OrderService {
         kpis.put("pending", orderRepository.countByAssignedToUserIdAndOrderStatus(moderatorId, "PENDING"));
         kpis.put("approved", orderRepository.countByAssignedToUserIdAndOrderStatus(moderatorId, STATUS_PENDING_PAYMENT));
         kpis.put("paid", orderRepository.countByAssignedToUserIdAndOrderStatus(moderatorId, "PAID"));
-        kpis.put("rejected", orderRepository.countByAssignedToUserIdAndOrderStatus(moderatorId, "REJECTED"));
+        kpis.put("rejected", orderRepository.countByAssignedToUserIdAndOrderStatus(moderatorId, "CANCELLED"));
         return kpis;
     }
 
@@ -337,12 +337,12 @@ public class OrderService {
 
         // Kiểm tra quyền sở hữu đơn hàng
         if (order.getAssignedTo() == null || !order.getAssignedTo().getUserId().equals(moderator.getUserId())) {
-            throw new SecurityException("Bạn không có quyền từ chối duyệt đơn hàng này!");
+            throw new SecurityException("Bạn không có quyền hủy đơn hàng này!");
         }
 
         String oldStatus = order.getOrderStatus();
-        order.setOrderStatus("REJECTED");
-        order.setNotes("Từ chối duyệt với lý do: " + reason);
+        order.setOrderStatus("CANCELLED");
+        order.setNotes("Hủy đơn với lý do: " + reason);
         orderRepository.save(order);
 
         if (order.getOrderDetails() != null) {
@@ -360,7 +360,7 @@ public class OrderService {
                 .actionBy(moderator)
                 .actionType("REJECT")
                 .fromStatus(oldStatus)
-                .toStatus("REJECTED")
+                .toStatus("CANCELLED")
                 .actionAt(LocalDateTime.now())
                 .build();
         orderLogRepository.save(log);

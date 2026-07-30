@@ -46,7 +46,7 @@ public class OrderEventListener {
     @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handleOrderRejectedEvent(OrderRejectedEvent event) {
-        log.info("Bắt đầu xử lý gửi email từ chối đơn hàng: {}", event.getOrder().getOrderCode());
+        log.info("Bắt đầu xử lý gửi email hủy đơn hàng: {}", event.getOrder().getOrderCode());
         mailService.sendOrderRejectedEmail(event.getOrder(), event.getReason());
     }
 

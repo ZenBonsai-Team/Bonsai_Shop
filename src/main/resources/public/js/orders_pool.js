@@ -10,7 +10,6 @@ const orderStatusLabels = {
     'PENDING_PAYMENT': 'Chờ thanh toán',
     'DEPOSITED': 'Đã đặt cọc',
     'PAID': 'Đã thanh toán',
-    'REJECTED': 'Đã từ chối',
     'COMPLETED': 'Hoàn thành',
     'CANCELLED': 'Đã hủy',
     'CONFIRMED': 'Đã xác nhận',

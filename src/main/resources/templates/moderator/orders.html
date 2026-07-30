@@ -54,7 +54,7 @@
             <div class="kpi-card kpi-rejected">
                 <div class="kpi-icon-wrapper"><i class="fa-solid fa-circle-xmark"></i></div>
                 <div class="kpi-data">
-                    <span class="kpi-label">Bị từ chối</span>
+                    <span class="kpi-label">Đã hủy</span>
                     <span class="kpi-value" id="kpiRejectedCount">0</span>
                 </div>
             </div>
@@ -93,7 +93,7 @@
                     <button class="tab-btn" data-status="PENDING_PAYMENT">Chờ thanh toán</button>
                     <button class="tab-btn" data-status="PAID">Đã thanh toán (Paid)</button>
                     <button class="tab-btn" data-status="CANCELLED">Đã hủy (Cancelled)</button>
-                    <button class="tab-btn" data-status="REJECTED">Từ chối (Rejected)</button>
+                    <button class="tab-btn" data-status="CANCELLED">Đã hủy</button>
                 </div>
             </div>
 
@@ -267,18 +267,18 @@
 
                 <!-- Slide down Rejection Dialog -->
                 <div class="reject-reason-box" id="rejectReasonBox">
-                    <label for="textareaRejectReason" style="font-size:12px; font-weight:700; color:#c53030;">Nhập lý do từ chối duyệt đơn:</label>
+                    <label for="textareaRejectReason" style="font-size:12px; font-weight:700; color:#c53030;">Nhập lý do hủy đơn:</label>
                     <textarea id="textareaRejectReason" rows="3" placeholder="Nhập lý do chi tiết để thông báo lại cho Artisan/Khách hàng..."></textarea>
                     <div class="reject-action-row">
                         <button class="btn-mini btn-mini-cancel" id="btnRejectCancel">Hủy</button>
-                        <button class="btn-mini btn-mini-confirm" id="btnRejectConfirm">Xác nhận Từ chối</button>
+                        <button class="btn-mini btn-mini-confirm" id="btnRejectConfirm">Xác nhận hủy</button>
                     </div>
                 </div>
             </div>
 
             <!-- Drawer Bottom Buttons -->
             <div class="drawer-footer">
-                <button class="btn-block btn-reject" id="btnRejectOrder"><i class="fa-solid fa-circle-xmark"></i> Từ chối duyệt</button>
+                <button class="btn-block btn-reject" id="btnRejectOrder"><i class="fa-solid fa-circle-xmark"></i> Hủy đơn</button>
                 <button class="btn-block btn-verify" id="btnVerifyOrder"><i class="fa-solid fa-circle-check"></i> Phê duyệt đơn</button>
                 <button class="btn-block btn-verify" id="btnConfirmRemainingPayment" style="display: none; background: #2e7d32;"><i class="fa-solid fa-money-bill-wave"></i> Xác nhận đã thanh toán đầy đủ</button>
             </div>

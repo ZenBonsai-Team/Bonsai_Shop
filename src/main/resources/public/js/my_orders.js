@@ -11,7 +11,6 @@ const orderStatusLabels = {
     'PENDING_PAYMENT': 'Chờ thanh toán',
     'DEPOSITED': 'Đã đặt cọc',
     'PAID': 'Đã thanh toán',
-    'REJECTED': 'Đã từ chối',
     'COMPLETED': 'Hoàn thành',
     'CANCELLED': 'Đã hủy',
     'CONFIRMED': 'Đã xác nhận',
@@ -205,7 +204,7 @@ function initDrawerEvents() {
         rejectConfirmBtn.addEventListener('click', () => {
             const reason = document.getElementById('textareaRejectReason').value.trim();
             if (!reason) {
-                BSMSToast.warning("Vui lòng nhập lý do từ chối!");
+                BSMSToast.warning("Vui lòng nhập lý do hủy đơn!");
                 return;
             }
             rejectOrder(activeOrderCode, reason);
@@ -519,14 +518,14 @@ async function rejectOrder(orderCode, reason) {
         const result = await response.json();
 
         if (response.ok && result.success) {
-            BSMSToast.success("Từ chối đơn hàng thành công!");
+            BSMSToast.success("Hủy đơn hàng thành công!");
             closeDrawer();
             renderDashboard();
         } else {
-            BSMSToast.error(result.message || "Lỗi khi từ chối đơn hàng.");
+            BSMSToast.error(result.message || "Lỗi khi hủy đơn hàng.");
         }
     } catch (err) {
-        console.error("Lỗi từ chối:", err);
+        console.error("Lỗi hủy đơn:", err);
     }
 }
 
