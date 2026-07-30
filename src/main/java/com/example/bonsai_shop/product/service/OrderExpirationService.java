@@ -39,13 +39,13 @@ public class OrderExpirationService {
         LocalDateTime onlineCutoff = now.minusMinutes(15);
         List<Order> expiredOnlineOrders = orderRepository.findExpiredOnlineOrders(onlineCutoff);
         for (Order order : expiredOnlineOrders) {
-            cancelSingleOrder(order, "Tự động từ chối: Đơn hàng online quá hạn 15 phút chưa thanh toán qua VNPay", "REJECTED");
+            cancelSingleOrder(order, "Tự động hủy: Đơn hàng online quá hạn 15 phút chưa thanh toán qua VNPay", "CANCELLED");
         }
 
         LocalDateTime offlineCutoff = now.minusHours(48);
         List<Order> expiredOfflineOrders = orderRepository.findExpiredOfflineOrders(offlineCutoff);
         for (Order order : expiredOfflineOrders) {
-            cancelSingleOrder(order, "Tự động từ chối: Đơn hàng quá hạn 48 giờ chưa chuẩn bị/thanh toán tiền", "REJECTED");
+            cancelSingleOrder(order, "Tự động hủy: Đơn hàng quá hạn 48 giờ chưa chuẩn bị/thanh toán tiền", "CANCELLED");
         }
 
         LocalDateTime inPersonCutoff = now.minusMinutes(inPersonExpirationMinutes);
@@ -122,9 +122,9 @@ public class OrderExpirationService {
     private void sendExpirationEmail(Order order, String reason) {
         try {
             mailService.sendOrderRejectedEmail(order, reason);
-            log.info("Đã gửi email thông báo hết hạn/từ chối đơn hàng [{}] tới email [{}]", order.getOrderCode(), order.getCustomerEmail());
+            log.info("Đã gửi email thông báo hết hạn/hủy đơn hàng [{}] tới email [{}]", order.getOrderCode(), order.getCustomerEmail());
         } catch (Exception e) {
-            log.warn("Không thể gửi email thông báo từ chối cho đơn hàng {}: {}", order.getOrderCode(), e.getMessage());
+            log.warn("Không thể gửi email thông báo hủy cho đơn hàng {}: {}", order.getOrderCode(), e.getMessage());
         }
     }
 }

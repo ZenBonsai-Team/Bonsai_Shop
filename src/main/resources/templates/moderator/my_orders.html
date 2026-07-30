@@ -82,7 +82,7 @@
             <div class="kpi-card kpi-rejected">
                 <div class="kpi-icon-wrapper"><i class="fa-solid fa-circle-xmark"></i></div>
                 <div class="kpi-data">
-                    <span class="kpi-label">Tôi đã từ chối</span>
+                    <span class="kpi-label">Tôi đã hủy</span>
                     <span class="kpi-value" id="kpiRejectedCount">0</span>
                 </div>
             </div>
@@ -113,8 +113,9 @@
                     <button class="tab-btn" data-status="PENDING">Chờ duyệt</button>
                     <button class="tab-btn" data-status="PENDING_PAYMENT">Chờ thanh toán</button>
                     <button class="tab-btn" data-status="PAID">Đã thanh toán</button>
+                    <button class="tab-btn" data-status="COMPLETED">Hoàn thành</button>
                     <button class="tab-btn" data-status="CANCELLED">Đã hủy</button>
-                    <button class="tab-btn" data-status="REJECTED">Từ chối</button>
+                    <button class="tab-btn" data-status="CANCELLED">Đã hủy</button>
                 </div>
             </div>
 
@@ -270,11 +271,11 @@
 
                 <!-- Actions / Reject reason box -->
                 <div class="reject-reason-box mt-3" id="rejectReasonBox" style="display: none;">
-                    <label style="font-size:12px; font-weight:700; color:#c53030;">Nhập lý do từ chối duyệt đơn:</label>
+                    <label style="font-size:12px; font-weight:700; color:#c53030;">Nhập lý do hủy đơn:</label>
                     <textarea id="textareaRejectReason" class="form-control mt-1" rows="3" placeholder="Lý do chi tiết..."></textarea>
                     <div class="mt-2 d-flex justify-content-end gap-2">
                         <button class="btn btn-secondary btn-sm" id="btnRejectCancel">Hủy</button>
-                        <button class="btn btn-danger btn-sm" id="btnRejectConfirm">Xác nhận Từ chối</button>
+                        <button class="btn btn-danger btn-sm" id="btnRejectConfirm">Xác nhận hủy</button>
                     </div>
                 </div>
             </div>
@@ -282,9 +283,11 @@
             <!-- Drawer Footer Action Buttons -->
             <div class="drawer-footer d-flex gap-2 p-3">
                 <button class="btn btn-outline-danger flex-grow-1" id="btnUnclaimOrder"><i class="fa-solid fa-undo"></i> Trả đơn về Pool</button>
-                <button class="btn btn-danger flex-grow-1" id="btnRejectOrder"><i class="fa-solid fa-circle-xmark"></i> Từ chối</button>
+                <button class="btn btn-danger flex-grow-1" id="btnRejectOrder"><i class="fa-solid fa-circle-xmark"></i> Hủy đơn</button>
                 <button class="btn btn-success flex-grow-1" id="btnVerifyOrder"><i class="fa-solid fa-circle-check"></i> Phê duyệt</button>
                 <button class="btn btn-success flex-grow-1" id="btnConfirmRemainingPayment" style="display: none;"><i class="fa-solid fa-money-bill-wave me-1"></i> Xác nhận đã thanh toán đầy đủ</button>
+                <button class="btn btn-success flex-grow-1" id="btnCompletePaidOrder" style="display: none;"><i class="fa-solid fa-check-double me-1"></i> Khách đã nhận</button>
+                <button class="btn btn-danger flex-grow-1" id="btnCustomerNoShow" style="display: none;"><i class="fa-solid fa-user-slash me-1"></i> Khách không nhận</button>
             </div>
         </div>
 

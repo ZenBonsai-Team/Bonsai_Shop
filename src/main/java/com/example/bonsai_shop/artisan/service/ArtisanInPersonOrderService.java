@@ -31,7 +31,7 @@ import java.util.concurrent.ThreadLocalRandom;
 public class ArtisanInPersonOrderService {
 
     public static final String STATUS_PENDING_PAYMENT = "PENDING_PAYMENT";
-    public static final String STATUS_PAID = "PAID";
+    public static final String STATUS_COMPLETED = "COMPLETED";
     public static final String STATUS_CANCELLED = "CANCELLED";
     public static final String ORDER_TYPE_IN_PERSON = "IN_PERSON";
     public static final String ORDER_TYPE_ONLINE = "ONLINE";
@@ -252,11 +252,11 @@ public class ArtisanInPersonOrderService {
         payment.setPaymentDate(LocalDateTime.now());
         paymentRepository.save(payment);
 
-        order.setOrderStatus(STATUS_PAID);
+        order.setOrderStatus(STATUS_COMPLETED);
         product.setProductStatus(PRODUCT_SOLD);
         productRepository.save(product);
         Order savedOrder = orderRepository.save(order);
-        log(savedOrder, artisanUser, "IN_PERSON_PAYMENT_CONFIRMED", oldStatus, STATUS_PAID);
+        log(savedOrder, artisanUser, "IN_PERSON_PAYMENT_CONFIRMED", oldStatus, STATUS_COMPLETED);
         try {
             mailService.sendInPersonOrderPaidEmail(savedOrder);
         } catch (Exception e) {

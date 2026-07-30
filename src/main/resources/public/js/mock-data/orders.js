@@ -106,6 +106,53 @@ function apiRejectOrder(orderCode, reason) {
 }
 
 // Giữ lại các hàm giả lập không dùng đến trên UI để tránh lỗi tham chiếu nếu có
+function apiCustomerNoShow(orderCode, notes) {
+    const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
+    const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content');
+
+    const headers = {
+        'Content-Type': 'application/json'
+    };
+    if (csrfToken && csrfHeader) {
+        headers[csrfHeader] = csrfToken;
+    }
+
+    return fetch(`/api/orders/${orderCode}/customer-no-show`, {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify({
+            notes: notes
+        })
+    })
+    .then(response => response.json())
+    .catch(error => {
+        console.error("Lỗi hủy đơn vì khách không nhận:", error);
+        return { success: false, message: "Lỗi kết nối máy chủ khi hủy đơn vì khách không nhận." };
+    });
+}
+
+function apiCompletePaidOrder(orderCode) {
+    const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
+    const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content');
+
+    const headers = {
+        'Content-Type': 'application/json'
+    };
+    if (csrfToken && csrfHeader) {
+        headers[csrfHeader] = csrfToken;
+    }
+
+    return fetch(`/api/orders/${orderCode}/complete`, {
+        method: 'POST',
+        headers: headers
+    })
+    .then(response => response.json())
+    .catch(error => {
+        console.error("Lỗi hoàn thành đơn:", error);
+        return { success: false, message: "Lỗi kết nối máy chủ khi hoàn thành đơn." };
+    });
+}
+
 function apiSimulatePayment(orderCode) {
     return Promise.resolve({ success: true });
 }

@@ -38,7 +38,7 @@ public class ArtisanInPersonOrderController {
         model.addAttribute("orders", orders);
         model.addAttribute("selectedStatus", status);
         model.addAttribute("pendingPaymentStatus", ArtisanInPersonOrderService.STATUS_PENDING_PAYMENT);
-        model.addAttribute("paidStatus", ArtisanInPersonOrderService.STATUS_PAID);
+        model.addAttribute("completedStatus", ArtisanInPersonOrderService.STATUS_COMPLETED);
         model.addAttribute("cancelledStatus", ArtisanInPersonOrderService.STATUS_CANCELLED);
         return "artisan/in-person-order";
     }
@@ -81,7 +81,7 @@ public class ArtisanInPersonOrderController {
                                  RedirectAttributes redirectAttributes) {
         try {
             Order order = inPersonOrderService.confirmPayment(userDetails.getUsername(), orderId);
-            redirectAttributes.addFlashAttribute("success", "Đã xác nhận nhận tiền, order " + order.getOrderCode() + " đã chuyển sang PAID và sản phẩm sang SOLD.");
+            redirectAttributes.addFlashAttribute("success", "Đã xác nhận nhận tiền, order " + order.getOrderCode() + " đã hoàn thành và sản phẩm sang SOLD.");
         } catch (RuntimeException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }

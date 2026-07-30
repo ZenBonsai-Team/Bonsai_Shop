@@ -246,9 +246,6 @@
                                 <span th:if="${order.orderStatus == 'CANCELLED'}" class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-3 py-1">
                                     <i class="fa-solid fa-circle-xmark me-1"></i>Đã hủy
                                 </span>
-                                <span th:if="${order.orderStatus == 'REJECTED'}" class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-3 py-1">
-                                    <i class="fa-solid fa-ban me-1"></i>Từ chối
-                                </span>
                             </td>
                             <td class="text-end">
                                 <button type="button" class="btn btn-sm btn-outline-success rounded-pill px-3 fw-semibold" 
@@ -307,8 +304,7 @@
                                             <span th:if="${order.orderStatus == 'DELIVERED'}" class="badge bg-primary-subtle text-primary">Đã giao</span>
                                             <span th:if="${order.orderStatus == 'COMPLETED'}" class="badge bg-success-subtle text-success">Hoàn thành</span>
                                             <span th:if="${order.orderStatus == 'CANCELLED'}" class="badge bg-danger-subtle text-danger">Đã hủy</span>
-                                            <span th:if="${order.orderStatus == 'REJECTED'}" class="badge bg-danger-subtle text-danger">Từ chối</span>
-                                            <span th:if="${order.orderStatus != 'PENDING' and order.orderStatus != 'PENDING_PAYMENT' and order.orderStatus != 'VERIFIED' and order.orderStatus != 'DEPOSITED' and order.orderStatus != 'PAID' and order.orderStatus != 'PROCESSING' and order.orderStatus != 'SHIPPED' and order.orderStatus != 'SHIPPING' and order.orderStatus != 'DELIVERED' and order.orderStatus != 'COMPLETED' and order.orderStatus != 'CANCELLED' and order.orderStatus != 'REJECTED'}" th:text="${order.orderStatus}" class="fw-bold text-success">PENDING</span>
+                                            <span th:if="${order.orderStatus != 'PENDING' and order.orderStatus != 'PENDING_PAYMENT' and order.orderStatus != 'VERIFIED' and order.orderStatus != 'DEPOSITED' and order.orderStatus != 'PAID' and order.orderStatus != 'PROCESSING' and order.orderStatus != 'SHIPPED' and order.orderStatus != 'SHIPPING' and order.orderStatus != 'DELIVERED' and order.orderStatus != 'COMPLETED' and order.orderStatus != 'CANCELLED'}" th:text="${order.orderStatus}" class="fw-bold text-success">PENDING</span>
                                         </p>
                                         <p class="mb-0 text-muted small" th:if="${order.notes != null and !order.notes.isEmpty()}">
                                             <strong>Ghi chú:</strong> <span th:text="${order.notes}">Ghi chú đơn hàng...</span>
