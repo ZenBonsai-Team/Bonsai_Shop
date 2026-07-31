@@ -135,21 +135,23 @@ public class ArtisanProductController {
     @PostMapping("/{productId}/media")
     public String addMedia(@AuthenticationPrincipal UserDetails userDetails,
                            @PathVariable Integer productId,
-                           @RequestParam MultipartFile file,
-                           @RequestParam(required = false) String slotType,
-                           @RequestParam(required = false) String caption,
-                           @RequestParam(defaultValue = "false") Boolean isThumbnail,
+                           @RequestParam(required = false) List<MultipartFile> files,
+                           @RequestParam(required = false) List<String> mediaTypes,
+                           @RequestParam(required = false) List<String> slotTypes,
+                           @RequestParam(required = false) List<String> captions,
+                           @RequestParam(required = false) Integer thumbnailIndex,
                            RedirectAttributes redirectAttributes) {
         try {
-            artisanProductService.addMedia(
+            int uploadedCount = artisanProductService.addMediaBatch(
                     userDetails.getUsername(),
                     productId,
-                    file,
-                    slotType,
-                    caption,
-                    isThumbnail
+                    files,
+                    mediaTypes,
+                    slotTypes,
+                    captions,
+                    thumbnailIndex
             );
-            redirectAttributes.addFlashAttribute("success", "Đã thêm media.");
+            redirectAttributes.addFlashAttribute("success", "Đã thêm " + uploadedCount + " media.");
         } catch (RuntimeException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
@@ -175,10 +177,11 @@ public class ArtisanProductController {
                                    @PathVariable Integer productId,
                                    @RequestParam(required = false) List<Integer> mediaIds,
                                    @RequestParam(required = false) List<Integer> displayOrders,
+                                   @RequestParam(required = false) List<String> slotTypes,
                                    @RequestParam(required = false) List<String> captions,
                                    RedirectAttributes redirectAttributes) {
         try {
-            artisanProductService.updateMediaOrder(userDetails.getUsername(), productId, mediaIds, displayOrders, captions);
+            artisanProductService.updateMediaOrder(userDetails.getUsername(), productId, mediaIds, displayOrders, slotTypes, captions);
             redirectAttributes.addFlashAttribute("success", "Đã cập nhật media.");
         } catch (RuntimeException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
