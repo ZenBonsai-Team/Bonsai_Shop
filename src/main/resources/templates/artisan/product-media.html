@@ -38,34 +38,15 @@
     <div id="artisanFlashError" th:if="${error}" th:attr="data-message=${error}" hidden></div>
     <div th:if="${!isEditable}" class="alert warning">Chỉ có thể sửa media của sản phẩm nháp hoặc đã ẩn.</div>
 
-    <form th:if="${isEditable}" class="form-card" method="post" enctype="multipart/form-data"
+    <form th:if="${isEditable}" id="mediaUploadForm" class="form-card" method="post" enctype="multipart/form-data"
           th:action="@{/artisan/products/{id}/media(id=${product.productId})}">
-        <label>File ảnh/video
-            <input id="mediaFileInput" type="file" name="file" accept="image/*,video/mp4,video/webm" required>
-        </label>
-        <label>Góc chụp (Shot type)
-            <select id="shotTypeSelect" name="slotType">
-                <option value="">-- Chọn góc chụp --</option>
-                <option value="FRONT">FRONT - Chính diện</option>
-                <option value="BACK">BACK - Mặt sau</option>
-                <option value="LEFT">LEFT - Bên trái</option>
-                <option value="RIGHT">RIGHT - Bên phải</option>
-                <option value="DETAIL">DETAIL - Cận cảnh chi tiết</option>
-                <option value="TRUNK">TRUNK - Cận cảnh thân cây</option>
-                <option value="BRANCH">BRANCH - Cận cảnh cành</option>
-                <option value="POT">POT - Mặt bệ</option>
-                <option value="OVERVIEW">OVERVIEW - Tổng quan</option>
-            </select>
-        </label>
-        <label>Chú thích (Caption)
-            <input name="caption">
-        </label>
-        <p class="form-hint">Sau khi tải lên, bạn có thể kiểm tra ảnh, đặt thumbnail, chỉnh thứ tự và caption trước khi sang preview.</p>
-        <label class="checkbox">
-            <input type="checkbox" name="isThumbnail" value="true">
-            Đặt làm thumbnail
-        </label>
-        <button type="submit">Tải lên file</button>
+        <div class="media-upload-list" id="mediaUploadList"
+             th:attr="data-has-existing-media=${!#lists.isEmpty(mediaList)}"></div>
+        <div class="actions media-toolbar">
+            <button type="button" class="btn secondary" id="addMediaItemBtn">+ Thêm media khác</button>
+        </div>
+        <p class="form-hint">Mỗi mục gồm file, xem trước, góc chụp nếu là ảnh, chú thích và lựa chọn ảnh đại diện. Chỉ chọn được một media làm thumbnail.</p>
+        <button type="submit" id="uploadAllBtn">Tải lên tất cả 1 media</button>
     </form>
 
     <form id="mediaOrderForm" method="post" th:action="@{/artisan/products/{id}/media/order(id=${product.productId})}"></form>
@@ -73,7 +54,7 @@
         <button type="submit" form="mediaOrderForm">Lưu thứ tự & caption</button>
     </div>
 
-    <section class="media-grid">
+    <section class="media-grid" id="existingMediaGrid">
         <article class="media-card" th:each="media : ${mediaList}">
             <div class="media-preview-frame">
                 <img th:if="${media.mediaType == 'IMAGE'}" th:src="${media.mediaUrl}" alt="">
@@ -82,26 +63,41 @@
             </div>
             <div class="media-card-body">
                 <strong th:text="${media.mediaType}"></strong>
-                <span th:if="${media.slotType != null}" th:text="${'Góc chụp: ' + media.slotType}"></span>
-                <span th:if="${media.slotType == null}">Video</span>
+                <label>Góc chụp
+                    <input th:if="${media.mediaType == 'VIDEO'}" type="hidden" name="slotTypes" value="" form="mediaOrderForm">
+                    <select name="slotTypes" th:disabled="${!isEditable || media.mediaType == 'VIDEO'}" form="mediaOrderForm">
+                        <option value="" th:selected="${media.slotType == null}">-- Không áp dụng --</option>
+                        <option value="FRONT" th:selected="${media.slotType == 'FRONT'}">FRONT - Chính diện</option>
+                        <option value="BACK" th:selected="${media.slotType == 'BACK'}">BACK - Mặt sau</option>
+                        <option value="LEFT" th:selected="${media.slotType == 'LEFT'}">LEFT - Bên trái</option>
+                        <option value="RIGHT" th:selected="${media.slotType == 'RIGHT'}">RIGHT - Bên phải</option>
+                        <option value="DETAIL" th:selected="${media.slotType == 'DETAIL'}">DETAIL - Cận cảnh chi tiết</option>
+                        <option value="TRUNK" th:selected="${media.slotType == 'TRUNK'}">TRUNK - Cận cảnh thân cây</option>
+                        <option value="BRANCH" th:selected="${media.slotType == 'BRANCH'}">BRANCH - Cận cảnh cành</option>
+                        <option value="POT" th:selected="${media.slotType == 'POT'}">POT - Mặt bệ</option>
+                        <option value="OVERVIEW" th:selected="${media.slotType == 'OVERVIEW'}">OVERVIEW - Tổng quan</option>
+                    </select>
+                </label>
                 <label>Caption
                     <input type="text" name="captions" th:value="${media.caption}" th:disabled="${!isEditable}" form="mediaOrderForm" placeholder="Nhập chú thích ảnh/video">
                 </label>
-                <label>Thứ tự hiển thị
+                <label class="media-position-label">⠿ Kéo để sắp xếp
                     <input type="hidden" name="mediaIds" th:value="${media.mediaId}" form="mediaOrderForm">
-                    <span class="media-order-stepper">
-                        <button type="button" class="media-order-btn" data-order-step="-1" th:disabled="${!isEditable}">−</button>
-                        <input class="media-order-input" type="number" name="displayOrders" min="1" th:value="${media.displayOrder}" readonly th:disabled="${!isEditable}" form="mediaOrderForm">
-                        <button type="button" class="media-order-btn" data-order-step="1" th:disabled="${!isEditable}">+</button>
+                    <input class="media-order-input" type="hidden" name="displayOrders" min="1" th:value="${media.displayOrder}" readonly th:disabled="${!isEditable}" form="mediaOrderForm">
+                    <span class="media-position-text">Vị trí <span data-media-position>1</span></span>
+                    <span class="media-move-actions" th:if="${isEditable}">
+                        <button type="button" class="media-move-btn" data-media-move="-1">← Sang trái</button>
+                        <button type="button" class="media-move-btn" data-media-move="1">Sang phải →</button>
                     </span>
                 </label>
             </div>
-            <div class="actions" th:if="${isEditable}">
-                <form method="post" th:action="@{/artisan/products/{productId}/media/{mediaId}/thumbnail(productId=${product.productId},mediaId=${media.mediaId})}">
+            <div class="actions media-card-actions" th:if="${isEditable}">
+                <form th:if="${!media.isThumbnail}" method="post" th:action="@{/artisan/products/{productId}/media/{mediaId}/thumbnail(productId=${product.productId},mediaId=${media.mediaId})}">
                     <button type="submit">Đặt làm ảnh đại diện</button>
                 </form>
-                <form method="post" th:action="@{/artisan/products/{productId}/media/{mediaId}/delete(productId=${product.productId},mediaId=${media.mediaId})}">
-                    <button type="submit">Xóa</button>
+                <span th:if="${media.isThumbnail}" class="media-current-thumbnail">Đang là ảnh đại diện</span>
+                <form method="post" class="media-delete-form" th:action="@{/artisan/products/{productId}/media/{mediaId}/delete(productId=${product.productId},mediaId=${media.mediaId})}">
+                    <button type="submit" class="btn danger">🗑 Xóa media</button>
                 </form>
             </div>
         </article>
@@ -109,36 +105,228 @@
 </main>
 </div>
 
+<div class="media-delete-modal" id="mediaDeleteModal" hidden>
+    <div class="media-delete-dialog" role="dialog" aria-modal="true" aria-labelledby="mediaDeleteTitle">
+        <h2 id="mediaDeleteTitle">Xóa media này?</h2>
+        <p>Bạn có chắc muốn xóa media này? Media đã xóa không thể khôi phục.</p>
+        <div class="actions media-delete-modal-actions">
+            <button type="button" class="btn secondary" id="cancelMediaDeleteBtn">Hủy</button>
+            <button type="button" class="btn danger-fill" id="confirmMediaDeleteBtn">🗑 Xóa media</button>
+        </div>
+    </div>
+</div>
+
 <script>
-    const mediaFileInput = document.getElementById('mediaFileInput');
-    const shotTypeSelect = document.getElementById('shotTypeSelect');
+    const mediaUploadList = document.getElementById('mediaUploadList');
+    const addMediaItemBtn = document.getElementById('addMediaItemBtn');
+    const uploadAllBtn = document.getElementById('uploadAllBtn');
+    const shotTypeOptions = `
+        <option value="">-- Chọn góc chụp --</option>
+        <option value="FRONT">FRONT - Chính diện</option>
+        <option value="BACK">BACK - Mặt sau</option>
+        <option value="LEFT">LEFT - Bên trái</option>
+        <option value="RIGHT">RIGHT - Bên phải</option>
+        <option value="DETAIL">DETAIL - Cận cảnh chi tiết</option>
+        <option value="TRUNK">TRUNK - Cận cảnh thân cây</option>
+        <option value="BRANCH">BRANCH - Cận cảnh cành</option>
+        <option value="POT">POT - Mặt bệ</option>
+        <option value="OVERVIEW">OVERVIEW - Tổng quan</option>
+    `;
 
-    function syncShotTypeRequirement() {
-        const file = mediaFileInput.files[0];
-        const isVideo = file && file.type.startsWith('video/');
+    function refreshMediaUploadIndexes() {
+        if (!mediaUploadList || !uploadAllBtn) {
+            return;
+        }
 
+        const items = mediaUploadList.querySelectorAll('.media-upload-item');
+        items.forEach((item, index) => {
+            item.querySelector('[data-media-title]').textContent = `Media ${index + 1}`;
+            item.querySelector('[name="thumbnailIndex"]').value = String(index);
+            item.querySelector('[data-remove-media]').disabled = items.length === 1;
+        });
+        uploadAllBtn.textContent = `Tải lên tất cả ${items.length} media`;
+    }
+
+    function isVideoUpload(file) {
+        if (!file) {
+            return false;
+        }
+
+        const fileName = file.name ? file.name.toLowerCase() : '';
+        return file.type.startsWith('video/') || fileName.endsWith('.mp4') || fileName.endsWith('.webm');
+    }
+
+    function syncUploadItemFileState(item) {
+        const fileInput = item.querySelector('[name="files"]');
+        const shotTypeSelect = item.querySelector('select[name="slotTypes"]');
+        const shotTypeHidden = item.querySelector('input[data-slot-type-hidden]');
+        const mediaTypeInput = item.querySelector('[data-media-type-input]');
+        const preview = item.querySelector('[data-media-preview]');
+        const file = fileInput.files[0];
+        const isVideo = isVideoUpload(file);
+
+        mediaTypeInput.value = isVideo ? 'VIDEO' : 'IMAGE';
         shotTypeSelect.required = !isVideo;
         shotTypeSelect.disabled = isVideo;
+        shotTypeHidden.disabled = !isVideo;
         if (isVideo) {
             shotTypeSelect.value = '';
         }
+
+        preview.innerHTML = '<span>Chưa chọn file</span>';
+        if (!file) {
+            return;
+        }
+
+        const objectUrl = URL.createObjectURL(file);
+        if (isVideo) {
+            preview.innerHTML = `<video controls src="${objectUrl}"></video>`;
+        } else {
+            preview.innerHTML = `<img src="${objectUrl}" alt="Xem trước ảnh">`;
+        }
     }
 
-    mediaFileInput.addEventListener('change', syncShotTypeRequirement);
-    syncShotTypeRequirement();
+    function createMediaUploadItem() {
+        if (!mediaUploadList) {
+            return;
+        }
 
-    document.querySelectorAll('.media-order-btn').forEach(button => {
-        button.addEventListener('click', function () {
-            const stepper = button.closest('.media-order-stepper');
-            const input = stepper ? stepper.querySelector('.media-order-input') : null;
-            if (!input) {
+        const item = document.createElement('div');
+        item.className = 'media-upload-item';
+        item.innerHTML = `
+            <div class="media-upload-item-header">
+                <strong data-media-title>Media</strong>
+                <button type="button" class="btn secondary" data-remove-media>Xóa media</button>
+            </div>
+            <div class="media-upload-row">
+                <div class="media-preview-frame media-upload-preview" data-media-preview>
+                    <span>Chưa chọn file</span>
+                </div>
+                <label>Chọn file
+                    <input type="file" name="files" accept="image/*,video/mp4,video/webm" required>
+                </label>
+            </div>
+            <input type="hidden" name="mediaTypes" value="IMAGE" data-media-type-input>
+            <label>Góc chụp
+                <input type="hidden" name="slotTypes" value="" disabled data-slot-type-hidden>
+                <select name="slotTypes" required>${shotTypeOptions}</select>
+            </label>
+            <label>Chú thích
+                <input name="captions" placeholder="Nhập chú thích ảnh/video">
+            </label>
+            <label class="checkbox">
+                <input type="radio" name="thumbnailIndex" value="0">
+                Đặt làm media đại diện
+            </label>
+        `;
+
+        item.querySelector('[name="files"]').addEventListener('change', () => syncUploadItemFileState(item));
+        item.querySelector('[data-remove-media]').addEventListener('click', () => {
+            const wasThumbnail = item.querySelector('[name="thumbnailIndex"]').checked;
+            item.remove();
+            if (wasThumbnail) {
+                const firstThumbnail = mediaUploadList.querySelector('[name="thumbnailIndex"]');
+                if (firstThumbnail) {
+                    firstThumbnail.checked = true;
+                }
+            }
+            refreshMediaUploadIndexes();
+        });
+
+        mediaUploadList.appendChild(item);
+        const thumbnails = mediaUploadList.querySelectorAll('[name="thumbnailIndex"]');
+        const hasExistingMedia = mediaUploadList.dataset.hasExistingMedia === 'true';
+        if (!hasExistingMedia && thumbnails.length === 1) {
+            thumbnails[0].checked = true;
+        }
+        refreshMediaUploadIndexes();
+    }
+
+    addMediaItemBtn?.addEventListener('click', createMediaUploadItem);
+    createMediaUploadItem();
+
+    const existingMediaGrid = document.getElementById('existingMediaGrid');
+
+    function refreshExistingMediaOrder() {
+        if (!existingMediaGrid) {
+            return;
+        }
+
+        const cards = existingMediaGrid.querySelectorAll('.media-card');
+        cards.forEach((card, index) => {
+            const orderInput = card.querySelector('.media-order-input');
+            const positionText = card.querySelector('[data-media-position]');
+            const moveLeftButton = card.querySelector('[data-media-move="-1"]');
+            const moveRightButton = card.querySelector('[data-media-move="1"]');
+
+            if (orderInput) {
+                orderInput.value = String(index + 1);
+            }
+            if (positionText) {
+                positionText.textContent = String(index + 1);
+            }
+            if (moveLeftButton) {
+                moveLeftButton.disabled = index === 0;
+            }
+            if (moveRightButton) {
+                moveRightButton.disabled = index === cards.length - 1;
+            }
+        });
+    }
+
+    document.querySelectorAll('[data-media-move]').forEach(button => {
+        button.addEventListener('click', () => {
+            const card = button.closest('.media-card');
+            const direction = Number(button.dataset.mediaMove || 0);
+            if (!card || !existingMediaGrid) {
                 return;
             }
-            const step = Number(button.dataset.orderStep || 0);
-            const currentValue = Number(input.value || 1);
-            input.value = Math.max(1, currentValue + step);
+
+            if (direction < 0 && card.previousElementSibling) {
+                existingMediaGrid.insertBefore(card, card.previousElementSibling);
+            }
+            if (direction > 0 && card.nextElementSibling) {
+                existingMediaGrid.insertBefore(card.nextElementSibling, card);
+            }
+            refreshExistingMediaOrder();
         });
     });
+
+    const mediaDeleteModal = document.getElementById('mediaDeleteModal');
+    const cancelMediaDeleteBtn = document.getElementById('cancelMediaDeleteBtn');
+    const confirmMediaDeleteBtn = document.getElementById('confirmMediaDeleteBtn');
+    let pendingDeleteForm = null;
+
+    function closeMediaDeleteModal() {
+        if (mediaDeleteModal) {
+            mediaDeleteModal.hidden = true;
+        }
+        pendingDeleteForm = null;
+    }
+
+    document.querySelectorAll('.media-delete-form').forEach(form => {
+        form.addEventListener('submit', event => {
+            event.preventDefault();
+            pendingDeleteForm = form;
+            if (mediaDeleteModal) {
+                mediaDeleteModal.hidden = false;
+            }
+        });
+    });
+
+    cancelMediaDeleteBtn?.addEventListener('click', closeMediaDeleteModal);
+    mediaDeleteModal?.addEventListener('click', event => {
+        if (event.target === mediaDeleteModal) {
+            closeMediaDeleteModal();
+        }
+    });
+    confirmMediaDeleteBtn?.addEventListener('click', () => {
+        if (pendingDeleteForm) {
+            pendingDeleteForm.submit();
+        }
+    });
+
+    refreshExistingMediaOrder();
 </script>
 <script>
     document.addEventListener('DOMContentLoaded', () => {

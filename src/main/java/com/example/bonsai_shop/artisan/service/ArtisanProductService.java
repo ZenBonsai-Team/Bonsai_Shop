@@ -182,8 +182,7 @@ public class ArtisanProductService {
         Product product = getMyProduct(artisanEmail, productId);
         ensureEditable(product);
         String mediaUrl = mediaStorageService.storeProductMedia(file);
-        String contentType = file.getContentType();
-        String mediaType = contentType != null && contentType.startsWith("video/") ? "VIDEO" : "IMAGE";
+        String mediaType = resolveMediaType(file);
         String normalizedShotType = normalizeShotType(slotType, mediaType);
         List<ProductMedia> existingMedia = productMediaRepository.findByProductOrderByDisplayOrderAscMediaIdAsc(product);
         boolean shouldSetThumbnail = Boolean.TRUE.equals(isThumbnail) || existingMedia.isEmpty();
@@ -209,6 +208,64 @@ public class ArtisanProductService {
     }
 
     @Transactional
+    public int addMediaBatch(String artisanEmail,
+                             Integer productId,
+                             List<MultipartFile> files,
+                             List<String> mediaTypes,
+                             List<String> slotTypes,
+                             List<String> captions,
+                             Integer thumbnailIndex) {
+        Product product = getMyProduct(artisanEmail, productId);
+        ensureEditable(product);
+
+        if (files == null || files.isEmpty()) {
+            throw new RuntimeException("Vui lòng chọn ít nhất một file media!");
+        }
+
+        if (files.stream().anyMatch(file -> file == null || file.isEmpty())) {
+            throw new RuntimeException("Vui lòng chọn file cho tất cả mục media!");
+        }
+        if (mediaTypes != null && mediaTypes.size() < files.size()) {
+            throw new RuntimeException("Dữ liệu loại media không hợp lệ!");
+        }
+        if (thumbnailIndex != null && (thumbnailIndex < 0 || thumbnailIndex >= files.size())) {
+            throw new RuntimeException("Dữ liệu ảnh đại diện không hợp lệ!");
+        }
+
+        List<ProductMedia> existingMedia = productMediaRepository.findByProductOrderByDisplayOrderAscMediaIdAsc(product);
+        int nextDisplayOrder = getNextDisplayOrder(existingMedia);
+        int selectedThumbnailIndex = thumbnailIndex == null ? (existingMedia.isEmpty() ? 0 : -1) : thumbnailIndex;
+
+        if (selectedThumbnailIndex >= 0) {
+            existingMedia.forEach(media -> {
+                media.setIsThumbnail(false);
+                productMediaRepository.save(media);
+            });
+        }
+
+        for (int index = 0; index < files.size(); index++) {
+            MultipartFile file = files.get(index);
+            String mediaType = resolveMediaType(file, getListValue(mediaTypes, index));
+            String normalizedShotType = normalizeShotType(getListValue(slotTypes, index), mediaType);
+            String mediaUrl = mediaStorageService.storeProductMedia(file);
+
+            ProductMedia media = ProductMedia.builder()
+                    .product(product)
+                    .mediaUrl(mediaUrl)
+                    .mediaType(mediaType)
+                    .slotType(normalizedShotType)
+                    .caption(blankToNull(getListValue(captions, index)))
+                    .isThumbnail(index == selectedThumbnailIndex)
+                    .displayOrder(nextDisplayOrder + index)
+                    .build();
+
+            productMediaRepository.save(media);
+        }
+
+        return files.size();
+    }
+
+    @Transactional
     public void setThumbnail(String artisanEmail, Integer productId, Integer mediaId) {
         Product product = getMyProduct(artisanEmail, productId);
         ensureEditable(product);
@@ -227,20 +284,23 @@ public class ArtisanProductService {
                                  Integer productId,
                                  List<Integer> mediaIds,
                                  List<Integer> displayOrders,
+                                 List<String> slotTypes,
                                  List<String> captions) {
         Product product = getMyProduct(artisanEmail, productId);
         ensureEditable(product);
         if (mediaIds == null || displayOrders == null || mediaIds.size() != displayOrders.size()) {
             throw new RuntimeException("Dữ liệu thứ tự media không hợp lệ!");
         }
-        if (captions != null && captions.size() != mediaIds.size()) {
-            throw new RuntimeException("Dữ liệu caption media không hợp lệ!");
+        if (slotTypes != null && slotTypes.size() != mediaIds.size()) {
+            throw new RuntimeException("Dữ liệu góc chụp media không hợp lệ!");
         }
-
         for (int index = 0; index < mediaIds.size(); index++) {
             ProductMedia media = productMediaRepository.findByMediaIdAndProduct(mediaIds.get(index), product)
                     .orElseThrow(() -> new RuntimeException("Media không tồn tại!"));
             media.setDisplayOrder(displayOrders.get(index) == null ? 1 : Math.max(displayOrders.get(index), 1));
+            if (slotTypes != null) {
+                media.setSlotType(normalizeShotType(slotTypes.get(index), media.getMediaType()));
+            }
             if (captions != null) {
                 media.setCaption(blankToNull(captions.get(index)));
             }
@@ -257,6 +317,15 @@ public class ArtisanProductService {
 
         mediaStorageService.deleteProductMedia(media.getMediaUrl());
         productMediaRepository.delete(media);
+
+        if (Boolean.TRUE.equals(media.getIsThumbnail())) {
+            productMediaRepository.findByProductOrderByDisplayOrderAscMediaIdAsc(product).stream()
+                    .findFirst()
+                    .ifPresent(nextThumbnail -> {
+                        nextThumbnail.setIsThumbnail(true);
+                        productMediaRepository.save(nextThumbnail);
+                    });
+        }
     }
 
     @Transactional
@@ -447,6 +516,38 @@ public class ArtisanProductService {
         return value == null || value.isBlank() ? null : value.trim();
     }
 
+    private String getListValue(List<String> values, int index) {
+        return values == null || index >= values.size() ? null : values.get(index);
+    }
+
+    private String resolveMediaType(MultipartFile file) {
+        return resolveMediaType(file, null);
+    }
+
+    private String resolveMediaType(MultipartFile file, String requestedMediaType) {
+        if (requestedMediaType != null && !requestedMediaType.isBlank()) {
+            String normalizedMediaType = requestedMediaType.trim().toUpperCase(Locale.ROOT);
+            if ("VIDEO".equals(normalizedMediaType) || "IMAGE".equals(normalizedMediaType)) {
+                return normalizedMediaType;
+            }
+        }
+
+        String contentType = file.getContentType();
+        if (contentType != null && contentType.startsWith("video/")) {
+            return "VIDEO";
+        }
+
+        String filename = file.getOriginalFilename();
+        if (filename != null) {
+            String normalizedFilename = filename.toLowerCase(Locale.ROOT);
+            if (normalizedFilename.endsWith(".mp4") || normalizedFilename.endsWith(".webm")) {
+                return "VIDEO";
+            }
+        }
+
+        return "IMAGE";
+    }
+
     private Integer getNextDisplayOrder(List<ProductMedia> existingMedia) {
         return existingMedia.stream()
                 .map(ProductMedia::getDisplayOrder)
@@ -457,7 +558,7 @@ public class ArtisanProductService {
     }
 
     private String normalizeShotType(String shotType, String mediaType) {
-        if ("VIDEO".equals(mediaType) && (shotType == null || shotType.isBlank())) {
+        if ("VIDEO".equals(mediaType)) {
             return null;
         }
 
