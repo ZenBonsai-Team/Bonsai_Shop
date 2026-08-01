@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="vi"
+      xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/dashboard-layout :: layout(~{::title}, ~{::#moderator-content}, ~{::#page-styles}, ~{::#page-scripts})}"
+      th:with="paramActivePage='my-orders'">
+<head>
+    <title th:text="'Chi tiết đơn - ' + ${order.orderCode} + ' - Moderator Portal'">Chi tiết đơn hàng</title>
+    <th:block id="page-styles">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+        <style>
+            :root {
+                --od-bg: #f7f8fa;
+                --od-card: #ffffff;
+                --od-border: #e2e8f0;
+                --od-text-primary: #1a202c;
+                --od-text-secondary: #4a5568;
+                --od-text-muted: #718096;
+                --od-accent: #2b6cb0;
+                --od-green: #276749;
+                --od-red: #9b2c2c;
+                --od-yellow: #744210;
+                --od-gray-light: #f7f8fa;
+                --od-radius: 8px;
+                --od-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+            }
+
+            .od-page-wrapper { background: var(--od-bg); min-height: 100vh; padding: 0; }
+
+            /* ===== TOPBAR ===== */
+            .od-topbar {
+                background: var(--od-card);
+                border-bottom: 1px solid var(--od-border);
+                padding: 12px 24px;
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                position: sticky;
+                top: 0;
+                z-index: 100;
+            }
+            .od-back-btn {
+                display: inline-flex;
+                align-items: center;
+                gap: 5px;
+                color: var(--od-text-secondary);
+                text-decoration: none;
+                font-size: 13px;
+                font-weight: 500;
+                padding: 5px 10px;
+                border-radius: 5px;
+                border: 1px solid var(--od-border);
+                background: var(--od-card);
+                transition: background 0.15s;
+            }
+            .od-back-btn:hover { background: var(--od-gray-light); text-decoration: none; color: var(--od-text-primary); }
+            .od-topbar-breadcrumb { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--od-text-muted); }
+            .od-topbar-breadcrumb strong { color: var(--od-text-primary); font-weight: 600; }
+            .od-topbar-actions { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+
+            /* ===== LAYOUT ===== */
+            .od-main {
+                padding: 20px 24px;
+                max-width: 1280px;
+                margin: 0 auto;
+                display: grid;
+                grid-template-columns: 1fr 300px;
+                gap: 20px;
+                align-items: start;
+            }
+            @media (max-width: 1024px) { .od-main { grid-template-columns: 1fr; } }
+
+            /* ===== CARDS ===== */
+            .od-card {
+                background: var(--od-card);
+                border: 1px solid var(--od-border);
+                border-radius: var(--od-radius);
+                box-shadow: var(--od-shadow);
+                margin-bottom: 16px;
+            }
+            .od-card-header {
+                padding: 12px 16px;
+                border-bottom: 1px solid var(--od-border);
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+            }
+            .od-card-title {
+                font-size: 11px;
+                font-weight: 700;
+                color: var(--od-text-muted);
+                text-transform: uppercase;
+                letter-spacing: 0.07em;
+            }
+            .od-card-body { padding: 16px; }
+
+            /* ===== FIELDS ===== */
+            .od-order-header { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; }
+            .od-field-group { display: flex; flex-direction: column; gap: 3px; }
+            .od-field-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--od-text-muted); }
+            .od-field-value { font-size: 14px; color: var(--od-text-primary); font-weight: 500; }
+            .od-field-value.large { font-size: 17px; font-weight: 700; font-family: 'Courier New', monospace; color: var(--od-accent); }
+
+            .od-info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 20px; }
+            @media (max-width: 640px) { .od-info-grid { grid-template-columns: 1fr; } }
+
+            /* ===== BADGES ===== */
+            .od-badge {
+                display: inline-flex;
+                align-items: center;
+                padding: 3px 10px;
+                border-radius: 4px;
+                font-size: 12px;
+                font-weight: 600;
+            }
+            .od-badge.status-pending    { background: #fefcbf; color: var(--od-yellow); border: 1px solid #f6e05e; }
+            .od-badge.status-approved   { background: #c6f6d5; color: var(--od-green);  border: 1px solid #68d391; }
+            .od-badge.status-processing { background: #bee3f8; color: #2c5282;           border: 1px solid #63b3ed; }
+            .od-badge.status-completed  { background: #c6f6d5; color: var(--od-green);  border: 1px solid #68d391; }
+            .od-badge.status-cancelled  { background: #fed7d7; color: var(--od-red);    border: 1px solid #fc8181; }
+            .od-badge.status-rejected   { background: #fed7d7; color: var(--od-red);    border: 1px solid #fc8181; }
+            .od-badge.status-default    { background: #e2e8f0; color: var(--od-text-secondary); border: 1px solid #cbd5e0; }
+            .od-badge.priority-high   { background: #fed7d7; color: var(--od-red);    border: 1px solid #fc8181; }
+            .od-badge.priority-medium { background: #fefcbf; color: var(--od-yellow); border: 1px solid #f6e05e; }
+            .od-badge.priority-low    { background: #c6f6d5; color: var(--od-green);  border: 1px solid #68d391; }
+
+            /* ===== PRODUCT TABLE ===== */
+            .od-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+            .od-table thead th {
+                background: #f7f8fa; border: 1px solid var(--od-border);
+                padding: 8px 12px; text-align: left;
+                font-size: 11px; font-weight: 700; text-transform: uppercase;
+                letter-spacing: 0.04em; color: var(--od-text-muted);
+            }
+            .od-table tbody td { border: 1px solid var(--od-border); padding: 10px 12px; color: var(--od-text-primary); vertical-align: middle; }
+            .od-table tbody tr:hover td { background: #f9fafb; }
+            .od-table .td-num { text-align: right; font-variant-numeric: tabular-nums; }
+            .od-table .td-bold { font-weight: 600; }
+            .od-product-img { width: 40px; height: 40px; object-fit: cover; border-radius: 4px; border: 1px solid var(--od-border); }
+            .od-product-img-placeholder {
+                width: 40px; height: 40px; border-radius: 4px;
+                border: 1px solid var(--od-border); background: #edf2f7;
+                display: inline-flex; align-items: center; justify-content: center;
+                color: var(--od-text-muted); font-size: 11px;
+            }
+
+            /* ===== PAYMENT SUMMARY ===== */
+            .od-payment-table { width: 100%; font-size: 13px; }
+            .od-payment-table td { padding: 7px 0; color: var(--od-text-secondary); }
+            .od-payment-table td:last-child { text-align: right; font-variant-numeric: tabular-nums; }
+            .od-payment-table .divider td { border-top: 1px solid var(--od-border); padding-top: 10px; padding-bottom: 10px; }
+            .od-payment-table .grand-total td { font-weight: 700; font-size: 14px; color: var(--od-text-primary); }
+            .od-payment-table .paid-row td { color: var(--od-green); }
+            .od-payment-table .remain-row td { color: var(--od-red); font-weight: 600; }
+
+            /* ===== PAYMENT HISTORY BADGES ===== */
+            .od-pymt-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+            .od-pymt-badge.PAID, .od-pymt-badge.SUCCESS, .od-pymt-badge.COMPLETED { background: #c6f6d5; color: var(--od-green); }
+            .od-pymt-badge.PENDING { background: #fefcbf; color: var(--od-yellow); }
+            .od-pymt-badge.FAILED, .od-pymt-badge.CANCELLED { background: #fed7d7; color: var(--od-red); }
+            .od-pymt-badge.PARTIAL { background: #bee3f8; color: #2c5282; }
+
+            /* ===== TIMELINE ===== */
+            .od-timeline { position: relative; padding-left: 22px; }
+            .od-timeline::before { content: ''; position: absolute; left: 6px; top: 8px; bottom: 8px; width: 2px; background: var(--od-border); }
+            .od-timeline-item { position: relative; margin-bottom: 16px; }
+            .od-timeline-item:last-child { margin-bottom: 0; }
+            .od-timeline-dot { position: absolute; left: -17px; top: 4px; width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--od-border); background: white; z-index: 1; }
+            .od-timeline-item.completed .od-timeline-dot { background: var(--od-accent); border-color: var(--od-accent); }
+            .od-timeline-item.current .od-timeline-dot { background: white; border-color: var(--od-accent); border-width: 3px; box-shadow: 0 0 0 3px rgba(43,108,176,0.15); }
+            .od-timeline-label { font-size: 13px; font-weight: 600; color: var(--od-text-primary); }
+            .od-timeline-item:not(.completed):not(.current) .od-timeline-label { color: var(--od-text-muted); font-weight: 400; }
+            .od-timeline-time { font-size: 11px; color: var(--od-text-muted); margin-top: 2px; }
+
+            /* ===== HANDLING HISTORY ===== */
+            .od-history-item { display: flex; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--od-border); }
+            .od-history-item:last-child { border-bottom: none; }
+            .od-history-avatar { width: 30px; height: 30px; border-radius: 50%; background: #edf2f7; color: var(--od-text-secondary); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0; }
+            .od-history-body { flex: 1; min-width: 0; }
+            .od-history-who { font-size: 13px; font-weight: 600; color: var(--od-text-primary); }
+            .od-history-action { font-size: 12px; color: var(--od-text-muted); }
+            .od-history-time { font-size: 11px; color: var(--od-text-muted); margin-top: 2px; }
+
+            /* ===== ACTION BUTTONS ===== */
+            .od-action-card { position: sticky; top: 60px; }
+            .od-action-btn {
+                display: block; width: 100%;
+                padding: 9px 16px; border-radius: 5px;
+                font-size: 13px; font-weight: 600;
+                border: none; cursor: pointer;
+                text-align: center; margin-bottom: 7px;
+                letter-spacing: 0.01em;
+            }
+            .od-action-btn:last-child { margin-bottom: 0; }
+            .od-action-btn:hover { filter: brightness(0.93); }
+            .od-action-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+            .od-action-btn.approve  { background: #38a169; color: white; }
+            .od-action-btn.reject   { background: #c05621; color: white; }
+            .od-action-btn.claim    { background: var(--od-accent); color: white; }
+            .od-action-btn.unclaim  { background: #718096; color: white; }
+            .od-action-btn.complete { background: #276749; color: white; }
+            .od-action-btn.cancel   { background: #c53030; color: white; }
+            .od-action-note { font-size: 12px; color: var(--od-text-muted); margin-bottom: 10px; }
+            .od-form-grid { display: grid; grid-template-columns: 1fr; gap: 10px; }
+            .od-form-field { display: flex; flex-direction: column; gap: 4px; }
+            .od-form-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--od-text-muted); }
+            .od-form-input,
+            .od-form-textarea {
+                width: 100%;
+                border: 1px solid var(--od-border);
+                border-radius: 5px;
+                padding: 8px 10px;
+                font-size: 13px;
+                color: var(--od-text-primary);
+                background: white;
+            }
+            .od-form-input:disabled,
+            .od-form-textarea:disabled {
+                background: #f7f8fa;
+                color: var(--od-text-muted);
+            }
+            .od-form-summary { margin-top: 10px; border-top: 1px solid var(--od-border); padding-top: 10px; }
+            .od-form-summary .od-meta-row { padding: 6px 0; }
+            .od-inline-actions { display: grid; grid-template-columns: 1fr; gap: 8px; margin-top: 12px; }
+            .od-inline-actions .od-action-btn { margin-bottom: 0; }
+
+            /* ===== META ROWS ===== */
+            .od-meta-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--od-border); font-size: 13px; }
+            .od-meta-row:last-child { border-bottom: none; }
+            .od-meta-label { color: var(--od-text-muted); }
+            .od-meta-value { color: var(--od-text-primary); font-weight: 500; text-align: right; }
+
+            /* ===== NOTE BOXES ===== */
+            .od-note-box { background: #fffff0; border-left: 3px solid #ecc94b; border-radius: 0 4px 4px 0; padding: 8px 12px; font-size: 13px; color: #744210; margin-top: 4px; }
+            .od-note-box.internal { background: #fff5f5; border-left-color: #fc8181; color: #9b2c2c; }
+            .od-note-empty { font-style: italic; color: var(--od-text-muted); font-size: 13px; }
+
+            .money { font-variant-numeric: tabular-nums; font-feature-settings: "tnum"; }
+        </style>
+    </th:block>
+</head>
+<body>
+<div id="moderator-content" class="od-page-wrapper">
+
+    <!-- TOPBAR -->
+    <div class="od-topbar">
+        <a href="/moderator/orders/my" class="od-back-btn">&#8592; Quay lại</a>
+        <span style="color: var(--od-border);">/</span>
+        <div class="od-topbar-breadcrumb">
+            <span>Đơn của tôi</span>
+            <span>/</span>
+            <strong th:text="${order.orderCode}">ORD-000000</strong>
+        </div>
+        <span class="od-badge" style="margin-left:8px;"
+              th:classappend="${order.priority == 'HIGH' ? ' priority-high' : (order.priority == 'MEDIUM' ? ' priority-medium' : ' priority-low')}"
+              th:text="${order.ageFormatted}">---</span>
+        <div class="od-topbar-actions">
+            <span class="od-badge"
+                  th:classappend="${order.orderStatus == 'PENDING' ? ' status-pending' :
+                                   (order.orderStatus == 'APPROVED' ? ' status-approved' :
+                                   (order.orderStatus == 'PROCESSING' ? ' status-processing' :
+                                   (order.orderStatus == 'COMPLETED' ? ' status-completed' :
+                                   (order.orderStatus == 'CANCELLED' ? ' status-cancelled' :
+                                   (order.orderStatus == 'REJECTED' ? ' status-rejected' : ' status-default')))))}"
+                  th:text="${order.currentStage}">---</span>
+        </div>
+    </div>
+
+    <!-- MAIN LAYOUT -->
+    <div class="od-main">
+
+        <!-- LEFT COLUMN -->
+        <div>
+
+            <!-- Thông tin đơn hàng -->
+            <div class="od-card">
+                <div class="od-card-header">
+                    <div class="od-card-title">Thông tin đơn hàng</div>
+                    <span class="od-badge"
+                          th:classappend="${order.priority == 'HIGH' ? ' priority-high' : (order.priority == 'MEDIUM' ? ' priority-medium' : ' priority-low')}"
+                          th:text="${order.priority == 'HIGH' ? 'Khẩn' : (order.priority == 'MEDIUM' ? 'Trung bình' : 'Bình thường')}">---</span>
+                </div>
+                <div class="od-card-body">
+                    <div class="od-order-header">
+                        <div class="od-field-group">
+                            <span class="od-field-label">Mã đơn</span>
+                            <span class="od-field-value large" th:text="${order.orderCode}">ORD-000000</span>
+                        </div>
+                        <div class="od-field-group">
+                            <span class="od-field-label">Trạng thái</span>
+                            <span class="od-field-value">
+                                <span class="od-badge"
+                                      th:classappend="${order.orderStatus == 'PENDING' ? ' status-pending' :
+                                                       (order.orderStatus == 'APPROVED' ? ' status-approved' :
+                                                       (order.orderStatus == 'PROCESSING' ? ' status-processing' :
+                                                       (order.orderStatus == 'COMPLETED' ? ' status-completed' :
+                                                       (order.orderStatus == 'CANCELLED' ? ' status-cancelled' :
+                                                       (order.orderStatus == 'REJECTED' ? ' status-rejected' : ' status-default')))))}"
+                                      th:text="${order.currentStage}">---</span>
+                            </span>
+                        </div>
+                        <div class="od-field-group">
+                            <span class="od-field-label">Loại đơn</span>
+                            <span class="od-field-value" th:text="${order.orderType ?: '---'}">---</span>
+                        </div>
+                        <div class="od-field-group">
+                            <span class="od-field-label">Ngày tạo</span>
+                            <span class="od-field-value" th:text="${#temporals.format(order.createdDate, 'dd/MM/yyyy HH:mm')}">---</span>
+                        </div>
+                        <div class="od-field-group">
+                            <span class="od-field-label">Nhân viên xử lý</span>
+                            <span class="od-field-value" th:text="${order.assignedModeratorName ?: 'Chưa có'}">---</span>
+                        </div>
+                        <div class="od-field-group">
+                            <span class="od-field-label">Thời gian chờ</span>
+                            <span class="od-field-value" th:text="${order.ageFormatted ?: '---'}">---</span>
+                        </div>
+                    </div>
+
+                    <div th:if="${order.notes != null and !#strings.isEmpty(order.notes)}" style="margin-top:14px;">
+                        <div class="od-field-label" style="margin-bottom:4px;">Ghi chú khách hàng</div>
+                        <div class="od-note-box" th:text="${order.notes}">---</div>
+                    </div>
+                    <div th:if="${order.internalNote != null and !#strings.isEmpty(order.internalNote)}" style="margin-top:10px;">
+                        <div class="od-field-label" style="margin-bottom:4px;">Ghi chú nội bộ</div>
+                        <div class="od-note-box internal" th:text="${order.internalNote}">---</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Thông tin khách hàng -->
+            <div class="od-card" th:if="${order.customerInfo != null}">
+                <div class="od-card-header">
+                    <div class="od-card-title">Thông tin khách hàng</div>
+                </div>
+                <div class="od-card-body">
+                    <div class="od-info-grid">
+                        <div class="od-field-group">
+                            <span class="od-field-label">Họ tên</span>
+                            <span class="od-field-value" th:text="${order.customerInfo.fullName ?: '---'}">---</span>
+                        </div>
+                        <div class="od-field-group">
+                            <span class="od-field-label">Số điện thoại</span>
+                            <span class="od-field-value" th:text="${order.customerInfo.phone ?: '---'}">---</span>
+                        </div>
+                        <div class="od-field-group">
+                            <span class="od-field-label">Email</span>
+                            <span class="od-field-value" th:text="${order.customerInfo.email ?: '---'}">---</span>
+                        </div>
+                        <div class="od-field-group">
+                            <span class="od-field-label">Địa chỉ giao hàng</span>
+                            <span class="od-field-value" th:text="${order.customerInfo.address ?: '---'}">---</span>
+                        </div>
+                    </div>
+                    <div th:if="${order.customerInfo.customerNote != null and !#strings.isEmpty(order.customerInfo.customerNote)}" style="margin-top:12px;">
+                        <div class="od-field-label" style="margin-bottom:4px;">Ghi chú thêm</div>
+                        <div class="od-note-box" th:text="${order.customerInfo.customerNote}">---</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sản phẩm -->
+            <div class="od-card" th:if="${order.products != null and !order.products.isEmpty()}">
+                <div class="od-card-header">
+                    <div class="od-card-title">Sản phẩm</div>
+                    <span style="font-size:12px; color:var(--od-text-muted);"
+                          th:text="${#lists.size(order.products)} + ' sản phẩm'">0 sản phẩm</span>
+                </div>
+                <div class="od-card-body" style="padding:0;">
+                    <table class="od-table">
+                        <thead>
+                            <tr>
+                                <th style="width:50px;"></th>
+                                <th>Sản phẩm</th>
+                                <th>Mã SP</th>
+                                <th>Danh mục</th>
+                                <th class="td-num">SL</th>
+                                <th class="td-num">Đơn giá</th>
+                                <th class="td-num">Đặt cọc</th>
+                                <th class="td-num">Thành tiền</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="p : ${order.products}">
+                                <td>
+                                    <img th:if="${p.imageUrl != null and !#strings.isEmpty(p.imageUrl)}"
+                                         th:src="${p.imageUrl}" class="od-product-img" alt="ảnh" />
+                                    <div th:if="${p.imageUrl == null or #strings.isEmpty(p.imageUrl)}"
+                                         class="od-product-img-placeholder">N/A</div>
+                                </td>
+                                <td class="td-bold" th:text="${p.productName ?: '---'}">---</td>
+                                <td th:text="${p.productCode ?: '---'}">---</td>
+                                <td th:text="${p.categoryName ?: '---'}">---</td>
+                                <td class="td-num" th:text="${p.quantity ?: 0}">0</td>
+                                <td class="td-num money" th:text="${#numbers.formatDecimal(p.price, 0, 'COMMA', 0, 'POINT')} + ' đ'">---</td>
+                                <td class="td-num money" th:text="${p.deposit != null ? #numbers.formatDecimal(p.deposit, 0, 'COMMA', 0, 'POINT') + ' đ' : '-'}">---</td>
+                                <td class="td-num money td-bold" th:text="${#numbers.formatDecimal(p.subtotal, 0, 'COMMA', 0, 'POINT')} + ' đ'">---</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Tổng quan thanh toán -->
+            <div class="od-card" th:if="${order.paymentSummary != null}">
+                <div class="od-card-header">
+                    <div class="od-card-title">Tổng quan thanh toán</div>
+                </div>
+                <div class="od-card-body">
+                    <table class="od-payment-table">
+                        <tr>
+                            <td>Tiền cây</td>
+                            <td class="money" th:text="${#numbers.formatDecimal(order.paymentSummary.treePrice, 0, 'COMMA', 0, 'POINT')} + ' đ'">---</td>
+                        </tr>
+                        <tr th:if="${order.paymentSummary.shippingFee != null}">
+                            <td>Phí vận chuyển</td>
+                            <td class="money" th:text="${#numbers.formatDecimal(order.paymentSummary.shippingFee, 0, 'COMMA', 0, 'POINT')} + ' đ'">---</td>
+                        </tr>
+                        <tr th:if="${order.paymentSummary.craneFee != null}">
+                            <td>Phí cẩu</td>
+                            <td class="money" th:text="${#numbers.formatDecimal(order.paymentSummary.craneFee, 0, 'COMMA', 0, 'POINT')} + ' đ'">---</td>
+                        </tr>
+                        <tr class="divider grand-total">
+                            <td>Tổng cộng</td>
+                            <td class="money" th:text="${#numbers.formatDecimal(order.paymentSummary.grandTotal, 0, 'COMMA', 0, 'POINT')} + ' đ'">---</td>
+                        </tr>
+                        <tr th:if="${order.paymentSummary.depositAmount != null}">
+                            <td>Đã đặt cọc</td>
+                            <td class="money" th:text="${#numbers.formatDecimal(order.paymentSummary.depositAmount, 0, 'COMMA', 0, 'POINT')} + ' đ'">---</td>
+                        </tr>
+                        <tr class="paid-row">
+                            <td>Đã thanh toán</td>
+                            <td class="money" th:text="${#numbers.formatDecimal(order.paymentSummary.paidAmount, 0, 'COMMA', 0, 'POINT')} + ' đ'">---</td>
+                        </tr>
+                        <tr class="remain-row">
+                            <td>Còn lại</td>
+                            <td class="money" th:text="${#numbers.formatDecimal(order.paymentSummary.remainingPaymentAmount, 0, 'COMMA', 0, 'POINT')} + ' đ'">---</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Lịch sử giao dịch -->
+            <div class="od-card" th:if="${order.paymentHistory != null and !order.paymentHistory.isEmpty()}">
+                <div class="od-card-header">
+                    <div class="od-card-title">Lịch sử giao dịch</div>
+                </div>
+                <div class="od-card-body" style="padding:0;">
+                    <table class="od-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Loại</th>
+                                <th>Phương thức</th>
+                                <th class="td-num">Số tiền</th>
+                                <th>Trạng thái</th>
+                                <th>Mã giao dịch</th>
+                                <th>Thời gian</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="ph : ${order.paymentHistory}">
+                                <td th:text="${ph.paymentNumber}">1</td>
+                                <td th:text="${ph.paymentType ?: '---'}">---</td>
+                                <td th:text="${ph.method ?: '---'}">---</td>
+                                <td class="td-num money td-bold" th:text="${#numbers.formatDecimal(ph.amount, 0, 'COMMA', 0, 'POINT')} + ' đ'">---</td>
+                                <td>
+                                    <span class="od-pymt-badge" th:classappend="${ph.status}" th:text="${ph.status}">---</span>
+                                </td>
+                                <td style="font-family:monospace; font-size:11px;" th:text="${ph.transactionCode ?: (ph.vnpayRef ?: '-')}">---</td>
+                                <td th:text="${ph.createdTime != null ? #temporals.format(ph.createdTime, 'dd/MM HH:mm') : '---'}">---</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Lịch sử xử lý -->
+            <div class="od-card" th:if="${order.handlingHistory != null and !order.handlingHistory.isEmpty()}">
+                <div class="od-card-header">
+                    <div class="od-card-title">Lịch sử xử lý</div>
+                </div>
+                <div class="od-card-body">
+                    <div th:each="h : ${order.handlingHistory}" class="od-history-item">
+                        <div class="od-history-avatar" th:text="${#strings.substring(h.moderatorName, 0, 1).toUpperCase()}">M</div>
+                        <div class="od-history-body">
+                            <div class="od-history-who" th:text="${h.moderatorName}">Moderator</div>
+                            <div class="od-history-action" th:text="${h.action ?: '---'}">---</div>
+                            <div th:if="${h.reason != null and !#strings.isEmpty(h.reason)}"
+                                 style="font-size:12px; color:var(--od-text-secondary); margin-top:2px;"
+                                 th:text="'Lý do: ' + ${h.reason}">---</div>
+                            <div class="od-history-time">
+                                <span th:text="${h.handledAt != null ? #temporals.format(h.handledAt, 'dd/MM/yyyy HH:mm') : '---'}">---</span>
+                                <span th:if="${h.durationFormatted != null}" style="margin-left:8px;"
+                                      th:text="'· ' + ${h.durationFormatted}">---</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- RIGHT COLUMN: Sidebar -->
+        <div>
+
+            <!-- Hành động -->
+            <div class="od-card od-action-card">
+                <div class="od-card-header">
+                    <div class="od-card-title">Hành động</div>
+                </div>
+                <div class="od-card-body">
+                    <div th:if="${!order.canApprove and !order.canReject and !order.canReturnInventory and !order.canComplete}"
+                         class="od-note-empty" style="text-align:center; padding:6px 0;">
+                        Không có hành động khả dụng
+                    </div>
+
+                    <div th:if="${order.canApprove or order.canReject or order.canReturnInventory}" class="od-action-note">
+                        <div>Phương thức thanh toán: <strong th:text="${order.paymentMethod ?: 'VNPAY'}">VNPAY</strong></div>
+                        <div th:if="${order.paymentMethod == 'COD'}">COD yêu cầu nhập tiền đặt cọc trước khi duyệt.</div>
+                        <div th:if="${order.paymentMethod != 'COD'}">VNPay full không dùng tiền đặt cọc.</div>
+                    </div>
+
+                    <div th:if="${order.canApprove or order.canReject or order.canReturnInventory}" class="od-form-grid">
+                        <div class="od-form-field">
+                            <label class="od-form-label" for="approvalDepositAmount">Deposit Amount</label>
+                            <input id="approvalDepositAmount" class="od-form-input" type="number" min="0" step="1">
+                        </div>
+                        <div class="od-form-field">
+                            <label class="od-form-label" for="approvalShippingFee">Shipping Fee</label>
+                            <input id="approvalShippingFee" class="od-form-input" type="number" min="0" step="1" value="0">
+                        </div>
+                        <div class="od-form-field">
+                            <label class="od-form-label" for="approvalCraneFee">Crane Fee</label>
+                            <input id="approvalCraneFee" class="od-form-input" type="number" min="0" step="1" value="0">
+                        </div>
+                        <div class="od-form-field">
+                            <label class="od-form-label" for="approvalReason">Reason (optional)</label>
+                            <textarea id="approvalReason" class="od-form-textarea" rows="3" placeholder="Nhập lý do nếu cần"></textarea>
+                        </div>
+                    </div>
+
+                    <div th:if="${order.canApprove or order.canReject or order.canReturnInventory}" class="od-form-summary">
+                        <div class="od-meta-row">
+                            <span class="od-meta-label">Tree Price</span>
+                            <span class="od-meta-value" id="summaryTreePrice" th:text="${#numbers.formatDecimal(order.paymentSummary.treePrice, 0, 'COMMA', 0, 'POINT')} + ' đ'">0 đ</span>
+                        </div>
+                        <div class="od-meta-row">
+                            <span class="od-meta-label">Order Total</span>
+                            <span class="od-meta-value" id="summaryOrderTotal" th:text="${#numbers.formatDecimal(order.paymentSummary.grandTotal, 0, 'COMMA', 0, 'POINT')} + ' đ'">0 đ</span>
+                        </div>
+                        <div class="od-meta-row">
+                            <span class="od-meta-label">Need To Pay Now</span>
+                            <span class="od-meta-value" id="summaryNeedNow">0 đ</span>
+                        </div>
+                        <div class="od-meta-row">
+                            <span class="od-meta-label">Remaining</span>
+                            <span class="od-meta-value" id="summaryRemaining">0 đ</span>
+                        </div>
+                    </div>
+
+                    <div class="od-inline-actions" th:if="${order.canApprove or order.canReject or order.canReturnInventory or order.canComplete}">
+                        <button th:if="${order.canApprove}" class="od-action-btn approve" type="button" onclick="submitOrderAction('approve')">Duyệt đơn</button>
+                        <button th:if="${order.canReject}" class="od-action-btn reject" type="button" onclick="submitOrderAction('reject')">Từ chối đơn</button>
+                        <button th:if="${order.canReturnInventory}" class="od-action-btn unclaim" type="button" onclick="submitOrderAction('return_inventory')">Return to Pool</button>
+                        <button th:if="${order.canComplete}" class="od-action-btn complete" type="button" onclick="submitOrderAction('complete')">Hoàn thành đơn</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chi tiết -->
+            <div class="od-card">
+                <div class="od-card-header">
+                    <div class="od-card-title">Chi tiết</div>
+                </div>
+                <div class="od-card-body">
+                    <div class="od-meta-row">
+                        <span class="od-meta-label">Mã đơn</span>
+                        <span class="od-meta-value" style="font-family:monospace;" th:text="${order.orderCode}">---</span>
+                    </div>
+                    <div class="od-meta-row">
+                        <span class="od-meta-label">Loại đơn</span>
+                        <span class="od-meta-value" th:text="${order.orderType ?: '---'}">---</span>
+                    </div>
+                    <div class="od-meta-row">
+                        <span class="od-meta-label">Độ ưu tiên</span>
+                        <span class="od-meta-value">
+                            <span class="od-badge"
+                                  th:classappend="${order.priority == 'HIGH' ? ' priority-high' : (order.priority == 'MEDIUM' ? ' priority-medium' : ' priority-low')}"
+                                  th:text="${order.priority ?: '---'}">---</span>
+                        </span>
+                    </div>
+                    <div class="od-meta-row">
+                        <span class="od-meta-label">Nhân viên</span>
+                        <span class="od-meta-value" th:text="${order.assignedModeratorName ?: 'Chưa nhận'}">---</span>
+                    </div>
+                    <div class="od-meta-row">
+                        <span class="od-meta-label">Tạo lúc</span>
+                        <span class="od-meta-value" th:text="${#temporals.format(order.createdDate, 'dd/MM/yyyy HH:mm')}">---</span>
+                    </div>
+                    <div th:if="${order.statusTimestamp != null}" class="od-meta-row">
+                        <span class="od-meta-label">Cập nhật</span>
+                        <span class="od-meta-value" th:text="${#temporals.format(order.statusTimestamp, 'dd/MM/yyyy HH:mm')}">---</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tiến trình đơn -->
+            <div class="od-card" th:if="${order.timeline != null and !order.timeline.isEmpty()}">
+                <div class="od-card-header">
+                    <div class="od-card-title">Tiến trình đơn</div>
+                </div>
+                <div class="od-card-body">
+                    <div class="od-timeline">
+                        <div th:each="tl : ${order.timeline}" class="od-timeline-item"
+                             th:classappend="${tl.completed ? ' completed' : (tl.current ? ' current' : '')}">
+                            <div class="od-timeline-dot"></div>
+                            <div class="od-timeline-label" th:text="${tl.label}">---</div>
+                            <div class="od-timeline-time"
+                                 th:text="${tl.timestamp != null ? #temporals.format(tl.timestamp, 'dd/MM/yyyy HH:mm') : 'Chờ xử lý'}">---</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+<th:block id="page-scripts">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}"/>
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : 'X-CSRF-TOKEN'}"/>
+    <script th:inline="javascript">
+        const ORDER_CODE = /*[[${order.orderCode}]]*/ '';
+        const CSRF_TOKEN = document.querySelector('meta[name="_csrf"]')?.content || '';
+        const CSRF_HEADER = document.querySelector('meta[name="_csrf_header"]')?.content || 'X-CSRF-TOKEN';
+        const ORDER_PAYMENT_METHOD = /*[[${order.paymentMethod}]]*/ 'VNPAY';
+        const BASE_TREE_PRICE = /*[[${order.paymentSummary.treePrice}]]*/ 0;
+        const BASE_DEPOSIT = /*[[${order.paymentSummary.depositAmount}]]*/ 0;
+        const BASE_SHIPPING_FEE = /*[[${order.paymentSummary.shippingFee}]]*/ 0;
+        const BASE_CRANE_FEE = /*[[${order.paymentSummary.craneFee}]]*/ 0;
+        const IS_COD = ORDER_PAYMENT_METHOD === 'COD';
+
+        function formatCurrency(value) {
+            return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(Number(value || 0));
+        }
+
+        function readAmount(id) {
+            const el = document.getElementById(id);
+            if (!el || el.disabled) return 0;
+            const raw = String(el.value || '').trim();
+            return raw === '' ? 0 : (Number(raw) || 0);
+        }
+
+        function syncDepositField() {
+            const depositEl = document.getElementById('approvalDepositAmount');
+            if (!depositEl) return;
+            if (IS_COD) {
+                depositEl.disabled = false;
+                depositEl.value = BASE_DEPOSIT > 0 ? BASE_DEPOSIT : '';
+            } else {
+                depositEl.disabled = true;
+                depositEl.value = 0;
+            }
+        }
+
+        function syncFeeFields() {
+            const shippingEl = document.getElementById('approvalShippingFee');
+            const craneEl = document.getElementById('approvalCraneFee');
+            if (shippingEl && String(shippingEl.value || '').trim() === '') {
+                shippingEl.value = BASE_SHIPPING_FEE || 0;
+            }
+            if (craneEl && String(craneEl.value || '').trim() === '') {
+                craneEl.value = BASE_CRANE_FEE || 0;
+            }
+        }
+
+        function updateApprovalSummary() {
+            const crane = readAmount('approvalCraneFee');
+            const shipping = readAmount('approvalShippingFee');
+            const depositRaw = readAmount('approvalDepositAmount');
+            const deposit = IS_COD ? depositRaw : 0;
+            const orderTotal = BASE_TREE_PRICE + crane + shipping;
+            const needNow = deposit;
+            const remaining = Math.max(0, orderTotal - deposit);
+
+            const treeEl = document.getElementById('summaryTreePrice');
+            const totalEl = document.getElementById('summaryOrderTotal');
+            const needEl = document.getElementById('summaryNeedNow');
+            const remainEl = document.getElementById('summaryRemaining');
+            if (treeEl) treeEl.textContent = formatCurrency(BASE_TREE_PRICE);
+            if (totalEl) totalEl.textContent = formatCurrency(orderTotal);
+            if (needEl) needEl.textContent = formatCurrency(needNow);
+            if (remainEl) remainEl.textContent = formatCurrency(remaining);
+        }
+
+        function validateApprovalInput() {
+            const depositEl = document.getElementById('approvalDepositAmount');
+            if (IS_COD) {
+                const deposit = readAmount('approvalDepositAmount');
+                if (!depositEl || deposit <= 0) {
+                    alert('Deposit Amount là bắt buộc khi thanh toán COD.');
+                    if (depositEl) depositEl.focus();
+                    return false;
+                }
+                const crane = readAmount('approvalCraneFee');
+                const shipping = readAmount('approvalShippingFee');
+                const orderTotal = BASE_TREE_PRICE + crane + shipping;
+                if (deposit > orderTotal) {
+                    alert('Deposit Amount không được lớn hơn Order Total.');
+                    if (depositEl) depositEl.focus();
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        async function submitOrderAction(action) {
+            const payload = {
+                action: action,
+                reason: document.getElementById('approvalReason')?.value?.trim() || '',
+                craneFee: readAmount('approvalCraneFee'),
+                shippingFee: readAmount('approvalShippingFee'),
+                depositAmount: IS_COD ? readAmount('approvalDepositAmount') : 0
+            };
+
+            if (action === 'approve' && !validateApprovalInput()) {
+                return;
+            }
+
+            const response = await fetch(`/moderator/orders/api/action/${encodeURIComponent(ORDER_CODE)}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    [CSRF_HEADER]: CSRF_TOKEN
+                },
+                body: JSON.stringify(payload)
+            });
+
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+                alert(data.error || 'Không thể thực hiện hành động.');
+                return;
+            }
+
+            window.location.reload();
+        }
+
+        const approvalCrane = document.getElementById('approvalCraneFee');
+        const approvalShipping = document.getElementById('approvalShippingFee');
+        const approvalDeposit = document.getElementById('approvalDepositAmount');
+
+        if (approvalCrane) approvalCrane.addEventListener('input', updateApprovalSummary);
+        if (approvalShipping) approvalShipping.addEventListener('input', updateApprovalSummary);
+        if (approvalDeposit) approvalDeposit.addEventListener('input', updateApprovalSummary);
+
+        syncFeeFields();
+        syncDepositField();
+        updateApprovalSummary();
+    </script>
+</th:block>
+
+</body>
+</html>

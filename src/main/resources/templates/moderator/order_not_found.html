@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="vi"
+      xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/dashboard-layout :: layout(~{::title}, ~{::#moderator-content}, ~{::#page-styles}, ~{::#page-scripts})}"
+      th:with="paramActivePage='my-orders'">
+<head>
+    <title>Không tìm thấy đơn hàng - Moderator Portal</title>
+    <th:block id="page-styles"></th:block>
+</head>
+<body>
+<div id="moderator-content" style="padding: 48px 24px; text-align: center; max-width: 480px; margin: 0 auto;">
+    <div style="font-size: 48px; margin-bottom: 16px;">🔍</div>
+    <h2 style="font-size: 20px; font-weight: 700; color: #1a202c; margin-bottom: 8px;">Không tìm thấy đơn hàng</h2>
+    <p style="font-size: 14px; color: #4a5568; margin-bottom: 4px;"
+       th:text="${errorMessage ?: 'Đơn hàng không tồn tại hoặc bạn không có quyền xem.'}">
+        Đơn hàng không tồn tại hoặc bạn không có quyền xem.
+    </p>
+    <p style="font-size: 13px; color: #718096; margin-bottom: 24px;"
+       th:if="${orderCode}" th:text="'Mã đơn: ' + ${orderCode}"></p>
+    <a href="/moderator/orders/my"
+       style="display: inline-flex; align-items: center; gap: 6px; padding: 10px 20px;
+              background: #2b6cb0; color: white; border-radius: 6px; text-decoration: none;
+              font-size: 13px; font-weight: 600;">
+        ← Quay lại Đơn hàng của tôi
+    </a>
+</div>
+<th:block id="page-scripts"></th:block>
+</body>
+</html>

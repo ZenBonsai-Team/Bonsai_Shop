@@ -1,355 +1,307 @@
 <!DOCTYPE html>
-<html lang="vi" 
+<html lang="vi"
       xmlns:th="http://www.thymeleaf.org"
       th:replace="~{fragments/dashboard-layout :: layout(~{::title}, ~{::#moderator-content}, ~{::#page-styles}, ~{::#page-scripts})}"
       th:with="paramActivePage='my-orders'">
 <head>
-    <title>Đơn Hàng Của Tôi - Bonsai Shop</title>
+    <title>&#272;&#417;n h&#224;ng c&#7911;a t&#244;i - Moderator Portal</title>
     <th:block id="page-styles">
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
         <link rel="stylesheet" href="/css/moderator-orders.css">
         <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}"/>
         <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : 'X-CSRF-TOKEN'}"/>
         <style>
-            .timeline-item {
-                position: relative;
-                padding-left: 24px;
-                padding-bottom: 12px;
-                border-left: 2px solid #e2e8f0;
+            .my-kpi-grid {
+                display: grid;
+                grid-template-columns: repeat(6, minmax(0, 1fr));
+                gap: 16px;
+                margin-bottom: 24px;
             }
-            .timeline-item::before {
-                content: '';
-                position: absolute;
-                left: -6px;
-                top: 2px;
-                width: 10px;
-                height: 10px;
-                border-radius: 50%;
-                background: #319795;
+            @media (max-width: 1200px) { .my-kpi-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+            @media (max-width: 768px) { .my-kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+            @media (max-width: 520px) { .my-kpi-grid { grid-template-columns: 1fr; } }
+
+            .my-kpi-card {
+                background: #ffffff;
+                border: 1px solid #e2e8f0;
+                border-radius: 8px;
+                padding: 16px 18px;
+                cursor: pointer;
+                user-select: none;
+                transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+                min-height: 92px;
             }
-            .timeline-item.active::before {
-                background: #38a169;
-                box-shadow: 0 0 0 3px rgba(56, 161, 105, 0.2);
+            .my-kpi-card:hover { border-color: #cbd5e0; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04); }
+            .my-kpi-card.active { border-color: #2b6cb0; background-color: #f7fafc; box-shadow: 0 0 0 2px rgba(43, 108, 176, 0.2); }
+            .my-kpi-card .kpi-title { font-size: 13px; font-weight: 600; line-height: 1.35; color: #4a5568; margin-bottom: 10px; }
+            .my-kpi-card .kpi-count { font-size: 22px; line-height: 1.1; font-weight: 700; color: #1a202c; font-variant-numeric: tabular-nums; }
+            .my-kpi-card.card-critical { border-top: 3px solid #e53e3e; }
+            .my-kpi-card.card-approval { border-top: 3px solid #dd6b20; }
+            .my-kpi-card.card-payment { border-top: 3px solid #d69e2e; }
+            .my-kpi-card.card-delivery { border-top: 3px solid #319795; }
+            .my-kpi-card.card-completed { border-top: 3px solid #38a169; }
+            .my-kpi-card.card-cancelled { border-top: 3px solid #a0aec0; }
+
+            .my-toolbar {
+                background: #ffffff;
+                border: 1px solid #e2e8f0;
+                border-radius: 8px;
+                padding: 16px;
+                margin-bottom: 20px;
+                display: flex;
+                flex-wrap: wrap;
+                gap: 12px;
+                align-items: center;
+                justify-content: flex-start;
             }
-            .timeline-item.released::before {
-                background: #e53e3e;
+            .my-toolbar-search { position: relative; flex: 1 1 420px; min-width: 320px; }
+            .my-toolbar-search input {
+                width: 100%;
+                height: 40px;
+                padding: 8px 12px 8px 36px;
+                border: 1px solid #cbd5e0;
+                border-radius: 6px;
+                font-size: 14px;
+                outline: none;
             }
-            .timeline-time {
-                font-size: 11px;
-                color: #718096;
-            }
-            .timeline-text {
+            .my-toolbar-search input:focus { border-color: #3182ce; box-shadow: 0 0 0 2px rgba(49, 130, 206, 0.15); }
+            .my-toolbar-search .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #a0aec0; font-size: 14px; }
+            .my-toolbar-filters { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+            .my-toolbar-filters select {
+                height: 40px;
+                padding: 8px 12px;
+                border: 1px solid #cbd5e0;
+                border-radius: 6px;
                 font-size: 13px;
-                font-weight: 600;
                 color: #2d3748;
+                background-color: #ffffff;
+                outline: none;
+                cursor: pointer;
+                max-width: 100%;
+            }
+            #priorityFilterSelect { width: 180px; }
+            #statusFilterSelect { width: 220px; }
+            #orderSortSelect { width: 170px; }
+            .my-toolbar-filters select:focus { border-color: #3182ce; }
+            @media (max-width: 900px) {
+                .my-toolbar-search { flex-basis: 100%; min-width: 0; }
+                .my-toolbar-filters { width: 100%; }
+            }
+
+            .my-orders-table-wrapper {
+                background: #ffffff;
+                border: 1px solid #e2e8f0;
+                border-radius: 8px;
+                overflow-x: auto;
+                overflow-y: visible;
+            }
+            .my-orders-table {
+                width: 100%;
+                min-width: 1100px;
+                border-collapse: collapse;
+                text-align: left;
+                font-size: 14px;
+                table-layout: fixed;
+            }
+            .my-orders-table th {
+                background-color: #f7fafc;
+                color: #4a5568;
+                font-weight: 600;
+                font-size: 12px;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                padding: 14px 18px;
+                border-bottom: 1px solid #e2e8f0;
+                white-space: nowrap;
+            }
+            .my-orders-table td {
+                padding: 14px 18px;
+                border-bottom: 1px solid #edf2f7;
+                vertical-align: middle;
+                color: #2d3748;
+                overflow: visible;
+                text-overflow: clip;
+            }
+            .my-orders-table tbody tr:hover { background-color: #f8fafc; }
+            .my-orders-table .col-code { font-family: monospace; font-weight: 700; color: #2b6cb0; letter-spacing: 0.02em; white-space: nowrap; }
+            .my-orders-table .col-customer strong { display: block; font-weight: 600; font-size: 14px; line-height: 1.35; white-space: normal; overflow-wrap: anywhere; }
+            .my-orders-table .col-customer .cust-phone { display: block; margin-top: 3px; font-size: 12px; line-height: 1.3; color: #718096; white-space: nowrap; }
+            .my-orders-table .col-money { text-align: right; font-variant-numeric: tabular-nums; font-feature-settings: "tnum"; font-weight: 600; white-space: nowrap; }
+            .my-orders-table .col-priority,
+            .my-orders-table .col-age,
+            .my-orders-table .col-status,
+            .my-orders-table .col-action { text-align: center; }
+            .my-orders-table .col-age { font-size: 13px; color: #4a5568; white-space: nowrap; }
+            .my-orders-table .col-action { padding-right: 22px; white-space: nowrap; }
+            .badge-priority, .badge-status { display: inline-block; white-space: nowrap; }
+            .badge-priority { padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; }
+            .badge-priority-critical { background: #fed7d7; color: #9b2c2c; border: 1px solid #feb2b2; }
+            .badge-priority-high { background: #feebc8; color: #7b341e; border: 1px solid #fbd38d; }
+            .badge-priority-normal { background: #ebf8ff; color: #2b6cb0; border: 1px solid #bee3f8; }
+            .badge-priority-low { background: #edf2f7; color: #4a5568; border: 1px solid #e2e8f0; }
+            .badge-status { padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; }
+            .badge-status-pending { background: #fffaf0; color: #dd6b20; border: 1px solid #fbd38d; }
+            .badge-status-pending_payment { background: #fefcbf; color: #744210; border: 1px solid #faf089; }
+            .badge-status-deposited { background: #e6fffa; color: #234e52; border: 1px solid #b2f5ea; }
+            .badge-status-paid { background: #ebf8ff; color: #2b6cb0; border: 1px solid #bee3f8; }
+            .badge-status-completed { background: #f0fff4; color: #276749; border: 1px solid #c6f6d5; }
+            .badge-status-cancelled { background: #edf2f7; color: #4a5568; border: 1px solid #e2e8f0; }
+            .btn-view-detail {
+                min-width: 86px;
+                color: #2b6cb0;
+                background: #ebf8ff;
+                border: 1px solid #bee3f8;
+                padding: 6px 12px;
+                border-radius: 4px;
+                font-size: 12px;
+                font-weight: 600;
+                text-decoration: none;
+                display: inline-block;
+                white-space: nowrap;
+                transition: background 0.15s ease;
+            }
+            .btn-view-detail:hover { background: #bee3f8; color: #2b6cb0; }
+            .my-pagination-footer {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                min-width: 1100px;
+                padding: 14px 18px;
+                background: #ffffff;
+                border-top: 1px solid #edf2f7;
+                font-size: 13px;
+                color: #718096;
             }
         </style>
     </th:block>
 </head>
 <body>
     <div id="moderator-content">
-
-        <!-- KPI Metrics Header Cards (Personal Stats) -->
-        <section class="kpi-row">
-            <div class="kpi-card kpi-all">
-                <div class="kpi-icon-wrapper"><i class="fa-solid fa-box"></i></div>
-                <div class="kpi-data">
-                    <span class="kpi-label">Đơn tôi đã nhận</span>
-                    <span class="kpi-value" id="kpiTotalCount">0</span>
-                </div>
+        <section class="my-kpi-grid">
+            <div class="my-kpi-card card-critical" id="cardCritical" data-filter="CRITICAL">
+                <div class="kpi-title">Kh&#7849;n c&#7845;p</div>
+                <div class="kpi-count" id="kpiCriticalCount" th:text="${kpis != null ? kpis.criticalCount : 0}">0</div>
             </div>
-            <div class="kpi-card kpi-pending">
-                <div class="kpi-icon-wrapper"><i class="fa-solid fa-gauge-high"></i></div>
-                <div class="kpi-data">
-                    <span class="kpi-label">Chờ tôi duyệt</span>
-                    <span class="kpi-value" id="kpiPendingCount">0</span>
-                </div>
+            <div class="my-kpi-card card-approval" id="cardApproval" data-filter="WAITING_APPROVAL">
+                <div class="kpi-title">Ch&#7901; t&#244;i duy&#7879;t</div>
+                <div class="kpi-count" id="kpiApprovalCount" th:text="${kpis != null ? kpis.waitingApprovalCount : 0}">0</div>
             </div>
-            <div class="kpi-card kpi-approved">
-                <div class="kpi-icon-wrapper"><i class="fa-solid fa-circle-check"></i></div>
-                <div class="kpi-data">
-                    <span class="kpi-label">Tôi đã duyệt</span>
-                    <span class="kpi-value" id="kpiApprovedCount">0</span>
-                </div>
+            <div class="my-kpi-card card-payment" id="cardPayment" data-filter="WAITING_CUSTOMER_PAYMENT">
+                <div class="kpi-title">Ch&#7901; kh&#225;ch thanh to&#225;n</div>
+                <div class="kpi-count" id="kpiPaymentCount" th:text="${kpis != null ? kpis.waitingPaymentCount : 0}">0</div>
             </div>
-            <div class="kpi-card kpi-paid">
-                <div class="kpi-icon-wrapper"><i class="fa-solid fa-money-bill-wave"></i></div>
-                <div class="kpi-data">
-                    <span class="kpi-label">Đã thanh toán</span>
-                    <span class="kpi-value" id="kpiPaidCount">0</span>
-                </div>
+            <div class="my-kpi-card card-delivery" id="cardDelivery" data-filter="WAITING_DELIVERY_PAYMENT">
+                <div class="kpi-title">Ch&#7901; giao &amp; thu n&#7889;t</div>
+                <div class="kpi-count" id="kpiDeliveryCount" th:text="${kpis != null ? kpis.waitingDeliveryCount : 0}">0</div>
             </div>
-            <div class="kpi-card kpi-rejected">
-                <div class="kpi-icon-wrapper"><i class="fa-solid fa-circle-xmark"></i></div>
-                <div class="kpi-data">
-                    <span class="kpi-label">Tôi đã hủy</span>
-                    <span class="kpi-value" id="kpiRejectedCount">0</span>
-                </div>
+            <div class="my-kpi-card card-completed" id="cardCompleted" data-filter="COMPLETED">
+                <div class="kpi-title">&#272;&#227; ho&#224;n th&#224;nh</div>
+                <div class="kpi-count" id="kpiCompletedCount" th:text="${kpis != null ? kpis.completedCount : 0}">0</div>
+            </div>
+            <div class="my-kpi-card card-cancelled" id="cardCancelled" data-filter="CANCELLED">
+                <div class="kpi-title">&#272;&#227; h&#7911;y</div>
+                <div class="kpi-count" id="kpiCancelledCount" th:text="${kpis != null ? kpis.cancelledCount : 0}">0</div>
             </div>
         </section>
 
-        <!-- Main Management Card -->
-        <div class="management-card">
-            <div class="toolbar-header">
-                <div class="toolbar-search-row">
-                    <div class="search-input-wrapper">
-                        <span class="search-icon"><i class="fa-solid fa-magnifying-glass"></i></span>
-                        <input type="text" id="orderSearchInput" placeholder="Tìm kiếm trong danh sách đơn của tôi...">
-                    </div>
-                    <div class="toolbar-filters-group">
-                        <div class="sort-select-wrapper">
-                            <select id="orderSortSelect">
-                                <option value="date_desc" selected>Mới nhất xếp trước</option>
-                                <option value="date_asc">Cũ nhất xếp trước</option>
-                                <option value="price_desc">Giá trị lớn nhất</option>
-                                <option value="price_asc">Giá trị nhỏ nhất</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="filter-tabs" id="statusFilterTabs">
-                    <button class="tab-btn active" data-status="ALL">Tất cả đơn hàng</button>
-                    <button class="tab-btn" data-status="PENDING">Chờ duyệt</button>
-                    <button class="tab-btn" data-status="PENDING_PAYMENT">Chờ thanh toán</button>
-                    <button class="tab-btn" data-status="PAID">Đã thanh toán</button>
-                    <button class="tab-btn" data-status="COMPLETED">Hoàn thành</button>
-                    <button class="tab-btn" data-status="CANCELLED">Đã hủy</button>
-                    <button class="tab-btn" data-status="CANCELLED">Đã hủy</button>
-                </div>
+        <div class="my-toolbar">
+            <div class="my-toolbar-search">
+                <span class="search-icon"><i class="fa-solid fa-magnifying-glass"></i></span>
+                <input type="text" id="orderSearchInput" placeholder="T&#236;m theo m&#227; &#273;&#417;n, t&#234;n kh&#225;ch h&#224;ng, s&#7889; &#273;i&#7879;n tho&#7841;i..." th:value="${search}">
             </div>
 
-            <!-- Table -->
-            <div class="table-container">
-                <table class="orders-table" id="ordersDataTable">
-                    <thead>
-                        <tr>
-                            <th>Mã Đơn Hàng</th>
-                            <th>Khách Hàng</th>
-                            <th>Số lượng cây</th>
-                            <th class="col-price">Tổng Tiền</th>
-                            <th>Ngày Đặt</th>
-                            <th>Trạng Thái</th>
-                            <th style="width: 140px; text-align: center;">Thao tác</th>
-                        </tr>
-                    </thead>
-                    <tbody id="ordersTableBody">
-                        <tr>
-                            <td colspan="7" class="empty-state">Đang tải danh sách của bạn...</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+            <div class="my-toolbar-filters">
+                <select id="priorityFilterSelect">
+                    <option value="ALL" th:selected="${priority == 'ALL'}">T&#7845;t c&#7843; &#273;&#7897; &#432;u ti&#234;n</option>
+                    <option value="CRITICAL" th:selected="${priority == 'CRITICAL'}">Kh&#7849;n c&#7845;p (CRITICAL)</option>
+                    <option value="HIGH" th:selected="${priority == 'HIGH'}">Cao (HIGH)</option>
+                    <option value="NORMAL" th:selected="${priority == 'NORMAL'}">B&#236;nh th&#432;&#7901;ng (NORMAL)</option>
+                    <option value="LOW" th:selected="${priority == 'LOW'}">Th&#7845;p (LOW)</option>
+                </select>
 
-            <div class="pagination-footer">
-                <div class="pagination-info" id="paginationInfo">Hiển thị đơn hàng</div>
-                <div class="pagination-controls" id="paginationControls"></div>
+                <select id="statusFilterSelect">
+                    <option value="ALL" th:selected="${status == 'ALL'}">T&#7845;t c&#7843; tr&#7841;ng th&#225;i</option>
+                    <option value="PENDING" th:selected="${status == 'PENDING'}">Ch&#7901; duy&#7879;t (PENDING)</option>
+                    <option value="PENDING_PAYMENT" th:selected="${status == 'PENDING_PAYMENT'}">Ch&#7901; thanh to&#225;n (PENDING_PAYMENT)</option>
+                    <option value="DEPOSITED" th:selected="${status == 'DEPOSITED'}">&#272;&#227; &#273;&#7863;t c&#7885;c (DEPOSITED)</option>
+                    <option value="PAID" th:selected="${status == 'PAID'}">&#272;&#227; thanh to&#225;n (PAID)</option>
+                    <option value="COMPLETED" th:selected="${status == 'COMPLETED'}">Ho&#224;n th&#224;nh (COMPLETED)</option>
+                    <option value="CANCELLED" th:selected="${status == 'CANCELLED'}">&#272;&#227; h&#7911;y (CANCELLED)</option>
+                </select>
+
+                <select id="orderSortSelect">
+                    <option value="date_desc" th:selected="${sort == 'date_desc'}">M&#7899;i nh&#7845;t x&#7871;p tr&#432;&#7899;c</option>
+                    <option value="date_asc" th:selected="${sort == 'date_asc'}">C&#361; nh&#7845;t x&#7871;p tr&#432;&#7899;c</option>
+                    <option value="price_desc" th:selected="${sort == 'price_desc'}">Gi&#225; tr&#7883; l&#7899;n nh&#7845;t</option>
+                    <option value="price_asc" th:selected="${sort == 'price_asc'}">Gi&#225; tr&#7883; nh&#7887; nh&#7845;t</option>
+                </select>
             </div>
         </div>
 
-        <!-- Component Drawer Chi tiết Đơn hàng & Timeline Lịch sử -->
-        <div class="drawer-backdrop" id="drawerBackdrop"></div>
-        <div class="drawer-panel" id="drawerPanel">
-            <div class="drawer-header">
-                <div class="drawer-title">
-                    <span>Chi Tiết Đơn Hàng</span>
-                    <span class="col-code" id="drawerOrderCode">BSMS-XXXXX</span>
-                </div>
-                <button class="drawer-close-btn" id="btnDrawerClose">&times;</button>
-            </div>
-            
-            <div class="drawer-body">
-                <div class="drawer-section" style="display:flex; justify-content:space-between; align-items:center;">
-                    <span class="detail-label">Trạng thái:</span>
-                    <span id="drawerStatusBadge" class="status-badge pending">PENDING</span>
-                </div>
+        <div class="my-orders-table-wrapper">
+            <table class="my-orders-table">
+                <colgroup>
+                    <col style="width: 10%;">
+                    <col style="width: 24%;">
+                    <col style="width: 11%;">
+                    <col style="width: 11%;">
+                    <col style="width: 10%;">
+                    <col style="width: 9%;">
+                    <col style="width: 11%;">
+                    <col style="width: 14%;">
+                </colgroup>
+                <thead>
+                    <tr>
+                        <th>M&#227; &#273;&#417;n</th>
+                        <th>Kh&#225;ch h&#224;ng</th>
+                        <th style="text-align: right;">&#272;&#227; c&#7885;c</th>
+                        <th style="text-align: right;">C&#242;n l&#7841;i</th>
+                        <th style="text-align: center;">&#272;&#7897; &#432;u ti&#234;n</th>
+                        <th style="text-align: center;">T&#7891;n</th>
+                        <th style="text-align: center;">Tr&#7841;ng th&#225;i</th>
+                        <th style="text-align: center;">Thao t&#225;c</th>
+                    </tr>
+                </thead>
+                <tbody id="myOrdersTableBody">
+                    <tr th:if="${orders == null or #lists.isEmpty(orders)}">
+                        <td colspan="8" style="text-align: center; padding: 40px; color: #a0aec0; font-style: italic;">
+                            Kh&#244;ng t&#236;m th&#7845;y &#273;&#417;n h&#224;ng n&#224;o ph&#249; h&#7907;p
+                        </td>
+                    </tr>
+                    <tr th:each="order : ${orders}">
+                        <td class="col-code" th:text="${order.orderCode}">BSMS-000000</td>
+                        <td class="col-customer">
+                            <strong th:text="${order.customerName}">Kh&#225;ch h&#224;ng</strong>
+                            <span class="cust-phone" th:text="${order.customerPhone}">-</span>
+                        </td>
+                        <td class="col-money" th:utext="${order.depositAmount != null ? #numbers.formatDecimal(order.depositAmount, 0, 'POINT', 0, 'COMMA') + ' &#8363;' : '0 &#8363;'}">0 &#8363;</td>
+                        <td class="col-money" th:utext="${order.remainingPaymentAmount != null ? #numbers.formatDecimal(order.remainingPaymentAmount, 0, 'POINT', 0, 'COMMA') + ' &#8363;' : '0 &#8363;'}">0 &#8363;</td>
+                        <td class="col-priority">
+                            <span th:class="'badge-priority badge-priority-' + ${#strings.toLowerCase(order.priority != null ? order.priority : 'normal')}"
+                                  th:text="${order.priority != null ? order.priority : 'NORMAL'}">NORMAL</span>
+                        </td>
+                        <td class="col-age">
+                            <span class="age-timer-element"
+                                  th:data-timestamp="${order.statusTimestamp != null ? order.statusTimestamp : ''}"
+                                  th:text="${order.ageFormatted}">-</span>
+                        </td>
+                        <td class="col-status">
+                            <span th:class="'badge-status badge-status-' + ${#strings.toLowerCase(order.orderStatus != null ? order.orderStatus : 'pending')}"
+                                  th:text="${order.orderStatus}">PENDING</span>
+                        </td>
+                        <td class="col-action">
+                            <a th:href="@{/moderator/orders/{code}(code=${order.orderCode})}" class="btn-view-detail">Chi ti&#7871;t</a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
 
-                <!-- Customer Details -->
-                <div class="drawer-section">
-                    <h4 class="section-title">Khách hàng đặt hàng</h4>
-                    <div class="detail-grid">
-                        <span class="detail-label">Họ tên:</span> <span class="detail-value" id="drawerCustName">-</span>
-                        <span class="detail-label">Điện thoại:</span> <span class="detail-value" id="drawerCustPhone">-</span>
-                        <span class="detail-label">Email:</span> <span class="detail-value" id="drawerCustEmail">-</span>
-                        <span class="detail-label">Địa chỉ:</span> <span class="detail-value" id="drawerCustAddress">-</span>
-                    </div>
-                </div>
-
-                <!-- Product Details -->
-                <div class="drawer-section">
-                    <h4 class="section-title">Danh sách Bonsai đặt mua</h4>
-                    <div id="drawerProductsContainer" class="d-flex flex-column gap-3">
-                        <!-- List of ordered products will be dynamically loaded here -->
-                    </div>
-                </div>
-
-                <!-- Notes / Additional Details -->
-                <div class="drawer-section">
-                    <h4 class="section-title">Yêu cầu từ khách hàng</h4>
-                    <p style="font-size: 13px; color: var(--text-muted); font-style: italic; background:#fcfcfc; padding:8px; border-radius:4px; border:1px solid #f0f0f0;" id="drawerNotes">
-                        Không có yêu cầu đặc biệt.
-                    </p>
-                </div>
-
-                <!-- Fees Form -->
-                <div class="drawer-section">
-                    <h4 class="section-title">Chi Phí Đơn Hàng & Phê Duyệt</h4>
-                    <div class="fees-form-group">
-                        <div class="input-field-group mb-2" id="groupDepositAmount" style="display:none;">
-                            <label class="fw-semibold text-primary"><i class="fa-solid fa-coins me-1"></i> Tiền đặt cọc cây (Deposit Amount)</label>
-                            <input type="number" id="inputDepositAmount" class="form-control" placeholder="Nhập số tiền đặt cọc (VNĐ)">
-                            <small class="text-muted">Bắt buộc nhập đối với đơn hàng Đặt cọc / COD.</small>
-                        </div>
-                        <div class="input-field-group">
-                            <label>Phí xe cẩu</label>
-                            <input type="number" id="inputCraneFee" class="form-control" placeholder="0">
-                        </div>
-                        <div class="input-field-group mt-2">
-                            <label>Phí vận chuyển</label>
-                            <input type="number" id="inputShippingFee" class="form-control" placeholder="0">
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Financial Breakdown Summary Card (3 Groups) -->
-                <div class="drawer-section" style="background:#fff; padding: 16px; border-radius: 8px; border:1px solid #e0e0e0;">
-                    <!-- Nhóm 1: GIÁ TRỊ ĐƠN HÀNG -->
-                    <div style="font-weight:700; font-size:13px; color:#424242; text-transform:uppercase; margin-bottom:8px; padding-bottom:4px; border-bottom:1px solid #eeeeee;">
-                        <i class="fa-solid fa-receipt me-1 text-secondary"></i> 1. Giá Trị Đơn Hàng
-                    </div>
-                    <div class="detail-grid mb-2">
-                        <span class="detail-label">Giá cây:</span>
-                        <span class="detail-value fw-semibold" id="drawerBasePrice">0 VND</span>
-                        
-                        <span class="detail-label">Phí vận chuyển:</span>
-                        <span class="detail-value" id="drawerShippingFeeVal">0 VND</span>
-
-                        <span class="detail-label">Phí xe cẩu:</span>
-                        <span class="detail-value" id="drawerCraneFeeVal">0 VND</span>
-
-                        <span class="detail-label fw-bold text-dark">Tổng giá trị đơn hàng:</span>
-                        <span class="detail-value fw-bold text-dark" id="drawerFinalTotal">0 VND</span>
-                    </div>
-
-                    <!-- Nhóm 2: THANH TOÁN NGAY (VNPAY) -->
-                    <div style="font-weight:700; font-size:13px; color:#2e7d32; text-transform:uppercase; margin-top:12px; margin-bottom:8px; padding-bottom:4px; border-bottom:1px solid #e8f5e9;">
-                        <i class="fa-solid fa-credit-card me-1 text-success"></i> 2. Thanh Toán Ngay (VNPay)
-                    </div>
-                    <div class="detail-grid mb-2">
-                        <span class="detail-label">Tiền đặt cọc cây:</span>
-                        <span class="detail-value text-primary font-weight-bold" id="drawerDeposit">0 VND</span>
-                        
-                        <span class="detail-label">Phí vận chuyển:</span>
-                        <span class="detail-value" id="drawerPayNowShip">0 VND</span>
-
-                        <span class="detail-label">Phí xe cẩu:</span>
-                        <span class="detail-value" id="drawerPayNowCrane">0 VND</span>
-
-                        <span class="detail-label fw-bold text-success" style="font-size:14px;">Khách cần thanh toán ngay:</span>
-                        <span class="detail-value fw-bold text-success" style="font-size:15px;" id="drawerPayment1Total">0 VND</span>
-                    </div>
-
-                    <!-- Nhóm 3: THANH TOÁN KHI NHẬN CÂY -->
-                    <div id="groupRemainingSection">
-                        <div style="font-weight:700; font-size:13px; color:#e65100; text-transform:uppercase; margin-top:12px; margin-bottom:8px; padding-bottom:4px; border-bottom:1px solid #fff3e0;">
-                            <i class="fa-solid fa-truck-ramp-box me-1 text-warning"></i> 3. Thanh Toán Khi Nhận Cây
-                        </div>
-                        <div class="detail-grid">
-                            <span class="detail-label">Phần còn lại của giá cây:</span>
-                            <span class="detail-value fw-bold text-danger" style="font-size:14px;" id="drawerRemainingPay">0 VND</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Handling Timeline Audit Log -->
-                <div class="drawer-section">
-                    <h4 class="section-title"><i class="fa-solid fa-clock-rotate-left me-1"></i> Lịch sử phân bổ & xử lý đơn</h4>
-                    <div id="handlingTimelineContainer" class="mt-3">
-                        <div class="text-muted small">Chưa có thông tin chuyển giao.</div>
-                    </div>
-                </div>
-
-                <!-- Actions / Reject reason box -->
-                <div class="reject-reason-box mt-3" id="rejectReasonBox" style="display: none;">
-                    <label style="font-size:12px; font-weight:700; color:#c53030;">Nhập lý do hủy đơn:</label>
-                    <textarea id="textareaRejectReason" class="form-control mt-1" rows="3" placeholder="Lý do chi tiết..."></textarea>
-                    <div class="mt-2 d-flex justify-content-end gap-2">
-                        <button class="btn btn-secondary btn-sm" id="btnRejectCancel">Hủy</button>
-                        <button class="btn btn-danger btn-sm" id="btnRejectConfirm">Xác nhận hủy</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Drawer Footer Action Buttons -->
-            <div class="drawer-footer d-flex gap-2 p-3">
-                <button class="btn btn-outline-danger flex-grow-1" id="btnUnclaimOrder"><i class="fa-solid fa-undo"></i> Trả đơn về Pool</button>
-                <button class="btn btn-danger flex-grow-1" id="btnRejectOrder"><i class="fa-solid fa-circle-xmark"></i> Hủy đơn</button>
-                <button class="btn btn-success flex-grow-1" id="btnVerifyOrder"><i class="fa-solid fa-circle-check"></i> Phê duyệt</button>
-                <button class="btn btn-success flex-grow-1" id="btnConfirmRemainingPayment" style="display: none;"><i class="fa-solid fa-money-bill-wave me-1"></i> Xác nhận đã thanh toán đầy đủ</button>
-                <button class="btn btn-success flex-grow-1" id="btnCompletePaidOrder" style="display: none;"><i class="fa-solid fa-check-double me-1"></i> Khách đã nhận</button>
-                <button class="btn btn-danger flex-grow-1" id="btnCustomerNoShow" style="display: none;"><i class="fa-solid fa-user-slash me-1"></i> Khách không nhận</button>
-            </div>
-        </div>
-
-        <!-- Offcanvas Chi tiết sản phẩm cây cảnh -->
-        <div class="offcanvas offcanvas-end" tabindex="-1" id="productDetailDrawer" aria-labelledby="productDetailDrawerLabel" style="width: 450px; border-left: 1px solid var(--border-color);">
-            <div class="offcanvas-header" style="border-bottom: 1px solid var(--border-color); padding: 20px;">
-                <h5 class="offcanvas-title" id="productDetailDrawerLabel" style="font-weight: 700; color: var(--primary-color);">
-                    <i class="fa-solid fa-tree me-2"></i> Chi Tiết Tác Phẩm Bonsai
-                </h5>
-                <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-            </div>
-            
-            <div class="offcanvas-body" style="padding: 24px;">
-                <div id="prodDrawerLoading" class="text-center py-5">
-                    <div class="spinner-border text-success" role="status" style="width: 3rem; height: 3rem;">
-                        <span class="visually-hidden">Đang tải...</span>
-                    </div>
-                    <p class="text-muted mt-3">Đang tải thông tin tác phẩm...</p>
-                </div>
-
-                <div id="prodDrawerError" class="text-center py-5 d-none">
-                    <div class="text-danger" style="font-size: 3rem;"><i class="fa-solid fa-circle-exclamation"></i></div>
-                    <p class="text-muted mt-2" id="prodDrawerErrorMessage">Không tìm thấy thông tin sản phẩm.</p>
-                </div>
-
-                <div id="prodDrawerContent" class="d-none">
-                    <div class="product-img-wrapper mb-4" style="border-radius: 8px; overflow: hidden; border: 1px solid var(--border-color); aspect-ratio: 4/3;">
-                        <img id="prodDrawerImg" src="" alt="Bonsai Image" style="width: 100%; height: 100%; object-fit: cover;">
-                    </div>
-
-                    <div class="mb-3">
-                        <span class="badge bg-success" id="prodDrawerStatus" style="font-size: 11px; padding: 6px 12px; border-radius: 20px; text-transform: uppercase;">AVAILABLE</span>
-                        <h4 id="prodDrawerName" class="mt-2 mb-1" style="font-weight: 700; color: var(--text-main);">Tên tác phẩm</h4>
-                        <p class="text-muted small" id="prodDrawerCode">Mã cây: -</p>
-                    </div>
-
-                    <div class="specs-box p-3 mb-4" style="background: var(--bg-beige); border-radius: 8px; border: 1px solid var(--border-color);">
-                        <h6 style="font-weight: 700; text-transform: uppercase; font-size: 11px; color: var(--text-muted); border-bottom: 1px solid rgba(0,0,0,0.06); padding-bottom: 6px; margin-bottom: 12px;">Thông số kỹ thuật tác phẩm</h6>
-                        
-                        <div style="display: grid; grid-template-columns: 140px 1fr; gap: 8px 12px; font-size: 13px;">
-                            <span class="text-muted">Dáng cây (Style):</span>
-                            <strong id="prodDrawerStyle" class="text-dark">-</strong>
-
-                            <span class="text-muted">Tuổi cây (Age):</span>
-                            <strong id="prodDrawerAge" class="text-dark">-</strong>
-
-                            <span class="text-muted">Chiều cao (Height):</span>
-                            <strong id="prodDrawerHeight" class="text-dark">-</strong>
-
-                            <span class="text-muted">Đường kính thân:</span>
-                            <strong id="prodDrawerDiameter" class="text-dark">-</strong>
-
-                            <span class="text-muted">Giá niêm yết:</span>
-                            <strong id="prodDrawerPrice" style="color: var(--accent-color); font-size: 15px;">-</strong>
-                        </div>
-                    </div>
-
-                    <div>
-                        <h6 style="font-weight: 700; text-transform: uppercase; font-size: 11px; color: var(--text-muted); margin-bottom: 8px;">Mô tả chi tiết</h6>
-                        <p id="prodDrawerDesc" style="font-size: 13px; color: var(--text-muted); line-height: 1.6; text-align: justify; white-space: pre-line;">-</p>
-                    </div>
-                </div>
+            <div class="my-pagination-footer">
+                <div id="paginationInfo">Hi&#7875;n th&#7883; &#273;&#417;n h&#224;ng</div>
+                <div id="paginationControls" class="d-flex gap-1"></div>
             </div>
         </div>
     </div>

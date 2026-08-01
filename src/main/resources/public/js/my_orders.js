@@ -1,724 +1,287 @@
-const DashboardState = {
-    searchQuery: '',
-    selectedStatus: 'ALL',
-    sortBy: 'date_desc',
-    currentPage: 1,
-    pageSize: 8
-};
-
-const orderStatusLabels = {
-    'PENDING': 'Chờ xử lý',
-    'PENDING_PAYMENT': 'Chờ thanh toán',
-    'DEPOSITED': 'Đã đặt cọc',
-    'PAID': 'Đã thanh toán',
-    'COMPLETED': 'Hoàn thành',
-    'CANCELLED': 'Đã hủy',
-    'CONFIRMED': 'Đã xác nhận',
-    'SHIPPING': 'Đang giao',
-    'DELIVERED': 'Đã giao'
-};
-
-let activeOrderCode = null;
-let currentActiveOrder = null;
-const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
-const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content');
-
+﻿/**
+ * My Orders Page JavaScript - Isolated Module for Moderator Portal
+ */
 document.addEventListener('DOMContentLoaded', () => {
-    initApp();
-});
 
-function initApp() {
+    // State Variables
+    let activeCardFilter = 'ALL';
+    let currentPage = 1;
+    let searchDebounceTimeout = null;
+
+    // DOM Elements
+    const cardElements = document.querySelectorAll('.my-kpi-card');
     const searchInput = document.getElementById('orderSearchInput');
+    const prioritySelect = document.getElementById('priorityFilterSelect');
+    const statusSelect = document.getElementById('statusFilterSelect');
     const sortSelect = document.getElementById('orderSortSelect');
-    const tabContainer = document.getElementById('statusFilterTabs');
+    const tableBody = document.getElementById('myOrdersTableBody');
+    const paginationInfo = document.getElementById('paginationInfo');
+    const paginationControls = document.getElementById('paginationControls');
 
-    let searchDebounceTimer;
-    if (searchInput) {
-        searchInput.addEventListener('input', (e) => {
-            clearTimeout(searchDebounceTimer);
-            searchDebounceTimer = setTimeout(() => {
-                DashboardState.searchQuery = e.target.value;
-                DashboardState.currentPage = 1;
-                renderDashboard();
-            }, 300);
-        });
-    }
+    // Initialize Event Listeners
+    initCardFilterEvents();
+    initToolbarEvents();
+    startAgeRefreshTimer();
 
-    if (sortSelect) {
-        sortSelect.addEventListener('change', (e) => {
-            DashboardState.sortBy = e.target.value;
-            DashboardState.currentPage = 1;
-            renderDashboard();
-        });
-    }
+    // 1. KPI Card Click Handler (Toggle & Switch Filter)
+    function initCardFilterEvents() {
+        cardElements.forEach(card => {
+            card.addEventListener('click', () => {
+                const targetFilter = card.dataset.filter;
 
-    if (tabContainer) {
-        tabContainer.addEventListener('click', (e) => {
-            const btn = e.target.closest('.tab-btn');
-            if (!btn) return;
-            tabContainer.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
-            btn.classList.add('active');
-            DashboardState.selectedStatus = btn.dataset.status;
-            DashboardState.currentPage = 1;
-            renderDashboard();
-        });
-    }
+                if (activeCardFilter === targetFilter) {
+                    // Toggle Off
+                    activeCardFilter = 'ALL';
+                    card.classList.remove('active');
+                } else {
+                    // Switch Filter
+                    cardElements.forEach(c => c.classList.remove('active'));
+                    activeCardFilter = targetFilter;
+                    card.classList.add('active');
+                }
 
-    initDrawerEvents();
-    renderDashboard();
-}
-
-async function renderDashboard() {
-    updatePersonalKPIs();
-
-    const params = new URLSearchParams({
-        search: DashboardState.searchQuery,
-        status: DashboardState.selectedStatus,
-        sort: DashboardState.sortBy,
-        page: DashboardState.currentPage,
-        limit: DashboardState.pageSize
-    });
-
-    try {
-        const response = await fetch(`/api/orders/my?${params.toString()}`);
-        if (!response.ok) return;
-        const result = await response.json();
-
-        renderTable(result.orders);
-        renderPagination(result);
-    } catch (err) {
-        console.error("Lỗi khi tải danh sách đơn hàng:", err);
-    }
-}
-
-async function updatePersonalKPIs() {
-    try {
-        const response = await fetch('/api/orders/my-stats');
-        if (!response.ok) return;
-        const data = await response.json();
-
-        document.getElementById('kpiTotalCount').textContent = data.total || 0;
-        document.getElementById('kpiPendingCount').textContent = data.pending || 0;
-        document.getElementById('kpiApprovedCount').textContent = data.approved || 0;
-        document.getElementById('kpiPaidCount').textContent = data.paid || 0;
-        document.getElementById('kpiRejectedCount').textContent = data.rejected || 0;
-    } catch (err) {
-        console.error("Lỗi cập nhật KPI cá nhân:", err);
-    }
-}
-
-function renderTable(orders) {
-    const tableBody = document.getElementById('ordersTableBody');
-    if (!tableBody) return;
-    tableBody.innerHTML = '';
-
-    if (!orders || orders.length === 0) {
-        tableBody.innerHTML = `
-            <tr>
-                <td colspan="7" class="text-center p-4">Không tìm thấy đơn hàng nào trong mục Đơn Của Tôi.</td>
-            </tr>
-        `;
-        return;
-    }
-
-    orders.forEach(order => {
-        const tr = document.createElement('tr');
-        tr.style.cursor = 'pointer';
-        tr.addEventListener('click', () => openDrawer(order));
-
-        tr.innerHTML = `
-            <td class="col-code">${order.orderCode}</td>
-            <td><strong>${order.customer ? order.customer.name : 'N/A'}</strong></td>
-            <td><span class="fw-bold text-dark">${order.items ? order.items.length : 1} cây</span></td>
-            <td class="col-price">${formatVND(order.totalAmount || 0)}</td>
-            <td>${new Date(order.orderDate).toLocaleString('vi-VN')}</td>
-            <td><span class="status-badge ${order.orderStatus.toLowerCase()}">${orderStatusLabels[order.orderStatus] || order.orderStatus}</span></td>
-            <td class="text-center">
-                <button class="btn btn-sm btn-outline-primary"><i class="fa-solid fa-eye"></i> Chi tiết</button>
-            </td>
-        `;
-
-        tableBody.appendChild(tr);
-    });
-}
-
-function initDrawerEvents() {
-    const backdrop = document.getElementById('drawerBackdrop');
-    const closeBtn = document.getElementById('btnDrawerClose');
-    const unclaimBtn = document.getElementById('btnUnclaimOrder');
-    const verifyBtn = document.getElementById('btnVerifyOrder');
-    const rejectBtn = document.getElementById('btnRejectOrder');
-    const rejectConfirmBtn = document.getElementById('btnRejectConfirm');
-    const rejectCancelBtn = document.getElementById('btnRejectCancel');
-
-    const craneInput = document.getElementById('inputCraneFee');
-    const shipInput = document.getElementById('inputShippingFee');
-
-    if (backdrop) backdrop.addEventListener('click', closeDrawer);
-    if (closeBtn) closeBtn.addEventListener('click', closeDrawer);
-
-    if (craneInput) craneInput.addEventListener('input', updateLiveTotals);
-    if (shipInput) shipInput.addEventListener('input', updateLiveTotals);
-    const depositInput = document.getElementById('inputDepositAmount');
-    if (depositInput) depositInput.addEventListener('input', updateLiveTotals);
-
-    if (unclaimBtn) {
-        unclaimBtn.addEventListener('click', () => {
-            BSMSConfirm({
-                title: "Xác nhận trả đơn hàng?",
-                message: "Bạn có chắc chắn muốn trả lại đơn hàng này về Kho đơn chung (Pool)?",
-                type: "warning",
-                confirmText: "Trả đơn",
-                cancelText: "Hủy bỏ",
-                onConfirm: () => { unclaimOrder(activeOrderCode); }
+                fetchMyOrders(1);
             });
         });
     }
 
-    if (verifyBtn) {
-        verifyBtn.addEventListener('click', () => {
-            verifyOrder(activeOrderCode);
-        });
+    // 2. Toolbar Events (Search & Dropdown Selects)
+    function initToolbarEvents() {
+        if (searchInput) {
+            searchInput.addEventListener('input', () => {
+                clearTimeout(searchDebounceTimeout);
+                searchDebounceTimeout = setTimeout(() => {
+                    fetchMyOrders(1);
+                }, 300);
+            });
+        }
+
+        if (prioritySelect) {
+            prioritySelect.addEventListener('change', () => fetchMyOrders(1));
+        }
+
+        if (statusSelect) {
+            statusSelect.addEventListener('change', () => fetchMyOrders(1));
+        }
+
+        if (sortSelect) {
+            sortSelect.addEventListener('change', () => fetchMyOrders(1));
+        }
     }
 
-    if (rejectBtn) {
-        rejectBtn.addEventListener('click', () => {
-            const box = document.getElementById('rejectReasonBox');
-            if (box) {
-                box.style.display = 'block';
-                box.scrollIntoView({ behavior: 'smooth' });
-                const textarea = document.getElementById('textareaRejectReason');
-                if (textarea) textarea.focus();
+    // 3. Fetch Orders & KPI Counts from Backend API
+    function fetchMyOrders(page = 1) {
+        currentPage = page;
+
+        const params = new URLSearchParams({
+            search: searchInput ? searchInput.value.trim() : '',
+            cardFilter: activeCardFilter,
+            priority: prioritySelect ? prioritySelect.value : 'ALL',
+            status: statusSelect ? statusSelect.value : 'ALL',
+            sort: sortSelect ? sortSelect.value : 'date_desc',
+            page: page,
+            limit: 8
+        });
+
+        fetch(`/moderator/orders/api/my-orders?${params.toString()}`)
+            .then(res => {
+                if (!res.ok) throw new Error('Kh\u00f4ng th\u1ec3 t\u1ea3i d\u1eef li\u1ec7u \u0111\u01a1n h\u00e0ng');
+                return res.json();
+            })
+            .then(data => {
+                updateKPIStats(data.kpis);
+                renderTableRows(data.orders);
+                renderPagination(data.totalCount, data.totalPages, data.currentPage, data.pageSize);
+                updateDisplayedAges();
+            })
+            .catch(err => {
+                console.error('Error fetching my orders:', err);
+                if (tableBody) {
+                    tableBody.innerHTML = `
+                        <tr>
+                            <td colspan="8" style="text-align: center; color: #e53e3e; padding: 30px;">
+                                L\u1ed7i k\u1ebft n\u1ed1i d\u1eef li\u1ec7u. Vui l\u00f2ng th\u1eed l\u1ea1i sau.
+                            </td>
+                        </tr>
+                    `;
+                }
+            });
+    }
+
+    // 4. Update KPI Card Metrics Display
+    function updateKPIStats(kpis) {
+        if (!kpis) return;
+        const setVal = (id, val) => {
+            const el = document.getElementById(id);
+            if (el) el.innerText = val != null ? val : 0;
+        };
+
+        setVal('kpiCriticalCount', kpis.criticalCount);
+        setVal('kpiApprovalCount', kpis.waitingApprovalCount);
+        setVal('kpiPaymentCount', kpis.waitingPaymentCount);
+        setVal('kpiDeliveryCount', kpis.waitingDeliveryCount);
+        setVal('kpiCompletedCount', kpis.completedCount);
+        setVal('kpiCancelledCount', kpis.cancelledCount);
+    }
+
+    // 5. Render Table Rows
+    function renderTableRows(orders) {
+        if (!tableBody) return;
+
+        if (!orders || orders.length === 0) {
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="8" style="text-align: center; padding: 40px; color: #a0aec0;">
+                        Kh\u00f4ng t\u00ecm th\u1ea5y \u0111\u01a1n h\u00e0ng n\u00e0o ph\u00f9 h\u1ee3p
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        tableBody.innerHTML = orders.map(order => {
+            const depositStr = formatCurrency(order.depositAmount);
+            const remainingStr = formatCurrency(order.remainingPaymentAmount);
+            const priorityClass = `badge-priority-${(order.priority || 'normal').toLowerCase()}`;
+            const statusClass = `badge-status-${(order.orderStatus || 'pending').toLowerCase()}`;
+            const orderCode = encodeURIComponent(order.orderCode || '');
+
+            return `
+                <tr>
+                    <td class="col-code">
+                        <strong>${escapeHtml(order.orderCode || '')}</strong>
+                    </td>
+                    <td class="col-customer">
+                        <strong>${escapeHtml(order.customerName || 'Kh\u00e1ch h\u00e0ng')}</strong>
+                        <span class="cust-phone">${escapeHtml(order.customerPhone || '-')}</span>
+                    </td>
+                    <td class="col-money">
+                        ${depositStr}
+                    </td>
+                    <td class="col-money">
+                        ${remainingStr}
+                    </td>
+                    <td class="col-priority">
+                        <span class="badge-priority ${priorityClass}">
+                            ${escapeHtml(order.priority || 'NORMAL')}
+                        </span>
+                    </td>
+                    <td class="col-age">
+                        <span class="age-timer-element" data-timestamp="${order.statusTimestamp || ''}">
+                            ${escapeHtml(order.ageFormatted || '-')}
+                        </span>
+                    </td>
+                    <td class="col-status">
+                        <span class="badge-status ${statusClass}">
+                            ${escapeHtml(order.orderStatus || 'PENDING')}
+                        </span>
+                    </td>
+                    <td class="col-action">
+                        <a href="/moderator/orders/${orderCode}" class="btn-view-detail">
+                            <i class="fa-regular fa-eye"></i> Chi ti\u1ebft
+                        </a>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    function renderPagination(totalCount, totalPages, currentPage, pageSize) {
+        if (paginationInfo) {
+            const start = totalCount > 0 ? (currentPage - 1) * pageSize + 1 : 0;
+            const end = Math.min(currentPage * pageSize, totalCount);
+            paginationInfo.innerText = `Hi\u1ec3n th\u1ecb ${start} - ${end} tr\u00ean t\u1ed5ng s\u1ed1 ${totalCount} \u0111\u01a1n h\u00e0ng`;
+        }
+
+        if (!paginationControls) return;
+        paginationControls.innerHTML = '';
+
+        if (totalPages <= 1) return;
+
+        // Previous Button
+        const prevBtn = document.createElement('button');
+        prevBtn.className = `btn btn-sm btn-outline-secondary ${currentPage === 1 ? 'disabled' : ''}`;
+        prevBtn.innerText = 'Tr\u01b0\u1edbc';
+        prevBtn.disabled = currentPage === 1;
+        prevBtn.onclick = () => fetchMyOrders(currentPage - 1);
+        paginationControls.appendChild(prevBtn);
+
+        // Page Numbers
+        for (let i = 1; i <= totalPages; i++) {
+            if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) {
+                const pageBtn = document.createElement('button');
+                pageBtn.className = `btn btn-sm ${i === currentPage ? 'btn-primary' : 'btn-outline-secondary'}`;
+                pageBtn.innerText = i;
+                pageBtn.onclick = () => fetchMyOrders(i);
+                paginationControls.appendChild(pageBtn);
             }
-        });
+        }
+
+        // Next Button
+        const nextBtn = document.createElement('button');
+        nextBtn.className = `btn btn-sm btn-outline-secondary ${currentPage === totalPages ? 'disabled' : ''}`;
+        nextBtn.innerText = 'Sau';
+        nextBtn.disabled = currentPage === totalPages;
+        nextBtn.onclick = () => fetchMyOrders(currentPage + 1);
+        paginationControls.appendChild(nextBtn);
     }
 
-    if (rejectCancelBtn) {
-        rejectCancelBtn.addEventListener('click', () => {
-            const box = document.getElementById('rejectReasonBox');
-            if (box) box.style.display = 'none';
-        });
+    // 7. Client-Side Periodic AGE Timer Refresh (1-Minute Refresh Loop)
+    function startAgeRefreshTimer() {
+        updateDisplayedAges();
+        setInterval(updateDisplayedAges, 60000); // 1 minute
     }
 
-    if (rejectConfirmBtn) {
-        rejectConfirmBtn.addEventListener('click', () => {
-            const reason = document.getElementById('textareaRejectReason').value.trim();
-            if (!reason) {
-                BSMSToast.warning("Vui lòng nhập lý do hủy đơn!");
+    function updateDisplayedAges() {
+        const ageElements = document.querySelectorAll('.age-timer-element');
+        const now = new Date();
+
+        ageElements.forEach(el => {
+            const rawTs = el.getAttribute('data-timestamp');
+            if (!rawTs) return;
+
+            const tsDate = new Date(rawTs);
+            if (isNaN(tsDate.getTime())) return;
+
+            const diffMs = now - tsDate;
+            if (diffMs < 0) {
+                el.innerText = 'V\u1eeba xong';
                 return;
             }
-            rejectOrder(activeOrderCode, reason);
+
+            const diffMins = Math.floor(diffMs / (1000 * 60));
+            if (diffMins < 1) {
+                el.innerText = 'V\u1eeba xong';
+            } else if (diffMins < 60) {
+                el.innerText = `${diffMins} ph\u00fat`;
+            } else {
+                const diffHours = Math.floor(diffMins / 60);
+                if (diffHours < 24) {
+                    el.innerText = `${diffHours} gi\u1edd`;
+                } else {
+                    const diffDays = Math.floor(diffHours / 24);
+                    el.innerText = `${diffDays} ng\u00e0y`;
+                }
+            }
         });
     }
 
-    const confirmRemainingBtn = document.getElementById('btnConfirmRemainingPayment');
-    if (confirmRemainingBtn) {
-        confirmRemainingBtn.addEventListener('click', () => {
-            if (!currentActiveOrder) return;
-            const basePrice = currentActiveOrder.treePrice !== undefined ? currentActiveOrder.treePrice : 
-                (currentActiveOrder.items ? 
-                    currentActiveOrder.items.reduce((sum, item) => sum + ((item.price || 0) * (item.quantity || 1)), 0) : 
-                    (currentActiveOrder.totalAmount || 0));
-            const depositVal = currentActiveOrder.depositAmount || 0;
-            const remainingPay = Math.max(0, basePrice - depositVal);
-
-            const confirmMsg = `Xác nhận rằng khách hàng đã thanh toán đầy đủ phần tiền còn lại (${formatVND(remainingPay)}) của đơn hàng ngoài thực tế? Thao tác này sẽ chuyển trạng thái đơn sang HOÀN THÀNH (COMPLETED) và không thể hoàn tác.`;
-
-            BSMSConfirm({
-                title: "Xác nhận thanh toán nấc 2 (COD)?",
-                message: confirmMsg,
-                type: "warning",
-                confirmText: "Xác nhận đã thu tiền",
-                cancelText: "Hủy bỏ",
-                onConfirm: () => { confirmRemainingPayment(activeOrderCode); }
-            });
-        });
+    // Helper Utility Functions
+    function formatCurrency(amount) {
+        const numericAmount = Number(amount);
+        if (!Number.isFinite(numericAmount)) return '0 \u20ab';
+        return new Intl.NumberFormat('vi-VN', {
+            maximumFractionDigits: 0
+        }).format(numericAmount) + ' \u20ab';
     }
 
-    const customerNoShowBtn = document.getElementById('btnCustomerNoShow');
-    if (customerNoShowBtn) {
-        customerNoShowBtn.addEventListener('click', () => {
-            if (!currentActiveOrder) return;
-            const isPaid = currentActiveOrder.orderStatus === 'PAID';
-            BSMSConfirm({
-                title: "Xác nhận khách không nhận?",
-                message: isPaid
-                    ? "Đơn hàng đã thanh toán toàn bộ sẽ bị hủy, sản phẩm được mở bán lại. Payment giữ nguyên và ghi chú cần hoàn tiền ngoài hệ thống."
-                    : "Đơn hàng sẽ bị hủy, sản phẩm được mở bán lại. Tiền cọc đã thu sẽ không hoàn và không tạo thanh toán phần còn lại.",
-                type: "warning",
-                confirmText: "Xác nhận hủy đơn",
-                cancelText: "Hủy bỏ",
-                onConfirm: () => { markCustomerNoShow(activeOrderCode); }
-            });
-        });
+    function escapeHtml(str) {
+        if (!str) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
     }
-
-    const completePaidOrderBtn = document.getElementById('btnCompletePaidOrder');
-    if (completePaidOrderBtn) {
-        completePaidOrderBtn.addEventListener('click', () => {
-            if (!currentActiveOrder) return;
-            BSMSConfirm({
-                title: "Xác nhận khách đã nhận?",
-                message: "Đơn hàng sẽ chuyển từ PAID sang COMPLETED. Thao tác này xác nhận khách đã nhận cây và đơn hàng đã hoàn tất.",
-                type: "success",
-                confirmText: "Hoàn thành đơn",
-                cancelText: "Hủy bỏ",
-                onConfirm: () => { completePaidOrder(activeOrderCode); }
-            });
-        });
-    }
-}
-
-function updateLiveTotals() {
-    if (!currentActiveOrder) return;
-    const basePrice = currentActiveOrder.treePrice !== undefined ? currentActiveOrder.treePrice : 
-        (currentActiveOrder.items ? 
-            currentActiveOrder.items.reduce((sum, item) => sum + ((item.price || 0) * (item.quantity || 1)), 0) : 
-            (currentActiveOrder.totalAmount || 0));
-
-    const craneFee = parseFloat(document.getElementById('inputCraneFee')?.value) || 0;
-    const shippingFee = parseFloat(document.getElementById('inputShippingFee')?.value) || 0;
-
-    const isDeposit = (currentActiveOrder.paymentMethod === 'DEPOSIT' || currentActiveOrder.paymentMethod === 'COD');
-    const depositInput = document.getElementById('inputDepositAmount');
-    let depositVal = 0;
-    if (isDeposit) {
-        depositVal = (depositInput && depositInput.value !== '') ? 
-            (parseFloat(depositInput.value) || 0) : 0;
-    }
-
-    const finalTotal = basePrice + craneFee + shippingFee;
-    const payment1Amount = isDeposit ? (depositVal + craneFee + shippingFee) : finalTotal;
-    const remainingPay = isDeposit ? Math.max(0, basePrice - depositVal) : 0;
-
-    // Nhóm 1: GIÁ TRỊ ĐƠN HÀNG
-    const basePriceEl = document.getElementById('drawerBasePrice');
-    if (basePriceEl) basePriceEl.textContent = formatVND(basePrice);
-
-    const shipValEl = document.getElementById('drawerShippingFeeVal');
-    if (shipValEl) shipValEl.textContent = formatVND(shippingFee);
-
-    const craneValEl = document.getElementById('drawerCraneFeeVal');
-    if (craneValEl) craneValEl.textContent = formatVND(craneFee);
-
-    const finalTotalEl = document.getElementById('drawerFinalTotal');
-    if (finalTotalEl) finalTotalEl.textContent = formatVND(finalTotal);
-
-    // Nhóm 2: THANH TOÁN NGAY (VNPAY)
-    const depositEl = document.getElementById('drawerDeposit');
-    if (depositEl) depositEl.textContent = isDeposit ? formatVND(depositVal) : "Không (Trả 100%)";
-
-    const payNowShipEl = document.getElementById('drawerPayNowShip');
-    if (payNowShipEl) payNowShipEl.textContent = formatVND(shippingFee);
-
-    const payNowCraneEl = document.getElementById('drawerPayNowCrane');
-    if (payNowCraneEl) payNowCraneEl.textContent = formatVND(craneFee);
-
-    const pay1El = document.getElementById('drawerPayment1Total');
-    if (pay1El) pay1El.textContent = formatVND(payment1Amount);
-
-    // Nhóm 3: THANH TOÁN KHI NHẬN CÂY
-    const remSection = document.getElementById('groupRemainingSection');
-    if (remSection) remSection.style.display = isDeposit ? 'block' : 'none';
-
-    const remEl = document.getElementById('drawerRemainingPay');
-    if (remEl) remEl.textContent = formatVND(remainingPay);
-}
-
-function openDrawer(order) {
-    if (!order) return;
-    activeOrderCode = order.orderCode;
-    currentActiveOrder = order;
-    
-    const codeEl = document.getElementById('drawerOrderCode');
-    if (codeEl) codeEl.textContent = order.orderCode || 'BSMS-XXXXX';
-    
-    const badge = document.getElementById('drawerStatusBadge');
-    if (badge) {
-        badge.textContent = orderStatusLabels[order.orderStatus] || order.orderStatus || 'Chờ xử lý';
-        badge.className = `status-badge ${(order.orderStatus || 'PENDING').toLowerCase()}`;
-    }
-
-    if (order.customer) {
-        if (document.getElementById('drawerCustName')) document.getElementById('drawerCustName').textContent = order.customer.name || '-';
-        if (document.getElementById('drawerCustPhone')) document.getElementById('drawerCustPhone').textContent = order.customer.phone || '-';
-        if (document.getElementById('drawerCustEmail')) document.getElementById('drawerCustEmail').textContent = order.customer.email || '-';
-        if (document.getElementById('drawerCustAddress')) document.getElementById('drawerCustAddress').textContent = order.customer.address || '-';
-    } else {
-        if (document.getElementById('drawerCustName')) document.getElementById('drawerCustName').textContent = '-';
-        if (document.getElementById('drawerCustPhone')) document.getElementById('drawerCustPhone').textContent = '-';
-        if (document.getElementById('drawerCustEmail')) document.getElementById('drawerCustEmail').textContent = '-';
-        if (document.getElementById('drawerCustAddress')) document.getElementById('drawerCustAddress').textContent = '-';
-    }
-
-    // Render list of products in drawer
-    const productsContainer = document.getElementById('drawerProductsContainer');
-    if (productsContainer) {
-        productsContainer.innerHTML = '';
-        if (order.items && order.items.length > 0) {
-            order.items.forEach(item => {
-                const card = document.createElement('div');
-                card.className = 'product-card-info p-2 border rounded d-flex align-items-center gap-3';
-                const imgUrl = item.image || '/images/default-tree.jpg';
-                card.innerHTML = `
-                    <img src="${imgUrl}" class="product-card-img" style="width: 60px; height: 60px; object-fit: cover; border-radius: 4px;">
-                    <div class="product-card-details">
-                        <span class="product-card-name text-primary fw-bold text-decoration-underline cursor-pointer" 
-                              onclick="openProductDetailDrawer(${item.id})">
-                            ${item.name}
-                        </span>
-                        <div class="small text-muted mt-1">
-                            <span>Đơn giá: <strong class="text-success">${formatVND(item.price || 0)}</strong></span>
-                        </div>
-                    </div>
-                `;
-                productsContainer.appendChild(card);
-            });
-        } else {
-            productsContainer.innerHTML = '<div class="text-muted small">Không có thông tin sản phẩm.</div>';
-        }
-    }
-
-    if (document.getElementById('drawerNotes')) document.getElementById('drawerNotes').textContent = order.notes || 'Không có yêu cầu đặc biệt.';
-
-    const basePrice = order.items ? 
-        order.items.reduce((sum, item) => sum + ((item.price || 0) * (item.quantity || 1)), 0) : 
-        (order.totalAmount || 0);
-    const craneFee = order.craneFee || 0;
-    const shippingFee = order.shippingFee || 0;
-    const deposit = order.depositAmount || 0;
-
-    if (document.getElementById('drawerBasePrice')) document.getElementById('drawerBasePrice').textContent = formatVND(basePrice);
-    if (document.getElementById('drawerDeposit')) document.getElementById('drawerDeposit').textContent = formatVND(deposit);
-
-    const isPending = order.orderStatus === 'PENDING';
-    const isDeposit = (order.paymentMethod === 'DEPOSIT' || order.paymentMethod === 'COD');
-    const groupDeposit = document.getElementById('groupDepositAmount');
-    const depositInput = document.getElementById('inputDepositAmount');
-
-    if (groupDeposit) {
-        groupDeposit.style.display = isDeposit ? 'block' : 'none';
-    }
-
-    if (depositInput) {
-        if (isDeposit) {
-            const defaultDeposit = (order.depositAmount && order.depositAmount > 0) ? 
-                order.depositAmount : '';
-            depositInput.value = defaultDeposit;
-            depositInput.disabled = !isPending;
-        } else {
-            depositInput.value = 0;
-            depositInput.disabled = true;
-        }
-    }
-
-    const craneInput = document.getElementById('inputCraneFee');
-    const shipInput = document.getElementById('inputShippingFee');
-
-    if (craneInput) {
-        craneInput.value = craneFee;
-        craneInput.disabled = !isPending;
-    }
-    if (shipInput) {
-        shipInput.value = shippingFee;
-        shipInput.disabled = !isPending;
-    }
-
-    updateLiveTotals();
-
-    // Render Handling Timeline Log
-    renderTimeline(order.handlingHistory);
-
-    const isDeposited = order.orderStatus === 'DEPOSITED';
-    const isPaid = order.orderStatus === 'PAID';
-    if (document.getElementById('btnUnclaimOrder')) document.getElementById('btnUnclaimOrder').style.display = isPending ? 'block' : 'none';
-    if (document.getElementById('btnVerifyOrder')) document.getElementById('btnVerifyOrder').style.display = isPending ? 'block' : 'none';
-    if (document.getElementById('btnRejectOrder')) document.getElementById('btnRejectOrder').style.display = isPending ? 'block' : 'none';
-    if (document.getElementById('btnConfirmRemainingPayment')) document.getElementById('btnConfirmRemainingPayment').style.display = isDeposited ? 'block' : 'none';
-    if (document.getElementById('btnCompletePaidOrder')) document.getElementById('btnCompletePaidOrder').style.display = isPaid ? 'block' : 'none';
-    if (document.getElementById('btnCustomerNoShow')) document.getElementById('btnCustomerNoShow').style.display = (isDeposited || isPaid) ? 'block' : 'none';
-    if (document.getElementById('rejectReasonBox')) document.getElementById('rejectReasonBox').style.display = 'none';
-
-    const backdrop = document.getElementById('drawerBackdrop');
-    const panel = document.getElementById('drawerPanel');
-    if (backdrop) backdrop.classList.add('show');
-    if (panel) panel.classList.add('show');
-}
-
-function closeDrawer() {
-    const backdrop = document.getElementById('drawerBackdrop');
-    const panel = document.getElementById('drawerPanel');
-    if (backdrop) backdrop.classList.remove('show');
-    if (panel) panel.classList.remove('show');
-}
-
-function renderTimeline(history) {
-    const container = document.getElementById('handlingTimelineContainer');
-    if (!container) return;
-    container.innerHTML = '';
-
-    if (!history || history.length === 0) {
-        container.innerHTML = '<div class="text-muted small">Chưa có thông tin chuyển giao.</div>';
-        return;
-    }
-
-    history.forEach(item => {
-        const div = document.createElement('div');
-        div.className = `timeline-item ${item.isActive ? 'active' : 'released'}`;
-        
-        const handledTimeStr = item.handledAt ? new Date(item.handledAt).toLocaleString('vi-VN') : 'N/A';
-        const releasedTimeStr = item.releasedAt ? new Date(item.releasedAt).toLocaleString('vi-VN') : null;
-        const statusText = item.isActive ? 
-            `<span class="text-success font-weight-bold">Đang xử lý (Active)</span>` : 
-            `<span class="text-secondary">Đã ngưng quản lý (${releasedTimeStr})</span>`;
-
-        div.innerHTML = `
-            <div class="timeline-text">${item.moderatorFullName} (@${item.moderatorUsername})</div>
-            <div class="timeline-time"><i class="fa-regular fa-clock me-1"></i> Bắt đầu: ${handledTimeStr}</div>
-            <div class="timeline-time mt-1">Trạng thái: ${statusText}</div>
-        `;
-        container.appendChild(div);
-    });
-}
-
-async function unclaimOrder(orderCode) {
-    const headers = { 'Content-Type': 'application/json' };
-    if (csrfHeader && csrfToken) headers[csrfHeader] = csrfToken;
-
-    try {
-        const response = await fetch(`/api/orders/${orderCode}/unclaim`, {
-            method: 'POST',
-            headers: headers
-        });
-        const result = await response.json();
-
-        if (response.ok && result.success) {
-            BSMSToast.success("Đã trả đơn về Kho đơn chung!");
-            closeDrawer();
-            renderDashboard();
-        } else {
-            BSMSToast.error(result.message || "Lỗi khi trả đơn.");
-        }
-    } catch (err) {
-        console.error("Lỗi khi trả đơn:", err);
-        BSMSToast.error("Có lỗi kết nối khi trả đơn.");
-    }
-}
-
-async function verifyOrder(orderCode) {
-    const isDeposit = (currentActiveOrder && (currentActiveOrder.paymentMethod === 'DEPOSIT' || currentActiveOrder.paymentMethod === 'COD'));
-    const craneFee = parseFloat(document.getElementById('inputCraneFee').value) || 0;
-    const shippingFee = parseFloat(document.getElementById('inputShippingFee').value) || 0;
-    const depositInput = document.getElementById('inputDepositAmount');
-    const depositAmount = (depositInput && depositInput.value !== '') ? parseFloat(depositInput.value) : null;
-
-    if (isDeposit && (!depositAmount || depositAmount <= 0)) {
-        BSMSToast.error("Vui lòng nhập số tiền đặt cọc.");
-        if (depositInput) depositInput.focus();
-        return;
-    }
-
-    const headers = { 'Content-Type': 'application/json' };
-    if (csrfHeader && csrfToken) headers[csrfHeader] = csrfToken;
-
-    try {
-        const response = await fetch(`/api/orders/${orderCode}/verify`, {
-            method: 'POST',
-            headers: headers,
-            body: JSON.stringify({ craneFee, shippingFee, depositAmount })
-        });
-        const result = await response.json();
-
-        if (response.ok && result.success) {
-            BSMSToast.success("Phê duyệt đơn hàng thành công!");
-            closeDrawer();
-            renderDashboard();
-        } else {
-            BSMSToast.error(result.message || "Không thể phê duyệt đơn hàng.");
-        }
-    } catch (err) {
-        console.error("Lỗi khi phê duyệt:", err);
-    }
-}
-
-async function rejectOrder(orderCode, reason) {
-    const headers = { 'Content-Type': 'application/json' };
-    if (csrfHeader && csrfToken) headers[csrfHeader] = csrfToken;
-
-    try {
-        const response = await fetch(`/api/orders/${orderCode}/reject`, {
-            method: 'POST',
-            headers: headers,
-            body: JSON.stringify({ reason })
-        });
-        const result = await response.json();
-
-        if (response.ok && result.success) {
-            BSMSToast.success("Hủy đơn hàng thành công!");
-            closeDrawer();
-            renderDashboard();
-        } else {
-            BSMSToast.error(result.message || "Lỗi khi hủy đơn hàng.");
-        }
-    } catch (err) {
-        console.error("Lỗi hủy đơn:", err);
-    }
-}
-
-async function confirmRemainingPayment(orderCode) {
-    const headers = { 'Content-Type': 'application/json' };
-    if (csrfHeader && csrfToken) headers[csrfHeader] = csrfToken;
-
-    try {
-        const response = await fetch(`/api/orders/${orderCode}/confirm-remaining-payment`, {
-            method: 'POST',
-            headers: headers
-        });
-        const result = await response.json();
-
-        if (response.ok && result.success) {
-            BSMSToast.success("Xác nhận thanh toán đầy đủ thành công! Đơn hàng đã chuyển sang HOÀN THÀNH (COMPLETED).");
-            closeDrawer();
-            renderDashboard();
-        } else {
-            BSMSToast.error(result.message || "Lỗi khi xác nhận thanh toán.");
-        }
-    } catch (err) {
-        console.error("Lỗi xác nhận thanh toán nấc 2:", err);
-    }
-}
-
-async function markCustomerNoShow(orderCode) {
-    if (!orderCode) return;
-    const headers = { 'Content-Type': 'application/json' };
-    if (csrfHeader && csrfToken) headers[csrfHeader] = csrfToken;
-    const isPaid = currentActiveOrder && currentActiveOrder.orderStatus === 'PAID';
-    const notes = isPaid
-        ? "Khách không nhận do lỗi nhà vườn. Cần hoàn tiền ngoài hệ thống."
-        : "Khách không nhận hàng / không thanh toán phần còn lại.";
-
-    try {
-        const response = await fetch(`/api/orders/${orderCode}/customer-no-show`, {
-            method: 'POST',
-            headers: headers,
-            body: JSON.stringify({ notes: notes })
-        });
-        const result = await response.json();
-
-        if (response.ok && result.success) {
-            BSMSToast.success("Đã hủy đơn vì khách không nhận. Sản phẩm đã được mở bán lại.");
-            closeDrawer();
-            renderDashboard();
-        } else {
-            BSMSToast.error(result.message || "Lỗi khi hủy đơn vì khách không nhận.");
-        }
-    } catch (err) {
-        console.error("Lỗi hủy đơn vì khách không nhận:", err);
-    }
-}
-
-async function completePaidOrder(orderCode) {
-    if (!orderCode) return;
-    const headers = { 'Content-Type': 'application/json' };
-    if (csrfHeader && csrfToken) headers[csrfHeader] = csrfToken;
-
-    try {
-        const response = await fetch(`/api/orders/${orderCode}/complete`, {
-            method: 'POST',
-            headers: headers
-        });
-        const result = await response.json();
-
-        if (response.ok && result.success) {
-            BSMSToast.success("Đơn hàng đã hoàn thành.");
-            closeDrawer();
-            renderDashboard();
-        } else {
-            BSMSToast.error(result.message || "Lỗi khi hoàn thành đơn.");
-        }
-    } catch (err) {
-        console.error("Lỗi hoàn thành đơn:", err);
-    }
-}
-
-function renderPagination(result) {
-    const infoEl = document.getElementById('paginationInfo');
-    const controlsEl = document.getElementById('paginationControls');
-    
-    if (infoEl) {
-        infoEl.textContent = `Hiển thị ${result.orders ? result.orders.length : 0} trong tổng số ${result.totalCount || 0} đơn của bạn`;
-    }
-    if (!controlsEl) return;
-    controlsEl.innerHTML = '';
-    if (!result.pages || result.pages <= 1) return;
-
-    for (let i = 1; i <= result.pages; i++) {
-        const btn = document.createElement('button');
-        btn.className = `btn btn-sm mx-1 ${DashboardState.currentPage === i ? 'btn-primary' : 'btn-outline-secondary'}`;
-        btn.textContent = i;
-        btn.addEventListener('click', () => {
-            DashboardState.currentPage = i;
-            renderDashboard();
-        });
-        controlsEl.appendChild(btn);
-    }
-}
-
-async function openProductDetailDrawer(productId) {
-    const drawerEl = document.getElementById('productDetailDrawer');
-    if (!drawerEl) return;
-    const bsOffcanvas = bootstrap.Offcanvas.getOrCreateInstance(drawerEl);
-    
-    document.getElementById('prodDrawerLoading').classList.remove('d-none');
-    document.getElementById('prodDrawerError').classList.add('d-none');
-    document.getElementById('prodDrawerContent').classList.add('d-none');
-    
-    bsOffcanvas.show();
-
-    try {
-        const response = await fetch(`/api/products/${productId}`);
-        if (!response.ok) {
-            throw new Error(`Mã lỗi hệ thống: ${response.status}`);
-        }
-        const data = await response.json();
-
-        document.getElementById('prodDrawerName').textContent = data.productName;
-        document.getElementById('prodDrawerCode').textContent = `Mã cây: ${data.productCode}`;
-        document.getElementById('prodDrawerDesc').textContent = data.description || 'Không có mô tả chi tiết cho tác phẩm này.';
-        
-        const priceFormatted = formatVND(data.price || 0);
-        document.getElementById('prodDrawerPrice').textContent = priceFormatted;
-
-        document.getElementById('prodDrawerStyle').textContent = data.style || 'Chưa cập nhật';
-        document.getElementById('prodDrawerAge').textContent = data.age ? `${data.age} năm` : 'Chưa cập nhật';
-        document.getElementById('prodDrawerHeight').textContent = data.height ? `${data.height} cm` : 'Chưa cập nhật';
-        document.getElementById('prodDrawerDiameter').textContent = data.trunkDiameter ? `${data.trunkDiameter} cm` : 'Chưa cập nhật';
-        
-        const imgUrl = data.imageUrl || '/images/default-tree.jpg';
-        document.getElementById('prodDrawerImg').src = imgUrl;
-
-        const statusEl = document.getElementById('prodDrawerStatus');
-        statusEl.textContent = data.productStatus;
-        if (data.productStatus === 'AVAILABLE') {
-            statusEl.className = 'badge bg-success';
-        } else if (data.productStatus === 'RESERVED') {
-            statusEl.className = 'badge bg-warning text-dark';
-        } else {
-            statusEl.className = 'badge bg-danger';
-        }
-
-        document.getElementById('prodDrawerLoading').classList.add('d-none');
-        document.getElementById('prodDrawerContent').classList.remove('d-none');
-
-    } catch (error) {
-        console.error("Lỗi khi tải chi tiết sản phẩm:", error);
-        document.getElementById('prodDrawerLoading').classList.add('d-none');
-        document.getElementById('prodDrawerError').classList.remove('d-none');
-        document.getElementById('prodDrawerErrorMessage').textContent = 
-            error.message.includes('404') ? 'Không tìm thấy tác phẩm này trên hệ thống!' : 'Lỗi kết nối máy chủ, vui lòng kiểm tra lại mạng.';
-    }
-}
-
-function formatVND(num) {
-    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(num);
-}
+});

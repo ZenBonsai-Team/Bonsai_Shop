@@ -30,7 +30,7 @@ public class SecurityConfig {
         @Bean
         public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
                 http
-                                .csrf(csrf -> csrf.ignoringRequestMatchers("/api/notifications/**", "/community/**"))
+                                .csrf(csrf -> csrf.ignoringRequestMatchers("/api/notifications/**", "/community/**", "/moderator/orders/api/**"))
                                 .userDetailsService(customUserDetailsService)
                                 .authorizeHttpRequests(auth -> auth
                                                 // Trang công khai

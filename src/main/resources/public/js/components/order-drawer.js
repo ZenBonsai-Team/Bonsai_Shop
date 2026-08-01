@@ -106,6 +106,18 @@ const OrderDrawer = {
         this.calculateFinalTotalOnTheFly();
     },
 
+    readNullableAmount(input) {
+        if (!input) return null;
+        const raw = String(input.value || '').trim();
+        if (!raw) return null;
+        const value = Number(raw);
+        return Number.isFinite(value) ? value : null;
+    },
+
+    formatOptionalVND(value) {
+        return value === null || value === undefined ? 'Chưa nhập' : this.formatVND(value);
+    },
+
     /**
      * Updates final total amount dynamically based on input fees
      */
@@ -113,38 +125,37 @@ const OrderDrawer = {
         if (!this.currentOrder) return;
         const base = this.currentOrder.treePrice !== undefined ? this.currentOrder.treePrice : 
             ((this.currentOrder.product ? this.currentOrder.product.price : 0) * (this.currentOrder.quantity || 1));
-        const crane = Number(this.inputCraneFee ? this.inputCraneFee.value : 0) || 0;
-        const shipping = Number(this.inputShippingFee ? this.inputShippingFee.value : 0) || 0;
+        const crane = this.readNullableAmount(this.inputCraneFee);
+        const shipping = this.readNullableAmount(this.inputShippingFee);
         const isDeposit = (this.currentOrder.paymentMethod === 'DEPOSIT' || this.currentOrder.paymentMethod === 'COD');
-        let depositVal = 0;
-        if (isDeposit) {
-            depositVal = (this.inputDepositAmount && this.inputDepositAmount.value !== '') ? 
-                (Number(this.inputDepositAmount.value) || 0) : 0;
-        }
+        const depositVal = isDeposit ? this.readNullableAmount(this.inputDepositAmount) : null;
+        const craneValue = crane ?? 0;
+        const shippingValue = shipping ?? 0;
+        const effectiveDeposit = depositVal ?? 0;
 
-        const total = base + crane + shipping;
-        const payment1Total = isDeposit ? (depositVal + crane + shipping) : total;
-        const remainingPay = isDeposit ? Math.max(0, base - depositVal) : 0;
+        const total = base + craneValue + shippingValue;
+        const payment1Total = isDeposit ? effectiveDeposit : total;
+        const remainingPay = isDeposit ? Math.max(0, total - effectiveDeposit) : 0;
 
         // Nhóm 1: GIÁ TRỊ ĐƠN HÀNG
         if (this.elBasePrice) this.elBasePrice.textContent = this.formatVND(base);
 
         const shipValEl = document.getElementById('drawerShippingFeeVal');
-        if (shipValEl) shipValEl.textContent = this.formatVND(shipping);
+        if (shipValEl) shipValEl.textContent = this.formatOptionalVND(shipping);
 
         const craneValEl = document.getElementById('drawerCraneFeeVal');
-        if (craneValEl) craneValEl.textContent = this.formatVND(crane);
+        if (craneValEl) craneValEl.textContent = this.formatOptionalVND(crane);
 
         if (this.elFinalTotal) this.elFinalTotal.textContent = this.formatVND(total);
 
         // Nhóm 2: THANH TOÁN NGAY (VNPAY)
-        if (this.elDeposit) this.elDeposit.textContent = isDeposit ? this.formatVND(depositVal) : "Không (Trả 100%)";
+        if (this.elDeposit) this.elDeposit.textContent = isDeposit ? this.formatOptionalVND(depositVal) : "Không (Trả 100%)";
 
         const payNowShipEl = document.getElementById('drawerPayNowShip');
-        if (payNowShipEl) payNowShipEl.textContent = this.formatVND(shipping);
+        if (payNowShipEl) payNowShipEl.textContent = this.formatOptionalVND(shipping);
 
         const payNowCraneEl = document.getElementById('drawerPayNowCrane');
-        if (payNowCraneEl) payNowCraneEl.textContent = this.formatVND(crane);
+        if (payNowCraneEl) payNowCraneEl.textContent = this.formatOptionalVND(crane);
 
         const pay1El = document.getElementById('drawerPayment1Total');
         if (pay1El) pay1El.textContent = this.formatVND(payment1Total);
@@ -201,7 +212,7 @@ const OrderDrawer = {
         // Financial Details
         const basePrice = (order.product ? order.product.price : 0) * (order.quantity || 1);
         this.elBasePrice.textContent = this.formatVND(basePrice);
-        this.elDeposit.textContent = this.formatVND(order.depositAmount);
+        this.elDeposit.textContent = this.formatOptionalVND(order.depositAmount);
         this.elFinalTotal.textContent = this.formatVND(order.totalAmount);
         
         const isPending = order.orderStatus === 'PENDING';
@@ -219,7 +230,7 @@ const OrderDrawer = {
                 this.inputDepositAmount.value = defaultDeposit;
                 this.inputDepositAmount.disabled = !isPending;
             } else {
-                this.inputDepositAmount.value = 0;
+                this.inputDepositAmount.value = '';
                 this.inputDepositAmount.disabled = true;
             }
         }
@@ -243,11 +254,11 @@ const OrderDrawer = {
         } else {
             if (this.inputCraneFee) {
                 this.inputCraneFee.disabled = true;
-                this.inputCraneFee.value = order.craneFee !== null ? order.craneFee : 0;
+                this.inputCraneFee.value = order.craneFee !== null ? order.craneFee : '';
             }
             if (this.inputShippingFee) {
                 this.inputShippingFee.disabled = true;
-                this.inputShippingFee.value = order.shippingFee !== null ? order.shippingFee : 0;
+                this.inputShippingFee.value = order.shippingFee !== null ? order.shippingFee : '';
             }
             
             // Hide verification actions if already verified/cancelled/rejected
@@ -269,11 +280,12 @@ const OrderDrawer = {
      */
     handleVerifyClick() {
         const base = (this.currentOrder.product ? this.currentOrder.product.price : 0) * (this.currentOrder.quantity || 1);
-        const crane = Number(this.inputCraneFee ? this.inputCraneFee.value : 0) || 0;
-        const shipping = Number(this.inputShippingFee ? this.inputShippingFee.value : 0) || 0;
+        const crane = this.readNullableAmount(this.inputCraneFee);
+        const shipping = this.readNullableAmount(this.inputShippingFee);
         const isDeposit = (this.currentOrder.paymentMethod === 'DEPOSIT' || this.currentOrder.paymentMethod === 'COD');
-        const depositAmount = (isDeposit && this.inputDepositAmount && this.inputDepositAmount.value !== '') ? 
-            Number(this.inputDepositAmount.value) : null;
+        const depositAmount = isDeposit ? this.readNullableAmount(this.inputDepositAmount) : null;
+        const craneValue = crane ?? 0;
+        const shippingValue = shipping ?? 0;
 
         if (isDeposit && (!depositAmount || depositAmount <= 0)) {
             BSMSToast.error('Vui lòng nhập số tiền đặt cọc.');
@@ -282,7 +294,13 @@ const OrderDrawer = {
         }
 
         const effectiveDeposit = isDeposit ? depositAmount : 0;
-        const pay1 = isDeposit ? (effectiveDeposit + crane + shipping) : (base + crane + shipping);
+        if (isDeposit && effectiveDeposit > (base + craneValue + shippingValue)) {
+            BSMSToast.error('Tiền đặt cọc không được lớn hơn giá trị của cây.');
+            if (this.inputDepositAmount) this.inputDepositAmount.focus();
+            return;
+        }
+
+        const pay1 = isDeposit ? effectiveDeposit : (base + craneValue + shippingValue);
 
         ConfirmDialog.show({
             title: "Xác nhận duyệt đơn hàng",
@@ -291,9 +309,9 @@ const OrderDrawer = {
                 { label: "Mã đơn hàng", value: this.currentOrder.orderCode },
                 { label: "Phương thức thanh toán", value: isDeposit ? "Đặt cọc (COD / DEPOSIT)" : "Thanh toán 100% toàn bộ" },
                 ...(isDeposit ? [{ label: "Tiền đặt cọc cây", value: this.formatVND(effectiveDeposit) }] : []),
-                { label: "Phí xe cẩu", value: this.formatVND(crane) },
-                { label: "Phí vận chuyển", value: this.formatVND(shipping) },
-                { label: "Tổng giá trị đơn hàng", value: this.formatVND(base + crane + shipping) },
+                { label: "Phí xe cẩu", value: this.formatOptionalVND(crane) },
+                { label: "Phí vận chuyển", value: this.formatOptionalVND(shipping) },
+                { label: "Tổng giá trị đơn hàng", value: this.formatVND(base + craneValue + shippingValue) },
                 { label: "THANH TOÁN NẤC 1 (Đợt duyệt)", value: this.formatVND(pay1) }
             ],
             onConfirm: async () => {

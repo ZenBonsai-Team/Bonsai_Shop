@@ -350,14 +350,10 @@ public class OrderApiController {
             return ResponseEntity.status(401).body(response);
         }
 
-        BigDecimal craneFee = new BigDecimal(payload.getOrDefault("craneFee", 0).toString());
-        BigDecimal shippingFee = new BigDecimal(payload.getOrDefault("shippingFee", 0).toString());
-        BigDecimal depositAmount = null;
-        if (payload.containsKey("depositAmount") && payload.get("depositAmount") != null) {
-            depositAmount = new BigDecimal(payload.get("depositAmount").toString());
-        }
-
         try {
+            BigDecimal craneFee = parseNullableBigDecimal(payload.get("craneFee"));
+            BigDecimal shippingFee = parseNullableBigDecimal(payload.get("shippingFee"));
+            BigDecimal depositAmount = parseNullableBigDecimal(payload.get("depositAmount"));
             boolean success = orderService.verifyOrder(orderCode, craneFee, shippingFee, depositAmount, moderator);
             response.put("success", success);
             response.put("message", success ? "Duyệt đơn hàng thành công." : "Duyệt đơn hàng thất bại.");
@@ -818,5 +814,18 @@ public class OrderApiController {
                 .assignedAt(order.getAssignedAt())
                 .handlingHistory(handlingHistory)
                 .build();
+    }
+
+    private BigDecimal parseNullableBigDecimal(Object value) {
+        if (value == null) {
+            return null;
+        }
+
+        String raw = value.toString().trim();
+        if (raw.isEmpty() || "null".equalsIgnoreCase(raw)) {
+            return null;
+        }
+
+        return new BigDecimal(raw);
     }
 }

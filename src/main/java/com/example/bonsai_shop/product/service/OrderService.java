@@ -48,6 +48,8 @@ public class OrderService {
 
     public static final BigDecimal MAX_ORDER_AMOUNT = new BigDecimal("200000000");
     private static final String STATUS_PENDING_PAYMENT = "PENDING_PAYMENT";
+    private static final String STATUS_PENDING = "PENDING";
+    private static final BigDecimal ZERO = BigDecimal.ZERO;
 
     private final OrderRepository orderRepository;
     private final ProductRepository productRepository;
@@ -208,7 +210,7 @@ public class OrderService {
     @Transactional
     public boolean verifyOrder(String orderCode, BigDecimal craneFee, BigDecimal shippingFee, BigDecimal depositAmount, User moderator) {
         Order order = orderRepository.findByOrderCodeWithDetails(orderCode).orElse(null);
-        if (order == null || !"PENDING".equalsIgnoreCase(order.getOrderStatus())) {
+        if (order == null || !STATUS_PENDING.equalsIgnoreCase(order.getOrderStatus())) {
             return false;
         }
 
@@ -220,22 +222,15 @@ public class OrderService {
         String oldStatus = order.getOrderStatus();
         
         // Tính chính xác giá gốc các cây trong đơn hàng (không bao gồm phụ phí)
-        BigDecimal treePrice = BigDecimal.ZERO;
-        if (order.getOrderDetails() != null && !order.getOrderDetails().isEmpty()) {
-            treePrice = order.getOrderDetails().stream()
-                    .map(d -> d.getPriceAtPurchase().multiply(BigDecimal.valueOf(d.getQuantity())))
-                    .reduce(BigDecimal.ZERO, BigDecimal::add);
-        } else {
-            treePrice = order.getTotalAmount()
-                    .subtract(order.getCraneFee() != null ? order.getCraneFee() : BigDecimal.ZERO)
-                    .subtract(order.getShippingFee() != null ? order.getShippingFee() : BigDecimal.ZERO);
-        }
+        BigDecimal treePrice = resolveTreePrice(order);
+        BigDecimal normalizedCraneFee = normalizeNonNegativeAmount(craneFee, "Phí cẩu");
+        BigDecimal normalizedShippingFee = normalizeNonNegativeAmount(shippingFee, "Phí vận chuyển");
 
-        order.setCraneFee(craneFee != null ? craneFee : BigDecimal.ZERO);
-        order.setShippingFee(shippingFee != null ? shippingFee : BigDecimal.ZERO);
+        order.setCraneFee(normalizedCraneFee);
+        order.setShippingFee(normalizedShippingFee);
 
         // Tong gia tri thuc te cua toan bo don hang = Tree Price + Crane Fee + Shipping Fee
-        BigDecimal newTotal = treePrice.add(order.getCraneFee()).add(order.getShippingFee());
+        BigDecimal newTotal = treePrice.add(normalizedCraneFee).add(normalizedShippingFee);
         order.setTotalAmount(newTotal);
 
         List<Payment> existingPayments = paymentRepository.findByOrderOrderIdOrderByPaymentIdAsc(order.getOrderId());
@@ -247,16 +242,16 @@ public class OrderService {
         );
 
         if (isDepositFlow) {
-            if (depositAmount == null || depositAmount.compareTo(BigDecimal.ZERO) <= 0) {
+            if (depositAmount == null || depositAmount.compareTo(ZERO) <= 0) {
                 throw new IllegalArgumentException("Vui lòng nhập số tiền đặt cọc.");
             }
-            if (depositAmount.compareTo(treePrice) > 0) {
+            if (depositAmount.compareTo(newTotal) > 0) {
                 throw new IllegalArgumentException("Số tiền đặt cọc không được vượt quá tổng giá trị cây.");
             }
             order.setDepositAmount(depositAmount);
 
             // Số tiền cần thanh toán lần 1 = deposit + phí cẩu + phí ship
-            BigDecimal amountToPay = depositAmount.add(order.getCraneFee()).add(order.getShippingFee());
+            BigDecimal amountToPay = depositAmount;
 
             Payment depositPayment = existingPayments.stream()
                     .filter(p -> PaymentType.DEPOSIT.name().equalsIgnoreCase(p.getPaymentType()))
@@ -278,7 +273,7 @@ public class OrderService {
             }
         } else {
             // Thanh toán toàn bộ 1 lần = treePrice + phí cẩu + phí ship
-            order.setDepositAmount(BigDecimal.ZERO);
+            order.setDepositAmount(ZERO);
 
             Payment fullPayment = existingPayments.stream()
                     .filter(p -> PaymentType.FULL_PAYMENT.name().equalsIgnoreCase(p.getPaymentType()))
@@ -617,15 +612,18 @@ public class OrderService {
         }
 
         // Tính tổng tiền deposit đã thanh toán thành công
+        BigDecimal treePrice = resolveTreePrice(order);
+
         List<Payment> depositPayments = paymentRepository.findByOrderOrderIdAndPaymentType(order.getOrderId(), PaymentType.DEPOSIT.name());
         BigDecimal depositPaid = depositPayments.stream()
                 .filter(p -> "SUCCESS".equalsIgnoreCase(p.getPaymentStatus()))
                 .map(Payment::getAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        BigDecimal remainingAmount = order.getTotalAmount().subtract(depositPaid);
-        if (remainingAmount.compareTo(BigDecimal.ZERO) < 0) {
-            remainingAmount = BigDecimal.ZERO;
+        BigDecimal totalAmount = order.getTotalAmount() != null ? order.getTotalAmount() : treePrice;
+        BigDecimal remainingAmount = totalAmount.subtract(depositPaid);
+        if (remainingAmount.compareTo(ZERO) < 0) {
+            remainingAmount = ZERO;
         }
 
         // Tạo Payment record #2: REMAINING_PAYMENT
@@ -657,6 +655,36 @@ public class OrderService {
 
         eventPublisher.publishEvent(new OrderPaidEvent(order));
         return true;
+    }
+
+    private BigDecimal resolveTreePrice(Order order) {
+        if (order == null) {
+            return ZERO;
+        }
+
+        if (order.getOrderDetails() != null && !order.getOrderDetails().isEmpty()) {
+            return order.getOrderDetails().stream()
+                    .map(d -> {
+                        BigDecimal price = d.getPriceAtPurchase() != null ? d.getPriceAtPurchase() : BigDecimal.ZERO;
+                        int quantity = d.getQuantity() != null ? d.getQuantity() : 1;
+                        return price.multiply(BigDecimal.valueOf(quantity));
+                    })
+                    .reduce(ZERO, BigDecimal::add);
+        }
+
+        BigDecimal craneFee = order.getCraneFee() != null ? order.getCraneFee() : ZERO;
+        BigDecimal shippingFee = order.getShippingFee() != null ? order.getShippingFee() : ZERO;
+        BigDecimal totalAmount = order.getTotalAmount() != null ? order.getTotalAmount() : ZERO;
+        BigDecimal treePrice = totalAmount.subtract(craneFee).subtract(shippingFee);
+        return treePrice.compareTo(ZERO) < 0 ? ZERO : treePrice;
+    }
+
+    private BigDecimal normalizeNonNegativeAmount(BigDecimal amount, String label) {
+        BigDecimal normalized = amount != null ? amount : ZERO;
+        if (normalized.compareTo(ZERO) < 0) {
+            throw new IllegalArgumentException(label + " khÃ´ng Ä‘Æ°á»£c Ã¢m.");
+        }
+        return normalized;
     }
 
     @Transactional

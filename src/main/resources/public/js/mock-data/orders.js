@@ -33,7 +33,7 @@ function apiFetchOrders({ search = '', status = 'ALL', sort = 'date_desc', page 
  * Lấy thông tin chi tiết của một đơn hàng dựa theo mã Code
  */
 function apiFetchOrderDetail(orderCode) {
-    return fetch(`/api/orders/${orderCode}`)
+    return fetch(`/api/orders/${encodeURIComponent(orderCode)}`)
         .then(response => {
             if (!response.ok) {
                 throw new Error("Không thể lấy chi tiết đơn hàng " + orderCode);
@@ -61,7 +61,7 @@ function apiVerifyOrder(orderCode, craneFee, shippingFee, depositAmount) {
         headers[csrfHeader] = csrfToken; // Gửi token lên đầu để vượt qua filter bảo mật
     }
     
-    return fetch(`/api/orders/${orderCode}/verify`, {
+    return fetch(`/api/orders/${encodeURIComponent(orderCode)}/verify`, {
         method: 'POST',
         headers: headers,
         body: JSON.stringify({
@@ -91,7 +91,7 @@ function apiRejectOrder(orderCode, reason) {
         headers[csrfHeader] = csrfToken;
     }
     
-    return fetch(`/api/orders/${orderCode}/reject`, {
+    return fetch(`/api/orders/${encodeURIComponent(orderCode)}/reject`, {
         method: 'POST',
         headers: headers,
         body: JSON.stringify({
@@ -117,7 +117,7 @@ function apiCustomerNoShow(orderCode, notes) {
         headers[csrfHeader] = csrfToken;
     }
 
-    return fetch(`/api/orders/${orderCode}/customer-no-show`, {
+    return fetch(`/api/orders/${encodeURIComponent(orderCode)}/customer-no-show`, {
         method: 'POST',
         headers: headers,
         body: JSON.stringify({
@@ -142,7 +142,7 @@ function apiCompletePaidOrder(orderCode) {
         headers[csrfHeader] = csrfToken;
     }
 
-    return fetch(`/api/orders/${orderCode}/complete`, {
+    return fetch(`/api/orders/${encodeURIComponent(orderCode)}/complete`, {
         method: 'POST',
         headers: headers
     })
