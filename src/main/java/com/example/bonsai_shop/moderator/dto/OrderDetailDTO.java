@@ -1,5 +1,6 @@
 package com.example.bonsai_shop.moderator.dto;
 
+import com.example.bonsai_shop.finance.dto.FinancialLedgerDTO;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -16,8 +17,11 @@ public class OrderDetailDTO {
     private Integer orderId;
     private String orderCode;
     private String orderStatus;
+    private String orderStatusLabel;
     private String paymentMethod;
+    private String paymentMethodLabel;
     private String priority;
+    private String priorityLabel;
     private String orderType;
     private LocalDateTime createdDate;
     private String assignedModeratorName;
@@ -34,11 +38,14 @@ public class OrderDetailDTO {
     private boolean canReturnInventory;
     private boolean canComplete;
     private boolean canCancel;
+    private boolean canCustomerNoShow;
+    private boolean canRecordFaultRefund;
 
     private CustomerInfoDTO customerInfo;
     private List<ProductSummaryDTO> products;
     private PaymentSummaryDTO paymentSummary;
     private List<PaymentHistoryDTO> paymentHistory;
+    private List<FinancialLedgerDTO> ledgerHistory;
     private List<TimelineDTO> timeline;
     private List<HandlingHistoryDTO> handlingHistory;
 }

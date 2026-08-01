@@ -5,18 +5,6 @@ const DashboardState = {
     pageSize: 8
 };
 
-const orderStatusLabels = {
-    'PENDING': 'Chờ xử lý',
-    'PENDING_PAYMENT': 'Chờ thanh toán',
-    'DEPOSITED': 'Đã đặt cọc',
-    'PAID': 'Đã thanh toán',
-    'COMPLETED': 'Hoàn thành',
-    'CANCELLED': 'Đã hủy',
-    'CONFIRMED': 'Đã xác nhận',
-    'SHIPPING': 'Đang giao',
-    'DELIVERED': 'Đã giao'
-};
-
 const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
 const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content');
 
@@ -30,10 +18,10 @@ function initPool() {
 
     let searchDebounceTimer;
     if (searchInput) {
-        searchInput.addEventListener('input', (e) => {
+        searchInput.addEventListener('input', (event) => {
             clearTimeout(searchDebounceTimer);
             searchDebounceTimer = setTimeout(() => {
-                DashboardState.searchQuery = e.target.value;
+                DashboardState.searchQuery = event.target.value;
                 DashboardState.currentPage = 1;
                 renderPool();
             }, 300);
@@ -41,8 +29,8 @@ function initPool() {
     }
 
     if (sortSelect) {
-        sortSelect.addEventListener('change', (e) => {
-            DashboardState.sortBy = e.target.value;
+        sortSelect.addEventListener('change', (event) => {
+            DashboardState.sortBy = event.target.value;
             DashboardState.currentPage = 1;
             renderPool();
         });
@@ -67,7 +55,7 @@ async function renderPool() {
         renderTable(result.orders);
         renderPagination(result);
     } catch (err) {
-        console.error("Error fetching pool orders:", err);
+        console.error('Lỗi khi tải kho đơn hàng chung:', err);
     }
 }
 
@@ -81,7 +69,7 @@ function renderTable(orders) {
             <tr>
                 <td colspan="7" class="text-center p-4">
                     <div class="text-muted"><i class="fa-solid fa-inbox fa-2x mb-2"></i></div>
-                    <div>Kho đơn hàng chung hiện tại trống!</div>
+                    <div>Kho đơn hàng chung hiện tại trống.</div>
                 </td>
             </tr>
         `;
@@ -91,21 +79,21 @@ function renderTable(orders) {
     orders.forEach(order => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
-            <td class="col-code">${order.orderCode}</td>
-            <td><strong>${order.customer ? order.customer.name : 'N/A'}</strong></td>
+            <td class="col-code">${escapeHtml(order.orderCode || '-')}</td>
+            <td><strong>${escapeHtml(order.customer ? order.customer.name : '-')}</strong></td>
             <td><span class="fw-bold text-dark">${order.items ? order.items.length : 1} cây</span></td>
-            <td class="col-price">${new Intl.NumberFormat('vi-VN', {style: 'currency', currency: 'VND'}).format(order.totalAmount)}</td>
-            <td>${new Date(order.orderDate).toLocaleString('vi-VN')}</td>
-            <td><span class="status-badge pending">${orderStatusLabels[order.orderStatus] || order.orderStatus}</span></td>
+            <td class="col-price">${new Intl.NumberFormat('vi-VN', {style: 'currency', currency: 'VND'}).format(order.totalAmount || 0)}</td>
+            <td>${order.orderDate ? new Date(order.orderDate).toLocaleString('vi-VN') : '-'}</td>
+            <td><span class="status-badge pending">${escapeHtml(window.OrderModeratorLabels?.orderStatus(order.orderStatus) || '-')}</span></td>
             <td class="text-center">
-                <button class="btn btn-sm btn-success btn-claim-action" data-code="${order.orderCode}">
-                    <i class="fa-solid fa-hand"></i> Nhận đơn
+                <button class="btn btn-sm btn-success btn-claim-action" data-code="${escapeHtml(order.orderCode || '')}">
+                    <i class="fa-solid fa-hand"></i> Tiếp nhận đơn hàng
                 </button>
             </td>
         `;
 
-        tr.querySelector('.btn-claim-action').addEventListener('click', (e) => {
-            e.stopPropagation();
+        tr.querySelector('.btn-claim-action').addEventListener('click', (event) => {
+            event.stopPropagation();
             claimOrder(order.orderCode);
         });
 
@@ -120,49 +108,33 @@ async function claimOrder(orderCode) {
     }
 
     try {
-        const response = await fetch(`/api/orders/${orderCode}/claim`, {
+        const response = await fetch(`/api/orders/${encodeURIComponent(orderCode)}/claim`, {
             method: 'POST',
-            headers: headers
+            headers
         });
 
         const result = await response.json();
         if (response.ok && result.success) {
-            if (typeof BSMSToast !== 'undefined') {
-                BSMSToast.success("Nhận đơn hàng thành công! Đơn hàng đã được chuyển vào mục Đơn Của Tôi.");
-            } else {
-                alert("Nhận đơn hàng thành công! Đơn hàng đã được chuyển vào mục Đơn Của Tôi.");
-            }
+            showSuccess('Tiếp nhận đơn hàng thành công. Đơn hàng đã được chuyển vào mục Đơn của tôi.');
             renderPool();
         } else if (response.status === 409) {
-            if (typeof BSMSToast !== 'undefined') {
-                BSMSToast.error("Xung đột: Đơn hàng này đã bị một Moderator khác nhận trước đó!");
-            } else {
-                alert("Xung đột: Đơn hàng này đã bị một Moderator khác nhận trước đó!");
-            }
+            showError('Đơn hàng này đã được nhân viên khác tiếp nhận trước đó.');
             renderPool();
         } else {
-            if (typeof BSMSToast !== 'undefined') {
-                BSMSToast.error(result.message || "Lỗi khi nhận đơn hàng.");
-            } else {
-                alert(result.message || "Lỗi khi nhận đơn hàng.");
-            }
+            showError(result.message || 'Không thể tiếp nhận đơn hàng. Vui lòng thử lại.');
         }
     } catch (err) {
-        console.error("Error claiming order:", err);
-        if (typeof BSMSToast !== 'undefined') {
-            BSMSToast.error("Có lỗi kết nối đến máy chủ.");
-        } else {
-            alert("Có lỗi kết nối đến máy chủ.");
-        }
+        console.error('Lỗi khi tiếp nhận đơn hàng:', err);
+        showError('Có lỗi kết nối đến máy chủ. Vui lòng thử lại.');
     }
 }
 
 function renderPagination(result) {
     const infoEl = document.getElementById('paginationInfo');
     const controlsEl = document.getElementById('paginationControls');
-    
+
     if (infoEl) {
-        infoEl.textContent = `Hiển thị ${result.orders ? result.orders.length : 0} trong tổng số ${result.totalCount || 0} đơn chờ trong Pool`;
+        infoEl.textContent = `Hiển thị ${result.orders ? result.orders.length : 0} trong tổng số ${result.totalCount || 0} đơn hàng chờ tiếp nhận`;
     }
     if (!controlsEl) return;
     controlsEl.innerHTML = '';
@@ -184,11 +156,11 @@ async function openProductDetailDrawer(productId) {
     const drawerEl = document.getElementById('productDetailDrawer');
     if (!drawerEl) return;
     const bsOffcanvas = bootstrap.Offcanvas.getOrCreateInstance(drawerEl);
-    
+
     document.getElementById('prodDrawerLoading').classList.remove('d-none');
     document.getElementById('prodDrawerError').classList.add('d-none');
     document.getElementById('prodDrawerContent').classList.add('d-none');
-    
+
     bsOffcanvas.show();
 
     try {
@@ -198,10 +170,10 @@ async function openProductDetailDrawer(productId) {
         }
         const data = await response.json();
 
-        document.getElementById('prodDrawerName').textContent = data.productName;
-        document.getElementById('prodDrawerCode').textContent = `Mã cây: ${data.productCode}`;
+        document.getElementById('prodDrawerName').textContent = data.productName || '-';
+        document.getElementById('prodDrawerCode').textContent = `Mã cây: ${data.productCode || '-'}`;
         document.getElementById('prodDrawerDesc').textContent = data.description || 'Không có mô tả chi tiết cho tác phẩm này.';
-        
+
         const priceFormatted = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(data.price || 0);
         document.getElementById('prodDrawerPrice').textContent = priceFormatted;
 
@@ -209,12 +181,11 @@ async function openProductDetailDrawer(productId) {
         document.getElementById('prodDrawerAge').textContent = data.age ? `${data.age} năm` : 'Chưa cập nhật';
         document.getElementById('prodDrawerHeight').textContent = data.height ? `${data.height} cm` : 'Chưa cập nhật';
         document.getElementById('prodDrawerDiameter').textContent = data.trunkDiameter ? `${data.trunkDiameter} cm` : 'Chưa cập nhật';
-        
-        const imgUrl = data.imageUrl || '/images/default-tree.jpg';
-        document.getElementById('prodDrawerImg').src = imgUrl;
+
+        document.getElementById('prodDrawerImg').src = data.imageUrl || '/images/default-tree.jpg';
 
         const statusEl = document.getElementById('prodDrawerStatus');
-        statusEl.textContent = data.productStatus;
+        statusEl.textContent = productStatusLabel(data.productStatus);
         if (data.productStatus === 'AVAILABLE') {
             statusEl.className = 'badge bg-success';
         } else if (data.productStatus === 'RESERVED') {
@@ -225,13 +196,45 @@ async function openProductDetailDrawer(productId) {
 
         document.getElementById('prodDrawerLoading').classList.add('d-none');
         document.getElementById('prodDrawerContent').classList.remove('d-none');
-
     } catch (error) {
-        console.error("Lỗi khi tải chi tiết sản phẩm:", error);
+        console.error('Lỗi khi tải chi tiết sản phẩm:', error);
         document.getElementById('prodDrawerLoading').classList.add('d-none');
         document.getElementById('prodDrawerError').classList.remove('d-none');
-        document.getElementById('prodDrawerErrorMessage').textContent = 
-            error.message.includes('404') ? 'Không tìm thấy tác phẩm này trên hệ thống!' : 'Lỗi kết nối máy chủ, vui lòng kiểm tra lại mạng.';
+        document.getElementById('prodDrawerErrorMessage').textContent =
+            error.message.includes('404') ? 'Không tìm thấy tác phẩm này trên hệ thống.' : 'Lỗi kết nối máy chủ, vui lòng kiểm tra lại mạng.';
     }
 }
 
+function productStatusLabel(status) {
+    const labels = {
+        AVAILABLE: 'Có thể bán',
+        RESERVED: 'Đang được giữ cho đơn hàng',
+        SOLD: 'Đã bán'
+    };
+    return labels[String(status || '').toUpperCase()] || 'Chưa xác định';
+}
+
+function showSuccess(message) {
+    if (typeof BSMSToast !== 'undefined') {
+        BSMSToast.success(message);
+    } else {
+        alert(message);
+    }
+}
+
+function showError(message) {
+    if (typeof BSMSToast !== 'undefined') {
+        BSMSToast.error(message);
+    } else {
+        alert(message);
+    }
+}
+
+function escapeHtml(value) {
+    return String(value ?? '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
+}

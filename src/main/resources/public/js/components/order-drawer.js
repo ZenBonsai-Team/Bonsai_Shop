@@ -194,7 +194,7 @@ const OrderDrawer = {
         
         // Status Badge class skins
         this.elStatusBadge.className = `status-badge ${order.orderStatus.toLowerCase()}`;
-        this.elStatusBadge.textContent = order.orderStatus;
+        this.elStatusBadge.textContent = order.orderStatusLabel || window.OrderModeratorLabels?.orderStatus(order.orderStatus) || '-';
         
         this.elCustName.textContent = order.customer.name;
         this.elCustPhone.textContent = order.customer.phone;
@@ -307,12 +307,12 @@ const OrderDrawer = {
             message: `Bạn có chắc chắn muốn duyệt đơn hàng ${this.currentOrder.orderCode} không?`,
             summary: [
                 { label: "Mã đơn hàng", value: this.currentOrder.orderCode },
-                { label: "Phương thức thanh toán", value: isDeposit ? "Đặt cọc (COD / DEPOSIT)" : "Thanh toán 100% toàn bộ" },
+                { label: "Phương thức thanh toán", value: window.OrderModeratorLabels?.paymentMethod(isDeposit ? "COD" : "VNPAY") || (isDeposit ? "Đặt cọc trước, thanh toán phần còn lại khi nhận cây" : "Thanh toán trực tuyến qua VNPay") },
                 ...(isDeposit ? [{ label: "Tiền đặt cọc cây", value: this.formatVND(effectiveDeposit) }] : []),
                 { label: "Phí xe cẩu", value: this.formatOptionalVND(crane) },
                 { label: "Phí vận chuyển", value: this.formatOptionalVND(shipping) },
                 { label: "Tổng giá trị đơn hàng", value: this.formatVND(base + craneValue + shippingValue) },
-                { label: "THANH TOÁN NẤC 1 (Đợt duyệt)", value: this.formatVND(pay1) }
+                { label: "Số tiền khách cần thanh toán ngay", value: this.formatVND(pay1) }
             ],
             onConfirm: async () => {
                 const res = await apiVerifyOrder(this.currentOrder.orderCode, crane, shipping, depositAmount);
@@ -355,8 +355,8 @@ const OrderDrawer = {
         }
 
         ConfirmDialog.show({
-            title: "Từ chối duyệt đơn hàng",
-            message: `Bạn có chắc chắn từ chối duyệt đơn hàng ${this.currentOrder.orderCode}?`,
+            title: "Từ chối đơn hàng",
+            message: `Đơn hàng ${this.currentOrder.orderCode} sẽ bị từ chối và cây trong đơn sẽ được giải phóng theo quy tắc hiện tại.`,
             summary: [
                 { label: "Mã đơn hàng", value: this.currentOrder.orderCode },
                 { label: "Lý do từ chối", value: reason }
@@ -364,7 +364,7 @@ const OrderDrawer = {
             onConfirm: async () => {
                 const res = await apiRejectOrder(this.currentOrder.orderCode, reason);
                 if (res.success) {
-                    BSMSToast.success('Đơn hàng đã bị từ chối duyệt.');
+                    BSMSToast.success('Đơn hàng đã được từ chối.');
                     this.close();
                     if (this.onSuccessCallback) this.onSuccessCallback();
                 } else {
@@ -377,13 +377,13 @@ const OrderDrawer = {
     handleCustomerNoShow() {
         const isPaid = this.currentOrder && this.currentOrder.orderStatus === 'PAID';
         ConfirmDialog.show({
-            title: "Xác nhận khách không nhận?",
+            title: "Xác nhận khách không nhận hàng",
             message: isPaid
-                ? "Đơn hàng đã thanh toán toàn bộ sẽ bị hủy, sản phẩm được mở bán lại. Payment giữ nguyên và ghi chú cần hoàn tiền ngoài hệ thống."
-                : "Đơn hàng sẽ bị hủy, sản phẩm được mở bán lại. Tiền cọc đã thu sẽ không hoàn và không tạo thanh toán phần còn lại.",
+                ? "Đơn hàng đã thanh toán toàn bộ sẽ bị chấm dứt và sản phẩm được mở bán lại theo quy tắc hiện tại. Thông tin thanh toán hiện có được giữ nguyên."
+                : "Đơn hàng sẽ bị chấm dứt do lỗi từ phía khách hàng. Tiền đặt cọc đã thanh toán sẽ được ghi nhận là khoản nhà vườn được giữ.",
             summary: [
                 { label: "Mã đơn hàng", value: this.currentOrder.orderCode },
-                { label: "Lý do", value: "Khách không nhận hàng / không thanh toán phần còn lại" }
+                { label: "Lý do", value: "Khách không nhận hàng hoặc không thanh toán số tiền còn lại" }
             ],
             onConfirm: async () => {
                 const notes = isPaid
@@ -391,7 +391,7 @@ const OrderDrawer = {
                     : "Khách không nhận hàng / không thanh toán phần còn lại.";
                 const res = await apiCustomerNoShow(this.currentOrder.orderCode, notes);
                 if (res.success) {
-                    BSMSToast.success("Đã hủy đơn vì khách không nhận. Sản phẩm đã được mở bán lại.");
+                    BSMSToast.success("Đã chấm dứt đơn vì khách không nhận hàng. Sản phẩm đã được mở bán lại.");
                     this.close();
                     if (this.onSuccessCallback) this.onSuccessCallback();
                 } else {
@@ -403,8 +403,8 @@ const OrderDrawer = {
 
     handleCompletePaidOrder() {
         ConfirmDialog.show({
-            title: "Xác nhận khách đã nhận?",
-            message: "Đơn hàng sẽ chuyển từ PAID sang COMPLETED. Thao tác này xác nhận khách đã nhận cây và đơn hàng đã hoàn tất.",
+            title: "Xác nhận hoàn thành đơn hàng",
+            message: "Đơn hàng sẽ được xác nhận hoàn thành. Doanh thu của đơn chỉ đủ điều kiện ghi nhận sau khi đơn chuyển sang trạng thái hoàn thành.",
             summary: [
                 { label: "Mã đơn hàng", value: this.currentOrder.orderCode }
             ],

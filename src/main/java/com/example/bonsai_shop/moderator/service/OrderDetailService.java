@@ -7,6 +7,8 @@ import com.example.bonsai_shop.entity.Payment;
 import com.example.bonsai_shop.entity.Product;
 import com.example.bonsai_shop.entity.User;
 import com.example.bonsai_shop.exception.OrderNotFoundException;
+import com.example.bonsai_shop.finance.dto.FinancialLedgerDTO;
+import com.example.bonsai_shop.finance.service.FinancialLedgerService;
 import com.example.bonsai_shop.moderator.dto.CustomerInfoDTO;
 import com.example.bonsai_shop.moderator.dto.HandlingHistoryDTO;
 import com.example.bonsai_shop.moderator.dto.OrderDetailDTO;
@@ -14,6 +16,7 @@ import com.example.bonsai_shop.moderator.dto.PaymentHistoryDTO;
 import com.example.bonsai_shop.moderator.dto.PaymentSummaryDTO;
 import com.example.bonsai_shop.moderator.dto.ProductSummaryDTO;
 import com.example.bonsai_shop.moderator.dto.TimelineDTO;
+import com.example.bonsai_shop.moderator.util.ModeratorDisplayLabelMapper;
 import com.example.bonsai_shop.product.repository.OrderHandlingRepository;
 import com.example.bonsai_shop.product.repository.OrderRepository;
 import com.example.bonsai_shop.product.repository.PaymentRepository;
@@ -36,6 +39,7 @@ public class OrderDetailService {
     private final PaymentRepository paymentRepository;
     private final OrderHandlingRepository orderHandlingRepository;
     private final MyOrderService myOrderService;
+    private final FinancialLedgerService financialLedgerService;
 
     @Transactional(readOnly = true)
     public OrderDetailDTO getOrderDetailByCode(String orderCode, User currentModerator) {
@@ -144,6 +148,9 @@ public class OrderDetailService {
 
         List<Payment> paymentEntities = paymentRepository.findByOrderOrderIdOrderByPaymentIdAsc(order.getOrderId());
         BigDecimal paidAmount = BigDecimal.ZERO;
+        BigDecimal successfulDepositAmount = BigDecimal.ZERO;
+        BigDecimal successfulRemainingPaymentAmount = BigDecimal.ZERO;
+        BigDecimal successfulFullPaymentAmount = BigDecimal.ZERO;
         List<PaymentHistoryDTO> paymentHistoryList = new ArrayList<>();
         String paymentMethod = resolvePaymentMethod(paymentEntities, order);
 
@@ -154,15 +161,25 @@ public class OrderDetailService {
                 String pStatus = p.getPaymentStatus() != null ? p.getPaymentStatus() : "PENDING";
                 if ("SUCCESS".equalsIgnoreCase(pStatus) || "PAID".equalsIgnoreCase(pStatus) || "COMPLETED".equalsIgnoreCase(pStatus)) {
                     paidAmount = paidAmount.add(amt);
+                    if ("DEPOSIT".equalsIgnoreCase(p.getPaymentType())) {
+                        successfulDepositAmount = successfulDepositAmount.add(amt);
+                    } else if ("REMAINING_PAYMENT".equalsIgnoreCase(p.getPaymentType())) {
+                        successfulRemainingPaymentAmount = successfulRemainingPaymentAmount.add(amt);
+                    } else if ("FULL_PAYMENT".equalsIgnoreCase(p.getPaymentType())) {
+                        successfulFullPaymentAmount = successfulFullPaymentAmount.add(amt);
+                    }
                 }
 
                 paymentHistoryList.add(PaymentHistoryDTO.builder()
                         .paymentId(p.getPaymentId())
                         .paymentNumber(payIndex++)
                         .method(p.getPaymentMethod() != null ? p.getPaymentMethod() : "VNPay")
+                        .methodLabel(ModeratorDisplayLabelMapper.paymentMethodLabel(p.getPaymentMethod() != null ? p.getPaymentMethod() : "VNPAY"))
                         .paymentType(p.getPaymentType() != null ? p.getPaymentType() : "DEPOSIT")
+                        .paymentTypeLabel(ModeratorDisplayLabelMapper.paymentTypeLabel(p.getPaymentType() != null ? p.getPaymentType() : "DEPOSIT"))
                         .amount(amt)
                         .status(pStatus)
+                        .statusLabel(ModeratorDisplayLabelMapper.paymentStatusLabel(pStatus))
                         .createdTime(p.getPaymentDate())
                         .transactionCode("PAY-" + p.getPaymentId())
                         .vnpayRef(p.getNotes() != null ? p.getNotes() : "-")
@@ -171,10 +188,26 @@ public class OrderDetailService {
             }
         }
 
-        BigDecimal remainingPaymentAmount = grandTotal.subtract(depositAmount);
+        BigDecimal totalCashReceived = paidAmount;
+        BigDecimal remainingPaymentAmount = grandTotal.subtract(totalCashReceived);
         if (remainingPaymentAmount.compareTo(BigDecimal.ZERO) < 0) {
             remainingPaymentAmount = BigDecimal.ZERO;
         }
+        BigDecimal recognizedCompletedRevenue = financialLedgerService.sumRecognizedCompletedRevenue(order);
+        BigDecimal forfeitedDepositIncome = financialLedgerService.sumForfeitedDepositIncome(order);
+        BigDecimal partialRefundAmount = financialLedgerService.sumPartialRefunds(order);
+        BigDecimal fullRefundAmount = financialLedgerService.sumFullRefunds(order);
+        BigDecimal totalRefundAmount = partialRefundAmount.add(fullRefundAmount);
+        BigDecimal netRecognizedAmount = financialLedgerService.sumNetRecognizedAmount(order);
+        String financialResolutionStatus = resolveFinancialResolutionStatus(
+                order.getOrderStatus(),
+                recognizedCompletedRevenue,
+                forfeitedDepositIncome,
+                totalRefundAmount,
+                totalCashReceived
+        );
+        List<FinancialLedgerDTO> ledgerHistory =
+                financialLedgerService.getLedgerHistory(order.getOrderId());
 
         PaymentSummaryDTO paymentSummary = PaymentSummaryDTO.builder()
                 .treePrice(computedTreePrice)
@@ -184,6 +217,18 @@ public class OrderDetailService {
                 .paidAmount(paidAmount)
                 .remainingPaymentAmount(remainingPaymentAmount)
                 .grandTotal(grandTotal)
+                .orderTotal(grandTotal)
+                .successfulDepositAmount(successfulDepositAmount)
+                .successfulRemainingPaymentAmount(successfulRemainingPaymentAmount)
+                .successfulFullPaymentAmount(successfulFullPaymentAmount)
+                .totalCashReceived(totalCashReceived)
+                .recognizedCompletedRevenue(recognizedCompletedRevenue)
+                .forfeitedDepositIncome(forfeitedDepositIncome)
+                .partialRefundAmount(partialRefundAmount)
+                .fullRefundAmount(fullRefundAmount)
+                .netRecognizedAmount(netRecognizedAmount)
+                .financialResolutionStatus(financialResolutionStatus)
+                .financialResolutionStatusLabel(ModeratorDisplayLabelMapper.financialResolutionStatusLabel(financialResolutionStatus))
                 .build();
 
         String currentStatus = order.getOrderStatus() != null ? order.getOrderStatus().toUpperCase() : "PENDING";
@@ -216,6 +261,14 @@ public class OrderDetailService {
         boolean canUnclaim = canReturnInventory;
         boolean canComplete = ("PAID".equals(currentStatus) || "DEPOSITED".equals(currentStatus)) && isAssignedToMe;
         boolean canCancel = false;
+        boolean hasForfeitedDeposit = forfeitedDepositIncome.compareTo(BigDecimal.ZERO) > 0;
+        boolean canCustomerNoShow = "DEPOSITED".equals(currentStatus)
+                && isAssignedToMe
+                && successfulDepositAmount.compareTo(BigDecimal.ZERO) > 0
+                && !hasForfeitedDeposit;
+        boolean canRecordFaultRefund = ("DEPOSITED".equals(currentStatus) || "PAID".equals(currentStatus) || "COMPLETED".equals(currentStatus))
+                && isAssignedToMe
+                && financialLedgerService.calculateRefundableCash(order).compareTo(BigDecimal.ZERO) > 0;
 
         String priority = myOrderService.calculatePriority(order);
         LocalDateTime statusTimestamp = order.getAssignedAt() != null ? order.getAssignedAt()
@@ -227,8 +280,11 @@ public class OrderDetailService {
                 .orderId(order.getOrderId())
                 .orderCode(order.getOrderCode())
                 .orderStatus(currentStatus)
+                .orderStatusLabel(ModeratorDisplayLabelMapper.orderStatusLabel(currentStatus))
                 .paymentMethod(paymentMethod)
+                .paymentMethodLabel(ModeratorDisplayLabelMapper.paymentMethodLabel(paymentMethod))
                 .priority(priority)
+                .priorityLabel(ModeratorDisplayLabelMapper.priorityLabel(priority))
                 .orderType(order.getOrderType() != null ? order.getOrderType() : "ONLINE")
                 .createdDate(order.getOrderDate())
                 .assignedModeratorName(assignedName)
@@ -244,10 +300,13 @@ public class OrderDetailService {
                 .canReturnInventory(canReturnInventory)
                 .canComplete(canComplete)
                 .canCancel(canCancel)
+                .canCustomerNoShow(canCustomerNoShow)
+                .canRecordFaultRefund(canRecordFaultRefund)
                 .customerInfo(customerInfo)
                 .products(productList)
                 .paymentSummary(paymentSummary)
                 .paymentHistory(paymentHistoryList)
+                .ledgerHistory(ledgerHistory)
                 .timeline(timeline)
                 .handlingHistory(handlingHistoryList)
                 .build();
@@ -265,6 +324,34 @@ public class OrderDetailService {
         }
 
         return isDeposit ? "COD" : "VNPAY";
+    }
+
+    private String resolveFinancialResolutionStatus(String orderStatus, BigDecimal recognizedCompletedRevenue,
+                                                    BigDecimal forfeitedDepositIncome,
+                                                    BigDecimal totalRefundAmount, BigDecimal totalCashReceived) {
+        String status = orderStatus != null ? orderStatus.toUpperCase() : "PENDING";
+        if (forfeitedDepositIncome != null && forfeitedDepositIncome.compareTo(BigDecimal.ZERO) > 0) {
+            return "FORFEITED_DEPOSIT_INCOME";
+        }
+        if (totalRefundAmount != null && totalRefundAmount.compareTo(BigDecimal.ZERO) > 0) {
+            return "REFUND_RECORDED";
+        }
+        if (recognizedCompletedRevenue != null && recognizedCompletedRevenue.compareTo(BigDecimal.ZERO) > 0) {
+            return "REVENUE_RECOGNIZED";
+        }
+        if ("DEPOSITED".equals(status)) {
+            return "DEPOSIT_RECEIVED_PENDING_COMPLETION";
+        }
+        if ("PAID".equals(status)) {
+            return "FULL_PAYMENT_RECEIVED_PENDING_COMPLETION";
+        }
+        if ("CANCELLED".equals(status)) {
+            return "CANCELLED_NO_FINANCIAL_RECOGNITION";
+        }
+        if (totalCashReceived != null && totalCashReceived.compareTo(BigDecimal.ZERO) > 0) {
+            return "CASH_RECEIVED_PENDING_RECOGNITION";
+        }
+        return "OPEN";
     }
 
     private List<TimelineDTO> buildOrderTimeline(String status, LocalDateTime createdDate, LocalDateTime assignedDate) {

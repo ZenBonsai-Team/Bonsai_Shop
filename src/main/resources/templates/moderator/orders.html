@@ -47,14 +47,14 @@
             <div class="kpi-card kpi-paid">
                 <div class="kpi-icon-wrapper"><i class="fa-solid fa-box"></i></div>
                 <div class="kpi-data">
-                    <span class="kpi-label">Đã thanh toán</span>
+                    <span class="kpi-label">Đã thanh toán toàn bộ</span>
                     <span class="kpi-value" id="kpiPaidCount">0</span>
                 </div>
             </div>
             <div class="kpi-card kpi-rejected">
                 <div class="kpi-icon-wrapper"><i class="fa-solid fa-circle-xmark"></i></div>
                 <div class="kpi-data">
-                    <span class="kpi-label">Đã hủy</span>
+                    <span class="kpi-label">Đã chấm dứt đơn hàng</span>
                     <span class="kpi-value" id="kpiRejectedCount">0</span>
                 </div>
             </div>
@@ -89,11 +89,11 @@
                 <!-- Status Filter Tabs -->
                 <div class="filter-tabs" id="statusFilterTabs">
                     <button class="tab-btn active" data-status="ALL">Tất cả đơn hàng</button>
-                    <button class="tab-btn" data-status="PENDING">Chờ duyệt (Pending)</button>
-                    <button class="tab-btn" data-status="PENDING_PAYMENT">Chờ thanh toán</button>
-                    <button class="tab-btn" data-status="PAID">Đã thanh toán</button>
-                    <button class="tab-btn" data-status="COMPLETED">Hoàn thành</button>
-                    <button class="tab-btn" data-status="CANCELLED">Đã hủy</button>
+                    <button class="tab-btn" data-status="PENDING">Chờ kiểm duyệt</button>
+                    <button class="tab-btn" data-status="PENDING_PAYMENT">Chờ khách thanh toán</button>
+                    <button class="tab-btn" data-status="PAID">Đã thanh toán toàn bộ</button>
+                    <button class="tab-btn" data-status="COMPLETED">Đã hoàn thành</button>
+                    <button class="tab-btn" data-status="CANCELLED">Đã chấm dứt đơn hàng</button>
                 </div>
             </div>
 
@@ -151,7 +151,7 @@
                 <!-- Status Row -->
                 <div class="drawer-section" style="display:flex; justify-content:space-between; align-items:center;">
                     <span class="detail-label">Trạng thái:</span>
-                    <span id="drawerStatusBadge" class="status-badge pending">PENDING</span>
+                    <span id="drawerStatusBadge" class="status-badge pending">Chờ kiểm duyệt</span>
                 </div>
 
                 <!-- Customer Details -->
@@ -201,15 +201,15 @@
                     </p>
                     <div class="fees-form-group">
                         <div class="input-field-group mb-2" id="groupDepositAmount" style="display:none;">
-                            <label for="inputDepositAmount">Tiền đặt cọc cây (Deposit Amount)</label>
+                            <label for="inputDepositAmount">Tiền đặt cọc</label>
                             <input type="text" id="inputDepositAmount" placeholder="Nhập số tiền đặt cọc (VNĐ)" disabled>
                         </div>
                         <div class="input-field-group">
-                            <label for="inputCraneFee">Phí xe cẩu (Crane Fee)</label>
+                            <label for="inputCraneFee">Phí xe cẩu</label>
                             <input type="text" id="inputCraneFee" placeholder="Ví dụ: 500000" disabled>
                         </div>
                         <div class="input-field-group mt-2">
-                            <label for="inputShippingFee">Phí vận chuyển (Ship)</label>
+                            <label for="inputShippingFee">Phí vận chuyển</label>
                             <input type="text" id="inputShippingFee" placeholder="Ví dụ: 300000" disabled>
                         </div>
                     </div>
@@ -387,6 +387,7 @@
         <script src="../../public/js/mock-data/orders.js" th:src="@{/js/mock-data/orders.js}"></script>
         <!-- Reusable Modal components -->
         <script src="../../public/js/components/confirm-dialog.js" th:src="@{/js/components/confirm-dialog.js}"></script>
+        <script src="../../public/js/moderator-display-labels.js" th:src="@{/js/moderator-display-labels.js}"></script>
         <script src="../../public/js/components/order-drawer.js" th:src="@{/js/components/order-drawer.js}"></script>
         <!-- Main Dashboard controller -->
         <script src="../../public/js/moderator_orders.js" th:src="@{/js/moderator_orders.js}"></script>

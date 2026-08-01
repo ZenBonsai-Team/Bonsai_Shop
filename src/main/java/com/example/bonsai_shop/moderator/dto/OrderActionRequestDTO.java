@@ -11,4 +11,10 @@ public class OrderActionRequestDTO {
     private BigDecimal craneFee;
     private BigDecimal shippingFee;
     private BigDecimal depositAmount;
+    private String faultParty;
+    private BigDecimal refundAmount;
+    private String evidenceNote;
+    private String externalReference;
+    private Boolean customerKeepsTree;
+    private String productResolution;
 }

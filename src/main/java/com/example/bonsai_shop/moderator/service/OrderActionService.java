@@ -43,7 +43,9 @@ public class OrderActionService {
             case "approve" -> handleApprove(order, status, moderator, isAssignedToMe, request);
             case "reject" -> handleReject(order, status, moderator, isAssignedToMe, request.getReason());
             case "return_inventory", "unclaim" -> handleReturnInventory(order, status, moderator, isAssignedToMe);
-            case "complete" -> handleComplete(order, status, moderator, isAssignedToMe);
+            case "complete" -> handleComplete(order, status, moderator, isAssignedToMe, request.getReason());
+            case "customer_no_show" -> handleCustomerNoShow(order, status, moderator, isAssignedToMe, request.getReason());
+            case "record_fault_refund", "fault_refund" -> handleFaultRefund(order, status, moderator, isAssignedToMe, request);
             case "cancel" -> throw new IllegalStateException("Hành động huỷ không còn hợp lệ trên trang chi tiết đơn hàng.");
             default -> throw new IllegalArgumentException("Hành động không hợp lệ: " + request.getAction());
         };
@@ -54,7 +56,7 @@ public class OrderActionService {
             throw new IllegalStateException("Đơn hàng này đã có người nhận.");
         }
         if (!"PENDING".equals(status)) {
-            throw new IllegalStateException("Không thể nhận đơn ở trạng thái: " + status);
+            throw new IllegalStateException("Không thể tiếp nhận đơn hàng vì trạng thái đơn hàng không còn phù hợp.");
         }
 
         order.setAssignedTo(moderator);
@@ -65,12 +67,13 @@ public class OrderActionService {
         return success(order.getOrderCode(), "claim", order.getOrderStatus());
     }
 
-    private Map<String, Object> handleApprove(Order order, String status, User moderator, boolean isAssignedToMe, OrderActionRequestDTO request) {
+    private Map<String, Object> handleApprove(Order order, String status, User moderator,
+                                              boolean isAssignedToMe, OrderActionRequestDTO request) {
         if (!isAssignedToMe) {
             throw new IllegalStateException("Bạn không phụ trách đơn này.");
         }
         if (!"PENDING".equals(status)) {
-            throw new IllegalStateException("Chỉ có thể duyệt đơn PENDING.");
+            throw new IllegalStateException("Chỉ có thể duyệt đơn hàng đang chờ kiểm duyệt.");
         }
 
         boolean success = orderService.verifyOrder(
@@ -88,12 +91,17 @@ public class OrderActionService {
         return success(order.getOrderCode(), "approve", "PENDING_PAYMENT");
     }
 
-    private Map<String, Object> handleReject(Order order, String status, User moderator, boolean isAssignedToMe, String reason) {
+    private Map<String, Object> handleReject(Order order, String status, User moderator,
+                                             boolean isAssignedToMe, String reason) {
         if (!isAssignedToMe) {
             throw new IllegalStateException("Bạn không phụ trách đơn này.");
         }
         if (!"PENDING".equals(status)) {
-            throw new IllegalStateException("Chỉ có thể từ chối đơn PENDING.");
+            throw new IllegalStateException("Chỉ có thể từ chối đơn hàng đang chờ kiểm duyệt.");
+        }
+
+        if (reason == null || reason.isBlank()) {
+            throw new IllegalArgumentException("Lý do từ chối là bắt buộc.");
         }
 
         boolean rejected = orderService.rejectOrder(order.getOrderCode(), normalizeReason(reason), moderator);
@@ -105,12 +113,13 @@ public class OrderActionService {
         return success(order.getOrderCode(), "reject", "CANCELLED");
     }
 
-    private Map<String, Object> handleReturnInventory(Order order, String status, User moderator, boolean isAssignedToMe) {
+    private Map<String, Object> handleReturnInventory(Order order, String status, User moderator,
+                                                      boolean isAssignedToMe) {
         if (!isAssignedToMe) {
             throw new IllegalStateException("Bạn không phụ trách đơn này.");
         }
         if (!"PENDING".equals(status)) {
-            throw new IllegalStateException("Chỉ có thể trả đơn về kho trước khi duyệt, khi đơn đang ở PENDING.");
+            throw new IllegalStateException("Không thể trả lại kho chung sau khi đơn hàng đã được duyệt.");
         }
 
         closeHandling(order);
@@ -121,7 +130,8 @@ public class OrderActionService {
         return success(order.getOrderCode(), "return_inventory", order.getOrderStatus());
     }
 
-    private Map<String, Object> handleComplete(Order order, String status, User moderator, boolean isAssignedToMe) {
+    private Map<String, Object> handleComplete(Order order, String status, User moderator,
+                                               boolean isAssignedToMe, String reason) {
         if (!isAssignedToMe) {
             throw new IllegalStateException("Bạn không phụ trách đơn này.");
         }
@@ -129,11 +139,60 @@ public class OrderActionService {
             throw new IllegalStateException("Chỉ hoàn thành đơn khi khách đã thanh toán.");
         }
 
-        order.setOrderStatus("COMPLETED");
+        if ("DEPOSITED".equals(status)) {
+            String notes = normalizeReason(reason);
+            orderService.confirmRemainingPayment(
+                    order.getOrderCode(),
+                    notes.isBlank() ? "Moderator confirmed remaining payment" : notes,
+                    moderator
+            );
+        } else {
+            orderService.completePaidOrder(order.getOrderCode(), moderator);
+        }
         closeHandling(order);
-        orderRepository.save(order);
         log.info("[ACTION] complete - order={}", order.getOrderCode());
         return success(order.getOrderCode(), "complete", "COMPLETED");
+    }
+
+    private Map<String, Object> handleCustomerNoShow(Order order, String status, User moderator,
+                                                     boolean isAssignedToMe, String reason) {
+        if (!isAssignedToMe) {
+            throw new IllegalStateException("Bạn không phụ trách đơn này.");
+        }
+        if (!"DEPOSITED".equals(status)) {
+            throw new IllegalStateException("Chỉ có thể ghi nhận khách không nhận hàng sau khi khách đã thanh toán tiền đặt cọc.");
+        }
+
+        orderService.markDepositedOrderCustomerNoShow(order.getOrderCode(), reason, moderator);
+        closeHandling(order);
+        log.info("[ACTION] customer_no_show - order={}", order.getOrderCode());
+        return success(order.getOrderCode(), "customer_no_show", "CANCELLED");
+    }
+
+    private Map<String, Object> handleFaultRefund(Order order, String status, User moderator,
+                                                  boolean isAssignedToMe, OrderActionRequestDTO request) {
+        if (!isAssignedToMe) {
+            throw new IllegalStateException("Bạn không phụ trách đơn này.");
+        }
+        if (!"DEPOSITED".equals(status) && !"PAID".equals(status) && !"COMPLETED".equals(status)) {
+            throw new IllegalStateException("Chỉ có thể ghi nhận hoàn tiền khi đơn đã có khoản thanh toán thành công.");
+        }
+
+        orderService.recordFaultRefundAndCancel(
+                order.getOrderCode(),
+                request.getFaultParty(),
+                request.getRefundAmount(),
+                request.getReason(),
+                request.getEvidenceNote(),
+                request.getExternalReference(),
+                request.getCustomerKeepsTree(),
+                request.getProductResolution(),
+                moderator
+        );
+        closeHandling(order);
+        log.info("[ACTION] record_fault_refund - order={}", order.getOrderCode());
+        String newStatus = Boolean.TRUE.equals(request.getCustomerKeepsTree()) ? "COMPLETED" : "CANCELLED";
+        return success(order.getOrderCode(), "record_fault_refund", newStatus);
     }
 
     private Map<String, Object> success(String orderCode, String action, String newStatus) {

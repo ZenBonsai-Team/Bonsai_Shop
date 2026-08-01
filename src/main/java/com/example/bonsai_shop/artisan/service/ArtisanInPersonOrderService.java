@@ -11,6 +11,7 @@ import com.example.bonsai_shop.product.repository.OrderRepository;
 import com.example.bonsai_shop.product.repository.PaymentRepository;
 import com.example.bonsai_shop.product.repository.ProductRepository;
 import com.example.bonsai_shop.product.service.MailService;
+import com.example.bonsai_shop.finance.service.FinancialLedgerService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -48,6 +49,7 @@ public class ArtisanInPersonOrderService {
     private final PaymentRepository paymentRepository;
     private final OrderLogRepository orderLogRepository;
     private final MailService mailService;
+    private final FinancialLedgerService financialLedgerService;
 
     public List<Product> getAvailableProducts(String artisanEmail) {
         Integer artisanUserId = artisanProductService.getArtisanUser(artisanEmail).getUserId();
@@ -252,10 +254,14 @@ public class ArtisanInPersonOrderService {
         payment.setPaymentDate(LocalDateTime.now());
         paymentRepository.save(payment);
 
+        LocalDateTime completedAt = LocalDateTime.now();
         order.setOrderStatus(STATUS_COMPLETED);
         product.setProductStatus(PRODUCT_SOLD);
         productRepository.save(product);
         Order savedOrder = orderRepository.save(order);
+        if (financialLedgerService.recordCompletedOrderRevenueIfAbsent(savedOrder, artisanUser, completedAt) != null) {
+            log(savedOrder, artisanUser, "COMPLETED_ORDER_REVENUE_RECORDED", STATUS_COMPLETED, STATUS_COMPLETED);
+        }
         log(savedOrder, artisanUser, "IN_PERSON_PAYMENT_CONFIRMED", oldStatus, STATUS_COMPLETED);
         try {
             mailService.sendInPersonOrderPaidEmail(savedOrder);

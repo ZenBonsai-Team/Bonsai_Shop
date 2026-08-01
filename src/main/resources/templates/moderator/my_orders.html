@@ -216,20 +216,20 @@
             <div class="my-toolbar-filters">
                 <select id="priorityFilterSelect">
                     <option value="ALL" th:selected="${priority == 'ALL'}">T&#7845;t c&#7843; &#273;&#7897; &#432;u ti&#234;n</option>
-                    <option value="CRITICAL" th:selected="${priority == 'CRITICAL'}">Kh&#7849;n c&#7845;p (CRITICAL)</option>
-                    <option value="HIGH" th:selected="${priority == 'HIGH'}">Cao (HIGH)</option>
-                    <option value="NORMAL" th:selected="${priority == 'NORMAL'}">B&#236;nh th&#432;&#7901;ng (NORMAL)</option>
-                    <option value="LOW" th:selected="${priority == 'LOW'}">Th&#7845;p (LOW)</option>
+                    <option value="CRITICAL" th:selected="${priority == 'CRITICAL'}">Rất khẩn cấp</option>
+                    <option value="HIGH" th:selected="${priority == 'HIGH'}">Ưu tiên cao</option>
+                    <option value="NORMAL" th:selected="${priority == 'NORMAL'}">Bình thường</option>
+                    <option value="LOW" th:selected="${priority == 'LOW'}">Ưu tiên thấp</option>
                 </select>
 
                 <select id="statusFilterSelect">
                     <option value="ALL" th:selected="${status == 'ALL'}">T&#7845;t c&#7843; tr&#7841;ng th&#225;i</option>
-                    <option value="PENDING" th:selected="${status == 'PENDING'}">Ch&#7901; duy&#7879;t (PENDING)</option>
-                    <option value="PENDING_PAYMENT" th:selected="${status == 'PENDING_PAYMENT'}">Ch&#7901; thanh to&#225;n (PENDING_PAYMENT)</option>
-                    <option value="DEPOSITED" th:selected="${status == 'DEPOSITED'}">&#272;&#227; &#273;&#7863;t c&#7885;c (DEPOSITED)</option>
-                    <option value="PAID" th:selected="${status == 'PAID'}">&#272;&#227; thanh to&#225;n (PAID)</option>
-                    <option value="COMPLETED" th:selected="${status == 'COMPLETED'}">Ho&#224;n th&#224;nh (COMPLETED)</option>
-                    <option value="CANCELLED" th:selected="${status == 'CANCELLED'}">&#272;&#227; h&#7911;y (CANCELLED)</option>
+                    <option value="PENDING" th:selected="${status == 'PENDING'}">Chờ kiểm duyệt</option>
+                    <option value="PENDING_PAYMENT" th:selected="${status == 'PENDING_PAYMENT'}">Chờ khách thanh toán</option>
+                    <option value="DEPOSITED" th:selected="${status == 'DEPOSITED'}">Đã thanh toán tiền đặt cọc</option>
+                    <option value="PAID" th:selected="${status == 'PAID'}">Đã thanh toán toàn bộ</option>
+                    <option value="COMPLETED" th:selected="${status == 'COMPLETED'}">Đã hoàn thành</option>
+                    <option value="CANCELLED" th:selected="${status == 'CANCELLED'}">Đã chấm dứt đơn hàng</option>
                 </select>
 
                 <select id="orderSortSelect">
@@ -281,7 +281,7 @@
                         <td class="col-money" th:utext="${order.remainingPaymentAmount != null ? #numbers.formatDecimal(order.remainingPaymentAmount, 0, 'POINT', 0, 'COMMA') + ' &#8363;' : '0 &#8363;'}">0 &#8363;</td>
                         <td class="col-priority">
                             <span th:class="'badge-priority badge-priority-' + ${#strings.toLowerCase(order.priority != null ? order.priority : 'normal')}"
-                                  th:text="${order.priority != null ? order.priority : 'NORMAL'}">NORMAL</span>
+                                  th:text="${order.priorityLabel != null ? order.priorityLabel : 'Bình thường'}">Bình thường</span>
                         </td>
                         <td class="col-age">
                             <span class="age-timer-element"
@@ -290,7 +290,7 @@
                         </td>
                         <td class="col-status">
                             <span th:class="'badge-status badge-status-' + ${#strings.toLowerCase(order.orderStatus != null ? order.orderStatus : 'pending')}"
-                                  th:text="${order.orderStatus}">PENDING</span>
+                                  th:text="${order.orderStatusLabel}">Chờ kiểm duyệt</span>
                         </td>
                         <td class="col-action">
                             <a th:href="@{/moderator/orders/{code}(code=${order.orderCode})}" class="btn-view-detail">Chi ti&#7871;t</a>
@@ -308,6 +308,7 @@
 
     <th:block id="page-scripts">
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="/js/moderator-display-labels.js"></script>
         <script src="/js/my_orders.js"></script>
     </th:block>
 </body>

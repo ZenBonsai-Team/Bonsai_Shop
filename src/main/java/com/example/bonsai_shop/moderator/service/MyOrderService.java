@@ -5,6 +5,7 @@ import com.example.bonsai_shop.entity.OrderDetail;
 import com.example.bonsai_shop.entity.Product;
 import com.example.bonsai_shop.moderator.dto.MyOrderDTO;
 import com.example.bonsai_shop.moderator.dto.MyOrderKPIsDTO;
+import com.example.bonsai_shop.moderator.util.ModeratorDisplayLabelMapper;
 import com.example.bonsai_shop.product.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -227,6 +228,8 @@ public class MyOrderService {
                 }
             }
 
+            String orderStatus = order.getOrderStatus() != null ? order.getOrderStatus() : "PENDING";
+
             return MyOrderDTO.builder()
                     .orderId(order.getOrderId())
                     .orderCode(order.getOrderCode())
@@ -238,7 +241,9 @@ public class MyOrderService {
                     .remainingPaymentAmount(remainingPaymentAmount)
                     .totalAmount(totalAmount)
                     .priority(priority)
-                    .orderStatus(order.getOrderStatus() != null ? order.getOrderStatus() : "PENDING")
+                    .priorityLabel(ModeratorDisplayLabelMapper.priorityLabel(priority))
+                    .orderStatus(orderStatus)
+                    .orderStatusLabel(ModeratorDisplayLabelMapper.orderStatusLabel(orderStatus))
                     .orderType(order.getOrderType() != null ? order.getOrderType() : "ONLINE")
                     .statusTimestamp(statusTimestamp)
                     .ageFormatted(ageFormatted)

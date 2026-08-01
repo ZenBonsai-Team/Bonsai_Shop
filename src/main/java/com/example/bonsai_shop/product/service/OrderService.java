@@ -25,6 +25,9 @@ import com.example.bonsai_shop.entity.OrderLog;
 import com.example.bonsai_shop.entity.Payment;
 import com.example.bonsai_shop.entity.Product;
 import com.example.bonsai_shop.entity.User;
+import com.example.bonsai_shop.finance.enums.FaultParty;
+import com.example.bonsai_shop.entity.FinancialLedger;
+import com.example.bonsai_shop.finance.service.FinancialLedgerService;
 import com.example.bonsai_shop.product.dto.PurchaseOrderRequestDTO;
 import com.example.bonsai_shop.product.enums.PaymentMethod;
 import com.example.bonsai_shop.product.enums.PaymentType;
@@ -59,6 +62,7 @@ public class OrderService {
     private final ApplicationEventPublisher eventPublisher;
     private final MailService mailService;
     private final CartService cartService;
+    private final FinancialLedgerService financialLedgerService;
 
     @Transactional(readOnly = true)
     public Page<Order> getFilteredOrders(String search, String status, String sort, int page, int limit) {
@@ -325,6 +329,9 @@ public class OrderService {
 
     @Transactional
     public boolean rejectOrder(String orderCode, String reason, User moderator) {
+        if (reason == null || reason.isBlank()) {
+            throw new IllegalArgumentException("Lý do từ chối là bắt buộc.");
+        }
         Order order = orderRepository.findByOrderCodeWithDetails(orderCode).orElse(null);
         if (order == null || !"PENDING".equalsIgnoreCase(order.getOrderStatus())) {
             return false;
@@ -611,6 +618,8 @@ public class OrderService {
             throw new IllegalStateException("Đơn hàng phải ở trạng thái ĐÃ ĐẶT CỌC (DEPOSITED) mới được xác nhận thanh toán phần còn lại!");
         }
 
+        validateAssignedModerator(order, moderator);
+
         // Tính tổng tiền deposit đã thanh toán thành công
         BigDecimal treePrice = resolveTreePrice(order);
 
@@ -639,9 +648,11 @@ public class OrderService {
         paymentRepository.save(remainingPayment);
 
         String oldStatus = order.getOrderStatus();
+        LocalDateTime completedAt = LocalDateTime.now();
         order.setOrderStatus("COMPLETED");
         orderRepository.save(order);
         markProductsAsSold(order);
+        recordCompletedRevenueLedger(order, moderator, completedAt);
 
         OrderLog logEntry = OrderLog.builder()
                 .order(order)
@@ -693,18 +704,17 @@ public class OrderService {
         if (order == null) {
             throw new IllegalArgumentException("Không tìm thấy đơn hàng: " + orderCode);
         }
-        boolean isDeposited = "DEPOSITED".equalsIgnoreCase(order.getOrderStatus());
-        boolean isPaid = "PAID".equalsIgnoreCase(order.getOrderStatus());
-        if (!isDeposited && !isPaid) {
-            throw new IllegalStateException("Chỉ có thể hủy vì khách không nhận khi đơn hàng đang ở trạng thái DEPOSITED.");
+        validateAssignedModerator(order, moderator);
+        if (!"DEPOSITED".equalsIgnoreCase(order.getOrderStatus())) {
+            throw new IllegalStateException("Chỉ có thể ghi nhận khách không nhận hàng sau khi khách đã thanh toán tiền đặt cọc.");
         }
 
         String oldStatus = order.getOrderStatus();
-        String reason = notes == null || notes.isBlank()
-                ? "Khách không nhận hàng / không thanh toán phần còn lại. Tiền cọc không hoàn."
-                : notes.trim() + " Tiền cọc không hoàn.";
-        String currentNotes = order.getNotes();
-        order.setNotes(currentNotes == null || currentNotes.isBlank() ? reason : currentNotes + " | " + reason);
+        String reason = requireReason(notes);
+        Payment depositPayment = financialLedgerService.requireSuccessfulDepositPayment(order);
+        BigDecimal forfeitedAmount = depositPayment.getAmount() != null ? depositPayment.getAmount() : ZERO;
+        financialLedgerService.recordForfeitedDepositIncome(order, depositPayment, forfeitedAmount, reason, moderator);
+        appendOrderNote(order, reason + " Tiền cọc được ghi nhận giữ lại do lỗi khách hàng.");
         order.setOrderStatus("CANCELLED");
         orderRepository.save(order);
         releaseProducts(order);
@@ -712,7 +722,7 @@ public class OrderService {
         OrderLog logEntry = OrderLog.builder()
                 .order(order)
                 .actionBy(moderator)
-                .actionType(isDeposited ? "CUSTOMER_NO_SHOW" : "CUSTOMER_NO_SHOW_AFTER_FULL_PAYMENT")
+                .actionType("FORFEITED_DEPOSIT_INCOME_RECORDED")
                 .fromStatus(oldStatus)
                 .toStatus("CANCELLED")
                 .actionAt(LocalDateTime.now())
@@ -724,18 +734,93 @@ public class OrderService {
     }
 
     @Transactional
+    public boolean recordFaultRefundAndCancel(String orderCode, String faultPartyValue, BigDecimal refundAmount,
+                                              String reason, String evidenceNote, String externalReference,
+                                              Boolean customerKeepsTree, String productResolution,
+                                              User moderator) {
+        Order order = orderRepository.findByOrderCode(orderCode).orElse(null);
+        if (order == null) {
+            throw new IllegalArgumentException("Không tìm thấy đơn hàng: " + orderCode);
+        }
+        validateAssignedModerator(order, moderator);
+
+        String oldStatus = order.getOrderStatus();
+        boolean validStatus = "DEPOSITED".equalsIgnoreCase(oldStatus)
+                || "PAID".equalsIgnoreCase(oldStatus)
+                || "COMPLETED".equalsIgnoreCase(oldStatus);
+        if (!validStatus) {
+            throw new IllegalStateException("Chỉ có thể ghi nhận hoàn tiền khi đơn đã có khoản thanh toán thành công.");
+        }
+
+        FaultParty faultParty = parseFaultParty(faultPartyValue);
+        if (faultParty != FaultParty.NURSERY && faultParty != FaultParty.DELIVERY) {
+            throw new IllegalArgumentException("Bên chịu trách nhiệm phải là nhà vườn hoặc quá trình vận chuyển.");
+        }
+
+        String normalizedReason = requireReason(reason);
+        FinancialLedger refundLedger = financialLedgerService.recordManualFaultRefund(
+                order,
+                faultParty,
+                refundAmount,
+                normalizedReason,
+                evidenceNote,
+                externalReference,
+                moderator
+        );
+
+        appendOrderNote(order, normalizedReason + " Hoàn tiền chỉ được ghi nhận thủ công, không tự động chuyển khoản.");
+        boolean keepsTree = Boolean.TRUE.equals(customerKeepsTree);
+        String newStatus;
+        if (keepsTree) {
+            if (!"PAID".equalsIgnoreCase(oldStatus) && !"COMPLETED".equalsIgnoreCase(oldStatus)) {
+                throw new IllegalStateException("Chỉ có thể để khách giữ cây khi đơn đã thanh toán toàn bộ.");
+            }
+            LocalDateTime completedAt = LocalDateTime.now();
+            order.setOrderStatus("COMPLETED");
+            orderRepository.save(order);
+            markProductsAsSold(order);
+            recordCompletedRevenueLedger(order, moderator, completedAt);
+            newStatus = "COMPLETED";
+        } else {
+            String normalizedProductResolution = requireProductResolution(productResolution);
+            order.setOrderStatus("CANCELLED");
+            orderRepository.save(order);
+            applyProductResolution(order, normalizedProductResolution);
+            newStatus = "CANCELLED";
+        }
+
+        OrderLog logEntry = OrderLog.builder()
+                .order(order)
+                .actionBy(moderator)
+                .actionType(refundLedger.getLedgerType().name() + "_RECORDED")
+                .fromStatus(oldStatus)
+                .toStatus(newStatus)
+                .actionAt(LocalDateTime.now())
+                .build();
+        orderLogRepository.save(logEntry);
+
+        if ("CANCELLED".equals(newStatus)) {
+            eventPublisher.publishEvent(new OrderRejectedEvent(order, normalizedReason));
+        }
+        return true;
+    }
+
+    @Transactional
     public boolean completePaidOrder(String orderCode, User moderator) {
         Order order = orderRepository.findByOrderCode(orderCode).orElse(null);
         if (order == null) {
             throw new IllegalArgumentException("Không tìm thấy đơn hàng: " + orderCode);
         }
+        validateAssignedModerator(order, moderator);
         if (!"PAID".equalsIgnoreCase(order.getOrderStatus())) {
             throw new IllegalStateException("Chỉ có thể hoàn thành đơn hàng đang ở trạng thái PAID.");
         }
 
         String oldStatus = order.getOrderStatus();
+        LocalDateTime completedAt = LocalDateTime.now();
         order.setOrderStatus("COMPLETED");
         orderRepository.save(order);
+        recordCompletedRevenueLedger(order, moderator, completedAt);
 
         OrderLog logEntry = OrderLog.builder()
                 .order(order)
@@ -743,10 +828,83 @@ public class OrderService {
                 .actionType("ORDER_COMPLETED")
                 .fromStatus(oldStatus)
                 .toStatus("COMPLETED")
-                .actionAt(LocalDateTime.now())
+                .actionAt(completedAt)
                 .build();
         orderLogRepository.save(logEntry);
         return true;
+    }
+
+    private void validateAssignedModerator(Order order, User moderator) {
+        Integer moderatorId = moderator != null ? moderator.getUserId() : null;
+        Integer assignedId = order != null && order.getAssignedTo() != null ? order.getAssignedTo().getUserId() : null;
+        if (moderatorId == null || !moderatorId.equals(assignedId)) {
+            throw new IllegalStateException("Bạn không phụ trách đơn này.");
+        }
+    }
+
+    private String requireReason(String reason) {
+        if (reason == null || reason.isBlank()) {
+            throw new IllegalArgumentException("Lý do là bắt buộc.");
+        }
+        return reason.trim();
+    }
+
+    private FaultParty parseFaultParty(String faultPartyValue) {
+        if (faultPartyValue == null || faultPartyValue.isBlank()) {
+            throw new IllegalArgumentException("Bên chịu lỗi là bắt buộc.");
+        }
+        try {
+            return FaultParty.valueOf(faultPartyValue.trim().toUpperCase());
+        } catch (IllegalArgumentException ex) {
+            throw new IllegalArgumentException("Bên chịu lỗi không hợp lệ: " + faultPartyValue);
+        }
+    }
+
+    private void appendOrderNote(Order order, String note) {
+        String normalized = note == null ? "" : note.trim();
+        if (normalized.isBlank()) {
+            return;
+        }
+        String currentNotes = order.getNotes();
+        String merged = currentNotes == null || currentNotes.isBlank() ? normalized : currentNotes + " | " + normalized;
+        order.setNotes(merged.length() > 500 ? merged.substring(0, 500) : merged);
+    }
+
+    private String requireProductResolution(String productResolution) {
+        if (productResolution == null || productResolution.isBlank()) {
+            throw new IllegalArgumentException("Vui lòng chọn cách xử lý cây trước khi xác nhận hoàn tiền.");
+        }
+        String normalized = productResolution.trim().toUpperCase();
+        return switch (normalized) {
+            case "RETURNED_AND_RESELLABLE", "RETURNED_AND_DAMAGED", "NOT_RETURNED", "UNDER_INSPECTION" -> normalized;
+            default -> throw new IllegalArgumentException("Cách xử lý cây không hợp lệ: " + productResolution);
+        };
+    }
+
+    private void applyProductResolution(Order order, String productResolution) {
+        switch (productResolution) {
+            case "RETURNED_AND_RESELLABLE" -> releaseProducts(order);
+            case "UNDER_INSPECTION" -> markProductsAsReserved(order);
+            case "RETURNED_AND_DAMAGED", "NOT_RETURNED" -> markProductsAsSold(order);
+            default -> throw new IllegalArgumentException("Cách xử lý cây không hợp lệ: " + productResolution);
+        }
+    }
+
+    private void recordCompletedRevenueLedger(Order order, User actor, LocalDateTime completedAt) {
+        FinancialLedger ledger = financialLedgerService.recordCompletedOrderRevenueIfAbsent(order, actor, completedAt);
+        if (ledger == null) {
+            return;
+        }
+
+        OrderLog ledgerLog = OrderLog.builder()
+                .order(order)
+                .actionBy(actor)
+                .actionType("COMPLETED_ORDER_REVENUE_RECORDED")
+                .fromStatus(order.getOrderStatus())
+                .toStatus(order.getOrderStatus())
+                .actionAt(completedAt != null ? completedAt : LocalDateTime.now())
+                .build();
+        orderLogRepository.save(ledgerLog);
     }
 
     @Transactional
@@ -780,6 +938,18 @@ public class OrderService {
                 Product prod = detail.getProduct();
                 if (prod != null) {
                     prod.setProductStatus("SOLD");
+                    productRepository.save(prod);
+                }
+            }
+        }
+    }
+
+    private void markProductsAsReserved(Order order) {
+        if (order.getOrderDetails() != null) {
+            for (OrderDetail detail : order.getOrderDetails()) {
+                Product prod = detail.getProduct();
+                if (prod != null) {
+                    prod.setProductStatus("RESERVED");
                     productRepository.save(prod);
                 }
             }

@@ -19,4 +19,16 @@ public class PaymentSummaryDTO {
     private BigDecimal paidAmount;
     private BigDecimal remainingPaymentAmount;
     private BigDecimal grandTotal;
+    private BigDecimal orderTotal;
+    private BigDecimal successfulDepositAmount;
+    private BigDecimal successfulRemainingPaymentAmount;
+    private BigDecimal successfulFullPaymentAmount;
+    private BigDecimal totalCashReceived;
+    private BigDecimal recognizedCompletedRevenue;
+    private BigDecimal forfeitedDepositIncome;
+    private BigDecimal partialRefundAmount;
+    private BigDecimal fullRefundAmount;
+    private BigDecimal netRecognizedAmount;
+    private String financialResolutionStatus;
+    private String financialResolutionStatusLabel;
 }

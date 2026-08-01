@@ -16,9 +16,12 @@ public class PaymentHistoryDTO {
     private Integer paymentId;
     private int paymentNumber;
     private String method;
+    private String methodLabel;
     private String paymentType;
+    private String paymentTypeLabel;
     private BigDecimal amount;
     private String status;
+    private String statusLabel;
     private LocalDateTime createdTime;
     private String transactionCode;
     private String vnpayRef;

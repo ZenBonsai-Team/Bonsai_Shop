@@ -14,6 +14,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 
 import java.time.LocalDateTime;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -86,6 +87,19 @@ class OrderActionServiceTest {
     }
 
     @Test
+    void rejectRequiresReasonBeforeCallingBackendWorkflow() {
+        User moderator = moderator(12);
+        Order order = assignedOrder("BSMS-REJECT", "PENDING", moderator);
+
+        when(orderRepository.findByOrderCode("BSMS-REJECT")).thenReturn(Optional.of(order));
+
+        assertThatThrownBy(() -> orderActionService.executeAction("BSMS-REJECT", request("reject"), moderator))
+                .isInstanceOf(IllegalArgumentException.class);
+
+        verify(orderService, never()).rejectOrder(any(), any(), any());
+    }
+
+    @Test
     void approvedUnassignedOrderCannotBeClaimedManually() {
         User moderator = moderator(11);
         Order order = Order.builder()
@@ -127,6 +141,75 @@ class OrderActionServiceTest {
         assertThat(handlingCaptor.getValue().getOrder()).isEqualTo(returnedOrder);
         assertThat(handlingCaptor.getValue().getModerator()).isEqualTo(secondModerator);
         assertThat(handlingCaptor.getValue().getIsActive()).isTrue();
+    }
+
+    @Test
+    void depositedCompletionCreatesRemainingPaymentThroughOrderService() {
+        User moderator = moderator(30);
+        Order order = assignedOrder("BSMS-005", "DEPOSITED", moderator);
+
+        when(orderRepository.findByOrderCode("BSMS-005")).thenReturn(Optional.of(order));
+        when(orderHandlingRepository.findByOrderOrderIdOrderByHandledAtDesc(order.getOrderId()))
+                .thenReturn(List.of());
+        OrderActionRequestDTO request = request("complete");
+        request.setReason("Collected remaining cash");
+
+        Map<String, Object> result = orderActionService.executeAction("BSMS-005", request, moderator);
+
+        assertThat(result.get("newStatus")).isEqualTo("COMPLETED");
+        verify(orderService).confirmRemainingPayment("BSMS-005", "Collected remaining cash", moderator);
+        verify(orderService, never()).completePaidOrder("BSMS-005", moderator);
+        verify(orderRepository, never()).save(order);
+    }
+
+    @Test
+    void customerNoShowActionRequiresDepositedAssignedOrder() {
+        User moderator = moderator(31);
+        Order order = assignedOrder("BSMS-006", "DEPOSITED", moderator);
+        OrderActionRequestDTO request = request("customer_no_show");
+        request.setReason("Customer refused delivery");
+
+        when(orderRepository.findByOrderCode("BSMS-006")).thenReturn(Optional.of(order));
+        when(orderHandlingRepository.findByOrderOrderIdOrderByHandledAtDesc(order.getOrderId()))
+                .thenReturn(List.of());
+
+        Map<String, Object> result = orderActionService.executeAction("BSMS-006", request, moderator);
+
+        assertThat(result.get("newStatus")).isEqualTo("CANCELLED");
+        verify(orderService).markDepositedOrderCustomerNoShow("BSMS-006", "Customer refused delivery", moderator);
+    }
+
+    @Test
+    void faultRefundActionCallsDedicatedManualRefundWorkflow() {
+        User moderator = moderator(32);
+        Order order = assignedOrder("BSMS-007", "PAID", moderator);
+        OrderActionRequestDTO request = request("record_fault_refund");
+        request.setFaultParty("NURSERY");
+        request.setRefundAmount(new BigDecimal("500000"));
+        request.setReason("Tree damaged before handover");
+        request.setEvidenceNote("Photo evidence");
+        request.setExternalReference("REF-001");
+        request.setCustomerKeepsTree(false);
+        request.setProductResolution("RETURNED_AND_RESELLABLE");
+
+        when(orderRepository.findByOrderCode("BSMS-007")).thenReturn(Optional.of(order));
+        when(orderHandlingRepository.findByOrderOrderIdOrderByHandledAtDesc(order.getOrderId()))
+                .thenReturn(List.of());
+
+        Map<String, Object> result = orderActionService.executeAction("BSMS-007", request, moderator);
+
+        assertThat(result.get("newStatus")).isEqualTo("CANCELLED");
+        verify(orderService).recordFaultRefundAndCancel(
+                "BSMS-007",
+                "NURSERY",
+                new BigDecimal("500000"),
+                "Tree damaged before handover",
+                "Photo evidence",
+                "REF-001",
+                false,
+                "RETURNED_AND_RESELLABLE",
+                moderator
+        );
     }
 
     private OrderActionRequestDTO request(String action) {

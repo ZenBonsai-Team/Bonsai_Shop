@@ -144,6 +144,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const remainingStr = formatCurrency(order.remainingPaymentAmount);
             const priorityClass = `badge-priority-${(order.priority || 'normal').toLowerCase()}`;
             const statusClass = `badge-status-${(order.orderStatus || 'pending').toLowerCase()}`;
+            const priorityLabel = order.priorityLabel || window.OrderModeratorLabels?.priority(order.priority) || 'Bình thường';
+            const statusLabel = order.orderStatusLabel || window.OrderModeratorLabels?.orderStatus(order.orderStatus) || 'Chờ kiểm duyệt';
             const orderCode = encodeURIComponent(order.orderCode || '');
 
             return `
@@ -163,7 +165,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     </td>
                     <td class="col-priority">
                         <span class="badge-priority ${priorityClass}">
-                            ${escapeHtml(order.priority || 'NORMAL')}
+                            ${escapeHtml(priorityLabel)}
                         </span>
                     </td>
                     <td class="col-age">
@@ -173,7 +175,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     </td>
                     <td class="col-status">
                         <span class="badge-status ${statusClass}">
-                            ${escapeHtml(order.orderStatus || 'PENDING')}
+                            ${escapeHtml(statusLabel)}
                         </span>
                     </td>
                     <td class="col-action">

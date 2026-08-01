@@ -23,7 +23,9 @@ public class MyOrderDTO {
     private BigDecimal remainingPaymentAmount;
     private BigDecimal totalAmount;
     private String priority;
+    private String priorityLabel;
     private String orderStatus;
+    private String orderStatusLabel;
     private String orderType;
     private LocalDateTime statusTimestamp;
     private String ageFormatted;
