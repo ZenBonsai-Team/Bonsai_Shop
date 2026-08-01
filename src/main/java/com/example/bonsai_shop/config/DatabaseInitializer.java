@@ -88,6 +88,7 @@ public class DatabaseInitializer implements CommandLineRunner {
         } catch (Exception e) {
             System.err.println(">>> FLYWAY MIGRATION FAILED: " + e.getMessage());
             e.printStackTrace();
+            throw e;
         }
     }
 }

@@ -820,6 +820,7 @@ public class OrderService {
         LocalDateTime completedAt = LocalDateTime.now();
         order.setOrderStatus("COMPLETED");
         orderRepository.save(order);
+        markProductsAsSold(order);
         recordCompletedRevenueLedger(order, moderator, completedAt);
 
         OrderLog logEntry = OrderLog.builder()

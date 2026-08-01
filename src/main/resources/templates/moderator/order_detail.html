@@ -732,7 +732,7 @@
                             <textarea id="customerNoShowReason" class="od-form-textarea" rows="3" placeholder="Bắt buộc nhập lý do"></textarea>
                         </div>
                         <div class="od-action-note">
-                            Xác nhận này sẽ chấm dứt đơn và ghi nhận tiền cọc là forfeited deposit income.
+                            Xác nhận này sẽ chấm dứt đơn và ghi nhận tiền cọc là khoản thu nhập từ tiền đặt cọc do khách bỏ đơn.
                         </div>
                     </div>
 
@@ -891,6 +891,7 @@
         const BASE_CRANE_FEE = /*[[${order.paymentSummary.craneFee}]]*/ 0;
         const SUCCESSFUL_DEPOSIT_AMOUNT = /*[[${order.paymentSummary.successfulDepositAmount}]]*/ 0;
         const TOTAL_CASH_RECEIVED = /*[[${order.paymentSummary.totalCashReceived}]]*/ 0;
+        const REFUNDABLE_CASH = /*[[${order.paymentSummary.refundableCash}]]*/ 0;
         const REMAINING_PAYMENT_AMOUNT = /*[[${order.paymentSummary.remainingPaymentAmount}]]*/ 0;
         const GRAND_TOTAL = /*[[${order.paymentSummary.grandTotal}]]*/ 0;
         const IS_COD = ORDER_PAYMENT_METHOD === 'COD';
@@ -1273,6 +1274,18 @@
                 });
                 return;
             }
+            if (refundAmount > REFUNDABLE_CASH) {
+                document.getElementById('refundAmount')?.focus();
+                openConfirmationModal({
+                    title: 'Số tiền hoàn vượt quá giới hạn',
+                    description: `Số tiền hoàn không được lớn hơn số tiền còn có thể hoàn: ${formatCurrency(REFUNDABLE_CASH)}.`,
+                    confirmLabel: 'Đã hiểu',
+                    danger: true,
+                    infoOnly: true,
+                    buildPayload: () => ({})
+                });
+                return;
+            }
             if (!reason) {
                 document.getElementById('faultRefundReason')?.focus();
                 openConfirmationModal({
@@ -1290,6 +1303,7 @@
                 { label: 'Mã đơn hàng', value: ORDER_CODE },
                 { label: 'Bên chịu trách nhiệm', value: faultParty === 'NURSERY' ? 'Lỗi từ phía nhà vườn' : 'Lỗi trong quá trình vận chuyển' },
                 { label: 'Số tiền hoàn lại', value: formatCurrency(refundAmount) },
+                { label: 'Số tiền tối đa có thể hoàn', value: formatCurrency(REFUNDABLE_CASH) },
                 { label: 'Khách giữ cây', value: customerKeepsTree ? 'Có' : 'Không' },
                 { label: 'Cách xử lý cây', value: customerKeepsTree ? 'Cây thuộc về khách' : productResolutionLabel(productResolution) },
                 { label: 'Lý do', value: reason }

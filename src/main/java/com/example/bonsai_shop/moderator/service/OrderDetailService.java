@@ -199,6 +199,7 @@ public class OrderDetailService {
         BigDecimal fullRefundAmount = financialLedgerService.sumFullRefunds(order);
         BigDecimal totalRefundAmount = partialRefundAmount.add(fullRefundAmount);
         BigDecimal netRecognizedAmount = financialLedgerService.sumNetRecognizedAmount(order);
+        BigDecimal refundableCash = financialLedgerService.calculateRefundableCash(order);
         String financialResolutionStatus = resolveFinancialResolutionStatus(
                 order.getOrderStatus(),
                 recognizedCompletedRevenue,
@@ -227,6 +228,7 @@ public class OrderDetailService {
                 .partialRefundAmount(partialRefundAmount)
                 .fullRefundAmount(fullRefundAmount)
                 .netRecognizedAmount(netRecognizedAmount)
+                .refundableCash(refundableCash)
                 .financialResolutionStatus(financialResolutionStatus)
                 .financialResolutionStatusLabel(ModeratorDisplayLabelMapper.financialResolutionStatusLabel(financialResolutionStatus))
                 .build();
@@ -268,7 +270,7 @@ public class OrderDetailService {
                 && !hasForfeitedDeposit;
         boolean canRecordFaultRefund = ("DEPOSITED".equals(currentStatus) || "PAID".equals(currentStatus) || "COMPLETED".equals(currentStatus))
                 && isAssignedToMe
-                && financialLedgerService.calculateRefundableCash(order).compareTo(BigDecimal.ZERO) > 0;
+                && refundableCash.compareTo(BigDecimal.ZERO) > 0;
 
         String priority = myOrderService.calculatePriority(order);
         LocalDateTime statusTimestamp = order.getAssignedAt() != null ? order.getAssignedAt()

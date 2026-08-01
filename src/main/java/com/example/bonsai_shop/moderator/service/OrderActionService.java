@@ -162,8 +162,11 @@ public class OrderActionService {
         if (!"DEPOSITED".equals(status)) {
             throw new IllegalStateException("Chỉ có thể ghi nhận khách không nhận hàng sau khi khách đã thanh toán tiền đặt cọc.");
         }
+        if (reason == null || reason.isBlank()) {
+            throw new IllegalArgumentException("Lý do khách không nhận hàng là bắt buộc.");
+        }
 
-        orderService.markDepositedOrderCustomerNoShow(order.getOrderCode(), reason, moderator);
+        orderService.markDepositedOrderCustomerNoShow(order.getOrderCode(), normalizeReason(reason), moderator);
         closeHandling(order);
         log.info("[ACTION] customer_no_show - order={}", order.getOrderCode());
         return success(order.getOrderCode(), "customer_no_show", "CANCELLED");

@@ -1,18 +1,72 @@
 -- V3: Refactor Payment table — chuyển từ quan hệ 1-1 sang 1-N với Order
 -- Lý do: Business rule mới yêu cầu 1 Order có thể có nhiều Payment records
 --   (Payment #1: DEPOSIT qua VNPay / Payment #2: REMAINING_PAYMENT bằng tiền mặt)
--- An toàn: không xóa dữ liệu, không thay đổi kiểu cột, data cũ vẫn valid
+-- An toàn: không xóa dữ liệu, không thay đổi kiểu dữ liệu. Các thao tác drop/add
+-- được bọc điều kiện để chạy được trên clean DB và schema dev đã bị Hibernate/Flyway
+-- đồng bộ một phần.
 
--- 1. Bỏ UNIQUE constraint trên OrderID trong bảng payment
---    (MySQL đặt tên index trùng với tên cột khi dùng `NOT NULL UNIQUE`. 
---    Ta cần tạm thời drop foreign key trước khi drop index này).
-ALTER TABLE `payment` DROP FOREIGN KEY `fk_pay_order`;
-ALTER TABLE `payment` DROP INDEX `OrderID`;
+DROP PROCEDURE IF EXISTS RefactorPaymentOneToMany;
 
--- 2. Thêm lại foreign key và index thường để query theo OrderID vẫn nhanh
-ALTER TABLE `payment` ADD CONSTRAINT `fk_pay_order` FOREIGN KEY (`OrderID`) REFERENCES `order` (`OrderID`) ON DELETE CASCADE;
-ALTER TABLE `payment` ADD INDEX `idx_payment_order_id` (`OrderID`);
+DELIMITER //
 
--- 3. Thêm cột Notes để Moderator ghi chú khi xác nhận thanh toán tiền mặt
-ALTER TABLE `payment` ADD COLUMN `Notes` VARCHAR(500) DEFAULT NULL AFTER `PaymentDate`;
+CREATE PROCEDURE RefactorPaymentOneToMany()
+BEGIN
+    IF EXISTS (
+        SELECT 1
+        FROM information_schema.table_constraints
+        WHERE constraint_schema = DATABASE()
+          AND table_name = 'payment'
+          AND constraint_name = 'fk_pay_order'
+          AND constraint_type = 'FOREIGN KEY'
+    ) THEN
+        ALTER TABLE `payment` DROP FOREIGN KEY `fk_pay_order`;
+    END IF;
 
+    IF EXISTS (
+        SELECT 1
+        FROM information_schema.statistics
+        WHERE table_schema = DATABASE()
+          AND table_name = 'payment'
+          AND index_name = 'OrderID'
+    ) THEN
+        ALTER TABLE `payment` DROP INDEX `OrderID`;
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1
+        FROM information_schema.table_constraints
+        WHERE constraint_schema = DATABASE()
+          AND table_name = 'payment'
+          AND constraint_name = 'fk_pay_order'
+          AND constraint_type = 'FOREIGN KEY'
+    ) THEN
+        ALTER TABLE `payment`
+            ADD CONSTRAINT `fk_pay_order`
+            FOREIGN KEY (`OrderID`) REFERENCES `order` (`OrderID`) ON DELETE CASCADE;
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1
+        FROM information_schema.statistics
+        WHERE table_schema = DATABASE()
+          AND table_name = 'payment'
+          AND index_name = 'idx_payment_order_id'
+    ) THEN
+        ALTER TABLE `payment` ADD INDEX `idx_payment_order_id` (`OrderID`);
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_schema = DATABASE()
+          AND table_name = 'payment'
+          AND column_name = 'Notes'
+    ) THEN
+        ALTER TABLE `payment` ADD COLUMN `Notes` VARCHAR(500) DEFAULT NULL AFTER `PaymentDate`;
+    END IF;
+END //
+
+DELIMITER ;
+
+CALL RefactorPaymentOneToMany();
+DROP PROCEDURE RefactorPaymentOneToMany;

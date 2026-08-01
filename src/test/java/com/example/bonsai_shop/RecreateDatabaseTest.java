@@ -1,6 +1,7 @@
 package com.example.bonsai_shop;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Disabled;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -12,6 +13,7 @@ import java.util.Properties;
 class RecreateDatabaseTest {
 
     @Test
+    @Disabled("Destructive local utility. Use DatabaseResetTest with explicit RESET_BONSAI_DB=YES instead.")
     void cleanAndRecreateDb() {
         Properties props = new Properties();
         try {
