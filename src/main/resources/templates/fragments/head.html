@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head th:fragment="head(title, extraCss)">
     <meta charset="UTF-8">
@@ -23,3 +23,4 @@
     <link rel="stylesheet" th:if="${extraCss != null and !extraCss.isEmpty()}" th:href="@{${extraCss}}">
 </head>
 </html>
+

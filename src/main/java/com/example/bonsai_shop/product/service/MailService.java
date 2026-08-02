@@ -43,7 +43,7 @@ public class MailService {
         }
 
         String emailContent = buildCreatedTemplate(order);
-        sendHtmlEmailWithRetry(toEmail, "Xác nhận ghi nhận đơn hàng #" + orderCode + " - Bonsai Shop", emailContent, orderCode);
+        sendHtmlEmailWithRetry(toEmail, "Xác nhận ghi nhận đơn hàng #" + orderCode + " - Minh Kỷ Garden", emailContent, orderCode);
     }
 
     public void sendOrderApprovedEmail(Order order) {
@@ -70,7 +70,7 @@ public class MailService {
         String paymentLink = baseUrl + "/vnpay/pay-order?orderCode=" + orderCode;
         String emailContent = buildAprovedTemplate(order, paymentLink);
 
-        sendHtmlEmailWithRetry(toEmail, "Xác nhân đơn hàng #" + orderCode + " - Bonsai Shop", emailContent, orderCode);
+        sendHtmlEmailWithRetry(toEmail, "Xác nhận đơn hàng #" + orderCode + " - Minh Kỷ Garden", emailContent, orderCode);
     }
 
     public void sendOrderDepositedEmail(Order order) {
@@ -82,7 +82,7 @@ public class MailService {
             return;
         }
         String emailContent = buildDepositedTemplate(order);
-        sendHtmlEmailWithRetry(toEmail, "Xác nhận đặt cọc thành công #" + orderCode + " - Bonsai Shop", emailContent, orderCode);
+        sendHtmlEmailWithRetry(toEmail, "Xác nhận đặt cọc thành công #" + orderCode + " - Minh Kỷ Garden", emailContent, orderCode);
     }
 
     public void sendOrderFinalReceiptEmail(Order order) {
@@ -94,7 +94,7 @@ public class MailService {
             return;
         }
         String emailContent = buildFinalReceiptTemplate(order);
-        sendHtmlEmailWithRetry(toEmail, "Hóa đơn hoàn tất thanh toán #" + orderCode + " - Bonsai Shop", emailContent, orderCode);
+        sendHtmlEmailWithRetry(toEmail, "Hóa đơn hoàn tất thanh toán #" + orderCode + " - Minh Kỷ Garden", emailContent, orderCode);
     }
 
     public void sendInPersonOrderPaidEmail(Order order) {
@@ -107,7 +107,7 @@ public class MailService {
         }
 
         String emailContent = buildInPersonPaidTemplate(order);
-        sendHtmlEmailWithRetry(toEmail, "Xác nhận thanh toán tại cửa hàng #" + orderCode + " - Bonsai Shop", emailContent, orderCode);
+        sendHtmlEmailWithRetry(toEmail, "Xác nhận thanh toán tại cửa hàng #" + orderCode + " - Minh Kỷ Garden", emailContent, orderCode);
     }
 
     public void sendOrderRejectedEmail(Order order, String reason) {
@@ -119,7 +119,7 @@ public class MailService {
             return;
         }
         String emailContent = buildRejectedTemplate(order, reason);
-        sendHtmlEmailWithRetry(toEmail, "Thông báo hủy đơn hàng #" + orderCode + " - Bonsai Shop", emailContent,
+        sendHtmlEmailWithRetry(toEmail, "Thông báo hủy đơn hàng #" + orderCode + " - Minh Kỷ Garden", emailContent,
                 orderCode);
     }
 
@@ -198,7 +198,7 @@ public class MailService {
                 + "    </table>"
                 + "  </div>"
                 + "  <div style=\"text-align: center; font-size: 12px; color: #a0aec0; border-top: 1px solid #edf2f7; padding-top: 15px;\">"
-                + "    © " + java.time.LocalDate.now().getYear() + " Bonsai Shop. All rights reserved."
+                + "    © " + java.time.LocalDate.now().getYear() + " Minh Kỷ Garden. All rights reserved."
                 + "  </div>"
                 + "</div>";
     }
@@ -307,7 +307,7 @@ public class MailService {
                 + "    </div>"
                 + "  </div>"
                 + "  <div style=\"text-align: center; font-size: 12px; color: #a0aec0; border-top: 1px solid #edf2f7; padding-top: 15px;\">"
-                + "    © " + java.time.LocalDate.now().getYear() + " Bonsai Shop. All rights reserved."
+                + "    © " + java.time.LocalDate.now().getYear() + " Minh Kỷ Garden. All rights reserved."
                 + "  </div>"
                 + "</div>";
     }
@@ -343,7 +343,7 @@ public class MailService {
                 "  </div>" +
                 "  <div style=\"padding: 20px 0; color: #1a202c; line-height: 1.6;\">" +
                 "    <p>Xin chào <strong>" + customerName + "</strong>,</p>" +
-                "    <p>Bonsai Shop đã nhận thành công khoản <strong>thanh toán Nấc 1 (" + formatVND(paidNac1) + ")</strong> (bao gồm Tiền cọc cây + Phí xe cẩu + Phí vận chuyển) cho đơn hàng của bạn.</p>" +
+                "    <p>Minh Kỷ Garden đã nhận thành công khoản <strong>thanh toán Nấc 1 (" + formatVND(paidNac1) + ")</strong> (bao gồm Tiền cọc cây + Phí xe cẩu + Phí vận chuyển) cho đơn hàng của bạn.</p>" +
                 "    <h4 style=\"color: #2d3748; margin: 20px 0 10px 0;\">Danh sách tác phẩm Bonsai:</h4>" +
                 "    <table style=\"width: 100%; border-collapse: collapse; margin-bottom: 20px;\">" +
                 "      <thead>" +
@@ -370,10 +370,10 @@ public class MailService {
                 "        <td style=\"text-align: right; padding: 12px; font-size: 15px;\">" + formatVND(remaining) + "</td>" +
                 "      </tr>" +
                 "    </table>" +
-                "    <p>Đội ngũ Bonsai Shop đang tiến hành chèn bảo vệ và đóng bọc cây để cẩu đến địa chỉ của bạn. Vui lòng chuẩn bị phần tiền cây còn lại (<strong>" + formatVND(remaining) + "</strong>) để thanh toán cho tài xế/Shipper khi nhận hàng.</p>" +
+                "    <p>Đội ngũ Minh Kỷ Garden đang tiến hành chèn bảo vệ và đóng bọc cây để cẩu đến địa chỉ của bạn. Vui lòng chuẩn bị phần tiền cây còn lại (<strong>" + formatVND(remaining) + "</strong>) để thanh toán cho tài xế/Shipper khi nhận hàng.</p>" +
                 "  </div>" +
                 "  <div style=\"text-align: center; font-size: 12px; color: #a0aec0; border-top: 1px solid #edf2f7; padding-top: 15px;\">" +
-                "    © " + java.time.LocalDate.now().getYear() + " Bonsai Shop. All rights reserved." +
+                "    © " + java.time.LocalDate.now().getYear() + " Minh Kỷ Garden. All rights reserved." +
                 "  </div>" +
                 "</div>";
     }
@@ -411,7 +411,7 @@ public class MailService {
                 "    </table>" +
                 "  </div>" +
                 "  <div style=\"text-align: center; font-size: 12px; color: #a0aec0; border-top: 1px solid #edf2f7; padding-top: 15px;\">" +
-                "    © " + java.time.LocalDate.now().getYear() + " Bonsai Shop. All rights reserved." +
+                "    © " + java.time.LocalDate.now().getYear() + " Minh Kỷ Garden. All rights reserved." +
                 "  </div>" +
                 "</div>";
     }
@@ -434,7 +434,7 @@ public class MailService {
                 "  </div>" +
                 "  <div style=\"padding: 20px 0; color: #1a202c; line-height: 1.6;\">" +
                 "    <p>Xin chào <strong>" + customerName + "</strong>,</p>" +
-                "    <p>Bonsai Shop xác nhận đơn hàng <strong>#" + order.getOrderCode() + "</strong> đã được thanh toán thành công tại cửa hàng.</p>" +
+                "    <p>Minh Kỷ Garden xác nhận đơn hàng <strong>#" + order.getOrderCode() + "</strong> đã được thanh toán thành công tại cửa hàng.</p>" +
                 "    <h4 style=\"color: #2d3748; margin: 20px 0 10px 0;\">Danh sách tác phẩm Bonsai đã mua:</h4>" +
                 "    <table style=\"width: 100%; border-collapse: collapse; margin-bottom: 20px;\">" +
                 "      <thead>" +
@@ -453,10 +453,10 @@ public class MailService {
                 "      <tr style=\"border-bottom: 1px solid #edf2f7;\"><td style=\"padding: 12px;\">Phí vận chuyển:</td><td style=\"text-align: right; padding: 12px;\">" + formatVND(shippingFee) + "</td></tr>" +
                 "      <tr style=\"background-color: #f0fff4; font-weight: bold; color: #22543d;\"><td style=\"padding: 12px;\">Tổng tiền đã thanh toán:</td><td style=\"text-align: right; padding: 12px; font-size: 16px;\">" + formatVND(total) + "</td></tr>" +
                 "    </table>" +
-                "    <p>Cảm ơn bạn đã mua hàng trực tiếp tại Bonsai Shop. Vui lòng giữ email này để đối chiếu thông tin đơn hàng khi cần.</p>" +
+                "    <p>Cảm ơn bạn đã mua hàng trực tiếp tại Minh Kỷ Garden. Vui lòng giữ email này để đối chiếu thông tin đơn hàng khi cần.</p>" +
                 "  </div>" +
                 "  <div style=\"text-align: center; font-size: 12px; color: #a0aec0; border-top: 1px solid #edf2f7; padding-top: 15px;\">" +
-                "    © " + java.time.LocalDate.now().getYear() + " Bonsai Shop. All rights reserved." +
+                "    © " + java.time.LocalDate.now().getYear() + " Minh Kỷ Garden. All rights reserved." +
                 "  </div>" +
                 "</div>";
     }
@@ -473,7 +473,7 @@ public class MailService {
                 "  </div>" +
                 "  <div style=\"padding: 20px 0; color: #1a202c; line-height: 1.6;\">" +
                 "    <p>Xin chào <strong>" + customerName + "</strong>,</p>" +
-                "    <p>Bonsai Shop đã nhận được yêu cầu đặt hàng của bạn. Đơn hàng của bạn hiện đang ở trạng thái <strong>CHỜ KIỂM DUYỆT (PENDING)</strong>.</p>" +
+                "    <p>Minh Kỷ Garden đã nhận được yêu cầu đặt hàng của bạn. Đơn hàng của bạn hiện đang ở trạng thái <strong>CHỜ KIỂM DUYỆT (PENDING)</strong>.</p>" +
                 "    <div style=\"background-color: #ebf8ff; border-left: 4px solid #3182ce; padding: 15px; border-radius: 4px; margin: 20px 0;\">" +
                 "      <h4 style=\"margin: 0 0 5px 0; color: #2b6cb0;\">Lưu ý quan trọng:</h4>" +
                 "      <p style=\"margin: 0; color: #2c5282;\">Đây là email xác nhận hệ thống đã ghi nhận đơn hàng. Đội ngũ Moderator sẽ kiểm tra tình trạng cây, tính toán chi phí cẩu/vận chuyển và phê duyệt đơn hàng trong thời gian sớm nhất. Bạn sẽ nhận được email hướng dẫn thanh toán ngay khi đơn hàng được duyệt.</p>" +
@@ -502,7 +502,7 @@ public class MailService {
                 "    </table>" +
                 "  </div>" +
                 "  <div style=\"text-align: center; font-size: 12px; color: #a0aec0; border-top: 1px solid #edf2f7; padding-top: 15px;\">" +
-                "    © " + java.time.LocalDate.now().getYear() + " Bonsai Shop. All rights reserved." +
+                "    © " + java.time.LocalDate.now().getYear() + " Minh Kỷ Garden. All rights reserved." +
                 "  </div>" +
                 "</div>";
     }
