@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="vi">
 <head>
@@ -76,12 +76,12 @@
 <!-- ===================================================== -->
 <div class="container breadcrumb-container d-flex align-items-center">
     <button class="btn btn-outline-dark btn-sm me-3 rounded-pill px-3" onclick="window.history.back()" title="Quay lại">
-        <i class="fa-solid fa-arrow-left me-1"></i> Quay lại
+        <i class="fa-solid fa-arrow-left me-1"></i> <span th:text="${#locale.language == 'en' ? 'Back' : 'Quay lại'}">Quay lại</span>
     </button>
     <nav aria-label="breadcrumb" class="mb-0">
         <ul class="breadcrumb-list mb-0">
-            <li class="breadcrumb-item"><a th:href="@{/home}">Home</a></li>
-            <li class="breadcrumb-item"><a th:href="@{/marketplace}">Marketplace</a></li>
+            <li class="breadcrumb-item"><a th:href="@{/home}" th:text="#{nav.home}">Trang chủ</a></li>
+            <li class="breadcrumb-item"><a th:href="@{/marketplace}" th:text="#{nav.marketplace}">Chợ Cây</a></li>
             <!-- CALL DB: product.productName -->
             <li class="breadcrumb-item active" aria-current="page" th:text="${product.productName}">Tùng La Hán Dáng Hoành</li>
         </ul>
@@ -284,15 +284,16 @@
                         <button type="button" 
                             class="btn-buy-vnpay" 
                             th:if="${product.productStatus == 'AVAILABLE'}"
-                            th:onclick="'addToCartAndGo(' + ${product.productId} + ')'">
+                            th:onclick="'addToCartAndGo(' + ${product.productId} + ')'"
+                            th:text="#{product.buy_now}">
                         Mua ngay (Đặt hàng)
                         </button>
 
-                        <button class="btn-card-disabled" style="width: 100%; padding: 14px 0;" disabled th:if="${product.productStatus == 'RESERVED'}"><i class="fa-solid fa-lock"></i> Reserved</button>
-                        <button class="btn-card-disabled" style="width: 100%; padding: 14px 0;" disabled th:if="${product.productStatus == 'SOLD'}"><i class="fa-solid fa-ban"></i> Sold</button>
+                        <button class="btn-card-disabled" style="width: 100%; padding: 14px 0;" disabled th:if="${product.productStatus == 'RESERVED'}"><i class="fa-solid fa-lock"></i> <span th:text="#{product.reserved}">ĐÃ ĐẶT</span></button>
+                        <button class="btn-card-disabled" style="width: 100%; padding: 14px 0;" disabled th:if="${product.productStatus == 'SOLD'}"><i class="fa-solid fa-ban"></i> <span th:text="#{product.sold}">ĐÃ BÁN</span></button>
                         
                         <!-- Wishlist Button -->
-                        <button class="btn-action-square" title="Yêu thích">
+                        <button class="btn-action-square btn-main-wishlist" th:data-product-id="${product.productId}" title="Yêu thích">
                             <i class="fa-regular fa-heart"></i>
                         </button>
                         
@@ -304,7 +305,7 @@
 
                     <!-- Add to Cart Outline -->
                     <button class="btn-add-cart-outline" th:if="${product.productStatus == 'AVAILABLE'}" th:onclick="'addToCart(' + ${product.productId} + ')'">
-                        <i class="fa-solid fa-cart-shopping"></i> Add to Cart
+                        <i class="fa-solid fa-cart-shopping"></i> <span th:text="#{product.add_to_cart}">Thêm vào giỏ</span>
                     </button>
                 </div>
             </div>
@@ -440,9 +441,9 @@
             <div class="col-lg-4">
                 <div class="specs-side-header">
                     <span class="section-tag-gold" style="text-align:left;">Thông số chi tiết</span>
-                    <h2 class="specs-side-title">Specification</h2>
-                    <p class="specs-side-desc">
-                        Bảng thông số kỹ thuật và pháp lý đi kèm tác phẩm. Mọi thông tin đều được xác minh bởi BSMS trước khi niêm yết.
+                    <h2 class="specs-side-title" th:text="#{product.specs.title}">Thông số kỹ thuật</h2>
+                    <p class="specs-side-desc" th:text="${#locale.language == 'en' ? 'Technical and legal details of the masterpiece. All information is verified by Minh Ky Garden.' : 'Bảng thông số kỹ thuật và pháp lý đi kèm tác phẩm. Mọi thông tin đều được xác minh bởi Minh Kỷ Garden trước khi niêm yết.'}">
+                        Bảng thông số kỹ thuật và pháp lý đi kèm tác phẩm. Mọi thông tin đều được xác minh bởi Minh Kỷ Garden trước khi niêm yết.
                     </p>
                 </div>
             </div>
@@ -524,113 +525,73 @@
 </section>
 
 <!-- ===================================================== -->
-<!-- RELATED PRODUCTS SECTION // FIX CỨNG-->
+<!-- RELATED PRODUCTS SECTION // DYNAMICALLY LOADED -->
 <!-- ===================================================== -->
 <section class="related-section">
     <div class="container">
         
         <div class="related-header">
-            <h2 class="related-title">You May Also Like</h2>
-            <a href="#" class="related-link-all">Xem tất cả <i class="fa-solid fa-arrow-right"></i></a>
+            <h2 class="related-title" th:text="#{product.detail.related}">Có thể bạn sẽ thích</h2>
+            <a th:href="@{/marketplace}" class="related-link-all">
+                <span th:text="#{product.detail.view_all}">Xem tất cả</span> <i class="fa-solid fa-arrow-right"></i>
+            </a>
         </div>
 
         <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-xl-4 g-3">
             
-            <!-- Card 1 (AVAILABLE) -->
-            <div class="col">
-                <div class="product-card">
+            <div class="col" th:each="related : ${relatedProducts}">
+                <div class="product-card"
+                     style="cursor: pointer;"
+                     th:onclick="|if(!event.target.closest('.card-btn-wishlist, .btn-card-cart-icon, video, a, button')) { window.location.href='@{/product/{id}(id=${related.productId})}' }|"
+                     th:with="relMediaUrl=${related.primaryMediaUrl},
+                              relMediaType=${related.primaryMediaType},
+                              isMidRel=${related.midSegment}"
+                     th:classappend="${isMidRel} ? ' product-card-mid' : ' product-card-budget'">
                     <div class="card-image-wrap">
-                        <span class="card-status-badge avail">AVAILABLE</span>
-                        <button class="card-btn-wishlist" title="Yêu thích"><i class="fa-regular fa-heart"></i></button>
-                        <img src="https://images.unsplash.com/photo-1599599810769-bcde5a160d32?auto=format&fit=crop&q=80&w=600" alt="Sanh Nam Điền Dáng Trực Cổ" class="card-img-asset">
-                    </div>
-                    <div class="card-content">
-                        <span class="card-species-tag">Sanh Nam Điền</span>
-                        <h3 class="card-title-serif">Sanh Nam Điền Dáng Trực Cổ</h3>
-                        <p class="card-pedigree-code text-muted mb-1" style="font-size:0.7rem;">Mã: BSMS-SND-102</p>
-                        <p class="card-dimensions-meta text-muted mb-2">Tuổi: 12 năm • Cao: 65cm • Thân: 15cm</p>
-                        <div class="card-price-rating-row">
-                            <span class="card-price-val">4.500.000 đ</span>
-                            <span class="card-rating-val">4.8 <i class="fa-solid fa-star"></i></span>
-                        </div>
-                        <div class="card-action-row">
-                            <a href="#" class="btn-card-view-details">Xem chi tiết</a>
-                            <button type="button" class="btn-card-cart-icon" title="Thêm vào giỏ hàng"><i class="fa-solid fa-cart-shopping"></i></button>
-                        </div>
-                    </div>
-                </div>
-            </div>
+                        <span th:if="${related.productStatus == 'AVAILABLE'}" class="card-status-badge avail" th:text="#{product.available}">AVAILABLE</span>
+                        <span th:if="${related.productStatus == 'RESERVED'}" class="card-status-badge resv" th:text="#{product.reserved}">RESERVED</span>
+                        <span th:if="${related.productStatus == 'SOLD'}" class="card-status-badge sld" th:text="#{product.sold}">SOLD</span>
+                        
+                        <button class="card-btn-wishlist" th:data-product-id="${related.productId}" title="Yêu thích"><i class="fa-regular fa-heart"></i></button>
 
-            <!-- Card 2 (RESERVED) -->
-            <div class="col">
-                <div class="product-card">
-                    <div class="card-image-wrap">
-                        <span class="card-status-badge resv">RESERVED</span>
-                        <button class="card-btn-wishlist" title="Yêu thích"><i class="fa-regular fa-heart"></i></button>
-                        <img src="https://images.unsplash.com/photo-1592150621744-aca64f48394a?auto=format&fit=crop&q=80&w=600" alt="Linh Sam Dáng Huyền" class="card-img-asset">
+                        <video th:if="${relMediaUrl != null && !relMediaUrl.isEmpty() && relMediaType == 'VIDEO'}"
+                               th:src="${relMediaUrl}"
+                               class="card-img-asset"
+                               controls
+                               muted
+                               playsinline
+                               preload="metadata"></video>
+                        <img th:if="${relMediaUrl == null || relMediaUrl.isEmpty() || relMediaType != 'VIDEO'}"
+                             th:src="${relMediaUrl != null && !relMediaUrl.isEmpty() ? relMediaUrl : 'https://images.unsplash.com/photo-1599599810769-bcde5a160d32?auto=format&fit=crop&q=80&w=600'}"
+                             th:alt="${related.productName}" class="card-img-asset">
                     </div>
                     <div class="card-content">
-                        <span class="card-species-tag">Linh Sam</span>
-                        <h3 class="card-title-serif">Linh Sam Dáng Huyền</h3>
-                        <p class="card-pedigree-code text-muted mb-1" style="font-size:0.7rem;">Mã: BSMS-LSM-077</p>
-                        <p class="card-dimensions-meta text-muted mb-2">Tuổi: 8 năm • Cao: 45cm • Thân: 8cm</p>
+                        <span class="card-species-tag" th:text="${related.variety != null ? related.variety.varietyName : 'Bonsai'}">Variety</span>
+                        <h3 class="card-title-serif" th:text="${related.productName}">Product Name</h3>
+                        <p class="card-pedigree-code text-muted mb-1" style="font-size:0.7rem;" th:text="${(#locale.language == 'en' ? 'Code: ' : 'Mã: ') + related.productCode}">Mã</p>
+                        <p class="card-dimensions-meta text-muted mb-2" 
+                           th:text="${(#locale.language == 'en' ? 'Age: ' : 'Tuổi: ') + (related.age != null ? related.age + (#locale.language == 'en' ? ' yrs' : ' năm') : 'N/A') + ' • ' + (#locale.language == 'en' ? 'Height: ' : 'Cao: ') + (related.height != null ? related.height + 'cm' : 'N/A') + ' • ' + (#locale.language == 'en' ? 'Trunk: ' : 'Thân: ') + (related.trunkDiameter != null ? related.trunkDiameter + 'cm' : 'N/A')}">
+                           Dimensions
+                        </p>
                         <div class="card-price-rating-row">
-                            <span class="card-price-val">3.200.000 đ</span>
-                            <span class="card-rating-val">4.7 <i class="fa-solid fa-star"></i></span>
+                            <span class="card-price-val"
+                                  th:if="${related.isPublicPrice}"
+                                  th:text="${#numbers.formatDecimal(related.price, 0, 'POINT', 0, 'POINT') + ' đ'}">Price</span>
+                            <span class="card-price-val" th:if="${!related.isPublicPrice}" th:text="${#locale.language == 'en' ? 'Contact' : 'Liên hệ'}">Liên hệ</span>
+                            <span class="card-rating-val">
+                                <span th:text="${related.averageRating != null ? #numbers.formatDecimal(related.averageRating, 1, 1) : '4.8'}">4.8</span>
+                                <i class="fa-solid fa-star"></i>
+                            </span>
                         </div>
                         <div class="card-action-row">
-                            <a href="#" class="btn-card-view-details">Xem chi tiết</a>
-                            <button type="button" class="btn-card-cart-icon btn-card-disabled" disabled title="Đã đặt / Đã bán"><i class="fa-solid fa-lock"></i></button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Card 3 (AVAILABLE) -->
-            <div class="col">
-                <div class="product-card">
-                    <div class="card-image-wrap">
-                        <span class="card-status-badge avail">AVAILABLE</span>
-                        <button class="card-btn-wishlist" title="Yêu thích"><i class="fa-regular fa-heart"></i></button>
-                        <img src="https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?auto=format&fit=crop&q=80&w=600" alt="Mai Chiếu Thủy Bonsai Hoa" class="card-img-asset">
-                    </div>
-                    <div class="card-content">
-                        <span class="card-species-tag">Mai Chiếu Thủy</span>
-                        <h3 class="card-title-serif">Mai Chiếu Thủy Bonsai Hoa</h3>
-                        <p class="card-pedigree-code text-muted mb-1" style="font-size:0.7rem;">Mã: BSMS-MCT-145</p>
-                        <p class="card-dimensions-meta text-muted mb-2">Tuổi: 10 năm • Cao: 55cm • Thân: 12cm</p>
-                        <div class="card-price-rating-row">
-                            <span class="card-price-val">6.700.000 đ</span>
-                            <span class="card-rating-val">4.8 <i class="fa-solid fa-star"></i></span>
-                        </div>
-                        <div class="card-action-row">
-                            <a href="#" class="btn-card-view-details">Xem chi tiết</a>
-                            <button type="button" class="btn-card-cart-icon" title="Thêm vào giỏ hàng"><i class="fa-solid fa-cart-shopping"></i></button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Card 4 (SOLD) -->
-            <div class="col">
-                <div class="product-card">
-                    <div class="card-image-wrap">
-                        <span class="card-status-badge sld">SOLD</span>
-                        <button class="card-btn-wishlist" title="Yêu thích"><i class="fa-regular fa-heart"></i></button>
-                        <img src="https://images.unsplash.com/photo-1583847268964-b28dc8f51f92?auto=format&fit=crop&q=80&w=600" alt="Sanh Quê Dáng Song Thụ" class="card-img-asset">
-                    </div>
-                    <div class="card-content">
-                        <span class="card-species-tag">Sanh Quê</span>
-                        <h3 class="card-title-serif">Sanh Quê Dáng Song Thụ</h3>
-                        <p class="card-pedigree-code text-muted mb-1" style="font-size:0.7rem;">Mã: BSMS-SNQ-301</p>
-                        <p class="card-dimensions-meta text-muted mb-2">Tuổi: 25 năm • Cao: 90cm • Thân: 20cm</p>
-                        <div class="card-price-rating-row">
-                            <span class="card-price-val">12.500.000 đ</span>
-                            <span class="card-rating-val">5.0 <i class="fa-solid fa-star"></i></span>
-                        </div>
-                        <div class="card-action-row">
-                            <a href="#" class="btn-card-view-details">Xem chi tiết</a>
-                            <button type="button" class="btn-card-cart-icon btn-card-disabled" disabled title="Đã đặt / Đã bán"><i class="fa-solid fa-lock"></i></button>
+                            <a th:href="@{'/product/' + ${related.productId}}" class="btn-card-view-details" th:text="#{product.view_details}">Xem chi tiết</a>
+                            <button sec:authorize="!hasAnyRole('OWNER', 'ARTISAN', 'MODERATOR', 'CONTENT_MODERATOR')" 
+                                    th:if="${related.productStatus == 'AVAILABLE'}" 
+                                    type="button" 
+                                    class="btn-card-cart-icon" 
+                                    th:onclick="'addToCart(' + ${related.productId} + ')'">
+                                <i class="fa-solid fa-cart-shopping"></i>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -797,6 +758,40 @@
             ? (currentIndex - 1 + slides.length) % slides.length
             : (currentIndex + 1) % slides.length;
         setProductJournalSlide(eventId, targetIndex);
+    });
+
+    // Wishlist Heart Icon Toggle with Local Storage persistence
+    const wishlistButtons = document.querySelectorAll('.card-btn-wishlist, .btn-main-wishlist');
+    let favorites = JSON.parse(localStorage.getItem('wishlist_favorites')) || [];
+
+    // Initialize wishlist state from localStorage
+    wishlistButtons.forEach(btn => {
+        const productId = btn.getAttribute('data-product-id');
+        if (favorites.includes(productId)) {
+            btn.classList.add('active');
+            const icon = btn.querySelector('i');
+            if (icon) {
+                icon.className = 'fa-solid fa-heart';
+            }
+        }
+
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const prodId = btn.getAttribute('data-product-id');
+            btn.classList.toggle('active');
+            const icon = btn.querySelector('i');
+            
+            if (btn.classList.contains('active')) {
+                if (icon) icon.className = 'fa-solid fa-heart';
+                if (!favorites.includes(prodId)) {
+                    favorites.push(prodId);
+                }
+            } else {
+                if (icon) icon.className = 'fa-regular fa-heart';
+                favorites = favorites.filter(id => id !== prodId);
+            }
+            localStorage.setItem('wishlist_favorites', JSON.stringify(favorites));
+        });
     });
 </script>
 <div th:replace="~{fragments/checkout-modal :: checkoutModal}"></div>

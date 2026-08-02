@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="vi">
 
@@ -148,32 +148,19 @@
 
     <div class="masters-grid">
 
-        <div class="master-card">
+        <div class="master-card" th:each="artisan, iter : ${artisans}">
             <div class="master-icon">
-                <i class="fa-regular fa-user"></i>
+                <img th:if="${artisan.avatar != null and !artisan.avatar.isBlank()}" th:src="${artisan.avatar}" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                <i th:if="${artisan.avatar == null or artisan.avatar.isBlank()}" class="fa-regular fa-user"></i>
             </div>
 
             <div>
-                <h3>Master Kenji Tanaka</h3>
-
-                <p>
-                    Với hơn 40 năm kinh nghiệm, Master Tanaka là người giữ lửa
-                    cho phong cách Shimpaku truyền thống tại vườn Omiya.
+                <h3 th:text="${artisan.fullName}">Nghệ Nhân</h3>
+                <p th:if="${iter.index == 0}" th:text="${#locale.language == 'en' ? 'Master artisan specializing in Northern Vietnam heritage bonsai shapes with over 35 years of dedication.' : 'Nghệ nhân ưu tú chuyên kiến tạo các dáng thế bonsai truyền thống Bắc Bộ với hơn 35 năm tâm huyết.'}">
+                    Nghệ nhân ưu tú chuyên kiến tạo các dáng thế bonsai truyền thống Bắc Bộ với hơn 35 năm tâm huyết.
                 </p>
-            </div>
-        </div>
-
-        <div class="master-card">
-            <div class="master-icon">
-                <i class="fa-regular fa-user"></i>
-            </div>
-
-            <div>
-                <h3>Master Hiroshi Sato</h3>
-
-                <p>
-                    Chuyên gia về các dòng thông đen (Kuro-Matsu), ông nổi tiếng
-                    với kỹ thuật tạo hình "Wabi-Sabi" đầy chiều sâu.
+                <p th:if="${iter.index != 0}" th:text="${#locale.language == 'en' ? 'Legacy artisan renowned for precision styling, root structure, and curation of old trees.' : 'Nghệ nhân di sản nổi tiếng với kỹ thuật tạo tác rễ cảnh bám đá và nghệ thuật chăm sóc cây phôi lâu năm.'}">
+                    Nghệ nhân di sản nổi tiếng với kỹ thuật tạo tác rễ cảnh bám đá và nghệ thuật chăm sóc cây phôi lâu năm.
                 </p>
             </div>
         </div>
@@ -213,27 +200,22 @@
 <section class="standard">
 
     <div class="standard-img">
-        <img src="/images/tools.png" alt="Bonsai Garden">
+        <img src="/images/nam_dinh_bonsai_garden.png" alt="Nam Dinh Bonsai Garden">
     </div>
 
     <div class="standard-info">
 
-        <h2>
-            Di Sản Nhà Vườn Bonsai
+        <h2 th:text="#{home.heritage.title}">
+            Di Sản Bonsai Nam Định
         </h2>
 
-        <p class="standard-desc">
-            Trải rộng trên diện tích hàng ngàn mét vuông, nhà vườn Bonsai là nơi lưu giữ
-            những kiệt tác bonsai trăm tuổi trong không gian kiến trúc Nhật Bản truyền thống.
-
-            Mỗi góc vườn đều được thiết kế tỉ mỉ để tạo ra sự giao thoa hoàn hảo giữa thiên
-            nhiên và nghệ thuật, mang đến trải nghiệm tĩnh lặng tuyệt đối cho khách tham quan.
+        <p class="standard-desc" th:text="#{home.heritage.desc}">
+            Hải Hậu, Nam Định từ lâu đã được mệnh danh là cái nôi của nghệ thuật tạo hình cây cảnh truyền thống Việt Nam. Trải qua hàng thế kỷ, các thế hệ nghệ nhân đất học Hải Hậu đã thổi hồn vào những gốc cây Sanh Nam Điền mộc mạc, tạo nên những tác phẩm danh bất hư truyền. Điểm đặc trưng của nghệ thuật bonsai nơi đây là kỹ thuật ký đá tinh xảo và tạo tác dáng thế nghiêm cẩn, phản ánh cốt cách kiên cường và thanh cao của con người đất Bắc. Chơi cây nghệ thuật tại Hải Hậu không chỉ là một thú chơi tao nhã, mà đã trở thành di sản văn hóa, dòng chảy gia tộc được trao truyền qua nhiều thế hệ.
         </p>
 
         <div class="quote-box">
             <blockquote>
-                "Mỗi tác phẩm đều đi kèm chứng nhận định danh và bộ hướng dẫn chăm sóc
-                chuyên biệt từ nghệ nhân."
+                "<span th:text="#{home.heritage.quote}">Mỗi tác phẩm từ Minh Kỷ Garden đều mang đậm dấu ấn văn hóa và tâm huyết của các nghệ nhân đất Nam Định.</span>"
             </blockquote>
         </div>
 

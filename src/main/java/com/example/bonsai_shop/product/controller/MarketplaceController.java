@@ -148,6 +148,7 @@ public class MarketplaceController {
                 product.getCreatedBy() == null ? null : product.getCreatedBy().getUserId()
         ));
         model.addAttribute("journalEvents", productJournalService.getPublicEvents(product));
+        model.addAttribute("relatedProducts", productService.getRelatedProducts(product, 4));
         model.addAttribute("activePage", "marketplace");
         return "product/product-detail";
     }

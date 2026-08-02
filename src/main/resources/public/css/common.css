@@ -375,6 +375,16 @@ h1, h2, h3, h4, h5, h6, .serif-text {
     font-weight: 900;
 }
 
+.btn-action-square.active {
+    color: #e53e3e !important;
+    background-color: #fff5f5 !important;
+    border-color: #feb2b2 !important;
+}
+
+.btn-action-square.active i {
+    font-weight: 900 !important;
+}
+
 .card-content {
     padding: 16px;
     display: flex;

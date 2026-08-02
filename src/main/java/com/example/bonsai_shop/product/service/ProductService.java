@@ -142,6 +142,64 @@ public class ProductService {
                 .findTop5ByProductStatusAndIsVisibleTrueOrderByViewCountDesc("AVAILABLE");
     }
 
+    @Transactional(readOnly = true)
+    public List<Product> getRelatedProducts(Product product, int limit) {
+        if (product == null || product.getVariety() == null) {
+            return List.of();
+        }
+        Integer varietyId = product.getVariety().getVarietyId();
+        Integer currentProductId = product.getProductId();
+        
+        final List<Product> relatedByVariety = productRepository.findAll().stream()
+                .filter(p -> p.getVariety() != null 
+                        && varietyId.equals(p.getVariety().getVarietyId())
+                        && !currentProductId.equals(p.getProductId())
+                        && !Boolean.FALSE.equals(p.getIsVisible())
+                        && !"DRAFT".equalsIgnoreCase(p.getProductStatus()))
+                .limit(limit)
+                .toList();
+                
+        List<Product> related = new java.util.ArrayList<>(relatedByVariety);
+                
+        if (related.size() < limit && product.getVariety().getCategory() != null) {
+            Integer categoryId = product.getVariety().getCategory().getCategoryId();
+            final List<Product> currentRelated = List.copyOf(related);
+            List<Product> additional = productRepository.findAll().stream()
+                    .filter(p -> p.getVariety() != null 
+                            && p.getVariety().getCategory() != null
+                            && categoryId.equals(p.getVariety().getCategory().getCategoryId())
+                            && !currentProductId.equals(p.getProductId())
+                            && !Boolean.FALSE.equals(p.getIsVisible())
+                            && !"DRAFT".equalsIgnoreCase(p.getProductStatus())
+                            && !currentRelated.contains(p))
+                    .limit(limit - related.size())
+                    .toList();
+            
+            related.addAll(additional);
+        }
+        
+        if (related.size() < limit) {
+            final List<Product> currentRelated = List.copyOf(related);
+            List<Product> fallback = productRepository.findAll().stream()
+                    .filter(p -> !currentProductId.equals(p.getProductId())
+                            && !Boolean.FALSE.equals(p.getIsVisible())
+                            && !"DRAFT".equalsIgnoreCase(p.getProductStatus())
+                            && !currentRelated.contains(p))
+                    .limit(limit - related.size())
+                    .toList();
+            related.addAll(fallback);
+        }
+        
+        related.forEach(p -> {
+            if (p.getProductMedias() != null) {
+                p.getProductMedias().size();
+            }
+        });
+        
+        return related;
+    }
+
+
     private ProductMediaDTO toProductMediaDTO(ProductMedia media) {
         return new ProductMediaDTO(
                 media.getMediaId(),

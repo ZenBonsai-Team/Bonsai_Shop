@@ -51,6 +51,13 @@ public class HomeController {
         List<Product> topProducts = productService.getTop5MostViewed();
         model.addAttribute("topProducts", topProducts);
 
+        // Lấy danh sách nghệ nhân từ DB
+        List<User> artisans = userRepository.findFeaturedArtisans();
+        if (artisans.isEmpty()) {
+            artisans = userRepository.findByRoleRoleId(3); // 3: ARTISAN
+        }
+        model.addAttribute("artisans", artisans);
+
         // Lấy email user nếu đã đăng nhập
         if (principal instanceof UserDetails userDetails) {
             model.addAttribute("email", userDetails.getUsername());
