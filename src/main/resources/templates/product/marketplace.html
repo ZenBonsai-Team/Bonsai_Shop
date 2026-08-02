@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="vi">
 <head>
@@ -292,9 +292,10 @@
             <!-- Product Card Grid (4 columns on desktop) -->
             <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-xl-4 g-3">
 
-                <!-- DYNAMIC PRODUCT CARDS LOOP -->
                 <div class="col" th:each="product : ${products}">
                     <div class="product-card"
+                         style="cursor: pointer;"
+                         th:onclick="|if(!event.target.closest('.card-btn-wishlist, .btn-card-cart-icon, video, a, button')) { window.location.href='@{/product/{id}(id=${product.productId})}' }|"
                          th:with="primaryMediaUrl=${product.primaryMediaUrl},
                                   primaryMediaType=${product.primaryMediaType},
                                   isMidSegment=${product.midSegment}"
@@ -314,7 +315,7 @@
                             Wishlist icon kept UI-only.
                             Reason: Wishlist interaction logic is not requested for this task.
                             -->
-                            <button class="card-btn-wishlist" title="Yêu thích"><i class="fa-regular fa-heart"></i></button>
+                            <button class="card-btn-wishlist" th:data-product-id="${product.productId}" title="Yêu thích"><i class="fa-regular fa-heart"></i></button>
                             
                             <span class="card-segment-ribbon" th:if="${isMidSegment}">
                                 <i class="fa-solid fa-gem"></i> <span th:text="#{product.selected}">Selected</span>
@@ -782,6 +783,40 @@
             if (block) {
                 block.classList.toggle('collapsed');
             }
+        });
+    });
+
+    // Wishlist Heart Icon Toggle with Local Storage persistence
+    const wishlistButtons = document.querySelectorAll('.card-btn-wishlist');
+    let favorites = JSON.parse(localStorage.getItem('wishlist_favorites')) || [];
+
+    // Initialize wishlist state from localStorage
+    wishlistButtons.forEach(btn => {
+        const productId = btn.getAttribute('data-product-id');
+        if (favorites.includes(productId)) {
+            btn.classList.add('active');
+            const icon = btn.querySelector('i');
+            if (icon) {
+                icon.className = 'fa-solid fa-heart';
+            }
+        }
+
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const prodId = btn.getAttribute('data-product-id');
+            btn.classList.toggle('active');
+            const icon = btn.querySelector('i');
+            
+            if (btn.classList.contains('active')) {
+                if (icon) icon.className = 'fa-solid fa-heart';
+                if (!favorites.includes(prodId)) {
+                    favorites.push(prodId);
+                }
+            } else {
+                if (icon) icon.className = 'fa-regular fa-heart';
+                favorites = favorites.filter(id => id !== prodId);
+            }
+            localStorage.setItem('wishlist_favorites', JSON.stringify(favorites));
         });
     });
 </script>
