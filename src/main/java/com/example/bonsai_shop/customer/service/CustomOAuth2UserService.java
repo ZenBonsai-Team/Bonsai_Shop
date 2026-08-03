@@ -63,7 +63,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             if (roleName != null) {
                 String normRole = roleName.trim().toUpperCase(Locale.ROOT);
                 if (!"CUSTOMER".equals(normRole) && !"ROLE_CUSTOMER".equals(normRole)) {
-                    throw new OAuth2AuthenticationException("Tài khoản quản trị/nhân viên bắt buộc phải đăng nhập bằng mật khẩu!");
+                    throw new OAuth2AuthenticationException("Tài khoản của bạn không thể đăng nhập bằng phương thức này");
                 }
             }
         }
