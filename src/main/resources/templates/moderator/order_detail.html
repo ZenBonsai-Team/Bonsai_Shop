@@ -218,6 +218,17 @@
                 background: #f7f8fa;
                 color: var(--od-text-muted);
             }
+            .od-form-input.is-invalid {
+                border-color: #e53e3e;
+                box-shadow: 0 0 0 2px rgba(229, 62, 62, 0.12);
+            }
+            .od-field-error {
+                display: none;
+                color: #c53030;
+                font-size: 12px;
+                line-height: 1.35;
+            }
+            .od-field-error.show { display: block; }
             .od-form-summary { margin-top: 10px; border-top: 1px solid var(--od-border); padding-top: 10px; }
             .od-form-summary .od-meta-row { padding: 6px 0; }
             .od-inline-actions { display: grid; grid-template-columns: 1fr; gap: 8px; margin-top: 12px; }
@@ -691,19 +702,18 @@
                     <div th:if="${order.canApprove or order.canReject or order.canReturnInventory}" class="od-form-grid">
                         <div class="od-form-field">
                             <label class="od-form-label" for="approvalDepositAmount">Tiền đặt cọc</label>
-                            <input id="approvalDepositAmount" class="od-form-input" type="number" min="0" step="1">
+                            <input id="approvalDepositAmount" class="od-form-input js-money-input" type="text" inputmode="numeric" autocomplete="off" data-error-id="approvalDepositAmountError">
+                            <div id="approvalDepositAmountError" class="od-field-error"></div>
                         </div>
                         <div class="od-form-field">
                             <label class="od-form-label" for="approvalShippingFee">Phí vận chuyển</label>
-                            <input id="approvalShippingFee" class="od-form-input" type="number" min="0" step="1" value="0">
+                            <input id="approvalShippingFee" class="od-form-input js-money-input" type="text" inputmode="numeric" autocomplete="off" data-error-id="approvalShippingFeeError" value="0">
+                            <div id="approvalShippingFeeError" class="od-field-error"></div>
                         </div>
                         <div class="od-form-field">
                             <label class="od-form-label" for="approvalCraneFee">Phí xe cẩu</label>
-                            <input id="approvalCraneFee" class="od-form-input" type="number" min="0" step="1" value="0">
-                        </div>
-                        <div class="od-form-field">
-                            <label class="od-form-label" for="approvalReason">Lý do bổ sung (không bắt buộc)</label>
-                            <textarea id="approvalReason" class="od-form-textarea" rows="3" placeholder="Nhập lý do nếu cần"></textarea>
+                            <input id="approvalCraneFee" class="od-form-input js-money-input" type="text" inputmode="numeric" autocomplete="off" data-error-id="approvalCraneFeeError" value="0">
+                            <div id="approvalCraneFeeError" class="od-field-error"></div>
                         </div>
                     </div>
 
@@ -900,11 +910,41 @@
             return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(Number(value || 0));
         }
 
-        function readAmount(id) {
+        function formatMoneyInputValue(value) {
+            const digits = String(value ?? '').replace(/\D/g, '');
+            if (digits === '') return '';
+            return new Intl.NumberFormat('en-US').format(Number(digits));
+        }
+
+        function normalizeMoneyInput(el) {
+            if (!el) return;
+            el.value = formatMoneyInputValue(el.value);
+        }
+
+        function setFieldError(id, message) {
             const el = document.getElementById(id);
-            if (!el || el.disabled) return 0;
-            const raw = String(el.value || '').trim();
-            return raw === '' ? 0 : (Number(raw) || 0);
+            if (!el) return;
+            const errorEl = document.getElementById(el.dataset.errorId || `${id}Error`);
+            el.classList.toggle('is-invalid', Boolean(message));
+            if (errorEl) {
+                errorEl.textContent = message || '';
+                errorEl.classList.toggle('show', Boolean(message));
+            }
+        }
+
+        function clearFieldError(id) {
+            setFieldError(id, '');
+        }
+
+        function readRawAmount(id) {
+            const el = document.getElementById(id);
+            if (!el || el.disabled) return '';
+            return String(el.value || '').replace(/,/g, '').trim();
+        }
+
+        function readAmount(id) {
+            const raw = readRawAmount(id);
+            return raw === '' ? 0 : Number(raw);
         }
 
         function syncDepositField() {
@@ -912,10 +952,11 @@
             if (!depositEl) return;
             if (IS_COD) {
                 depositEl.disabled = false;
-                depositEl.value = BASE_DEPOSIT > 0 ? BASE_DEPOSIT : '';
+                depositEl.value = BASE_DEPOSIT > 0 ? formatMoneyInputValue(BASE_DEPOSIT) : '';
             } else {
                 depositEl.disabled = true;
-                depositEl.value = 0;
+                depositEl.value = formatMoneyInputValue(0);
+                clearFieldError('approvalDepositAmount');
             }
         }
 
@@ -923,10 +964,10 @@
             const shippingEl = document.getElementById('approvalShippingFee');
             const craneEl = document.getElementById('approvalCraneFee');
             if (shippingEl && String(shippingEl.value || '').trim() === '') {
-                shippingEl.value = BASE_SHIPPING_FEE || 0;
+                shippingEl.value = formatMoneyInputValue(BASE_SHIPPING_FEE || 0);
             }
             if (craneEl && String(craneEl.value || '').trim() === '') {
-                craneEl.value = BASE_CRANE_FEE || 0;
+                craneEl.value = formatMoneyInputValue(BASE_CRANE_FEE || 0);
             }
         }
 
@@ -950,24 +991,48 @@
         }
 
         function validateApprovalInput() {
-            const depositEl = document.getElementById('approvalDepositAmount');
-            if (IS_COD) {
-                const deposit = readAmount('approvalDepositAmount');
-                if (!depositEl || deposit <= 0) {
-                    alert('Vui lòng nhập số tiền đặt cọc trước khi duyệt đơn COD.');
-                    if (depositEl) depositEl.focus();
-                    return false;
+            let isValid = true;
+            const validateMoneyField = (id, label, required) => {
+                const el = document.getElementById(id);
+                if (!el || el.disabled) {
+                    clearFieldError(id);
+                    return 0;
                 }
-                const crane = readAmount('approvalCraneFee');
-                const shipping = readAmount('approvalShippingFee');
+                const rawValue = String(el.value || '').trim();
+                const raw = readRawAmount(id);
+                let message = '';
+
+                if (required && raw === '') {
+                    message = `Vui lòng nhập ${label}.`;
+                } else if (rawValue.includes('-')) {
+                    message = 'Số tiền không được là số âm.';
+                } else if (rawValue.includes('.')) {
+                    message = 'Số tiền phải là số nguyên.';
+                } else if (raw !== '' && !/^\d+$/.test(raw)) {
+                    message = 'Số tiền chỉ được nhập số nguyên không âm.';
+                }
+
+                setFieldError(id, message);
+                if (message) isValid = false;
+                return raw === '' ? 0 : Number(raw);
+            };
+
+            const crane = validateMoneyField('approvalCraneFee', 'phí xe cẩu', false);
+            const shipping = validateMoneyField('approvalShippingFee', 'phí vận chuyển', false);
+            const deposit = validateMoneyField('approvalDepositAmount', 'tiền đặt cọc', IS_COD);
+
+            if (IS_COD) {
                 const orderTotal = BASE_TREE_PRICE + crane + shipping;
                 if (deposit > orderTotal) {
-                    alert('Tiền đặt cọc không được lớn hơn tổng giá trị đơn hàng.');
-                    if (depositEl) depositEl.focus();
-                    return false;
+                    setFieldError('approvalDepositAmount', `Tiền đặt cọc không được vượt quá ${formatCurrency(orderTotal)}.`);
+                    isValid = false;
                 }
             }
-            return true;
+
+            if (!isValid) {
+                document.querySelector('.od-form-input.is-invalid')?.focus();
+            }
+            return isValid;
         }
 
         function readText(id) {
@@ -992,7 +1057,6 @@
         function buildApprovalPayload() {
             return {
                 action: 'approve',
-                reason: readText('approvalReason'),
                 craneFee: readAmount('approvalCraneFee'),
                 shippingFee: readAmount('approvalShippingFee'),
                 depositAmount: IS_COD ? readAmount('approvalDepositAmount') : 0
@@ -1012,6 +1076,20 @@
                 needNow: deposit,
                 remaining: Math.max(0, orderTotal - deposit)
             };
+        }
+
+        function handleMoneyBeforeInput(event) {
+            if (event.inputType && event.inputType.startsWith('delete')) return;
+            if (event.inputType === 'insertFromPaste') return;
+            if (event.data && !/^\d+$/.test(event.data)) {
+                event.preventDefault();
+            }
+        }
+
+        function handleMoneyInput(event) {
+            normalizeMoneyInput(event.target);
+            clearFieldError(event.target.id);
+            updateApprovalSummary();
         }
 
         let pendingConfirmAction = null;
@@ -1378,12 +1456,22 @@
         const approvalShipping = document.getElementById('approvalShippingFee');
         const approvalDeposit = document.getElementById('approvalDepositAmount');
 
-        if (approvalCrane) approvalCrane.addEventListener('input', updateApprovalSummary);
-        if (approvalShipping) approvalShipping.addEventListener('input', updateApprovalSummary);
-        if (approvalDeposit) approvalDeposit.addEventListener('input', updateApprovalSummary);
+        [approvalCrane, approvalShipping, approvalDeposit].forEach(input => {
+            if (!input) return;
+            input.addEventListener('beforeinput', handleMoneyBeforeInput);
+            input.addEventListener('input', handleMoneyInput);
+            input.addEventListener('paste', () => {
+                window.setTimeout(() => {
+                    normalizeMoneyInput(input);
+                    clearFieldError(input.id);
+                    updateApprovalSummary();
+                }, 0);
+            });
+        });
 
         syncFeeFields();
         syncDepositField();
+        [approvalCrane, approvalShipping, approvalDeposit].forEach(normalizeMoneyInput);
         updateApprovalSummary();
     </script>
 </th:block>

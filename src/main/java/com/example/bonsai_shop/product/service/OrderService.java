@@ -249,6 +249,7 @@ public class OrderService {
             if (depositAmount == null || depositAmount.compareTo(ZERO) <= 0) {
                 throw new IllegalArgumentException("Vui lòng nhập số tiền đặt cọc.");
             }
+            validateWholeNumberAmount(depositAmount, "Tiền đặt cọc");
             if (depositAmount.compareTo(newTotal) > 0) {
                 throw new IllegalArgumentException("Số tiền đặt cọc không được vượt quá tổng giá trị cây.");
             }
@@ -695,7 +696,14 @@ public class OrderService {
         if (normalized.compareTo(ZERO) < 0) {
             throw new IllegalArgumentException(label + " khÃ´ng Ä‘Æ°á»£c Ã¢m.");
         }
+        validateWholeNumberAmount(normalized, label);
         return normalized;
+    }
+
+    private void validateWholeNumberAmount(BigDecimal amount, String label) {
+        if (amount != null && amount.stripTrailingZeros().scale() > 0) {
+            throw new IllegalArgumentException(label + " phải là số nguyên.");
+        }
     }
 
     @Transactional
