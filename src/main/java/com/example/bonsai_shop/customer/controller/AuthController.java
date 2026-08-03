@@ -28,17 +28,22 @@ public class AuthController {
     // ===== TRANG LOGIN =====
     @GetMapping("/login")
     public String loginPage(
-            @RequestParam(required = false) String error, String logout,
+            @RequestParam(required = false) String error,
+            @RequestParam(required = false) String logout,
+            HttpServletRequest request,
             Model model) {
 
         if (error != null) {
-            model.addAttribute(
-                    "error1",
-                    "Sai tài khoản, mật khẩu hoặc tài khoản chưa kích hoạt");
+            Object exception = request.getSession().getAttribute("SPRING_SECURITY_LAST_EXCEPTION");
+            String errorMsg = "Sai tài khoản, mật khẩu hoặc tài khoản chưa kích hoạt";
+            if (exception instanceof Exception ex) {
+                errorMsg = ex.getMessage();
+            }
+            model.addAttribute("errorMsg", errorMsg);
         }
 
-        if(logout != null){
-            model.addAttribute("success",  "Đăng xuất thành công!");
+        if (logout != null) {
+            model.addAttribute("success", "Đăng xuất thành công!");
         }
 
         return "customer/login";

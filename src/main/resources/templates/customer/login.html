@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" th:lang="${#locale.language}">
 <head>
     <meta charset="UTF-8">
@@ -50,7 +50,7 @@
 
             <!-- THÔNG BÁO LỖI -->
             <div th:if="${param.error}" class="alert alert-error">
-                ❌ Email hoặc mật khẩu không đúng!
+                ❌ <span th:text="${errorMsg != null ? errorMsg : 'Email hoặc mật khẩu không đúng!'}">Email hoặc mật khẩu không đúng!</span>
             </div>
             <div th:if="${param.logout}" class="alert alert-success">
                 ✅ Đăng xuất thành công!
