@@ -49,7 +49,6 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class OrderService {
 
-    public static final BigDecimal MAX_ORDER_AMOUNT = new BigDecimal("200000000");
     private static final String STATUS_PENDING_PAYMENT = "PENDING_PAYMENT";
     private static final String STATUS_PENDING = "PENDING";
     private static final BigDecimal ZERO = BigDecimal.ZERO;
@@ -445,27 +444,6 @@ public class OrderService {
         return productsToBuy;
     }
 
-    public void validateOrderLimit(List<Product> products) {
-        BigDecimal totalAmount = products.stream()
-                .map(Product::getPrice)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-        if (totalAmount.compareTo(MAX_ORDER_AMOUNT) > 0) {
-            throw new IllegalArgumentException(
-                    "Tổng giá trị đơn hàng vượt quá giới hạn tối đa cho phép (tối đa 200.000.000 VNĐ)!");
-        }
-    }
-
-    public void validateOrderLimit(PurchaseOrderRequestDTO dto, User customer) {
-        validateOrderLimit(resolveProductsToBuy(dto, customer));
-    }
-
-    public void validateProductIdsLimit(List<Integer> productIds) {
-        if (productIds == null || productIds.isEmpty()) {
-            return;
-        }
-        validateOrderLimit(productRepository.findAllById(productIds));
-    }
-
     public List<Product> getProductsByIds(List<Integer> productIds) {
         if (productIds == null || productIds.isEmpty()) {
             return new ArrayList<>();
@@ -494,8 +472,6 @@ public class OrderService {
         if (productsToBuy.isEmpty()) {
             throw new IllegalArgumentException("Giỏ hàng của bạn đang trống! Vui lòng chọn sản phẩm trước.");
         }
-
-        validateOrderLimit(productsToBuy);
 
         for (Product prod : productsToBuy) {
             if (!"AVAILABLE".equalsIgnoreCase(prod.getProductStatus())) {
