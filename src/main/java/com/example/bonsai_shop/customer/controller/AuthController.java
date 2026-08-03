@@ -42,7 +42,7 @@ public class AuthController {
                     if (rawMsg.contains("authorization_request_not_found")) {
                         errorMsg = "Yêu cầu đăng nhập đã hết hạn hoặc không hợp lệ. Vui lòng thử lại.";
                     } else {
-                        errorMsg = rawMsg;
+                        errorMsg = rawMsg.replace("[", "").replace("]", "");
                     }
                 }
             }
