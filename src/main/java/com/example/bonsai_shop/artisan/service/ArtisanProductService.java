@@ -38,6 +38,9 @@ public class ArtisanProductService {
     private static final SecureRandom RANDOM = new SecureRandom();
     private static final String CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
     private static final Set<String> VALID_SHOT_TYPES = Set.of("FRONT", "BACK", "LEFT", "RIGHT", "DETAIL", "TRUNK", "BRANCH", "POT", "OVERVIEW");
+    private static final int MAX_MEDIA_PER_UPLOAD = 10;
+    private static final long MAX_IMAGE_SIZE_BYTES = 5L * 1024 * 1024;
+    private static final long MAX_VIDEO_SIZE_BYTES = 100L * 1024 * 1024;
 
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
@@ -169,6 +172,8 @@ public class ArtisanProductService {
     }
 
     public List<ProductMedia> getMedia(Product product) {
+        List<ProductMedia> mediaList = productMediaRepository.findByProductOrderByDisplayOrderAscMediaIdAsc(product);
+        ensureImageThumbnail(mediaList);
         return productMediaRepository.findByProductOrderByDisplayOrderAscMediaIdAsc(product);
     }
 
@@ -181,11 +186,15 @@ public class ArtisanProductService {
                          Boolean isThumbnail) {
         Product product = getMyProduct(artisanEmail, productId);
         ensureEditable(product);
-        String mediaUrl = mediaStorageService.storeProductMedia(file);
         String mediaType = resolveMediaType(file);
+        validateMediaFile(file, mediaType);
+        if (Boolean.TRUE.equals(isThumbnail) && "VIDEO".equals(mediaType)) {
+            throw new RuntimeException("Video không thể đặt làm media đại diện!");
+        }
         String normalizedShotType = normalizeShotType(slotType, mediaType);
+        String mediaUrl = mediaStorageService.storeProductMedia(file);
         List<ProductMedia> existingMedia = productMediaRepository.findByProductOrderByDisplayOrderAscMediaIdAsc(product);
-        boolean shouldSetThumbnail = Boolean.TRUE.equals(isThumbnail) || existingMedia.isEmpty();
+        boolean shouldSetThumbnail = "IMAGE".equals(mediaType) && (Boolean.TRUE.equals(isThumbnail) || existingMedia.isEmpty());
 
         if (shouldSetThumbnail) {
             existingMedia.forEach(media -> {
@@ -221,6 +230,9 @@ public class ArtisanProductService {
         if (files == null || files.isEmpty()) {
             throw new RuntimeException("Vui lòng chọn ít nhất một file media!");
         }
+        if (files.size() > MAX_MEDIA_PER_UPLOAD) {
+            throw new RuntimeException("Mỗi lần chỉ được tải lên tối đa " + MAX_MEDIA_PER_UPLOAD + " media!");
+        }
 
         if (files.stream().anyMatch(file -> file == null || file.isEmpty())) {
             throw new RuntimeException("Vui lòng chọn file cho tất cả mục media!");
@@ -234,7 +246,7 @@ public class ArtisanProductService {
 
         List<ProductMedia> existingMedia = productMediaRepository.findByProductOrderByDisplayOrderAscMediaIdAsc(product);
         int nextDisplayOrder = getNextDisplayOrder(existingMedia);
-        int selectedThumbnailIndex = thumbnailIndex == null ? (existingMedia.isEmpty() ? 0 : -1) : thumbnailIndex;
+        int selectedThumbnailIndex = thumbnailIndex == null ? findDefaultThumbnailIndex(files, mediaTypes, existingMedia.isEmpty()) : thumbnailIndex;
 
         if (selectedThumbnailIndex >= 0) {
             existingMedia.forEach(media -> {
@@ -246,6 +258,10 @@ public class ArtisanProductService {
         for (int index = 0; index < files.size(); index++) {
             MultipartFile file = files.get(index);
             String mediaType = resolveMediaType(file, getListValue(mediaTypes, index));
+            validateMediaFile(file, mediaType);
+            if (index == selectedThumbnailIndex && "VIDEO".equals(mediaType)) {
+                throw new RuntimeException("Video không thể đặt làm media đại diện!");
+            }
             String normalizedShotType = normalizeShotType(getListValue(slotTypes, index), mediaType);
             String mediaUrl = mediaStorageService.storeProductMedia(file);
 
@@ -271,6 +287,9 @@ public class ArtisanProductService {
         ensureEditable(product);
         ProductMedia selected = productMediaRepository.findByMediaIdAndProduct(mediaId, product)
                 .orElseThrow(() -> new RuntimeException("Media không tồn tại!"));
+        if (!"IMAGE".equals(selected.getMediaType())) {
+            throw new RuntimeException("Chỉ ảnh mới có thể đặt làm ảnh đại diện!");
+        }
 
         productMediaRepository.findByProductOrderByDisplayOrderAscMediaIdAsc(product)
                 .forEach(media -> {
@@ -306,6 +325,7 @@ public class ArtisanProductService {
             }
             productMediaRepository.save(media);
         }
+        ensureImageThumbnail(productMediaRepository.findByProductOrderByDisplayOrderAscMediaIdAsc(product));
     }
 
     @Transactional
@@ -320,6 +340,7 @@ public class ArtisanProductService {
 
         if (Boolean.TRUE.equals(media.getIsThumbnail())) {
             productMediaRepository.findByProductOrderByDisplayOrderAscMediaIdAsc(product).stream()
+                    .filter(nextThumbnail -> "IMAGE".equals(nextThumbnail.getMediaType()))
                     .findFirst()
                     .ifPresent(nextThumbnail -> {
                         nextThumbnail.setIsThumbnail(true);
@@ -423,6 +444,7 @@ public class ArtisanProductService {
         if (productMediaRepository.findByProductOrderByDisplayOrderAscMediaIdAsc(product).isEmpty()) {
             throw new RuntimeException("Cần ít nhất một ảnh hoặc video trước khi publish.");
         }
+        ensureImageThumbnail(productMediaRepository.findByProductOrderByDisplayOrderAscMediaIdAsc(product));
     }
 
     private void validateRequiredSpecifications(Integer age, Float height, Float trunkDiameter, String style) {
@@ -546,6 +568,65 @@ public class ArtisanProductService {
         }
 
         return "IMAGE";
+    }
+
+    private void validateMediaFile(MultipartFile file, String mediaType) {
+        long maxSize = "VIDEO".equals(mediaType) ? MAX_VIDEO_SIZE_BYTES : MAX_IMAGE_SIZE_BYTES;
+        if (file.getSize() > maxSize) {
+            throw new RuntimeException(("VIDEO".equals(mediaType) ? "Video" : "Ảnh")
+                    + " vượt quá dung lượng tối đa "
+                    + formatMegabytes(maxSize)
+                    + "MB!");
+        }
+    }
+
+    private int findDefaultThumbnailIndex(List<MultipartFile> files, List<String> mediaTypes, boolean shouldSelectDefault) {
+        if (!shouldSelectDefault) {
+            return -1;
+        }
+
+        for (int index = 0; index < files.size(); index++) {
+            if ("IMAGE".equals(resolveMediaType(files.get(index), getListValue(mediaTypes, index)))) {
+                return index;
+            }
+        }
+
+        return -1;
+    }
+
+    private void ensureImageThumbnail(List<ProductMedia> mediaList) {
+        boolean hasVideoThumbnail = mediaList.stream()
+                .anyMatch(media -> Boolean.TRUE.equals(media.getIsThumbnail()) && "VIDEO".equals(media.getMediaType()));
+        boolean hasImageThumbnail = mediaList.stream()
+                .anyMatch(media -> Boolean.TRUE.equals(media.getIsThumbnail()) && "IMAGE".equals(media.getMediaType()));
+
+        if (!hasVideoThumbnail && hasImageThumbnail) {
+            return;
+        }
+
+        ProductMedia firstImage = mediaList.stream()
+                .filter(media -> "IMAGE".equals(media.getMediaType()))
+                .findFirst()
+                .orElse(null);
+
+        if (firstImage == null) {
+            mediaList.stream()
+                    .filter(media -> Boolean.TRUE.equals(media.getIsThumbnail()))
+                    .forEach(media -> {
+                        media.setIsThumbnail(false);
+                        productMediaRepository.save(media);
+                    });
+            return;
+        }
+
+        mediaList.forEach(media -> {
+            media.setIsThumbnail(media.getMediaId().equals(firstImage.getMediaId()));
+            productMediaRepository.save(media);
+        });
+    }
+
+    private long formatMegabytes(long bytes) {
+        return bytes / 1024 / 1024;
     }
 
     private Integer getNextDisplayOrder(List<ProductMedia> existingMedia) {
