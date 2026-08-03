@@ -147,6 +147,13 @@ document.addEventListener('DOMContentLoaded', () => {
             const priorityLabel = order.priorityLabel || window.OrderModeratorLabels?.priority(order.priority) || 'Bình thường';
             const statusLabel = order.orderStatusLabel || window.OrderModeratorLabels?.orderStatus(order.orderStatus) || 'Chờ kiểm duyệt';
             const orderCode = encodeURIComponent(order.orderCode || '');
+            const status = (order.orderStatus || '').toUpperCase();
+            const isTerminalOrder = status === 'COMPLETED' || status === 'CANCELLED';
+            const ageHtml = isTerminalOrder
+                ? `<span class="age-static">${status === 'COMPLETED' ? 'Đã hoàn thành' : 'Đã hủy'}</span>`
+                : `<span class="age-timer-element" data-timestamp="${order.statusTimestamp || ''}">
+                            ${escapeHtml(order.ageFormatted || '-')}
+                        </span>`;
 
             return `
                 <tr>
@@ -169,9 +176,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         </span>
                     </td>
                     <td class="col-age">
-                        <span class="age-timer-element" data-timestamp="${order.statusTimestamp || ''}">
-                            ${escapeHtml(order.ageFormatted || '-')}
-                        </span>
+                        ${ageHtml}
                     </td>
                     <td class="col-status">
                         <span class="badge-status ${statusClass}">
