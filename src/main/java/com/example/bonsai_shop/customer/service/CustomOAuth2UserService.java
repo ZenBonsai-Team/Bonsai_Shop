@@ -57,6 +57,17 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             throw new OAuth2AuthenticationException("Tài khoản đã bị khóa!");
         }
 
+        // Chặn tài khoản quản trị/nhân viên đăng nhập bằng Google để đảm bảo bảo mật
+        if (user.getRole() != null) {
+            String roleName = user.getRole().getRoleName();
+            if (roleName != null) {
+                String normRole = roleName.trim().toUpperCase(Locale.ROOT);
+                if (!"CUSTOMER".equals(normRole) && !"ROLE_CUSTOMER".equals(normRole)) {
+                    throw new OAuth2AuthenticationException("Tài khoản quản trị/nhân viên bắt buộc phải đăng nhập bằng mật khẩu!");
+                }
+            }
+        }
+
         // Tạo authorities từ role của user
         List<SimpleGrantedAuthority> authorities = buildAuthorities(user);
 
