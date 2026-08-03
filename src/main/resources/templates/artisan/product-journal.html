@@ -141,6 +141,7 @@
                     </label>
                     <label>Ảnh/video trạng thái
                         <input type="file" name="files" accept="image/*,video/mp4,video/webm" multiple>
+                        <span class="muted-text">Tối đa 10 media/lần. Ảnh tối đa 5MB, video tối đa 100MB.</span>
                     </label>
                     <label class="checkbox">
                         <input type="checkbox" name="isPublic" value="true" checked>
@@ -214,7 +215,7 @@
                             <form class="journal-add-media" method="post" enctype="multipart/form-data"
                                   th:action="@{/artisan/products/{productId}/journal/{eventId}/media(productId=${product.productId},eventId=${event.eventId})}">
                                 <input type="file" name="files" accept="image/*,video/mp4,video/webm" multiple required>
-                                <button type="submit">Bổ sung ảnh</button>
+                                <button type="submit">Bổ sung media</button>
                             </form>
                             <form method="post" th:action="@{/artisan/products/{productId}/journal/{eventId}/delete(productId=${product.productId},eventId=${event.eventId})}">
                                 <button type="submit" class="text-danger">Xóa cập nhật</button>
@@ -275,6 +276,61 @@
     </main>
 </div>
 <script>
+    const JOURNAL_MAX_MEDIA_PER_UPLOAD = 10;
+    const JOURNAL_MAX_IMAGE_SIZE = 5 * 1024 * 1024;
+    const JOURNAL_MAX_VIDEO_SIZE = 100 * 1024 * 1024;
+
+    function showJournalError(message) {
+        if (window.BSMSToast) {
+            BSMSToast.error(message);
+            return;
+        }
+        alert(message);
+    }
+
+    function isJournalVideo(file) {
+        return file.type.startsWith('video/') || /\.(mp4|webm)$/i.test(file.name);
+    }
+
+    function validateJournalMediaInput(input) {
+        if (!input || !input.files || input.files.length === 0) {
+            return true;
+        }
+
+        const files = Array.from(input.files);
+        if (files.length > JOURNAL_MAX_MEDIA_PER_UPLOAD) {
+            showJournalError('Mỗi lần chỉ được tải lên tối đa 10 media nhật ký.');
+            input.value = '';
+            return false;
+        }
+
+        for (const file of files) {
+            const isVideo = isJournalVideo(file);
+            const maxSize = isVideo ? JOURNAL_MAX_VIDEO_SIZE : JOURNAL_MAX_IMAGE_SIZE;
+            if (file.size > maxSize) {
+                showJournalError((isVideo ? 'Video' : 'Ảnh') + ' nhật ký "' + file.name + '" vượt quá dung lượng tối đa ' + (isVideo ? '100MB.' : '5MB.'));
+                input.value = '';
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    document.addEventListener('change', function (event) {
+        const input = event.target.closest('input[type="file"][name="files"]');
+        if (input) {
+            validateJournalMediaInput(input);
+        }
+    });
+
+    document.addEventListener('submit', function (event) {
+        const input = event.target.querySelector('input[type="file"][name="files"]');
+        if (input && !validateJournalMediaInput(input)) {
+            event.preventDefault();
+        }
+    });
+
     function setJournalSlide(eventId, nextIndex) {
         const stage = document.querySelector('.journal-modal-stage[data-event-id="' + eventId + '"]');
         if (!stage) {

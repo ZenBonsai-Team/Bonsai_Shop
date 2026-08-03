@@ -45,7 +45,7 @@
         <div class="actions media-toolbar">
             <button type="button" class="btn secondary" id="addMediaItemBtn">+ Thêm media khác</button>
         </div>
-        <p class="form-hint">Mỗi mục gồm file, xem trước, góc chụp nếu là ảnh, chú thích và lựa chọn ảnh đại diện. Chỉ chọn được một media làm thumbnail.</p>
+        <p class="form-hint">Mỗi lượt tối đa 10 media. Ảnh tối đa 5MB, video tối đa 100MB. Video không cần góc chụp và không dùng làm media đại diện.</p>
         <button type="submit" id="uploadAllBtn">Tải lên tất cả 1 media</button>
     </form>
 
@@ -59,7 +59,7 @@
             <div class="media-preview-frame">
                 <img th:if="${media.mediaType == 'IMAGE'}" th:src="${media.mediaUrl}" alt="">
                 <video th:if="${media.mediaType == 'VIDEO'}" controls th:src="${media.mediaUrl}"></video>
-                <span th:if="${media.isThumbnail}" class="media-badge">Ảnh đại diện</span>
+                <span th:if="${media.isThumbnail && media.mediaType == 'IMAGE'}" class="media-badge">Ảnh đại diện</span>
             </div>
             <div class="media-card-body">
                 <strong th:text="${media.mediaType}"></strong>
@@ -92,10 +92,11 @@
                 </label>
             </div>
             <div class="actions media-card-actions" th:if="${isEditable}">
-                <form th:if="${!media.isThumbnail}" method="post" th:action="@{/artisan/products/{productId}/media/{mediaId}/thumbnail(productId=${product.productId},mediaId=${media.mediaId})}">
+                <form th:if="${!media.isThumbnail && media.mediaType == 'IMAGE'}" method="post" th:action="@{/artisan/products/{productId}/media/{mediaId}/thumbnail(productId=${product.productId},mediaId=${media.mediaId})}">
                     <button type="submit">Đặt làm ảnh đại diện</button>
                 </form>
-                <span th:if="${media.isThumbnail}" class="media-current-thumbnail">Đang là ảnh đại diện</span>
+                <span th:if="${media.isThumbnail && media.mediaType == 'IMAGE'}" class="media-current-thumbnail">Đang là ảnh đại diện</span>
+                <span th:if="${media.mediaType == 'VIDEO'}" class="media-current-thumbnail">Video không dùng làm ảnh đại diện</span>
                 <form method="post" class="media-delete-form" th:action="@{/artisan/products/{productId}/media/{mediaId}/delete(productId=${product.productId},mediaId=${media.mediaId})}">
                     <button type="submit" class="btn danger">🗑 Xóa media</button>
                 </form>
@@ -120,6 +121,10 @@
     const mediaUploadList = document.getElementById('mediaUploadList');
     const addMediaItemBtn = document.getElementById('addMediaItemBtn');
     const uploadAllBtn = document.getElementById('uploadAllBtn');
+    const mediaUploadForm = document.getElementById('mediaUploadForm');
+    const maxMediaPerUpload = 10;
+    const maxImageSizeBytes = 5 * 1024 * 1024;
+    const maxVideoSizeBytes = 100 * 1024 * 1024;
     const shotTypeOptions = `
         <option value="">-- Chọn góc chụp --</option>
         <option value="FRONT">FRONT - Chính diện</option>
@@ -145,6 +150,9 @@
             item.querySelector('[data-remove-media]').disabled = items.length === 1;
         });
         uploadAllBtn.textContent = `Tải lên tất cả ${items.length} media`;
+        if (addMediaItemBtn) {
+            addMediaItemBtn.disabled = items.length >= maxMediaPerUpload;
+        }
     }
 
     function isVideoUpload(file) {
@@ -161,6 +169,8 @@
         const shotTypeSelect = item.querySelector('select[name="slotTypes"]');
         const shotTypeHidden = item.querySelector('input[data-slot-type-hidden]');
         const mediaTypeInput = item.querySelector('[data-media-type-input]');
+        const thumbnailInput = item.querySelector('[name="thumbnailIndex"]');
+        const thumbnailLabel = item.querySelector('[data-thumbnail-label]');
         const preview = item.querySelector('[data-media-preview]');
         const file = fileInput.files[0];
         const isVideo = isVideoUpload(file);
@@ -169,8 +179,23 @@
         shotTypeSelect.required = !isVideo;
         shotTypeSelect.disabled = isVideo;
         shotTypeHidden.disabled = !isVideo;
+        thumbnailInput.disabled = isVideo;
+        if (isVideo && thumbnailInput.checked) {
+            thumbnailInput.checked = false;
+        }
+        if (thumbnailLabel) {
+            thumbnailLabel.classList.toggle('is-disabled', isVideo);
+        }
         if (isVideo) {
             shotTypeSelect.value = '';
+        }
+        if (!mediaUploadList.querySelector('[name="thumbnailIndex"]:checked')) {
+            const firstImageThumbnail = Array.from(mediaUploadList.querySelectorAll('.media-upload-item'))
+                    .map(uploadItem => uploadItem.querySelector('[name="thumbnailIndex"]'))
+                    .find(input => input && !input.disabled);
+            if (firstImageThumbnail) {
+                firstImageThumbnail.checked = true;
+            }
         }
 
         preview.innerHTML = '<span>Chưa chọn file</span>';
@@ -188,6 +213,12 @@
 
     function createMediaUploadItem() {
         if (!mediaUploadList) {
+            return;
+        }
+        if (mediaUploadList.querySelectorAll('.media-upload-item').length >= maxMediaPerUpload) {
+            if (window.BSMSToast) {
+                BSMSToast.error(`Mỗi lần chỉ được tải lên tối đa ${maxMediaPerUpload} media.`);
+            }
             return;
         }
 
@@ -214,7 +245,7 @@
             <label>Chú thích
                 <input name="captions" placeholder="Nhập chú thích ảnh/video">
             </label>
-            <label class="checkbox">
+            <label class="checkbox" data-thumbnail-label>
                 <input type="radio" name="thumbnailIndex" value="0">
                 Đặt làm media đại diện
             </label>
@@ -244,6 +275,33 @@
 
     addMediaItemBtn?.addEventListener('click', createMediaUploadItem);
     createMediaUploadItem();
+
+    mediaUploadForm?.addEventListener('submit', event => {
+        const items = mediaUploadList.querySelectorAll('.media-upload-item');
+        if (items.length > maxMediaPerUpload) {
+            event.preventDefault();
+            if (window.BSMSToast) {
+                BSMSToast.error(`Mỗi lần chỉ được tải lên tối đa ${maxMediaPerUpload} media.`);
+            }
+            return;
+        }
+
+        for (const item of items) {
+            const file = item.querySelector('[name="files"]').files[0];
+            if (!file) {
+                continue;
+            }
+            const isVideo = isVideoUpload(file);
+            const maxSize = isVideo ? maxVideoSizeBytes : maxImageSizeBytes;
+            if (file.size > maxSize) {
+                event.preventDefault();
+                if (window.BSMSToast) {
+                    BSMSToast.error(`${isVideo ? 'Video' : 'Ảnh'} vượt quá dung lượng tối đa ${maxSize / 1024 / 1024}MB.`);
+                }
+                return;
+            }
+        }
+    });
 
     const existingMediaGrid = document.getElementById('existingMediaGrid');
 

@@ -125,6 +125,12 @@ textarea {
     gap: 8px;
 }
 
+.checkbox.is-disabled {
+    color: #8a948d;
+    cursor: not-allowed;
+    opacity: 0.65;
+}
+
 .actions {
     align-items: center;
     display: flex;
