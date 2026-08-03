@@ -585,6 +585,100 @@ public class OrderService {
     }
 
     @Transactional
+    public boolean processPaymentFailure(String orderCode, String responseCode, String transactionStatus, String source) {
+        Order order = orderRepository.findByOrderCode(orderCode).orElse(null);
+        if (order == null) {
+            return false;
+        }
+
+        Payment pendingPayment = paymentRepository
+                .findTopByOrderOrderIdAndPaymentStatusOrderByPaymentIdDesc(order.getOrderId(), "PENDING")
+                .orElse(null);
+
+        if (pendingPayment == null) {
+            return paymentRepository.findByOrderOrderIdOrderByPaymentIdAsc(order.getOrderId()).stream()
+                    .anyMatch(payment -> "FAILED".equalsIgnoreCase(payment.getPaymentStatus()));
+        }
+
+        pendingPayment.setPaymentStatus("FAILED");
+        pendingPayment.setNotes(buildVnPayFailureNote(responseCode, transactionStatus, source));
+        paymentRepository.save(pendingPayment);
+
+        if (STATUS_PENDING_PAYMENT.equalsIgnoreCase(order.getOrderStatus())) {
+            appendOrderNote(order, "Thanh toán VNPay thất bại. Khách có thể thử thanh toán lại nếu đơn còn hiệu lực.");
+            orderRepository.save(order);
+        }
+
+        return true;
+    }
+
+    @Transactional
+    public Payment preparePendingVnPayPayment(String orderCode) {
+        Order order = orderRepository.findByOrderCode(orderCode)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy đơn hàng: " + orderCode));
+
+        if (!STATUS_PENDING_PAYMENT.equalsIgnoreCase(order.getOrderStatus())) {
+            throw new IllegalStateException("Đơn hàng hiện không ở trạng thái chờ thanh toán.");
+        }
+
+        Payment pendingPayment = paymentRepository
+                .findTopByOrderOrderIdAndPaymentStatusOrderByPaymentIdDesc(order.getOrderId(), "PENDING")
+                .orElse(null);
+        if (pendingPayment != null) {
+            return pendingPayment;
+        }
+
+        List<Payment> payments = paymentRepository.findByOrderOrderIdOrderByPaymentIdAsc(order.getOrderId());
+        Payment latestFailedVnPayPayment = payments.stream()
+                .filter(payment -> PaymentMethod.VNPAY.name().equalsIgnoreCase(payment.getPaymentMethod())
+                        || PaymentType.DEPOSIT.name().equalsIgnoreCase(payment.getPaymentType())
+                        || PaymentType.FULL_PAYMENT.name().equalsIgnoreCase(payment.getPaymentType()))
+                .filter(payment -> "FAILED".equalsIgnoreCase(payment.getPaymentStatus())
+                        || "EXPIRED".equalsIgnoreCase(payment.getPaymentStatus()))
+                .reduce((first, second) -> second)
+                .orElse(null);
+
+        String paymentType = latestFailedVnPayPayment != null && latestFailedVnPayPayment.getPaymentType() != null
+                ? latestFailedVnPayPayment.getPaymentType()
+                : (order.getDepositAmount() != null && order.getDepositAmount().compareTo(ZERO) > 0
+                ? PaymentType.DEPOSIT.name()
+                : PaymentType.FULL_PAYMENT.name());
+
+        BigDecimal amount = latestFailedVnPayPayment != null && latestFailedVnPayPayment.getAmount() != null
+                ? latestFailedVnPayPayment.getAmount()
+                : (PaymentType.DEPOSIT.name().equalsIgnoreCase(paymentType)
+                ? order.getDepositAmount()
+                : order.getTotalAmount());
+
+        if (amount == null || amount.compareTo(ZERO) <= 0) {
+            throw new IllegalStateException("Số tiền thanh toán không hợp lệ.");
+        }
+
+        Payment retryPayment = Payment.builder()
+                .order(order)
+                .paymentType(paymentType)
+                .paymentMethod(PaymentMethod.VNPAY.name())
+                .paymentStatus("PENDING")
+                .amount(amount)
+                .notes("Retry VNPay payment after previous failed/expired attempt")
+                .build();
+        return paymentRepository.save(retryPayment);
+    }
+
+    private String buildVnPayFailureNote(String responseCode, String transactionStatus, String source) {
+        String note = "VNPay payment failed"
+                + " source=" + safeGatewayValue(source)
+                + ", responseCode=" + safeGatewayValue(responseCode)
+                + ", transactionStatus=" + safeGatewayValue(transactionStatus)
+                + ", at=" + LocalDateTime.now();
+        return note.length() > 500 ? note.substring(0, 500) : note;
+    }
+
+    private String safeGatewayValue(String value) {
+        return value == null || value.isBlank() ? "N/A" : value.trim();
+    }
+
+    @Transactional
     public boolean confirmRemainingPayment(String orderCode, String notes, User moderator) {
         Order order = orderRepository.findByOrderCode(orderCode).orElse(null);
         if (order == null) {

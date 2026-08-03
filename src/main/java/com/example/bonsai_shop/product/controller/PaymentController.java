@@ -2,6 +2,7 @@ package com.example.bonsai_shop.product.controller;
 
 import com.example.bonsai_shop.config.VNPayConfig;
 import com.example.bonsai_shop.entity.Order;
+import com.example.bonsai_shop.entity.Payment;
 import com.example.bonsai_shop.entity.Product;
 import com.example.bonsai_shop.product.repository.OrderRepository;
 import com.example.bonsai_shop.product.repository.ProductRepository;
@@ -162,8 +163,9 @@ public class PaymentController {
         // Kiểm tra tính hợp lệ của chữ ký để đảm bảo dữ liệu không bị thay đổi
         if (signValue.equals(vnp_SecureHash)) {
             String responseCode = request.getParameter("vnp_ResponseCode");
-            if ("00".equals(responseCode)) {
-                String orderCode = request.getParameter("vnp_TxnRef");
+            String transactionStatus = request.getParameter("vnp_TransactionStatus");
+            String orderCode = request.getParameter("vnp_TxnRef");
+            if (isSuccessfulVnPayResult(responseCode, transactionStatus)) {
                 orderService.processPaymentSuccess(orderCode);
                 model.addAttribute("status", "SUCCESS");
                 model.addAttribute("message", "Thanh toán giao dịch thành công!");
@@ -171,6 +173,7 @@ public class PaymentController {
                 model.addAttribute("txnRef", orderCode);
                 model.addAttribute("orderInfo", request.getParameter("vnp_OrderInfo"));
             } else {
+                orderService.processPaymentFailure(orderCode, responseCode, transactionStatus, "RETURN_URL");
                 model.addAttribute("status", "FAILED");
                 model.addAttribute("message", "Thanh toán thất bại hoặc đã bị hủy (Mã lỗi: " + responseCode + ")");
             }
@@ -191,13 +194,9 @@ public class PaymentController {
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy đơn hàng: " + orderCode));
 
         // 2. Lấy số tiền từ Payment record PENDING gần nhất (nếu có, ví dụ: Đặt cọc = Deposit + Crane + Ship)
-        com.example.bonsai_shop.entity.Payment pendingPayment = paymentRepository
-                .findTopByOrderOrderIdAndPaymentStatusOrderByPaymentIdDesc(order.getOrderId(), "PENDING")
-                .orElse(null);
+        Payment pendingPayment = orderService.preparePendingVnPayPayment(orderCode);
 
-        long amount = (pendingPayment != null && pendingPayment.getAmount() != null)
-                ? pendingPayment.getAmount().longValue()
-                : order.getTotalAmount().longValue();
+        long amount = pendingPayment.getAmount().longValue();
 
         String vnp_Version = "2.1.0";
         String vnp_Command = "pay";
@@ -275,5 +274,9 @@ public class PaymentController {
         System.out.println("==================================================");
 
         return "redirect:" + paymentUrl;
+    }
+
+    private boolean isSuccessfulVnPayResult(String responseCode, String transactionStatus) {
+        return "00".equals(responseCode) && "00".equals(transactionStatus);
     }
 }
