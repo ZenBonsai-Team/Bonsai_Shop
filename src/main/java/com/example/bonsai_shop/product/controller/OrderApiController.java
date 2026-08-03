@@ -100,14 +100,6 @@ public class OrderApiController {
         if (!productIds.isEmpty()) {
             List<Product> products = orderService.getProductsByIds(productIds);
 
-            try {
-                orderService.validateOrderLimit(products);
-            } catch (IllegalArgumentException e) {
-                response.put("success", false);
-                response.put("message", e.getMessage());
-                return ResponseEntity.badRequest().body(response);
-            }
-
             // UX Validation Layer â€” kiá»ƒm tra tráº¡ng thÃ¡i sáº£n pháº©m
             // LÆ¯U Ã: Ä‘Ã¢y KHÃ”NG pháº£i data guard. reserveIfAvailable() trong createOrder() má»›i lÃ  lá»›p báº£o vá»‡ cuá»‘i cÃ¹ng.
             List<Product> unavailableProducts = orderService.validateProductAvailability(products);
@@ -537,15 +529,6 @@ public class OrderApiController {
             response.put("message",
                     "TÃ i khoáº£n quáº£n trá»‹, nhÃ  vÆ°á»n hoáº·c kiá»ƒm duyá»‡t viÃªn khÃ´ng Ä‘Æ°á»£c phÃ©p thá»±c hiá»‡n Ä‘áº·t hÃ ng!");
             return ResponseEntity.status(403).body(response);
-        }
-
-        // Kiá»ƒm tra giá»›i háº¡n Ä‘Æ¡n hÃ ng (â‰¤ 200 triá»‡u VNÄ) sá»›m trÆ°á»›c khi yÃªu cáº§u/xÃ¡c thá»±c OTP
-        try {
-            orderService.validateOrderLimit(dto, customer);
-        } catch (IllegalArgumentException e) {
-            response.put("success", false);
-            response.put("message", e.getMessage());
-            return ResponseEntity.badRequest().body(response);
         }
 
         // [Má»šI] Pre-validate tráº¡ng thÃ¡i sáº£n pháº©m cho Logged-in User

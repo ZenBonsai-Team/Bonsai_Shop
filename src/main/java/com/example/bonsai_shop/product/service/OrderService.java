@@ -49,7 +49,6 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class OrderService {
 
-    public static final BigDecimal MAX_ORDER_AMOUNT = new BigDecimal("200000000");
     private static final String STATUS_PENDING_PAYMENT = "PENDING_PAYMENT";
     private static final String STATUS_PENDING = "PENDING";
     private static final BigDecimal ZERO = BigDecimal.ZERO;
@@ -249,6 +248,7 @@ public class OrderService {
             if (depositAmount == null || depositAmount.compareTo(ZERO) <= 0) {
                 throw new IllegalArgumentException("Vui lòng nhập số tiền đặt cọc.");
             }
+            validateWholeNumberAmount(depositAmount, "Tiền đặt cọc");
             if (depositAmount.compareTo(newTotal) > 0) {
                 throw new IllegalArgumentException("Số tiền đặt cọc không được vượt quá tổng giá trị cây.");
             }
@@ -444,27 +444,6 @@ public class OrderService {
         return productsToBuy;
     }
 
-    public void validateOrderLimit(List<Product> products) {
-        BigDecimal totalAmount = products.stream()
-                .map(Product::getPrice)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-        if (totalAmount.compareTo(MAX_ORDER_AMOUNT) > 0) {
-            throw new IllegalArgumentException(
-                    "Tổng giá trị đơn hàng vượt quá giới hạn tối đa cho phép (tối đa 200.000.000 VNĐ)!");
-        }
-    }
-
-    public void validateOrderLimit(PurchaseOrderRequestDTO dto, User customer) {
-        validateOrderLimit(resolveProductsToBuy(dto, customer));
-    }
-
-    public void validateProductIdsLimit(List<Integer> productIds) {
-        if (productIds == null || productIds.isEmpty()) {
-            return;
-        }
-        validateOrderLimit(productRepository.findAllById(productIds));
-    }
-
     public List<Product> getProductsByIds(List<Integer> productIds) {
         if (productIds == null || productIds.isEmpty()) {
             return new ArrayList<>();
@@ -493,8 +472,6 @@ public class OrderService {
         if (productsToBuy.isEmpty()) {
             throw new IllegalArgumentException("Giỏ hàng của bạn đang trống! Vui lòng chọn sản phẩm trước.");
         }
-
-        validateOrderLimit(productsToBuy);
 
         for (Product prod : productsToBuy) {
             if (!"AVAILABLE".equalsIgnoreCase(prod.getProductStatus())) {
@@ -608,6 +585,100 @@ public class OrderService {
     }
 
     @Transactional
+    public boolean processPaymentFailure(String orderCode, String responseCode, String transactionStatus, String source) {
+        Order order = orderRepository.findByOrderCode(orderCode).orElse(null);
+        if (order == null) {
+            return false;
+        }
+
+        Payment pendingPayment = paymentRepository
+                .findTopByOrderOrderIdAndPaymentStatusOrderByPaymentIdDesc(order.getOrderId(), "PENDING")
+                .orElse(null);
+
+        if (pendingPayment == null) {
+            return paymentRepository.findByOrderOrderIdOrderByPaymentIdAsc(order.getOrderId()).stream()
+                    .anyMatch(payment -> "FAILED".equalsIgnoreCase(payment.getPaymentStatus()));
+        }
+
+        pendingPayment.setPaymentStatus("FAILED");
+        pendingPayment.setNotes(buildVnPayFailureNote(responseCode, transactionStatus, source));
+        paymentRepository.save(pendingPayment);
+
+        if (STATUS_PENDING_PAYMENT.equalsIgnoreCase(order.getOrderStatus())) {
+            appendOrderNote(order, "Thanh toán VNPay thất bại. Khách có thể thử thanh toán lại nếu đơn còn hiệu lực.");
+            orderRepository.save(order);
+        }
+
+        return true;
+    }
+
+    @Transactional
+    public Payment preparePendingVnPayPayment(String orderCode) {
+        Order order = orderRepository.findByOrderCode(orderCode)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy đơn hàng: " + orderCode));
+
+        if (!STATUS_PENDING_PAYMENT.equalsIgnoreCase(order.getOrderStatus())) {
+            throw new IllegalStateException("Đơn hàng hiện không ở trạng thái chờ thanh toán.");
+        }
+
+        Payment pendingPayment = paymentRepository
+                .findTopByOrderOrderIdAndPaymentStatusOrderByPaymentIdDesc(order.getOrderId(), "PENDING")
+                .orElse(null);
+        if (pendingPayment != null) {
+            return pendingPayment;
+        }
+
+        List<Payment> payments = paymentRepository.findByOrderOrderIdOrderByPaymentIdAsc(order.getOrderId());
+        Payment latestFailedVnPayPayment = payments.stream()
+                .filter(payment -> PaymentMethod.VNPAY.name().equalsIgnoreCase(payment.getPaymentMethod())
+                        || PaymentType.DEPOSIT.name().equalsIgnoreCase(payment.getPaymentType())
+                        || PaymentType.FULL_PAYMENT.name().equalsIgnoreCase(payment.getPaymentType()))
+                .filter(payment -> "FAILED".equalsIgnoreCase(payment.getPaymentStatus())
+                        || "EXPIRED".equalsIgnoreCase(payment.getPaymentStatus()))
+                .reduce((first, second) -> second)
+                .orElse(null);
+
+        String paymentType = latestFailedVnPayPayment != null && latestFailedVnPayPayment.getPaymentType() != null
+                ? latestFailedVnPayPayment.getPaymentType()
+                : (order.getDepositAmount() != null && order.getDepositAmount().compareTo(ZERO) > 0
+                ? PaymentType.DEPOSIT.name()
+                : PaymentType.FULL_PAYMENT.name());
+
+        BigDecimal amount = latestFailedVnPayPayment != null && latestFailedVnPayPayment.getAmount() != null
+                ? latestFailedVnPayPayment.getAmount()
+                : (PaymentType.DEPOSIT.name().equalsIgnoreCase(paymentType)
+                ? order.getDepositAmount()
+                : order.getTotalAmount());
+
+        if (amount == null || amount.compareTo(ZERO) <= 0) {
+            throw new IllegalStateException("Số tiền thanh toán không hợp lệ.");
+        }
+
+        Payment retryPayment = Payment.builder()
+                .order(order)
+                .paymentType(paymentType)
+                .paymentMethod(PaymentMethod.VNPAY.name())
+                .paymentStatus("PENDING")
+                .amount(amount)
+                .notes("Retry VNPay payment after previous failed/expired attempt")
+                .build();
+        return paymentRepository.save(retryPayment);
+    }
+
+    private String buildVnPayFailureNote(String responseCode, String transactionStatus, String source) {
+        String note = "VNPay payment failed"
+                + " source=" + safeGatewayValue(source)
+                + ", responseCode=" + safeGatewayValue(responseCode)
+                + ", transactionStatus=" + safeGatewayValue(transactionStatus)
+                + ", at=" + LocalDateTime.now();
+        return note.length() > 500 ? note.substring(0, 500) : note;
+    }
+
+    private String safeGatewayValue(String value) {
+        return value == null || value.isBlank() ? "N/A" : value.trim();
+    }
+
+    @Transactional
     public boolean confirmRemainingPayment(String orderCode, String notes, User moderator) {
         Order order = orderRepository.findByOrderCode(orderCode).orElse(null);
         if (order == null) {
@@ -695,7 +766,14 @@ public class OrderService {
         if (normalized.compareTo(ZERO) < 0) {
             throw new IllegalArgumentException(label + " khÃ´ng Ä‘Æ°á»£c Ã¢m.");
         }
+        validateWholeNumberAmount(normalized, label);
         return normalized;
+    }
+
+    private void validateWholeNumberAmount(BigDecimal amount, String label) {
+        if (amount != null && amount.stripTrailingZeros().scale() > 0) {
+            throw new IllegalArgumentException(label + " phải là số nguyên.");
+        }
     }
 
     @Transactional

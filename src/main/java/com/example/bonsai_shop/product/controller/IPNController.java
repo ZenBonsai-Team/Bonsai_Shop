@@ -3,6 +3,7 @@ package com.example.bonsai_shop.product.controller;
 import com.example.bonsai_shop.config.VNPayConfig;
 import com.example.bonsai_shop.entity.Order;
 import com.example.bonsai_shop.entity.OrderDetail;
+import com.example.bonsai_shop.entity.Payment;
 import com.example.bonsai_shop.entity.Product;
 import com.example.bonsai_shop.product.repository.OrderRepository;
 import com.example.bonsai_shop.product.repository.ProductRepository;
@@ -83,15 +84,22 @@ public class IPNController {
             boolean checkOrderStatus = false;
 
             if (checkOrderId) {
-                com.example.bonsai_shop.entity.Payment pendingPayment = paymentRepository
+                Payment pendingPayment = paymentRepository
                         .findTopByOrderOrderIdAndPaymentStatusOrderByPaymentIdDesc(order.getOrderId(), "PENDING")
                         .orElse(null);
 
-                long expectedAmount = (pendingPayment != null && pendingPayment.getAmount() != null)
-                        ? pendingPayment.getAmount().longValue() * 100
+                Payment callbackPayment = pendingPayment != null ? pendingPayment : paymentRepository
+                        .findByOrderOrderIdOrderByPaymentIdAsc(order.getOrderId())
+                        .stream()
+                        .filter(payment -> "FAILED".equalsIgnoreCase(payment.getPaymentStatus()))
+                        .reduce((first, second) -> second)
+                        .orElse(null);
+
+                long expectedAmount = (callbackPayment != null && callbackPayment.getAmount() != null)
+                        ? callbackPayment.getAmount().longValue() * 100
                         : order.getTotalAmount().longValue() * 100;
 
-                checkAmount = Math.abs(vnpAmount - expectedAmount) < 1000;
+                checkAmount = vnpAmount == expectedAmount;
                 
                 checkOrderStatus = !"PAID".equalsIgnoreCase(order.getOrderStatus());
                 if (pendingPayment != null && "DEPOSIT".equalsIgnoreCase(pendingPayment.getPaymentType())) {
@@ -104,8 +112,11 @@ public class IPNController {
                 if (checkAmount) {
                     if (checkOrderStatus) {
                         String responseCode = request.getParameter("vnp_ResponseCode");
-                        if ("00".equals(responseCode)) {
+                        String transactionStatus = request.getParameter("vnp_TransactionStatus");
+                        if (isSuccessfulVnPayResult(responseCode, transactionStatus)) {
                             orderService.processPaymentSuccess(orderCode);
+                        } else {
+                            orderService.processPaymentFailure(orderCode, responseCode, transactionStatus, "IPN");
                         }
 
                         response.put("RspCode", "00");
@@ -128,5 +139,9 @@ public class IPNController {
         }
 
         return response;
+    }
+
+    private boolean isSuccessfulVnPayResult(String responseCode, String transactionStatus) {
+        return "00".equals(responseCode) && "00".equals(transactionStatus);
     }
 }
