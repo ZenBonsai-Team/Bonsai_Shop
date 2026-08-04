@@ -46,8 +46,8 @@
         <article class="artisan-metric-card metric-revenue">
             <div class="metric-icon"><i class="fa-solid fa-chart-line"></i></div>
             <div>
-                <span>Doanh thu tháng này</span>
-                <strong class="money-value" th:text="${#numbers.formatDecimal(monthlyRevenue, 0, 'POINT', 0, 'POINT') + ' VNĐ'}">0 VNĐ</strong>
+                <span>Doanh thu ròng tháng này</span>
+                <strong class="money-value" th:text="${#numbers.formatDecimal(monthlyNetRevenue, 0, 'POINT', 0, 'POINT') + ' VNĐ'}">0 VNĐ</strong>
             </div>
         </article>
     </section>
@@ -108,8 +108,43 @@
                 <div class="revenue-summary-card">
                     <span class="summary-icon"><i class="fa-solid fa-wallet"></i></span>
                     <div>
-                        <small>Tổng doanh thu</small>
+                        <small>Doanh thu đơn hoàn thành</small>
                         <strong class="money-value" th:text="${#numbers.formatDecimal(monthlyRevenue, 0, 'POINT', 0, 'POINT') + ' VNĐ'}">0 VNĐ</strong>
+                    </div>
+                </div>
+                <div class="revenue-summary-card">
+                    <span class="summary-icon"><i class="fa-solid fa-hand-holding-dollar"></i></span>
+                    <div>
+                        <small>Cọc khách bỏ</small>
+                        <strong class="money-value" th:text="${#numbers.formatDecimal(monthlyForfeitedDepositIncome, 0, 'POINT', 0, 'POINT') + ' VNĐ'}">0 VNĐ</strong>
+                    </div>
+                </div>
+                <div class="revenue-summary-card">
+                    <span class="summary-icon"><i class="fa-solid fa-rotate-left"></i></span>
+                    <div>
+                        <small>Hoàn lại khách</small>
+                        <strong class="money-value" th:text="${#numbers.formatDecimal(monthlyRefundAmount, 0, 'POINT', 0, 'POINT') + ' VNĐ'}">0 VNĐ</strong>
+                    </div>
+                </div>
+                <div class="revenue-summary-card">
+                    <span class="summary-icon"><i class="fa-solid fa-truck-fast"></i></span>
+                    <div>
+                        <small>Phí ship</small>
+                        <strong class="money-value" th:text="${#numbers.formatDecimal(monthlyShippingFee, 0, 'POINT', 0, 'POINT') + ' VNĐ'}">0 VNĐ</strong>
+                    </div>
+                </div>
+                <div class="revenue-summary-card">
+                    <span class="summary-icon"><i class="fa-solid fa-truck-ramp-box"></i></span>
+                    <div>
+                        <small>Phí cẩu</small>
+                        <strong class="money-value" th:text="${#numbers.formatDecimal(monthlyCraneFee, 0, 'POINT', 0, 'POINT') + ' VNĐ'}">0 VNĐ</strong>
+                    </div>
+                </div>
+                <div class="revenue-summary-card">
+                    <span class="summary-icon"><i class="fa-solid fa-scale-balanced"></i></span>
+                    <div>
+                        <small>Doanh thu ròng</small>
+                        <strong class="money-value" th:text="${#numbers.formatDecimal(monthlyNetRevenue, 0, 'POINT', 0, 'POINT') + ' VNĐ'}">0 VNĐ</strong>
                     </div>
                 </div>
                 <div class="revenue-summary-card">
