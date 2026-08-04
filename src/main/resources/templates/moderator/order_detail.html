@@ -1295,11 +1295,11 @@
         }
 
         function openFaultRefundConfirmation() {
-            const refundAmount100 = GRAND_TOTAL || REFUNDABLE_CASH;
+            const refundAmount100 = REFUNDABLE_CASH;
 
             openConfirmationModal({
                 title: 'Xác nhận chấm dứt đơn và hoàn tiền',
-                description: 'Sau khi xác nhận, đơn hàng sẽ bị chấm dứt, ghi nhận hoàn toàn bộ số tiền đã thanh toán và cây sẽ được trả lại nhà vườn. Hành động này không thể hoàn tác.',
+                description: 'Sau khi xác nhận, đơn hàng sẽ bị chấm dứt và hệ thống ghi nhận hoàn lại toàn bộ số tiền khách đã thực thanh toán cho đơn hàng này. Cây sẽ được trả lại nhà vườn. Hành động này không thể hoàn tác.',
                 confirmLabel: 'Xác nhận chấm dứt và hoàn tiền',
                 danger: true,
                 faultRefund: {
@@ -1308,6 +1308,7 @@
                 },
                 summaryRows: [
                     { label: 'Mã đơn hàng', value: ORDER_CODE },
+                    { label: 'Tổng giá trị đơn hàng', value: formatCurrency(GRAND_TOTAL) },
                     { label: 'Trạng thái sau xử lý', value: 'Đã chấm dứt đơn hàng' }
                 ],
                 buildPayload: ({ faultParty, reason }) => {

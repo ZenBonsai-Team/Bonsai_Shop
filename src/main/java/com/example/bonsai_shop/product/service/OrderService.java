@@ -847,11 +847,6 @@ public class OrderService {
             throw new IllegalStateException("Đơn hàng này không có khoản thanh toán thành công nào còn có thể hoàn tiền.");
         }
 
-        BigDecimal grandTotal = order.getTotalAmount() != null ? order.getTotalAmount() : ZERO;
-        if (grandTotal.compareTo(ZERO) > 0 && refundableCash.compareTo(grandTotal) != 0) {
-            throw new IllegalStateException("Tổng số tiền khách đã thanh toán (" + refundableCash + " đ) và tổng giá trị đơn hàng (" + grandTotal + " đ) không đồng nhất. Vui lòng kiểm tra lại giao dịch!");
-        }
-
         BigDecimal calculatedRefundAmount = refundableCash;
         String normalizedReason = requireReason(reason);
 

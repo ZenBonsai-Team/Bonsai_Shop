@@ -156,6 +156,42 @@ class OrderServiceTest {
     }
 
     @Test
+    void depositRefundRefundsOnlyPaidAmountNotGrandTotal() {
+        User moderator = moderator(15);
+        Product product = product("RESERVED");
+        Order order = assignedOrder("BSMS-DEPOSIT-REFUND", "DEPOSITED", moderator, product);
+        order.setTotalAmount(new BigDecimal("7800000")); // Order total is 7.800.000đ
+        FinancialLedger refund = ledger(order, FinancialLedgerType.FULL_REFUND);
+
+        when(orderRepository.findByOrderCode("BSMS-DEPOSIT-REFUND")).thenReturn(Optional.of(order));
+        // Customer actually paid deposit of 1.200.000đ
+        when(financialLedgerService.calculateRefundableCash(order)).thenReturn(new BigDecimal("1200000"));
+        when(financialLedgerService.recordManualFaultRefund(
+                any(Order.class), any(FaultParty.class), any(BigDecimal.class), any(String.class), any(), any(), any(User.class)))
+                .thenReturn(refund);
+
+        boolean result = orderService.recordFaultRefundAndCancel(
+                "BSMS-DEPOSIT-REFUND",
+                "NURSERY",
+                null,
+                "Nursery fault deposit refund",
+                null,
+                null,
+                false,
+                null,
+                moderator
+        );
+
+        assertThat(result).isTrue();
+        assertThat(order.getOrderStatus()).isEqualTo("CANCELLED");
+        assertThat(product.getProductStatus()).isEqualTo("AVAILABLE");
+        verify(productRepository).save(product);
+        // Verify refund amount is 1.200.000đ, NOT 7.800.000đ!
+        verify(financialLedgerService).recordManualFaultRefund(
+                eq(order), eq(FaultParty.NURSERY), eq(new BigDecimal("1200000")), eq("Nursery fault deposit refund"), any(), any(), eq(moderator));
+    }
+
+    @Test
     void refundRejectsOrderWithoutSuccessfulPayments() {
         User moderator = moderator(12);
         Product product = product("RESERVED");
