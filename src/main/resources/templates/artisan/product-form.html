@@ -83,14 +83,35 @@
         </div>
 
         <fieldset class="form-group">
-            <legend>Thẻ nhãn (Tags)</legend>
+            <legend>Thẻ nhãn</legend>
             <p th:if="${#lists.isEmpty(tags)}" class="form-hint">Chưa có thẻ nhãn nào trong hệ thống.</p>
-            <label class="checkbox" th:each="tag : ${tags}">
-                <input type="checkbox"
-                       th:field="*{tagIds}"
-                       th:value="${tag.tagId}">
-                <span th:text="${tag.tagName}"></span>
-            </label>
+            <div class="tag-multiselect" th:if="${!#lists.isEmpty(tags)}" data-tag-multiselect data-max-tags="12">
+                <button type="button" class="tag-select-trigger" data-tag-trigger>
+                    <span class="tag-select-placeholder" data-tag-summary>Chọn thẻ nhãn</span>
+                    <i class="fa-solid fa-chevron-down"></i>
+                </button>
+                <div class="tag-selected-row" data-tag-chips></div>
+                <div class="tag-dropdown" data-tag-dropdown hidden>
+                    <div class="tag-search-box">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="search" placeholder="Tìm thẻ nhãn..." data-tag-search>
+                    </div>
+                    <div class="tag-dropdown-head">
+                        <span data-tag-count>Đã chọn 0 thẻ</span>
+                        <button type="button" data-tag-clear>Xóa tất cả</button>
+                    </div>
+                    <div class="tag-option-list" data-tag-list>
+                        <label class="tag-option" th:each="tag : ${tags}" th:attr="data-tag-name=${#strings.toLowerCase(tag.tagName)}">
+                            <input type="checkbox"
+                                   th:field="*{tagIds}"
+                                   th:value="${tag.tagId}">
+                            <span th:text="${tag.tagName}"></span>
+                        </label>
+                    </div>
+                    <p class="tag-empty-state" data-tag-empty hidden>Không tìm thấy thẻ phù hợp.</p>
+                </div>
+                <p class="form-hint">Chọn tối đa 12 thẻ. Thẻ đã chọn sẽ được đưa lên đầu danh sách.</p>
+            </div>
         </fieldset>
 
         <label>Mô tả
@@ -104,21 +125,21 @@
         <div class="grid">
             <label>Tuổi
                 <span class="input-with-unit">
-                    <input type="number" th:field="*{age}" min="0" required>
+                    <input type="number" th:field="*{age}" min="1" required>
                     <span>năm</span>
                 </span>
                 <small th:if="${#fields.hasErrors('age')}" th:errors="*{age}" class="text-danger"></small>
             </label>
             <label>Chiều cao
                 <span class="input-with-unit">
-                    <input type="number" step="0.01" th:field="*{height}" min="0" required>
+                    <input type="number" step="0.01" th:field="*{height}" min="0.01" required>
                     <span>cm</span>
                 </span>
                 <small th:if="${#fields.hasErrors('height')}" th:errors="*{height}" class="text-danger"></small>
             </label>
             <label>Đường kính thân
                 <span class="input-with-unit">
-                    <input type="number" step="0.01" th:field="*{trunkDiameter}" min="0" required>
+                    <input type="number" step="0.01" th:field="*{trunkDiameter}" min="0.01" required>
                     <span>cm</span>
                 </span>
                 <small th:if="${#fields.hasErrors('trunkDiameter')}" th:errors="*{trunkDiameter}" class="text-danger"></small>
@@ -126,7 +147,7 @@
         </div>
 
         <label>Dáng cây (Style/Dáng)
-            <input th:field="*{style}" required>
+            <input th:field="*{style}" pattern="[\p{L}\s]+" title="Style chỉ được nhập chữ." required>
             <small th:if="${#fields.hasErrors('style')}" th:errors="*{style}" class="text-danger"></small>
         </label>
 
@@ -197,6 +218,120 @@
     priceValue.value = normalizePrice(priceDisplay.dataset.price || priceValue.value);
     priceDisplay.addEventListener('input', syncPriceValue);
     priceDisplay.form.addEventListener('submit', syncPriceValue);
+
+    const tagMultiselect = document.querySelector('[data-tag-multiselect]');
+    if (tagMultiselect) {
+        const maxTags = Number(tagMultiselect.dataset.maxTags || 8);
+        const trigger = tagMultiselect.querySelector('[data-tag-trigger]');
+        const dropdown = tagMultiselect.querySelector('[data-tag-dropdown]');
+        const searchInput = tagMultiselect.querySelector('[data-tag-search]');
+        const optionList = tagMultiselect.querySelector('[data-tag-list]');
+        const options = Array.from(tagMultiselect.querySelectorAll('.tag-option'));
+        const chipsContainer = tagMultiselect.querySelector('[data-tag-chips]');
+        const summary = tagMultiselect.querySelector('[data-tag-summary]');
+        const countLabel = tagMultiselect.querySelector('[data-tag-count]');
+        const clearButton = tagMultiselect.querySelector('[data-tag-clear]');
+        const emptyState = tagMultiselect.querySelector('[data-tag-empty]');
+
+        function getSelectedOptions() {
+            return options.filter(option => option.querySelector('input').checked);
+        }
+
+        function showTagLimitMessage() {
+            const message = 'Chỉ được chọn tối đa ' + maxTags + ' thẻ cho một cây.';
+            if (window.BSMSToast) {
+                BSMSToast.error(message);
+            } else {
+                alert(message);
+            }
+        }
+
+        function renderTags() {
+            const selectedOptions = getSelectedOptions();
+            const selectedIds = new Set(selectedOptions.map(option => option.querySelector('input').value));
+
+            summary.textContent = selectedOptions.length ? 'Đã chọn ' + selectedOptions.length + ' thẻ' : 'Chọn thẻ nhãn';
+            countLabel.textContent = 'Đã chọn ' + selectedOptions.length + ' thẻ';
+            chipsContainer.innerHTML = '';
+
+            selectedOptions.forEach(option => {
+                const input = option.querySelector('input');
+                const chip = document.createElement('span');
+                chip.className = 'tag-chip';
+                chip.innerHTML = '<span></span><button type="button" aria-label="Bỏ chọn thẻ">×</button>';
+                chip.querySelector('span').textContent = option.textContent.trim();
+                chip.querySelector('button').addEventListener('click', () => {
+                    input.checked = false;
+                    renderTags();
+                });
+                chipsContainer.appendChild(chip);
+            });
+
+            options
+                .sort((first, second) => {
+                    const firstSelected = selectedIds.has(first.querySelector('input').value);
+                    const secondSelected = selectedIds.has(second.querySelector('input').value);
+                    if (firstSelected !== secondSelected) {
+                        return firstSelected ? -1 : 1;
+                    }
+                    return first.textContent.trim().localeCompare(second.textContent.trim(), 'vi');
+                })
+                .forEach(option => {
+                    option.classList.toggle('is-selected', option.querySelector('input').checked);
+                    optionList.appendChild(option);
+                });
+
+            filterTags();
+        }
+
+        function filterTags() {
+            const keyword = (searchInput.value || '').trim().toLowerCase();
+            let visibleCount = 0;
+            options.forEach(option => {
+                const isVisible = !keyword || option.dataset.tagName.includes(keyword);
+                option.hidden = !isVisible;
+                if (isVisible) {
+                    visibleCount++;
+                }
+            });
+            emptyState.hidden = visibleCount > 0;
+        }
+
+        trigger.addEventListener('click', () => {
+            dropdown.hidden = !dropdown.hidden;
+            if (!dropdown.hidden) {
+                searchInput.focus();
+            }
+        });
+
+        searchInput.addEventListener('input', filterTags);
+        clearButton.addEventListener('click', () => {
+            options.forEach(option => {
+                option.querySelector('input').checked = false;
+            });
+            renderTags();
+            searchInput.focus();
+        });
+
+        options.forEach(option => {
+            const input = option.querySelector('input');
+            input.addEventListener('change', () => {
+                if (input.checked && getSelectedOptions().length > maxTags) {
+                    input.checked = false;
+                    showTagLimitMessage();
+                }
+                renderTags();
+            });
+        });
+
+        document.addEventListener('click', (event) => {
+            if (!tagMultiselect.contains(event.target)) {
+                dropdown.hidden = true;
+            }
+        });
+
+        renderTags();
+    }
 </script>
 <script>
     document.addEventListener('DOMContentLoaded', () => {

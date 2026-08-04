@@ -63,22 +63,22 @@
 <!-- ===================================================== -->
 <div class="container mt-4">
     <div class="category-tabs-container">
-        <a th:href="@{/marketplace(keyword=${keyword}, availableOnly=${availableOnly}, ages=${ages}, species=${species}, styles=${styles}, sort=${sort})}" 
+        <a th:href="@{/marketplace(keyword=${keyword}, availableOnly=${availableOnly}, ages=${ages}, species=${species}, styles=${styles}, tagIds=${tagIds}, sort=${sort})}" 
            class="category-tab-pill" 
            th:classappend="${segment == null && minPrice == null && (maxPrice == null || maxPrice == 20000000)} ? 'active'"
            th:text="${#locale.language == 'en' ? 'All Bonsai Trees' : 'Tất Cả Cây'}">All Bonsai Trees</a>
         
-        <a th:href="@{/marketplace(segment='Popular Picks', keyword=${keyword}, availableOnly=${availableOnly}, ages=${ages}, species=${species}, styles=${styles}, sort=${sort})}" 
+        <a th:href="@{/marketplace(segment='Popular Picks', keyword=${keyword}, availableOnly=${availableOnly}, ages=${ages}, species=${species}, styles=${styles}, tagIds=${tagIds}, sort=${sort})}" 
            class="category-tab-pill" 
            th:classappend="${segment == 'Popular Picks'} ? 'active'"
            th:text="${#locale.language == 'en' ? 'Popular Picks' : 'Được yêu thích'}">Popular Picks</a>
         
-        <a th:href="@{/marketplace(segment='Budget', keyword=${keyword}, availableOnly=${availableOnly}, ages=${ages}, species=${species}, styles=${styles}, sort=${sort})}" 
+        <a th:href="@{/marketplace(segment='Budget', keyword=${keyword}, availableOnly=${availableOnly}, ages=${ages}, species=${species}, styles=${styles}, tagIds=${tagIds}, sort=${sort})}" 
            class="category-tab-pill" 
            th:classappend="${segment == 'Budget'} ? 'active'"
            th:text="${#locale.language == 'en' ? 'Affordable Trees (Budget)' : 'Bonsai Bình Dân'}">Affordable Trees (Budget)</a>
         
-        <a th:href="@{/marketplace(segment='Mid', keyword=${keyword}, availableOnly=${availableOnly}, ages=${ages}, species=${species}, styles=${styles}, sort=${sort})}" 
+        <a th:href="@{/marketplace(segment='Mid', keyword=${keyword}, availableOnly=${availableOnly}, ages=${ages}, species=${species}, styles=${styles}, tagIds=${tagIds}, sort=${sort})}" 
            class="category-tab-pill" 
            th:classappend="${segment == 'Mid'} ? 'active'"
            th:text="${#locale.language == 'en' ? 'Mid-range Trees' : 'Bonsai Tầm Trung'}">Mid-range Trees</a>
@@ -187,6 +187,24 @@
                             <label class="checkbox-label">
                                 <span th:text="${#locale.language == 'en' ? 'Over 20 years' : 'Trên 20 năm'}">Over 20 years</span>
                                 <input type="checkbox" name="ages" value="over20" th:checked="${ages != null && ages.contains('over20')}">
+                                <span class="checkbox-checkmark"></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Tag Checklist -->
+                    <div class="filter-block" th:if="${tags != null && !tags.isEmpty()}">
+                        <div class="filter-block-title">
+                            <span>Thẻ nhãn</span>
+                            <i class="fa-solid fa-chevron-up"></i>
+                        </div>
+                        <div class="filter-block-content">
+                            <label class="checkbox-label" th:each="tag : ${tags}">
+                                <span th:text="${tag.tagName}">Cổ thụ</span>
+                                <input type="checkbox"
+                                       name="tagIds"
+                                       th:value="${tag.tagId}"
+                                       th:checked="${tagIds != null && tagIds.contains(tag.tagId)}">
                                 <span class="checkbox-checkmark"></span>
                             </label>
                         </div>
@@ -416,6 +434,7 @@
                        ages=${ages},
                        species=${species},
                        styles=${styles},
+                       tagIds=${tagIds},
                        sort=${sort},
                        segment=${segment},
                        category=${category}
@@ -433,6 +452,7 @@
                        ages=${ages},
                        species=${species},
                        styles=${styles},
+                       tagIds=${tagIds},
                        sort=${sort},
                        segment=${segment},
                        category=${category}
@@ -450,6 +470,7 @@
                        ages=${ages},
                        species=${species},
                        styles=${styles},
+                       tagIds=${tagIds},
                        sort=${sort},
                        segment=${segment},
                        category=${category}

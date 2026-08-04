@@ -4,7 +4,7 @@ import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.PositiveOrZero;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -37,19 +37,20 @@ public class ArtisanProductFormDTO {
     private String treeStory;
 
     @NotNull(message = "Vui lòng nhập tuổi cây.")
-    @Min(value = 0, message = "Tuổi cây không được âm.")
+    @Min(value = 1, message = "Tuổi cây phải lớn hơn 0.")
     private Integer age;
 
     @NotNull(message = "Vui lòng nhập chiều cao cây.")
-    @PositiveOrZero(message = "Chiều cao cây không được âm.")
+    @DecimalMin(value = "0.01", message = "Chiều cao cây phải lớn hơn 0.")
     private Float height;
 
     @NotNull(message = "Vui lòng nhập đường kính thân cây.")
-    @PositiveOrZero(message = "Đường kính thân cây không được âm.")
+    @DecimalMin(value = "0.01", message = "Đường kính thân cây phải lớn hơn 0.")
     private Float trunkDiameter;
 
     @NotBlank(message = "Vui lòng nhập style cây.")
     @Size(max = 255, message = "Style không được vượt quá 255 ký tự.")
+    @Pattern(regexp = "^[\\p{L}\\s]+$", message = "Style chỉ được nhập chữ.")
     private String style;
 
     @NotNull(message = "Vui lòng nhập giá sản phẩm.")

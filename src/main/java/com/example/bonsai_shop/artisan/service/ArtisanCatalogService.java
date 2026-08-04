@@ -62,8 +62,10 @@ public class ArtisanCatalogService {
 
     @Transactional
     public void createCategory(String categoryName, String description) {
+        String normalizedCategoryName = requireText(categoryName, "Tên category không được để trống!");
+        ensureCategoryNameUnique(normalizedCategoryName, null);
         categoryRepository.save(Category.builder()
-                .categoryName(requireText(categoryName, "Tên category không được để trống!"))
+                .categoryName(normalizedCategoryName)
                 .description(blankToNull(description))
                 .build());
     }
@@ -72,18 +74,22 @@ public class ArtisanCatalogService {
     public void createVariety(Integer categoryId, String varietyName, String description) {
         Category category = categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new RuntimeException("Category không tồn tại!"));
+        String normalizedVarietyName = requireText(varietyName, "Tên variety không được để trống!");
+        ensureVarietyNameUnique(categoryId, normalizedVarietyName, null);
 
         varietyRepository.save(Variety.builder()
                 .category(category)
-                .varietyName(requireText(varietyName, "Tên variety không được để trống!"))
+                .varietyName(normalizedVarietyName)
                 .description(blankToNull(description))
                 .build());
     }
 
     @Transactional
     public void createTag(String tagName) {
+        String normalizedTagName = requireText(tagName, "Tên tag không được để trống!");
+        ensureTagNameUnique(normalizedTagName, null);
         tagRepository.save(Tag.builder()
-                .tagName(requireText(tagName, "Tên tag không được để trống!"))
+                .tagName(normalizedTagName)
                 .build());
     }
 
@@ -91,7 +97,10 @@ public class ArtisanCatalogService {
     public void updateCategory(Integer categoryId, String categoryName, String description) {
         Category category = categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new RuntimeException("Category không tồn tại!"));
-        category.setCategoryName(requireText(categoryName, "Tên category không được để trống!"));
+        String normalizedCategoryName = requireText(categoryName, "Tên category không được để trống!");
+        ensureCategoryNameUnique(normalizedCategoryName, categoryId);
+
+        category.setCategoryName(normalizedCategoryName);
         category.setDescription(blankToNull(description));
         categoryRepository.save(category);
     }
@@ -110,9 +119,11 @@ public class ArtisanCatalogService {
                 .orElseThrow(() -> new RuntimeException("Variety không tồn tại!"));
         Category category = categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new RuntimeException("Category không tồn tại!"));
+        String normalizedVarietyName = requireText(varietyName, "Tên variety không được để trống!");
+        ensureVarietyNameUnique(categoryId, normalizedVarietyName, varietyId);
 
         variety.setCategory(category);
-        variety.setVarietyName(requireText(varietyName, "Tên variety không được để trống!"));
+        variety.setVarietyName(normalizedVarietyName);
         variety.setDescription(blankToNull(description));
         varietyRepository.save(variety);
     }
@@ -124,11 +135,15 @@ public class ArtisanCatalogService {
         }
         varietyRepository.deleteById(varietyId);
     }
+
     @Transactional
     public void updateTag(Integer tagId, String tagName) {
         Tag tag = tagRepository.findById(tagId)
                 .orElseThrow(() -> new RuntimeException("Tag không tồn tại!"));
-        tag.setTagName(requireText(tagName, "Tên tag không được để trống!"));
+        String normalizedTagName = requireText(tagName, "Tên tag không được để trống!");
+        ensureTagNameUnique(normalizedTagName, tagId);
+
+        tag.setTagName(normalizedTagName);
         tagRepository.save(tag);
     }
 
@@ -147,8 +162,34 @@ public class ArtisanCatalogService {
         return value.trim();
     }
 
+    private void ensureCategoryNameUnique(String categoryName, Integer currentCategoryId) {
+        boolean isDuplicate = currentCategoryId == null
+                ? categoryRepository.existsByCategoryNameIgnoreCase(categoryName)
+                : categoryRepository.existsByCategoryNameIgnoreCaseAndCategoryIdNot(categoryName, currentCategoryId);
+        if (isDuplicate) {
+            throw new RuntimeException("Tên category đã tồn tại.");
+        }
+    }
+
+    private void ensureVarietyNameUnique(Integer categoryId, String varietyName, Integer currentVarietyId) {
+        boolean isDuplicate = currentVarietyId == null
+                ? varietyRepository.existsByCategoryCategoryIdAndVarietyNameIgnoreCase(categoryId, varietyName)
+                : varietyRepository.existsByCategoryCategoryIdAndVarietyNameIgnoreCaseAndVarietyIdNot(categoryId, varietyName, currentVarietyId);
+        if (isDuplicate) {
+            throw new RuntimeException("Tên variety đã tồn tại trong category này.");
+        }
+    }
+
+    private void ensureTagNameUnique(String tagName, Integer currentTagId) {
+        boolean isDuplicate = currentTagId == null
+                ? tagRepository.existsByTagNameIgnoreCase(tagName)
+                : tagRepository.existsByTagNameIgnoreCaseAndTagIdNot(tagName, currentTagId);
+        if (isDuplicate) {
+            throw new RuntimeException("Tên tag đã tồn tại.");
+        }
+    }
+
     private String blankToNull(String value) {
         return value == null || value.isBlank() ? null : value.trim();
     }
 }
-
