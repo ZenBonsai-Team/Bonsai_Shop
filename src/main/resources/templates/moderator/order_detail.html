@@ -736,37 +736,6 @@
                         </div>
                     </div>
 
-                    <div th:if="${order.canCustomerNoShow}" class="od-form-grid">
-                        <div class="od-form-field">
-                            <label class="od-form-label" for="customerNoShowReason">Lý do khách không nhận hàng</label>
-                            <textarea id="customerNoShowReason" class="od-form-textarea" rows="3" placeholder="Bắt buộc nhập lý do"></textarea>
-                        </div>
-                        <div class="od-action-note">
-                            Xác nhận này sẽ chấm dứt đơn và ghi nhận tiền cọc là khoản thu nhập từ tiền đặt cọc do khách bỏ đơn.
-                        </div>
-                    </div>
-
-                    <div th:if="${order.canRecordFaultRefund}" class="od-form-grid">
-                        <div class="od-form-field" style="grid-column: span 2;">
-                            <label class="od-form-label" for="faultParty">Bên chịu lỗi</label>
-                            <select id="faultParty" class="od-form-input" style="width: 100%;">
-                                <option value="NURSERY">Vườn / nhà bán</option>
-                                <option value="DELIVERY">Đơn vị giao hàng</option>
-                            </select>
-                        </div>
-                        <div class="od-form-field" style="grid-column: span 2;">
-                            <label class="od-form-label">Số tiền hoàn (100% giá trị đơn hàng)</label>
-                            <div class="od-form-input" style="background-color: #e9ecef; font-weight: 600; color: #198754; display: flex; align-items: center; width: 100%; min-height: 38px;" th:text="${#numbers.formatDecimal(order.paymentSummary.grandTotal, 0, 'COMMA', 0, 'POINT')} + ' đ'">0 đ</div>
-                        </div>
-                        <div class="od-form-field" style="grid-column: span 2;">
-                            <label class="od-form-label" for="faultRefundReason">Lý do hoàn tiền</label>
-                            <textarea id="faultRefundReason" class="od-form-textarea" rows="3" placeholder="Bắt buộc nhập lý do hoàn tiền" style="width: 100%;"></textarea>
-                        </div>
-                        <div class="od-action-note" style="grid-column: span 2;">
-                            Đơn hàng sẽ bị hủy. Cây tự động được trả về nhà vườn. Đây chỉ là bản ghi hoàn tiền thủ công; hệ thống không tự động chuyển tiền qua VNPay hoặc ngân hàng.
-                        </div>
-                    </div>
-
                     <div class="od-inline-actions" th:if="${order.canApprove or order.canReject or order.canReturnInventory or order.canComplete or order.canCustomerNoShow or order.canRecordFaultRefund}">
                         <button th:if="${order.canApprove}" class="od-action-btn approve" type="button" onclick="openApproveConfirmation()">Duyệt đơn</button>
                         <button th:if="${order.canReject}" class="od-action-btn reject" type="button" onclick="openRejectConfirmation()">Từ chối đơn</button>
@@ -848,6 +817,23 @@
             <div id="confirmModalInputWrap" class="od-confirm-field" style="display:none;">
                 <label id="confirmModalInputLabel" class="od-form-label" for="confirmModalInput">Lý do</label>
                 <textarea id="confirmModalInput" class="od-form-textarea" rows="3"></textarea>
+            </div>
+            <div id="confirmModalFaultRefundWrap" style="display:none; margin-top: 12px;">
+                <div class="od-form-field" style="margin-bottom: 12px;">
+                    <label class="od-form-label" for="confirmModalFaultParty">Bên chịu lỗi <span style="color: #dc3545;">*</span></label>
+                    <select id="confirmModalFaultParty" class="od-form-input" style="width: 100%;">
+                        <option value="NURSERY">Vườn / nhà bán</option>
+                        <option value="DELIVERY">Đơn vị giao hàng</option>
+                    </select>
+                </div>
+                <div class="od-form-field" style="margin-bottom: 12px;">
+                    <label class="od-form-label">Số tiền hoàn</label>
+                    <div id="confirmModalRefundAmountDisplay" class="od-form-input" style="background-color: #e9ecef; font-weight: 600; color: #198754; display: flex; align-items: center; width: 100%; min-height: 38px;">0 đ</div>
+                </div>
+                <div class="od-form-field" style="margin-bottom: 12px;">
+                    <label class="od-form-label" for="confirmModalFaultReason">Lý do hoàn tiền <span style="color: #dc3545;">*</span></label>
+                    <textarea id="confirmModalFaultReason" class="od-form-textarea" rows="3" placeholder="Bắt buộc nhập lý do hoàn tiền" style="width: 100%;"></textarea>
+                </div>
             </div>
             <div id="confirmModalError" class="od-confirm-error"></div>
         </div>
@@ -1080,6 +1066,10 @@
                 inputWrap: document.getElementById('confirmModalInputWrap'),
                 inputLabel: document.getElementById('confirmModalInputLabel'),
                 input: document.getElementById('confirmModalInput'),
+                faultRefundWrap: document.getElementById('confirmModalFaultRefundWrap'),
+                faultParty: document.getElementById('confirmModalFaultParty'),
+                refundAmountDisplay: document.getElementById('confirmModalRefundAmountDisplay'),
+                faultReason: document.getElementById('confirmModalFaultReason'),
                 error: document.getElementById('confirmModalError'),
                 confirm: document.getElementById('confirmModalConfirm'),
                 cancel: document.getElementById('confirmModalCancel'),
@@ -1135,11 +1125,23 @@
                 elements.input.value = '';
             }
 
+            if (config.faultRefund) {
+                elements.faultRefundWrap.style.display = 'block';
+                elements.faultParty.value = config.faultRefund.faultParty || 'NURSERY';
+                elements.refundAmountDisplay.textContent = formatCurrency(config.faultRefund.refundAmount);
+                elements.faultReason.value = '';
+            } else {
+                elements.faultRefundWrap.style.display = 'none';
+                elements.faultReason.value = '';
+            }
+
             showModalError('');
             elements.modal.classList.add('show');
             elements.modal.setAttribute('aria-hidden', 'false');
             if (config.input) {
                 setTimeout(() => elements.input.focus(), 0);
+            } else if (config.faultRefund) {
+                setTimeout(() => elements.faultReason.focus(), 0);
             }
         }
 
@@ -1179,7 +1181,16 @@
             const elements = getModalElements();
             let payload;
             try {
-                payload = pendingConfirmAction.buildPayload(elements.input.value.trim());
+                if (pendingConfirmAction.faultRefund) {
+                    payload = pendingConfirmAction.buildPayload({
+                        faultParty: elements.faultParty.value,
+                        reason: elements.faultReason.value.trim()
+                    });
+                } else if (pendingConfirmAction.input) {
+                    payload = pendingConfirmAction.buildPayload(elements.input.value.trim());
+                } else {
+                    payload = pendingConfirmAction.buildPayload();
+                }
             } catch (err) {
                 showModalError(err.message || 'Dữ liệu xác nhận không hợp lệ.');
                 return;
@@ -1244,8 +1255,8 @@
                     { label: 'Trạng thái sau xử lý', value: 'Đã chấm dứt đơn hàng' }
                 ],
                 buildPayload: (reason) => {
-                    if (!reason) throw new Error('Vui lòng nhập lý do từ chối.');
-                    return { action: 'reject', reason };
+                    if (!reason || !reason.trim()) throw new Error('Vui lòng nhập lý do từ chối.');
+                    return { action: 'reject', reason: reason.trim() };
                 }
             });
         }
@@ -1265,87 +1276,61 @@
         }
 
         function openCustomerNoShowConfirmation() {
-            const reason = readText('customerNoShowReason');
-            if (!reason) {
-                document.getElementById('customerNoShowReason')?.focus();
-                openConfirmationModal({
-                    title: 'Thiếu lý do',
-                    description: 'Vui lòng nhập lý do khách không nhận hàng trước khi xác nhận.',
-                    confirmLabel: 'Đã hiểu',
-                    danger: true,
-                    summaryRows: [],
-                    infoOnly: true,
-                    buildPayload: () => ({})
-                });
-                return;
-            }
             openConfirmationModal({
                 title: 'Xác nhận khách không nhận hàng',
-                description: 'Đơn hàng sẽ bị chấm dứt do lỗi từ phía khách hàng. Tiền đặt cọc đã thanh toán sẽ được ghi nhận là khoản nhà vườn được giữ. Hệ thống không tạo thêm giao dịch thanh toán mới.',
-                confirmLabel: 'Xác nhận khách không nhận hàng',
+                description: 'Hành động này sẽ hủy đơn hàng và không thể hoàn tác.',
+                confirmLabel: 'Xác nhận hủy đơn',
                 danger: true,
+                input: {
+                    label: 'Lý do khách không nhận hàng',
+                    placeholder: 'Bắt buộc nhập lý do'
+                },
                 summaryRows: [
                     { label: 'Mã đơn hàng', value: ORDER_CODE },
                     { label: 'Tiền đặt cọc đã thanh toán', value: formatCurrency(SUCCESSFUL_DEPOSIT_AMOUNT) },
-                    { label: 'Lý do', value: reason },
                     { label: 'Trạng thái sau xử lý', value: 'Đã chấm dứt đơn hàng' }
                 ],
-                buildPayload: () => ({
-                    action: 'customer_no_show',
-                    reason
-                })
+                buildPayload: (reason) => {
+                    if (!reason || !reason.trim()) {
+                        throw new Error('Vui lòng nhập lý do khách không nhận hàng.');
+                    }
+                    return {
+                        action: 'customer_no_show',
+                        reason: reason.trim()
+                    };
+                }
             });
         }
 
         function openFaultRefundConfirmation() {
-            const faultParty = readText('faultParty');
-            const reason = readText('faultRefundReason');
-            if (!faultParty) {
-                openConfirmationModal({
-                    title: 'Thiếu bên chịu lỗi',
-                    description: 'Vui lòng chọn bên chịu lỗi trước khi xác nhận.',
-                    confirmLabel: 'Đã hiểu',
-                    danger: true,
-                    infoOnly: true,
-                    buildPayload: () => ({})
-                });
-                return;
-            }
-            if (!reason) {
-                document.getElementById('faultRefundReason')?.focus();
-                openConfirmationModal({
-                    title: 'Thiếu lý do hoàn tiền',
-                    description: 'Vui lòng nhập lý do hoàn tiền trước khi xác nhận.',
-                    confirmLabel: 'Đã hiểu',
-                    danger: true,
-                    infoOnly: true,
-                    buildPayload: () => ({})
-                });
-                return;
-            }
-
             const refundAmount100 = GRAND_TOTAL || REFUNDABLE_CASH;
 
-            const rows = [
-                { label: 'Mã đơn hàng', value: ORDER_CODE },
-                { label: 'Bên chịu trách nhiệm', value: faultParty === 'NURSERY' ? 'Lỗi từ phía nhà vườn' : 'Lỗi trong quá trình vận chuyển' },
-                { label: 'Số tiền hoàn lại (100%)', value: formatCurrency(refundAmount100) },
-                { label: 'Khách giữ cây', value: 'Không (Cây tự động trả về nhà vườn)' },
-                { label: 'Lý do hoàn tiền', value: reason },
-                { label: 'Trạng thái sau xử lý', value: 'Đã chấm dứt đơn hàng' }
-            ];
-
             openConfirmationModal({
-                title: 'Xác nhận ghi nhận hoàn tiền thủ công (100%)',
-                description: 'Đơn hàng sẽ bị chấm dứt do lỗi từ phía nhà vườn hoặc quá trình vận chuyển. Toàn bộ cây trong đơn sẽ tự động được trả về nhà vườn. Hệ thống chỉ ghi nhận thông tin hoàn tiền thủ công và không tự động chuyển tiền qua VNPay hoặc ngân hàng.',
-                confirmLabel: 'Xác nhận ghi nhận hoàn tiền',
+                title: 'Xác nhận chấm dứt đơn và hoàn tiền',
+                description: 'Sau khi xác nhận, đơn hàng sẽ bị chấm dứt, ghi nhận hoàn toàn bộ số tiền đã thanh toán và cây sẽ được trả lại nhà vườn. Hành động này không thể hoàn tác.',
+                confirmLabel: 'Xác nhận chấm dứt và hoàn tiền',
                 danger: true,
-                summaryRows: rows,
-                buildPayload: () => ({
-                    action: 'record_fault_refund',
-                    faultParty,
-                    reason
-                })
+                faultRefund: {
+                    faultParty: 'NURSERY',
+                    refundAmount: refundAmount100
+                },
+                summaryRows: [
+                    { label: 'Mã đơn hàng', value: ORDER_CODE },
+                    { label: 'Trạng thái sau xử lý', value: 'Đã chấm dứt đơn hàng' }
+                ],
+                buildPayload: ({ faultParty, reason }) => {
+                    if (!faultParty) {
+                        throw new Error('Vui lòng chọn bên chịu lỗi.');
+                    }
+                    if (!reason || !reason.trim()) {
+                        throw new Error('Vui lòng nhập lý do hoàn tiền.');
+                    }
+                    return {
+                        action: 'record_fault_refund',
+                        faultParty,
+                        reason: reason.trim()
+                    };
+                }
             });
         }
 
