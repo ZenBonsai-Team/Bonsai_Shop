@@ -515,8 +515,8 @@ public class OrderService {
         Order savedOrder = orderRepository.save(order);
 
         // Khởi tạo bản ghi Payment PENDING ban đầu duy nhất theo 1-N Model
-        String rawMethod = dto.getPaymentMethod() != null ? dto.getPaymentMethod() : "COD";
-        String pType = ("DEPOSIT".equalsIgnoreCase(rawMethod) || "COD".equalsIgnoreCase(rawMethod)) 
+        String rawMethod = dto.getPaymentMethod() != null ? dto.getPaymentMethod() : PaymentMethod.DEPOSIT.name();
+        String pType = (PaymentMethod.DEPOSIT.name().equalsIgnoreCase(rawMethod) || "COD".equalsIgnoreCase(rawMethod)) 
                 ? PaymentType.DEPOSIT.name() 
                 : PaymentType.FULL_PAYMENT.name();
 
@@ -656,10 +656,14 @@ public class OrderService {
             throw new IllegalStateException("Số tiền thanh toán không hợp lệ.");
         }
 
+        String retryPaymentMethod = PaymentType.DEPOSIT.name().equalsIgnoreCase(paymentType)
+                ? PaymentMethod.DEPOSIT.name()
+                : PaymentMethod.VNPAY.name();
+
         Payment retryPayment = Payment.builder()
                 .order(order)
                 .paymentType(paymentType)
-                .paymentMethod(PaymentMethod.VNPAY.name())
+                .paymentMethod(retryPaymentMethod)
                 .paymentStatus("PENDING")
                 .amount(amount)
                 .notes("Retry VNPay payment after previous failed/expired attempt")

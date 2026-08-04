@@ -325,7 +325,7 @@ public class OrderDetailService {
             isDeposit = order.getDepositAmount().compareTo(BigDecimal.ZERO) > 0;
         }
 
-        return isDeposit ? "COD" : "VNPAY";
+        return isDeposit ? "DEPOSIT" : "VNPAY";
     }
 
     private String resolveFinancialResolutionStatus(String orderStatus, BigDecimal recognizedCompletedRevenue,

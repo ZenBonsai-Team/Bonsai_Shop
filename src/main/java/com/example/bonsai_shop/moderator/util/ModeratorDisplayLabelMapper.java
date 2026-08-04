@@ -38,7 +38,7 @@ public final class ModeratorDisplayLabelMapper {
         return switch (normalize(value)) {
             case "VNPAY" -> "Thanh toán trực tuyến qua VNPay";
             case "CASH" -> "Thanh toán tiền mặt";
-            case "COD", "DEPOSIT" -> "Đặt cọc trước, thanh toán phần còn lại khi nhận cây";
+            case "DEPOSIT", "COD" -> "Đặt cọc trước, thanh toán phần còn lại khi nhận cây";
             case "BANK_TRANSFER" -> "Chuyển khoản ngân hàng";
             default -> fallback(value);
         };

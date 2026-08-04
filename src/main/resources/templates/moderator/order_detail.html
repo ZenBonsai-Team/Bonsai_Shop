@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi"
       xmlns:th="http://www.thymeleaf.org"
       th:replace="~{fragments/dashboard-layout :: layout(~{::title}, ~{::#moderator-content}, ~{::#page-styles}, ~{::#page-scripts})}"
@@ -695,8 +695,8 @@
 
                     <div th:if="${order.canApprove or order.canReject or order.canReturnInventory}" class="od-action-note">
                         <div>Phương thức thanh toán: <strong th:text="${order.paymentMethodLabel ?: 'Thanh toán trực tuyến qua VNPay'}">Thanh toán trực tuyến qua VNPay</strong></div>
-                        <div th:if="${order.paymentMethod == 'COD'}">Đơn COD yêu cầu nhập tiền đặt cọc trước khi duyệt.</div>
-                        <div th:if="${order.paymentMethod != 'COD'}">Khách sẽ thanh toán toàn bộ đơn hàng qua VNPay.</div>
+                        <div th:if="${order.paymentMethod == 'DEPOSIT' or order.paymentMethod == 'COD'}">Đơn cọc trước yêu cầu nhập tiền đặt cọc trước khi duyệt.</div>
+                        <div th:if="${order.paymentMethod != 'DEPOSIT' and order.paymentMethod != 'COD'}">Khách sẽ thanh toán toàn bộ đơn hàng qua VNPay.</div>
                     </div>
 
                     <div th:if="${order.canApprove or order.canReject or order.canReturnInventory}" class="od-form-grid">
@@ -904,7 +904,7 @@
         const REFUNDABLE_CASH = /*[[${order.paymentSummary.refundableCash}]]*/ 0;
         const REMAINING_PAYMENT_AMOUNT = /*[[${order.paymentSummary.remainingPaymentAmount}]]*/ 0;
         const GRAND_TOTAL = /*[[${order.paymentSummary.grandTotal}]]*/ 0;
-        const IS_COD = ORDER_PAYMENT_METHOD === 'COD';
+        const IS_COD = ORDER_PAYMENT_METHOD === 'DEPOSIT' || ORDER_PAYMENT_METHOD === 'COD';
 
         function formatCurrency(value) {
             return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(Number(value || 0));

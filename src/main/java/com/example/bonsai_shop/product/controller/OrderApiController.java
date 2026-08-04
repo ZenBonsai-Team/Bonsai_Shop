@@ -586,7 +586,7 @@ public class OrderApiController {
         try {
             Order createdOrder = orderService.createOrder(dto, customer);
             response.put("success", true);
-            response.put("paymentMethod", dto.getPaymentMethod() != null ? dto.getPaymentMethod() : "COD");
+            response.put("paymentMethod", dto.getPaymentMethod() != null ? dto.getPaymentMethod() : "DEPOSIT");
             response.put("orderCode", createdOrder.getOrderCode());
             return ResponseEntity.ok(response);
         } catch (IllegalArgumentException | IllegalStateException e) {
@@ -747,7 +747,7 @@ public class OrderApiController {
         }
 
         if (resolvedPaymentMethod == null) {
-            resolvedPaymentMethod = isDepositFlow ? "COD" : "VNPAY";
+            resolvedPaymentMethod = isDepositFlow ? "DEPOSIT" : "VNPAY";
         }
 
         BigDecimal immediatePaymentAmount;
