@@ -46,7 +46,6 @@
     const FINANCIAL_LEDGER_TYPE = {
         COMPLETED_ORDER_REVENUE: 'Doanh thu từ đơn hàng đã hoàn thành',
         FORFEITED_DEPOSIT_INCOME: 'Thu nhập từ tiền đặt cọc do khách bỏ đơn',
-        PARTIAL_REFUND: 'Hoàn lại một phần tiền cho khách',
         FULL_REFUND: 'Hoàn lại toàn bộ tiền cho khách'
     };
 

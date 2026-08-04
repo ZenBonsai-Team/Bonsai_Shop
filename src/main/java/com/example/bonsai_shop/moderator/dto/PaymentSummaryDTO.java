@@ -26,7 +26,6 @@ public class PaymentSummaryDTO {
     private BigDecimal totalCashReceived;
     private BigDecimal recognizedCompletedRevenue;
     private BigDecimal forfeitedDepositIncome;
-    private BigDecimal partialRefundAmount;
     private BigDecimal fullRefundAmount;
     private BigDecimal netRecognizedAmount;
     private BigDecimal refundableCash;

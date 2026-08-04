@@ -199,9 +199,8 @@ public class OrderDetailService {
         }
         BigDecimal recognizedCompletedRevenue = financialLedgerService.sumRecognizedCompletedRevenue(order);
         BigDecimal forfeitedDepositIncome = financialLedgerService.sumForfeitedDepositIncome(order);
-        BigDecimal partialRefundAmount = financialLedgerService.sumPartialRefunds(order);
         BigDecimal fullRefundAmount = financialLedgerService.sumFullRefunds(order);
-        BigDecimal totalRefundAmount = partialRefundAmount.add(fullRefundAmount);
+        BigDecimal totalRefundAmount = fullRefundAmount;
         BigDecimal netRecognizedAmount = financialLedgerService.sumNetRecognizedAmount(order);
         BigDecimal refundableCash = financialLedgerService.calculateRefundableCash(order);
         List<FinancialLedgerDTO> ledgerHistory =
@@ -222,7 +221,6 @@ public class OrderDetailService {
                 .totalCashReceived(totalCashReceived)
                 .recognizedCompletedRevenue(recognizedCompletedRevenue)
                 .forfeitedDepositIncome(forfeitedDepositIncome)
-                .partialRefundAmount(partialRefundAmount)
                 .fullRefundAmount(fullRefundAmount)
                 .netRecognizedAmount(netRecognizedAmount)
                 .refundableCash(refundableCash)

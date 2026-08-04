@@ -62,7 +62,6 @@ public final class ModeratorDisplayLabelMapper {
         return switch (value) {
             case COMPLETED_ORDER_REVENUE -> "Doanh thu từ đơn hàng đã hoàn thành";
             case FORFEITED_DEPOSIT_INCOME -> "Thu nhập từ tiền đặt cọc do khách bỏ đơn";
-            case PARTIAL_REFUND -> "Hoàn lại một phần tiền cho khách";
             case FULL_REFUND -> "Hoàn lại toàn bộ tiền cho khách";
         };
     }
