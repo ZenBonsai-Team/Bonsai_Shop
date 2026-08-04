@@ -20,9 +20,11 @@ public class ProductSpecifications {
             List<String> ages,
             List<String> species,
             List<String> styles,
+            List<Integer> tagIds,
             List<String> priceRanges) {
         return (Root<Product> root, CriteriaQuery<?> query, CriteriaBuilder cb) -> {
             List<Predicate> predicates = new ArrayList<>();
+            query.distinct(true);
 
             // Avoid fetch joins for count queries (used by Spring Data JPA pagination count
             // query)
@@ -148,6 +150,11 @@ public class ProductSpecifications {
 
             if (species != null && !species.isEmpty()) {
                 predicates.add(root.get("variety").get("varietyName").in(species));
+            }
+
+            if (tagIds != null && !tagIds.isEmpty()) {
+                Join<Object, Object> productTagJoin = root.join("productTags", JoinType.INNER);
+                predicates.add(productTagJoin.get("tag").get("tagId").in(tagIds));
             }
 
             // if (styles != null && !styles.isEmpty()) {

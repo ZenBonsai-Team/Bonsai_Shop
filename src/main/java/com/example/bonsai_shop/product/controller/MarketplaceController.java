@@ -52,6 +52,7 @@ public class MarketplaceController {
             @RequestParam(required = false) List<String> ages,
             @RequestParam(required = false) List<String> species,
             @RequestParam(required = false) List<String> styles,
+            @RequestParam(required = false) List<Integer> tagIds,
             @RequestParam(required = false) List<String> priceRanges,
             @RequestParam(required = false) String sort,
             Model model) {
@@ -80,6 +81,7 @@ public class MarketplaceController {
                 ages,
                 species,
                 styles,
+                tagIds,
                 priceRanges,
                 PageRequest.of(page, 12, springSort));
 
@@ -94,6 +96,8 @@ public class MarketplaceController {
         model.addAttribute("ages", ages);
         model.addAttribute("species", species);
         model.addAttribute("styles", styles);
+        model.addAttribute("tagIds", tagIds);
+        model.addAttribute("tags", productService.getTags());
         model.addAttribute("priceRanges", priceRanges);
         model.addAttribute("sort", sort);
         model.addAttribute("activePage", "marketplace");

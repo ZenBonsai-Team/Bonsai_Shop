@@ -18,6 +18,7 @@ import com.example.bonsai_shop.product.repository.ProductMediaRepository;
 import com.example.bonsai_shop.product.repository.ProductRepository;
 import com.example.bonsai_shop.product.repository.ProductSpecifications;
 import com.example.bonsai_shop.product.repository.ProductTagRepository;
+import com.example.bonsai_shop.product.repository.TagRepository;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 
@@ -27,6 +28,7 @@ public class ProductService {
     private final ProductRepository productRepository;
     private final ProductMediaRepository productMediaRepository;
     private final ProductTagRepository productTagRepository;
+    private final TagRepository tagRepository;
 
     public Page<ProductCardDTO> getMarketplaceProducts(Pageable pageable) {
         return productRepository.findMarketplaceProducts(pageable);
@@ -51,14 +53,20 @@ public class ProductService {
             List<String> ages,
             List<String> species,
             List<String> styles,
+            List<Integer> tagIds,
             List<String> priceRanges,
             Pageable pageable) {
         return productRepository.findAll(
                 ProductSpecifications.filterProducts(
-                        keyword, status, availableOnly, segment, category, minPrice, maxPrice, ages, species, styles, priceRanges
+                        keyword, status, availableOnly, segment, category, minPrice, maxPrice, ages, species, styles, tagIds, priceRanges
                 ),
                 pageable
         );
+    }
+
+    @Transactional(readOnly = true)
+    public List<Tag> getTags() {
+        return tagRepository.findAll();
     }
 
     public Page<ProductCardDTO> getPremiumProducts(Pageable pageable) {
