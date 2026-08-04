@@ -73,6 +73,9 @@ public class ProductJournalService {
         if (title == null || title.isBlank()) {
             throw new RuntimeException("Vui lòng nhập tiêu đề cập nhật.");
         }
+        if (!hasUploadedFiles(files)) {
+            throw new RuntimeException("Vui lòng chọn ít nhất một ảnh/video để tạo cập nhật.");
+        }
 
         ProductJournalEvent event = ProductJournalEvent.builder()
                 .product(product)
@@ -143,7 +146,7 @@ public class ProductJournalService {
         ProductJournalEvent event = journalEventRepository.findByEventIdAndProduct(eventId, product)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy cập nhật cây."));
 
-        if (files == null || files.stream().allMatch(file -> file == null || file.isEmpty())) {
+        if (!hasUploadedFiles(files)) {
             throw new RuntimeException("Vui lòng chọn ít nhất một ảnh/video để bổ sung.");
         }
 
@@ -183,6 +186,10 @@ public class ProductJournalService {
                     .displayOrder(displayOrder++)
                     .build());
         }
+    }
+
+    private boolean hasUploadedFiles(List<MultipartFile> files) {
+        return files != null && files.stream().anyMatch(file -> file != null && !file.isEmpty());
     }
 
     private void validateMediaFile(MultipartFile file, String mediaType) {
