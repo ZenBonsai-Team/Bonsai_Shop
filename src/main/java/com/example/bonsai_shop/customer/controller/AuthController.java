@@ -37,7 +37,14 @@ public class AuthController {
             Object exception = request.getSession().getAttribute("SPRING_SECURITY_LAST_EXCEPTION");
             String errorMsg = "Sai tài khoản, mật khẩu hoặc tài khoản chưa kích hoạt";
             if (exception instanceof Exception ex) {
-                errorMsg = ex.getMessage();
+                String rawMsg = ex.getMessage();
+                if (rawMsg != null) {
+                    if (rawMsg.contains("authorization_request_not_found")) {
+                        errorMsg = "Yêu cầu đăng nhập đã hết hạn hoặc không hợp lệ. Vui lòng thử lại.";
+                    } else {
+                        errorMsg = rawMsg.replace("[", "").replace("]", "");
+                    }
+                }
             }
             model.addAttribute("errorMsg", errorMsg);
         }

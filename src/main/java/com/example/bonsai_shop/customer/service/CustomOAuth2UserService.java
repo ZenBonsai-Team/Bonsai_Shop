@@ -10,6 +10,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
+import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -54,7 +55,18 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
         // Kiểm tra trạng thái tài khoản
         if ("LOCKED".equals(user.getStatus())) {
-            throw new OAuth2AuthenticationException("Tài khoản đã bị khóa!");
+            throw new OAuth2AuthenticationException(new OAuth2Error("account_locked"), "Tài khoản đã bị khóa!");
+        }
+
+        // Chặn tài khoản quản trị/nhân viên đăng nhập bằng Google để đảm bảo bảo mật
+        if (user.getRole() != null) {
+            String roleName = user.getRole().getRoleName();
+            if (roleName != null) {
+                String normRole = roleName.trim().toUpperCase(Locale.ROOT);
+                if (!"CUSTOMER".equals(normRole) && !"ROLE_CUSTOMER".equals(normRole)) {
+                    throw new OAuth2AuthenticationException(new OAuth2Error("role_not_allowed"), "Tài khoản của bạn không thể đăng nhập bằng phương thức này");
+                }
+            }
         }
 
         // Tạo authorities từ role của user
