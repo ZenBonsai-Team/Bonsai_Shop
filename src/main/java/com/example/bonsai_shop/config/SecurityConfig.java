@@ -30,7 +30,7 @@ public class SecurityConfig {
         @Bean
         public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
                 http
-                                .csrf(csrf -> csrf.ignoringRequestMatchers("/api/notifications/**", "/community/**", "/moderator/orders/api/**"))
+                                .csrf(csrf -> csrf.ignoringRequestMatchers("/api/notifications/**", "/api/wishlist/**", "/community/**", "/moderator/orders/api/**"))
                                 .userDetailsService(customUserDetailsService)
                                 .authorizeHttpRequests(auth -> auth
                                                 // Trang công khai
@@ -71,7 +71,9 @@ public class SecurityConfig {
                                                                 "/cart", // ← cho phép khách xem giỏ hàng
                                                                 "/checkout", // ← cho phép khách vào trang checkout
                                                                 "/order/success", // ← cho phép khách xem thông báo thành công
+                                                                "/wishlist",
                                                                 "/api/cart/**",
+                                                                "/api/wishlist/**",
                                                                 "/api/products/**",
                                                                 "/api/orders", // ← tạm thời cho phép để test API chính
                                                                 "/api/orders/**", // ← tạm thời cho phép để test API con
