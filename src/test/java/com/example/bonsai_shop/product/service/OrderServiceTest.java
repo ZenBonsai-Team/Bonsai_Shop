@@ -4,6 +4,7 @@ import com.example.bonsai_shop.entity.FinancialLedger;
 import com.example.bonsai_shop.entity.Order;
 import com.example.bonsai_shop.entity.OrderDetail;
 import com.example.bonsai_shop.entity.OrderLog;
+import com.example.bonsai_shop.entity.Payment;
 import com.example.bonsai_shop.entity.Product;
 import com.example.bonsai_shop.entity.User;
 import com.example.bonsai_shop.finance.enums.FaultParty;
@@ -16,6 +17,7 @@ import com.example.bonsai_shop.product.repository.OrderLogRepository;
 import com.example.bonsai_shop.product.repository.OrderRepository;
 import com.example.bonsai_shop.product.repository.PaymentRepository;
 import com.example.bonsai_shop.product.repository.ProductRepository;
+import com.example.bonsai_shop.product.enums.PaymentType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.ApplicationEventPublisher;
@@ -37,6 +39,7 @@ class OrderServiceTest {
     private OrderRepository orderRepository;
     private ProductRepository productRepository;
     private OrderLogRepository orderLogRepository;
+    private PaymentRepository paymentRepository;
     private FinancialLedgerService financialLedgerService;
     private OrderService orderService;
 
@@ -46,7 +49,7 @@ class OrderServiceTest {
         productRepository = mock(ProductRepository.class);
         orderLogRepository = mock(OrderLogRepository.class);
         OrderHandlingRepository orderHandlingRepository = mock(OrderHandlingRepository.class);
-        PaymentRepository paymentRepository = mock(PaymentRepository.class);
+        paymentRepository = mock(PaymentRepository.class);
         ApplicationEventPublisher eventPublisher = mock(ApplicationEventPublisher.class);
         MailService mailService = mock(MailService.class);
         CartService cartService = mock(CartService.class);
@@ -63,6 +66,37 @@ class OrderServiceTest {
                 cartService,
                 financialLedgerService
         );
+    }
+
+    @Test
+    void fullPaymentSuccessMarksPaidAndRecordsRevenueLedger() {
+        User moderator = moderator(14);
+        Product product = product("RESERVED");
+        Order order = assignedOrder("BSMS-FULL", "PENDING_PAYMENT", moderator, product);
+        Payment fullPayment = Payment.builder()
+                .paymentId(300)
+                .order(order)
+                .paymentType(PaymentType.FULL_PAYMENT.name())
+                .paymentStatus("PENDING")
+                .amount(new BigDecimal("1000000"))
+                .build();
+        FinancialLedger revenue = ledger(order, FinancialLedgerType.COMPLETED_ORDER_REVENUE);
+
+        when(orderRepository.findByOrderCode("BSMS-FULL")).thenReturn(Optional.of(order));
+        when(paymentRepository.findTopByOrderOrderIdAndPaymentStatusOrderByPaymentIdDesc(100, "PENDING"))
+                .thenReturn(Optional.of(fullPayment));
+        when(paymentRepository.findByOrderOrderIdOrderByPaymentIdAsc(100)).thenReturn(List.of(fullPayment));
+        when(financialLedgerService.recordCompletedOrderRevenueIfAbsent(any(Order.class), any(User.class), any(LocalDateTime.class)))
+                .thenReturn(revenue);
+
+        boolean result = orderService.processPaymentSuccess("BSMS-FULL");
+
+        assertThat(result).isTrue();
+        assertThat(fullPayment.getPaymentStatus()).isEqualTo("SUCCESS");
+        assertThat(order.getOrderStatus()).isEqualTo("PAID");
+        assertThat(product.getProductStatus()).isEqualTo("SOLD");
+        verify(financialLedgerService).recordCompletedOrderRevenueIfAbsent(any(Order.class), any(User.class), any(LocalDateTime.class));
+        verify(orderLogRepository).save(any(OrderLog.class));
     }
 
     @Test

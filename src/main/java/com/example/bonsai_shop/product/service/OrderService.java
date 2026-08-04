@@ -550,6 +550,7 @@ public class OrderService {
         }
 
         if ("PAID".equalsIgnoreCase(order.getOrderStatus())) {
+            recordFullPaymentRevenueLedgerIfPossible(order, LocalDateTime.now());
             return true;
         }
 
@@ -579,6 +580,7 @@ public class OrderService {
         order.setOrderStatus("PAID");
         orderRepository.save(order);
         markProductsAsSold(order);
+        recordFullPaymentRevenueLedgerIfPossible(order, LocalDateTime.now());
 
         eventPublisher.publishEvent(new OrderPaidEvent(order));
         return true;
@@ -984,6 +986,29 @@ public class OrderService {
                 .actionAt(completedAt != null ? completedAt : LocalDateTime.now())
                 .build();
         orderLogRepository.save(ledgerLog);
+    }
+
+    private void recordFullPaymentRevenueLedgerIfPossible(Order order, LocalDateTime paidAt) {
+        if (order == null || order.getOrderId() == null) {
+            return;
+        }
+
+        boolean hasSuccessfulFullPayment = paymentRepository.findByOrderOrderIdOrderByPaymentIdAsc(order.getOrderId())
+                .stream()
+                .anyMatch(payment -> PaymentType.FULL_PAYMENT.name().equalsIgnoreCase(payment.getPaymentType())
+                        && "SUCCESS".equalsIgnoreCase(payment.getPaymentStatus()));
+        if (!hasSuccessfulFullPayment) {
+            return;
+        }
+
+        User actor = order.getAssignedTo();
+        if (actor == null || actor.getUserId() == null) {
+            log.warn("Cannot record full-payment revenue ledger for order {} because assigned moderator is missing.",
+                    order.getOrderCode());
+            return;
+        }
+
+        recordCompletedRevenueLedger(order, actor, paidAt);
     }
 
     @Transactional
