@@ -32,6 +32,9 @@ public class ProductApiController {
                 .style(product.getStyle())
                 .price(product.getPrice())
                 .productStatus(product.getProductStatus())
+                .isVisible(product.getIsVisible())
+                .segmentId(product.getSegment() == null ? null : product.getSegment().getSegmentId())
+                .segmentName(product.getSegment() == null ? null : product.getSegment().getSegmentName())
                 .imageUrl(product.getFirstImageUrl())
                 .build();
 
