@@ -125,21 +125,21 @@
         <div class="grid">
             <label>Tuổi
                 <span class="input-with-unit">
-                    <input type="number" th:field="*{age}" min="0" required>
+                    <input type="number" th:field="*{age}" min="1" required>
                     <span>năm</span>
                 </span>
                 <small th:if="${#fields.hasErrors('age')}" th:errors="*{age}" class="text-danger"></small>
             </label>
             <label>Chiều cao
                 <span class="input-with-unit">
-                    <input type="number" step="0.01" th:field="*{height}" min="0" required>
+                    <input type="number" step="0.01" th:field="*{height}" min="0.01" required>
                     <span>cm</span>
                 </span>
                 <small th:if="${#fields.hasErrors('height')}" th:errors="*{height}" class="text-danger"></small>
             </label>
             <label>Đường kính thân
                 <span class="input-with-unit">
-                    <input type="number" step="0.01" th:field="*{trunkDiameter}" min="0" required>
+                    <input type="number" step="0.01" th:field="*{trunkDiameter}" min="0.01" required>
                     <span>cm</span>
                 </span>
                 <small th:if="${#fields.hasErrors('trunkDiameter')}" th:errors="*{trunkDiameter}" class="text-danger"></small>
@@ -147,7 +147,7 @@
         </div>
 
         <label>Dáng cây (Style/Dáng)
-            <input th:field="*{style}" required>
+            <input th:field="*{style}" pattern="[\p{L}\s]+" title="Style chỉ được nhập chữ." required>
             <small th:if="${#fields.hasErrors('style')}" th:errors="*{style}" class="text-danger"></small>
         </label>
 
