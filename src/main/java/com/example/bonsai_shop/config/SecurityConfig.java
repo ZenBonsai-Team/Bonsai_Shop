@@ -75,12 +75,17 @@ public class SecurityConfig {
                                                                 "/api/products/**",
                                                                 "/api/orders", // ← tạm thời cho phép để test API chính
                                                                 "/api/orders/**", // ← tạm thời cho phép để test API con
-                                                                "/api/notifications/**" // ← cho phép lấy thông tin thông báo nút chuông
+                                                                "/api/notifications/**",
+                                                                "/ws-live-chat/**",
+                                                                "/api/live/**",
+                                                                "/api/reviews/**"
                                                 ).permitAll()
                                                 // Chỉ OWNER mới vào được /owner và /owner/**
                                                 .requestMatchers("/owner", "/owner/**").hasRole("OWNER")
                                                 // Chỉ CONTENT_MODERATOR mới vào được /moderator/community và /moderator/community/**
                                                 .requestMatchers("/moderator/community", "/moderator/community/**").hasRole("CONTENT_MODERATOR")
+                                                .requestMatchers("/moderator/live-session", "/moderator/live-session/**").hasRole("CONTENT_MODERATOR")
+                                                .requestMatchers("/moderator/reviews", "/moderator/reviews/**").hasRole("CONTENT_MODERATOR")
                                                 // Chỉ MODERATOR mới vào được /moderator và /moderator/**
                                                 .requestMatchers("/moderator", "/moderator/**").hasRole("MODERATOR")
                                                 // Chỉ ARTISAN hoặc SELLER mới vào được /artisan và /artisan/**

@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.w3.org/1999/xhtml" lang="vi">
 <head>
     <meta charset="UTF-8">
@@ -328,14 +328,25 @@
                                     <tbody>
                                         <tr th:each="detail : ${order.orderDetails}">
                                             <td>
-                                                <div class="d-flex align-items-center gap-2">
-                                                    <img th:src="${detail.product != null and detail.product.firstImageUrl != null ? detail.product.firstImageUrl : '/images/bonsai-1.png'}" 
-                                                         onerror="this.onerror=null;this.src='/images/bonsai-1.png';"
-                                                         alt="Product" class="rounded" style="width: 48px; height: 48px; object-fit: cover;">
-                                                    <div>
-                                                        <div class="fw-semibold text-dark" th:text="${detail.product != null ? detail.product.productName : 'Sản phẩm'}">Bonsai Tùng Cối</div>
-                                                    </div>
-                                                </div>
+                                                 <div class="d-flex align-items-center gap-2">
+                                                     <img th:src="${detail.product != null and detail.product.firstImageUrl != null ? detail.product.firstImageUrl : '/images/bonsai-1.png'}" 
+                                                          onerror="this.onerror=null;this.src='/images/bonsai-1.png';"
+                                                          alt="Product" class="rounded" style="width: 48px; height: 48px; object-fit: cover;">
+                                                     <div class="d-flex flex-column gap-1">
+                                                         <div class="fw-semibold text-dark" th:text="${detail.product != null ? detail.product.productName : 'Sản phẩm'}">Bonsai Tùng Cối</div>
+                                                         <!-- Review Button -->
+                                                         <button th:if="${order.orderStatus == 'COMPLETED' and detail.product != null}" 
+                                                                 class="btn btn-sm btn-outline-primary py-0 px-2 rounded-pill mt-1 write-review-btn" 
+                                                                 style="font-size: 11px; width: fit-content;"
+                                                                 th:data-product-id="${detail.product.productId}"
+                                                                 th:data-product-name="${detail.product.productName}"
+                                                                 th:data-product-image="${detail.product.firstImageUrl != null ? detail.product.firstImageUrl : '/images/bonsai-1.png'}"
+                                                                 data-bs-toggle="modal" 
+                                                                 data-bs-target="#writeReviewModal">
+                                                             <i class="fa-regular fa-star me-1"></i>Viết đánh giá
+                                                         </button>
+                                                     </div>
+                                                 </div>
                                             </td>
                                             <td class="text-center" th:text="${#numbers.formatDecimal(detail.priceAtPurchase, 0, 'COMMA', 0, 'POINT')} + ' ₫'">1.000.000 ₫</td>
                                             <td class="text-center" th:text="${detail.quantity}">1</td>
@@ -534,6 +545,70 @@
     </div>
 </div>
 
+<!-- SHOPEE STYLE REVIEW MODAL -->
+<div class="modal fade" id="writeReviewModal" tabindex="-1" aria-hidden="true" style="z-index: 1060;">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow">
+            <div class="modal-header bg-success text-white py-3">
+                <h5 class="modal-title fw-bold d-flex align-items-center gap-2">
+                    <i class="fa-regular fa-comment-dots"></i>
+                    Đánh giá trải nghiệm mua cây
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="d-flex align-items-center gap-3 mb-3 pb-3 border-bottom">
+                    <img id="modalProductImage" src="/images/bonsai-1.png" alt="Bonsai" class="rounded border" style="width: 60px; height: 60px; object-fit: cover;">
+                    <div>
+                        <h6 class="fw-bold text-dark mb-1" id="modalProductName">Bonsai Tùng Cối</h6>
+                        <span class="text-muted small">Đánh giá cho sản phẩm độc bản này</span>
+                    </div>
+                </div>
+
+                <!-- Star Rating -->
+                <div class="text-center mb-4">
+                    <label class="d-block text-dark fw-semibold mb-2">Chất lượng sản phẩm & Dịch vụ</label>
+                    <div class="d-flex justify-content-center gap-2" id="starRatingContainer">
+                        <button type="button" class="btn p-0 border-0 star-rating-btn" data-value="1" style="background: none;">
+                            <i class="fa-solid fa-star text-warning fs-3"></i>
+                        </button>
+                        <button type="button" class="btn p-0 border-0 star-rating-btn" data-value="2" style="background: none;">
+                            <i class="fa-solid fa-star text-warning fs-3"></i>
+                        </button>
+                        <button type="button" class="btn p-0 border-0 star-rating-btn" data-value="3" style="background: none;">
+                            <i class="fa-solid fa-star text-warning fs-3"></i>
+                        </button>
+                        <button type="button" class="btn p-0 border-0 star-rating-btn" data-value="4" style="background: none;">
+                            <i class="fa-solid fa-star text-warning fs-3"></i>
+                        </button>
+                        <button type="button" class="btn p-0 border-0 star-rating-btn" data-value="5" style="background: none;">
+                            <i class="fa-solid fa-star text-warning fs-3"></i>
+                        </button>
+                    </div>
+                    <span id="starRatingLabel" class="small text-warning fw-semibold mt-2 d-block">Tuyệt vời</span>
+                </div>
+
+                <!-- Comment Textarea -->
+                <div class="mb-3">
+                    <label for="reviewCommentText" class="form-label text-dark fw-semibold">Nội dung cảm nhận của bạn</label>
+                    <textarea class="form-control rounded-3" id="reviewCommentText" rows="4" 
+                              placeholder="Hãy chia sẻ cảm nhận của bạn về sản phẩm này nhé (chất lượng cây, cách đóng gói, nhân viên phục vụ...)"></textarea>
+                </div>
+
+                <!-- Alerts -->
+                <div class="alert alert-danger d-none small py-2" id="reviewErrorAlert"></div>
+                <div class="alert alert-success d-none small py-2" id="reviewSuccessAlert">
+                    <i class="fa-solid fa-circle-check me-1"></i> Gửi đánh giá thành công! Đang chờ phê duyệt từ cửa hàng.
+                </div>
+            </div>
+            <div class="modal-footer border-0 p-3 bg-light d-flex gap-2">
+                <button type="button" class="btn btn-outline-secondary rounded-pill flex-grow-1 py-2 btn-sm fw-semibold" data-bs-dismiss="modal">Hủy bỏ</button>
+                <button type="button" class="btn btn-success rounded-pill flex-grow-1 py-2 btn-sm fw-semibold" id="submitReviewBtn">Gửi đánh giá</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
     function showDeleteModal(postId) {
         const form = document.getElementById('profileDeleteForm');
@@ -543,6 +618,133 @@
         const deleteModal = new bootstrap.Modal(document.getElementById('profileDeletePostModal'));
         deleteModal.show();
     }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const writeReviewModal = document.getElementById('writeReviewModal');
+        if (writeReviewModal) {
+            let selectedRating = 5;
+            const stars = writeReviewModal.querySelectorAll('.star-rating-btn');
+            const starLabel = writeReviewModal.querySelector('#starRatingLabel');
+            const modalProdImg = writeReviewModal.querySelector('#modalProductImage');
+            const modalProdName = writeReviewModal.querySelector('#modalProductName');
+            const reviewTextarea = writeReviewModal.querySelector('#reviewCommentText');
+            const submitBtn = writeReviewModal.querySelector('#submitReviewBtn');
+            const errorAlert = writeReviewModal.querySelector('#reviewErrorAlert');
+            const successAlert = writeReviewModal.querySelector('#reviewSuccessAlert');
+            let activeProductId = null;
+
+            const ratingLabels = {
+                1: 'Rất tệ',
+                2: 'Không hài lòng',
+                3: 'Bình thường',
+                4: 'Hài lòng',
+                5: 'Tuyệt vời'
+            };
+
+            // Event delegation to capture write-review-btn clicks (even inside modals)
+            document.addEventListener('click', (e) => {
+                const btn = e.target.closest('.write-review-btn');
+                if (btn) {
+                    activeProductId = btn.getAttribute('data-product-id');
+                    const productName = btn.getAttribute('data-product-name');
+                    const productImage = btn.getAttribute('data-product-image');
+
+                    modalProdName.textContent = productName;
+                    modalProdImg.src = productImage || '/images/bonsai-1.png';
+                    reviewTextarea.value = '';
+                    selectedRating = 5;
+                    updateStarsDisplay(selectedRating);
+                    errorAlert.classList.add('d-none');
+                    successAlert.classList.add('d-none');
+                }
+            });
+
+            stars.forEach(star => {
+                star.addEventListener('click', () => {
+                    selectedRating = parseInt(star.getAttribute('data-value'));
+                    updateStarsDisplay(selectedRating);
+                });
+                star.addEventListener('mouseover', () => {
+                    const hoverVal = parseInt(star.getAttribute('data-value'));
+                    updateStarsDisplay(hoverVal);
+                });
+                star.addEventListener('mouseout', () => {
+                    updateStarsDisplay(selectedRating);
+                });
+            });
+
+            function updateStarsDisplay(rating) {
+                stars.forEach(star => {
+                    const val = parseInt(star.getAttribute('data-value'));
+                    const icon = star.querySelector('i');
+                    if (val <= rating) {
+                        icon.className = 'fa-solid fa-star text-warning fs-3';
+                    } else {
+                        icon.className = 'fa-regular fa-star text-secondary fs-3';
+                    }
+                });
+                starLabel.textContent = ratingLabels[rating] || 'Tuyệt vời';
+            }
+
+            submitBtn.addEventListener('click', () => {
+                const comment = reviewTextarea.value.trim();
+                if (comment.length === 0) {
+                    errorAlert.textContent = 'Vui lòng nhập nội dung cảm nhận.';
+                    errorAlert.classList.remove('d-none');
+                    return;
+                }
+
+                // Extract CSRF Token
+                const csrfInput = document.querySelector('input[name="_csrf"]');
+                const csrfToken = csrfInput ? csrfInput.value : '';
+
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Đang gửi...';
+
+                fetch(`/api/reviews/product/${activeProductId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken
+                    },
+                    body: JSON.stringify({
+                        rating: selectedRating,
+                        comment: comment
+                    })
+                })
+                .then(async (response) => {
+                    if (response.ok) {
+                        successAlert.classList.remove('d-none');
+                        errorAlert.classList.add('d-none');
+                        setTimeout(() => {
+                            const bsModal = bootstrap.Modal.getInstance(writeReviewModal);
+                            if (bsModal) bsModal.hide();
+                            // Close the parent order details modal as well to avoid backdrop bug
+                            const openModalEl = document.querySelector('.modal.show');
+                            if (openModalEl) {
+                                const parentModal = bootstrap.Modal.getInstance(openModalEl);
+                                if (parentModal) parentModal.hide();
+                            }
+                            window.location.reload();
+                        }, 1500);
+                    } else {
+                        const text = await response.text();
+                        errorAlert.textContent = text || 'Gửi đánh giá thất bại. Vui lòng thử lại.';
+                        errorAlert.classList.remove('d-none');
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    errorAlert.textContent = 'Đã xảy ra lỗi kết nối. Vui lòng kiểm tra lại.';
+                    errorAlert.classList.remove('d-none');
+                })
+                .finally(() => {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = 'Gửi đánh giá';
+                });
+            });
+        }
+    });
 </script>
 
 </body>

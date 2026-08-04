@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="vi"
+      xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/dashboard-layout :: layout(~{::title}, ~{::#moderator-content}, ~{::#page-styles}, ~{::#page-scripts})}"
+      th:with="paramActivePage='reviews'">
+<head>
+    <title>Quản lý Đánh giá - Moderator Portal</title>
+    <th:block id="page-styles">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+        <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}"/>
+        <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : 'X-CSRF-TOKEN'}"/>
+        <style>
+            .review-card {
+                background: #fff;
+                border: 1px solid #e2e8f0;
+                border-radius: 12px;
+                padding: 16px;
+                margin-bottom: 12px;
+                transition: box-shadow 0.2s;
+            }
+            .review-card:hover {
+                box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            }
+            .star-display {
+                color: #f59e0b;
+                font-size: 16px;
+            }
+            .badge-PENDING { background-color: #f59e0b; }
+            .badge-APPROVED { background-color: #10b981; }
+            .badge-REJECTED { background-color: #ef4444; }
+            .tab-panel { display: none; }
+            .tab-panel.active { display: block; }
+            .review-tab-btn { cursor: pointer; }
+            .nav-tabs .nav-link { color: #475569; }
+            .nav-tabs .nav-link.active { color: #1e293b; font-weight: 600; }
+            .action-btn { font-size: 13px; padding: 4px 12px; border-radius: 6px; }
+            .response-box {
+                background: #f8fafc;
+                border-left: 3px solid #3b82f6;
+                padding: 10px 14px;
+                border-radius: 0 8px 8px 0;
+                font-size: 13px;
+                color: #475569;
+                margin-top: 8px;
+            }
+        </style>
+    </th:block>
+</head>
+<body>
+<div id="moderator-content">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="fw-bold mb-1"><i class="fa-regular fa-star me-2 text-warning"></i>Quản lý Đánh giá Khách hàng</h4>
+            <p class="text-muted small mb-0">Duyệt và phản hồi đánh giá từ khách hàng sau khi hoàn tất đơn hàng</p>
+        </div>
+        <div class="d-flex gap-2">
+            <span class="badge bg-warning text-dark fs-6" th:text="${pendingReviews != null ? pendingReviews.size() : 0} + ' chờ duyệt'">0 chờ duyệt</span>
+            <span class="badge bg-success fs-6" th:text="${approvedReviews != null ? approvedReviews.size() : 0} + ' đã duyệt'">0 đã duyệt</span>
+        </div>
+    </div>
+
+    <!-- Tab navigation -->
+    <ul class="nav nav-tabs mb-4" id="reviewTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="pending-tab" data-bs-toggle="tab" data-bs-target="#pending-panel" type="button" role="tab">
+                <i class="fa-solid fa-clock me-1"></i> Chờ duyệt
+                <span class="badge bg-warning text-dark ms-1" th:text="${pendingReviews != null ? pendingReviews.size() : 0}">0</span>
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="approved-tab" data-bs-toggle="tab" data-bs-target="#approved-panel" type="button" role="tab">
+                <i class="fa-solid fa-check-circle me-1 text-success"></i> Đã duyệt
+                <span class="badge bg-success ms-1" th:text="${approvedReviews != null ? approvedReviews.size() : 0}">0</span>
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="rejected-tab" data-bs-toggle="tab" data-bs-target="#rejected-panel" type="button" role="tab">
+                <i class="fa-solid fa-ban me-1 text-danger"></i> Đã từ chối
+                <span class="badge bg-danger ms-1" th:text="${rejectedReviews != null ? rejectedReviews.size() : 0}">0</span>
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="reviewTabContent">
+
+        <!-- PENDING REVIEWS -->
+        <div class="tab-pane fade show active" id="pending-panel" role="tabpanel">
+            <div th:if="${pendingReviews == null or pendingReviews.isEmpty()}" class="text-center py-5 text-muted">
+                <i class="fa-regular fa-face-smile fa-3x mb-3"></i>
+                <p>Không có đánh giá nào đang chờ duyệt.</p>
+            </div>
+            <div th:each="review : ${pendingReviews}" class="review-card">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div class="flex-grow-1">
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <strong th:text="${review.customer?.fullName ?: 'Ẩn danh'}">Khách hàng</strong>
+                            <span class="badge bg-secondary" th:text="${'#' + review.product?.productId}"></span>
+                            <span class="text-muted small" th:text="${review.product?.productName}">Tên sản phẩm</span>
+                        </div>
+                        <div class="star-display mb-2">
+                            <span th:each="i : ${#numbers.sequence(1, 5)}"
+                                  th:text="${i <= review.rating ? '★' : '☆'}">★</span>
+                            <span class="text-muted small ms-1" th:text="${review.rating + '/5 sao'}"></span>
+                        </div>
+                        <p class="mb-2" th:text="${review.comment}">Nội dung đánh giá</p>
+                        <small class="text-muted" th:text="${'Gửi lúc: ' + review.createdAt}"></small>
+                    </div>
+                    <div class="d-flex gap-2 ms-3">
+                        <button class="btn btn-success action-btn"
+                                th:onclick="|approveReview(${review.reviewId})|">
+                            <i class="fa-solid fa-check me-1"></i>Duyệt
+                        </button>
+                        <button class="btn btn-outline-danger action-btn"
+                                th:onclick="|rejectReview(${review.reviewId})|">
+                            <i class="fa-solid fa-ban me-1"></i>Từ chối
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- APPROVED REVIEWS -->
+        <div class="tab-pane fade" id="approved-panel" role="tabpanel">
+            <div th:if="${approvedReviews == null or approvedReviews.isEmpty()}" class="text-center py-5 text-muted">
+                <i class="fa-regular fa-star fa-3x mb-3"></i>
+                <p>Chưa có đánh giá nào được duyệt.</p>
+            </div>
+            <div th:each="review : ${approvedReviews}" class="review-card">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div class="flex-grow-1">
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <strong th:text="${review.customer?.fullName ?: 'Ẩn danh'}">Khách hàng</strong>
+                            <span class="text-muted small" th:text="${review.product?.productName}">Tên sản phẩm</span>
+                        </div>
+                        <div class="star-display mb-2">
+                            <span th:each="i : ${#numbers.sequence(1, 5)}"
+                                  th:text="${i <= review.rating ? '★' : '☆'}">★</span>
+                        </div>
+                        <p class="mb-2" th:text="${review.comment}">Nội dung đánh giá</p>
+                        <div th:if="${review.response != null and !#strings.isEmpty(review.response)}" class="response-box">
+                            <i class="fa-solid fa-reply me-1"></i><strong>Phản hồi của nhà vườn:</strong>
+                            <span th:text="${review.response}"></span>
+                        </div>
+                    </div>
+                    <div class="ms-3">
+                        <button class="btn btn-outline-primary action-btn"
+                                th:attr="data-review-id=${review.reviewId}"
+                                onclick="openResponseModal(this.getAttribute('data-review-id'))">
+                            <i class="fa-solid fa-reply me-1"></i>Phản hồi
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- REJECTED REVIEWS -->
+        <div class="tab-pane fade" id="rejected-panel" role="tabpanel">
+            <div th:if="${rejectedReviews == null or rejectedReviews.isEmpty()}" class="text-center py-5 text-muted">
+                <i class="fa-solid fa-ban fa-3x mb-3 text-danger opacity-50"></i>
+                <p>Không có đánh giá nào bị từ chối.</p>
+            </div>
+            <div th:each="review : ${rejectedReviews}" class="review-card border-danger-subtle">
+                <div class="d-flex align-items-start gap-3">
+                    <div class="flex-grow-1">
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <strong th:text="${review.customer?.fullName ?: 'Ẩn danh'}">Khách hàng</strong>
+                            <span class="badge bg-danger">Từ chối</span>
+                            <span class="text-muted small" th:text="${review.product?.productName}">Tên sản phẩm</span>
+                        </div>
+                        <div class="star-display mb-2">
+                            <span th:each="i : ${#numbers.sequence(1, 5)}"
+                                  th:text="${i <= review.rating ? '★' : '☆'}">★</span>
+                        </div>
+                        <p class="mb-0 text-muted" th:text="${review.comment}">Nội dung đánh giá</p>
+                    </div>
+                    <button class="btn btn-outline-success action-btn"
+                            th:onclick="|approveReview(${review.reviewId})|">
+                        <i class="fa-solid fa-undo me-1"></i>Duyệt lại
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Response Modal -->
+<div class="modal fade" id="responseModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fa-solid fa-reply me-2"></i>Phản hồi đánh giá</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="responseReviewId">
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Nội dung phản hồi</label>
+                    <textarea id="responseText" class="form-control" rows="4"
+                              placeholder="Nhập phản hồi của nhà vườn tới khách hàng..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button class="btn btn-primary" onclick="submitResponse()">
+                    <i class="fa-solid fa-paper-plane me-1"></i>Gửi phản hồi
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<th:block id="page-scripts">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const csrfToken = document.querySelector('meta[name="_csrf"]')?.content || '';
+        const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.content || 'X-CSRF-TOKEN';
+
+        function approveReview(reviewId) {
+            if (!confirm('Duyệt đánh giá này?')) return;
+            fetch(`/api/reviews/${reviewId}/approve`, {
+                method: 'PUT',
+                headers: { [csrfHeader]: csrfToken }
+            })
+            .then(r => r.json())
+            .then(d => {
+                if (d.success) { alert('Đã duyệt thành công!'); location.reload(); }
+                else alert('Lỗi: ' + d.error);
+            });
+        }
+
+        function rejectReview(reviewId) {
+            if (!confirm('Từ chối đánh giá này?')) return;
+            fetch(`/api/reviews/${reviewId}/reject`, {
+                method: 'PUT',
+                headers: { [csrfHeader]: csrfToken }
+            })
+            .then(r => r.json())
+            .then(d => {
+                if (d.success) { alert('Đã từ chối!'); location.reload(); }
+                else alert('Lỗi: ' + d.error);
+            });
+        }
+
+        function openResponseModal(reviewId) {
+            document.getElementById('responseReviewId').value = reviewId;
+            document.getElementById('responseText').value = '';
+            new bootstrap.Modal(document.getElementById('responseModal')).show();
+        }
+
+        function submitResponse() {
+            const reviewId = document.getElementById('responseReviewId').value;
+            const response = document.getElementById('responseText').value.trim();
+            if (!response) { alert('Vui lòng nhập nội dung phản hồi'); return; }
+
+            fetch(`/api/reviews/${reviewId}/respond`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    [csrfHeader]: csrfToken
+                },
+                body: JSON.stringify({ response })
+            })
+            .then(r => r.json())
+            .then(d => {
+                if (d.success) { alert('Đã gửi phản hồi!'); location.reload(); }
+                else alert('Lỗi: ' + d.error);
+            });
+        }
+    </script>
+</th:block>
+</body>
+</html>

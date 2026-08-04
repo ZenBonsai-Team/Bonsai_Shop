@@ -96,4 +96,11 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
 
     @Query("SELECT DISTINCT o FROM Order o LEFT JOIN FETCH o.orderDetails od LEFT JOIN FETCH od.product WHERE o.orderStatus = 'PENDING_PAYMENT' AND LOWER(o.orderType) = 'in_person' AND o.orderDate <= :cutoffTime")
     List<Order> findExpiredInPersonOrders(@Param("cutoffTime") java.time.LocalDateTime cutoffTime);
+
+    // Review eligibility: check if customer has a COMPLETED order with a specific product
+    @Query("SELECT COUNT(o) > 0 FROM Order o JOIN o.orderDetails od WHERE o.customer.userId = :customerId AND o.orderStatus = :orderStatus AND od.product.productId = :productId")
+    boolean existsByCustomerUserIdAndOrderStatusAndOrderDetails_Product_ProductId(
+            @Param("customerId") Integer customerId,
+            @Param("orderStatus") String orderStatus,
+            @Param("productId") Integer productId);
 }
