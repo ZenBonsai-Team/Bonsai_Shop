@@ -17,7 +17,9 @@ import com.example.bonsai_shop.moderator.dto.PaymentSummaryDTO;
 import com.example.bonsai_shop.moderator.dto.ProductSummaryDTO;
 import com.example.bonsai_shop.moderator.dto.TimelineDTO;
 import com.example.bonsai_shop.moderator.util.ModeratorDisplayLabelMapper;
+import com.example.bonsai_shop.entity.OrderLog;
 import com.example.bonsai_shop.product.repository.OrderHandlingRepository;
+import com.example.bonsai_shop.product.repository.OrderLogRepository;
 import com.example.bonsai_shop.product.repository.OrderRepository;
 import com.example.bonsai_shop.product.repository.PaymentRepository;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +31,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -38,6 +41,7 @@ public class OrderDetailService {
     private final OrderRepository orderRepository;
     private final PaymentRepository paymentRepository;
     private final OrderHandlingRepository orderHandlingRepository;
+    private final OrderLogRepository orderLogRepository;
     private final MyOrderService myOrderService;
     private final FinancialLedgerService financialLedgerService;
 
@@ -225,7 +229,7 @@ public class OrderDetailService {
                 .build();
 
         String currentStatus = order.getOrderStatus() != null ? order.getOrderStatus().toUpperCase() : "PENDING";
-        List<TimelineDTO> timeline = buildOrderTimeline(currentStatus, order.getOrderDate(), order.getAssignedAt());
+        List<TimelineDTO> timeline = buildOrderTimeline(order, currentStatus, paymentEntities);
 
         List<OrderHandling> handlings = orderHandlingRepository.findByOrderOrderIdOrderByHandledAtDesc(order.getOrderId());
         List<HandlingHistoryDTO> handlingHistoryList = new ArrayList<>();
@@ -321,19 +325,63 @@ public class OrderDetailService {
 
 
 
-    private List<TimelineDTO> buildOrderTimeline(String status, LocalDateTime createdDate, LocalDateTime assignedDate) {
+    private List<TimelineDTO> buildOrderTimeline(Order order, String status, List<Payment> paymentEntities) {
         List<TimelineDTO> list = new ArrayList<>();
         boolean isCancelled = "CANCELLED".equals(status);
+        LocalDateTime createdDate = order != null ? order.getOrderDate() : null;
+        LocalDateTime assignedDate = order != null ? order.getAssignedAt() : null;
+
+        List<OrderLog> logs = order != null && order.getOrderId() != null
+                ? orderLogRepository.findByOrderOrderIdOrderByActionAtAsc(order.getOrderId())
+                : List.of();
+
+        LocalDateTime approvedAt = logs.stream()
+                .filter(l -> "PENDING_PAYMENT".equalsIgnoreCase(l.getToStatus())
+                        || "APPROVED".equalsIgnoreCase(l.getActionType())
+                        || "DEPOSITED".equalsIgnoreCase(l.getToStatus())
+                        || "PAID".equalsIgnoreCase(l.getToStatus())
+                        || "COMPLETED".equalsIgnoreCase(l.getToStatus()))
+                .map(OrderLog::getActionAt)
+                .filter(Objects::nonNull)
+                .findFirst()
+                .orElse(null);
+
+        LocalDateTime depositedOrPaidAt = paymentEntities != null ? paymentEntities.stream()
+                .filter(p -> "SUCCESS".equalsIgnoreCase(p.getPaymentStatus()))
+                .map(Payment::getPaymentDate)
+                .filter(Objects::nonNull)
+                .findFirst()
+                .orElseGet(() -> logs.stream()
+                        .filter(l -> "DEPOSITED".equalsIgnoreCase(l.getToStatus()) || "PAID".equalsIgnoreCase(l.getToStatus()))
+                        .map(OrderLog::getActionAt)
+                        .filter(Objects::nonNull)
+                        .findFirst()
+                        .orElse(null))
+                : null;
+
+        LocalDateTime completedAt = logs.stream()
+                .filter(l -> "COMPLETED".equalsIgnoreCase(l.getToStatus()) || "ORDER_COMPLETED".equalsIgnoreCase(l.getActionType()))
+                .map(OrderLog::getActionAt)
+                .filter(Objects::nonNull)
+                .findFirst()
+                .orElse(null);
+
+        LocalDateTime cancelledAt = logs.stream()
+                .filter(l -> "CANCELLED".equalsIgnoreCase(l.getToStatus()))
+                .map(OrderLog::getActionAt)
+                .filter(Objects::nonNull)
+                .findFirst()
+                .orElse(null);
 
         list.add(TimelineDTO.builder().stage("CREATED").label("Khởi tạo đơn hàng").timestamp(createdDate).completed(true).current("PENDING".equals(status) && assignedDate == null).build());
         list.add(TimelineDTO.builder().stage("CLAIMED").label("Tiếp nhận đơn").timestamp(assignedDate).completed(assignedDate != null).current("PENDING".equals(status) && assignedDate != null).build());
-        list.add(TimelineDTO.builder().stage("APPROVED").label("Đã phê duyệt").timestamp(null).completed("PENDING_PAYMENT".equals(status) || "DEPOSITED".equals(status) || "PAID".equals(status) || "COMPLETED".equals(status)).current("PENDING_PAYMENT".equals(status)).build());
-        list.add(TimelineDTO.builder().stage("DEPOSITED").label("Đã đặt cọc/Thanh toán").timestamp(null).completed("DEPOSITED".equals(status) || "PAID".equals(status) || "COMPLETED".equals(status)).current("DEPOSITED".equals(status) || "PAID".equals(status)).build());
+        list.add(TimelineDTO.builder().stage("APPROVED").label("Đã phê duyệt").timestamp(approvedAt).completed("PENDING_PAYMENT".equals(status) || "DEPOSITED".equals(status) || "PAID".equals(status) || "COMPLETED".equals(status)).current("PENDING_PAYMENT".equals(status)).build());
+        list.add(TimelineDTO.builder().stage("DEPOSITED").label("Đã đặt cọc/Thanh toán").timestamp(depositedOrPaidAt).completed("DEPOSITED".equals(status) || "PAID".equals(status) || "COMPLETED".equals(status)).current("DEPOSITED".equals(status) || "PAID".equals(status)).build());
 
         if (isCancelled) {
-            list.add(TimelineDTO.builder().stage("CANCELLED").label("Đã huỷ đơn").timestamp(null).completed(true).current(true).build());
+            list.add(TimelineDTO.builder().stage("CANCELLED").label("Đã huỷ đơn").timestamp(cancelledAt).completed(true).current(true).build());
         } else {
-            list.add(TimelineDTO.builder().stage("COMPLETED").label("Hoàn thành").timestamp(null).completed("COMPLETED".equals(status)).current("COMPLETED".equals(status)).build());
+            list.add(TimelineDTO.builder().stage("COMPLETED").label("Hoàn thành").timestamp(completedAt).completed("COMPLETED".equals(status)).current("COMPLETED".equals(status)).build());
         }
 
         return list;

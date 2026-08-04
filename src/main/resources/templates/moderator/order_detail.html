@@ -788,7 +788,8 @@
                             <div class="od-timeline-dot"></div>
                             <div class="od-timeline-label" th:text="${tl.label}">---</div>
                             <div class="od-timeline-time"
-                                 th:text="${tl.timestamp != null ? #temporals.format(tl.timestamp, 'dd/MM/yyyy HH:mm') : 'Chờ xử lý'}">---</div>
+                                 th:if="${tl.timestamp != null}"
+                                 th:text="${#temporals.format(tl.timestamp, 'dd/MM/yyyy HH:mm')}"></div>
                         </div>
                     </div>
                 </div>
