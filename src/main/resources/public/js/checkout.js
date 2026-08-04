@@ -136,7 +136,7 @@ async function placeOrder() {
     const notes = document.getElementById('orderNotes').value.trim();
     
     const paymentMethodEl = document.querySelector('input[name="paymentMethod"]:checked');
-    const paymentMethod = paymentMethodEl ? paymentMethodEl.value : 'COD';
+    const paymentMethod = paymentMethodEl ? paymentMethodEl.value : 'DEPOSIT';
     
     // --- BẮT ĐẦU VALIDATE PHÍA CLIENT ---
     let hasError = false;

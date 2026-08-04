@@ -194,8 +194,7 @@ public class OrderActionService {
         );
         closeHandling(order);
         log.info("[ACTION] record_fault_refund - order={}", order.getOrderCode());
-        String newStatus = Boolean.TRUE.equals(request.getCustomerKeepsTree()) ? "COMPLETED" : "CANCELLED";
-        return success(order.getOrderCode(), "record_fault_refund", newStatus);
+        return success(order.getOrderCode(), "record_fault_refund", "CANCELLED");
     }
 
     private Map<String, Object> success(String orderCode, String action, String newStatus) {

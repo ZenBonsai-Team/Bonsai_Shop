@@ -307,7 +307,7 @@ const OrderDrawer = {
             message: `Bạn có chắc chắn muốn duyệt đơn hàng ${this.currentOrder.orderCode} không?`,
             summary: [
                 { label: "Mã đơn hàng", value: this.currentOrder.orderCode },
-                { label: "Phương thức thanh toán", value: window.OrderModeratorLabels?.paymentMethod(isDeposit ? "COD" : "VNPAY") || (isDeposit ? "Đặt cọc trước, thanh toán phần còn lại khi nhận cây" : "Thanh toán trực tuyến qua VNPay") },
+                { label: "Phương thức thanh toán", value: window.OrderModeratorLabels?.paymentMethod(isDeposit ? "DEPOSIT" : "VNPAY") || (isDeposit ? "Đặt cọc trước, thanh toán phần còn lại khi nhận cây" : "Thanh toán trực tuyến qua VNPay") },
                 ...(isDeposit ? [{ label: "Tiền đặt cọc cây", value: this.formatVND(effectiveDeposit) }] : []),
                 { label: "Phí xe cẩu", value: this.formatOptionalVND(crane) },
                 { label: "Phí vận chuyển", value: this.formatOptionalVND(shipping) },

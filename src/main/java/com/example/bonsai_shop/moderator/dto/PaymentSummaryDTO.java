@@ -30,6 +30,4 @@ public class PaymentSummaryDTO {
     private BigDecimal fullRefundAmount;
     private BigDecimal netRecognizedAmount;
     private BigDecimal refundableCash;
-    private String financialResolutionStatus;
-    private String financialResolutionStatusLabel;
 }

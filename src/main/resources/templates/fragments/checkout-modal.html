@@ -1,4 +1,4 @@
-﻿<!-- src/main/resources/templates/fragments/checkout-modal.html -->
+<!-- src/main/resources/templates/fragments/checkout-modal.html -->
 <div th:fragment="checkoutModal" 
      class="modal fade" 
      id="checkoutModal" 
@@ -91,13 +91,13 @@
                             <div class="mb-4">
                                 <label class="form-label required-label">Phương thức thanh toán</label>
                                 <div class="d-flex gap-3">
-                                    <!-- COD Option -->
-                                    <div class="payment-method-card active" onclick="selectPaymentMethod('COD')">
-                                        <input type="radio" name="paymentMethod" id="payCOD" value="COD" checked class="d-none">
-                                        <div class="pm-icon"><i class="fa-solid fa-truck-ramp-box"></i></div>
+                                    <!-- Deposit Option -->
+                                    <div class="payment-method-card active" onclick="selectPaymentMethod('DEPOSIT')">
+                                        <input type="radio" name="paymentMethod" id="payDeposit" value="DEPOSIT" checked class="d-none">
+                                        <div class="pm-icon"><i class="fa-solid fa-hand-holding-dollar"></i></div>
                                         <div class="pm-text">
-                                            <div class="pm-title">COD</div>
-                                            <div class="pm-desc">Thanh toán khi nhận cây</div>
+                                            <div class="pm-title">Cọc trước</div>
+                                            <div class="pm-desc">Thanh toán tiền cọc trước, phần còn lại thanh toán khi nhận hàng</div>
                                         </div>
                                         <div class="pm-badge"><i class="fa-solid fa-circle-check"></i></div>
                                     </div>

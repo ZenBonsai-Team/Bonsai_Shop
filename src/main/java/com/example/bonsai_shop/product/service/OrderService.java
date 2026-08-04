@@ -515,8 +515,8 @@ public class OrderService {
         Order savedOrder = orderRepository.save(order);
 
         // Khởi tạo bản ghi Payment PENDING ban đầu duy nhất theo 1-N Model
-        String rawMethod = dto.getPaymentMethod() != null ? dto.getPaymentMethod() : "COD";
-        String pType = ("DEPOSIT".equalsIgnoreCase(rawMethod) || "COD".equalsIgnoreCase(rawMethod)) 
+        String rawMethod = dto.getPaymentMethod() != null ? dto.getPaymentMethod() : PaymentMethod.DEPOSIT.name();
+        String pType = (PaymentMethod.DEPOSIT.name().equalsIgnoreCase(rawMethod) || "COD".equalsIgnoreCase(rawMethod)) 
                 ? PaymentType.DEPOSIT.name() 
                 : PaymentType.FULL_PAYMENT.name();
 
@@ -550,6 +550,7 @@ public class OrderService {
         }
 
         if ("PAID".equalsIgnoreCase(order.getOrderStatus())) {
+            recordFullPaymentRevenueLedgerIfPossible(order, LocalDateTime.now());
             return true;
         }
 
@@ -579,6 +580,7 @@ public class OrderService {
         order.setOrderStatus("PAID");
         orderRepository.save(order);
         markProductsAsSold(order);
+        recordFullPaymentRevenueLedgerIfPossible(order, LocalDateTime.now());
 
         eventPublisher.publishEvent(new OrderPaidEvent(order));
         return true;
@@ -654,10 +656,14 @@ public class OrderService {
             throw new IllegalStateException("Số tiền thanh toán không hợp lệ.");
         }
 
+        String retryPaymentMethod = PaymentType.DEPOSIT.name().equalsIgnoreCase(paymentType)
+                ? PaymentMethod.DEPOSIT.name()
+                : PaymentMethod.VNPAY.name();
+
         Payment retryPayment = Payment.builder()
                 .order(order)
                 .paymentType(paymentType)
-                .paymentMethod(PaymentMethod.VNPAY.name())
+                .paymentMethod(retryPaymentMethod)
                 .paymentStatus("PENDING")
                 .amount(amount)
                 .notes("Retry VNPay payment after previous failed/expired attempt")
@@ -835,51 +841,48 @@ public class OrderService {
             throw new IllegalArgumentException("Bên chịu trách nhiệm phải là nhà vườn hoặc quá trình vận chuyển.");
         }
 
+        // Tự động xác định số tiền hoàn 100% dựa trên tổng số tiền thực tế khách đã thanh toán
+        BigDecimal refundableCash = financialLedgerService.calculateRefundableCash(order);
+        if (refundableCash == null || refundableCash.compareTo(ZERO) <= 0) {
+            throw new IllegalStateException("Đơn hàng này không có khoản thanh toán thành công nào còn có thể hoàn tiền.");
+        }
+
+        BigDecimal grandTotal = order.getTotalAmount() != null ? order.getTotalAmount() : ZERO;
+        if (grandTotal.compareTo(ZERO) > 0 && refundableCash.compareTo(grandTotal) != 0) {
+            throw new IllegalStateException("Tổng số tiền khách đã thanh toán (" + refundableCash + " đ) và tổng giá trị đơn hàng (" + grandTotal + " đ) không đồng nhất. Vui lòng kiểm tra lại giao dịch!");
+        }
+
+        BigDecimal calculatedRefundAmount = refundableCash;
         String normalizedReason = requireReason(reason);
+
         FinancialLedger refundLedger = financialLedgerService.recordManualFaultRefund(
                 order,
                 faultParty,
-                refundAmount,
+                calculatedRefundAmount,
                 normalizedReason,
                 evidenceNote,
                 externalReference,
                 moderator
         );
 
-        appendOrderNote(order, normalizedReason + " Hoàn tiền chỉ được ghi nhận thủ công, không tự động chuyển khoản.");
-        boolean keepsTree = Boolean.TRUE.equals(customerKeepsTree);
-        String newStatus;
-        if (keepsTree) {
-            if (!"PAID".equalsIgnoreCase(oldStatus) && !"COMPLETED".equalsIgnoreCase(oldStatus)) {
-                throw new IllegalStateException("Chỉ có thể để khách giữ cây khi đơn đã thanh toán toàn bộ.");
-            }
-            LocalDateTime completedAt = LocalDateTime.now();
-            order.setOrderStatus("COMPLETED");
-            orderRepository.save(order);
-            markProductsAsSold(order);
-            recordCompletedRevenueLedger(order, moderator, completedAt);
-            newStatus = "COMPLETED";
-        } else {
-            String normalizedProductResolution = requireProductResolution(productResolution);
-            order.setOrderStatus("CANCELLED");
-            orderRepository.save(order);
-            applyProductResolution(order, normalizedProductResolution);
-            newStatus = "CANCELLED";
-        }
+        appendOrderNote(order, normalizedReason + " Hoàn tiền 100% chỉ được ghi nhận thủ công, không tự động chuyển khoản.");
+
+        // Nghiệp vụ cố định: Đơn chuyển CANCELLED, khách không giữ cây, toàn bộ cây trong đơn trả về AVAILABLE
+        order.setOrderStatus("CANCELLED");
+        orderRepository.save(order);
+        releaseProducts(order);
 
         OrderLog logEntry = OrderLog.builder()
                 .order(order)
                 .actionBy(moderator)
                 .actionType(refundLedger.getLedgerType().name() + "_RECORDED")
                 .fromStatus(oldStatus)
-                .toStatus(newStatus)
+                .toStatus("CANCELLED")
                 .actionAt(LocalDateTime.now())
                 .build();
         orderLogRepository.save(logEntry);
 
-        if ("CANCELLED".equals(newStatus)) {
-            eventPublisher.publishEvent(new OrderRejectedEvent(order, normalizedReason));
-        }
+        eventPublisher.publishEvent(new OrderRejectedEvent(order, normalizedReason));
         return true;
     }
 
@@ -984,6 +987,29 @@ public class OrderService {
                 .actionAt(completedAt != null ? completedAt : LocalDateTime.now())
                 .build();
         orderLogRepository.save(ledgerLog);
+    }
+
+    private void recordFullPaymentRevenueLedgerIfPossible(Order order, LocalDateTime paidAt) {
+        if (order == null || order.getOrderId() == null) {
+            return;
+        }
+
+        boolean hasSuccessfulFullPayment = paymentRepository.findByOrderOrderIdOrderByPaymentIdAsc(order.getOrderId())
+                .stream()
+                .anyMatch(payment -> PaymentType.FULL_PAYMENT.name().equalsIgnoreCase(payment.getPaymentType())
+                        && "SUCCESS".equalsIgnoreCase(payment.getPaymentStatus()));
+        if (!hasSuccessfulFullPayment) {
+            return;
+        }
+
+        User actor = order.getAssignedTo();
+        if (actor == null || actor.getUserId() == null) {
+            log.warn("Cannot record full-payment revenue ledger for order {} because assigned moderator is missing.",
+                    order.getOrderCode());
+            return;
+        }
+
+        recordCompletedRevenueLedger(order, actor, paidAt);
     }
 
     @Transactional

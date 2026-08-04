@@ -4,6 +4,7 @@ import com.example.bonsai_shop.entity.FinancialLedger;
 import com.example.bonsai_shop.entity.Order;
 import com.example.bonsai_shop.entity.OrderDetail;
 import com.example.bonsai_shop.entity.OrderLog;
+import com.example.bonsai_shop.entity.Payment;
 import com.example.bonsai_shop.entity.Product;
 import com.example.bonsai_shop.entity.User;
 import com.example.bonsai_shop.finance.enums.FaultParty;
@@ -16,6 +17,7 @@ import com.example.bonsai_shop.product.repository.OrderLogRepository;
 import com.example.bonsai_shop.product.repository.OrderRepository;
 import com.example.bonsai_shop.product.repository.PaymentRepository;
 import com.example.bonsai_shop.product.repository.ProductRepository;
+import com.example.bonsai_shop.product.enums.PaymentType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.ApplicationEventPublisher;
@@ -27,6 +29,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -37,6 +40,7 @@ class OrderServiceTest {
     private OrderRepository orderRepository;
     private ProductRepository productRepository;
     private OrderLogRepository orderLogRepository;
+    private PaymentRepository paymentRepository;
     private FinancialLedgerService financialLedgerService;
     private OrderService orderService;
 
@@ -46,7 +50,7 @@ class OrderServiceTest {
         productRepository = mock(ProductRepository.class);
         orderLogRepository = mock(OrderLogRepository.class);
         OrderHandlingRepository orderHandlingRepository = mock(OrderHandlingRepository.class);
-        PaymentRepository paymentRepository = mock(PaymentRepository.class);
+        paymentRepository = mock(PaymentRepository.class);
         ApplicationEventPublisher eventPublisher = mock(ApplicationEventPublisher.class);
         MailService mailService = mock(MailService.class);
         CartService cartService = mock(CartService.class);
@@ -63,6 +67,37 @@ class OrderServiceTest {
                 cartService,
                 financialLedgerService
         );
+    }
+
+    @Test
+    void fullPaymentSuccessMarksPaidAndRecordsRevenueLedger() {
+        User moderator = moderator(14);
+        Product product = product("RESERVED");
+        Order order = assignedOrder("BSMS-FULL", "PENDING_PAYMENT", moderator, product);
+        Payment fullPayment = Payment.builder()
+                .paymentId(300)
+                .order(order)
+                .paymentType(PaymentType.FULL_PAYMENT.name())
+                .paymentStatus("PENDING")
+                .amount(new BigDecimal("1000000"))
+                .build();
+        FinancialLedger revenue = ledger(order, FinancialLedgerType.COMPLETED_ORDER_REVENUE);
+
+        when(orderRepository.findByOrderCode("BSMS-FULL")).thenReturn(Optional.of(order));
+        when(paymentRepository.findTopByOrderOrderIdAndPaymentStatusOrderByPaymentIdDesc(100, "PENDING"))
+                .thenReturn(Optional.of(fullPayment));
+        when(paymentRepository.findByOrderOrderIdOrderByPaymentIdAsc(100)).thenReturn(List.of(fullPayment));
+        when(financialLedgerService.recordCompletedOrderRevenueIfAbsent(any(Order.class), any(User.class), any(LocalDateTime.class)))
+                .thenReturn(revenue);
+
+        boolean result = orderService.processPaymentSuccess("BSMS-FULL");
+
+        assertThat(result).isTrue();
+        assertThat(fullPayment.getPaymentStatus()).isEqualTo("SUCCESS");
+        assertThat(order.getOrderStatus()).isEqualTo("PAID");
+        assertThat(product.getProductStatus()).isEqualTo("SOLD");
+        verify(financialLedgerService).recordCompletedOrderRevenueIfAbsent(any(Order.class), any(User.class), any(LocalDateTime.class));
+        verify(orderLogRepository).save(any(OrderLog.class));
     }
 
     @Test
@@ -87,57 +122,28 @@ class OrderServiceTest {
     }
 
     @Test
-    void partialRefundWithCustomerKeepingTreeCompletesOrderAndKeepsProductSold() {
+    void fullRefundCancelsOrderAndReleasesAllProductsToAvailable() {
         User moderator = moderator(11);
         Product product = product("RESERVED");
-        Order order = assignedOrder("BSMS-KEEP", "PAID", moderator, product);
-        FinancialLedger refund = ledger(order, FinancialLedgerType.PARTIAL_REFUND);
-
-        when(orderRepository.findByOrderCode("BSMS-KEEP")).thenReturn(Optional.of(order));
-        when(financialLedgerService.recordManualFaultRefund(
-                any(Order.class), any(FaultParty.class), any(BigDecimal.class), any(String.class), any(), any(), any(User.class)))
-                .thenReturn(refund);
-
-        boolean result = orderService.recordFaultRefundAndCancel(
-                "BSMS-KEEP",
-                "NURSERY",
-                new BigDecimal("100000"),
-                "Tree damaged",
-                null,
-                null,
-                true,
-                null,
-                moderator
-        );
-
-        assertThat(result).isTrue();
-        assertThat(order.getOrderStatus()).isEqualTo("COMPLETED");
-        assertThat(product.getProductStatus()).isEqualTo("SOLD");
-        verify(productRepository).save(product);
-        verify(financialLedgerService).recordCompletedOrderRevenueIfAbsent(any(Order.class), any(User.class), any(LocalDateTime.class));
-    }
-
-    @Test
-    void partialRefundWithReturnedResellableTreeCancelsOrderAndReleasesProduct() {
-        User moderator = moderator(12);
-        Product product = product("RESERVED");
         Order order = assignedOrder("BSMS-RETURN", "PAID", moderator, product);
-        FinancialLedger refund = ledger(order, FinancialLedgerType.PARTIAL_REFUND);
+        order.setTotalAmount(new BigDecimal("1000000"));
+        FinancialLedger refund = ledger(order, FinancialLedgerType.FULL_REFUND);
 
         when(orderRepository.findByOrderCode("BSMS-RETURN")).thenReturn(Optional.of(order));
+        when(financialLedgerService.calculateRefundableCash(order)).thenReturn(new BigDecimal("1000000"));
         when(financialLedgerService.recordManualFaultRefund(
                 any(Order.class), any(FaultParty.class), any(BigDecimal.class), any(String.class), any(), any(), any(User.class)))
                 .thenReturn(refund);
 
         boolean result = orderService.recordFaultRefundAndCancel(
                 "BSMS-RETURN",
-                "DELIVERY",
-                new BigDecimal("100000"),
-                "Delivery issue",
+                "NURSERY",
+                null,
+                "Tree damaged",
                 null,
                 null,
                 false,
-                "RETURNED_AND_RESELLABLE",
+                null,
                 moderator
         );
 
@@ -145,47 +151,32 @@ class OrderServiceTest {
         assertThat(order.getOrderStatus()).isEqualTo("CANCELLED");
         assertThat(product.getProductStatus()).isEqualTo("AVAILABLE");
         verify(productRepository).save(product);
+        verify(financialLedgerService).recordManualFaultRefund(
+                eq(order), eq(FaultParty.NURSERY), eq(new BigDecimal("1000000")), eq("Tree damaged"), any(), any(), eq(moderator));
     }
 
     @Test
-    void partialRefundDoesNotReleaseDamagedOrNotReturnedProduct() {
-        User moderator = moderator(13);
-        Product damagedProduct = product("RESERVED");
-        Order damagedOrder = assignedOrder("BSMS-DAMAGED", "PAID", moderator, damagedProduct);
-        Product notReturnedProduct = product("RESERVED");
-        Order notReturnedOrder = assignedOrder("BSMS-NOTRETURNED", "PAID", moderator, notReturnedProduct);
+    void refundRejectsOrderWithoutSuccessfulPayments() {
+        User moderator = moderator(12);
+        Product product = product("RESERVED");
+        Order order = assignedOrder("BSMS-NOPAY", "PAID", moderator, product);
 
-        when(orderRepository.findByOrderCode("BSMS-DAMAGED")).thenReturn(Optional.of(damagedOrder));
-        when(orderRepository.findByOrderCode("BSMS-NOTRETURNED")).thenReturn(Optional.of(notReturnedOrder));
-        when(financialLedgerService.recordManualFaultRefund(
-                any(Order.class), any(FaultParty.class), any(BigDecimal.class), any(String.class), any(), any(), any(User.class)))
-                .thenReturn(ledger(damagedOrder, FinancialLedgerType.PARTIAL_REFUND));
+        when(orderRepository.findByOrderCode("BSMS-NOPAY")).thenReturn(Optional.of(order));
+        when(financialLedgerService.calculateRefundableCash(order)).thenReturn(BigDecimal.ZERO);
 
-        orderService.recordFaultRefundAndCancel(
-                "BSMS-DAMAGED",
-                "NURSERY",
-                new BigDecimal("100000"),
-                "Damaged",
-                null,
-                null,
-                false,
-                "RETURNED_AND_DAMAGED",
-                moderator
+        org.junit.jupiter.api.Assertions.assertThrows(IllegalStateException.class, () ->
+                orderService.recordFaultRefundAndCancel(
+                        "BSMS-NOPAY",
+                        "NURSERY",
+                        null,
+                        "No payment",
+                        null,
+                        null,
+                        false,
+                        null,
+                        moderator
+                )
         );
-        orderService.recordFaultRefundAndCancel(
-                "BSMS-NOTRETURNED",
-                "DELIVERY",
-                new BigDecimal("100000"),
-                "Not returned",
-                null,
-                null,
-                false,
-                "NOT_RETURNED",
-                moderator
-        );
-
-        assertThat(damagedProduct.getProductStatus()).isEqualTo("SOLD");
-        assertThat(notReturnedProduct.getProductStatus()).isEqualTo("SOLD");
     }
 
     private Order assignedOrder(String code, String status, User moderator, Product product) {

@@ -20,7 +20,7 @@ class ModeratorOrderDetailTemplateTest {
         assertThat(template).contains("ph.paymentTypeLabel");
         assertThat(template).contains("ph.statusLabel");
         assertThat(template).contains("const REFUNDABLE_CASH");
-        assertThat(template).contains("refundAmount > REFUNDABLE_CASH");
+        assertThat(template).contains("openFaultRefundConfirmation");
         assertThat(template).doesNotContain("forfeited deposit income");
     }
 }
