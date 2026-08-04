@@ -39,6 +39,7 @@ public class ArtisanProductService {
     private static final String CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
     private static final Set<String> VALID_SHOT_TYPES = Set.of("FRONT", "BACK", "LEFT", "RIGHT", "DETAIL", "TRUNK", "BRANCH", "POT", "OVERVIEW");
     private static final int MAX_MEDIA_PER_UPLOAD = 10;
+    private static final int MAX_TAGS_PER_PRODUCT = 12;
     private static final long MAX_IMAGE_SIZE_BYTES = 5L * 1024 * 1024;
     private static final long MAX_VIDEO_SIZE_BYTES = 100L * 1024 * 1024;
 
@@ -413,7 +414,15 @@ public class ArtisanProductService {
             return;
         }
 
-        List<Tag> tags = tagRepository.findAllById(tagIds);
+        List<Integer> uniqueTagIds = tagIds.stream()
+                .filter(tagId -> tagId != null)
+                .distinct()
+                .toList();
+        if (uniqueTagIds.size() > MAX_TAGS_PER_PRODUCT) {
+            throw new RuntimeException("Chỉ được chọn tối đa 12 thẻ cho một cây.");
+        }
+
+        List<Tag> tags = tagRepository.findAllById(uniqueTagIds);
         tags.stream()
                 .map(tag -> ProductTag.builder()
                         .product(product)
