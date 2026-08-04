@@ -151,7 +151,7 @@ public class OrderActionService {
         }
         closeHandling(order);
         log.info("[ACTION] complete - order={}", order.getOrderCode());
-        return success(order.getOrderCode(), "complete", "DEPOSITED".equals(status) ? "PAID" : "COMPLETED");
+        return success(order.getOrderCode(), "complete", "COMPLETED");
     }
 
     private Map<String, Object> handleCustomerNoShow(Order order, String status, User moderator,

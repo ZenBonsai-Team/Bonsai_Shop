@@ -259,7 +259,7 @@ public class OrderDetailService {
                 && isAssignedToMe
                 && successfulDepositAmount.compareTo(BigDecimal.ZERO) > 0
                 && !hasForfeitedDeposit;
-        boolean canRecordFaultRefund = ("DEPOSITED".equals(currentStatus) || "PAID".equals(currentStatus) || "COMPLETED".equals(currentStatus))
+        boolean canRecordFaultRefund = ("DEPOSITED".equals(currentStatus) || "PAID".equals(currentStatus))
                 && isAssignedToMe
                 && refundableCash.compareTo(BigDecimal.ZERO) > 0;
 

@@ -725,18 +725,19 @@ public class OrderService {
         paymentRepository.save(remainingPayment);
 
         String oldStatus = order.getOrderStatus();
-        LocalDateTime paidAt = LocalDateTime.now();
-        order.setOrderStatus("PAID");
+        LocalDateTime completedAt = LocalDateTime.now();
+        order.setOrderStatus("COMPLETED");
         orderRepository.save(order);
         markProductsAsSold(order);
+        recordCompletedRevenueLedger(order, moderator, completedAt);
 
         OrderLog logEntry = OrderLog.builder()
                 .order(order)
                 .actionBy(moderator)
                 .actionType("REMAINING_PAYMENT_CONFIRMED")
                 .fromStatus(oldStatus)
-                .toStatus("PAID")
-                .actionAt(paidAt)
+                .toStatus("COMPLETED")
+                .actionAt(completedAt)
                 .build();
         orderLogRepository.save(logEntry);
 
