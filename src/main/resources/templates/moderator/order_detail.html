@@ -747,47 +747,23 @@
                     </div>
 
                     <div th:if="${order.canRecordFaultRefund}" class="od-form-grid">
-                        <div class="od-form-field">
+                        <div class="od-form-field" style="grid-column: span 2;">
                             <label class="od-form-label" for="faultParty">Bên chịu lỗi</label>
-                            <select id="faultParty" class="od-form-input">
+                            <select id="faultParty" class="od-form-input" style="width: 100%;">
                                 <option value="NURSERY">Vườn / nhà bán</option>
                                 <option value="DELIVERY">Đơn vị giao hàng</option>
                             </select>
                         </div>
-                        <div class="od-form-field">
-                            <label class="od-form-label" for="refundAmount">Số tiền hoàn ghi nhận</label>
-                            <input id="refundAmount" class="od-form-input" type="number" min="1" step="1">
+                        <div class="od-form-field" style="grid-column: span 2;">
+                            <label class="od-form-label">Số tiền hoàn (100% giá trị đơn hàng)</label>
+                            <div class="od-form-input" style="background-color: #e9ecef; font-weight: 600; color: #198754; display: flex; align-items: center; width: 100%; min-height: 38px;" th:text="${#numbers.formatDecimal(order.paymentSummary.grandTotal, 0, 'COMMA', 0, 'POINT')} + ' đ'">0 đ</div>
                         </div>
-                        <div class="od-form-field">
-                            <label class="od-form-label" for="customerKeepsTree">Khách có giữ cây không?</label>
-                            <select id="customerKeepsTree" class="od-form-input">
-                                <option value="false">Không, đơn sẽ chấm dứt</option>
-                                <option value="true">Có, khách vẫn giữ cây</option>
-                            </select>
-                        </div>
-                        <div class="od-form-field">
-                            <label class="od-form-label" for="productResolution">Cách xử lý cây</label>
-                            <select id="productResolution" class="od-form-input">
-                                <option value="RETURNED_AND_RESELLABLE">Cây đã trả lại và có thể bán tiếp</option>
-                                <option value="RETURNED_AND_DAMAGED">Cây đã trả lại nhưng bị hư hỏng</option>
-                                <option value="NOT_RETURNED">Cây chưa được trả lại</option>
-                                <option value="UNDER_INSPECTION">Cây đang chờ kiểm tra</option>
-                            </select>
-                        </div>
-                        <div class="od-form-field">
+                        <div class="od-form-field" style="grid-column: span 2;">
                             <label class="od-form-label" for="faultRefundReason">Lý do hoàn tiền</label>
-                            <textarea id="faultRefundReason" class="od-form-textarea" rows="3" placeholder="Bắt buộc nhập lý do"></textarea>
+                            <textarea id="faultRefundReason" class="od-form-textarea" rows="3" placeholder="Bắt buộc nhập lý do hoàn tiền" style="width: 100%;"></textarea>
                         </div>
-                        <div class="od-form-field">
-                            <label class="od-form-label" for="evidenceNote">Ghi chú bằng chứng</label>
-                            <textarea id="evidenceNote" class="od-form-textarea" rows="2" placeholder="Không bắt buộc"></textarea>
-                        </div>
-                        <div class="od-form-field">
-                            <label class="od-form-label" for="externalReference">Mã tham chiếu ngoài</label>
-                            <input id="externalReference" class="od-form-input" type="text" placeholder="Không bắt buộc">
-                        </div>
-                        <div class="od-action-note">
-                            Đây chỉ là bản ghi hoàn tiền thủ công; hệ thống không tự động gọi VNPay hoặc ngân hàng.
+                        <div class="od-action-note" style="grid-column: span 2;">
+                            Đơn hàng sẽ bị hủy. Cây tự động được trả về nhà vườn. Đây chỉ là bản ghi hoàn tiền thủ công; hệ thống không tự động chuyển tiền qua VNPay hoặc ngân hàng.
                         </div>
                     </div>
 
@@ -1323,40 +1299,11 @@
 
         function openFaultRefundConfirmation() {
             const faultParty = readText('faultParty');
-            const refundAmount = readAmount('refundAmount');
             const reason = readText('faultRefundReason');
-            const evidenceNote = readText('evidenceNote');
-            const externalReference = readText('externalReference');
-            const customerKeepsTree = readText('customerKeepsTree') === 'true';
-            const productResolution = readText('productResolution');
             if (!faultParty) {
                 openConfirmationModal({
                     title: 'Thiếu bên chịu lỗi',
                     description: 'Vui lòng chọn bên chịu lỗi trước khi xác nhận.',
-                    confirmLabel: 'Đã hiểu',
-                    danger: true,
-                    infoOnly: true,
-                    buildPayload: () => ({})
-                });
-                return;
-            }
-            if (refundAmount <= 0) {
-                document.getElementById('refundAmount')?.focus();
-                openConfirmationModal({
-                    title: 'Số tiền hoàn không hợp lệ',
-                    description: 'Số tiền hoàn phải lớn hơn 0.',
-                    confirmLabel: 'Đã hiểu',
-                    danger: true,
-                    infoOnly: true,
-                    buildPayload: () => ({})
-                });
-                return;
-            }
-            if (refundAmount > REFUNDABLE_CASH) {
-                document.getElementById('refundAmount')?.focus();
-                openConfirmationModal({
-                    title: 'Số tiền hoàn vượt quá giới hạn',
-                    description: `Số tiền hoàn không được lớn hơn số tiền còn có thể hoàn: ${formatCurrency(REFUNDABLE_CASH)}.`,
                     confirmLabel: 'Đã hiểu',
                     danger: true,
                     infoOnly: true,
@@ -1377,39 +1324,27 @@
                 return;
             }
 
+            const refundAmount100 = GRAND_TOTAL || REFUNDABLE_CASH;
+
             const rows = [
                 { label: 'Mã đơn hàng', value: ORDER_CODE },
                 { label: 'Bên chịu trách nhiệm', value: faultParty === 'NURSERY' ? 'Lỗi từ phía nhà vườn' : 'Lỗi trong quá trình vận chuyển' },
-                { label: 'Số tiền hoàn lại', value: formatCurrency(refundAmount) },
-                { label: 'Số tiền tối đa có thể hoàn', value: formatCurrency(REFUNDABLE_CASH) },
-                { label: 'Khách giữ cây', value: customerKeepsTree ? 'Có' : 'Không' },
-                { label: 'Cách xử lý cây', value: customerKeepsTree ? 'Cây thuộc về khách' : productResolutionLabel(productResolution) },
-                { label: 'Lý do', value: reason }
+                { label: 'Số tiền hoàn lại (100%)', value: formatCurrency(refundAmount100) },
+                { label: 'Khách giữ cây', value: 'Không (Cây tự động trả về nhà vườn)' },
+                { label: 'Lý do hoàn tiền', value: reason },
+                { label: 'Trạng thái sau xử lý', value: 'Đã chấm dứt đơn hàng' }
             ];
-            if (evidenceNote) rows.push({ label: 'Ghi chú bằng chứng', value: evidenceNote });
-            if (externalReference) rows.push({ label: 'Mã tham chiếu giao dịch', value: externalReference });
-            rows.push({ label: 'Trạng thái sau xử lý', value: 'Đã chấm dứt đơn hàng' });
 
             openConfirmationModal({
-                title: 'Xác nhận ghi nhận hoàn tiền thủ công',
-                description: 'Đơn hàng sẽ bị chấm dứt do lỗi từ phía nhà vườn hoặc quá trình vận chuyển. Hệ thống chỉ ghi nhận thông tin hoàn tiền thủ công và không tự động chuyển tiền qua VNPay hoặc ngân hàng.',
+                title: 'Xác nhận ghi nhận hoàn tiền thủ công (100%)',
+                description: 'Đơn hàng sẽ bị chấm dứt do lỗi từ phía nhà vườn hoặc quá trình vận chuyển. Toàn bộ cây trong đơn sẽ tự động được trả về nhà vườn. Hệ thống chỉ ghi nhận thông tin hoàn tiền thủ công và không tự động chuyển tiền qua VNPay hoặc ngân hàng.',
                 confirmLabel: 'Xác nhận ghi nhận hoàn tiền',
                 danger: true,
-                description: customerKeepsTree
-                    ? 'Hệ thống sẽ ghi nhận hoàn tiền thủ công do lỗi từ phía nhà vườn hoặc quá trình vận chuyển. Khách vẫn giữ cây; hệ thống không tự động chuyển tiền qua VNPay hoặc ngân hàng.'
-                    : 'Đơn hàng sẽ bị chấm dứt do lỗi từ phía nhà vườn hoặc quá trình vận chuyển. Hệ thống chỉ ghi nhận thông tin hoàn tiền thủ công và không tự động chuyển tiền qua VNPay hoặc ngân hàng.',
-                summaryRows: rows.map(row => String(row.label || '').includes('Trạng thái') || String(row.label || '').includes('Tráº¡ng thÃ¡i')
-                    ? { label: 'Trạng thái sau xử lý', value: customerKeepsTree ? 'Đã hoàn thành' : 'Đã chấm dứt đơn hàng' }
-                    : row),
+                summaryRows: rows,
                 buildPayload: () => ({
                     action: 'record_fault_refund',
                     faultParty,
-                    refundAmount,
-                    reason,
-                    evidenceNote,
-                    externalReference,
-                    customerKeepsTree,
-                    productResolution: customerKeepsTree ? null : productResolution
+                    reason
                 })
             });
         }
