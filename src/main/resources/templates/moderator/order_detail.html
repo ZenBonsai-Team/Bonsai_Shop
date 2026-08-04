@@ -733,8 +733,8 @@
                         <button th:if="${order.canReject}" class="od-action-btn reject" type="button" onclick="openRejectConfirmation()">Từ chối đơn</button>
                         <button th:if="${order.canReturnInventory}" class="od-action-btn unclaim" type="button" onclick="openReturnToPoolConfirmation()">Trả lại kho</button>
                         <button th:if="${order.canCustomerNoShow}" class="od-action-btn reject" type="button" onclick="openCustomerNoShowConfirmation()">Khách không nhận hàng</button>
+                        <button th:if="${order.canComplete}" class="od-action-btn approve" type="button" onclick="openCompleteConfirmation()" th:text="${order.orderStatus == 'DEPOSITED' ? 'Xác nhận thu phần còn lại' : 'Xác nhận khách đã nhận cây'}">Xác nhận khách đã nhận cây</button>
                         <button th:if="${order.canRecordFaultRefund}" class="od-action-btn reject" type="button" onclick="openFaultRefundConfirmation()">Chấm dứt và ghi nhận hoàn tiền</button>
-                        <button th:if="${order.canComplete}" class="od-action-btn complete" type="button" onclick="openCompleteConfirmation()">Xác nhận hoàn thành đơn hàng</button>
                     </div>
                 </div>
             </div>
@@ -1330,23 +1330,22 @@
         function openCompleteConfirmation() {
             const isDepositedCompletion = ORDER_STATUS === 'DEPOSITED';
             openConfirmationModal({
-                title: isDepositedCompletion ? 'Xác nhận thanh toán phần còn lại' : 'Xác nhận hoàn thành đơn',
+                title: isDepositedCompletion ? 'Xác nhận thanh toán phần còn lại' : 'Xác nhận khách đã nhận cây',
                 description: isDepositedCompletion
-                    ? 'Hệ thống sẽ ghi nhận khách hàng đã thanh toán số tiền còn lại và hoàn tất nghĩa vụ thanh toán của đơn hàng.'
-                    : 'Đơn hàng sẽ được xác nhận hoàn thành. Doanh thu của đơn chỉ đủ điều kiện ghi nhận sau khi đơn chuyển sang trạng thái hoàn thành.',
-                confirmLabel: isDepositedCompletion ? 'Xác nhận đã thu số tiền còn lại' : 'Xác nhận hoàn thành đơn hàng',
+                    ? 'Hệ thống sẽ ghi nhận khách hàng đã thanh toán số tiền còn lại và chuyển đơn sang trạng thái Đã thanh toán.'
+                    : 'Xác nhận khách hàng đã nhận đầy đủ cây trong đơn hàng. Sau khi xác nhận, đơn sẽ chuyển từ \'Đã thanh toán\' sang \'Đã hoàn thành\'. Hành động này không làm phát sinh thêm khoản thanh toán.',
+                confirmLabel: isDepositedCompletion ? 'Xác nhận đã thu số tiền còn lại' : 'Xác nhận hoàn thành',
                 summaryRows: isDepositedCompletion ? [
                     { label: 'Mã đơn hàng', value: ORDER_CODE },
                     { label: 'Tiền đặt cọc đã thu', value: formatCurrency(SUCCESSFUL_DEPOSIT_AMOUNT) },
                     { label: 'Số tiền còn lại cần thanh toán', value: formatCurrency(REMAINING_PAYMENT_AMOUNT) },
                     { label: 'Phương thức thanh toán', value: 'Thanh toán tiền mặt / nhân viên xác nhận thủ công' },
                     { label: 'Tổng giá trị đơn hàng', value: formatCurrency(GRAND_TOTAL) },
-                    { label: 'Trạng thái sau xử lý', value: 'Đã hoàn thành' }
+                    { label: 'Trạng thái sau xử lý', value: 'Đã thanh toán' }
                 ] : [
                     { label: 'Mã đơn hàng', value: ORDER_CODE },
-                    { label: 'Tổng giá trị đơn hàng', value: formatCurrency(GRAND_TOTAL) },
-                    { label: 'Tổng số tiền đã thu', value: formatCurrency(TOTAL_CASH_RECEIVED) },
-                    { label: 'Trạng thái hiện tại', value: ORDER_STATUS_LABEL },
+                    { label: 'Trạng thái hiện tại', value: 'Đã thanh toán' },
+                    { label: 'Tổng số tiền khách đã thanh toán', value: formatCurrency(TOTAL_CASH_RECEIVED) },
                     { label: 'Trạng thái sau xử lý', value: 'Đã hoàn thành' }
                 ],
                 buildPayload: () => ({

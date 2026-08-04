@@ -725,19 +725,18 @@ public class OrderService {
         paymentRepository.save(remainingPayment);
 
         String oldStatus = order.getOrderStatus();
-        LocalDateTime completedAt = LocalDateTime.now();
-        order.setOrderStatus("COMPLETED");
+        LocalDateTime paidAt = LocalDateTime.now();
+        order.setOrderStatus("PAID");
         orderRepository.save(order);
         markProductsAsSold(order);
-        recordCompletedRevenueLedger(order, moderator, completedAt);
 
         OrderLog logEntry = OrderLog.builder()
                 .order(order)
                 .actionBy(moderator)
                 .actionType("REMAINING_PAYMENT_CONFIRMED")
                 .fromStatus(oldStatus)
-                .toStatus("COMPLETED")
-                .actionAt(LocalDateTime.now())
+                .toStatus("PAID")
+                .actionAt(paidAt)
                 .build();
         orderLogRepository.save(logEntry);
 
@@ -770,7 +769,7 @@ public class OrderService {
     private BigDecimal normalizeNonNegativeAmount(BigDecimal amount, String label) {
         BigDecimal normalized = amount != null ? amount : ZERO;
         if (normalized.compareTo(ZERO) < 0) {
-            throw new IllegalArgumentException(label + " khÃ´ng Ä‘Æ°á»£c Ã¢m.");
+            throw new IllegalArgumentException(label + " không được âm.");
         }
         validateWholeNumberAmount(normalized, label);
         return normalized;
@@ -889,7 +888,13 @@ public class OrderService {
         }
         validateAssignedModerator(order, moderator);
         if (!"PAID".equalsIgnoreCase(order.getOrderStatus())) {
-            throw new IllegalStateException("Chỉ có thể hoàn thành đơn hàng đang ở trạng thái PAID.");
+            throw new IllegalStateException("Trạng thái hiện tại của đơn không cho phép xác nhận hoàn thành.");
+        }
+
+        BigDecimal refundableCash = financialLedgerService.calculateRefundableCash(order);
+        BigDecimal totalRequired = order.getTotalAmount() != null ? order.getTotalAmount() : ZERO;
+        if (refundableCash == null || refundableCash.compareTo(totalRequired) < 0) {
+            throw new IllegalStateException("Không thể hoàn thành đơn vì khách hàng chưa thanh toán đầy đủ.");
         }
 
         String oldStatus = order.getOrderStatus();

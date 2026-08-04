@@ -156,7 +156,7 @@ class OrderActionServiceTest {
 
         Map<String, Object> result = orderActionService.executeAction("BSMS-005", request, moderator);
 
-        assertThat(result.get("newStatus")).isEqualTo("COMPLETED");
+        assertThat(result.get("newStatus")).isEqualTo("PAID");
         verify(orderService).confirmRemainingPayment("BSMS-005", "Collected remaining cash", moderator);
         verify(orderService, never()).completePaidOrder("BSMS-005", moderator);
         verify(orderRepository, never()).save(order);
