@@ -99,19 +99,7 @@ public final class ModeratorDisplayLabelMapper {
         };
     }
 
-    public static String financialResolutionStatusLabel(String value) {
-        return switch (normalize(value)) {
-            case "FORFEITED_DEPOSIT_INCOME" -> "Thu nhập từ tiền đặt cọc do khách bỏ đơn";
-            case "REFUND_RECORDED" -> "Đã ghi nhận hoàn tiền";
-            case "REVENUE_RECOGNIZED" -> "Đã ghi nhận doanh thu của đơn hoàn thành";
-            case "DEPOSIT_RECEIVED_PENDING_COMPLETION" -> "Đã thu tiền đặt cọc, chờ hoàn tất đơn";
-            case "FULL_PAYMENT_RECEIVED_PENDING_COMPLETION" -> "Đã thu toàn bộ tiền, chờ hoàn tất đơn";
-            case "CANCELLED_NO_FINANCIAL_RECOGNITION" -> "Đã chấm dứt, không ghi nhận doanh thu";
-            case "CASH_RECEIVED_PENDING_RECOGNITION" -> "Đã thu tiền, chờ đủ điều kiện ghi nhận";
-            case "OPEN" -> "Đang xử lý";
-            default -> fallback(value);
-        };
-    }
+
 
     public static String priorityLabel(String value) {
         return switch (normalize(value)) {

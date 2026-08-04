@@ -200,13 +200,6 @@ public class OrderDetailService {
         BigDecimal totalRefundAmount = partialRefundAmount.add(fullRefundAmount);
         BigDecimal netRecognizedAmount = financialLedgerService.sumNetRecognizedAmount(order);
         BigDecimal refundableCash = financialLedgerService.calculateRefundableCash(order);
-        String financialResolutionStatus = resolveFinancialResolutionStatus(
-                order.getOrderStatus(),
-                recognizedCompletedRevenue,
-                forfeitedDepositIncome,
-                totalRefundAmount,
-                totalCashReceived
-        );
         List<FinancialLedgerDTO> ledgerHistory =
                 financialLedgerService.getLedgerHistory(order.getOrderId());
 
@@ -229,8 +222,6 @@ public class OrderDetailService {
                 .fullRefundAmount(fullRefundAmount)
                 .netRecognizedAmount(netRecognizedAmount)
                 .refundableCash(refundableCash)
-                .financialResolutionStatus(financialResolutionStatus)
-                .financialResolutionStatusLabel(ModeratorDisplayLabelMapper.financialResolutionStatusLabel(financialResolutionStatus))
                 .build();
 
         String currentStatus = order.getOrderStatus() != null ? order.getOrderStatus().toUpperCase() : "PENDING";
@@ -328,33 +319,7 @@ public class OrderDetailService {
         return isDeposit ? "DEPOSIT" : "VNPAY";
     }
 
-    private String resolveFinancialResolutionStatus(String orderStatus, BigDecimal recognizedCompletedRevenue,
-                                                    BigDecimal forfeitedDepositIncome,
-                                                    BigDecimal totalRefundAmount, BigDecimal totalCashReceived) {
-        String status = orderStatus != null ? orderStatus.toUpperCase() : "PENDING";
-        if (forfeitedDepositIncome != null && forfeitedDepositIncome.compareTo(BigDecimal.ZERO) > 0) {
-            return "FORFEITED_DEPOSIT_INCOME";
-        }
-        if (totalRefundAmount != null && totalRefundAmount.compareTo(BigDecimal.ZERO) > 0) {
-            return "REFUND_RECORDED";
-        }
-        if (recognizedCompletedRevenue != null && recognizedCompletedRevenue.compareTo(BigDecimal.ZERO) > 0) {
-            return "REVENUE_RECOGNIZED";
-        }
-        if ("DEPOSITED".equals(status)) {
-            return "DEPOSIT_RECEIVED_PENDING_COMPLETION";
-        }
-        if ("PAID".equals(status)) {
-            return "FULL_PAYMENT_RECEIVED_PENDING_COMPLETION";
-        }
-        if ("CANCELLED".equals(status)) {
-            return "CANCELLED_NO_FINANCIAL_RECOGNITION";
-        }
-        if (totalCashReceived != null && totalCashReceived.compareTo(BigDecimal.ZERO) > 0) {
-            return "CASH_RECEIVED_PENDING_RECOGNITION";
-        }
-        return "OPEN";
-    }
+
 
     private List<TimelineDTO> buildOrderTimeline(String status, LocalDateTime createdDate, LocalDateTime assignedDate) {
         List<TimelineDTO> list = new ArrayList<>();

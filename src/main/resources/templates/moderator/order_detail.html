@@ -550,10 +550,6 @@
                             <td>Tổng số tiền đã thu</td>
                             <td class="money" th:text="${#numbers.formatDecimal(order.paymentSummary.paidAmount, 0, 'COMMA', 0, 'POINT')} + ' đ'">---</td>
                         </tr>
-                        <tr class="paid-row">
-                            <td>Tổng số tiền đã thu</td>
-                            <td class="money" th:text="${#numbers.formatDecimal(order.paymentSummary.totalCashReceived, 0, 'COMMA', 0, 'POINT')} + ' đ'">---</td>
-                        </tr>
                         <tr class="remain-row">
                             <td>Còn lại</td>
                             <td class="money" th:text="${#numbers.formatDecimal(order.paymentSummary.remainingPaymentAmount, 0, 'COMMA', 0, 'POINT')} + ' đ'">---</td>
@@ -563,7 +559,7 @@
                             <td class="money" th:text="${#numbers.formatDecimal(order.paymentSummary.recognizedCompletedRevenue, 0, 'COMMA', 0, 'POINT')} + ' đ'">---</td>
                         </tr>
                         <tr th:if="${order.paymentSummary.forfeitedDepositIncome != null and order.paymentSummary.forfeitedDepositIncome > 0}">
-                            <td>Thu nhập từ tiền đặt cọc do khách bỏ đơn</td>
+                            <td>Tiền cọc được ghi nhận</td>
                             <td class="money" th:text="${#numbers.formatDecimal(order.paymentSummary.forfeitedDepositIncome, 0, 'COMMA', 0, 'POINT')} + ' đ'">---</td>
                         </tr>
                         <tr th:if="${order.paymentSummary.partialRefundAmount != null and order.paymentSummary.partialRefundAmount > 0}">
@@ -574,13 +570,9 @@
                             <td>Số tiền hoàn toàn bộ đã ghi nhận</td>
                             <td class="money" th:text="${#numbers.formatDecimal(order.paymentSummary.fullRefundAmount, 0, 'COMMA', 0, 'POINT')} + ' đ'">---</td>
                         </tr>
-                        <tr th:if="${order.paymentSummary.netRecognizedAmount != null and order.paymentSummary.netRecognizedAmount != 0}">
+                        <tr th:if="${order.paymentSummary.netRecognizedAmount != null and order.paymentSummary.netRecognizedAmount != 0 and (order.paymentSummary.forfeitedDepositIncome == null or order.paymentSummary.netRecognizedAmount != order.paymentSummary.forfeitedDepositIncome) and (order.paymentSummary.recognizedCompletedRevenue == null or order.paymentSummary.netRecognizedAmount != order.paymentSummary.recognizedCompletedRevenue)}">
                             <td>Giá trị ghi nhận ròng của đơn</td>
                             <td class="money" th:text="${#numbers.formatDecimal(order.paymentSummary.netRecognizedAmount, 0, 'COMMA', 0, 'POINT')} + ' đ'">---</td>
-                        </tr>
-                        <tr>
-                            <td>Kết quả xử lý tài chính</td>
-                            <td th:text="${order.paymentSummary.financialResolutionStatusLabel ?: '-'}">-</td>
                         </tr>
                     </table>
                 </div>
