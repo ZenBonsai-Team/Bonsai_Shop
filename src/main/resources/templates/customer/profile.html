@@ -335,8 +335,7 @@
                                                      <div class="d-flex flex-column gap-1">
                                                          <div class="fw-semibold text-dark" th:text="${detail.product != null ? detail.product.productName : 'Sản phẩm'}">Bonsai Tùng Cối</div>
                                                          <!-- Review Button -->
-                                                         <div th:if="${order.orderStatus == 'COMPLETED' and detail.product != null}"
-                                                              th:with="completedTime=${order.completedAt != null ? order.completedAt : order.orderDate}">
+                                                         <div th:if="${order.orderStatus == 'COMPLETED' and detail.product != null}">
                                                             <!-- Đã đánh giá -->
                                                             <button th:if="${reviewedProductIds != null and reviewedProductIds.contains(detail.product.productId)}" 
                                                                     class="btn btn-sm btn-light text-muted py-1 px-3 rounded-pill mt-2 fw-semibold" 
@@ -345,7 +344,7 @@
                                                                 <i class="fa-solid fa-circle-check me-1 text-success"></i>Đã đánh giá
                                                             </button>
                                                             <!-- Đã quá hạn 30 ngày -->
-                                                            <button th:elif="${!T(java.time.LocalDateTime).now().minusDays(30).isBefore(completedTime)}" 
+                                                            <button th:elif="${expiredOrderIds != null and expiredOrderIds.contains(order.orderId)}" 
                                                                     class="btn btn-sm btn-light text-muted py-1 px-3 rounded-pill mt-2 fw-semibold" 
                                                                     style="font-size: 12px; width: fit-content; border: 1px solid var(--border-color);" 
                                                                     disabled>

@@ -87,11 +87,23 @@ public class ProfileController {
                 .map(r -> r.getProduct().getProductId())
                 .collect(Collectors.toSet());
 
+        // Lấy danh sách ID đơn hàng đã quá hạn 30 ngày để đánh giá
+        java.util.Set<Integer> expiredOrderIds = new java.util.HashSet<>();
+        if (orders != null) {
+            for (Order o : orders) {
+                java.time.LocalDateTime completedTime = o.getCompletedAt() != null ? o.getCompletedAt() : o.getOrderDate();
+                if (completedTime == null || completedTime.isBefore(java.time.LocalDateTime.now().minusDays(30))) {
+                    expiredOrderIds.add(o.getOrderId());
+                }
+            }
+        }
+
         model.addAttribute("user", user);
         model.addAttribute("myBonsaiPosts", myBonsaiPosts);
         model.addAttribute("savedPosts", savedPosts);
         model.addAttribute("orders", orders);
         model.addAttribute("reviewedProductIds", reviewedProductIds);
+        model.addAttribute("expiredOrderIds", expiredOrderIds);
         return "customer/profile"; // templates/customer/profile.html
 
     }
