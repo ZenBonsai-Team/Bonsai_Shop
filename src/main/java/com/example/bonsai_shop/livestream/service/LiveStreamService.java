@@ -65,7 +65,15 @@ public class LiveStreamService {
                 .orElseThrow(() -> new IllegalArgumentException("Session not found with ID: " + sessionId));
         session.setStatus("ENDED");
         session.setEndTime(LocalDateTime.now());
-        return liveSessionRepository.save(session);
+        LiveSession saved = liveSessionRepository.save(session);
+
+        // Clean up chat messages for this session.
+        // The raw chat is only needed while the session is ONGOING (for refresh-safe history).
+        // Leads (phone numbers, product codes) are already persisted in live_lead table.
+        liveChatMessageRepository.deleteByLiveSessionSessionId(sessionId);
+        log.info("Cleaned up chat messages for ended session #{}", sessionId);
+
+        return saved;
     }
 
     public Optional<LiveSession> getActiveSession() {

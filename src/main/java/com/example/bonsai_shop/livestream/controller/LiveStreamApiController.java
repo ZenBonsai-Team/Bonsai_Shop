@@ -118,12 +118,17 @@ public class LiveStreamApiController {
     }
 
     /**
-     * GET /api/live/{sessionId}/chat-history - Load persisted chat messages for a session.
-     * Called on page open so that both moderator and viewer see past messages after F5.
+     * GET /api/live/{sessionId}/chat-history - Load last 200 persisted chat messages.
+     * Only the most recent 200 messages are returned (sorted chronologically oldest→newest).
+     * This ensures page reload is fast regardless of how many total messages were sent.
      */
     @GetMapping("/{sessionId}/chat-history")
     public ResponseEntity<?> getChatHistory(@PathVariable Integer sessionId) {
-        List<LiveChatMessage> messages = liveChatMessageRepository.findByLiveSessionSessionIdOrderBySentAtAsc(sessionId);
+        // Fetch last 200 (DESC), then reverse to show oldest→newest in UI
+        List<LiveChatMessage> messages = liveChatMessageRepository
+                .findTop200ByLiveSessionSessionIdOrderBySentAtDesc(sessionId);
+        java.util.Collections.reverse(messages);
+
         DateTimeFormatter fmt = DateTimeFormatter.ofPattern("HH:mm");
         List<Map<String, String>> result = messages.stream()
                 .map(m -> Map.of(
