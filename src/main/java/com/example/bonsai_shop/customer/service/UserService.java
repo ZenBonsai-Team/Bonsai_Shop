@@ -184,7 +184,9 @@ public class UserService {
     public void resetPassword(String email, String newPassword) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Email không tồn tại!"));
-
+        if(newPassword.length() < 6){
+            throw  new RuntimeException("Mật khẩu phải có ít nhất 6 ký tự!");
+        }
         user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
         otpRepository.deleteByEmail(email);
@@ -203,8 +205,8 @@ public class UserService {
             throw new RuntimeException("Mật khẩu xác nhận không khớp!");
         }
 
-        if (newPassword.length() < 3) {
-            throw new RuntimeException("Mật khẩu phải có ít nhất 3 ký tự!");
+        if (newPassword.length() < 6) {
+            throw new RuntimeException("Mật khẩu phải có ít nhất 6 ký tự!");
         }
 
         user.setPassword(passwordEncoder.encode(newPassword));
