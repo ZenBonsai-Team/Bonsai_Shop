@@ -66,7 +66,9 @@ public class OrderExpirationService {
         expirePendingPayments(order);
         releaseOrderHandlings(order);
         releaseProducts(order);
-        sendExpirationEmail(order, reason);
+        if (!"IN_PERSON".equalsIgnoreCase(order.getOrderType())) {
+            sendExpirationEmail(order, reason);
+        }
     }
 
     private void expirePendingPayments(Order order) {
