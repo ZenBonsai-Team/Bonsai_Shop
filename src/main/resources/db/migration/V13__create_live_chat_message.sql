@@ -15,4 +15,24 @@ CREATE TABLE IF NOT EXISTS live_chat_message (
 );
 
 -- Index for fast "last N messages per session" queries
-CREATE INDEX IF NOT EXISTS idx_chat_msg_session_time ON live_chat_message (SessionID, SentAt DESC);
+DROP PROCEDURE IF EXISTS EnsureLiveChatMessageIndexes;
+
+DELIMITER //
+
+CREATE PROCEDURE EnsureLiveChatMessageIndexes()
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM information_schema.statistics
+    WHERE table_schema = DATABASE()
+      AND table_name = 'live_chat_message'
+      AND index_name = 'idx_chat_msg_session_time'
+  ) THEN
+    CREATE INDEX idx_chat_msg_session_time ON live_chat_message (SessionID, SentAt DESC);
+  END IF;
+END //
+
+DELIMITER ;
+
+CALL EnsureLiveChatMessageIndexes();
+DROP PROCEDURE EnsureLiveChatMessageIndexes;
