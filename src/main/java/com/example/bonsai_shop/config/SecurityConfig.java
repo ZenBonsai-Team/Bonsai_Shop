@@ -30,7 +30,13 @@ public class SecurityConfig {
         @Bean
         public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
                 http
-                                .csrf(csrf -> csrf.ignoringRequestMatchers("/api/notifications/**", "/community/**", "/moderator/orders/api/**"))
+                                .csrf(csrf -> csrf.ignoringRequestMatchers(
+                                                "/api/notifications/**", 
+                                                "/community/**", 
+                                                "/moderator/orders/api/**",
+                                                "/api/live/**",
+                                                "/api/reviews/**"
+                                ))
                                 .userDetailsService(customUserDetailsService)
                                 .authorizeHttpRequests(auth -> auth
                                                 // Trang công khai
@@ -78,7 +84,8 @@ public class SecurityConfig {
                                                                 "/api/notifications/**",
                                                                 "/ws-live-chat/**",
                                                                 "/api/live/**",
-                                                                "/api/reviews/**"
+                                                                "/api/reviews/**",
+                                                                "/live" // ← trang xem live cho khách hàng
                                                 ).permitAll()
                                                 // Chỉ OWNER mới vào được /owner và /owner/**
                                                 .requestMatchers("/owner", "/owner/**").hasRole("OWNER")

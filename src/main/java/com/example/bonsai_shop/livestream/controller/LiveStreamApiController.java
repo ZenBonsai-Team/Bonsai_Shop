@@ -7,8 +7,11 @@ import com.example.bonsai_shop.livestream.repository.LiveSessionRepository;
 import com.example.bonsai_shop.livestream.service.LiveStreamService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 
@@ -20,6 +23,7 @@ public class LiveStreamApiController {
     private final LiveStreamService liveStreamService;
     private final LiveSessionRepository liveSessionRepository;
     private final LiveLeadRepository liveLeadRepository;
+    private final SimpMessagingTemplate messagingTemplate;
 
     /**
      * POST /api/live/start - Start a new live session
@@ -108,7 +112,13 @@ public class LiveStreamApiController {
             Integer sessionId = Integer.valueOf(body.get("sessionId").toString());
             String author = body.getOrDefault("author", "Ẩn danh").toString();
             String message = body.get("message").toString();
-            // Get the active session
+            String time = LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm"));
+
+            // Broadcast message to all viewers in the chat room via WebSocket
+            messagingTemplate.convertAndSend("/topic/live-chat/" + sessionId,
+                    Map.of("author", author, "message", message, "time", time));
+
+            // Also process for lead detection (phone + product code matching)
             liveSessionRepository.findById(sessionId).ifPresent(session ->
                 liveStreamService.processComment(author, message, session)
             );

@@ -69,7 +69,7 @@
                 </a>
                 <a th:href="@{/moderator/live-session}" 
                    class="sidebar-nav-item" 
-                   th:classappend="${activePage == 'live-session' ? 'active' : ''}">
+                   th:classappend="${activePage == 'live-session' or activePage == 'session' ? 'active' : ''}">
                     <span class="nav-icon"><i class="fa-solid fa-tower-broadcast"></i></span>
                     <span>Live Stream</span>
                 </a>

@@ -138,7 +138,7 @@
             <button th:if="${activeSession == null}" class="btn btn-success rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#startSessionModal">
                 <i class="fa-solid fa-play me-2"></i>Bắt đầu phiên Live
             </button>
-            <button th:if="${activeSession != null}" class="btn btn-danger rounded-pill px-4" th:onclick="'endLiveSession(' + ${activeSession.sessionId} + ')'">
+            <button th:if="${activeSession != null}" class="btn btn-danger rounded-pill px-4" th:onclick="|endLiveSession(${activeSession?.sessionId})|">
                 <i class="fa-solid fa-stop me-2"></i>Kết thúc phiên Live
             </button>
         </div>
@@ -174,12 +174,11 @@
         <!-- Left panel: Video and Simulation -->
         <div>
             <div class="video-placeholder shadow-sm">
-                <!-- If YouTube URL is present, embed it, otherwise show mock player -->
-                <iframe th:if="${activeSession.streamUrl != null and #strings.contains(activeSession.streamUrl, 'youtube.com')}" 
-                        th:src="'https://www.youtube.com/embed/' + ${#strings.substringAfter(activeSession.streamUrl, 'v=')} + '?autoplay=1&mute=1'"
-                        allowfullscreen>
-                </iframe>
-                <div th:if="${activeSession.streamUrl == null or !#strings.contains(activeSession.streamUrl, 'youtube.com')}" class="text-center">
+                <!-- If YouTube URL is present, embed it (resolved dynamically via JS) -->
+                <div class="w-100 h-100" id="liveVideoContainer" style="display: none;">
+                    <iframe id="liveVideoIframe" allow="autoplay; fullscreen" allowfullscreen style="width: 100%; height: 100%; border: 0;"></iframe>
+                </div>
+                <div id="internalLiveBanner" style="display: none;" class="text-center">
                     <i class="fa-solid fa-circle-play display-1 text-success opacity-75 mb-3"></i>
                     <h5 class="fw-bold">Bonsai Live Player Simulation</h5>
                     <p class="text-muted small px-3">Bạn đang phát trực tiếp mà không kết nối URL ngoài. Bạn có thể sử dụng khung chat room bên cạnh để test thử luồng.</p>
@@ -248,54 +247,54 @@
             </table>
         </div>
     </div>
-</div>
 
-<!-- START SESSION MODAL -->
-<div class="modal fade" id="startSessionModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content rounded-4 border-0 shadow">
-            <div class="modal-header bg-success text-white py-3">
-                <h5 class="modal-title fw-bold"><i class="fa-solid fa-circle-play me-2"></i>Khởi tạo phiên Live Stream</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body p-4">
-                <div class="mb-3">
-                    <label class="form-label text-dark fw-semibold">Tiêu đề buổi Live</label>
-                    <input type="text" class="form-control rounded-3" id="sessionTitleInput" placeholder="Ví dụ: Bán bonsai tùng la hán - Ưu đãi tháng 8">
+    <!-- START SESSION MODAL -->
+    <div class="modal fade" id="startSessionModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-4 border-0 shadow">
+                <div class="modal-header bg-success text-white py-3">
+                    <h5 class="modal-title fw-bold"><i class="fa-solid fa-circle-play me-2"></i>Khởi tạo phiên Live Stream</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="mb-3">
-                    <label class="form-label text-dark fw-semibold">Đường dẫn luồng video YouTube (Tùy chọn)</label>
-                    <input type="text" class="form-control rounded-3" id="sessionUrlInput" placeholder="Ví dụ: https://www.youtube.com/watch?v=xxxx">
-                    <span class="text-muted small d-block mt-1">Dán link YouTube live để nhúng trực tiếp luồng video vào control panel.</span>
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label text-dark fw-semibold">Tiêu đề buổi Live</label>
+                        <input type="text" class="form-control rounded-3" id="sessionTitleInput" placeholder="Ví dụ: Bán bonsai tùng la hán - Ưu đãi tháng 8">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-dark fw-semibold">Đường dẫn luồng video YouTube (Tùy chọn)</label>
+                        <input type="text" class="form-control rounded-3" id="sessionUrlInput" placeholder="Ví dụ: https://www.youtube.com/watch?v=xxxx">
+                        <span class="text-muted small d-block mt-1">Dán link YouTube live để nhúng trực tiếp luồng video vào control panel.</span>
+                    </div>
                 </div>
-            </div>
-            <div class="modal-footer border-0 p-3 bg-light d-flex gap-2">
-                <button type="button" class="btn btn-outline-secondary rounded-pill flex-grow-1 py-2 btn-sm fw-semibold" data-bs-dismiss="modal">Hủy bỏ</button>
-                <button type="button" class="btn btn-success rounded-pill flex-grow-1 py-2 btn-sm fw-semibold" onclick="startLiveSession()">Bắt đầu Live</button>
+                <div class="modal-footer border-0 p-3 bg-light d-flex gap-2">
+                    <button type="button" class="btn btn-outline-secondary rounded-pill flex-grow-1 py-2 btn-sm fw-semibold" data-bs-dismiss="modal">Hủy bỏ</button>
+                    <button type="button" class="btn btn-success rounded-pill flex-grow-1 py-2 btn-sm fw-semibold" onclick="startLiveSession()">Bắt đầu Live</button>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-<!-- YOUTUBE SYNC MODAL -->
-<div class="modal fade" id="youtubeSyncModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content rounded-4 border-0 shadow">
-            <div class="modal-header bg-danger text-white py-3">
-                <h5 class="modal-title fw-bold"><i class="fa-brands fa-youtube me-2"></i>Đồng bộ chat YouTube Live</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body p-4">
-                <div class="mb-3">
-                    <label class="form-label text-dark fw-semibold">YouTube Video ID</label>
-                    <input type="text" class="form-control rounded-3" id="youtubeVideoIdInput" placeholder="Ví dụ: dQw4w9WgXcQ">
-                    <span class="text-muted small d-block mt-1">Lấy chuỗi ký tự sau `?v=` trên đường dẫn YouTube để đồng bộ bình luận.</span>
+    <!-- YOUTUBE SYNC MODAL -->
+    <div class="modal fade" id="youtubeSyncModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-4 border-0 shadow">
+                <div class="modal-header bg-danger text-white py-3">
+                    <h5 class="modal-title fw-bold"><i class="fa-brands fa-youtube me-2"></i>Đồng bộ chat YouTube Live</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div id="youtubeSyncStatus" class="alert alert-info py-2 d-none small"></div>
-            </div>
-            <div class="modal-footer border-0 p-3 bg-light d-flex gap-2">
-                <button type="button" class="btn btn-outline-secondary rounded-pill flex-grow-1 py-2 btn-sm fw-semibold" data-bs-dismiss="modal">Đóng</button>
-                <button type="button" class="btn btn-danger rounded-pill flex-grow-1 py-2 btn-sm fw-semibold" onclick="triggerYouTubeSync()">Kích hoạt Đồng bộ</button>
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label text-dark fw-semibold">YouTube Video ID</label>
+                        <input type="text" class="form-control rounded-3" id="youtubeVideoIdInput" placeholder="Ví dụ: dQw4w9WgXcQ">
+                        <span class="text-muted small d-block mt-1">Lấy chuỗi ký tự sau `?v=` trên đường dẫn YouTube để đồng bộ bình luận.</span>
+                    </div>
+                    <div id="youtubeSyncStatus" class="alert alert-info py-2 d-none small"></div>
+                </div>
+                <div class="modal-footer border-0 p-3 bg-light d-flex gap-2">
+                    <button type="button" class="btn btn-outline-secondary rounded-pill flex-grow-1 py-2 btn-sm fw-semibold" data-bs-dismiss="modal">Đóng</button>
+                    <button type="button" class="btn btn-danger rounded-pill flex-grow-1 py-2 btn-sm fw-semibold" onclick="triggerYouTubeSync()">Kích hoạt Đồng bộ</button>
+                </div>
             </div>
         </div>
     </div>
@@ -309,10 +308,31 @@
         /*<![CDATA[*/
         let stompClient = null;
         let activeSessionId = [[${activeSession != null ? activeSession.sessionId : null}]];
+        let activeSessionUrl = [[${activeSession != null ? activeSession.streamUrl : null}]];
         let youtubeSyncInterval = null;
+
+        function extractYouTubeId(url) {
+            if (!url) return null;
+            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|live\/|shorts\/)([^#\&\?]*).*/;
+            const match = url.match(regExp);
+            return (match && match[2].length === 11) ? match[2] : null;
+        }
 
         document.addEventListener('DOMContentLoaded', () => {
             if (activeSessionId) {
+                // Initialize Video Player or Simulation Banner
+                if (activeSessionUrl) {
+                    const videoId = extractYouTubeId(activeSessionUrl);
+                    if (videoId) {
+                        document.getElementById('liveVideoIframe').src = 'https://www.youtube.com/embed/' + videoId + '?autoplay=1&mute=1';
+                        document.getElementById('liveVideoContainer').style.display = 'block';
+                    } else {
+                        document.getElementById('internalLiveBanner').style.display = 'block';
+                    }
+                } else {
+                    document.getElementById('internalLiveBanner').style.display = 'block';
+                }
+
                 connectWebSocket();
                 loadLeads(activeSessionId);
             }
@@ -360,9 +380,9 @@
                 return;
             }
 
-            const csrfToken = document.querySelector('meta[name="_csrf"]').content;
+            const csrfToken = document.querySelector('meta[name="_csrf"]')?.content || '';
 
-            fetch('/api/live/session/start', {
+            fetch('/api/live/start', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -372,7 +392,11 @@
             })
             .then(res => res.json())
             .then(data => {
-                window.location.reload();
+                if (data.success) {
+                    window.location.reload();
+                } else {
+                    alert('Lỗi: ' + (data.error || 'Không thể bắt đầu phiên live'));
+                }
             })
             .catch(err => {
                 alert('Khởi tạo phiên live thất bại: ' + err.message);
@@ -384,9 +408,9 @@
                 return;
             }
 
-            const csrfToken = document.querySelector('meta[name="_csrf"]').content;
+            const csrfToken = document.querySelector('meta[name="_csrf"]')?.content || '';
 
-            fetch('/api/live/session/' + id + '/end', {
+            fetch('/api/live/' + id + '/end', {
                 method: 'POST',
                 headers: {
                     'X-CSRF-TOKEN': csrfToken
@@ -399,7 +423,7 @@
         }
 
         function loadLeads(sessionId) {
-            fetch('/api/live/session/' + sessionId + '/leads')
+            fetch('/api/live/' + sessionId + '/leads')
                 .then(res => res.json())
                 .then(leads => {
                     const table = document.getElementById('leadsTableBody');
@@ -472,7 +496,7 @@
         function updateLead(leadId) {
             const status = document.getElementById('status-' + leadId).value;
             const notes = document.getElementById('notes-' + leadId).value;
-            const csrfToken = document.querySelector('meta[name="_csrf"]').content;
+            const csrfToken = document.querySelector('meta[name="_csrf"]')?.content || '';
 
             fetch('/api/live/leads/' + leadId + '/status', {
                 method: 'PUT',
@@ -508,16 +532,17 @@
             appendChatMsg(author, text, true);
 
             // POST to API to parse
-            const csrfToken = document.querySelector('meta[name="_csrf"]').content;
-            fetch('/api/live/comment', {
+            const csrfToken = document.querySelector('meta[name="_csrf"]')?.content || '';
+            fetch('/api/live/chat', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': csrfToken
                 },
                 body: JSON.stringify({
-                    viewerName: author,
-                    messageContent: text
+                    sessionId: activeSessionId,
+                    author: author,
+                    message: text
                 })
             });
         }
@@ -576,14 +601,10 @@
         }
 
         function syncYouTubeCall(videoId) {
-            const csrfToken = document.querySelector('meta[name="_csrf"]').content;
-            fetch('/api/live/youtube/sync', {
+            const csrfToken = document.querySelector('meta[name="_csrf"]')?.content || '';
+            fetch('/api/live/' + activeSessionId + '/fetch-youtube?videoId=' + encodeURIComponent(videoId), {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': csrfToken
-                },
-                body: JSON.stringify({ videoId })
+                headers: { 'X-CSRF-TOKEN': csrfToken }
             })
             .then(res => res.json())
             .then(data => {
