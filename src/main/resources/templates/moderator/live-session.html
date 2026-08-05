@@ -148,9 +148,16 @@
     <div th:if="${activeSession != null}" class="alert alert-success border-0 rounded-4 shadow-sm mb-4 p-3 d-flex justify-content-between align-items-center">
         <div>
             <h5 class="alert-heading fw-bold mb-1" th:text="${activeSession.title}">Phiên live: Bán cây cảnh ngày cuối tuần</h5>
-            <p class="mb-0 small text-success-emphasis">
-                <span class="spinner-grow spinner-grow-sm text-danger me-1" role="status"></span>
-                Đang phát trực tiếp • Bắt đầu lúc: <span th:text="${#temporals.format(activeSession.startTime, 'dd/MM/yyyy HH:mm')}">10:00</span>
+            <p class="mb-0 small text-success-emphasis d-flex align-items-center gap-3 flex-wrap">
+                <span>
+                    <span class="spinner-grow spinner-grow-sm text-danger me-1" role="status"></span>
+                    Đang phát trực tiếp &bull; Bắt đầu lúc: <span th:text="${#temporals.format(activeSession.startTime, 'dd/MM/yyyy HH:mm')}">10:00</span>
+                </span>
+                <!-- Live duration timer -->
+                <span style="display:inline-flex;align-items:center;gap:5px;background:rgba(0,0,0,0.12);border-radius:20px;padding:3px 12px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:0.5px;">
+                    <i class="fa-regular fa-clock"></i>
+                    <span id="liveDurationDisplay">00:00:00</span>
+                </span>
             </p>
         </div>
         <div class="d-flex gap-2">
@@ -309,6 +316,7 @@
         let stompClient = null;
         let activeSessionId = /*[[${activeSession != null ? activeSession.sessionId : null}]]*/ null;
         let activeSessionUrl = /*[[${activeSession != null ? activeSession.streamUrl : null}]]*/ null;
+        let activeSessionStart = /*[[${activeSession != null ? activeSession.startTime : null}]]*/ null;
         let youtubeSyncInterval = null;
 
         function extractYouTubeId(url) {
@@ -338,8 +346,31 @@
 
                 // ✅ Load chat history (persisted messages survive page reload)
                 loadChatHistory(activeSessionId);
+
+                // ⏱ Start live duration timer
+                startLiveTimer(activeSessionStart);
             }
         });
+
+        function startLiveTimer(startTimeStr) {
+            if (!startTimeStr) return;
+            // Parse ISO string from Java LocalDateTime e.g. "2026-08-05T11:03:00"
+            const startMs = new Date(startTimeStr.replace('T', ' ')).getTime();
+            const display = document.getElementById('liveDurationDisplay');
+            if (!display) return;
+            function tick() {
+                const elapsed = Math.max(0, Math.floor((Date.now() - startMs) / 1000));
+                const h = Math.floor(elapsed / 3600);
+                const m = Math.floor((elapsed % 3600) / 60);
+                const s = elapsed % 60;
+                display.textContent =
+                    String(h).padStart(2, '0') + ':' +
+                    String(m).padStart(2, '0') + ':' +
+                    String(s).padStart(2, '0');
+            }
+            tick();
+            setInterval(tick, 1000);
+        }
 
         function loadChatHistory(sessionId) {
             fetch('/api/live/' + sessionId + '/chat-history')

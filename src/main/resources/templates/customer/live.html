@@ -32,6 +32,13 @@
             0%, 100% { opacity: 1; }
             50% { opacity: 0.7; }
         }
+        .live-timer {
+            display: inline-flex; align-items: center; gap: 5px;
+            background: rgba(255,255,255,0.15); color: #ffffff;
+            border-radius: 20px; padding: 5px 14px; font-size: 12px; font-weight: 700;
+            font-variant-numeric: tabular-nums; letter-spacing: 0.5px;
+            border: 1px solid rgba(255,255,255,0.25);
+        }
         .video-frame {
             background: #000;
             border-radius: 12px 12px 0 0;
@@ -98,6 +105,10 @@
         <div class="d-flex align-items-center gap-3 mb-3">
             <span class="live-badge" th:if="${activeSession != null}">
                 <i class="fa-solid fa-circle"></i> ĐANG LIVE
+            </span>
+            <!-- Live duration timer (shown when session is active) -->
+            <span class="live-timer" th:if="${activeSession != null}" id="liveDurationBadge">
+                <i class="fa-regular fa-clock"></i> <span id="liveDurationDisplay">00:00:00</span>
             </span>
             <span class="badge bg-secondary fs-6" th:if="${activeSession == null}">
                 <i class="fa-solid fa-video-slash me-1"></i> NGOẠI TUYẾN
@@ -227,6 +238,7 @@
     /*<![CDATA[*/
     const activeSessionId = /*[[${activeSession != null ? activeSession.sessionId : null}]]*/ null;
     const activeSessionUrl = /*[[${activeSession != null ? activeSession.streamUrl : null}]]*/ null;
+    const activeSessionStart = /*[[${activeSession != null ? activeSession.startTime : null}]]*/ null;
     const csrfToken = document.querySelector('meta[name="_csrf"]')?.content || '';
     const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.content || 'X-CSRF-TOKEN';
     let stompClient = null;
@@ -264,6 +276,30 @@
         // Load persisted chat history first, then connect WebSocket for real-time
         loadChatHistory(activeSessionId);
         connectWebSocket();
+
+        // ⏱ Start live duration timer
+        startLiveTimer(activeSessionStart);
+    }
+
+    function startLiveTimer(startTimeStr) {
+        if (!startTimeStr) return;
+        // Parse ISO-like string from Java LocalDateTime: "2026-08-05T11:03:00"
+        const startMs = new Date(startTimeStr.replace('T', ' ')).getTime();
+        const display = document.getElementById('liveDurationDisplay');
+        if (!display) return;
+
+        function tick() {
+            const elapsed = Math.max(0, Math.floor((Date.now() - startMs) / 1000));
+            const h = Math.floor(elapsed / 3600);
+            const m = Math.floor((elapsed % 3600) / 60);
+            const s = elapsed % 60;
+            display.textContent =
+                String(h).padStart(2, '0') + ':' +
+                String(m).padStart(2, '0') + ':' +
+                String(s).padStart(2, '0');
+        }
+        tick();
+        setInterval(tick, 1000);
     }
 
     function loadChatHistory(sessionId) {
