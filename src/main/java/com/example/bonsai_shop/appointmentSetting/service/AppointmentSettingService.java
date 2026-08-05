@@ -11,26 +11,27 @@ import java.time.LocalDateTime;
 @RequiredArgsConstructor
 public class AppointmentSettingService {
 
-        private final AppointmentSettingRepository appointmentSettingRepository;
+    private final AppointmentSettingRepository appointmentSettingRepository;
 
-        public AppointmentSetting getAppointmentSetting() {
-            return appointmentSettingRepository.findFirstByOrderBySettingIdAsc()
-                    .orElseThrow(() -> new RuntimeException("Không tìm thấy cấu hình lịch hẹn."));
-        }
-
-        public boolean isPausedAt(LocalDateTime appointmentDate) {
-            AppointmentSetting setting = getAppointmentSetting();
-
-            if (appointmentDate == null) {
-                return false;
-            }
-
-            if (setting.getPauseFrom() == null || setting.getPauseTo() == null) {
-                return false;
-            }
-
-            return !appointmentDate.isBefore(setting.getPauseFrom())
-                    && !appointmentDate.isAfter(setting.getPauseTo());
-        }
+    public AppointmentSetting getAppointmentSetting() {
+        return appointmentSettingRepository.findFirstByOrderBySettingIdAsc()
+                .orElseGet(() -> appointmentSettingRepository.save(AppointmentSetting.builder().build()));
     }
 
+    public boolean isPausedAt(LocalDateTime appointmentDate) {
+        AppointmentSetting setting = getAppointmentSetting();
+
+        if (appointmentDate == null) {
+            return false;
+        }
+
+        if (setting.getPauseFrom() == null || setting.getPauseTo() == null) {
+            return false;
+        }
+
+        return !appointmentDate.isBefore(setting.getPauseFrom())
+                && !appointmentDate.isAfter(setting.getPauseTo());
+    }
+
+
+}

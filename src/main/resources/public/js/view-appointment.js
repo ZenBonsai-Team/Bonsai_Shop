@@ -107,6 +107,19 @@ document.addEventListener("DOMContentLoaded", () => {
         return `${year}-${month}-${day}`;
     };
 
+    const formatAppointmentStatus = (status) => {
+        const labels = {
+            PENDING: "Chờ duyệt",
+            APPROVED: "Đã duyệt",
+            REJECTED: "Đã từ chối",
+            COMPLETED: "Hoàn thành",
+            ABSENT: "Không đến",
+            CANCELLED: "Đã hủy"
+        };
+
+        return labels[status] || status || "Chờ duyệt";
+    };
+
     const getTomorrowValue = () => {
         const tomorrow = new Date();
         tomorrow.setDate(tomorrow.getDate() + 1);
@@ -135,7 +148,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     $("#detailCode").textContent = `APT-${data.appointmentId || id}`;
                     $("#detailDate").textContent = dateTime.date;
                     $("#detailTime").textContent = dateTime.time || data.appointmentTime || "";
-                    $("#detailStatus").textContent = data.status || "PENDING";
+                    $("#detailStatus").textContent = formatAppointmentStatus(data.status);
                     $("#detailNote").textContent = data.note || "Không có ghi chú riêng";
 
                     openModal(modal);
