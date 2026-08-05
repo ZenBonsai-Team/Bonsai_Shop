@@ -40,6 +40,8 @@ import com.example.bonsai_shop.product.repository.OrderLogRepository;
 import com.example.bonsai_shop.product.repository.OrderRepository;
 import com.example.bonsai_shop.product.repository.PaymentRepository;
 import com.example.bonsai_shop.product.repository.ProductRepository;
+import com.example.bonsai_shop.customer.repository.ModerationNotificationRepository;
+import com.example.bonsai_shop.entity.ModerationNotification;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -62,6 +64,7 @@ public class OrderService {
     private final MailService mailService;
     private final CartService cartService;
     private final FinancialLedgerService financialLedgerService;
+    private final ModerationNotificationRepository notificationRepository;
 
     @Transactional(readOnly = true)
     public Page<Order> getFilteredOrders(String search, String status, String sort, int page, int limit) {
@@ -550,7 +553,6 @@ public class OrderService {
         }
 
         if ("PAID".equalsIgnoreCase(order.getOrderStatus())) {
-            recordFullPaymentRevenueLedgerIfPossible(order, LocalDateTime.now());
             return true;
         }
 
@@ -579,8 +581,7 @@ public class OrderService {
         // Trường hợp FULL_PAYMENT hoặc fallback
         order.setOrderStatus("PAID");
         orderRepository.save(order);
-        markProductsAsSold(order);
-        recordFullPaymentRevenueLedgerIfPossible(order, LocalDateTime.now());
+        sendReviewReminderNotification(order);
 
         eventPublisher.publishEvent(new OrderPaidEvent(order));
         return true;
@@ -727,7 +728,9 @@ public class OrderService {
         String oldStatus = order.getOrderStatus();
         LocalDateTime completedAt = LocalDateTime.now();
         order.setOrderStatus("COMPLETED");
+        order.setCompletedAt(completedAt);
         orderRepository.save(order);
+        sendReviewReminderNotification(order);
         markProductsAsSold(order);
         recordCompletedRevenueLedger(order, moderator, completedAt);
 
@@ -901,7 +904,9 @@ public class OrderService {
         String oldStatus = order.getOrderStatus();
         LocalDateTime completedAt = LocalDateTime.now();
         order.setOrderStatus("COMPLETED");
+        order.setCompletedAt(completedAt);
         orderRepository.save(order);
+        sendReviewReminderNotification(order);
         markProductsAsSold(order);
         recordCompletedRevenueLedger(order, moderator, completedAt);
 
@@ -990,29 +995,6 @@ public class OrderService {
         orderLogRepository.save(ledgerLog);
     }
 
-    private void recordFullPaymentRevenueLedgerIfPossible(Order order, LocalDateTime paidAt) {
-        if (order == null || order.getOrderId() == null) {
-            return;
-        }
-
-        boolean hasSuccessfulFullPayment = paymentRepository.findByOrderOrderIdOrderByPaymentIdAsc(order.getOrderId())
-                .stream()
-                .anyMatch(payment -> PaymentType.FULL_PAYMENT.name().equalsIgnoreCase(payment.getPaymentType())
-                        && "SUCCESS".equalsIgnoreCase(payment.getPaymentStatus()));
-        if (!hasSuccessfulFullPayment) {
-            return;
-        }
-
-        User actor = order.getAssignedTo();
-        if (actor == null || actor.getUserId() == null) {
-            log.warn("Cannot record full-payment revenue ledger for order {} because assigned moderator is missing.",
-                    order.getOrderCode());
-            return;
-        }
-
-        recordCompletedRevenueLedger(order, actor, paidAt);
-    }
-
     @Transactional
     public boolean recordFinalPayment(String orderCode, User moderator) {
         Order order = orderRepository.findByOrderCode(orderCode).orElse(null);
@@ -1073,4 +1055,22 @@ public class OrderService {
             }
         }
     }
+
+    private void sendReviewReminderNotification(Order order) {
+        if (order != null && order.getCustomer() != null && order.getCustomer().getEmail() != null) {
+            try {
+                ModerationNotification notification = ModerationNotification.builder()
+                        .targetUsername(order.getCustomer().getEmail())
+                        .message("🎉 Đơn hàng " + order.getOrderCode() + " đã được thanh toán đầy đủ / hoàn thành! Hãy đánh giá và cho sao (Review & Rating) cho cây bonsai bạn đã mua nhé!")
+                        .isRead(false)
+                        .createdAt(LocalDateTime.now())
+                        .build();
+                notificationRepository.save(notification);
+            } catch (Exception e) {
+                log.error("Failed to send review reminder notification for order: " + order.getOrderCode(), e);
+            }
+        }
+    }
 }
+
+

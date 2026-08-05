@@ -256,6 +256,7 @@ public class ArtisanInPersonOrderService {
 
         LocalDateTime completedAt = LocalDateTime.now();
         order.setOrderStatus(STATUS_COMPLETED);
+        order.setCompletedAt(completedAt);
         product.setProductStatus(PRODUCT_SOLD);
         productRepository.save(product);
         Order savedOrder = orderRepository.save(order);

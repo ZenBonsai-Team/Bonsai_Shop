@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="vi">
 <head>
@@ -330,17 +330,7 @@
                     </button>
                 </div>
             </div>
-                <!-- Small Policy Guarantees -->
-                <div class="guarantees-row">
-                    <div class="guarantees-item">
-                        <i class="fa-solid fa-shield-check"></i>
-                        <span>Bảo đảm phả hệ</span>
-                    </div>
-                    <div class="guarantees-item">
-                        <i class="fa-solid fa-truck-fast"></i>
-                        <span>Vận chuyển toàn quốc</span>
-                    </div>
-                </div>
+
             </div>
         </section>
 
@@ -579,6 +569,55 @@
                 </table>
             </div>
 
+        </div>
+    </div>
+</section>
+
+<!-- CUSTOMER REVIEWS SECTION -->
+<section class="reviews-section" style="padding: 60px 0; border-top: 1px solid #eee; background-color: #fcfdfc;">
+    <div class="container" style="max-width: 900px; margin: 0 auto;">
+        <div class="d-flex align-items-center justify-content-between mb-4 pb-2 border-bottom">
+            <h3 class="fw-bold text-dark m-0" style="font-family: 'Cormorant Garamond', serif; font-size: 28px;">
+                <i class="fa-regular fa-comments text-success me-2"></i>Cảm nhận của người mua
+            </h3>
+            <div class="d-flex align-items-center gap-2" th:if="${reviews != null and !#lists.isEmpty(reviews)}">
+                <span class="fs-4 fw-bold text-dark" th:text="${#numbers.formatDecimal(averageRating, 1, 1)}">4.8</span>
+                <div class="text-warning">
+                    <i class="fa-solid fa-star" th:each="i : ${#numbers.sequence(1, 5)}" th:class="${i <= averageRating ? 'fa-solid fa-star text-warning' : 'fa-regular fa-star text-secondary'}"></i>
+                </div>
+                <span class="text-muted small" th:text="'(' + ${#lists.size(reviews)} + ' đánh giá)'">(5 đánh giá)</span>
+            </div>
+        </div>
+
+        <!-- No Reviews State -->
+        <div class="text-center py-5 bg-white rounded-4 border shadow-sm" th:if="${reviews == null or #lists.isEmpty(reviews)}">
+            <i class="fa-regular fa-comment-dots text-muted display-4 mb-3"></i>
+            <h5 class="text-dark fw-semibold">Chưa có đánh giá nào</h5>
+            <p class="text-muted small mb-0">Tác phẩm này chưa nhận được đánh giá nào từ chủ sở hữu.</p>
+        </div>
+
+        <!-- Review List -->
+        <div class="d-flex flex-column gap-3" th:if="${reviews != null and !#lists.isEmpty(reviews)}">
+            <div class="bg-white p-4 rounded-4 border shadow-sm" th:each="rev : ${reviews}">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <div>
+                        <div class="fw-bold text-dark mb-1" th:text="${rev.customer != null ? #strings.substring(rev.customer.fullName != null ? rev.customer.fullName : rev.customer.username, 0, 1) + '***' + #strings.substring(rev.customer.fullName != null ? rev.customer.fullName : rev.customer.username, #strings.length(rev.customer.fullName != null ? rev.customer.fullName : rev.customer.username) - 1, #strings.length(rev.customer.fullName != null ? rev.customer.fullName : rev.customer.username)) : 'Khách hàng'}">K***a</div>
+                        <div class="text-warning small">
+                            <i class="fa-solid fa-star" th:each="starVal : ${#numbers.sequence(1, 5)}" th:class="${starVal <= rev.rating ? 'fa-solid fa-star text-warning' : 'fa-regular fa-star text-secondary'}"></i>
+                        </div>
+                    </div>
+                    <span class="text-muted small" th:text="${#temporals.format(rev.createdAt, 'dd/MM/yyyy HH:mm')}">12/06/2025</span>
+                </div>
+                <p class="text-dark mb-0 mt-2" th:text="${rev.comment}">Cây rất đẹp, khỏe mạnh, đóng gói cẩn thận.</p>
+
+                <!-- Store Reply -->
+                <div class="mt-3 p-3 bg-light rounded-3 border-start border-success border-3" th:if="${rev.response != null and !rev.response.isEmpty()}">
+                    <div class="fw-bold text-success small mb-1">
+                        <i class="fa-solid fa-reply me-1"></i>Phản hồi của nhà vườn Hải Hậu
+                    </div>
+                    <p class="text-dark mb-0 small" th:text="${rev.response}">Cảm ơn quý khách đã tin tưởng và ủng hộ nhà vườn!</p>
+                </div>
+            </div>
         </div>
     </div>
 </section>

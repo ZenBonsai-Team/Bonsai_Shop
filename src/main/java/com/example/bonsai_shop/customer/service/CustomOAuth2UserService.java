@@ -47,8 +47,12 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         User user = userRepository.findByEmail(email)
                 .orElseGet(() -> createNewGoogleUser(email, fullName, avatar));
 
-        // Nếu user cũ chưa có avatar thì cập nhật từ Google
-        if (user.getAvatar() == null && avatar != null) {
+        // Luôn cập nhật avatar từ Google mỗi lần đăng nhập
+        // trừ khi user đã tự upload avatar riêng (lưu trên Cloudinary)
+        boolean hasCustomAvatar = user.getAvatar() != null
+                && !user.getAvatar().contains("googleusercontent.com")
+                && !user.getAvatar().isBlank();
+        if (!hasCustomAvatar && avatar != null) {
             user.setAvatar(avatar);
             userRepository.save(user);
         }

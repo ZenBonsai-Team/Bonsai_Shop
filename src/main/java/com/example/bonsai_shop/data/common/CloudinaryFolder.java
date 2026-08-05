@@ -3,8 +3,6 @@ package com.example.bonsai_shop.data.common;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
-@Getter
-@RequiredArgsConstructor
 public enum CloudinaryFolder {
 
     AVATAR("bonsai_shop/avatars"),
@@ -15,4 +13,12 @@ public enum CloudinaryFolder {
     COMMUNITY("bonsai_shop/community");
 
     private final String path;
+
+    CloudinaryFolder(String path) {
+        this.path = path;
+    }
+
+    public String getPath() {
+        return this.path;
+    }
 }
