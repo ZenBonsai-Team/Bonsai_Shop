@@ -83,10 +83,13 @@
         <section class="profile-top">
 
             <a th:href="@{/community/author/{id}(id=${user.userId})}" class="avatar-box text-decoration-none" title="Xem trang công khai của tôi">
-                <img th:if="${user.avatar != null}" th:src="${user.avatar}" alt="avatar">
+                <img th:if="${user.avatar != null and !user.avatar.isEmpty()}" 
+                     th:src="${user.avatar}" 
+                     alt="" 
+                     onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';">
 
-                <span th:unless="${user.avatar != null}"
-                      th:text="${#strings.substring(user.fullName, 0, 1)}">
+                <span th:style="${user.avatar != null and !user.avatar.isEmpty()} ? 'display: none;' : ''"
+                      th:text="${user.fullName != null and !user.fullName.isEmpty() ? #strings.substring(user.fullName, 0, 1) : 'U'}">
                     U
                 </span>
             </a>
