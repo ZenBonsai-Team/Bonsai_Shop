@@ -21,6 +21,7 @@ import com.example.bonsai_shop.product.enums.PaymentType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.ApplicationEventPublisher;
+import com.example.bonsai_shop.customer.repository.ModerationNotificationRepository;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -55,6 +56,7 @@ class OrderServiceTest {
         MailService mailService = mock(MailService.class);
         CartService cartService = mock(CartService.class);
         financialLedgerService = mock(FinancialLedgerService.class);
+        ModerationNotificationRepository notificationRepository = mock(ModerationNotificationRepository.class);
 
         orderService = new OrderService(
                 orderRepository,
@@ -65,7 +67,8 @@ class OrderServiceTest {
                 eventPublisher,
                 mailService,
                 cartService,
-                financialLedgerService
+                financialLedgerService,
+                notificationRepository
         );
     }
 
