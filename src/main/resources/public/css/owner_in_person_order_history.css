@@ -1,0 +1,595 @@
+@import url('dashboard.css');
+
+/* =========================
+   HEADER
+========================= */
+
+.owner-walkin-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    margin-bottom: 24px;
+}
+
+.owner-walkin-header h1 {
+    color: #1c3322;
+    font-size: 1.9rem;
+    font-weight: 800;
+    line-height: 1.2;
+    margin: 0 0 6px;
+}
+
+.owner-walkin-header p {
+    color: #536257;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    margin: 0;
+}
+
+.readonly-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+
+    min-height: 42px;
+    padding: 9px 14px;
+
+    background: #eef7f0;
+    border: 1px solid #d5eadb;
+    border-radius: 8px;
+
+    color: #1c3322;
+    font-size: 0.86rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+/* =========================
+   SEARCH
+========================= */
+
+.owner-walkin-search {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 14px;
+}
+
+.owner-walkin-search .search-input-wrapper {
+    flex: 1;
+    min-width: 260px;
+}
+
+.owner-walkin-search .search-input-wrapper input {
+    width: 100%;
+    min-height: 42px;
+    padding: 10px 14px;
+
+    background: #faf8f5;
+    border: 1px solid #e8e4dd;
+    border-radius: 8px;
+
+    color: #1e221f;
+    font-size: 0.9rem;
+    outline: none;
+}
+
+.owner-walkin-search .search-input-wrapper input:focus {
+    background: #fff;
+    border-color: #1c3322;
+    box-shadow: 0 0 0 3px rgba(28, 51, 34, 0.08);
+}
+
+.btn-mini-primary,
+.btn-mini-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    min-height: 42px;
+    padding: 0 16px;
+
+    border-radius: 7px;
+    font-size: 0.84rem;
+    font-weight: 700;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.btn-mini-primary {
+    background: #1c3322;
+    border: 1px solid #1c3322;
+    color: #fff;
+}
+
+.btn-mini-primary:hover {
+    background: #2d5036;
+    border-color: #2d5036;
+    color: #fff;
+}
+
+.btn-mini-secondary {
+    background: #fff;
+    border: 1px solid #e8e4dd;
+    color: #536257;
+}
+
+.btn-mini-secondary:hover {
+    background: #f5f3ef;
+    color: #1c3322;
+}
+
+/* =========================
+   FILTER TABS
+========================= */
+
+.product-filter-chips {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 14px;
+}
+
+.product-filter-chips .tab-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    min-height: 40px;
+    padding: 0 18px;
+
+    border-radius: 7px;
+    color: #536257;
+    font-size: 0.86rem;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.product-filter-chips .tab-btn:hover {
+    background: #f2efe9;
+    color: #1c3322;
+}
+
+.product-filter-chips .tab-btn.active {
+    background: #1c3322;
+    color: #fff;
+}
+
+/* =========================
+   TABLE CONTAINER
+========================= */
+
+.owner-walkin-table-container {
+    width: 100%;
+    overflow-x: hidden;
+}
+
+/* =========================
+   TABLE
+========================= */
+
+.owner-walkin-table {
+    width: 100%;
+    min-width: 0;
+
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+.owner-walkin-table th,
+.owner-walkin-table td {
+    vertical-align: middle;
+}
+
+/* Chia chiều rộng các cột */
+.owner-walkin-table th:nth-child(1),
+.owner-walkin-table td:nth-child(1) {
+    width: 11%;
+}
+
+.owner-walkin-table th:nth-child(2),
+.owner-walkin-table td:nth-child(2) {
+    width: 15%;
+}
+
+.owner-walkin-table th:nth-child(3),
+.owner-walkin-table td:nth-child(3) {
+    width: 15%;
+}
+
+.owner-walkin-table th:nth-child(4),
+.owner-walkin-table td:nth-child(4) {
+    width: 18%;
+}
+
+.owner-walkin-table th:nth-child(5),
+.owner-walkin-table td:nth-child(5) {
+    width: 13%;
+}
+
+.owner-walkin-table th:nth-child(6),
+.owner-walkin-table td:nth-child(6) {
+    width: 11%;
+}
+
+.owner-walkin-table th:nth-child(7),
+.owner-walkin-table td:nth-child(7) {
+    width: 9%;
+}
+
+.owner-walkin-table th:nth-child(8),
+.owner-walkin-table td:nth-child(8) {
+    width: 8%;
+}
+
+.owner-walkin-table thead th {
+    background: #f4f1ea;
+    color: #536257;
+
+    font-size: 0.76rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    line-height: 1.35;
+    text-align: left;
+    text-transform: uppercase;
+
+    padding: 12px 10px;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+
+.owner-walkin-table tbody td {
+    border-bottom: 1px solid #e8e4dd;
+    color: #1e221f;
+
+    font-size: 0.82rem;
+    line-height: 1.45;
+
+    padding: 13px 10px;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
+.owner-walkin-table tbody tr {
+    cursor: default;
+}
+
+.owner-walkin-table tbody tr:hover {
+    background: rgba(28, 51, 34, 0.03);
+}
+
+/* =========================
+   TEXT CELLS
+========================= */
+
+.owner-walkin-table td strong {
+    display: block;
+    color: #1e221f;
+    font-size: 0.88rem;
+    font-weight: 700;
+    line-height: 1.35;
+}
+
+.owner-walkin-table td small {
+    display: block;
+    color: #66736b;
+    font-size: 0.78rem;
+    line-height: 1.4;
+    margin-top: 4px;
+
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
+.owner-walkin-table .col-code {
+    color: #1c3322;
+    font-weight: 800;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
+/* =========================
+   MONEY
+========================= */
+
+.owner-walkin-table .col-price {
+    font-variant-numeric: tabular-nums;
+    font-weight: 800;
+    text-align: right;
+
+    white-space: normal;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+}
+
+/* =========================
+   DATE
+========================= */
+
+.owner-walkin-table td[data-label="Ngày tạo"] {
+    font-variant-numeric: tabular-nums;
+    line-height: 1.45;
+
+    white-space: normal;
+    word-break: normal;
+    overflow-wrap: normal;
+}
+
+/* =========================
+   STATUS
+========================= */
+
+.owner-walkin-table td[data-label="Trạng thái"] {
+    text-align: center;
+}
+
+.owner-walkin-table .status-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    max-width: 100%;
+    min-height: 34px;
+    padding: 7px 8px;
+
+    border-radius: 999px;
+
+    font-size: 0.72rem;
+    font-weight: 800;
+    line-height: 1.2;
+    text-align: center;
+
+    white-space: normal;
+    word-break: normal;
+    overflow-wrap: normal;
+}
+
+.owner-walkin-table .status-badge.pending {
+    background: #fff4df;
+    color: #875a0f;
+}
+
+.owner-walkin-table .status-badge.approved {
+    background: #e7f7ed;
+    color: #17643a;
+}
+
+.owner-walkin-table .status-badge.cancelled {
+    background: #ffe7e5;
+    color: #a33a31;
+}
+
+/* =========================
+   ACTION
+========================= */
+
+.owner-walkin-table .col-action {
+    text-align: center;
+    white-space: normal;
+}
+
+.owner-walkin-table .btn-mini-confirm {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 100%;
+    min-width: 0;
+    min-height: 38px;
+    padding: 0 8px;
+
+    background: #1c3322;
+    border-radius: 7px;
+    color: #fff;
+
+    font-size: 0.8rem;
+    font-weight: 800;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.owner-walkin-table .btn-mini-confirm:hover {
+    background: #b8926a;
+    color: #fff;
+}
+
+/* =========================
+   EMPTY STATE
+========================= */
+
+.owner-walkin-table .empty-state {
+    padding: 36px 18px;
+    text-align: center;
+}
+
+.owner-walkin-table .empty-state-icon {
+    color: #b8926a;
+    font-size: 2rem;
+    margin-bottom: 10px;
+}
+
+.owner-walkin-table .empty-state-title {
+    color: #1c3322;
+    font-size: 1rem;
+    font-weight: 800;
+    margin-bottom: 5px;
+}
+
+.owner-walkin-table .empty-state-desc {
+    color: #66736b;
+    font-size: 0.86rem;
+}
+
+/* =========================
+   PAGINATION
+========================= */
+
+.pagination-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+
+    border-top: 1px solid #e8e4dd;
+    padding: 16px 18px;
+}
+
+.pagination-info {
+    color: #536257;
+    font-size: 0.86rem;
+    font-weight: 700;
+}
+
+.pagination-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.pagination-controls .page-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    min-height: 36px;
+    padding: 0 14px;
+
+    background: #1c3322;
+    border-radius: 7px;
+    color: #fff;
+
+    font-size: 0.82rem;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.pagination-controls .page-btn:hover {
+    background: #2d5036;
+}
+
+/* =========================
+   RESPONSIVE: TABLET
+========================= */
+
+@media (max-width: 980px) {
+    .owner-walkin-header {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .owner-walkin-search {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .owner-walkin-search .search-input-wrapper {
+        min-width: 0;
+    }
+
+    .owner-walkin-search .btn-mini {
+        width: 100%;
+    }
+
+    .product-filter-chips {
+        align-items: stretch;
+    }
+
+    .product-filter-chips .tab-btn {
+        flex: 1;
+        min-width: 130px;
+    }
+
+    .pagination-footer {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+}
+
+
+
+
+/* =========================
+   RESPONSIVE: MOBILE CARD
+========================= */
+
+@media (max-width: 760px) {
+    .owner-walkin-table-container {
+        overflow-x: visible;
+    }
+
+    .owner-walkin-table,
+    .owner-walkin-table thead,
+    .owner-walkin-table tbody,
+    .owner-walkin-table tr,
+    .owner-walkin-table th,
+    .owner-walkin-table td {
+        display: block;
+        width: 100%;
+        min-width: 0;
+    }
+
+    .owner-walkin-table thead {
+        display: none;
+    }
+
+    .owner-walkin-table tbody {
+        background: #faf8f5;
+        padding: 10px;
+    }
+
+    .owner-walkin-table tbody tr {
+        background: #fff;
+        border: 1px solid #e8e4dd;
+        border-radius: 8px;
+        margin-bottom: 12px;
+        overflow: hidden;
+    }
+
+    .owner-walkin-table td {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 14px;
+        padding: 11px 13px;
+        border-bottom: 1px solid #efeae2;
+        text-align: right;
+    }
+
+    .owner-walkin-table td::before {
+        content: attr(data-label);
+        flex: 0 0 42%;
+        color: #66736b;
+        font-size: 0.72rem;
+        font-weight: 800;
+        letter-spacing: 0.04em;
+        text-align: left;
+        text-transform: uppercase;
+    }
+
+    .owner-walkin-table td:last-child {
+        border-bottom: 0;
+    }
+
+    .owner-walkin-table td > * {
+        max-width: 58%;
+    }
+
+    .owner-walkin-table .col-price,
+    .owner-walkin-table .col-action,
+    .owner-walkin-table td[data-label="Trạng thái"] {
+        text-align: right;
+    }
+
+    .owner-walkin-table .empty-state {
+        display: block;
+        text-align: center;
+    }
+
+    .owner-walkin-table .empty-state::before {
+        content: none;
+    }
+}

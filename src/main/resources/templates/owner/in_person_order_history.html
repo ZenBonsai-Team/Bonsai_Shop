@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/dashboard-layout :: layout(~{::title}, ~{::#in-person-order-history-content}, ~{::styles}, ~{::scripts})}">
+<head>
+    <title>Lịch sử đơn tại vườn - Minh Kỷ Garden</title>
+    <th:block th:fragment="styles">
+        <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+        <link rel="stylesheet" th:href="@{/css/moderator-orders.css}">
+        <link rel="stylesheet" th:href="@{/css/owner_in_person_order_history.css}">
+    </th:block>
+</head>
+<body>
+
+<div id="in-person-order-history-content" th:with="paramActivePage='in-person-order-history'">
+    <header class="page-header owner-walkin-header">
+        <div>
+            <h1>Lịch sử đơn tại vườn</h1>
+            <p>Theo dõi các đơn bán trực tiếp tại vườn do tài khoản artisan phụ trách.</p>
+        </div>
+        <span class="readonly-badge">
+            <i class="fa-solid fa-eye"></i>
+            Chỉ xem
+        </span>
+    </header>
+
+    <section class="portal-card" id="walkInOrdersSection">
+        <div class="product-toolbar">
+            <div class="product-toolbar-top">
+                <div>
+                    <h2>Danh sách đơn tại vườn</h2>
+                    <p>Chỉ bao gồm order có loại IN_PERSON và handler là tài khoản artisan.</p>
+                </div>
+            </div>
+
+            <form class="owner-walkin-search" method="get" th:action="@{/owner/in-person-order-history}">
+                <input type="hidden" name="status" th:value="${selectedStatus}">
+                <div class="search-input-wrapper">
+                    <input type="text"
+                           name="search"
+                           th:value="${search}"
+                           placeholder="Tìm theo mã đơn, khách hàng, handler hoặc sản phẩm"
+                           autocomplete="off">
+                </div>
+                <button class="btn-mini btn-mini-primary" type="submit">Tìm</button>
+                <a class="btn-mini btn-mini-secondary"
+                   th:if="${search != null and !search.isBlank()}"
+                   th:href="@{/owner/in-person-order-history(status=${selectedStatus})}">Xóa lọc</a>
+            </form>
+
+            <div class="filter-tabs product-filter-chips">
+                <a class="tab-btn text-decoration-none"
+                   th:classappend="${selectedStatus == 'ALL'} ? ' active'"
+                   th:href="@{/owner/in-person-order-history(status='ALL', search=${search})}">Tất cả</a>
+                <a class="tab-btn text-decoration-none"
+                   th:classappend="${selectedStatus == pendingPaymentStatus} ? ' active'"
+                   th:href="@{/owner/in-person-order-history(status=${pendingPaymentStatus}, search=${search})}">Chờ tiền</a>
+                <a class="tab-btn text-decoration-none"
+                   th:classappend="${selectedStatus == completedStatus} ? ' active'"
+                   th:href="@{/owner/in-person-order-history(status=${completedStatus}, search=${search})}">Hoàn thành</a>
+                <a class="tab-btn text-decoration-none"
+                   th:classappend="${selectedStatus == cancelledStatus} ? ' active'"
+                   th:href="@{/owner/in-person-order-history(status=${cancelledStatus}, search=${search})}">Đã hủy</a>
+            </div>
+        </div>
+
+        <div class="table-container owner-walkin-table-container">
+            <table class="orders-table owner-walkin-table">
+                <colgroup>
+                    <col class="col-order-code-width">
+                    <col class="col-customer-width">
+                    <col class="col-handler-width">
+                    <col class="col-product-width">
+                    <col class="col-total-width">
+                    <col class="col-date-width">
+                    <col class="col-status-width">
+                    <col class="col-action-width">
+                </colgroup>
+                <thead>
+                <tr>
+                    <th>Mã đơn </th>
+                    <th>Khách hàng</th>
+                    <th>Handler</th>
+                    <th>Sản phẩm </th>
+                    <th class="col-price">Tổng tiền</th>
+                    <th>Ngày tạo</th>
+                    <th>Trạng thái</th>
+                    <th class="col-action">Thao tác</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="order : ${orders.content}">
+                    <td class="col-code" data-label="Mã đơn" th:text="${order.orderCode}">BSMS-517407</td>
+                    <td data-label="Khách hàng">
+                        <strong th:text="${order.customerName}">In-person customer</strong>
+                        <small class="d-block text-muted" th:text="${order.customerPhone}">SĐT</small>
+                    </td>
+                    <td data-label="Handler">
+                        <strong th:text="${order.handlerName}">Artisan</strong>
+                        <small class="d-block text-muted" th:text="${order.handlerEmail}">artisan@example.com</small>
+                    </td>
+                    <td data-label="Sản phẩm" th:text="${order.productName}">Product</td>
+                    <td data-label="Tổng tiền"
+                        class="col-price money-cell"
+                        th:text="${order.totalAmount != null
+                        ? #numbers.formatDecimal(order.totalAmount, 0, 'COMMA', 0, 'POINT') + ' đ'
+                         : '0 đ'}">
+                         0 đ
+                    </td>
+                    <td data-label="Ngày tạo" class="date-cell">
+                         <span th:if="${order.orderDate != null}"
+                               th:text="${#temporals.format(order.orderDate, 'dd/MM/yyyy')}">
+                                   05/08/2026
+                         </span>
+
+                        <small th:if="${order.orderDate != null}"
+                               th:text="${#temporals.format(order.orderDate, 'HH:mm')}">
+                            17:11
+                        </small>
+
+                        <span th:if="${order.orderDate == null}">-</span>
+                    </td>
+                    <td data-label="Trạng thái" class="status-cell">
+                        <span th:if="${order.orderStatus == pendingPaymentStatus}"
+                              class="status-badge pending">
+                              Chờ nhận tiền
+                        </span>
+
+                        <span th:if="${order.orderStatus == completedStatus}"
+                              class="status-badge approved">
+                               Hoàn thành
+                        </span>
+
+                        <span th:if="${order.orderStatus == cancelledStatus}"
+                              class="status-badge cancelled">
+                                     Đã hủy
+                        </span>
+
+                        <span th:if="${order.orderStatus != pendingPaymentStatus
+                              && order.orderStatus != completedStatus
+                              && order.orderStatus != cancelledStatus}"
+                              class="status-badge cancelled"
+                              th:text="${order.orderStatus}">
+                                 PENDING
+                        </span>
+                    </td>
+                    <td data-label="Thao tác" class="col-action">
+                        <a class="btn-mini btn-mini-confirm"
+                           th:href="@{/owner/in-person-order-history/orders/{orderCode}(orderCode=${order.orderCode})}">
+                            Chi tiết
+                        </a>
+                    </td>
+                </tr>
+                <tr th:if="${orders.totalElements == 0}">
+                    <td colspan="8" class="empty-state">
+                        <div class="empty-state-icon"><i class="fa-solid fa-cash-register"></i></div>
+                        <div class="empty-state-title">Chưa có đơn tại vườn.</div>
+                        <div class="empty-state-desc">Các đơn IN_PERSON thuộc tài khoản artisan sẽ hiển thị tại đây.</div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="pagination-footer" th:if="${orders.totalPages > 1}">
+            <div class="pagination-info" th:text="${'Hiển thị trang ' + (orders.number + 1) + ' / ' + orders.totalPages}">Hiển thị trang 1 / 1</div>
+            <div class="pagination-controls">
+                <a class="page-btn"
+                   th:if="${orders.hasPrevious()}"
+                   th:href="@{/owner/in-person-order-history(status=${selectedStatus}, search=${search}, page=${orders.number - 1})}">Trước</a>
+                <a class="page-btn"
+                   th:if="${orders.hasNext()}"
+                   th:href="@{/owner/in-person-order-history(status=${selectedStatus}, search=${search}, page=${orders.number + 1})}">Sau</a>
+            </div>
+        </div>
+    </section>
+</div>
+
+<th:block th:fragment="scripts"></th:block>
+</body>
+</html>

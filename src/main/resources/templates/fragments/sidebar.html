@@ -30,6 +30,18 @@
                     <span class="nav-icon"><i class="fa-solid fa-users"></i></span>
                     <span>Quản lý người dùng</span>
                 </a>
+                <a th:href="@{/owner/order-handling-history}"
+                   class="sidebar-nav-item"
+                   th:classappend="${activePage == 'order-handling-history' ? 'active' : ''}">
+                    <span class="nav-icon"><i class="fa-solid fa-clock-rotate-left"></i></span>
+                    <span>Lịch sử xử lý đơn</span>
+                </a>
+                <a th:href="@{/owner/in-person-order-history}"
+                   class="sidebar-nav-item"
+                   th:classappend="${activePage == 'in-person-order-history' ? 'active' : ''}">
+                    <span class="nav-icon"><i class="fa-solid fa-cash-register"></i></span>
+                    <span>Lịch sử đơn tại vườn</span>
+                </a>
                 <a href="#" class="sidebar-nav-item" 
                    th:classappend="${activePage == 'system-config' ? 'active' : ''}">
                     <span class="nav-icon"><i class="fa-solid fa-gear"></i></span>
