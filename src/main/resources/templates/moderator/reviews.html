@@ -24,50 +24,38 @@
                 color: #475569;
                 margin-top: 8px;
             }
-            .nav-tabs .nav-link {
-                color: #475569;
-                font-weight: 500;
-                border: none;
-                border-bottom: 2px solid transparent;
-                padding: 12px 20px;
-                background: transparent;
-            }
-            .nav-tabs .nav-link.active {
-                color: #2d6a4f !important;
-                border-bottom-color: #2d6a4f !important;
-                font-weight: 600;
-                background: transparent !important;
-            }
-            .orders-table th {
-                font-weight: 700;
-                text-transform: uppercase;
-                font-size: 0.78rem;
-                letter-spacing: 0.5px;
-            }
         </style>
     </th:block>
 </head>
 <body>
 <div id="moderator-content">
     
+    <!-- Premium Header Title -->
+    <header class="dashboard-header-title mb-4">
+        <div>
+            <h1 class="serif-text mb-1" style="font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; color: #1c3322; font-size: 1.8rem;">Quản lý đánh giá</h1>
+            <p class="text-secondary mb-0">Duyệt các bài nhận xét và phản hồi của khách hàng sau khi mua sản phẩm cây cảnh.</p>
+        </div>
+    </header>
+
     <!-- KPI Row -->
     <section class="kpi-row">
         <div class="kpi-card kpi-pending">
-            <div class="kpi-icon-wrapper"><i class="fa-solid fa-clock text-warning"></i></div>
+            <div class="kpi-icon-wrapper" style="width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: #FAF3E6; color: #C07F37;"><i class="fa-solid fa-clock"></i></div>
             <div class="kpi-data">
                 <span class="kpi-label">Đang chờ duyệt</span>
                 <span class="kpi-value" th:text="${pendingReviews != null ? pendingReviews.size() : 0}">0</span>
             </div>
         </div>
         <div class="kpi-card kpi-approved">
-            <div class="kpi-icon-wrapper"><i class="fa-solid fa-circle-check text-success"></i></div>
+            <div class="kpi-icon-wrapper" style="width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: #E8F3EB; color: #1C3322;"><i class="fa-solid fa-circle-check"></i></div>
             <div class="kpi-data">
                 <span class="kpi-label">Đã phê duyệt</span>
                 <span class="kpi-value" th:text="${approvedReviews != null ? approvedReviews.size() : 0}">0</span>
             </div>
         </div>
         <div class="kpi-card kpi-rejected">
-            <div class="kpi-icon-wrapper"><i class="fa-solid fa-circle-xmark text-danger"></i></div>
+            <div class="kpi-icon-wrapper" style="width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: #FDF2F2; color: #9C2A2A;"><i class="fa-solid fa-circle-xmark"></i></div>
             <div class="kpi-data">
                 <span class="kpi-label">Đã từ chối</span>
                 <span class="kpi-value" th:text="${rejectedReviews != null ? rejectedReviews.size() : 0}">0</span>
@@ -78,40 +66,52 @@
     <!-- Main Container -->
     <div class="management-card">
         
-        <!-- Toolbar Header with Tabs -->
-        <div class="toolbar-header" style="padding-bottom: 0;">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h5 class="fw-bold mb-0 text-dark"><i class="fa-regular fa-star me-2 text-warning"></i>Bộ lọc đánh giá</h5>
-                <span class="text-muted small">Cập nhật lúc: <span th:text="${#temporals.format(#temporals.createNow(), 'HH:mm')}"></span></span>
+        <!-- Toolbar Header with Search & Filter -->
+        <div class="toolbar-header">
+            <div class="toolbar-search-row">
+                <!-- Search Input -->
+                <div class="search-input-wrapper">
+                    <span class="search-icon"><i class="fa-solid fa-magnifying-glass"></i></span>
+                    <input type="text" id="reviewSearchInput" placeholder="Tìm kiếm theo tên khách, email, tên cây hoặc nội dung đánh giá...">
+                </div>
+                
+                <!-- Filters -->
+                <div class="toolbar-filters-group">
+                    <div class="sort-select-wrapper">
+                        <select id="ratingFilterSelect" class="form-select">
+                            <option value="ALL">Tất cả đánh giá sao</option>
+                            <option value="5">5 Sao ★★★★★</option>
+                            <option value="4">4 Sao ★★★★☆</option>
+                            <option value="3">3 Sao ★★★☆☆</option>
+                            <option value="2">2 Sao ★★☆☆☆</option>
+                            <option value="1">1 Sao ★☆☆☆☆</option>
+                        </select>
+                    </div>
+                </div>
             </div>
             
-            <ul class="nav nav-tabs border-0" id="reviewTabs" role="tablist">
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link active" id="pending-tab" data-bs-toggle="tab" data-bs-target="#pending-panel" type="button" role="tab">
-                        <i class="fa-solid fa-clock me-1"></i> Chờ duyệt
-                        <span class="badge bg-warning text-dark ms-1" th:text="${pendingReviews != null ? pendingReviews.size() : 0}">0</span>
-                    </button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="approved-tab" data-bs-toggle="tab" data-bs-target="#approved-panel" type="button" role="tab">
-                        <i class="fa-solid fa-check-circle me-1 text-success"></i> Đã duyệt
-                        <span class="badge bg-success ms-1" th:text="${approvedReviews != null ? approvedReviews.size() : 0}">0</span>
-                    </button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="rejected-tab" data-bs-toggle="tab" data-bs-target="#rejected-panel" type="button" role="tab">
-                        <i class="fa-solid fa-ban me-1 text-danger"></i> Đã từ chối
-                        <span class="badge bg-danger ms-1" th:text="${rejectedReviews != null ? rejectedReviews.size() : 0}">0</span>
-                    </button>
-                </li>
-            </ul>
+            <!-- Status Filter Tabs -->
+            <div class="filter-tabs mt-3" id="reviewFilterTabs" role="tablist">
+                <button class="tab-btn active" id="pending-tab" data-bs-toggle="tab" data-bs-target="#pending-panel" data-tab="pending" type="button" role="tab">
+                    <i class="fa-solid fa-clock me-1 text-warning"></i> Chờ duyệt
+                    <span class="badge bg-warning text-dark ms-1" th:text="${pendingReviews != null ? pendingReviews.size() : 0}">0</span>
+                </button>
+                <button class="tab-btn" id="approved-tab" data-bs-toggle="tab" data-bs-target="#approved-panel" data-tab="approved" type="button" role="tab">
+                    <i class="fa-solid fa-check-circle me-1 text-success"></i> Đã duyệt
+                    <span class="badge bg-success ms-1" th:text="${approvedReviews != null ? approvedReviews.size() : 0}">0</span>
+                </button>
+                <button class="tab-btn" id="rejected-tab" data-bs-toggle="tab" data-bs-target="#rejected-panel" data-tab="rejected" type="button" role="tab">
+                    <i class="fa-solid fa-ban me-1 text-danger"></i> Đã từ chối
+                    <span class="badge bg-danger ms-1" th:text="${rejectedReviews != null ? rejectedReviews.size() : 0}">0</span>
+                </button>
+            </div>
         </div>
 
         <div class="tab-content" id="reviewTabContent">
 
             <!-- PENDING REVIEWS -->
             <div class="tab-pane fade show active" id="pending-panel" role="tabpanel">
-                <div th:if="${pendingReviews == null or pendingReviews.isEmpty()}" class="text-center py-5 text-muted">
+                <div th:if="${pendingReviews == null or pendingReviews.isEmpty()}" class="text-center py-5 text-muted empty-state-container">
                     <i class="fa-regular fa-face-smile fa-3x mb-3 text-secondary opacity-50"></i>
                     <p class="mb-0 fw-semibold">Không có đánh giá nào đang chờ duyệt.</p>
                 </div>
@@ -128,7 +128,13 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr th:each="review : ${pendingReviews}">
+                            <tr th:each="review : ${pendingReviews}"
+                                th:data-author="${review.customer?.fullName ?: 'Ẩn danh'}"
+                                th:data-email="${review.customer?.email ?: ''}"
+                                th:data-product="${review.product?.productName ?: ''}"
+                                th:data-code="${review.product?.productCode ?: ''}"
+                                th:data-rating="${review.rating}"
+                                th:data-comment="${review.comment ?: ''}">
                                 <td>
                                     <div class="d-flex flex-column">
                                         <strong class="text-dark" th:text="${review.customer?.fullName ?: 'Ẩn danh'}"></strong>
@@ -170,7 +176,7 @@
 
             <!-- APPROVED REVIEWS -->
             <div class="tab-pane fade" id="approved-panel" role="tabpanel">
-                <div th:if="${approvedReviews == null or approvedReviews.isEmpty()}" class="text-center py-5 text-muted">
+                <div th:if="${approvedReviews == null or approvedReviews.isEmpty()}" class="text-center py-5 text-muted empty-state-container">
                     <i class="fa-regular fa-star fa-3x mb-3 text-secondary opacity-50"></i>
                     <p class="mb-0 fw-semibold">Chưa có đánh giá nào được duyệt.</p>
                 </div>
@@ -187,7 +193,13 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr th:each="review : ${approvedReviews}">
+                            <tr th:each="review : ${approvedReviews}"
+                                th:data-author="${review.customer?.fullName ?: 'Ẩn danh'}"
+                                th:data-email="${review.customer?.email ?: ''}"
+                                th:data-product="${review.product?.productName ?: ''}"
+                                th:data-code="${review.product?.productCode ?: ''}"
+                                th:data-rating="${review.rating}"
+                                th:data-comment="${review.comment ?: ''}">
                                 <td>
                                     <div class="d-flex flex-column">
                                         <strong class="text-dark" th:text="${review.customer?.fullName ?: 'Ẩn danh'}"></strong>
@@ -204,6 +216,7 @@
                                     <div class="star-display">
                                         <span th:each="i : ${#numbers.sequence(1, 5)}"
                                               th:text="${i <= review.rating ? '★' : '☆'}"></span>
+                                        <span class="text-muted small ms-1" th:text="${review.rating} + '/5'"></span>
                                     </div>
                                 </td>
                                 <td>
@@ -231,7 +244,7 @@
 
             <!-- REJECTED REVIEWS -->
             <div class="tab-pane fade" id="rejected-panel" role="tabpanel">
-                <div th:if="${rejectedReviews == null or rejectedReviews.isEmpty()}" class="text-center py-5 text-muted">
+                <div th:if="${rejectedReviews == null or rejectedReviews.isEmpty()}" class="text-center py-5 text-muted empty-state-container">
                     <i class="fa-solid fa-ban fa-3x mb-3 text-secondary opacity-50"></i>
                     <p class="mb-0 fw-semibold">Không có đánh giá nào bị từ chối.</p>
                 </div>
@@ -248,7 +261,13 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr th:each="review : ${rejectedReviews}">
+                            <tr th:each="review : ${rejectedReviews}"
+                                th:data-author="${review.customer?.fullName ?: 'Ẩn danh'}"
+                                th:data-email="${review.customer?.email ?: ''}"
+                                th:data-product="${review.product?.productName ?: ''}"
+                                th:data-code="${review.product?.productCode ?: ''}"
+                                th:data-rating="${review.rating}"
+                                th:data-comment="${review.comment ?: ''}">
                                 <td>
                                     <div class="d-flex flex-column">
                                         <strong class="text-dark" th:text="${review.customer?.fullName ?: 'Ẩn danh'}"></strong>
@@ -265,6 +284,7 @@
                                     <div class="star-display">
                                         <span th:each="i : ${#numbers.sequence(1, 5)}"
                                               th:text="${i <= review.rating ? '★' : '☆'}"></span>
+                                        <span class="text-muted small ms-1" th:text="${review.rating} + '/5'"></span>
                                     </div>
                                 </td>
                                 <td>
@@ -323,12 +343,29 @@
             if (!confirm('Duyệt đánh giá này?')) return;
             fetch(`/api/reviews/${reviewId}/approve`, {
                 method: 'PUT',
-                headers: { [csrfHeader]: csrfToken }
+                headers: { 
+                    [csrfHeader]: csrfToken,
+                    'Content-Type': 'application/json'
+                }
             })
-            .then(r => r.json())
+            .then(async (response) => {
+                if (!response.ok) {
+                    const text = await response.text();
+                    throw new Error(text || `HTTP error ${response.status}`);
+                }
+                return response.json();
+            })
             .then(d => {
-                if (d.success) { alert('Đã duyệt thành công!'); location.reload(); }
-                else alert('Lỗi: ' + d.error);
+                if (d.success) { 
+                    alert('Đã duyệt thành công!'); 
+                    location.reload(); 
+                } else {
+                    alert('Lỗi: ' + (d.error || 'Yêu cầu không thành công'));
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                alert('Có lỗi xảy ra: ' + err.message);
             });
         }
 
@@ -336,12 +373,29 @@
             if (!confirm('Từ chối đánh giá này?')) return;
             fetch(`/api/reviews/${reviewId}/reject`, {
                 method: 'PUT',
-                headers: { [csrfHeader]: csrfToken }
+                headers: { 
+                    [csrfHeader]: csrfToken,
+                    'Content-Type': 'application/json'
+                }
             })
-            .then(r => r.json())
+            .then(async (response) => {
+                if (!response.ok) {
+                    const text = await response.text();
+                    throw new Error(text || `HTTP error ${response.status}`);
+                }
+                return response.json();
+            })
             .then(d => {
-                if (d.success) { alert('Đã từ chối!'); location.reload(); }
-                else alert('Lỗi: ' + d.error);
+                if (d.success) { 
+                    alert('Đã từ chối!'); 
+                    location.reload(); 
+                } else {
+                    alert('Lỗi: ' + (d.error || 'Yêu cầu không thành công'));
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                alert('Có lỗi xảy ra: ' + err.message);
             });
         }
 
@@ -364,12 +418,110 @@
                 },
                 body: JSON.stringify({ response })
             })
-            .then(r => r.json())
+            .then(async (res) => {
+                if (!res.ok) {
+                    const text = await res.text();
+                    throw new Error(text || `HTTP error ${res.status}`);
+                }
+                return res.json();
+            })
             .then(d => {
-                if (d.success) { alert('Đã gửi phản hồi!'); location.reload(); }
-                else alert('Lỗi: ' + d.error);
+                if (d.success) { 
+                    alert('Đã gửi phản hồi!'); 
+                    location.reload(); 
+                } else {
+                    alert('Lỗi: ' + (d.error || 'Yêu cầu không thành công'));
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                alert('Có lỗi xảy ra: ' + err.message);
             });
         }
+
+        // --- Client-side Live Filtering & Search Logic ---
+        function applyFilters() {
+            const searchVal = document.getElementById('reviewSearchInput').value.toLowerCase().trim();
+            const ratingVal = document.getElementById('ratingFilterSelect').value;
+            
+            // Get active tab pane
+            const activeTabButton = document.querySelector('#reviewFilterTabs .tab-btn.active');
+            if (!activeTabButton) return;
+            const targetId = activeTabButton.getAttribute('data-bs-target');
+            const activePanel = document.querySelector(targetId);
+            if (!activePanel) return;
+
+            const rows = activePanel.querySelectorAll('tbody tr');
+            let visibleCount = 0;
+
+            rows.forEach(row => {
+                const author = (row.getAttribute('data-author') || '').toLowerCase();
+                const email = (row.getAttribute('data-email') || '').toLowerCase();
+                const product = (row.getAttribute('data-product') || '').toLowerCase();
+                const code = (row.getAttribute('data-code') || '').toLowerCase();
+                const comment = (row.getAttribute('data-comment') || '').toLowerCase();
+                const rating = row.getAttribute('data-rating');
+
+                const matchesSearch = !searchVal || 
+                    author.includes(searchVal) || 
+                    email.includes(searchVal) || 
+                    product.includes(searchVal) || 
+                    code.includes(searchVal) || 
+                    comment.includes(searchVal);
+
+                const matchesRating = ratingVal === 'ALL' || rating === ratingVal;
+
+                if (matchesSearch && matchesRating) {
+                    row.style.display = '';
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+
+            // Handle empty state if no rows match filter
+            let emptyState = activePanel.querySelector('.empty-state-search-hint');
+            const tableContainer = activePanel.querySelector('.table-container');
+            const defaultEmptyState = activePanel.querySelector('.empty-state-container');
+
+            if (visibleCount === 0 && rows.length > 0) {
+                if (tableContainer) tableContainer.style.display = 'none';
+                if (!emptyState) {
+                    emptyState = document.createElement('div');
+                    emptyState.className = 'text-center py-5 text-muted empty-state-search-hint';
+                    emptyState.innerHTML = `
+                        <i class="fa-solid fa-magnifying-glass fa-2x mb-3 opacity-30"></i>
+                        <p class="mb-0 fw-semibold">Không tìm thấy kết quả phù hợp với từ khóa hoặc số sao lọc.</p>
+                    `;
+                    activePanel.appendChild(emptyState);
+                }
+            } else {
+                if (emptyState) emptyState.remove();
+                if (tableContainer) tableContainer.style.display = '';
+            }
+        }
+
+        // Add filter listeners
+        document.addEventListener('DOMContentLoaded', () => {
+            const searchInput = document.getElementById('reviewSearchInput');
+            const ratingSelect = document.getElementById('ratingFilterSelect');
+            const tabButtons = document.querySelectorAll('#reviewFilterTabs .tab-btn');
+
+            if (searchInput) searchInput.addEventListener('keyup', applyFilters);
+            if (ratingSelect) ratingSelect.addEventListener('change', applyFilters);
+
+            tabButtons.forEach(btn => {
+                btn.addEventListener('shown.bs.tab', () => {
+                    // Bootstrap 5 fires shown.bs.tab when tab is changed
+                    applyFilters();
+                });
+                
+                // Backup listener
+                btn.addEventListener('click', () => {
+                    setTimeout(applyFilters, 50);
+                });
+            });
+        });
     </script>
 </th:block>
 </body>

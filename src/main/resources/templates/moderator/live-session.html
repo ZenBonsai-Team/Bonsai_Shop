@@ -316,7 +316,7 @@
         let stompClient = null;
         let activeSessionId = /*[[${activeSession != null ? activeSession.sessionId : null}]]*/ null;
         let activeSessionUrl = /*[[${activeSession != null ? activeSession.streamUrl : null}]]*/ null;
-        let activeSessionStart = /*[[${activeSession != null ? #temporals.format(activeSession.startTime, 'yyyy-MM-dd\'T\'HH:mm:ss') : null}]]*/ null;
+        let activeSessionStart = /*[[${activeSession != null ? #temporals.format(activeSession.startTime, 'yyyy-MM-dd''T''HH:mm:ss') : null}]]*/ null;
         let youtubeSyncInterval = null;
 
         function extractYouTubeId(url) {
