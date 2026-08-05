@@ -336,14 +336,14 @@
                                                          <div class="fw-semibold text-dark" th:text="${detail.product != null ? detail.product.productName : 'Sản phẩm'}">Bonsai Tùng Cối</div>
                                                          <!-- Review Button -->
                                                          <button th:if="${order.orderStatus == 'COMPLETED' and detail.product != null}" 
-                                                                 class="btn btn-sm btn-outline-primary py-0 px-2 rounded-pill mt-1 write-review-btn" 
-                                                                 style="font-size: 11px; width: fit-content;"
+                                                                 class="btn btn-sm btn-warning text-dark py-1 px-3 rounded-pill mt-2 write-review-btn fw-bold" 
+                                                                 style="font-size: 12px; width: fit-content; border: none; box-shadow: 0 4px 10px rgba(255, 179, 0, 0.4); background: #ffb300; transition: all 0.2s; color: #1c3322 !important;"
                                                                  th:data-product-id="${detail.product.productId}"
                                                                  th:data-product-name="${detail.product.productName}"
                                                                  th:data-product-image="${detail.product.firstImageUrl != null ? detail.product.firstImageUrl : '/images/bonsai-1.png'}"
                                                                  data-bs-toggle="modal" 
                                                                  data-bs-target="#writeReviewModal">
-                                                             <i class="fa-regular fa-star me-1"></i>Viết đánh giá
+                                                             <i class="fa-solid fa-star me-1 text-dark"></i>Viết đánh giá
                                                          </button>
                                                      </div>
                                                  </div>
