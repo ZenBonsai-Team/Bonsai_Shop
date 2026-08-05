@@ -1,4 +1,4 @@
-﻿<!-- 
+<!-- 
   Reusable Dynamic Sidebar Component
   Under: src/main/resources/templates/fragments/sidebar.html
 -->
@@ -66,6 +66,18 @@
                    th:classappend="${activePage == 'comments' ? 'active' : ''}">
                     <span class="nav-icon"><i class="fa-solid fa-comments"></i></span>
                     <span>Quản lý bình luận</span>
+                </a>
+                <a th:href="@{/moderator/live-session}" 
+                   class="sidebar-nav-item" 
+                   th:classappend="${activePage == 'live-session' or activePage == 'session' ? 'active' : ''}">
+                    <span class="nav-icon"><i class="fa-solid fa-tower-broadcast"></i></span>
+                    <span>Live Stream</span>
+                </a>
+                <a th:href="@{/moderator/reviews}" 
+                   class="sidebar-nav-item" 
+                   th:classappend="${activePage == 'reviews' ? 'active' : ''}">
+                    <span class="nav-icon"><i class="fa-regular fa-star"></i></span>
+                    <span>Quản lý đánh giá</span>
                 </a>
             </th:block>
 
