@@ -216,8 +216,9 @@
                         <a th:href="@{/profile}" class="nav-icon-link text-decoration-none" title="Profile">
                             <img th:src="${#authentication.principal != null and #authentication.principal.avatar != null and !#authentication.principal.avatar.trim().isEmpty() ? #authentication.principal.avatar : ('https://ui-avatars.com/api/?name=' + (#authentication.principal != null and #authentication.principal.fullName != null ? #authentication.principal.fullName : #authentication.name) + '&background=06210f&color=fff')}"
                                  alt="Avatar" 
+                                 referrerpolicy="no-referrer"
                                  style="width: 28px; height: 28px; border-radius: 50%; object-fit: cover; border: 1px solid #E2E8F0;"
-                                 th:onerror="'this.src=&quot;https://ui-avatars.com/api/?name=' + (#authentication.principal != null and #authentication.principal.fullName != null ? #authentication.principal.fullName : 'User') + '&background=06210f&color=fff&quot;;'">
+                                 onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=User&background=06210f&color=fff';">
                         </a>
                         <form method="post" th:action="@{/logout}" class="m-0" th:unless="${hideAdminBtn}">
                             <button type="submit" class="btn btn-link text-dark p-0 nav-icon-link" title="Đăng xuất"><i class="fa-solid fa-arrow-right-from-bracket"></i></button>
