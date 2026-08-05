@@ -3,6 +3,7 @@
         /* --- BREADCRUMB STYLES --- */
         .breadcrumb-container {
             padding: 24px 0 12px;
+            margin-top: 30px;
         }
         .breadcrumb-list {
             display: flex;
