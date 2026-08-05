@@ -1,7 +1,9 @@
 package com.example.bonsai_shop.livestream.controller;
 
+import com.example.bonsai_shop.entity.LiveChatMessage;
 import com.example.bonsai_shop.entity.LiveLead;
 import com.example.bonsai_shop.entity.LiveSession;
+import com.example.bonsai_shop.livestream.repository.LiveChatMessageRepository;
 import com.example.bonsai_shop.livestream.repository.LiveLeadRepository;
 import com.example.bonsai_shop.livestream.repository.LiveSessionRepository;
 import com.example.bonsai_shop.livestream.service.LiveStreamService;
@@ -10,10 +12,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalTime;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/live")
@@ -23,6 +26,7 @@ public class LiveStreamApiController {
     private final LiveStreamService liveStreamService;
     private final LiveSessionRepository liveSessionRepository;
     private final LiveLeadRepository liveLeadRepository;
+    private final LiveChatMessageRepository liveChatMessageRepository;
     private final SimpMessagingTemplate messagingTemplate;
 
     /**
@@ -114,7 +118,31 @@ public class LiveStreamApiController {
     }
 
     /**
-     * POST /api/live/chat - Process a chat message from YouTube or web chat room
+     * GET /api/live/{sessionId}/chat-history - Load persisted chat messages for a session.
+     * Called on page open so that both moderator and viewer see past messages after F5.
+     */
+    @GetMapping("/{sessionId}/chat-history")
+    public ResponseEntity<?> getChatHistory(@PathVariable Integer sessionId) {
+        List<LiveChatMessage> messages = liveChatMessageRepository.findByLiveSessionSessionIdOrderBySentAtAsc(sessionId);
+        DateTimeFormatter fmt = DateTimeFormatter.ofPattern("HH:mm");
+        List<Map<String, String>> result = messages.stream()
+                .map(m -> Map.of(
+                        "author", m.getAuthor(),
+                        "message", m.getMessage(),
+                        "time", m.getSentAt().format(fmt),
+                        "source", m.getSource() != null ? m.getSource() : "WEB"
+                ))
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(result);
+    }
+
+    /**
+     * POST /api/live/chat - Process a chat message from user web chat or moderator panel.
+     *
+     * Flow:
+     *  1. Save message to DB (for persistence / history reload)
+     *  2. Broadcast to /topic/live-chat/{sessionId} so BOTH moderator and viewer see it in real-time
+     *  3. Process for lead detection (phone + product code)
      */
     @PostMapping("/chat")
     public ResponseEntity<?> processChat(@RequestBody Map<String, Object> body) {
@@ -122,16 +150,30 @@ public class LiveStreamApiController {
             Integer sessionId = Integer.valueOf(body.get("sessionId").toString());
             String author = body.getOrDefault("author", "Ẩn danh").toString();
             String message = body.get("message").toString();
-            String time = LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm"));
+            String source = body.getOrDefault("source", "WEB").toString();
+            String time = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm"));
 
-            // Broadcast message to all viewers in the chat room via WebSocket
+            // 1. Persist message to DB
+            liveSessionRepository.findById(sessionId).ifPresent(session -> {
+                LiveChatMessage chatMsg = LiveChatMessage.builder()
+                        .liveSession(session)
+                        .author(author)
+                        .message(message)
+                        .source(source)
+                        .sentAt(LocalDateTime.now())
+                        .build();
+                liveChatMessageRepository.save(chatMsg);
+            });
+
+            // 2. Broadcast to ALL subscribers (both moderator and viewer pages)
             messagingTemplate.convertAndSend("/topic/live-chat/" + sessionId,
-                    (Object) Map.of("author", author, "message", message, "time", time));
+                    (Object) Map.of("author", author, "message", message, "time", time, "source", source));
 
-            // Also process for lead detection (phone + product code matching)
+            // 3. Lead detection (phone + product code)
             liveSessionRepository.findById(sessionId).ifPresent(session ->
                 liveStreamService.processComment(author, message, session)
             );
+
             return ResponseEntity.ok(Map.of("success", true));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
@@ -139,21 +181,33 @@ public class LiveStreamApiController {
     }
 
     /**
-     * POST /api/live/{sessionId}/fetch-youtube - Manually fetch new YouTube live chat messages
+     * POST /api/live/{sessionId}/fetch-youtube - Manually fetch new YouTube live chat messages.
+     *
+     * Note: YouTube Data API v3 key must be configured in application.properties as youtube.api.key.
+     * Without it, this endpoint will return success=false with an explanation message.
      */
     @PostMapping("/{sessionId}/fetch-youtube")
     public ResponseEntity<?> fetchYouTubeChat(
             @PathVariable Integer sessionId,
             @RequestParam(required = false) String videoId) {
         try {
+            boolean[] synced = {false};
             liveSessionRepository.findById(sessionId).ifPresent(session -> {
                 String vid = videoId != null ? videoId :
                         (session.getStreamUrl() != null ? extractVideoId(session.getStreamUrl()) : null);
                 if (vid != null) {
                     liveStreamService.syncYouTubeComments(vid, session);
+                    synced[0] = true;
                 }
             });
-            return ResponseEntity.ok(Map.of("success", true));
+            if (synced[0]) {
+                return ResponseEntity.ok(Map.of("success", true));
+            } else {
+                return ResponseEntity.ok(Map.of(
+                        "success", false,
+                        "message", "Không tìm thấy Video ID hoặc YouTube API Key chưa được cấu hình."
+                ));
+            }
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }

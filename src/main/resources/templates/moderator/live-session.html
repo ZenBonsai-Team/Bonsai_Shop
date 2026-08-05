@@ -335,14 +335,32 @@
 
                 connectWebSocket();
                 loadLeads(activeSessionId);
+
+                // ✅ Load chat history (persisted messages survive page reload)
+                loadChatHistory(activeSessionId);
             }
         });
+
+        function loadChatHistory(sessionId) {
+            fetch('/api/live/' + sessionId + '/chat-history')
+                .then(r => r.json())
+                .then(messages => {
+                    messages.forEach(m => appendChatMsg(m.author, m.message, false, m.source));
+                })
+                .catch(() => {});
+        }
 
         function connectWebSocket() {
             const socket = new SockJS('/ws-live-chat');
             stompClient = Stomp.over(socket);
             stompClient.debug = null; // Turn off console debugging logs
             stompClient.connect({}, (frame) => {
+                // ✅ Subscribe to chat room — same topic as customer live page
+                stompClient.subscribe('/topic/live-chat/' + activeSessionId, (message) => {
+                    const data = JSON.parse(message.body);
+                    appendChatMsg(data.author, data.message, true, data.source);
+                });
+
                 // Subscribe to lead detections
                 stompClient.subscribe('/topic/live-leads/' + activeSessionId, (message) => {
                     const lead = JSON.parse(message.body);
@@ -528,10 +546,7 @@
 
         /* Comment Simulators for Demo */
         function simulateComment(author, text) {
-            // Append to chat UI
-            appendChatMsg(author, text, true);
-
-            // POST to API to parse
+            // POST to API — server will save to DB, broadcast via WS, and detect leads
             const csrfToken = document.querySelector('meta[name="_csrf"]')?.content || '';
             fetch('/api/live/chat', {
                 method: 'POST',
@@ -542,9 +557,11 @@
                 body: JSON.stringify({
                     sessionId: activeSessionId,
                     author: author,
-                    message: text
+                    message: text,
+                    source: 'MODERATOR'
                 })
             });
+            // NOTE: Do NOT call appendChatMsg here — the WS subscription will receive it
         }
 
         function submitSimulatedComment() {
@@ -556,9 +573,9 @@
             document.getElementById('simComment').value = '';
         }
 
-        function appendChatMsg(author, text, isCaptured) {
+        function appendChatMsg(author, text, isCaptured, source) {
             const container = document.getElementById('liveChatMessages');
-            
+
             // Remove helper text if first message
             if (container.querySelector('.py-4')) {
                 container.innerHTML = '';
@@ -566,15 +583,23 @@
 
             const msg = document.createElement('div');
             msg.className = 'chat-msg-row' + (isCaptured ? ' captured' : '');
-            
+
             const time = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+            const sourceBadge = source === 'YOUTUBE'
+                ? `<span style="font-size:10px;color:#dc2626;font-weight:700;margin-left:4px"><i class="fa-brands fa-youtube"></i> YT</span>`
+                : '';
             msg.innerHTML = `
-                <span class="chat-msg-author">${author}</span>
-                <span class="chat-msg-text">${text}</span>
+                <span class="chat-msg-author">${escapeHtml(author)}${sourceBadge}</span>
+                <span class="chat-msg-text">${escapeHtml(text)}</span>
                 <span class="chat-msg-meta">${time}</span>
             `;
             container.appendChild(msg);
             container.scrollTop = container.scrollHeight;
+        }
+
+        function escapeHtml(t) {
+            if (!t) return '';
+            return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
         }
 
         /* YouTube Polling Trigger */
@@ -609,8 +634,13 @@
             .then(res => res.json())
             .then(data => {
                 const statusEl = document.getElementById('youtubeSyncStatus');
-                statusEl.textContent = 'Đồng bộ YouTube chat đang hoạt động ngầm (mỗi 5 giây).';
-                statusEl.className = 'alert alert-success py-2 small';
+                if (data.success) {
+                    statusEl.textContent = 'Đồng bộ YouTube chat đang hoạt động ngầm (mỗi 5 giây). Chat sẽ hiện ở cả 2 màn hình.';
+                    statusEl.className = 'alert alert-success py-2 small';
+                } else {
+                    statusEl.textContent = data.message || 'YouTube API Key chưa được cấu hình trong application.properties (youtube.api.key). Tính năng YouTube sync cần API Key từ Google Cloud Console.';
+                    statusEl.className = 'alert alert-warning py-2 small';
+                }
             })
             .catch(err => {
                 const statusEl = document.getElementById('youtubeSyncStatus');

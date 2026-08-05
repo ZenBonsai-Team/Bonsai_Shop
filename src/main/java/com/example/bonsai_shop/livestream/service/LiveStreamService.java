@@ -1,8 +1,10 @@
 package com.example.bonsai_shop.livestream.service;
 
+import com.example.bonsai_shop.entity.LiveChatMessage;
 import com.example.bonsai_shop.entity.LiveLead;
 import com.example.bonsai_shop.entity.LiveSession;
 import com.example.bonsai_shop.entity.Product;
+import com.example.bonsai_shop.livestream.repository.LiveChatMessageRepository;
 import com.example.bonsai_shop.livestream.repository.LiveLeadRepository;
 import com.example.bonsai_shop.livestream.repository.LiveSessionRepository;
 import com.example.bonsai_shop.product.repository.ProductRepository;
@@ -13,6 +15,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -24,6 +27,7 @@ public class LiveStreamService {
 
     private final LiveSessionRepository liveSessionRepository;
     private final LiveLeadRepository liveLeadRepository;
+    private final LiveChatMessageRepository liveChatMessageRepository;
     private final ProductRepository productRepository;
     private final SimpMessagingTemplate messagingTemplate;
 
@@ -150,7 +154,8 @@ public class LiveStreamService {
     }
 
     /**
-     * Poll comments from YouTube Live.
+     * Poll comments from YouTube Live and broadcast them to the live chat WebSocket topic.
+     * Requires youtube.api.key to be set in application.properties.
      */
     public void syncYouTubeComments(String youtubeVideoId, LiveSession session) {
         if (youtubeApiKey == null || youtubeApiKey.isEmpty()) {
@@ -165,7 +170,7 @@ public class LiveStreamService {
             }
 
             String nextPageToken = videoIdToNextPageToken.get(youtubeVideoId);
-            String url = "https://www.googleapis.com/youtube/v3/liveChat/messages?liveChatId=" + liveChatId 
+            String url = "https://www.googleapis.com/youtube/v3/liveChat/messages?liveChatId=" + liveChatId
                     + "&part=snippet,authorDetails&maxResults=200&key=" + youtubeApiKey;
             if (nextPageToken != null) {
                 url += "&pageToken=" + nextPageToken;
@@ -176,6 +181,7 @@ public class LiveStreamService {
                 videoIdToNextPageToken.put(youtubeVideoId, (String) response.get("nextPageToken"));
                 List<Map<String, Object>> items = (List<Map<String, Object>>) response.get("items");
                 if (items != null) {
+                    String fmt = DateTimeFormatter.ofPattern("HH:mm").format(LocalDateTime.now());
                     for (Map<String, Object> item : items) {
                         Map<String, Object> snippet = (Map<String, Object>) item.get("snippet");
                         Map<String, Object> authorDetails = (Map<String, Object>) item.get("authorDetails");
@@ -185,6 +191,27 @@ public class LiveStreamService {
                             Map<String, Object> textMessageDetails = (Map<String, Object>) snippet.get("textMessageDetails");
                             if (textMessageDetails != null) {
                                 String messageText = (String) textMessageDetails.get("messageText");
+
+                                // 1. Save message to DB
+                                LiveChatMessage chatMsg = LiveChatMessage.builder()
+                                        .liveSession(session)
+                                        .author(displayName)
+                                        .message(messageText)
+                                        .source("YOUTUBE")
+                                        .sentAt(LocalDateTime.now())
+                                        .build();
+                                liveChatMessageRepository.save(chatMsg);
+
+                                // 2. Broadcast to all subscribers (moderator + viewer)
+                                messagingTemplate.convertAndSend("/topic/live-chat/" + session.getSessionId(),
+                                        (Object) Map.of(
+                                                "author", displayName,
+                                                "message", messageText,
+                                                "time", fmt,
+                                                "source", "YOUTUBE"
+                                        ));
+
+                                // 3. Lead detection
                                 processComment(displayName, messageText, session);
                             }
                         }

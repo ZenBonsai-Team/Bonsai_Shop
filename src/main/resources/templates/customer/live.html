@@ -261,7 +261,18 @@
     }
 
     if (activeSessionId) {
+        // Load persisted chat history first, then connect WebSocket for real-time
+        loadChatHistory(activeSessionId);
         connectWebSocket();
+    }
+
+    function loadChatHistory(sessionId) {
+        fetch('/api/live/' + sessionId + '/chat-history')
+            .then(r => r.json())
+            .then(messages => {
+                messages.forEach(m => appendBubble(m.author, m.message, false, m.source));
+            })
+            .catch(() => {});
     }
 
     function connectWebSocket() {
@@ -276,7 +287,7 @@
                 // (we already add them locally in sendChat())
                 const myName = viewerName || 'Khách';
                 if (data.author === myName) return;
-                appendBubble(data.author, data.message, false);
+                appendBubble(data.author, data.message, false, data.source);
             });
         }, (err) => {
             setTimeout(connectWebSocket, 5000);
@@ -289,10 +300,10 @@
         if (!text || !activeSessionId) return;
 
         // Show locally immediately
-        appendBubble(viewerName || 'Bạn', text, true);
+        appendBubble(viewerName || 'Bạn', text, true, 'WEB');
         input.value = '';
 
-        // Send to server for processing (lead detection)
+        // Send to server (saves to DB + broadcasts to all via WS + lead detection)
         fetch('/api/live/chat', {
             method: 'POST',
             headers: {
@@ -302,12 +313,13 @@
             body: JSON.stringify({
                 sessionId: activeSessionId,
                 author: viewerName || 'Khách',
-                message: text
+                message: text,
+                source: 'WEB'
             })
         }).catch(() => {});
     }
 
-    function appendBubble(author, text, isMine) {
+    function appendBubble(author, text, isMine, source) {
         const container = document.getElementById('chatMessages');
         const hint = document.getElementById('chatHint');
         if (hint) hint.remove();
@@ -315,7 +327,10 @@
         const time = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
         const div = document.createElement('div');
         div.className = 'chat-bubble' + (isMine ? ' mine' : '');
-        div.innerHTML = `<div class="author">${escapeHtml(author)}</div>
+        const ytBadge = source === 'YOUTUBE'
+            ? `<span style="font-size:9px;color:#dc2626;font-weight:700;margin-left:4px"><i class="fa-brands fa-youtube"></i></span>`
+            : '';
+        div.innerHTML = `<div class="author">${escapeHtml(author)}${ytBadge}</div>
                          <div class="text">${escapeHtml(text)}</div>
                          <div style="font-size:10px;color:#94a3b8;text-align:right;margin-top:2px">${time}</div>`;
         container.appendChild(div);
