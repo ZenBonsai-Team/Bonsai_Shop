@@ -44,6 +44,31 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
             @Param("status") String status,
             Pageable pageable);
 
+    @Query("""
+            SELECT DISTINCT o
+            FROM Order o
+            JOIN o.orderDetails od
+            JOIN od.product p
+            JOIN p.createdBy a
+            JOIN a.role r
+            WHERE LOWER(o.orderType) = LOWER(:orderType)
+              AND UPPER(r.roleName) IN ('ARTISAN', 'ROLE_ARTISAN')
+              AND (:status = 'ALL' OR o.orderStatus = :status)
+              AND (:search IS NULL OR :search = '' OR
+                   LOWER(o.orderCode) LIKE LOWER(CONCAT('%', :search, '%')) OR
+                   LOWER(o.customerName) LIKE LOWER(CONCAT('%', :search, '%')) OR
+                   LOWER(o.customerPhone) LIKE LOWER(CONCAT('%', :search, '%')) OR
+                   LOWER(p.productName) LIKE LOWER(CONCAT('%', :search, '%')) OR
+                   LOWER(a.fullName) LIKE LOWER(CONCAT('%', :search, '%')) OR
+                   LOWER(a.email) LIKE LOWER(CONCAT('%', :search, '%')))
+            ORDER BY o.orderDate DESC
+            """)
+    Page<Order> searchOwnerInPersonOrders(
+            @Param("orderType") String orderType,
+            @Param("status") String status,
+            @Param("search") String search,
+            Pageable pageable);
+
 
     @Query("SELECT DISTINCT o FROM Order o " +
             "LEFT JOIN o.orderDetails od " +
