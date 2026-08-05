@@ -628,29 +628,6 @@
                 </div>
             </div>
 
-            <div class="od-card" th:if="${order.handlingHistory != null and !order.handlingHistory.isEmpty()}">
-                <div class="od-card-header">
-                    <div class="od-card-title">Lịch sử xử lý</div>
-                </div>
-                <div class="od-card-body">
-                    <div th:each="h : ${order.handlingHistory}" class="od-history-item">
-                        <div class="od-history-avatar" th:text="${#strings.substring(h.moderatorName, 0, 1).toUpperCase()}">M</div>
-                        <div class="od-history-body">
-                            <div class="od-history-who" th:text="${h.moderatorName}">Moderator</div>
-                            <div class="od-history-action" th:text="${h.action ?: '---'}">---</div>
-                            <div th:if="${h.reason != null and !#strings.isEmpty(h.reason)}"
-                                 style="font-size:12px; color:var(--od-text-secondary); margin-top:2px;"
-                                 th:text="'Lý do: ' + ${h.reason}">---</div>
-                            <div class="od-history-time">
-                                <span th:text="${h.handledAt != null ? #temporals.format(h.handledAt, 'dd/MM/yyyy HH:mm') : '---'}">---</span>
-                                <span th:if="${h.durationFormatted != null}" style="margin-left:8px;"
-                                      th:text="'· ' + ${h.durationFormatted}">---</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
         </div>
 
         <!-- RIGHT COLUMN: Sidebar -->
@@ -737,6 +714,30 @@
                             <div class="od-timeline-time"
                                  th:if="${tl.timestamp != null}"
                                  th:text="${#temporals.format(tl.timestamp, 'dd/MM/yyyy HH:mm')}"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lịch sử xử lý -->
+            <div class="od-card" th:if="${order.handlingHistory != null and !order.handlingHistory.isEmpty()}">
+                <div class="od-card-header">
+                    <div class="od-card-title">Lịch sử xử lý</div>
+                </div>
+                <div class="od-card-body">
+                    <div th:each="h : ${order.handlingHistory}" class="od-history-item">
+                        <div class="od-history-avatar" th:text="${#strings.substring(h.moderatorName, 0, 1).toUpperCase()}">M</div>
+                        <div class="od-history-body">
+                            <div class="od-history-who" th:text="${h.moderatorName}">Moderator</div>
+                            <div class="od-history-action" th:text="${h.action ?: '---'}">---</div>
+                            <div th:if="${h.reason != null and !#strings.isEmpty(h.reason)}"
+                                 style="font-size:12px; color:var(--od-text-secondary); margin-top:2px;"
+                                 th:text="'Lý do: ' + ${h.reason}">---</div>
+                            <div class="od-history-time">
+                                <span th:text="${h.handledAt != null ? #temporals.format(h.handledAt, 'dd/MM/yyyy HH:mm') : '---'}">---</span>
+                                <span th:if="${h.durationFormatted != null}" style="margin-left:8px;"
+                                      th:text="'· ' + ${h.durationFormatted}">---</span>
+                            </div>
                         </div>
                     </div>
                 </div>
