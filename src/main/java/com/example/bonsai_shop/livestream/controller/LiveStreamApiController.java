@@ -59,6 +59,16 @@ public class LiveStreamApiController {
     }
 
     /**
+     * GET /api/live/status - Lightweight status check: is there an active live session?
+     * Used by the floating live bubble on the navbar to update its appearance.
+     */
+    @GetMapping("/status")
+    public ResponseEntity<?> getLiveStatus() {
+        boolean isLive = liveSessionRepository.findFirstByStatusOrderByStartTimeDesc("ONGOING").isPresent();
+        return ResponseEntity.ok(Map.of("live", isLive));
+    }
+
+    /**
      * GET /api/live/active - Get currently active session
      */
     @GetMapping("/active")

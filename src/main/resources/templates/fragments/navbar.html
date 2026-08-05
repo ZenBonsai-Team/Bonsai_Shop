@@ -434,44 +434,77 @@
     </script>
 
     <!-- Floating Live Stream Bubble -->
-    <a th:href="@{/live}" class="floating-live-bubble" title="Xem Live Stream nghệ thuật Bonsai">
-        <div class="live-ring"></div>
-        <i class="fa-solid fa-tower-broadcast"></i>
-        <span class="live-text" th:text="${#locale.language == 'en' ? 'Watch Live' : 'Xem Live'}">Xem Live</span>
+    <a th:href="@{/live}" class="floating-live-bubble" id="floatingLiveBubble" title="Xem Live Stream nghệ thuật Bonsai">
+        <div class="live-ring" id="liveRing"></div>
+        <i class="fa-solid fa-tower-broadcast" id="liveBubbleIcon"></i>
+        <span class="live-text" id="liveBubbleText">Live</span>
+        <span class="live-status-dot" id="liveStatusDot"></span>
     </a>
 
     <style>
         .floating-live-bubble {
             position: fixed;
             bottom: 30px;
-            right: 30px;
+            left: 30px;
             z-index: 2000;
-            background: linear-gradient(135deg, #dc2626, #ef4444);
+            background: linear-gradient(135deg, #374151, #4b5563);
             color: #ffffff !important;
-            padding: 10px 18px;
+            padding: 10px 16px;
             border-radius: 50px;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 7px;
             text-decoration: none !important;
             font-weight: 700;
             font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
             font-size: 0.85rem;
-            box-shadow: 0 8px 20px rgba(220, 38, 38, 0.4);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
             transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            border: 2px solid rgba(255, 255, 255, 0.25);
+            border: 2px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .floating-live-bubble.is-live {
+            background: linear-gradient(135deg, #dc2626, #ef4444);
+            box-shadow: 0 8px 20px rgba(220, 38, 38, 0.45);
+            border-color: rgba(255, 255, 255, 0.25);
         }
         
         .floating-live-bubble:hover {
             transform: scale(1.08) translateY(-3px);
-            box-shadow: 0 12px 25px rgba(220, 38, 38, 0.55);
-            background: linear-gradient(135deg, #ef4444, #f87171);
+            box-shadow: 0 12px 25px rgba(0, 0, 0, 0.35);
             color: #ffffff !important;
+        }
+
+        .floating-live-bubble.is-live:hover {
+            box-shadow: 0 12px 25px rgba(220, 38, 38, 0.6);
+            background: linear-gradient(135deg, #ef4444, #f87171);
         }
         
         .floating-live-bubble i {
             font-size: 1rem;
+        }
+
+        .floating-live-bubble.is-live i {
             animation: live-wobble 2s infinite ease-in-out;
+        }
+
+        .live-status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #9ca3af;
+            display: inline-block;
+            flex-shrink: 0;
+        }
+
+        .floating-live-bubble.is-live .live-status-dot {
+            background: #fff;
+            animation: dot-blink 1.2s infinite;
+        }
+
+        @keyframes dot-blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
         }
 
         .live-ring {
@@ -482,9 +515,12 @@
             bottom: -2px;
             border-radius: 50px;
             border: 2px solid #ef4444;
-            animation: live-pulsate 2s infinite ease-out;
             pointer-events: none;
             opacity: 0;
+        }
+
+        .floating-live-bubble.is-live .live-ring {
+            animation: live-pulsate 2s infinite ease-out;
         }
         
         @keyframes live-pulsate {
@@ -498,6 +534,28 @@
             60% { transform: rotate(10deg); }
         }
     </style>
+
+    <script>
+        // Check live status from server and update floating bubble
+        (function checkLiveStatus() {
+            fetch('/api/live/status')
+                .then(r => r.ok ? r.json() : null)
+                .then(data => {
+                    const bubble = document.getElementById('floatingLiveBubble');
+                    if (!bubble) return;
+                    if (data && data.live) {
+                        bubble.classList.add('is-live');
+                        document.getElementById('liveBubbleText').textContent = 'LIVE';
+                    } else {
+                        bubble.classList.remove('is-live');
+                        document.getElementById('liveBubbleText').textContent = 'Live';
+                    }
+                })
+                .catch(() => {});
+            // Re-check every 60 seconds
+            setTimeout(checkLiveStatus, 60000);
+        })();
+    </script>
 </div>
 </body>
 </html>
