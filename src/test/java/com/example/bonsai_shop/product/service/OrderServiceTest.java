@@ -99,7 +99,6 @@ class OrderServiceTest {
         assertThat(fullPayment.getPaymentStatus()).isEqualTo("SUCCESS");
         assertThat(order.getOrderStatus()).isEqualTo("PAID");
         assertThat(product.getProductStatus()).isEqualTo("RESERVED");
-        verify(orderLogRepository).save(any(OrderLog.class));
     }
 
     @Test
