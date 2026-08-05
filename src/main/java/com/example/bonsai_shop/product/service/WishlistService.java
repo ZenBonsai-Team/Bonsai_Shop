@@ -86,6 +86,7 @@ public class WishlistService {
                 .productName(product.getProductName())
                 .productImage(product.getFirstImageUrl())
                 .price(product.getPrice())
+                .isPublicPrice(product.getIsPublicPrice())
                 .productStatus(product.getProductStatus())
                 .isVisible(product.getIsVisible())
                 .segmentId(product.getSegment() == null ? null : product.getSegment().getSegmentId())

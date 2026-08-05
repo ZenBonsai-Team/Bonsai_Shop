@@ -31,6 +31,7 @@ public class ProductApiController {
                 .trunkDiameter(product.getTrunkDiameter())
                 .style(product.getStyle())
                 .price(product.getPrice())
+                .isPublicPrice(product.getIsPublicPrice())
                 .productStatus(product.getProductStatus())
                 .isVisible(product.getIsVisible())
                 .segmentId(product.getSegment() == null ? null : product.getSegment().getSegmentId())
