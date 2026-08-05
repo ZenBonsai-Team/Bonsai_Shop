@@ -127,30 +127,30 @@
                 </div>
             </div>
             <div class="status-breakdown">
-                <div>
+                <a th:href="@{/artisan/products(status='ALL')}">
                     <span>Tổng sản phẩm</span>
                     <strong th:text="${totalProducts}">0</strong>
-                </div>
-                <div>
+                </a>
+                <a th:href="@{/artisan/products(status='AVAILABLE')}">
                     <span>Đang bán</span>
                     <strong th:text="${publishedProducts}">0</strong>
-                </div>
-                <div>
+                </a>
+                <a th:href="@{/artisan/products(status='DRAFT')}">
                     <span>Bản nháp</span>
                     <strong th:text="${draftProducts}">0</strong>
-                </div>
-                <div>
+                </a>
+                <a th:href="@{/artisan/products(status='INVISIBLE')}">
                     <span>Đang ẩn</span>
                     <strong th:text="${hiddenProducts}">0</strong>
-                </div>
-                <div>
+                </a>
+                <a th:href="@{/artisan/products(status='RESERVED')}">
                     <span>Đã được đặt</span>
                     <strong th:text="${reservedProducts}">0</strong>
-                </div>
-                <div>
+                </a>
+                <a th:href="@{/artisan/products(status='SOLD')}">
                     <span>Đã bán</span>
                     <strong th:text="${soldProducts}">0</strong>
-                </div>
+                </a>
             </div>
         </article>
     </section>
