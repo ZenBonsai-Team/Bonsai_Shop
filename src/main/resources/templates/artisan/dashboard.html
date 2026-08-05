@@ -21,37 +21,6 @@
         </a>
     </header>
 
-    <section class="artisan-metric-grid">
-        <article class="artisan-metric-card metric-total">
-            <div class="metric-icon"><i class="fa-solid fa-boxes-stacked"></i></div>
-            <div>
-                <span>Tổng sản phẩm</span>
-                <strong th:text="${totalProducts}">0</strong>
-            </div>
-        </article>
-        <article class="artisan-metric-card metric-published">
-            <div class="metric-icon"><i class="fa-solid fa-store"></i></div>
-            <div>
-                <span>Đang bán</span>
-                <strong th:text="${publishedProducts}">0</strong>
-            </div>
-        </article>
-        <article class="artisan-metric-card metric-sold">
-            <div class="metric-icon"><i class="fa-solid fa-seedling"></i></div>
-            <div>
-                <span>Đã bán</span>
-                <strong th:text="${soldProducts}">0</strong>
-            </div>
-        </article>
-        <article class="artisan-metric-card metric-revenue">
-            <div class="metric-icon"><i class="fa-solid fa-chart-line"></i></div>
-            <div>
-                <span>Doanh thu ròng tháng này</span>
-                <strong class="money-value" th:text="${#numbers.formatDecimal(monthlyNetRevenue, 0, 'POINT', 0, 'POINT') + ' VNĐ'}">0 VNĐ</strong>
-            </div>
-        </article>
-    </section>
-
     <section class="artisan-dashboard-panel-grid">
         <article class="artisan-dashboard-panel artisan-chart-panel">
             <div class="revenue-panel-heading">
@@ -141,24 +110,10 @@
                     </div>
                 </div>
                 <div class="revenue-summary-card">
-                    <span class="summary-icon"><i class="fa-solid fa-scale-balanced"></i></span>
-                    <div>
-                        <small>Doanh thu ròng</small>
-                        <strong class="money-value" th:text="${#numbers.formatDecimal(monthlyNetRevenue, 0, 'POINT', 0, 'POINT') + ' VNĐ'}">0 VNĐ</strong>
-                    </div>
-                </div>
-                <div class="revenue-summary-card">
                     <span class="summary-icon"><i class="fa-solid fa-clipboard-list"></i></span>
                     <div>
                         <small>Tổng đơn hàng</small>
                         <strong th:text="${monthlySoldItems}">0</strong>
-                    </div>
-                </div>
-                <div class="revenue-summary-card">
-                    <span class="summary-icon"><i class="fa-solid fa-sack-dollar"></i></span>
-                    <div>
-                        <small>Giá trị đơn TB</small>
-                        <strong class="money-value" th:text="${#numbers.formatDecimal(averageOrderValue, 0, 'POINT', 0, 'POINT') + ' VNĐ'}">0 VNĐ</strong>
                     </div>
                 </div>
             </div>
@@ -172,6 +127,14 @@
                 </div>
             </div>
             <div class="status-breakdown">
+                <div>
+                    <span>Tổng sản phẩm</span>
+                    <strong th:text="${totalProducts}">0</strong>
+                </div>
+                <div>
+                    <span>Đang bán</span>
+                    <strong th:text="${publishedProducts}">0</strong>
+                </div>
                 <div>
                     <span>Bản nháp</span>
                     <strong th:text="${draftProducts}">0</strong>

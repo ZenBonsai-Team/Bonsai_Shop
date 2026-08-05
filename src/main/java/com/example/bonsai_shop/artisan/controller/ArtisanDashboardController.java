@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.EnumSet;
@@ -88,8 +87,6 @@ public class ArtisanDashboardController {
                 nextMonthStart
         );
         monthlyRevenue = monthlyProductRevenue;
-        BigDecimal monthlyGrossIncome = monthlyRevenue.add(monthlyForfeitedDepositIncome);
-        BigDecimal monthlyNetRevenue = monthlyGrossIncome.subtract(monthlyRefundAmount);
 
         User artisanOrAdmin = artisanProductService.getArtisanUser(userDetails.getUsername());
 
@@ -101,18 +98,12 @@ public class ArtisanDashboardController {
                 .filter(product -> "SOLD".equals(product.getProductStatus()))
                 .count());
 
-        BigDecimal averageOrderValue = monthlySoldItems == 0
-                ? BigDecimal.ZERO
-                : monthlyRevenue.divide(BigDecimal.valueOf(monthlySoldItems), 0, RoundingMode.HALF_UP);
         model.addAttribute("monthlySoldItems", monthlySoldItems);
         model.addAttribute("monthlyRevenue", monthlyRevenue);
         model.addAttribute("monthlyShippingFee", monthlyShippingFee);
         model.addAttribute("monthlyCraneFee", monthlyCraneFee);
         model.addAttribute("monthlyForfeitedDepositIncome", monthlyForfeitedDepositIncome);
         model.addAttribute("monthlyRefundAmount", monthlyRefundAmount);
-        model.addAttribute("monthlyGrossIncome", monthlyGrossIncome);
-        model.addAttribute("monthlyNetRevenue", monthlyNetRevenue);
-        model.addAttribute("averageOrderValue", averageOrderValue);
         model.addAttribute("draftProducts", products.stream()
                 .filter(product -> "DRAFT".equals(product.getProductStatus()))
                 .count());
