@@ -307,8 +307,8 @@
     <script th:inline="javascript">
         /*<![CDATA[*/
         let stompClient = null;
-        let activeSessionId = [[${activeSession != null ? activeSession.sessionId : null}]];
-        let activeSessionUrl = [[${activeSession != null ? activeSession.streamUrl : null}]];
+        let activeSessionId = /*[[${activeSession != null ? activeSession.sessionId : null}]]*/ null;
+        let activeSessionUrl = /*[[${activeSession != null ? activeSession.streamUrl : null}]]*/ null;
         let youtubeSyncInterval = null;
 
         function extractYouTubeId(url) {

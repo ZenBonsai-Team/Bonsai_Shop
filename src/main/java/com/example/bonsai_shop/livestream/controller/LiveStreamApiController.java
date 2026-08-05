@@ -116,7 +116,7 @@ public class LiveStreamApiController {
 
             // Broadcast message to all viewers in the chat room via WebSocket
             messagingTemplate.convertAndSend("/topic/live-chat/" + sessionId,
-                    Map.of("author", author, "message", message, "time", time));
+                    (Object) Map.of("author", author, "message", message, "time", time));
 
             // Also process for lead detection (phone + product code matching)
             liveSessionRepository.findById(sessionId).ifPresent(session ->
