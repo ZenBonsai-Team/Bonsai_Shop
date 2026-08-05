@@ -214,8 +214,11 @@
                         </script>
 
                         <a th:href="@{/profile}" class="nav-icon-link text-decoration-none" title="Profile">
-                            <img th:if="${#authentication.principal != null and #authentication.principal.avatar != null and !#authentication.principal.avatar.trim().isEmpty()}" th:src="${#authentication.principal.avatar}" alt="Avatar" style="width: 28px; height: 28px; border-radius: 50%; object-fit: cover; border: 1px solid #E2E8F0;">
-                            <i th:unless="${#authentication.principal != null and #authentication.principal.avatar != null and !#authentication.principal.avatar.trim().isEmpty()}" class="fa-regular fa-user"></i>
+                            <img th:src="${#authentication.principal != null and #authentication.principal.avatar != null and !#authentication.principal.avatar.trim().isEmpty() ? #authentication.principal.avatar : ('https://ui-avatars.com/api/?name=' + (#authentication.principal != null and #authentication.principal.fullName != null ? #authentication.principal.fullName : #authentication.name) + '&background=06210f&color=fff')}"
+                                 alt="Avatar" 
+                                 referrerpolicy="no-referrer"
+                                 style="width: 28px; height: 28px; border-radius: 50%; object-fit: cover; border: 1px solid #E2E8F0;"
+                                 onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=User&background=06210f&color=fff';">
                         </a>
                         <form method="post" th:action="@{/logout}" class="m-0" th:unless="${hideAdminBtn}">
                             <button type="submit" class="btn btn-link text-dark p-0 nav-icon-link" title="Đăng xuất"><i class="fa-solid fa-arrow-right-from-bracket"></i></button>
@@ -451,7 +454,7 @@
     <style>
         .floating-live-bubble {
             position: fixed;
-            bottom: 30px;
+            top: 120px;
             right: 30px;
             z-index: 2000;
             background: linear-gradient(135deg, #374151, #4b5563);

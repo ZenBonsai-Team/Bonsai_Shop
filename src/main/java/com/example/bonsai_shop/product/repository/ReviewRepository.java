@@ -11,4 +11,5 @@ public interface ReviewRepository extends JpaRepository<Review, Integer> {
     List<Review> findByReviewStatus(String reviewStatus);
     long countByProductProductIdAndReviewStatus(Integer productId, String reviewStatus);
     boolean existsByCustomerUserIdAndProductProductId(Integer customerId, Integer productId);
+    List<Review> findByCustomerUserId(Integer customerId);
 }

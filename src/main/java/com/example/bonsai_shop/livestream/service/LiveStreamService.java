@@ -10,6 +10,9 @@ import com.example.bonsai_shop.livestream.repository.LiveSessionRepository;
 import com.example.bonsai_shop.product.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.example.bonsai_shop.customer.repository.UserRepository;
+import com.example.bonsai_shop.customer.repository.ModerationNotificationRepository;
+import com.example.bonsai_shop.entity.ModerationNotification;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
@@ -30,6 +33,8 @@ public class LiveStreamService {
     private final LiveChatMessageRepository liveChatMessageRepository;
     private final ProductRepository productRepository;
     private final SimpMessagingTemplate messagingTemplate;
+    private final UserRepository userRepository;
+    private final ModerationNotificationRepository notificationRepository;
 
     @Value("${youtube.api.key:}")
     private String youtubeApiKey;
@@ -57,7 +62,30 @@ public class LiveStreamService {
                 .status("ONGOING")
                 .startTime(LocalDateTime.now())
                 .build();
-        return liveSessionRepository.save(session);
+        LiveSession saved = liveSessionRepository.save(session);
+
+        // Notify all users that Live Stream has started
+        try {
+            List<com.example.bonsai_shop.entity.User> allUsers = userRepository.findAll();
+            List<ModerationNotification> notifications = new ArrayList<>();
+            for (com.example.bonsai_shop.entity.User u : allUsers) {
+                if (u.getEmail() != null && !u.getEmail().trim().isEmpty()) {
+                    notifications.add(ModerationNotification.builder()
+                            .targetUsername(u.getEmail())
+                            .message("🔴 Nhà vườn Minh Kỷ Garden đang phát trực tiếp: \"" + title + "\". Hãy tham gia xem ngay!")
+                            .isRead(false)
+                            .createdAt(LocalDateTime.now())
+                            .build());
+                }
+            }
+            if (!notifications.isEmpty()) {
+                notificationRepository.saveAll(notifications);
+            }
+        } catch (Exception e) {
+            log.error("Failed to notify users about live session: ", e);
+        }
+
+        return saved;
     }
 
     public LiveSession endSession(Integer sessionId) {
