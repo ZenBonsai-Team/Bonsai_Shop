@@ -30,18 +30,30 @@ public class AppointmentSetting {
     @Column(name = "SettingID")
     private Integer settingId;
 
+    @Builder.Default
+    @Column(name = "AutoApprove", nullable = false)
+    private Boolean autoApprove = true;
+
+    @Builder.Default
+    @Column(name = "AutoApproveAfter", nullable = false)
+    private Integer autoApproveAfter = 5;
+
+    @Builder.Default
+    @Column(name = "AutoComplete", nullable = false)
+    private Boolean autoComplete = true;
+
+    @Builder.Default
+    @Column(name = "AutoCompleteAfter", nullable = false)
+    private Integer autoCompleteAfter = 60;
+
     @Column(name = "PauseFrom")
     private LocalDateTime pauseFrom;
 
     @Column(name = "PauseTo")
     private LocalDateTime pauseTo;
 
-    @Column(name = "PauseReason", length = 500)
+    @Column(name = "PauseReason", columnDefinition = "TEXT")
     private String pauseReason;
-
-    @Column(name = "AutoComplete", nullable = false)
-    @Builder.Default
-    private Boolean autoComplete = true;
 
     @ManyToOne
     @JoinColumn(name = "UpdatedBy")

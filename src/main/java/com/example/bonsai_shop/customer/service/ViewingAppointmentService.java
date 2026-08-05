@@ -1,13 +1,12 @@
 package com.example.bonsai_shop.customer.service;
 
-import com.example.bonsai_shop.appointmentSetting.reponsitory.AppointmentSettingRepository;
 import com.example.bonsai_shop.appointmentSetting.service.AppointmentSettingService;
 import com.example.bonsai_shop.customer.dto.AppointmentDetailDTO;
 import com.example.bonsai_shop.entity.AppointmentSetting;
 import com.example.bonsai_shop.entity.User;
 import com.example.bonsai_shop.entity.ViewingAppointment;
 import com.example.bonsai_shop.notification.service.NotificationService;
-import com.example.bonsai_shop.viewappointment.repository.ViewingAppointmentRepository;
+import com.example.bonsai_shop.customer.repository.ViewingAppointmentRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
