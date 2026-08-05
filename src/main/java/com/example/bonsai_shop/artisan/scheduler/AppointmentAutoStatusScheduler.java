@@ -16,14 +16,26 @@ public class AppointmentAutoStatusScheduler {
     private final ArtisanAppointmentService artisanAppointmentService;
 
     @Scheduled(fixedRate = 60000)
-    public void processAppointmentStatusUpdates() {
-        try {
-            int updatedCount = artisanAppointmentService.processAutomaticAppointmentStatusUpdates();
-            if (updatedCount > 0) {
-                log.info("Automatically updated {} appointment status(es).", updatedCount);
+    public void autoApprove() {
+        try{
+            int count = artisanAppointmentService.processAutoApprove();
+            if(count > 0){
+                log.info("{} appointments have been auto approved", count);
             }
-        } catch (Exception e) {
-            log.error("Failed to process automatic appointment status updates.", e);
+        }catch(Exception e){
+              log.error("Auto approve appointments failed.", e);
+        }
+    }
+
+    @Scheduled(fixedRate = 60000)
+    public void scheduledAutoComplete() {
+        try{
+            int count = artisanAppointmentService.processAutoComplete();
+            if(count > 0){
+                log.info("{} appointments have been auto completed", count);
+            }
+        }catch(Exception e){
+            log.error("Auto complete appointments failed.", e);
         }
     }
 }

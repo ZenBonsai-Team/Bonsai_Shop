@@ -2,161 +2,238 @@ package com.example.bonsai_shop.artisan.service;
 
 import com.example.bonsai_shop.appointmentSetting.reponsitory.AppointmentSettingRepository;
 import com.example.bonsai_shop.artisan.dto.ArtisanAppointmentDTO;
+import com.example.bonsai_shop.artisan.repository.ArtisanAppointmentRepository;
 import com.example.bonsai_shop.entity.AppointmentSetting;
 import com.example.bonsai_shop.entity.User;
 import com.example.bonsai_shop.entity.ViewingAppointment;
-import com.example.bonsai_shop.notification.service.NotificationService;
-import com.example.bonsai_shop.viewappointment.repository.ViewingAppointmentRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class ArtisanAppointmentService {
 
-    // Demo: 5 phút (Production: 60 phút)
-    private static final int AUTO_DECIDE_PENDING_MINUTES = 5;
-    private static final int AUTO_COMPLETE_MINUTES = 5;
-    private static final String STATUS_PENDING = "PENDING";
-    private static final String STATUS_APPROVED = "APPROVED";
-    private static final String STATUS_COMPLETED = "COMPLETED";
-    private static final LocalTime BUSINESS_START_TIME = LocalTime.of(8, 0);
-    private static final LocalTime BUSINESS_END_TIME = LocalTime.of(17, 0);
+  private final ArtisanAppointmentRepository artisanAppointmentRepository;
+  private final AppointmentSettingRepository appointmentSettingRepository;
 
-    private final ViewingAppointmentRepository viewingAppointmentRepository;
-    private final NotificationService notificationService;
-    private final AppointmentSettingRepository appointmentSettingRepository;
 
-    public List<ArtisanAppointmentDTO> findAllAppointments() {
-        return viewingAppointmentRepository.findAllAppointmentSummaries();
+  public List<ArtisanAppointmentDTO> findAllByAppointmentDateBetween(LocalDate appointmentDate) {
+
+   LocalDateTime start = appointmentDate.atStartOfDay();
+   LocalDateTime end = start.plusDays(1);
+
+      List<ViewingAppointment> appointments =
+              artisanAppointmentRepository.findByAppointmentDateBetween(start, end);
+
+      List<ArtisanAppointmentDTO> result = new ArrayList<>();
+
+      for (ViewingAppointment appointment : appointments) {
+          result.add(toDto(appointment));
+      }
+
+      return result;
+
+  }
+
+  public ArtisanAppointmentDTO findById(int id) {
+      ViewingAppointment appointment =
+              artisanAppointmentRepository.findByAppointmentId(id)
+                      .orElseThrow(() ->
+                              new RuntimeException("Không tìm thấy lịch hẹn."));
+      return toDto(appointment);
+  }
+
+
+    private ArtisanAppointmentDTO toDto(ViewingAppointment appointment) {
+
+        ArtisanAppointmentDTO dto = new ArtisanAppointmentDTO();
+
+        dto.setAppointmentId(appointment.getAppointmentId());
+        dto.setAppointmentDate(appointment.getAppointmentDate());
+        dto.setCreatedAt(appointment.getCreatedAt());
+        dto.setStatus(appointment.getStatus());
+        dto.setNote(appointment.getNote());
+
+        dto.setCustomerName(appointment.getCustomer().getFullName());
+        dto.setCustomerPhone(appointment.getCustomer().getPhone());
+        dto.setCustomerEmail(appointment.getCustomer().getEmail());
+
+        return dto;
     }
 
     @Transactional
-    public int processAutomaticAppointmentStatusUpdates() {
-        LocalDateTime now = LocalDateTime.now();
+    public void handUpdateStatus(int id, String status) {
+        ViewingAppointment appointment =
+                artisanAppointmentRepository.findByAppointmentId(id)
+                        .orElseThrow(() ->
+                                new RuntimeException("Không tìm thấy lịch hẹn."));
 
-        int updatedCount = autoDecidePendingAppointments(now);
-        updatedCount += autoCompleteApprovedAppointments(now);
+        if(!appointment.getStatus().equals("PENDING")) {
+            throw new RuntimeException("Chỉ lịch đang chờ duyệt mới được cập nhật.");
+        }
 
-        return updatedCount;
+        status = status.toUpperCase();
+
+        if (!List.of("APPROVED", "REJECTED").contains(status)) {
+            throw new RuntimeException("Trạng thái không hợp lệ.");
+        }
+
+        appointment.setStatus(status);
+        artisanAppointmentRepository.save(appointment);
     }
 
-    public AppointmentSetting getAppointmentSetting() {
-       return appointmentSettingRepository.findFirstByOrderBySettingIdAsc()
-               .orElseThrow(() -> new RuntimeException("Không tìm thấy cấu hình lịch hẹn."));
+
+    @Transactional
+    public void handMarkComplete(int id, String status) {
+        ViewingAppointment appointment =
+                artisanAppointmentRepository.findByAppointmentId(id)
+                        .orElseThrow(() ->
+                                new RuntimeException("Không tìm thấy lịch hẹn."));
+
+        if(!appointment.getStatus().equals("APPROVED")) {
+            throw new RuntimeException("Chỉ lịch được duyệt mới được cập nhật.");
+        }
+
+        status = status.toUpperCase();
+
+        if (!List.of("COMPLETED", "ABSENT").contains(status)) {
+            throw new RuntimeException("Trạng thái không hợp lệ.");
+        }
+
+        appointment.setStatus(status);
+
+        artisanAppointmentRepository.save(appointment);
     }
 
-    public void updateAppointmentSetting(
-            LocalDateTime pauseFrom,
-            LocalDateTime pauseTo,
-            String pauseReason,
-            User updatedBy
-    ) {
-        AppointmentSetting setting = getAppointmentSetting();
+    @Transactional
+    public void updateSetting(Boolean autoApprove,
+                              Integer autoApproveAfter,
+                              Boolean autoComplete,
+                              Integer autoCompleteAfter,
+                              LocalDateTime pauseFrom,
+                              LocalDateTime pauseTo,
+                              String pauseReason,
+                              User user
+    ) throws RuntimeException {
+        AppointmentSetting setting = appointmentSettingRepository
+                .findFirstByOrderBySettingIdAsc()
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy cấu hình."));
 
-        if (pauseFrom != null && pauseTo != null && pauseFrom.isAfter(pauseTo)) {
-            throw new RuntimeException("Thời gian bắt đầu phải trước thời gian kết thúc.");
+        if (Boolean.TRUE.equals(autoApprove)) {
+            validateMinute(autoApproveAfter, "Thời gian tự động duyệt");
+        } else {
+            autoApproveAfter = null;   // hoặc giữ giá trị cũ nếu muốn
         }
 
-        validatePauseDateTime(pauseFrom);
-        validatePauseDateTime(pauseTo);
-
-        String normalizedPauseReason = normalizePauseReason(pauseReason);
-        if (pauseFrom != null && pauseTo != null && normalizedPauseReason == null) {
-            throw new RuntimeException("Vui lòng nhập lý do tạm ngừng.");
+        if (Boolean.TRUE.equals(autoComplete)) {
+            validateMinute(autoCompleteAfter, "Thời gian tự động hoàn thành");
+        } else {
+            autoCompleteAfter = null;
         }
 
-        if (pauseFrom != null && pauseTo != null) {
-            if (pauseFrom.isBefore(LocalDateTime.now())) {
-                throw new RuntimeException("Thời gian tạm nghỉ phải sau thời điểm hiện tại.");
+        boolean hasPause =
+                pauseFrom != null &&
+                        pauseTo != null &&
+                        pauseReason != null &&
+                        !pauseReason.trim().isEmpty();
+        if (!hasPause) {
+            if (pauseFrom != null ||
+                    pauseTo != null ||
+                    (pauseReason != null && !pauseReason.trim().isEmpty())) {
+                throw new RuntimeException(
+                        "Thiết lập tạm dừng phải nhập đầy đủ thời gian bắt đầu, kết thúc và lý do.");
             }
-
-            if (pauseFrom.isAfter(pauseTo)) {
-                throw new RuntimeException("Thời gian bắt đầu phải trước thời gian kết thúc.");
-            }
         }
 
+        if(hasPause && pauseFrom.isAfter(pauseTo)){
+            throw new RuntimeException("Khoảng thời gian tạm dừng nhận lịch không hợp lệ.");
+        }
 
+        if (hasPause && pauseFrom.isBefore(LocalDateTime.now())) {
+            throw new RuntimeException("Thời gian bắt đầu phải lớn hơn thời điểm hiện tại.");
+        }
+
+        if (!autoApprove) {
+            autoApproveAfter = setting.getAutoApproveAfter();
+        }
+
+        if (!autoComplete) {
+            autoCompleteAfter = setting.getAutoCompleteAfter();
+        }
+
+        setting.setAutoApprove(autoApprove);
+        setting.setAutoApproveAfter(autoApproveAfter);
+        setting.setAutoComplete(autoComplete);
+        setting.setAutoCompleteAfter(autoCompleteAfter);
         setting.setPauseFrom(pauseFrom);
         setting.setPauseTo(pauseTo);
-        setting.setPauseReason(normalizedPauseReason);
-        setting.setAutoComplete(true);
-        setting.setUpdatedBy(updatedBy);
+        setting.setPauseReason(pauseReason);
+        setting.setUpdatedBy(user);
         setting.setUpdatedAt(LocalDateTime.now());
 
         appointmentSettingRepository.save(setting);
+  }
+
+    private void validateMinute(Integer value, String fieldName) {
+        if (value == null || value < 1 || value > 120) {
+            throw new RuntimeException(fieldName + " phải từ 1 đến 120 phút.");
+        }
     }
 
-    private int autoDecidePendingAppointments(LocalDateTime now) {
-//        LocalDateTime start  = now.toLocalDate().atStartOfDay();
-//        LocalDateTime end = start.plusDays(1);
-//        List<ViewingAppointment> appointments = viewingAppointmentRepository
-//                 .findByStatusAndAppointmentDateGreaterThanEqualAndAppointmentDateLessThan(STATUS_PENDING, start, end);
+    @Transactional
+    public int processAutoApprove(){
+        AppointmentSetting setting = appointmentSettingRepository
+                .findFirstByOrderBySettingIdAsc()
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy cấu hình."));
 
+        if(setting.getAutoApprove() == false){
+            return 0;
+        }
 
-        LocalDateTime deadline = now.minusMinutes(AUTO_DECIDE_PENDING_MINUTES);
-        List<ViewingAppointment> appointments = viewingAppointmentRepository.findByStatusAndCreatedAtLessThanEqual(STATUS_PENDING, deadline);
+        LocalDateTime now = LocalDateTime.now();
+        List<ViewingAppointment> appointments = artisanAppointmentRepository.findByStatus("PENDING");
 
-        int updatedCount = 0;
+        int countPending = 0;
+
         for (ViewingAppointment appointment : appointments) {
-
-                applyAutomaticStatus(appointment,STATUS_APPROVED);
-            updatedCount++;
+            LocalDateTime approveTime = appointment.getCreatedAt().plusMinutes(setting.getAutoApproveAfter());
+            if (!approveTime.isAfter(now)) {
+                appointment.setStatus("APPROVED");
+                artisanAppointmentRepository.save(appointment);
+                countPending++;
+            }
         }
-
-        return updatedCount;
+        return countPending;
     }
+  @Transactional
+    public int processAutoComplete(){
+      AppointmentSetting setting = appointmentSettingRepository
+              .findFirstByOrderBySettingIdAsc()
+              .orElseThrow(() -> new RuntimeException("Không tìm thấy cấu hình."));
 
-    private int autoCompleteApprovedAppointments(LocalDateTime now) {
-        LocalDateTime completeTime = now.minusMinutes(AUTO_COMPLETE_MINUTES);
+      if(setting.getAutoComplete() == false){
+          return 0;
+      }
 
-        List<ViewingAppointment> appointments = viewingAppointmentRepository
-                .findByStatusAndAppointmentDateLessThanEqual(STATUS_APPROVED, completeTime);
+      LocalDateTime now = LocalDateTime.now();
+      List<ViewingAppointment> appointments = artisanAppointmentRepository.findByStatus("APPROVED");
 
-        int updatedCount = 0;
-        for (ViewingAppointment appointment : appointments) {
-            applyAutomaticStatus(appointment, STATUS_COMPLETED);
-            updatedCount++;
-        }
+      int countApprove = 0;
 
-        return updatedCount;
-    }
-
-    private void applyAutomaticStatus(ViewingAppointment appointment, String nextStatus) {
-       appointment.setStatus(nextStatus);
-       appointment.setUpdatedAt(LocalDateTime.now());
-       viewingAppointmentRepository.save(appointment);
-        if (STATUS_APPROVED.equals(nextStatus)) {
-            notificationService.createNotification(
-                    appointment.getCustomer(),
-                    "Lịch hẹn tham quan vườn của bạn đã được chấp nhận."
-            );
-        }
-    }
-
-    private String normalizePauseReason(String pauseReason) {
-        if (pauseReason == null || pauseReason.isBlank()) {
-            return null;
-        }
-        return pauseReason.trim();
-    }
-
-    private void validatePauseDateTime(LocalDateTime pauseDateTime) {
-        if (pauseDateTime == null) {
-            return;
-        }
-        if (pauseDateTime.isBefore(LocalDateTime.now())) {
-            throw new RuntimeException("Thoi gian ban khong duoc truoc thoi diem hien tai.");
-        }
-
-        LocalTime pauseTime = pauseDateTime.toLocalTime();
-        if (pauseTime.isBefore(BUSINESS_START_TIME) || pauseTime.isAfter(BUSINESS_END_TIME)) {
-            throw new RuntimeException("Thoi gian ban phai nam trong gio hanh chinh 08:00 - 17:00.");
-        }
-    }
+      for (ViewingAppointment appointment : appointments) {
+          LocalDateTime completedTime = appointment.getAppointmentDate().plusMinutes(setting.getAutoCompleteAfter());
+          if (!completedTime.isAfter(now)) {
+          appointment.setStatus("COMPLETED");
+              artisanAppointmentRepository.save(appointment);
+              countApprove++;
+          }
+      }
+      return countApprove;
+  }
 }

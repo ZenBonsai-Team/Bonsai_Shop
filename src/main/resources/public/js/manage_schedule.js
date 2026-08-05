@@ -1,9 +1,14 @@
-﻿﻿﻿document.addEventListener("DOMContentLoaded", () => {
+﻿document.addEventListener("DOMContentLoaded", () => {
     const state = {
         appointments: [],
         currentMonth: new Date().getMonth(),
         currentYear: new Date().getFullYear(),
-        selectedDate: ""
+        selectedDate: "",
+        requestToken: 0,
+        appointmentsByDate: new Map(),
+        appointmentDatesByMonth: new Map(),
+        loadedAppointmentDateMonths: new Set(),
+        loadingAppointmentDateMonths: new Set()
     };
 
     const monthNames = [
@@ -16,17 +21,11 @@
         APPROVED: "ĐÃ DUYỆT",
         REJECTED: "ĐÃ TỪ CHỐI",
         CANCELLED: "ĐÃ HỦY",
-        COMPLETED: "HOÀN THÀNH"
+        COMPLETED: "HOÀN THÀNH",
+        ABSENT: "KHÁCH VẮNG"
     };
 
     const elements = {
-        statTotal: document.getElementById("statTotal"),
-        statToday: document.getElementById("statToday"),
-        statApproved: document.getElementById("statApproved"),
-        statPending: document.getElementById("statPending"),
-        totalPercent: document.getElementById("totalPercent"),
-        approvedPercent: document.getElementById("approvedPercent"),
-        pendingPercent: document.getElementById("pendingPercent"),
         reminderCount: document.getElementById("reminderCount"),
         pendingReminders: document.getElementById("pendingReminders"),
         currentMonth: document.querySelector(".current-month"),
@@ -35,8 +34,6 @@
         calendarGrid: document.querySelector(".calendar-grid"),
         todayAppointments: document.getElementById("todayAppointments"),
         todayPanelTitle: document.getElementById("todayPanelTitle"),
-        appointmentListCount: document.getElementById("appointmentListCount"),
-        appointmentRows: document.getElementById("appointmentRows"),
         appointmentData: document.getElementById("appointmentData"),
         detailModal: document.getElementById("editModal"),
         closeModal: document.getElementById("closeModal"),
@@ -50,17 +47,26 @@
         infoPhone: document.getElementById("infoPhone"),
         infoEmail: document.getElementById("infoEmail"),
         infoNote: document.getElementById("infoNote"),
+        approveAppointmentForm: document.getElementById("approveAppointmentForm"),
+        rejectAppointmentForm: document.getElementById("rejectAppointmentForm"),
+        completeAppointmentForm: document.getElementById("completeAppointmentForm"),
+        noShowAppointmentForm: document.getElementById("noShowAppointmentForm"),
         notificationBtn: document.getElementById("notificationBtn"),
         notificationPopup: document.getElementById("notificationPopup"),
-        settingForm: document.querySelector(".sch-setting-form"),
-        pauseFromInput: document.getElementById("pauseFromInput"),
+        appointmentSettingForm: document.getElementById("appointmentSettingForm"),
+        autoApprove: document.getElementById("autoApprove"),
+        autoApproveAfter: document.getElementById("autoApproveAfter"),
+        autoComplete: document.getElementById("autoComplete"),
+        autoCompleteAfter: document.getElementById("autoCompleteAfter"),
+        pauseFrom: document.getElementById("pauseFrom"),
         pauseFromDate: document.getElementById("pauseFromDate"),
         pauseFromTime: document.getElementById("pauseFromTime"),
-        pauseToInput: document.getElementById("pauseToInput"),
+        pauseTo: document.getElementById("pauseTo"),
         pauseToDate: document.getElementById("pauseToDate"),
         pauseToTime: document.getElementById("pauseToTime"),
-        pauseReasonInput: document.getElementById("pauseReasonInput"),
-        pauseReasonCount: document.getElementById("pauseReasonCount")
+        pauseReason: document.getElementById("pauseReason"),
+        pauseReasonCount: document.getElementById("pauseReasonCount"),
+        clearPauseSetting: document.getElementById("clearPauseSetting")
     };
 
     function padZero(value) {
@@ -69,6 +75,43 @@
 
     function getLocalDateString(date = new Date()) {
         return `${date.getFullYear()}-${padZero(date.getMonth() + 1)}-${padZero(date.getDate())}`;
+    }
+
+    function getSelectedDateFromPage() {
+        const selectedDate = elements.calendarGrid?.dataset.selectedDate || "";
+        if (selectedDate) return selectedDate;
+
+        const queryDate = new URLSearchParams(window.location.search).get("date");
+        return parseDateInput(queryDate || "") || getLocalDateString();
+    }
+
+    function updateDateParam(dateString) {
+        const url = new URL(window.location.href);
+        url.pathname = "/artisan/appointments";
+        url.searchParams.set("date", dateString);
+        url.searchParams.delete("id");
+        window.history.replaceState({}, "", url.toString());
+    }
+
+    function getMonthKey(year, monthIndex) {
+        return `${year}-${padZero(monthIndex + 1)}`;
+    }
+
+    function getDateMonthKey(dateString) {
+        const parsedDate = parseDateInput(dateString);
+        return parsedDate ? parsedDate.substring(0, 7) : "";
+    }
+
+    function rememberAppointmentDate(dateString) {
+        const parsedDate = parseDateInput(dateString);
+        const monthKey = getDateMonthKey(parsedDate);
+        if (!parsedDate || !monthKey) return;
+
+        if (!state.appointmentDatesByMonth.has(monthKey)) {
+            state.appointmentDatesByMonth.set(monthKey, new Set());
+        }
+
+        state.appointmentDatesByMonth.get(monthKey).add(parsedDate);
     }
 
     function formatDateDisplay(dateString) {
@@ -95,26 +138,20 @@
         return Number.isNaN(parsedDate.getTime()) ? "" : getLocalDateString(parsedDate);
     }
 
-    function parseAppointmentDateTime(appointment) {
-        const dateTimeValue = appointment.appointmentAt || `${appointment.date}T${appointment.time}`;
-        const dateTimeMatch = dateTimeValue.trim().match(/^(\d{4})-(\d{2})-(\d{2})(?:T|\s)(\d{2}):(\d{2})/);
-        const parsedDate = dateTimeMatch
-                ? new Date(
-                        Number(dateTimeMatch[1]),
-                        Number(dateTimeMatch[2]) - 1,
-                        Number(dateTimeMatch[3]),
-                        Number(dateTimeMatch[4]),
-                        Number(dateTimeMatch[5])
-                )
-                : new Date(dateTimeValue);
-        return Number.isNaN(parsedDate.getTime()) ? null : parsedDate;
+    function getAutoApproveAfterMinutes() {
+        if (elements.autoApprove && !elements.autoApprove.checked) return null;
+
+        const configuredMinutes = Number(elements.autoApproveAfter?.value || elements.appointmentSettingForm?.dataset.autoApproveAfter || 5);
+        return Number.isFinite(configuredMinutes) && configuredMinutes > 0 ? configuredMinutes : 5;
     }
 
     function parseAppointmentProcessingDeadline(appointment) {
+        const autoApproveAfterMinutes = getAutoApproveAfterMinutes();
+        if (autoApproveAfterMinutes === null) return null;
         if (!appointment.createdAt) return null;
         const createdAt = new Date(appointment.createdAt);
         if (Number.isNaN(createdAt.getTime())) return null;
-        return new Date(createdAt.getTime() + 5 * 60000);
+        return new Date(createdAt.getTime() + autoApproveAfterMinutes * 60000);
     }
 
     function getMinutesUntilProcessingDeadline(appointment) {
@@ -124,40 +161,40 @@
 
     function getReminderLevel(minutesUntil) {
         if (minutesUntil === null) {
-            return { className: "neutral", label: "Cần kiểm tra", priority: 5 };
+            return { className: "neutral", label: "C\u1ea7n ki\u1ec3m tra", priority: 5 };
         }
         if (minutesUntil <= 0) {
-            return { className: "urgent", label: "Đến mốc auto", priority: 1 };
+            return { className: "urgent", label: "\u0110\u1ebfn m\u1ed1c auto", priority: 1 };
         }
         if (minutesUntil <= 30) {
-            return { className: "urgent", label: "Sắp auto", priority: 1 };
+            return { className: "urgent", label: "S\u1eafp auto", priority: 1 };
         }
         if (minutesUntil <= 120) {
-            return { className: "soon", label: "Gần mốc auto", priority: 2 };
+            return { className: "soon", label: "G\u1ea7n m\u1ed1c auto", priority: 2 };
         }
         if (minutesUntil <= 480) {
-            return { className: "high", label: "Sắp tới mốc", priority: 3 };
+            return { className: "high", label: "S\u1eafp t\u1edbi m\u1ed1c", priority: 3 };
         }
         if (minutesUntil <= 1440) {
             return { className: "today", label: "Trong ngày", priority: 4 };
         }
-        return { className: "neutral", label: "Chờ duyệt", priority: 5 };
+        return { className: "neutral", label: "Ch\u1edd duy\u1ec7t", priority: 5 };
     }
 
     function formatTimeUntil(minutesUntil) {
-        if (minutesUntil === null) return "Chưa xác định mốc auto";
-        if (minutesUntil <= 0) return "Đã tới mốc auto";
-        if (minutesUntil < 60) return `Còn ${minutesUntil} phút`;
+        if (minutesUntil === null) return "Ch\u01b0a x\u00e1c \u0111\u1ecbnh m\u1ed1c auto";
+        if (minutesUntil <= 0) return "\u0110\u00e3 t\u1edbi m\u1ed1c auto";
+        if (minutesUntil < 60) return `C\u00f2n ${minutesUntil} ph\u00fat`;
 
         const hours = Math.floor(minutesUntil / 60);
         const minutes = minutesUntil % 60;
         if (minutesUntil < 1440) {
-            return minutes > 0 ? `Còn ${hours} giờ ${minutes} phút` : `Còn ${hours} giờ`;
+            return minutes > 0 ? `C\u00f2n ${hours} gi\u1edd ${minutes} ph\u00fat` : `C\u00f2n ${hours} gi\u1edd`;
         }
 
         const days = Math.floor(hours / 24);
         const remainingHours = hours % 24;
-        return remainingHours > 0 ? `Còn ${days} ngày ${remainingHours} giờ` : `Còn ${days} ngày`;
+        return remainingHours > 0 ? `C\u00f2n ${days} ng\u00e0y ${remainingHours} gi\u1edd` : `C\u00f2n ${days} ng\u00e0y`;
     }
 
     function formatAppointmentLabel(appointment) {
@@ -165,113 +202,19 @@
     }
 
     function getReminderActionLabel(reminderLevel) {
-        return reminderLevel.priority <= 2 ? "Kiểm tra" : "Xem chi tiết";
+        return reminderLevel.priority <= 2 ? "Ki\u1ec3m tra" : "Xem chi ti\u1ebft";
     }
 
     function getReminderNote(reminderLevel) {
+        if (getAutoApproveAfterMinutes() === null) {
+            return "Tự động duyệt đang tắt. Cần xử lý lịch hẹn thủ công.";
+        }
+
         if (reminderLevel.className === "urgent") {
-            return "Hệ thống tự duyệt hoặc từ chối theo lịch bận.";
+            return "H\u1ec7 th\u1ed1ng t\u1ef1 duy\u1ec7t ho\u1eb7c t\u1eeb ch\u1ed1i theo l\u1ecbch b\u1eadn.";
         }
-        return "Auto xử lý sau 5 phút kể từ khi khách đặt lịch.";
-    }
 
-    function updatePauseReasonCount() {
-        if (!elements.pauseReasonInput || !elements.pauseReasonCount) return;
-        elements.pauseReasonCount.textContent = `${elements.pauseReasonInput.value.length}/500`;
-    }
-
-    function splitDateTimeLocal(value) {
-        const dateTimeMatch = value ? value.match(/^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})/) : null;
-        return dateTimeMatch ? { date: dateTimeMatch[1], time: dateTimeMatch[2] } : { date: "", time: "" };
-    }
-
-    function syncPausePickerFromHidden(hiddenInput, dateInput, timeSelect) {
-        if (!hiddenInput || !dateInput || !timeSelect) return;
-        const dateTime = splitDateTimeLocal(hiddenInput.value);
-        if (!dateInput.value) dateInput.value = dateTime.date;
-        if (!timeSelect.value) timeSelect.value = dateTime.time;
-    }
-
-    function syncPauseHiddenInput(hiddenInput, dateInput, timeSelect) {
-        if (!hiddenInput || !dateInput || !timeSelect) return;
-        hiddenInput.value = dateInput.value && timeSelect.value ? `${dateInput.value}T${timeSelect.value}` : "";
-    }
-
-    function syncPauseHiddenInputs() {
-        syncPauseHiddenInput(elements.pauseFromInput, elements.pauseFromDate, elements.pauseFromTime);
-        syncPauseHiddenInput(elements.pauseToInput, elements.pauseToDate, elements.pauseToTime);
-    }
-
-    function clearPausePickerValidity() {
-        [
-            elements.pauseFromDate,
-            elements.pauseFromTime,
-            elements.pauseToDate,
-            elements.pauseToTime
-        ].forEach(input => input?.setCustomValidity(""));
-    }
-
-    function updatePauseInputBounds() {
-        const minDate = getLocalDateString();
-        [elements.pauseFromDate, elements.pauseToDate].forEach(input => {
-            if (!input) return;
-            input.min = minDate;
-        });
-    }
-
-    function isBusinessHourDateTime(value) {
-        if (!value) return true;
-        const dateTime = new Date(value);
-        if (Number.isNaN(dateTime.getTime())) return false;
-
-        const hours = dateTime.getHours();
-        const minutes = dateTime.getMinutes();
-        return (hours > 8 || (hours === 8 && minutes >= 0))
-                && (hours < 17 || (hours === 17 && minutes === 0));
-    }
-
-    function validatePauseSettingForm(event) {
-        updatePauseInputBounds();
-        syncPauseHiddenInputs();
-        clearPausePickerValidity();
-
-        const pausePickers = [
-            {
-                hiddenInput: elements.pauseFromInput,
-                dateInput: elements.pauseFromDate,
-                timeSelect: elements.pauseFromTime
-            },
-            {
-                hiddenInput: elements.pauseToInput,
-                dateInput: elements.pauseToDate,
-                timeSelect: elements.pauseToTime
-            }
-        ].filter(picker => picker.hiddenInput && picker.dateInput && picker.timeSelect);
-
-        for (const picker of pausePickers) {
-            const hasDate = Boolean(picker.dateInput.value);
-            const hasTime = Boolean(picker.timeSelect.value);
-            if (!hasDate && !hasTime) continue;
-            if (hasDate !== hasTime) {
-                const invalidInput = hasDate ? picker.timeSelect : picker.dateInput;
-                invalidInput.setCustomValidity("Vui lòng chọn đủ ngày và giờ.");
-                invalidInput.reportValidity();
-                event.preventDefault();
-                return;
-            }
-            if (new Date(picker.hiddenInput.value).getTime() < Date.now()) {
-                picker.dateInput.setCustomValidity("Chỉ chọn thời gian từ hiện tại hoặc tương lai.");
-                picker.dateInput.reportValidity();
-                event.preventDefault();
-                return;
-            }
-            if (!isBusinessHourDateTime(picker.hiddenInput.value)) {
-                picker.timeSelect.setCustomValidity("Chỉ chọn giờ hành chính từ 08:00 đến 17:00.");
-                picker.timeSelect.reportValidity();
-                event.preventDefault();
-                return;
-            }
-        }
+        return `Auto xử lý sau ${getAutoApproveAfterMinutes()} phút kể từ khi khách đặt lịch.`;
     }
 
     function createElement(tagName, className, text) {
@@ -285,42 +228,53 @@
         return createElement("span", `status-badge ${status.toLowerCase()}`, statusLabels[status] || status);
     }
 
+    function mapAppointmentRow(row) {
+        const dateText = row.dataset.date || row.dataset.appointmentAt || "";
+        const status = row.dataset.status ? row.dataset.status.trim().toUpperCase() : "PENDING";
+
+        return {
+            id: row.dataset.id || "",
+            phone: row.dataset.phone || "",
+            email: row.dataset.email || "",
+            note: row.dataset.note || "",
+            appointmentAt: row.dataset.appointmentAt || "",
+            createdAt: row.dataset.createdAt || "",
+            client: row.dataset.client || "",
+            appointmentType: row.dataset.appointmentType || "",
+            date: parseDateInput(dateText),
+            time: row.dataset.time || "",
+            status
+        };
+    }
+
+    function mapAppointmentDto(appointment) {
+        const appointmentAt = appointment.appointmentDate || "";
+        const status = appointment.status ? appointment.status.trim().toUpperCase() : "PENDING";
+
+        return {
+            id: appointment.appointmentId || "",
+            phone: appointment.customerPhone || "",
+            email: appointment.customerEmail || "",
+            note: appointment.note || "",
+            appointmentAt,
+            createdAt: appointment.createdAt || "",
+            client: appointment.customerName || "",
+            appointmentType: "L\u1ecbch tham quan v\u01b0\u1eddn",
+            date: parseDateInput(appointmentAt),
+            time: appointmentAt.substring(11, 16) || "",
+            status
+        };
+    }
+
     function extractAppointmentsFromDOM() {
         state.appointments = [];
         elements.appointmentData.querySelectorAll(".appointment-data-row").forEach(row => {
-            const dateText = row.dataset.date || row.dataset.appointmentAt || "";
-            const status = row.dataset.status ? row.dataset.status.trim().toUpperCase() : "PENDING";
-
-            state.appointments.push({
-                id: row.dataset.id || "",
-                phone: row.dataset.phone || "",
-                email: row.dataset.email || "",
-                note: row.dataset.note || "",
-                appointmentAt: row.dataset.appointmentAt || "",
-                createdAt: row.dataset.createdAt || "",
-                client: row.dataset.client || "",
-                appointmentType: row.dataset.appointmentType || "",
-                date: parseDateInput(dateText),
-                time: row.dataset.time || "",
-                status
-            });
+            state.appointments.push(mapAppointmentRow(row));
         });
-    }
-
-    function renderStats() {
-        const total = state.appointments.length;
-        const todayString = getLocalDateString();
-        const today = state.appointments.filter(appointment => appointment.date === todayString).length;
-        const approved = state.appointments.filter(appointment => appointment.status === "APPROVED").length;
-        const pending = state.appointments.filter(appointment => appointment.status === "PENDING").length;
-
-        elements.statTotal.textContent = total;
-        elements.statToday.textContent = today;
-        elements.statApproved.textContent = approved;
-        elements.statPending.textContent = pending;
-        elements.totalPercent.textContent = total > 0 ? `+${total}` : "0";
-        elements.approvedPercent.textContent = approved;
-        elements.pendingPercent.textContent = pending;
+        if (state.selectedDate) {
+            state.appointmentsByDate.set(state.selectedDate, state.appointments);
+        }
+        state.appointments.forEach(appointment => rememberAppointmentDate(appointment.date));
     }
 
     function renderCalendar() {
@@ -336,16 +290,16 @@
             elements.calendarGrid.appendChild(createElement("div", "calendar-day empty"));
         }
 
-        const appointmentDates = new Set(state.appointments
-                .map(appointment => appointment.date)
-                .filter(Boolean));
+        state.appointments.forEach(appointment => rememberAppointmentDate(appointment.date));
+        const monthKey = getMonthKey(state.currentYear, state.currentMonth);
+        const appointmentDates = state.appointmentDatesByMonth.get(monthKey) || new Set();
 
         for (let day = 1; day <= totalDays; day += 1) {
             const dayButton = createElement("button", "calendar-day current-month-day", String(day));
             const dateString = `${state.currentYear}-${padZero(state.currentMonth + 1)}-${padZero(day)}`;
             dayButton.type = "button";
             dayButton.dataset.date = dateString;
-            dayButton.setAttribute("aria-label", `Xem lịch hẹn ngày ${formatDateDisplay(dateString)}`);
+            dayButton.setAttribute("aria-label", `Xem l\u1ecbch h\u1eb9n ng\u00e0y ${formatDateDisplay(dateString)}`);
 
             if (dateString === getLocalDateString()) dayButton.classList.add("today");
             if (dateString === state.selectedDate) dayButton.classList.add("selected");
@@ -360,9 +314,154 @@
     }
 
     function selectCalendarDate(dateString) {
+        loadAppointmentsForDate(dateString);
+    }
+
+    async function loadAppointmentsForDate(dateString) {
+        if (!dateString || dateString === state.selectedDate) return;
+
+        if (state.appointmentsByDate.has(dateString)) {
+            state.selectedDate = dateString;
+            state.appointments = state.appointmentsByDate.get(dateString);
+            state.appointments.forEach(appointment => rememberAppointmentDate(appointment.date));
+            updateDateParam(dateString);
+            renderAll();
+            return;
+        }
+
+        const requestToken = state.requestToken + 1;
+        state.requestToken = requestToken;
         state.selectedDate = dateString;
+        updateDateParam(dateString);
         renderCalendar();
-        renderDayPanel();
+        renderDayLoading(dateString);
+
+        try {
+            const url = new URL("/artisan/appointments/data", window.location.origin);
+            url.searchParams.set("date", dateString);
+
+            const response = await fetch(url.toString(), {
+                headers: { Accept: "application/json" }
+            });
+
+            if (!response.ok) {
+                throw new Error("Kh\u00f4ng t\u1ea3i \u0111\u01b0\u1ee3c l\u1ecbch h\u1eb9n cho ng\u00e0y \u0111\u00e3 ch\u1ecdn.");
+            }
+
+            const appointments = await response.json();
+            if (requestToken !== state.requestToken) return;
+
+            state.appointments = appointments.map(mapAppointmentDto);
+            state.appointmentsByDate.set(dateString, state.appointments);
+            state.appointments.forEach(appointment => rememberAppointmentDate(appointment.date));
+            renderAll();
+        } catch (error) {
+            alert(error.message);
+        }
+    }
+
+    function getChangedAppointments(previousAppointments, nextAppointments) {
+        const previousStatusById = new Map(
+                previousAppointments.map(appointment => [String(appointment.id), appointment.status])
+        );
+
+        return nextAppointments.filter(appointment => {
+            const previousStatus = previousStatusById.get(String(appointment.id));
+            return previousStatus && previousStatus !== appointment.status;
+        });
+    }
+
+    function notifyAppointmentStatusChanges(changedAppointments) {
+        if (!changedAppointments.length || !window.BSMSToast) return;
+
+        changedAppointments.forEach(appointment => {
+            BSMSToast.info(
+                    `Lịch #${appointment.id} đã chuyển sang ${statusLabels[appointment.status] || appointment.status}.`
+            );
+        });
+    }
+
+    async function refreshSelectedDateAppointments() {
+        const dateString = state.selectedDate || getLocalDateString();
+        if (!dateString) return;
+
+        try {
+            const url = new URL("/artisan/appointments/data", window.location.origin);
+            url.searchParams.set("date", dateString);
+
+            const response = await fetch(url.toString(), {
+                headers: { Accept: "application/json" }
+            });
+
+            if (!response.ok) return;
+
+            const previousAppointments = state.appointments;
+            const nextAppointments = (await response.json()).map(mapAppointmentDto);
+            const changedAppointments = getChangedAppointments(previousAppointments, nextAppointments);
+
+            state.appointments = nextAppointments;
+            state.appointmentsByDate.set(dateString, nextAppointments);
+            nextAppointments.forEach(appointment => rememberAppointmentDate(appointment.date));
+
+            renderAll();
+            notifyAppointmentStatusChanges(changedAppointments);
+        } catch (error) {
+            console.warn("Kh\u00f4ng th\u1ec3 t\u1ef1 t\u1ea3i l\u1ea1i l\u1ecbch h\u1eb9n.", error);
+        }
+    }
+
+    async function loadAppointmentDotsForCurrentMonth() {
+        const monthKey = getMonthKey(state.currentYear, state.currentMonth);
+        if (state.loadedAppointmentDateMonths.has(monthKey) || state.loadingAppointmentDateMonths.has(monthKey)) return;
+
+        state.loadingAppointmentDateMonths.add(monthKey);
+        if (!state.appointmentDatesByMonth.has(monthKey)) {
+            state.appointmentDatesByMonth.set(monthKey, new Set());
+        }
+
+        const totalDays = new Date(state.currentYear, state.currentMonth + 1, 0).getDate();
+        const dateStrings = Array.from({ length: totalDays }, (_, index) =>
+                `${state.currentYear}-${padZero(state.currentMonth + 1)}-${padZero(index + 1)}`
+        );
+
+        await Promise.all(dateStrings.map(async dateString => {
+            if (state.appointmentsByDate.has(dateString)) {
+                if (state.appointmentsByDate.get(dateString).length > 0) {
+                    rememberAppointmentDate(dateString);
+                }
+                return;
+            }
+
+            try {
+                const url = new URL("/artisan/appointments/data", window.location.origin);
+                url.searchParams.set("date", dateString);
+
+                const response = await fetch(url.toString(), {
+                    headers: { Accept: "application/json" }
+                });
+
+                if (!response.ok) return;
+
+                const appointments = (await response.json()).map(mapAppointmentDto);
+                state.appointmentsByDate.set(dateString, appointments);
+
+                if (appointments.length > 0) {
+                    rememberAppointmentDate(dateString);
+                }
+            } catch (error) {
+                console.warn(`Kh\u00f4ng t\u1ea3i \u0111\u01b0\u1ee3c d\u1ea5u ch\u1ea5m l\u1ecbch h\u1eb9n ng\u00e0y ${dateString}.`, error);
+            }
+        }));
+
+        state.loadingAppointmentDateMonths.delete(monthKey);
+        state.loadedAppointmentDateMonths.add(monthKey);
+        renderCalendar();
+    }
+
+    function renderDayLoading(dateString) {
+        elements.todayPanelTitle.textContent = `L\u1ecbch h\u1eb9n ng\u00e0y ${formatDateDisplay(dateString)}`;
+        elements.todayAppointments.innerHTML = "";
+        elements.todayAppointments.appendChild(createElement("li", "no-appointments", "\u0110ang t\u1ea3i l\u1ecbch h\u1eb9n..."));
     }
 
     function renderDayPanel() {
@@ -371,10 +470,10 @@
         const dayAppointments = state.appointments
                 .filter(appointment => appointment.date === targetDate)
                 .sort((first, second) => first.time.localeCompare(second.time));
-        elements.todayPanelTitle.textContent = `Lịch hẹn ngày ${formatDateDisplay(targetDate)}`;
+        elements.todayPanelTitle.textContent = `L\u1ecbch h\u1eb9n ng\u00e0y ${formatDateDisplay(targetDate)}`;
 
         if (dayAppointments.length === 0) {
-            elements.todayAppointments.appendChild(createElement("li", "no-appointments", "Không có lịch hẹn."));
+            elements.todayAppointments.appendChild(createElement("li", "no-appointments", "Kh\u00f4ng c\u00f3 l\u1ecbch h\u1eb9n."));
             return;
         }
 
@@ -398,54 +497,6 @@
         });
     }
 
-    function renderAppointmentList() {
-        if (!elements.appointmentRows) return;
-
-        const sortedAppointments = [...state.appointments].sort((first, second) => {
-            const firstDate = parseAppointmentDateTime(first);
-            const secondDate = parseAppointmentDateTime(second);
-            const firstTime = firstDate ? firstDate.getTime() : 0;
-            const secondTime = secondDate ? secondDate.getTime() : 0;
-            return secondTime - firstTime;
-        });
-
-        if (elements.appointmentListCount) {
-            elements.appointmentListCount.textContent = `${sortedAppointments.length} lịch`;
-        }
-
-        elements.appointmentRows.innerHTML = "";
-
-        if (sortedAppointments.length === 0) {
-            const emptyRow = document.createElement("tr");
-            const emptyCell = createElement("td", "sch-empty-table", "Chưa có lịch tham quan vườn.");
-            emptyCell.colSpan = 5;
-            emptyRow.appendChild(emptyCell);
-            elements.appointmentRows.appendChild(emptyRow);
-            return;
-        }
-
-        sortedAppointments.forEach(appointment => {
-            const row = document.createElement("tr");
-            const contact = appointment.phone || appointment.email || "-";
-
-            row.dataset.id = appointment.id;
-            row.tabIndex = 0;
-            row.setAttribute("role", "button");
-            row.setAttribute("aria-label", `Xem chi tiết lịch ${appointment.id}`);
-            row.append(
-                    createElement("td", "", `#${appointment.id}`),
-                    createElement("td", "", appointment.client || "Khách hàng"),
-                    createElement("td", "", `${formatDateDisplay(appointment.date)} ${appointment.time}`),
-                    createElement("td", "", contact)
-            );
-
-            const statusCell = document.createElement("td");
-            statusCell.appendChild(createStatusBadge(appointment.status));
-            row.appendChild(statusCell);
-            elements.appointmentRows.appendChild(row);
-        });
-    }
-
     function renderReminderPanel() {
         if (!elements.pendingReminders || !elements.reminderCount) return;
 
@@ -464,11 +515,11 @@
                     return first.minutesUntil - second.minutesUntil;
                 });
 
-        elements.reminderCount.textContent = `${pendingAppointments.length} lịch chờ`;
+        elements.reminderCount.textContent = `${pendingAppointments.length} l\u1ecbch ch\u1edd`;
         elements.pendingReminders.innerHTML = "";
 
         if (pendingAppointments.length === 0) {
-            elements.pendingReminders.appendChild(createElement("li", "sch-reminder-empty", "Không có lịch chờ xử lý."));
+            elements.pendingReminders.appendChild(createElement("li", "sch-reminder-empty", "Kh\u00f4ng c\u00f3 l\u1ecbch ch\u1edd x\u1eed l\u00fd."));
             return;
         }
 
@@ -480,7 +531,11 @@
             const content = createElement("div", "sch-reminder-content");
             const title = createElement("strong", "", appointment.client || "Khách hàng");
             const due = createElement("span", "sch-reminder-due", formatTimeUntil(appointment.minutesUntil));
-            const meta = createElement("span", "sch-reminder-meta", `${appointment.appointmentType} • Hẹn ${formatAppointmentLabel(appointment)} • Auto sau 5 phút đặt lịch`);
+            const autoApproveAfterMinutes = getAutoApproveAfterMinutes();
+            const autoLabel = autoApproveAfterMinutes === null
+                    ? "Tự động duyệt đang tắt"
+                    : `Auto sau ${autoApproveAfterMinutes} phút đặt lịch`;
+            const meta = createElement("span", "sch-reminder-meta", `${appointment.appointmentType} • Hẹn ${formatAppointmentLabel(appointment)} • ${autoLabel}`);
             const note = createElement("small", "sch-reminder-note", getReminderNote(reminderLevel));
             const badge = createElement("span", `sch-reminder-badge ${reminderLevel.className}`, reminderLevel.label);
             const action = createElement("span", "sch-reminder-action", getReminderActionLabel(reminderLevel));
@@ -494,24 +549,244 @@
         });
     }
 
-    function openDetailModal(id) {
-        const appointment = state.appointments.find(item => item.id === String(id));
-        if (!appointment) return;
+    function findAppointmentById(id) {
+        return state.appointments.find(appointment => String(appointment.id) === String(id));
+    }
 
-        elements.infoId.textContent = appointment.id;
+    function showDetailModal(appointment) {
+        if (!appointment) {
+            alert("Kh\u00f4ng t\u00ecm th\u1ea5y l\u1ecbch h\u1eb9n trong ng\u00e0y \u0111ang ch\u1ecdn.");
+            return;
+        }
+
+        elements.infoId.textContent = appointment.id || "-";
         elements.infoClient.textContent = appointment.client || "-";
-        elements.infoAppointmentType.textContent = appointment.appointmentType || "-";
-        elements.infoStatus.textContent = statusLabels[appointment.status] || appointment.status || "-";
-        elements.infoDate.textContent = formatDateDisplay(appointment.date);
-        elements.infoTime.textContent = appointment.time || "-";
         elements.infoPhone.textContent = appointment.phone || "-";
         elements.infoEmail.textContent = appointment.email || "-";
+        elements.infoDate.textContent = formatDateDisplay(appointment.date);
+        elements.infoTime.textContent = appointment.time || "-";
+        elements.infoStatus.textContent = statusLabels[appointment.status] || appointment.status || "-";
+        elements.infoAppointmentType.textContent = appointment.appointmentType || "-";
         elements.infoNote.textContent = appointment.note || "-";
+        updateAppointmentActionForms(appointment);
         elements.detailModal.classList.add("show");
+    }
+
+    function updateAppointmentActionForms(appointment) {
+        const actionForms = [
+            elements.approveAppointmentForm,
+            elements.rejectAppointmentForm,
+            elements.completeAppointmentForm,
+            elements.noShowAppointmentForm
+        ].filter(Boolean);
+
+        actionForms.forEach(form => {
+            form.classList.add("sch-hidden");
+            const idInput = form.querySelector('input[name="id"]');
+            const dateInput = form.querySelector('input[name="date"]');
+            if (idInput) idInput.value = appointment.id || "";
+            if (dateInput) dateInput.value = state.selectedDate || appointment.date || "";
+        });
+
+        if (appointment.status === "PENDING") {
+            elements.approveAppointmentForm?.classList.remove("sch-hidden");
+            elements.rejectAppointmentForm?.classList.remove("sch-hidden");
+            return;
+        }
+
+        if (appointment.status === "APPROVED") {
+            elements.completeAppointmentForm?.classList.remove("sch-hidden");
+            elements.noShowAppointmentForm?.classList.remove("sch-hidden");
+        }
+    }
+
+    function openDetailModal(id) {
+        const appointment = findAppointmentById(id);
+        showDetailModal(appointment);
     }
 
     function closeDetailModal() {
         elements.detailModal.classList.remove("show");
+    }
+
+    function updateAppointmentSettingUi() {
+        if (elements.autoApprove && elements.autoApproveAfter) {
+            elements.autoApproveAfter.disabled = !elements.autoApprove.checked;
+        }
+
+        if (elements.autoComplete && elements.autoCompleteAfter) {
+            elements.autoCompleteAfter.disabled = !elements.autoComplete.checked;
+        }
+
+        const autoApproveFallback = elements.appointmentSettingForm?.querySelector('input[type="hidden"][name="autoApprove"]');
+        const autoCompleteFallback = elements.appointmentSettingForm?.querySelector('input[type="hidden"][name="autoComplete"]');
+
+        if (autoApproveFallback && elements.autoApprove) {
+            autoApproveFallback.disabled = elements.autoApprove.checked;
+        }
+
+        if (autoCompleteFallback && elements.autoComplete) {
+            autoCompleteFallback.disabled = elements.autoComplete.checked;
+        }
+
+        if (elements.pauseReason && elements.pauseReasonCount) {
+            elements.pauseReasonCount.textContent = `${elements.pauseReason.value.length}/500`;
+        }
+    }
+
+    function getAppointmentSettingDraft() {
+        return {
+            autoApprove: Boolean(elements.autoApprove?.checked),
+            autoApproveAfter: elements.autoApproveAfter?.value || "",
+            autoComplete: Boolean(elements.autoComplete?.checked),
+            autoCompleteAfter: elements.autoCompleteAfter?.value || "",
+            pauseFrom: elements.pauseFrom?.value || "",
+            pauseFromDate: elements.pauseFromDate?.value || "",
+            pauseFromTime: elements.pauseFromTime?.value || "",
+            pauseTo: elements.pauseTo?.value || "",
+            pauseToDate: elements.pauseToDate?.value || "",
+            pauseToTime: elements.pauseToTime?.value || "",
+            pauseReason: elements.pauseReason?.value || ""
+        };
+    }
+
+    function saveAppointmentSettingDraft() {
+        if (!elements.appointmentSettingForm) return;
+        localStorage.setItem("artisanAppointmentSettingDraft", JSON.stringify(getAppointmentSettingDraft()));
+    }
+
+    function restoreAppointmentSettingDraftIfNeeded() {
+        if (!elements.appointmentSettingForm || elements.appointmentSettingForm.dataset.hasSetting === "true") return;
+
+        const rawDraft = localStorage.getItem("artisanAppointmentSettingDraft");
+        if (!rawDraft) return;
+
+        try {
+            const draft = JSON.parse(rawDraft);
+            if (elements.autoApprove) elements.autoApprove.checked = Boolean(draft.autoApprove);
+            if (elements.autoApproveAfter && draft.autoApproveAfter) elements.autoApproveAfter.value = draft.autoApproveAfter;
+            if (elements.autoComplete) elements.autoComplete.checked = Boolean(draft.autoComplete);
+            if (elements.autoCompleteAfter && draft.autoCompleteAfter) elements.autoCompleteAfter.value = draft.autoCompleteAfter;
+            if (elements.pauseFrom) elements.pauseFrom.value = draft.pauseFrom || "";
+            if (elements.pauseFromDate) elements.pauseFromDate.value = draft.pauseFromDate || "";
+            if (elements.pauseFromTime) elements.pauseFromTime.dataset.value = draft.pauseFromTime || "";
+            if (elements.pauseTo) elements.pauseTo.value = draft.pauseTo || "";
+            if (elements.pauseToDate) elements.pauseToDate.value = draft.pauseToDate || "";
+            if (elements.pauseToTime) elements.pauseToTime.dataset.value = draft.pauseToTime || "";
+            if (elements.pauseReason) elements.pauseReason.value = draft.pauseReason || "";
+        } catch (error) {
+            localStorage.removeItem("artisanAppointmentSettingDraft");
+        }
+    }
+
+    function hydrateAppointmentSettingFromDataset() {
+        const dataset = elements.appointmentSettingForm?.dataset;
+        if (!dataset || dataset.hasSetting !== "true") return;
+
+        if (elements.autoApprove && dataset.autoApprove) {
+            elements.autoApprove.checked = dataset.autoApprove === "true";
+        }
+
+        if (elements.autoApproveAfter && dataset.autoApproveAfter) {
+            elements.autoApproveAfter.value = dataset.autoApproveAfter;
+        }
+
+        if (elements.autoComplete && dataset.autoComplete) {
+            elements.autoComplete.checked = dataset.autoComplete === "true";
+        }
+
+        if (elements.autoCompleteAfter && dataset.autoCompleteAfter) {
+            elements.autoCompleteAfter.value = dataset.autoCompleteAfter;
+        }
+
+        if (elements.pauseFrom) elements.pauseFrom.value = dataset.pauseFrom || "";
+        if (elements.pauseFromDate) elements.pauseFromDate.value = dataset.pauseFromDate || "";
+        if (elements.pauseFromTime) elements.pauseFromTime.dataset.value = dataset.pauseFromTime || "";
+        if (elements.pauseTo) elements.pauseTo.value = dataset.pauseTo || "";
+        if (elements.pauseToDate) elements.pauseToDate.value = dataset.pauseToDate || "";
+        if (elements.pauseToTime) elements.pauseToTime.dataset.value = dataset.pauseToTime || "";
+        if (elements.pauseReason) elements.pauseReason.value = dataset.pauseReason || "";
+    }
+
+    function applyInitialPauseTime(selectElement) {
+        if (!selectElement || !selectElement.dataset.value) return;
+        selectElement.value = selectElement.dataset.value;
+    }
+
+    function populatePauseTimeSelect(selectElement) {
+        if (!selectElement) return;
+
+        const selectedValue = selectElement.dataset.value || selectElement.value || "";
+        selectElement.innerHTML = "";
+        selectElement.appendChild(new Option("Ch\u1ecdn gi\u1edd", ""));
+
+        for (let hour = 0; hour < 24; hour += 1) {
+            [0, 30].forEach(minute => {
+                const timeValue = `${padZero(hour)}:${padZero(minute)}`;
+                selectElement.appendChild(new Option(timeValue, timeValue));
+            });
+        }
+
+        selectElement.value = selectedValue;
+    }
+
+    function syncPauseHiddenInput(hiddenInput, dateInput, timeInput) {
+        if (!hiddenInput || !dateInput || !timeInput) return;
+        hiddenInput.value = dateInput.value && timeInput.value ? `${dateInput.value}T${timeInput.value}` : "";
+    }
+
+    function syncPauseHiddenInputs() {
+        syncPauseHiddenInput(elements.pauseFrom, elements.pauseFromDate, elements.pauseFromTime);
+        syncPauseHiddenInput(elements.pauseTo, elements.pauseToDate, elements.pauseToTime);
+    }
+
+    function clearPauseSetting() {
+        if (elements.pauseFrom) elements.pauseFrom.value = "";
+        if (elements.pauseFromDate) elements.pauseFromDate.value = "";
+        if (elements.pauseFromTime) elements.pauseFromTime.value = "";
+        if (elements.pauseTo) elements.pauseTo.value = "";
+        if (elements.pauseToDate) elements.pauseToDate.value = "";
+        if (elements.pauseToTime) elements.pauseToTime.value = "";
+        if (elements.pauseReason) elements.pauseReason.value = "";
+
+        updateAppointmentSettingUi();
+        saveAppointmentSettingDraft();
+
+        if (window.BSMSToast) {
+            BSMSToast.success("\u0110\u00e3 x\u00f3a th\u00f4ng tin t\u1ea1m d\u1eebng. B\u1ea5m L\u01b0u c\u1ea5u h\u00ecnh \u0111\u1ec3 \u00e1p d\u1ee5ng.");
+        }
+    }
+
+    function validateAppointmentSettingForm(event) {
+        updateAppointmentSettingUi();
+        syncPauseHiddenInputs();
+        saveAppointmentSettingDraft();
+        if (!elements.pauseFrom || !elements.pauseTo) return;
+
+        const pauseFrom = elements.pauseFrom.value ? new Date(elements.pauseFrom.value) : null;
+        const pauseTo = elements.pauseTo.value ? new Date(elements.pauseTo.value) : null;
+
+        if ((elements.pauseFromDate?.value && !elements.pauseFromTime?.value)
+                || (!elements.pauseFromDate?.value && elements.pauseFromTime?.value)
+                || (elements.pauseToDate?.value && !elements.pauseToTime?.value)
+                || (!elements.pauseToDate?.value && elements.pauseToTime?.value)) {
+            event.preventDefault();
+            if (window.BSMSToast) {
+                BSMSToast.error("Vui l\u00f2ng ch\u1ecdn \u0111\u1ee7 ng\u00e0y v\u00e0 gi\u1edd khi t\u1ea1m d\u1eebng nh\u1eadn l\u1ecbch.");
+            } else {
+                alert("Vui l\u00f2ng ch\u1ecdn \u0111\u1ee7 ng\u00e0y v\u00e0 gi\u1edd khi t\u1ea1m d\u1eebng nh\u1eadn l\u1ecbch.");
+            }
+            return;
+        }
+
+        if (pauseFrom && pauseTo && pauseTo <= pauseFrom) {
+            event.preventDefault();
+            if (window.BSMSToast) {
+                BSMSToast.error("Th\u1eddi \u0111i\u1ec3m k\u1ebft th\u00fac ph\u1ea3i sau th\u1eddi \u0111i\u1ec3m b\u1eaft \u0111\u1ea7u.");
+            } else {
+                alert("Th\u1eddi \u0111i\u1ec3m k\u1ebft th\u00fac ph\u1ea3i sau th\u1eddi \u0111i\u1ec3m b\u1eaft \u0111\u1ea7u.");
+            }
+        }
     }
 
     function bindEvents() {
@@ -522,6 +797,7 @@
                 state.currentYear -= 1;
             }
             renderCalendar();
+            loadAppointmentDotsForCurrentMonth();
         });
 
         elements.nextMonth.addEventListener("click", () => {
@@ -531,6 +807,7 @@
                 state.currentYear += 1;
             }
             renderCalendar();
+            loadAppointmentDotsForCurrentMonth();
         });
 
         elements.todayAppointments.addEventListener("click", event => {
@@ -549,19 +826,6 @@
         elements.pendingReminders?.addEventListener("click", event => {
             const button = event.target.closest(".sch-reminder-btn");
             if (button) openDetailModal(button.dataset.id);
-        });
-
-        elements.appointmentRows?.addEventListener("click", event => {
-            const row = event.target.closest("tr[data-id]");
-            if (row) openDetailModal(row.dataset.id);
-        });
-
-        elements.appointmentRows?.addEventListener("keydown", event => {
-            if (event.key !== "Enter" && event.key !== " ") return;
-            const row = event.target.closest("tr[data-id]");
-            if (!row) return;
-            event.preventDefault();
-            openDetailModal(row.dataset.id);
         });
 
         elements.closeModal?.addEventListener("click", closeDetailModal);
@@ -588,42 +852,53 @@
             });
         }
 
-        elements.pauseReasonInput?.addEventListener("input", updatePauseReasonCount);
-        elements.settingForm?.addEventListener("submit", validatePauseSettingForm);
-        [
-            elements.pauseFromDate,
-            elements.pauseFromTime,
-            elements.pauseToDate,
-            elements.pauseToTime
-        ].forEach(input => {
-            const syncPicker = () => {
-                clearPausePickerValidity();
-                syncPauseHiddenInputs();
-            };
-            input?.addEventListener("input", syncPicker);
-            input?.addEventListener("change", syncPicker);
+        elements.autoApprove?.addEventListener("change", () => {
+            updateAppointmentSettingUi();
+            renderReminderPanel();
         });
+        elements.autoApproveAfter?.addEventListener("input", renderReminderPanel);
+        elements.autoComplete?.addEventListener("change", updateAppointmentSettingUi);
+        elements.pauseFromDate?.addEventListener("change", syncPauseHiddenInputs);
+        elements.pauseFromTime?.addEventListener("change", syncPauseHiddenInputs);
+        elements.pauseToDate?.addEventListener("change", syncPauseHiddenInputs);
+        elements.pauseToTime?.addEventListener("change", syncPauseHiddenInputs);
+        elements.pauseReason?.addEventListener("input", updateAppointmentSettingUi);
+        elements.clearPauseSetting?.addEventListener("click", clearPauseSetting);
+        elements.appointmentSettingForm?.addEventListener("submit", validateAppointmentSettingForm);
+
     }
 
     function renderAll() {
-        renderStats();
         renderReminderPanel();
         renderCalendar();
         renderDayPanel();
-        renderAppointmentList();
+    }
+
+    function renderLivePanels() {
+        renderReminderPanel();
+        renderDayPanel();
     }
 
     function init() {
+        state.selectedDate = getSelectedDateFromPage();
         extractAppointmentsFromDOM();
-        state.selectedDate = getLocalDateString();
-        syncPausePickerFromHidden(elements.pauseFromInput, elements.pauseFromDate, elements.pauseFromTime);
-        syncPausePickerFromHidden(elements.pauseToInput, elements.pauseToDate, elements.pauseToTime);
+        const selectedDate = new Date(`${state.selectedDate}T00:00:00`);
+        if (!Number.isNaN(selectedDate.getTime())) {
+            state.currentMonth = selectedDate.getMonth();
+            state.currentYear = selectedDate.getFullYear();
+        }
+        hydrateAppointmentSettingFromDataset();
+        restoreAppointmentSettingDraftIfNeeded();
+        populatePauseTimeSelect(elements.pauseFromTime);
+        populatePauseTimeSelect(elements.pauseToTime);
+        applyInitialPauseTime(elements.pauseFromTime);
+        applyInitialPauseTime(elements.pauseToTime);
         syncPauseHiddenInputs();
-        updatePauseReasonCount();
-        updatePauseInputBounds();
         bindEvents();
+        updateAppointmentSettingUi();
         renderAll();
-        setInterval(renderAll, 60000);
+        loadAppointmentDotsForCurrentMonth();
+        setInterval(refreshSelectedDateAppointments, 5000);
     }
 
     init();

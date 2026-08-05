@@ -8,8 +8,7 @@
     <link rel="icon" type="image/png" th:href="@{/images/logo.png}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-            href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap"
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap"
             rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -37,171 +36,175 @@
 
             <div id="artisanFlashSuccess" th:if="${success}" th:attr="data-message=${success}" hidden></div>
             <div id="artisanFlashError" th:if="${error}" th:attr="data-message=${error}" hidden></div>
+            <form id="appointmentSettingForm"
+                  th:action="@{/artisan/appointments/settings}"
+                  method="post"
+                  th:data-has-setting="${appointmentSetting != null}"
+                  th:data-auto-approve="${appointmentSetting != null ? appointmentSetting.autoApprove : ''}"
+                  th:data-auto-approve-after="${appointmentSetting != null ? appointmentSetting.autoApproveAfter : ''}"
+                  th:data-auto-complete="${appointmentSetting != null ? appointmentSetting.autoComplete : ''}"
+                  th:data-auto-complete-after="${appointmentSetting != null ? appointmentSetting.autoCompleteAfter : ''}"
+                  th:data-pause-from="${appointmentSetting != null && appointmentSetting.pauseFrom != null ? #temporals.format(appointmentSetting.pauseFrom, 'yyyy-MM-dd''T''HH:mm') : ''}"
+                  th:data-pause-from-date="${appointmentSetting != null && appointmentSetting.pauseFrom != null ? #temporals.format(appointmentSetting.pauseFrom, 'yyyy-MM-dd') : ''}"
+                  th:data-pause-from-time="${appointmentSetting != null && appointmentSetting.pauseFrom != null ? #temporals.format(appointmentSetting.pauseFrom, 'HH:mm') : ''}"
+                  th:data-pause-to="${appointmentSetting != null && appointmentSetting.pauseTo != null ? #temporals.format(appointmentSetting.pauseTo, 'yyyy-MM-dd''T''HH:mm') : ''}"
+                  th:data-pause-to-date="${appointmentSetting != null && appointmentSetting.pauseTo != null ? #temporals.format(appointmentSetting.pauseTo, 'yyyy-MM-dd') : ''}"
+                  th:data-pause-to-time="${appointmentSetting != null && appointmentSetting.pauseTo != null ? #temporals.format(appointmentSetting.pauseTo, 'HH:mm') : ''}"
+                  th:data-pause-reason="${appointmentSetting != null ? appointmentSetting.pauseReason : ''}">
+                <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
 
-            <section class="portal-card sch-setting-panel" aria-label="Cấu hình lịch bận cho auto duyệt lịch hẹn">
-                <div class="sch-setting-head">
-                    <div>
-                        <p class="sch-reminder-kicker">Auto lịch hẹn</p>
-                        <h2><i class="fa-solid fa-gear me-2"></i>Cấu hình lịch bận</h2>
-                        <span class="sch-setting-subtitle">Hệ thống luôn tự duyệt lịch hẹn; phần này chỉ dùng để khai báo thời gian bận và lý do từ chối.</span>
-                    </div>
-                    <span class="sch-setting-status pause"
-                          th:classappend="${appointmentSetting != null && appointmentSetting.pauseFrom != null && appointmentSetting.pauseTo != null ? ' active' : ''}"
-                          th:text="${appointmentSetting != null && appointmentSetting.pauseFrom != null && appointmentSetting.pauseTo != null ? 'Đang có lịch bận' : 'Chưa đặt lịch bận'}">
-                        Chưa đặt lịch bận
-                    </span>
-                </div>
-
-                <form class="sch-setting-form" th:action="@{/artisan/appointments/settings}" method="post">
-                    <input type="hidden" name="_csrf" th:value="${_csrf?.token}">
-
-                    <div class="sch-setting-grid">
-                        <div class="sch-setting-field">
-                            <span>Bận từ</span>
-                            <input type="hidden"
-                                   id="pauseFromInput"
-                                   name="pauseFrom"
-                                   th:value="${appointmentSetting != null && appointmentSetting.pauseFrom != null ? #temporals.format(appointmentSetting.pauseFrom, 'yyyy-MM-dd''T''HH:mm') : ''}">
-                            <div class="sch-datetime-row">
-                                <input type="date"
-                                       id="pauseFromDate"
-                                       class="sch-date-input"
-                                       aria-label="Ngày bắt đầu bận"
-                                       th:value="${appointmentSetting != null && appointmentSetting.pauseFrom != null ? #temporals.format(appointmentSetting.pauseFrom, 'yyyy-MM-dd') : ''}">
-                                <select id="pauseFromTime" class="sch-time-select" aria-label="Giờ bắt đầu bận">
-                                    <option value="">Chọn giờ</option>
-                                    <option value="08:00">08:00</option>
-                                    <option value="08:30">08:30</option>
-                                    <option value="09:00">09:00</option>
-                                    <option value="09:30">09:30</option>
-                                    <option value="10:00">10:00</option>
-                                    <option value="10:30">10:30</option>
-                                    <option value="11:00">11:00</option>
-                                    <option value="11:30">11:30</option>
-                                    <option value="13:00">13:00</option>
-                                    <option value="13:30">13:30</option>
-                                    <option value="14:00">14:00</option>
-                                    <option value="14:30">14:30</option>
-                                    <option value="15:00">15:00</option>
-                                    <option value="15:30">15:30</option>
-                                    <option value="16:00">16:00</option>
-                                    <option value="16:30">16:30</option>
-                                    <option value="17:00">17:00</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div class="sch-setting-field">
-                            <span>Bận đến</span>
-                            <input type="hidden"
-                                   id="pauseToInput"
-                                   name="pauseTo"
-                                   th:value="${appointmentSetting != null && appointmentSetting.pauseTo != null ? #temporals.format(appointmentSetting.pauseTo, 'yyyy-MM-dd''T''HH:mm') : ''}">
-                            <div class="sch-datetime-row">
-                                <input type="date"
-                                       id="pauseToDate"
-                                       class="sch-date-input"
-                                       aria-label="Ngày kết thúc bận"
-                                       th:value="${appointmentSetting != null && appointmentSetting.pauseTo != null ? #temporals.format(appointmentSetting.pauseTo, 'yyyy-MM-dd') : ''}">
-                                <select id="pauseToTime" class="sch-time-select" aria-label="Giờ kết thúc bận">
-                                    <option value="">Chọn giờ</option>
-                                    <option value="08:00">08:00</option>
-                                    <option value="08:30">08:30</option>
-                                    <option value="09:00">09:00</option>
-                                    <option value="09:30">09:30</option>
-                                    <option value="10:00">10:00</option>
-                                    <option value="10:30">10:30</option>
-                                    <option value="11:00">11:00</option>
-                                    <option value="11:30">11:30</option>
-                                    <option value="13:00">13:00</option>
-                                    <option value="13:30">13:30</option>
-                                    <option value="14:00">14:00</option>
-                                    <option value="14:30">14:30</option>
-                                    <option value="15:00">15:00</option>
-                                    <option value="15:30">15:30</option>
-                                    <option value="16:00">16:00</option>
-                                    <option value="16:30">16:30</option>
-                                    <option value="17:00">17:00</option>
-                                </select>
-                            </div>
+                <section class="portal-card appointment-setting-panel sch-setting-panel" aria-labelledby="appointmentSettingTitle">
+                    <div class="setting-header">
+                        <div>
+                            <p class="setting-kicker">Cấu hình hệ thống</p>
+                            <h2 id="appointmentSettingTitle">
+                                <i class="fa-solid fa-sliders me-2"></i>
+                                Thiết lập lịch hẹn
+                            </h2>
                         </div>
                     </div>
 
-                    <div class="sch-setting-reason-card">
-                        <label class="sch-setting-field">
-                            <span>Lý do tạm ngưng</span>
-                            <textarea id="pauseReasonInput"
-                                      name="pauseReason"
-                                      rows="4"
+                    <div class="setting-grid">
+                        <article class="setting-card">
+                            <div class="setting-title">
+                                <h4>Tự động duyệt</h4>
+                                <input type="hidden" name="autoApprove" value="false">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input"
+                                           type="checkbox"
+                                           id="autoApprove"
+                                           name="autoApprove"
+                                           value="true"
+                                           th:checked="${appointmentSetting == null || appointmentSetting.autoApprove}">
+                                </div>
+                            </div>
+
+                            <div class="setting-body">
+                                <label for="autoApproveAfter">Tự động duyệt sau</label>
+                                <div class="input-group">
+                                    <input type="number"
+                                           min="1"
+                                           max="120"
+                                           class="form-control"
+                                           id="autoApproveAfter"
+                                           name="autoApproveAfter"
+                                           th:value="${appointmentSetting != null ? appointmentSetting.autoApproveAfter : 5}">
+                                    <span class="input-group-text">phút</span>
+                                </div>
+                            </div>
+                        </article>
+
+                        <article class="setting-card">
+                            <div class="setting-title">
+                                <h4>Tự động hoàn thành</h4>
+                                <input type="hidden" name="autoComplete" value="false">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input"
+                                           type="checkbox"
+                                           id="autoComplete"
+                                           name="autoComplete"
+                                           value="true"
+                                           th:checked="${appointmentSetting == null || appointmentSetting.autoComplete}">
+                                </div>
+                            </div>
+
+                            <div class="setting-body">
+                                <label for="autoCompleteAfter">Tự động hoàn thành sau</label>
+                                <div class="input-group">
+                                    <input
+                                            type="number"
+                                            min="1"
+                                            max="120"
+                                            class="form-control"
+                                            id="autoCompleteAfter"
+                                            name="autoCompleteAfter"
+                                            th:value="${appointmentSetting != null ? appointmentSetting.autoCompleteAfter : 60}">
+                                    <span class="input-group-text">phút</span>
+                                </div>
+                            </div>
+                        </article>
+                    </div>
+
+                    <hr>
+
+                    <section class="pause-card" aria-labelledby="pauseSettingTitle">
+                        <div class="setting-title">
+                            <h4 id="pauseSettingTitle">Tạm dừng nhận lịch</h4>
+                        </div>
+
+                        <div class="pause-grid">
+                            <div>
+                                <label for="pauseFromDate">Từ</label>
+                                <input type="hidden"
+                                       id="pauseFrom"
+                                       name="pauseFrom"
+                                       th:value="${appointmentSetting != null && appointmentSetting.pauseFrom != null ? #temporals.format(appointmentSetting.pauseFrom, 'yyyy-MM-dd''T''HH:mm') : ''}">
+                                <div class="sch-datetime-row">
+                                    <input type="date"
+                                           class="form-control"
+                                           id="pauseFromDate"
+                                           th:value="${appointmentSetting != null && appointmentSetting.pauseFrom != null ? #temporals.format(appointmentSetting.pauseFrom, 'yyyy-MM-dd') : ''}">
+                                    <select class="form-control sch-time-select"
+                                            id="pauseFromTime"
+                                            th:data-value="${appointmentSetting != null && appointmentSetting.pauseFrom != null ? #temporals.format(appointmentSetting.pauseFrom, 'HH:mm') : ''}">
+                                        <option value="">Chọn giờ</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label for="pauseToDate">Đến</label>
+                                <input type="hidden"
+                                       id="pauseTo"
+                                       name="pauseTo"
+                                       th:value="${appointmentSetting != null && appointmentSetting.pauseTo != null ? #temporals.format(appointmentSetting.pauseTo, 'yyyy-MM-dd''T''HH:mm') : ''}">
+                                <div class="sch-datetime-row">
+                                    <input type="date"
+                                           class="form-control"
+                                           id="pauseToDate"
+                                           th:value="${appointmentSetting != null && appointmentSetting.pauseTo != null ? #temporals.format(appointmentSetting.pauseTo, 'yyyy-MM-dd') : ''}">
+                                    <select class="form-control sch-time-select"
+                                            id="pauseToTime"
+                                            th:data-value="${appointmentSetting != null && appointmentSetting.pauseTo != null ? #temporals.format(appointmentSetting.pauseTo, 'HH:mm') : ''}">
+                                        <option value="">Chọn giờ</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-3">
+                            <label for="pauseReason">Lý do</label>
+                            <textarea rows="3"
                                       maxlength="500"
-                                      placeholder="Ví dụ: Nghệ nhân bận workshop, showroom tạm đóng để bảo dưỡng khu trưng bày..."
-                                      th:text="${appointmentSetting != null ? appointmentSetting.pauseReason : ''}"></textarea>
-                        </label>
-                        <div class="sch-setting-reason-footer">
-                            <span><i class="fa-regular fa-message me-1"></i>Lý do này được gửi cho khách khi lịch rơi vào thời gian bận.</span>
-                            <span id="pauseReasonCount">0/500</span>
+                                      class="form-control"
+                                      id="pauseReason"
+                                      name="pauseReason"
+                                      th:text="${appointmentSetting != null ? appointmentSetting.pauseReason : ''}"
+                                      placeholder="Ví dụ: Nghỉ lễ, bảo trì hệ thống..."></textarea>
+                            <div class="sch-setting-reason-footer">
+                                <span>
+                                    <i class="fa-solid fa-circle-info me-1"></i>
+                                    Bỏ trống thời gian nếu không muốn tạm dừng nhận lịch.
+                                </span>
+                                <span id="pauseReasonCount">0/500</span>
+                            </div>
                         </div>
-                    </div>
 
-                    <p class="sch-setting-help">
-                        Auto xử lý sau 5 phút kể từ khi khách đặt lịch: nếu trùng lịch bận thì từ chối kèm lý do, còn lại hệ thống tự duyệt.
-                    </p>
+                        <div class="mt-3">
+                            <button type="button" id="clearPauseSetting" class="btn-modal-danger">
+                                Xóa tạm dừng
+                            </button>
+                        </div>
+                    </section>
 
                     <div class="sch-setting-actions">
                         <button type="submit" class="btn-modal-confirm">
-                            <i class="fa-solid fa-floppy-disk me-1"></i>Lưu cấu hình
+                            <i class="fa-solid fa-floppy-disk me-2"></i>
+                            Lưu cấu hình
                         </button>
                     </div>
-                </form>
-            </section>
-
-            <section class="sch-kpi-grid">
-                <article class="sch-kpi-card">
-                    <div class="sch-kpi-top">
-                        <div class="sch-kpi-icon green"><i class="fa-solid fa-calendar-days"></i></div>
-                        <span class="sch-kpi-badge green" id="totalPercent">0%</span>
-                    </div>
-                    <div>
-                        <p class="sch-kpi-val" id="statTotal">0</p>
-                        <p class="sch-kpi-label">Tổng lịch hẹn</p>
-                    </div>
-                </article>
-
-                <article class="sch-kpi-card">
-                    <div class="sch-kpi-top">
-                        <div class="sch-kpi-icon blue"><i class="fa-solid fa-clock"></i></div>
-                        <span class="sch-kpi-badge blue">Hôm nay</span>
-                    </div>
-                    <div>
-                        <p class="sch-kpi-val" id="statToday">0</p>
-                        <p class="sch-kpi-label">Lịch hẹn hôm nay</p>
-                    </div>
-                </article>
-
-                <article class="sch-kpi-card">
-                    <div class="sch-kpi-top">
-                        <div class="sch-kpi-icon green"><i class="fa-solid fa-circle-check"></i></div>
-                        <span class="sch-kpi-badge green" id="approvedPercent">0</span>
-                    </div>
-                    <div>
-                        <p class="sch-kpi-val" id="statApproved">0</p>
-                        <p class="sch-kpi-label">Đã duyệt</p>
-                    </div>
-                </article>
-
-                <article class="sch-kpi-card">
-                    <div class="sch-kpi-top">
-                        <div class="sch-kpi-icon amber"><i class="fa-solid fa-hourglass-half"></i></div>
-                        <span class="sch-kpi-badge amber" id="pendingPercent">0</span>
-                    </div>
-                    <div>
-                        <p class="sch-kpi-val" id="statPending">0</p>
-                        <p class="sch-kpi-label">Chờ duyệt</p>
-                    </div>
-                </article>
-
-            </section>
-
+                </section>
+            </form>
             <section class="portal-card sch-reminder-panel" aria-label="Nhắc việc cần xử lý">
                 <div class="sch-reminder-head">
                     <div>
@@ -231,7 +234,9 @@
                     <div class="weekdays" aria-hidden="true">
                         <span>T2</span><span>T3</span><span>T4</span><span>T5</span><span>T6</span><span>T7</span><span>CN</span>
                     </div>
-                    <div class="calendar-grid"></div>
+                    <div class="calendar-grid"
+                         th:data-selected-date="${selectedDate != null ? #temporals.format(selectedDate, 'yyyy-MM-dd') : ''}">
+                    </div>
                 </article>
 
                 <article class="portal-card">
@@ -308,6 +313,34 @@
         </div>
 
         <div class="sch-modal-footer">
+            <form id="approveAppointmentForm" th:action="@{/artisan/appointments/update}" method="post" class="sch-action-form sch-hidden">
+                <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                <input type="hidden" name="id">
+                <input type="hidden" name="date">
+                <input type="hidden" name="status" value="APPROVED">
+                <button type="submit" class="btn-modal-confirm">Duyệt</button>
+            </form>
+            <form id="rejectAppointmentForm" th:action="@{/artisan/appointments/update}" method="post" class="sch-action-form sch-hidden">
+                <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                <input type="hidden" name="id">
+                <input type="hidden" name="date">
+                <input type="hidden" name="status" value="REJECTED">
+                <button type="submit" class="btn-modal-danger">Từ chối</button>
+            </form>
+            <form id="completeAppointmentForm" th:action="@{/artisan/appointments/complete}" method="post" class="sch-action-form sch-hidden">
+                <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                <input type="hidden" name="id">
+                <input type="hidden" name="date">
+                <input type="hidden" name="status" value="COMPLETED">
+                <button type="submit" class="btn-modal-confirm">Hoàn thành</button>
+            </form>
+            <form id="noShowAppointmentForm" th:action="@{/artisan/appointments/complete}" method="post" class="sch-action-form sch-hidden">
+                <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                <input type="hidden" name="id">
+                <input type="hidden" name="date">
+                <input type="hidden" name="status" value="ABSENT">
+                <button type="submit" class="btn-modal-danger">Khách vắng</button>
+            </form>
             <button type="button" id="closeModalFooter" class="btn-modal-confirm">Đóng</button>
         </div>
     </div>

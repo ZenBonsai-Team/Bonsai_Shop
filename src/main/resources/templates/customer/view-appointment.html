@@ -67,8 +67,15 @@
                     <div class="appointment-card-accent" aria-hidden="true"></div>
                     <div class="appointment-card-top">
                         <span class="appointment-status-tag"
-                              th:text="${appointment.status}"
-                              th:data-status="${appointment.status}">PENDING</span>
+                              th:data-status="${appointment.status}"
+                              th:switch="${appointment.status}">
+                            <span th:case="'PENDING'">Chờ duyệt</span>
+                            <span th:case="'APPROVED'">Đã duyệt</span>
+                            <span th:case="'REJECTED'">Đã từ chối</span>
+                            <span th:case="'COMPLETED'">Hoàn thành</span>
+                            <span th:case="'ABSENT'">Không đến</span>
+                            <span th:case="'CANCELLED'">Đã hủy</span>
+                        </span>
                         <span class="appointment-code-tag">GARDEN-VISIT</span>
                     </div>
 
