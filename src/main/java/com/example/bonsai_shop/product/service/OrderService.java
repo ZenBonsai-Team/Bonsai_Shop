@@ -550,7 +550,6 @@ public class OrderService {
         }
 
         if ("PAID".equalsIgnoreCase(order.getOrderStatus())) {
-            recordFullPaymentRevenueLedgerIfPossible(order, LocalDateTime.now());
             return true;
         }
 
@@ -579,8 +578,6 @@ public class OrderService {
         // Trường hợp FULL_PAYMENT hoặc fallback
         order.setOrderStatus("PAID");
         orderRepository.save(order);
-        markProductsAsSold(order);
-        recordFullPaymentRevenueLedgerIfPossible(order, LocalDateTime.now());
 
         eventPublisher.publishEvent(new OrderPaidEvent(order));
         return true;
@@ -737,7 +734,7 @@ public class OrderService {
                 .actionType("REMAINING_PAYMENT_CONFIRMED")
                 .fromStatus(oldStatus)
                 .toStatus("COMPLETED")
-                .actionAt(LocalDateTime.now())
+                .actionAt(completedAt)
                 .build();
         orderLogRepository.save(logEntry);
 
@@ -770,7 +767,7 @@ public class OrderService {
     private BigDecimal normalizeNonNegativeAmount(BigDecimal amount, String label) {
         BigDecimal normalized = amount != null ? amount : ZERO;
         if (normalized.compareTo(ZERO) < 0) {
-            throw new IllegalArgumentException(label + " khÃ´ng Ä‘Æ°á»£c Ã¢m.");
+            throw new IllegalArgumentException(label + " không được âm.");
         }
         validateWholeNumberAmount(normalized, label);
         return normalized;
@@ -847,11 +844,6 @@ public class OrderService {
             throw new IllegalStateException("Đơn hàng này không có khoản thanh toán thành công nào còn có thể hoàn tiền.");
         }
 
-        BigDecimal grandTotal = order.getTotalAmount() != null ? order.getTotalAmount() : ZERO;
-        if (grandTotal.compareTo(ZERO) > 0 && refundableCash.compareTo(grandTotal) != 0) {
-            throw new IllegalStateException("Tổng số tiền khách đã thanh toán (" + refundableCash + " đ) và tổng giá trị đơn hàng (" + grandTotal + " đ) không đồng nhất. Vui lòng kiểm tra lại giao dịch!");
-        }
-
         BigDecimal calculatedRefundAmount = refundableCash;
         String normalizedReason = requireReason(reason);
 
@@ -894,7 +886,13 @@ public class OrderService {
         }
         validateAssignedModerator(order, moderator);
         if (!"PAID".equalsIgnoreCase(order.getOrderStatus())) {
-            throw new IllegalStateException("Chỉ có thể hoàn thành đơn hàng đang ở trạng thái PAID.");
+            throw new IllegalStateException("Trạng thái hiện tại của đơn không cho phép xác nhận hoàn thành.");
+        }
+
+        BigDecimal refundableCash = financialLedgerService.calculateRefundableCash(order);
+        BigDecimal totalRequired = order.getTotalAmount() != null ? order.getTotalAmount() : ZERO;
+        if (refundableCash == null || refundableCash.compareTo(totalRequired) < 0) {
+            throw new IllegalStateException("Không thể hoàn thành đơn vì khách hàng chưa thanh toán đầy đủ.");
         }
 
         String oldStatus = order.getOrderStatus();
@@ -989,29 +987,6 @@ public class OrderService {
         orderLogRepository.save(ledgerLog);
     }
 
-    private void recordFullPaymentRevenueLedgerIfPossible(Order order, LocalDateTime paidAt) {
-        if (order == null || order.getOrderId() == null) {
-            return;
-        }
-
-        boolean hasSuccessfulFullPayment = paymentRepository.findByOrderOrderIdOrderByPaymentIdAsc(order.getOrderId())
-                .stream()
-                .anyMatch(payment -> PaymentType.FULL_PAYMENT.name().equalsIgnoreCase(payment.getPaymentType())
-                        && "SUCCESS".equalsIgnoreCase(payment.getPaymentStatus()));
-        if (!hasSuccessfulFullPayment) {
-            return;
-        }
-
-        User actor = order.getAssignedTo();
-        if (actor == null || actor.getUserId() == null) {
-            log.warn("Cannot record full-payment revenue ledger for order {} because assigned moderator is missing.",
-                    order.getOrderCode());
-            return;
-        }
-
-        recordCompletedRevenueLedger(order, actor, paidAt);
-    }
-
     @Transactional
     public boolean recordFinalPayment(String orderCode, User moderator) {
         Order order = orderRepository.findByOrderCode(orderCode).orElse(null);
@@ -1073,3 +1048,5 @@ public class OrderService {
         }
     }
 }
+
+

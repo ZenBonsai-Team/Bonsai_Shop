@@ -314,7 +314,7 @@
                         <button class="btn-card-disabled" style="width: 100%; padding: 14px 0;" disabled th:if="${product.productStatus == 'SOLD'}"><i class="fa-solid fa-ban"></i> <span th:text="#{product.sold}">ĐÃ BÁN</span></button>
                         
                         <!-- Wishlist Button -->
-                        <button class="btn-action-square btn-main-wishlist" th:data-product-id="${product.productId}" title="Yêu thích">
+                        <button sec:authorize="isAnonymous() or hasRole('CUSTOMER')" class="btn-action-square btn-main-wishlist" th:data-product-id="${product.productId}" title="Yêu thích">
                             <i class="fa-regular fa-heart"></i>
                         </button>
                         
@@ -650,7 +650,7 @@
                         <span th:if="${related.productStatus == 'RESERVED'}" class="card-status-badge resv" th:text="#{product.reserved}">RESERVED</span>
                         <span th:if="${related.productStatus == 'SOLD'}" class="card-status-badge sld" th:text="#{product.sold}">SOLD</span>
                         
-                        <button class="card-btn-wishlist" th:data-product-id="${related.productId}" title="Yêu thích"><i class="fa-regular fa-heart"></i></button>
+                        <button sec:authorize="isAnonymous() or hasRole('CUSTOMER')" class="card-btn-wishlist" th:data-product-id="${related.productId}" title="Yêu thích"><i class="fa-regular fa-heart"></i></button>
 
                         <video th:if="${relMediaUrl != null && !relMediaUrl.isEmpty() && relMediaType == 'VIDEO'}"
                                th:src="${relMediaUrl}"
@@ -857,44 +857,9 @@
             : (currentIndex + 1) % slides.length;
         setProductJournalSlide(eventId, targetIndex);
     });
-
-    // Wishlist Heart Icon Toggle with Local Storage persistence
-    const wishlistButtons = document.querySelectorAll('.card-btn-wishlist, .btn-main-wishlist');
-    let favorites = JSON.parse(localStorage.getItem('wishlist_favorites')) || [];
-
-    // Initialize wishlist state from localStorage
-    wishlistButtons.forEach(btn => {
-        const productId = btn.getAttribute('data-product-id');
-        if (favorites.includes(productId)) {
-            btn.classList.add('active');
-            const icon = btn.querySelector('i');
-            if (icon) {
-                icon.className = 'fa-solid fa-heart';
-            }
-        }
-
-        btn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const prodId = btn.getAttribute('data-product-id');
-            btn.classList.toggle('active');
-            const icon = btn.querySelector('i');
-            
-            if (btn.classList.contains('active')) {
-                if (icon) icon.className = 'fa-solid fa-heart';
-                if (!favorites.includes(prodId)) {
-                    favorites.push(prodId);
-                }
-            } else {
-                if (icon) icon.className = 'fa-regular fa-heart';
-                favorites = favorites.filter(id => id !== prodId);
-            }
-            localStorage.setItem('wishlist_favorites', JSON.stringify(favorites));
-        });
-    });
 </script>
 <div th:replace="~{fragments/checkout-modal :: checkoutModal}"></div>
 </body>
 </html>
-
 
 

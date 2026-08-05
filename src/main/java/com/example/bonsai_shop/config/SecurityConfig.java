@@ -32,6 +32,7 @@ public class SecurityConfig {
                 http
                                 .csrf(csrf -> csrf.ignoringRequestMatchers(
                                                 "/api/notifications/**", 
+                                                "/api/wishlist/**", 
                                                 "/community/**", 
                                                 "/moderator/orders/api/**",
                                                 "/api/live/**",
@@ -77,7 +78,9 @@ public class SecurityConfig {
                                                                 "/cart", // ← cho phép khách xem giỏ hàng
                                                                 "/checkout", // ← cho phép khách vào trang checkout
                                                                 "/order/success", // ← cho phép khách xem thông báo thành công
+                                                                "/wishlist",
                                                                 "/api/cart/**",
+                                                                "/api/wishlist/**",
                                                                 "/api/products/**",
                                                                 "/api/orders", // ← tạm thời cho phép để test API chính
                                                                 "/api/orders/**", // ← tạm thời cho phép để test API con

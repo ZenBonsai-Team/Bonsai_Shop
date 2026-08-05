@@ -333,7 +333,7 @@
                             Wishlist icon kept UI-only.
                             Reason: Wishlist interaction logic is not requested for this task.
                             -->
-                            <button class="card-btn-wishlist" th:data-product-id="${product.productId}" title="Yêu thích"><i class="fa-regular fa-heart"></i></button>
+                            <button sec:authorize="isAnonymous() or hasRole('CUSTOMER')" class="card-btn-wishlist" th:data-product-id="${product.productId}" title="Yêu thích"><i class="fa-regular fa-heart"></i></button>
                             
                             <span class="card-segment-ribbon" th:if="${isMidSegment}">
                                 <i class="fa-solid fa-gem"></i> <span th:text="#{product.selected}">Selected</span>
@@ -806,43 +806,8 @@
             }
         });
     });
-
-    // Wishlist Heart Icon Toggle with Local Storage persistence
-    const wishlistButtons = document.querySelectorAll('.card-btn-wishlist');
-    let favorites = JSON.parse(localStorage.getItem('wishlist_favorites')) || [];
-
-    // Initialize wishlist state from localStorage
-    wishlistButtons.forEach(btn => {
-        const productId = btn.getAttribute('data-product-id');
-        if (favorites.includes(productId)) {
-            btn.classList.add('active');
-            const icon = btn.querySelector('i');
-            if (icon) {
-                icon.className = 'fa-solid fa-heart';
-            }
-        }
-
-        btn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const prodId = btn.getAttribute('data-product-id');
-            btn.classList.toggle('active');
-            const icon = btn.querySelector('i');
-            
-            if (btn.classList.contains('active')) {
-                if (icon) icon.className = 'fa-solid fa-heart';
-                if (!favorites.includes(prodId)) {
-                    favorites.push(prodId);
-                }
-            } else {
-                if (icon) icon.className = 'fa-regular fa-heart';
-                favorites = favorites.filter(id => id !== prodId);
-            }
-            localStorage.setItem('wishlist_favorites', JSON.stringify(favorites));
-        });
-    });
 </script>
 </body>
 </html>
-
 
 

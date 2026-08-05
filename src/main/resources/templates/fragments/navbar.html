@@ -2,8 +2,11 @@
 <html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <body>
 <div th:fragment="navbar">
+    <meta name="_csrf" th:content="${_csrf.token}">
+    <meta name="_csrf_header" th:content="${_csrf.headerName}">
     <link rel="stylesheet" th:href="@{/css/bsms-notification.css}">
     <script th:src="@{/js/bsms-notification.js}"></script>
+    <script th:src="@{/js/wishlist.js}" defer></script>
     <nav class="navbar navbar-expand-lg navbar-custom sticky-top">
         <div class="container">
             <!-- Brand Logo -->
@@ -220,6 +223,10 @@
                     </div>
 
                     <!-- Cart icon -->
+                    <a sec:authorize="isAnonymous() or hasRole('CUSTOMER')" th:href="@{/wishlist}" class="nav-icon-link text-decoration-none position-relative ms-1" title="Wishlist">
+                        <i class="fa-solid fa-heart"></i>
+                        <span class="badge-count-orange" id="wishlistBadgeCount" style="display: none;">0</span>
+                    </a>
                     <a th:href="@{/cart}" class="nav-icon-link text-decoration-none position-relative ms-1" title="Giỏ hàng">
                         <i class="fa-solid fa-bag-shopping"></i>
                         <span class="badge-count-orange" id="cartBadgeCount" style="display: none;">0</span>

@@ -120,9 +120,7 @@ public class FinancialLedgerService {
         }
 
         Payment relatedPayment = resolveRelatedRefundPayment(order);
-        FinancialLedgerType type = normalizedAmount.compareTo(refundableAmount) == 0
-                ? FinancialLedgerType.FULL_REFUND
-                : FinancialLedgerType.PARTIAL_REFUND;
+        FinancialLedgerType type = FinancialLedgerType.FULL_REFUND;
 
         return financialLedgerRepository.save(FinancialLedger.builder()
                 .order(order)
@@ -163,18 +161,13 @@ public class FinancialLedgerService {
     }
 
     @Transactional(readOnly = true)
-    public BigDecimal sumPartialRefunds(Order order) {
-        return sumByType(order, FinancialLedgerType.PARTIAL_REFUND);
-    }
-
-    @Transactional(readOnly = true)
     public BigDecimal sumFullRefunds(Order order) {
         return sumByType(order, FinancialLedgerType.FULL_REFUND);
     }
 
     @Transactional(readOnly = true)
     public BigDecimal sumRecordedRefunds(Order order) {
-        return sumPartialRefunds(order).add(sumFullRefunds(order));
+        return sumFullRefunds(order);
     }
 
     @Transactional(readOnly = true)

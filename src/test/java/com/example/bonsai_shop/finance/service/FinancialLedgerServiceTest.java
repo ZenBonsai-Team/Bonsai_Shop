@@ -149,7 +149,7 @@ class FinancialLedgerServiceTest {
 
         ArgumentCaptor<FinancialLedger> captor = ArgumentCaptor.forClass(FinancialLedger.class);
         verify(financialLedgerRepository).save(captor.capture());
-        assertThat(captor.getValue().getLedgerType()).isEqualTo(FinancialLedgerType.PARTIAL_REFUND);
+        assertThat(captor.getValue().getLedgerType()).isEqualTo(FinancialLedgerType.FULL_REFUND);
         assertThat(captor.getValue().getDirection()).isEqualTo(FinancialLedgerDirection.OUTFLOW);
         assertThat(captor.getValue().getFaultParty()).isEqualTo(FaultParty.NURSERY);
     }
@@ -187,7 +187,7 @@ class FinancialLedgerServiceTest {
         Payment deposit = payment(14, order, PaymentType.DEPOSIT.name(), "SUCCESS", "1000000");
         FinancialLedger previousRefund = FinancialLedger.builder()
                 .order(order)
-                .ledgerType(FinancialLedgerType.PARTIAL_REFUND)
+                .ledgerType(FinancialLedgerType.FULL_REFUND)
                 .direction(FinancialLedgerDirection.OUTFLOW)
                 .ledgerStatus(FinancialLedgerStatus.RECORDED)
                 .amount(new BigDecimal("300000"))
@@ -219,7 +219,7 @@ class FinancialLedgerServiceTest {
         Payment cancelled = payment(18, order, PaymentType.DEPOSIT.name(), "CANCELLED", "4000000");
         FinancialLedger recordedRefund = FinancialLedger.builder()
                 .order(order)
-                .ledgerType(FinancialLedgerType.PARTIAL_REFUND)
+                .ledgerType(FinancialLedgerType.FULL_REFUND)
                 .direction(FinancialLedgerDirection.OUTFLOW)
                 .ledgerStatus(FinancialLedgerStatus.RECORDED)
                 .amount(new BigDecimal("250000"))
