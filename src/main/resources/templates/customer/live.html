@@ -238,7 +238,7 @@
     /*<![CDATA[*/
     const activeSessionId = /*[[${activeSession != null ? activeSession.sessionId : null}]]*/ null;
     const activeSessionUrl = /*[[${activeSession != null ? activeSession.streamUrl : null}]]*/ null;
-    const activeSessionStart = /*[[${activeSession != null ? activeSession.startTime : null}]]*/ null;
+    const activeSessionStart = /*[[${activeSession != null ? #temporals.format(activeSession.startTime, 'yyyy-MM-dd\'T\'HH:mm:ss') : null}]]*/ null;
     const csrfToken = document.querySelector('meta[name="_csrf"]')?.content || '';
     const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.content || 'X-CSRF-TOKEN';
     let stompClient = null;
