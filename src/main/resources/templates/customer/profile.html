@@ -248,10 +248,27 @@
                                 </span>
                             </td>
                             <td class="text-end">
-                                <button type="button" class="btn btn-sm btn-outline-success rounded-pill px-3 fw-semibold" 
-                                        data-bs-toggle="modal" th:data-bs-target="'#orderModal-' + ${order.orderId}">
-                                    <i class="fa-regular fa-eye me-1"></i>Xem
-                                </button>
+                                <div class="d-flex justify-content-end align-items-center gap-2">
+                                    <!-- Nút đánh giá nhanh từ bảng chính -->
+                                    <div th:if="${order.orderStatus == 'COMPLETED'}">
+                                        <th:block th:each="detail : ${order.orderDetails}" th:if="${detail.product != null}">
+                                            <button th:if="${(reviewedProductIds == null or !reviewedProductIds.contains(detail.product.productId)) and (expiredOrderIds == null or !expiredOrderIds.contains(order.orderId))}"
+                                                    class="btn btn-sm btn-warning text-dark px-3 rounded-pill write-review-btn fw-bold" 
+                                                    style="font-size: 12px; border: none; box-shadow: 0 4px 10px rgba(255, 179, 0, 0.4); background: #ffb300; transition: all 0.2s; color: #1c3322 !important;"
+                                                    th:data-product-id="${detail.product.productId}"
+                                                    th:data-product-name="${detail.product.productName}"
+                                                    th:data-product-image="${detail.product.firstImageUrl != null ? detail.product.firstImageUrl : '/images/bonsai-1.png'}"
+                                                    data-bs-toggle="modal" 
+                                                    data-bs-target="#writeReviewModal">
+                                                <i class="fa-solid fa-star me-1 text-dark"></i>Đánh giá <span th:if="${#lists.size(order.orderDetails) > 1}" th:text="${detail.product.productName}"></span>
+                                            </button>
+                                        </th:block>
+                                    </div>
+                                    <button type="button" class="btn btn-sm btn-outline-success rounded-pill px-3 fw-semibold" 
+                                            data-bs-toggle="modal" th:data-bs-target="'#orderModal-' + ${order.orderId}">
+                                        <i class="fa-regular fa-eye me-1"></i>Xem
+                                    </button>
+                                </div>
                             </td>
                         </tr>
                     </tbody>
@@ -343,15 +360,15 @@
                                                                     disabled>
                                                                 <i class="fa-solid fa-circle-check me-1 text-success"></i>Đã đánh giá
                                                             </button>
-                                                            <!-- Đã quá hạn 30 ngày -->
-                                                            <button th:elif="${expiredOrderIds != null and expiredOrderIds.contains(order.orderId)}" 
+                                                            <!-- Đã quá hạn 30 ngày (và chưa đánh giá) -->
+                                                            <button th:if="${(reviewedProductIds == null or !reviewedProductIds.contains(detail.product.productId)) and (expiredOrderIds != null and expiredOrderIds.contains(order.orderId))}" 
                                                                     class="btn btn-sm btn-light text-muted py-1 px-3 rounded-pill mt-2 fw-semibold" 
                                                                     style="font-size: 12px; width: fit-content; border: 1px solid var(--border-color);" 
                                                                     disabled>
                                                                 <i class="fa-solid fa-lock me-1"></i>Hết hạn đánh giá
                                                             </button>
                                                             <!-- Chưa đánh giá & còn hạn -->
-                                                            <button th:unless="${reviewedProductIds != null and reviewedProductIds.contains(detail.product.productId)}" 
+                                                            <button th:if="${(reviewedProductIds == null or !reviewedProductIds.contains(detail.product.productId)) and (expiredOrderIds == null or !expiredOrderIds.contains(order.orderId))}" 
                                                                     class="btn btn-sm btn-warning text-dark py-1 px-3 rounded-pill mt-2 write-review-btn fw-bold" 
                                                                     style="font-size: 12px; width: fit-content; border: none; box-shadow: 0 4px 10px rgba(255, 179, 0, 0.4); background: #ffb300; transition: all 0.2s; color: #1c3322 !important;"
                                                                     th:data-product-id="${detail.product.productId}"
