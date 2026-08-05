@@ -234,9 +234,10 @@ public class MailService {
                         "DEPOSIT".equalsIgnoreCase(p.getPaymentMethod()) ||
                         "COD".equalsIgnoreCase(p.getPaymentMethod())));
 
-        java.math.BigDecimal immediatePayment = isDeposit ? depositAmount.add(craneFee).add(shippingFee) : totalAmount;
-        java.math.BigDecimal remainingPayment = isDeposit ? treePrice.subtract(depositAmount) : java.math.BigDecimal.ZERO;
-        if (remainingPayment.compareTo(java.math.BigDecimal.ZERO) < 0) remainingPayment = java.math.BigDecimal.ZERO;
+        java.math.BigDecimal immediatePayment = isDeposit ? depositAmount : totalAmount;
+        java.math.BigDecimal remainingTreePrice = isDeposit ? treePrice.subtract(depositAmount) : java.math.BigDecimal.ZERO;
+        if (remainingTreePrice.compareTo(java.math.BigDecimal.ZERO) < 0) remainingTreePrice = java.math.BigDecimal.ZERO;
+        java.math.BigDecimal totalOnDelivery = isDeposit ? remainingTreePrice.add(shippingFee).add(craneFee) : java.math.BigDecimal.ZERO;
 
         StringBuilder financialBlocks = new StringBuilder();
 
@@ -253,20 +254,21 @@ public class MailService {
                 .append("</table>")
 
                 .append("<div style=\"background-color: #e6fffa; padding: 12px 15px; border-top: 2px solid #319795; border-bottom: 1px solid #e2e8f0;\">")
-                .append("<strong style=\"color: #234e52; font-size: 15px;\">2. THANH TOÁN NGAY QUA VNPAY</strong>")
+                .append("<strong style=\"color: #234e52; font-size: 15px;\">2. THANH TOÁN ĐẶT CỌC QUA VNPAY</strong>")
                 .append("</div>")
                 .append("<table style=\"width: 100%; border-collapse: collapse;\">")
                 .append("<tr><td style=\"padding: 8px 15px;\">Tiền đặt cọc cây:</td><td style=\"text-align: right; padding: 8px 15px; font-weight: 500;\">").append(formatVND(depositAmount)).append("</td></tr>")
-                .append("<tr><td style=\"padding: 8px 15px;\">Phí vận chuyển:</td><td style=\"text-align: right; padding: 8px 15px; font-weight: 500;\">").append(formatVND(shippingFee)).append("</td></tr>")
-                .append("<tr><td style=\"padding: 8px 15px;\">Phí xe cẩu:</td><td style=\"text-align: right; padding: 8px 15px; font-weight: 500;\">").append(formatVND(craneFee)).append("</td></tr>")
                 .append("<tr style=\"border-top: 1px solid #e2e8f0; background-color: #f0fff4; color: #22543d;\"><td style=\"padding: 10px 15px;\"><strong style=\"font-size: 15px;\">KHÁCH CẦN THANH TOÁN NGAY:</strong></td><td style=\"text-align: right; padding: 10px 15px;\"><strong style=\"font-size: 16px; color: #2e7d32;\">").append(formatVND(immediatePayment)).append("</strong></td></tr>")
                 .append("</table>")
 
                 .append("<div style=\"background-color: #fffaf0; padding: 12px 15px; border-top: 2px solid #dd6b20; border-bottom: 1px solid #e2e8f0;\">")
-                .append("<strong style=\"color: #7b341e; font-size: 15px;\">3. THANH TOÁN KHI NHẬN CÂY (NẤC CÒN LẠI)</strong>")
+                .append("<strong style=\"color: #7b341e; font-size: 15px;\">3. THANH TOÁN KHI NHẬN CÂY (PHẦN CÒN LẠI)</strong>")
                 .append("</div>")
                 .append("<table style=\"width: 100%; border-collapse: collapse;\">")
-                .append("<tr><td style=\"padding: 12px 15px;\">Phần còn lại của giá cây (Giá cây - Tiền cọc):</td><td style=\"text-align: right; padding: 12px 15px; font-weight: bold; color: #c05621; font-size: 15px;\">").append(formatVND(remainingPayment)).append("</td></tr>")
+                .append("<tr><td style=\"padding: 8px 15px;\">Phần còn lại của giá cây:</td><td style=\"text-align: right; padding: 8px 15px; font-weight: 500;\">").append(formatVND(remainingTreePrice)).append("</td></tr>")
+                .append("<tr><td style=\"padding: 8px 15px;\">Phí vận chuyển:</td><td style=\"text-align: right; padding: 8px 15px; font-weight: 500;\">").append(formatVND(shippingFee)).append("</td></tr>")
+                .append("<tr><td style=\"padding: 8px 15px;\">Phí xe cẩu:</td><td style=\"text-align: right; padding: 8px 15px; font-weight: 500;\">").append(formatVND(craneFee)).append("</td></tr>")
+                .append("<tr style=\"border-top: 1px solid #e2e8f0; background-color: #fffaf0; color: #7b341e;\"><td style=\"padding: 10px 15px;\"><strong style=\"font-size: 15px;\">TỔNG THANH TOÁN KHI NHẬN CÂY:</strong></td><td style=\"text-align: right; padding: 10px 15px;\"><strong style=\"font-size: 16px; color: #c05621;\">").append(formatVND(totalOnDelivery)).append("</strong></td></tr>")
                 .append("</table>")
                 .append("</div>");
         } else {
