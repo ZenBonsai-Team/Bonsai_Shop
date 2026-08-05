@@ -216,6 +216,7 @@
             productName: product.productName,
             productImage: product.imageUrl,
             price: product.price,
+            isPublicPrice: product.isPublicPrice !== false,
             productStatus: product.productStatus,
             isVisible,
             segmentId: product.segmentId,
@@ -254,6 +255,7 @@
         const detailUrl = item.detailUrl || `/product/${item.productId}`;
         const segmentLabel = item.segmentName ? `<span>${escapeHtml(item.segmentName)}</span>` : '';
         const visibilityLabel = isHiddenByVisibility ? '<span>Không hiển thị</span>' : '';
+        const priceLabel = item.isPublicPrice === false ? 'Li\u00ean h\u1ec7' : formatVND(item.price || 0);
         const addToCartButton = item.canAddToCart
             ? `<button class="btn btn-success btn-sm" type="button" data-wishlist-add-cart="${item.productId}" title="Thêm vào giỏ hàng" aria-label="Thêm vào giỏ hàng"><i class="fa-solid fa-cart-shopping"></i></button>`
             : `<button class="btn btn-outline-secondary btn-sm" type="button" disabled title="Không thể thêm giỏ" aria-label="Không thể thêm giỏ"><i class="fa-solid fa-cart-shopping"></i></button>`;
@@ -266,7 +268,7 @@
             <div class="wishlist-body">
                 <a class="wishlist-name" href="${escapeHtml(detailUrl)}">${escapeHtml(item.productName || 'Sản phẩm')}</a>
                 <div class="wishlist-meta">${[escapeHtml(item.productCode || `Bonsai-${item.productId}`), segmentLabel, visibilityLabel].filter(Boolean).join(' • ')}</div>
-                <div class="wishlist-price">${formatVND(item.price || 0)}</div>
+                <div class="wishlist-price">${priceLabel}</div>
                 <div class="wishlist-actions">
                     <a class="btn btn-outline-dark btn-sm" href="${escapeHtml(detailUrl)}">Chi tiết</a>
                     ${addToCartButton}
