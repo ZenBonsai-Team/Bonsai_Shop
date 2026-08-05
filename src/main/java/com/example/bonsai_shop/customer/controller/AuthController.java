@@ -86,11 +86,15 @@ public class AuthController {
             }
             if (password == null || password.isEmpty()) {
                 errors.append("Mật khẩu không được để trống. ");
-            } else if (password.length() < 3) {
+            } else if (password.length() < 6) {
                 errors.append("Mật khẩu phải có ít nhất 6 ký tự. ");
             }
-            
-            if (errors.length() > 0) {
+            if (phone == null || phone.trim().isEmpty()) {
+                errors.append("Số điện thoại không được để trống. ");
+            } else if (!phone.matches("^\\d{10,11}$")) {
+                errors.append("Số điện thoại không hợp lệ. ");
+            }
+            if (!errors.isEmpty()) {
                 model.addAttribute("error", errors.toString());
                 model.addAttribute("formData", new java.util.HashMap<String, String>() {{
                     put("fullName", fullName);
