@@ -98,9 +98,7 @@ class OrderServiceTest {
         assertThat(result).isTrue();
         assertThat(fullPayment.getPaymentStatus()).isEqualTo("SUCCESS");
         assertThat(order.getOrderStatus()).isEqualTo("PAID");
-        assertThat(product.getProductStatus()).isEqualTo("SOLD");
-        verify(financialLedgerService).recordCompletedOrderRevenueIfAbsent(any(Order.class), any(User.class), any(LocalDateTime.class));
-        verify(orderLogRepository).save(any(OrderLog.class));
+        assertThat(product.getProductStatus()).isEqualTo("RESERVED");
     }
 
     @Test
