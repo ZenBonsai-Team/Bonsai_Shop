@@ -28,17 +28,29 @@ public class AuthController {
     // ===== TRANG LOGIN =====
     @GetMapping("/login")
     public String loginPage(
-            @RequestParam(required = false) String error, String logout,
+            @RequestParam(required = false) String error,
+            @RequestParam(required = false) String logout,
+            HttpServletRequest request,
             Model model) {
 
         if (error != null) {
-            model.addAttribute(
-                    "error1",
-                    "Sai tài khoản, mật khẩu hoặc tài khoản chưa kích hoạt");
+            Object exception = request.getSession().getAttribute("SPRING_SECURITY_LAST_EXCEPTION");
+            String errorMsg = "Sai tài khoản, mật khẩu hoặc tài khoản chưa kích hoạt";
+            if (exception instanceof Exception ex) {
+                String rawMsg = ex.getMessage();
+                if (rawMsg != null) {
+                    if (rawMsg.contains("authorization_request_not_found")) {
+                        errorMsg = "Yêu cầu đăng nhập đã hết hạn hoặc không hợp lệ. Vui lòng thử lại.";
+                    } else {
+                        errorMsg = rawMsg.replace("[", "").replace("]", "");
+                    }
+                }
+            }
+            model.addAttribute("errorMsg", errorMsg);
         }
 
-        if(logout != null){
-            model.addAttribute("success",  "Đăng xuất thành công!");
+        if (logout != null) {
+            model.addAttribute("success", "Đăng xuất thành công!");
         }
 
         return "customer/login";
@@ -74,11 +86,15 @@ public class AuthController {
             }
             if (password == null || password.isEmpty()) {
                 errors.append("Mật khẩu không được để trống. ");
-            } else if (password.length() < 3) {
+            } else if (password.length() < 6) {
                 errors.append("Mật khẩu phải có ít nhất 6 ký tự. ");
             }
-            
-            if (errors.length() > 0) {
+            if (phone == null || phone.trim().isEmpty()) {
+                errors.append("Số điện thoại không được để trống. ");
+            } else if (!phone.matches("^\\d{10,11}$")) {
+                errors.append("Số điện thoại không hợp lệ. ");
+            }
+            if (!errors.isEmpty()) {
                 model.addAttribute("error", errors.toString());
                 model.addAttribute("formData", new java.util.HashMap<String, String>() {{
                     put("fullName", fullName);

@@ -267,20 +267,7 @@
                 </p>
             </div>
 
-            <!-- Livestreams & Events -->
-            <div class="feed-sidebar-card">
-                <h6 class="fw-bold mb-3 text-dark"><i class="fa-solid fa-video text-danger me-2"></i><span th:text="${#locale.language == 'en' ? 'Live Events' : 'Sự Kiện Trực Tiếp'}">Sự Kiện Trực Tiếp</span></h6>
-                <div class="d-flex flex-column gap-2">
-                    <a href="#" data-bs-toggle="modal" data-bs-target="#liveStreamModal" data-video-id="awQzjn72bI0" data-title="Kỹ thuật đi kẽm uốn cây Tùng Cổ" class="text-decoration-none p-2 rounded border bg-light d-flex align-items-center gap-2 live-stream-trigger">
-                        <span class="badge bg-danger rounded-pill" style="font-size:0.6rem;"><i class="fa-solid fa-circle text-white"></i> LIVE</span>
-                        <span class="small fw-semibold text-dark text-truncate" th:text="${#locale.language == 'en' ? 'Wiring technique for Buddhist Pine' : 'Kỹ thuật đi kẽm uốn cây Tùng Cổ'}">Kỹ thuật đi kẽm uốn cây Tùng Cổ</span>
-                    </a>
-                    <a href="#" data-bs-toggle="modal" data-bs-target="#liveStreamModal" data-video-id="Jm8wRjD3xVA" data-title="Giao lưu & chia sẻ kinh nghiệm Bonsai" class="text-decoration-none p-2 rounded border bg-light d-flex align-items-center gap-2 live-stream-trigger">
-                        <span class="badge bg-danger rounded-pill" style="font-size:0.6rem;"><i class="fa-solid fa-circle text-white"></i> LIVE</span>
-                        <span class="small fw-semibold text-dark text-truncate" th:text="${#locale.language == 'en' ? 'Sharing Bonsai experience & networking' : 'Giao lưu & chia sẻ kinh nghiệm Bonsai'}">Giao lưu & chia sẻ kinh nghiệm Bonsai</span>
-                    </a>
-                </div>
-            </div>
+
         </aside>
 
     </div>
@@ -379,100 +366,17 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     });
 
-    // Handle Livestream Modal Dynamic Content
-    const liveStreamModal = document.getElementById('liveStreamModal');
-    if (liveStreamModal) {
-        liveStreamModal.addEventListener('show.bs.modal', function(event) {
-            const button = event.relatedTarget;
-            const videoId = button.getAttribute('data-video-id');
-            const title = button.getAttribute('data-title');
-            
-            // Set Title
-            const modalTitle = document.getElementById('modalLiveTitle');
-            if (modalTitle) modalTitle.textContent = title;
-            
-            // Set Video Embed URL
-            const videoIframe = document.getElementById('modalLiveVideo');
-            if (videoIframe) {
-                videoIframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
-            }
-            
-            // Set Live Chat URL using dynamic domain
-            const chatIframe = document.getElementById('modalLiveChat');
-            if (chatIframe) {
-                const currentDomain = window.location.hostname;
-                chatIframe.src = `https://www.youtube.com/live_chat?v=${videoId}&embed_domain=${currentDomain}`;
-            }
-        });
-
-        liveStreamModal.addEventListener('hidden.bs.modal', function() {
-            // Stop video and chat on close
-            const videoIframe = document.getElementById('modalLiveVideo');
-            if (videoIframe) videoIframe.src = '';
-            
-            const chatIframe = document.getElementById('modalLiveChat');
-            if (chatIframe) chatIframe.src = '';
-        });
-    }
+    // Centralized livestream link to /live - no modal scripting needed
 });
 </script>
-
-<!-- Live Stream Modal with Video and Embedded Live Chat -->
-<div class="modal fade" id="liveStreamModal" tabindex="-1" aria-labelledby="liveStreamModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-xl modal-dialog-centered">
-        <div class="modal-content" style="border-radius: 12px; overflow: hidden; background: #fdfdfd; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.15);">
-            <div class="modal-header bg-dark text-white border-0 py-3">
-                <h5 class="modal-title fw-bold d-flex align-items-center gap-2" id="liveStreamModalLabel">
-                    <span class="badge bg-danger rounded-pill d-flex align-items-center gap-1" style="font-size:0.75rem; animation: pulse-live 1.5s infinite;"><i class="fa-solid fa-circle text-white" style="font-size: 0.5rem;"></i> LIVE</span>
-                    <span id="modalLiveTitle">Xem Trực Tiếp</span>
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body p-0">
-                <div class="container-fluid p-0">
-                    <div class="row g-0">
-                        <!-- Left Side: YouTube Video Player -->
-                        <div class="col-lg-8 bg-black d-flex align-items-center live-modal-container" style="height: 480px;">
-                            <div class="w-100 h-100">
-                                <iframe id="modalLiveVideo" src="" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen style="width: 100%; height: 100%;"></iframe>
-                            </div>
-                        </div>
-                        <!-- Right Side: Live Chat Panel -->
-                        <div class="col-lg-4 d-flex flex-column border-start live-modal-container" style="height: 480px;">
-                            <div class="bg-light p-3 border-bottom fw-bold small text-dark d-flex align-items-center justify-content-between">
-                                <span class="d-flex align-items-center gap-2">
-                                    <i class="fa-regular fa-comments text-danger"></i> <span th:text="${#locale.language == 'en' ? 'Live Chat' : 'Trò chuyện trực tiếp'}">Trò chuyện trực tiếp</span>
-                                </span>
-                                <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill" style="font-size: 0.7rem;" th:text="${#locale.language == 'en' ? 'Synced' : 'Đồng bộ'}">Đồng bộ</span>
-                            </div>
-                            <div class="flex-grow-1">
-                                <iframe id="modalLiveChat" src="" width="100%" height="100%" frameborder="0"></iframe>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
 
 <style>
 @keyframes pulse-live {
     0% { transform: scale(1); opacity: 1; }
-    50% { transform: scale(1.05); opacity: 0.8; }
+    50% { transform: scale(1.08); opacity: 0.8; }
     100% { transform: scale(1); opacity: 1; }
-}
-@media (max-width: 991.98px) {
-    .live-modal-container {
-        height: auto !important;
-    }
-    #modalLiveVideo {
-        height: 250px !important;
-    }
-    #modalLiveChat {
-        height: 350px !important;
-    }
 }
 </style>
 </body>
 </html>
+

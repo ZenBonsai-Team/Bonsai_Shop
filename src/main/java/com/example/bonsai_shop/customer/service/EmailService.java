@@ -11,8 +11,9 @@ import jakarta.mail.internet.MimeMessage;
 
 @Service
 @RequiredArgsConstructor
-@Slf4j
 public class EmailService {
+
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(EmailService.class);
 
     private final JavaMailSender mailSender;
 
@@ -24,32 +25,32 @@ public class EmailService {
     public void sendOtpEmail(String toEmail, String otpCode) {
         String emailContent = buildOtpTemplate("Mã OTP Đăng Nhập", 
             "Mã OTP của bạn là: " + otpCode, otpCode);
-        sendHtmlEmailWithRetry(toEmail, "🌿 Bonsai Shop - Mã OTP dùng để đăng nhập", emailContent, "SIGNUP_OTP_" + toEmail);
+        sendHtmlEmailWithRetry(toEmail, "🌿 Minh Kỷ Garden - Mã OTP dùng để đăng nhập", emailContent, "SIGNUP_OTP_" + toEmail);
     }
 
     public void sendOtpResetPassword(String toEmail, String otpCode) {
         String emailContent = buildOtpTemplate("Mã OTP Đặt Lại Mật Khẩu", 
             "Mã OTP để đặt lại mật khẩu của bạn là: " + otpCode, otpCode);
-        sendHtmlEmailWithRetry(toEmail, "🌿 Bonsai Shop - Mã OTP dùng để đổi lại mật khẩu", emailContent, "RESET_OTP_" + toEmail);
+        sendHtmlEmailWithRetry(toEmail, "🌿 Minh Kỷ Garden - Mã OTP dùng để đổi lại mật khẩu", emailContent, "RESET_OTP_" + toEmail);
     }
 
     public void sendGuestOrderOtp(String toEmail, String otpCode) {
         String emailContent = buildOtpTemplate("Mã OTP Xác Nhận Đặt Hàng", 
             "Mã OTP để xác nhận đặt hàng của bạn là: " + otpCode, otpCode);
-        sendHtmlEmailWithRetry(toEmail, "🌿 Bonsai Shop - Mã OTP xác nhận đặt hàng", emailContent, "GUEST_OTP_" + toEmail);
+        sendHtmlEmailWithRetry(toEmail, "🌿 Minh Kỷ Garden - Mã OTP xác nhận đặt hàng", emailContent, "GUEST_OTP_" + toEmail);
     }
 
     public void sendGuestOrderOtpOrThrow(String toEmail, String otpCode) throws Exception {
         String emailContent = buildOtpTemplate("Mã OTP Xác Nhận Đặt Hàng", 
             "Mã OTP để xác nhận đặt hàng của bạn là: " + otpCode, otpCode);
-        sendHtmlEmailOrThrow(toEmail, "🌿 Bonsai Shop - Mã OTP xác nhận đặt hàng", emailContent);
+        sendHtmlEmailOrThrow(toEmail, "🌿 Minh Kỷ Garden - Mã OTP xác nhận đặt hàng", emailContent);
     }
 
     private String buildOtpTemplate(String title, String message, String otpCode) {
         return "<div style=\"font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 25px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff;\">"
                 + "  <div style=\"text-align: center; background: linear-gradient(135deg, #2e7d32, #4caf50); color: white; padding: 20px; border-radius: 8px 8px 0 0;\">"
                 + "    <h2 style=\"margin: 0;\">" + title + "</h2>"
-                + "    <p style=\"margin: 5px 0 0 0;\">Bonsai Shop</p>"
+                + "    <p style=\"margin: 5px 0 0 0;\">Minh Kỷ Garden</p>"
                 + "  </div>"
                 + "  <div style=\"padding: 30px 20px; color: #1a202c; line-height: 1.8; text-align: center;\">"
                 + "    <p style=\"font-size: 16px; margin-bottom: 30px;\">Xin chào,</p>"
@@ -62,7 +63,7 @@ public class EmailService {
                 + "    <p style=\"font-size: 13px; color: #999; margin: 15px 0 0 0;\">Nếu bạn không yêu cầu mã này, vui lòng bỏ qua email này.</p>"
                 + "  </div>"
                 + "  <div style=\"text-align: center; font-size: 12px; color: #a0aec0; border-top: 1px solid #edf2f7; padding-top: 15px; margin-top: 20px;\">"
-                + "    © " + java.time.LocalDate.now().getYear() + " Bonsai Shop. All rights reserved."
+                + "    © " + java.time.LocalDate.now().getYear() + " Minh Kỷ Garden. All rights reserved."
                 + "  </div>"
                 + "</div>";
     }

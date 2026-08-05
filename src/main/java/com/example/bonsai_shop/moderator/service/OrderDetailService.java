@@ -17,7 +17,9 @@ import com.example.bonsai_shop.moderator.dto.PaymentSummaryDTO;
 import com.example.bonsai_shop.moderator.dto.ProductSummaryDTO;
 import com.example.bonsai_shop.moderator.dto.TimelineDTO;
 import com.example.bonsai_shop.moderator.util.ModeratorDisplayLabelMapper;
+import com.example.bonsai_shop.entity.OrderLog;
 import com.example.bonsai_shop.product.repository.OrderHandlingRepository;
+import com.example.bonsai_shop.product.repository.OrderLogRepository;
 import com.example.bonsai_shop.product.repository.OrderRepository;
 import com.example.bonsai_shop.product.repository.PaymentRepository;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +31,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -38,6 +41,7 @@ public class OrderDetailService {
     private final OrderRepository orderRepository;
     private final PaymentRepository paymentRepository;
     private final OrderHandlingRepository orderHandlingRepository;
+    private final OrderLogRepository orderLogRepository;
     private final MyOrderService myOrderService;
     private final FinancialLedgerService financialLedgerService;
 
@@ -195,17 +199,10 @@ public class OrderDetailService {
         }
         BigDecimal recognizedCompletedRevenue = financialLedgerService.sumRecognizedCompletedRevenue(order);
         BigDecimal forfeitedDepositIncome = financialLedgerService.sumForfeitedDepositIncome(order);
-        BigDecimal partialRefundAmount = financialLedgerService.sumPartialRefunds(order);
         BigDecimal fullRefundAmount = financialLedgerService.sumFullRefunds(order);
-        BigDecimal totalRefundAmount = partialRefundAmount.add(fullRefundAmount);
+        BigDecimal totalRefundAmount = fullRefundAmount;
         BigDecimal netRecognizedAmount = financialLedgerService.sumNetRecognizedAmount(order);
-        String financialResolutionStatus = resolveFinancialResolutionStatus(
-                order.getOrderStatus(),
-                recognizedCompletedRevenue,
-                forfeitedDepositIncome,
-                totalRefundAmount,
-                totalCashReceived
-        );
+        BigDecimal refundableCash = financialLedgerService.calculateRefundableCash(order);
         List<FinancialLedgerDTO> ledgerHistory =
                 financialLedgerService.getLedgerHistory(order.getOrderId());
 
@@ -224,15 +221,13 @@ public class OrderDetailService {
                 .totalCashReceived(totalCashReceived)
                 .recognizedCompletedRevenue(recognizedCompletedRevenue)
                 .forfeitedDepositIncome(forfeitedDepositIncome)
-                .partialRefundAmount(partialRefundAmount)
                 .fullRefundAmount(fullRefundAmount)
                 .netRecognizedAmount(netRecognizedAmount)
-                .financialResolutionStatus(financialResolutionStatus)
-                .financialResolutionStatusLabel(ModeratorDisplayLabelMapper.financialResolutionStatusLabel(financialResolutionStatus))
+                .refundableCash(refundableCash)
                 .build();
 
         String currentStatus = order.getOrderStatus() != null ? order.getOrderStatus().toUpperCase() : "PENDING";
-        List<TimelineDTO> timeline = buildOrderTimeline(currentStatus, order.getOrderDate(), order.getAssignedAt());
+        List<TimelineDTO> timeline = buildOrderTimeline(order, currentStatus, paymentEntities);
 
         List<OrderHandling> handlings = orderHandlingRepository.findByOrderOrderIdOrderByHandledAtDesc(order.getOrderId());
         List<HandlingHistoryDTO> handlingHistoryList = new ArrayList<>();
@@ -266,9 +261,9 @@ public class OrderDetailService {
                 && isAssignedToMe
                 && successfulDepositAmount.compareTo(BigDecimal.ZERO) > 0
                 && !hasForfeitedDeposit;
-        boolean canRecordFaultRefund = ("DEPOSITED".equals(currentStatus) || "PAID".equals(currentStatus) || "COMPLETED".equals(currentStatus))
+        boolean canRecordFaultRefund = ("DEPOSITED".equals(currentStatus) || "PAID".equals(currentStatus))
                 && isAssignedToMe
-                && financialLedgerService.calculateRefundableCash(order).compareTo(BigDecimal.ZERO) > 0;
+                && refundableCash.compareTo(BigDecimal.ZERO) > 0;
 
         String priority = myOrderService.calculatePriority(order);
         LocalDateTime statusTimestamp = order.getAssignedAt() != null ? order.getAssignedAt()
@@ -323,50 +318,68 @@ public class OrderDetailService {
             isDeposit = order.getDepositAmount().compareTo(BigDecimal.ZERO) > 0;
         }
 
-        return isDeposit ? "COD" : "VNPAY";
+        return isDeposit ? "DEPOSIT" : "VNPAY";
     }
 
-    private String resolveFinancialResolutionStatus(String orderStatus, BigDecimal recognizedCompletedRevenue,
-                                                    BigDecimal forfeitedDepositIncome,
-                                                    BigDecimal totalRefundAmount, BigDecimal totalCashReceived) {
-        String status = orderStatus != null ? orderStatus.toUpperCase() : "PENDING";
-        if (forfeitedDepositIncome != null && forfeitedDepositIncome.compareTo(BigDecimal.ZERO) > 0) {
-            return "FORFEITED_DEPOSIT_INCOME";
-        }
-        if (totalRefundAmount != null && totalRefundAmount.compareTo(BigDecimal.ZERO) > 0) {
-            return "REFUND_RECORDED";
-        }
-        if (recognizedCompletedRevenue != null && recognizedCompletedRevenue.compareTo(BigDecimal.ZERO) > 0) {
-            return "REVENUE_RECOGNIZED";
-        }
-        if ("DEPOSITED".equals(status)) {
-            return "DEPOSIT_RECEIVED_PENDING_COMPLETION";
-        }
-        if ("PAID".equals(status)) {
-            return "FULL_PAYMENT_RECEIVED_PENDING_COMPLETION";
-        }
-        if ("CANCELLED".equals(status)) {
-            return "CANCELLED_NO_FINANCIAL_RECOGNITION";
-        }
-        if (totalCashReceived != null && totalCashReceived.compareTo(BigDecimal.ZERO) > 0) {
-            return "CASH_RECEIVED_PENDING_RECOGNITION";
-        }
-        return "OPEN";
-    }
 
-    private List<TimelineDTO> buildOrderTimeline(String status, LocalDateTime createdDate, LocalDateTime assignedDate) {
+
+    private List<TimelineDTO> buildOrderTimeline(Order order, String status, List<Payment> paymentEntities) {
         List<TimelineDTO> list = new ArrayList<>();
         boolean isCancelled = "CANCELLED".equals(status);
+        LocalDateTime createdDate = order != null ? order.getOrderDate() : null;
+        LocalDateTime assignedDate = order != null ? order.getAssignedAt() : null;
+
+        List<OrderLog> logs = order != null && order.getOrderId() != null
+                ? orderLogRepository.findByOrderOrderIdOrderByActionAtAsc(order.getOrderId())
+                : List.of();
+
+        LocalDateTime approvedAt = logs.stream()
+                .filter(l -> "PENDING_PAYMENT".equalsIgnoreCase(l.getToStatus())
+                        || "APPROVED".equalsIgnoreCase(l.getActionType())
+                        || "DEPOSITED".equalsIgnoreCase(l.getToStatus())
+                        || "PAID".equalsIgnoreCase(l.getToStatus())
+                        || "COMPLETED".equalsIgnoreCase(l.getToStatus()))
+                .map(OrderLog::getActionAt)
+                .filter(Objects::nonNull)
+                .findFirst()
+                .orElse(null);
+
+        LocalDateTime depositedOrPaidAt = paymentEntities != null ? paymentEntities.stream()
+                .filter(p -> "SUCCESS".equalsIgnoreCase(p.getPaymentStatus()))
+                .map(Payment::getPaymentDate)
+                .filter(Objects::nonNull)
+                .findFirst()
+                .orElseGet(() -> logs.stream()
+                        .filter(l -> "DEPOSITED".equalsIgnoreCase(l.getToStatus()) || "PAID".equalsIgnoreCase(l.getToStatus()))
+                        .map(OrderLog::getActionAt)
+                        .filter(Objects::nonNull)
+                        .findFirst()
+                        .orElse(null))
+                : null;
+
+        LocalDateTime completedAt = logs.stream()
+                .filter(l -> "COMPLETED".equalsIgnoreCase(l.getToStatus()) || "ORDER_COMPLETED".equalsIgnoreCase(l.getActionType()))
+                .map(OrderLog::getActionAt)
+                .filter(Objects::nonNull)
+                .findFirst()
+                .orElse(null);
+
+        LocalDateTime cancelledAt = logs.stream()
+                .filter(l -> "CANCELLED".equalsIgnoreCase(l.getToStatus()))
+                .map(OrderLog::getActionAt)
+                .filter(Objects::nonNull)
+                .findFirst()
+                .orElse(null);
 
         list.add(TimelineDTO.builder().stage("CREATED").label("Khởi tạo đơn hàng").timestamp(createdDate).completed(true).current("PENDING".equals(status) && assignedDate == null).build());
         list.add(TimelineDTO.builder().stage("CLAIMED").label("Tiếp nhận đơn").timestamp(assignedDate).completed(assignedDate != null).current("PENDING".equals(status) && assignedDate != null).build());
-        list.add(TimelineDTO.builder().stage("APPROVED").label("Đã phê duyệt").timestamp(null).completed("PENDING_PAYMENT".equals(status) || "DEPOSITED".equals(status) || "PAID".equals(status) || "COMPLETED".equals(status)).current("PENDING_PAYMENT".equals(status)).build());
-        list.add(TimelineDTO.builder().stage("DEPOSITED").label("Đã đặt cọc/Thanh toán").timestamp(null).completed("DEPOSITED".equals(status) || "PAID".equals(status) || "COMPLETED".equals(status)).current("DEPOSITED".equals(status) || "PAID".equals(status)).build());
+        list.add(TimelineDTO.builder().stage("APPROVED").label("Đã phê duyệt").timestamp(approvedAt).completed("PENDING_PAYMENT".equals(status) || "DEPOSITED".equals(status) || "PAID".equals(status) || "COMPLETED".equals(status)).current("PENDING_PAYMENT".equals(status)).build());
+        list.add(TimelineDTO.builder().stage("DEPOSITED").label("Đã đặt cọc/Thanh toán").timestamp(depositedOrPaidAt).completed("DEPOSITED".equals(status) || "PAID".equals(status) || "COMPLETED".equals(status)).current("DEPOSITED".equals(status) || "PAID".equals(status)).build());
 
         if (isCancelled) {
-            list.add(TimelineDTO.builder().stage("CANCELLED").label("Đã huỷ đơn").timestamp(null).completed(true).current(true).build());
+            list.add(TimelineDTO.builder().stage("CANCELLED").label("Đã huỷ đơn").timestamp(cancelledAt).completed(true).current(true).build());
         } else {
-            list.add(TimelineDTO.builder().stage("COMPLETED").label("Hoàn thành").timestamp(null).completed("COMPLETED".equals(status)).current("COMPLETED".equals(status)).build());
+            list.add(TimelineDTO.builder().stage("COMPLETED").label("Hoàn thành").timestamp(completedAt).completed("COMPLETED".equals(status)).current("COMPLETED".equals(status)).build());
         }
 
         return list;

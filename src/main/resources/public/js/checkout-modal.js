@@ -56,8 +56,8 @@ function resetCheckoutForm() {
         input.classList.remove('is-invalid', 'is-valid');
     });
     
-    // Đảm bảo phương thức COD được chọn mặc định
-    selectPaymentMethod('COD');
+    // Đảm bảo phương thức Cọc trước (DEPOSIT) được chọn mặc định
+    selectPaymentMethod('DEPOSIT');
     
     // Ẩn các Overlay thông báo thành công / lỗi
     document.getElementById('modalSuccessOverlay').classList.add('d-none');
@@ -74,12 +74,14 @@ function selectPaymentMethod(method) {
     const cards = document.querySelectorAll('.payment-method-card');
     cards.forEach(card => card.classList.remove('active'));
     
-    if (method === 'COD') {
-        document.getElementById('payCOD').checked = true;
-        document.querySelector('[onclick="selectPaymentMethod(\'COD\')"]').classList.add('active');
+    if (method === 'DEPOSIT' || method === 'COD') {
+        document.getElementById('payDeposit').checked = true;
+        const el = document.querySelector('[onclick="selectPaymentMethod(\'DEPOSIT\')"]') || document.querySelector('[onclick="selectPaymentMethod(\'COD\')"]');
+        if (el) el.classList.add('active');
     } else {
         document.getElementById('payVNPAY').checked = true;
-        document.querySelector('[onclick="selectPaymentMethod(\'VNPAY\')"]').classList.add('active');
+        const el = document.querySelector('[onclick="selectPaymentMethod(\'VNPAY\')"]');
+        if (el) el.classList.add('active');
     }
 }
 

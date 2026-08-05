@@ -38,6 +38,10 @@ public class ArtisanProductService {
     private static final SecureRandom RANDOM = new SecureRandom();
     private static final String CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
     private static final Set<String> VALID_SHOT_TYPES = Set.of("FRONT", "BACK", "LEFT", "RIGHT", "DETAIL", "TRUNK", "BRANCH", "POT", "OVERVIEW");
+    private static final int MAX_MEDIA_PER_UPLOAD = 10;
+    private static final int MAX_TAGS_PER_PRODUCT = 12;
+    private static final long MAX_IMAGE_SIZE_BYTES = 5L * 1024 * 1024;
+    private static final long MAX_VIDEO_SIZE_BYTES = 100L * 1024 * 1024;
 
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
@@ -51,7 +55,7 @@ public class ArtisanProductService {
 
     public User getArtisanUser(String email) {
         return userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy artisan!"));
+                .orElseThrow(() -> new RuntimeException("KhÃ´ng tÃ¬m tháº¥y artisan!"));
     }
 
     public List<Product> getMyProducts(String artisanEmail) {
@@ -66,7 +70,7 @@ public class ArtisanProductService {
     public Product getMyProduct(String artisanEmail, Integer productId) {
         Integer artisanUserId = getArtisanUserId(artisanEmail);
         return productRepository.findByProductIdAndCreatedByUserId(productId, artisanUserId)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm thuộc artisan này!"));
+                .orElseThrow(() -> new RuntimeException("KhÃ´ng tÃ¬m tháº¥y sáº£n pháº©m thuá»™c artisan nÃ y!"));
     }
 
     private Integer getArtisanUserId(String artisanEmail) {
@@ -77,9 +81,9 @@ public class ArtisanProductService {
     public Product createProduct(String artisanEmail, ArtisanProductFormDTO form) {
         User artisanUser = getArtisanUser(artisanEmail);
         Variety variety = varietyRepository.findById(form.getVarietyId())
-                .orElseThrow(() -> new RuntimeException("Variety không tồn tại!"));
+                .orElseThrow(() -> new RuntimeException("Variety khÃ´ng tá»“n táº¡i!"));
         ProductSegment segment = productSegmentRepository.findById(form.getSegmentId())
-                .orElseThrow(() -> new RuntimeException("Segment không tồn tại!"));
+                .orElseThrow(() -> new RuntimeException("Segment khÃ´ng tá»“n táº¡i!"));
 
         validateRequiredSpecifications(form.getAge(), form.getHeight(), form.getTrunkDiameter(), form.getStyle());
 
@@ -115,9 +119,9 @@ public class ArtisanProductService {
         Product product = getMyProduct(artisanEmail, productId);
         ensureEditable(product);
         Variety variety = varietyRepository.findById(form.getVarietyId())
-                .orElseThrow(() -> new RuntimeException("Variety không tồn tại!"));
+                .orElseThrow(() -> new RuntimeException("Variety khÃ´ng tá»“n táº¡i!"));
         ProductSegment segment = productSegmentRepository.findById(form.getSegmentId())
-                .orElseThrow(() -> new RuntimeException("Segment không tồn tại!"));
+                .orElseThrow(() -> new RuntimeException("Segment khÃ´ng tá»“n táº¡i!"));
 
         validateRequiredSpecifications(form.getAge(), form.getHeight(), form.getTrunkDiameter(), form.getStyle());
 
@@ -169,6 +173,8 @@ public class ArtisanProductService {
     }
 
     public List<ProductMedia> getMedia(Product product) {
+        List<ProductMedia> mediaList = productMediaRepository.findByProductOrderByDisplayOrderAscMediaIdAsc(product);
+        ensureImageThumbnail(mediaList);
         return productMediaRepository.findByProductOrderByDisplayOrderAscMediaIdAsc(product);
     }
 
@@ -181,11 +187,15 @@ public class ArtisanProductService {
                          Boolean isThumbnail) {
         Product product = getMyProduct(artisanEmail, productId);
         ensureEditable(product);
-        String mediaUrl = mediaStorageService.storeProductMedia(file);
         String mediaType = resolveMediaType(file);
+        validateMediaFile(file, mediaType);
+        if (Boolean.TRUE.equals(isThumbnail) && "VIDEO".equals(mediaType)) {
+            throw new RuntimeException("Video khÃ´ng thá»ƒ Ä‘áº·t lÃ m media Ä‘áº¡i diá»‡n!");
+        }
         String normalizedShotType = normalizeShotType(slotType, mediaType);
+        String mediaUrl = mediaStorageService.storeProductMedia(file);
         List<ProductMedia> existingMedia = productMediaRepository.findByProductOrderByDisplayOrderAscMediaIdAsc(product);
-        boolean shouldSetThumbnail = Boolean.TRUE.equals(isThumbnail) || existingMedia.isEmpty();
+        boolean shouldSetThumbnail = "IMAGE".equals(mediaType) && (Boolean.TRUE.equals(isThumbnail) || existingMedia.isEmpty());
 
         if (shouldSetThumbnail) {
             existingMedia.forEach(media -> {
@@ -219,22 +229,25 @@ public class ArtisanProductService {
         ensureEditable(product);
 
         if (files == null || files.isEmpty()) {
-            throw new RuntimeException("Vui lòng chọn ít nhất một file media!");
+            throw new RuntimeException("Vui lÃ²ng chá»n Ã­t nháº¥t má»™t file media!");
+        }
+        if (files.size() > MAX_MEDIA_PER_UPLOAD) {
+            throw new RuntimeException("Má»—i láº§n chá»‰ Ä‘Æ°á»£c táº£i lÃªn tá»‘i Ä‘a " + MAX_MEDIA_PER_UPLOAD + " media!");
         }
 
         if (files.stream().anyMatch(file -> file == null || file.isEmpty())) {
-            throw new RuntimeException("Vui lòng chọn file cho tất cả mục media!");
+            throw new RuntimeException("Vui lÃ²ng chá»n file cho táº¥t cáº£ má»¥c media!");
         }
         if (mediaTypes != null && mediaTypes.size() < files.size()) {
-            throw new RuntimeException("Dữ liệu loại media không hợp lệ!");
+            throw new RuntimeException("Dá»¯ liá»‡u loáº¡i media khÃ´ng há»£p lá»‡!");
         }
         if (thumbnailIndex != null && (thumbnailIndex < 0 || thumbnailIndex >= files.size())) {
-            throw new RuntimeException("Dữ liệu ảnh đại diện không hợp lệ!");
+            throw new RuntimeException("Dá»¯ liá»‡u áº£nh Ä‘áº¡i diá»‡n khÃ´ng há»£p lá»‡!");
         }
 
         List<ProductMedia> existingMedia = productMediaRepository.findByProductOrderByDisplayOrderAscMediaIdAsc(product);
         int nextDisplayOrder = getNextDisplayOrder(existingMedia);
-        int selectedThumbnailIndex = thumbnailIndex == null ? (existingMedia.isEmpty() ? 0 : -1) : thumbnailIndex;
+        int selectedThumbnailIndex = thumbnailIndex == null ? findDefaultThumbnailIndex(files, mediaTypes, existingMedia.isEmpty()) : thumbnailIndex;
 
         if (selectedThumbnailIndex >= 0) {
             existingMedia.forEach(media -> {
@@ -246,6 +259,10 @@ public class ArtisanProductService {
         for (int index = 0; index < files.size(); index++) {
             MultipartFile file = files.get(index);
             String mediaType = resolveMediaType(file, getListValue(mediaTypes, index));
+            validateMediaFile(file, mediaType);
+            if (index == selectedThumbnailIndex && "VIDEO".equals(mediaType)) {
+                throw new RuntimeException("Video khÃ´ng thá»ƒ Ä‘áº·t lÃ m media Ä‘áº¡i diá»‡n!");
+            }
             String normalizedShotType = normalizeShotType(getListValue(slotTypes, index), mediaType);
             String mediaUrl = mediaStorageService.storeProductMedia(file);
 
@@ -270,7 +287,10 @@ public class ArtisanProductService {
         Product product = getMyProduct(artisanEmail, productId);
         ensureEditable(product);
         ProductMedia selected = productMediaRepository.findByMediaIdAndProduct(mediaId, product)
-                .orElseThrow(() -> new RuntimeException("Media không tồn tại!"));
+                .orElseThrow(() -> new RuntimeException("Media khÃ´ng tá»“n táº¡i!"));
+        if (!"IMAGE".equals(selected.getMediaType())) {
+            throw new RuntimeException("Chá»‰ áº£nh má»›i cÃ³ thá»ƒ Ä‘áº·t lÃ m áº£nh Ä‘áº¡i diá»‡n!");
+        }
 
         productMediaRepository.findByProductOrderByDisplayOrderAscMediaIdAsc(product)
                 .forEach(media -> {
@@ -289,14 +309,14 @@ public class ArtisanProductService {
         Product product = getMyProduct(artisanEmail, productId);
         ensureEditable(product);
         if (mediaIds == null || displayOrders == null || mediaIds.size() != displayOrders.size()) {
-            throw new RuntimeException("Dữ liệu thứ tự media không hợp lệ!");
+            throw new RuntimeException("Dá»¯ liá»‡u thá»© tá»± media khÃ´ng há»£p lá»‡!");
         }
         if (slotTypes != null && slotTypes.size() != mediaIds.size()) {
-            throw new RuntimeException("Dữ liệu góc chụp media không hợp lệ!");
+            throw new RuntimeException("Dá»¯ liá»‡u gÃ³c chá»¥p media khÃ´ng há»£p lá»‡!");
         }
         for (int index = 0; index < mediaIds.size(); index++) {
             ProductMedia media = productMediaRepository.findByMediaIdAndProduct(mediaIds.get(index), product)
-                    .orElseThrow(() -> new RuntimeException("Media không tồn tại!"));
+                    .orElseThrow(() -> new RuntimeException("Media khÃ´ng tá»“n táº¡i!"));
             media.setDisplayOrder(displayOrders.get(index) == null ? 1 : Math.max(displayOrders.get(index), 1));
             if (slotTypes != null) {
                 media.setSlotType(normalizeShotType(slotTypes.get(index), media.getMediaType()));
@@ -306,6 +326,7 @@ public class ArtisanProductService {
             }
             productMediaRepository.save(media);
         }
+        ensureImageThumbnail(productMediaRepository.findByProductOrderByDisplayOrderAscMediaIdAsc(product));
     }
 
     @Transactional
@@ -313,13 +334,14 @@ public class ArtisanProductService {
         Product product = getMyProduct(artisanEmail, productId);
         ensureEditable(product);
         ProductMedia media = productMediaRepository.findByMediaIdAndProduct(mediaId, product)
-                .orElseThrow(() -> new RuntimeException("Media không tồn tại!"));
+                .orElseThrow(() -> new RuntimeException("Media khÃ´ng tá»“n táº¡i!"));
 
         mediaStorageService.deleteProductMedia(media.getMediaUrl());
         productMediaRepository.delete(media);
 
         if (Boolean.TRUE.equals(media.getIsThumbnail())) {
             productMediaRepository.findByProductOrderByDisplayOrderAscMediaIdAsc(product).stream()
+                    .filter(nextThumbnail -> "IMAGE".equals(nextThumbnail.getMediaType()))
                     .findFirst()
                     .ifPresent(nextThumbnail -> {
                         nextThumbnail.setIsThumbnail(true);
@@ -392,7 +414,15 @@ public class ArtisanProductService {
             return;
         }
 
-        List<Tag> tags = tagRepository.findAllById(tagIds);
+        List<Integer> uniqueTagIds = tagIds.stream()
+                .filter(tagId -> tagId != null)
+                .distinct()
+                .toList();
+        if (uniqueTagIds.size() > MAX_TAGS_PER_PRODUCT) {
+            throw new RuntimeException("Chá»‰ Ä‘Æ°á»£c chá»n tá»‘i Ä‘a 12 tháº» cho má»™t cÃ¢y.");
+        }
+
+        List<Tag> tags = tagRepository.findAllById(uniqueTagIds);
         tags.stream()
                 .map(tag -> ProductTag.builder()
                         .product(product)
@@ -403,13 +433,13 @@ public class ArtisanProductService {
 
     private void ensurePublishReady(Product product) {
         if (product.getProductName() == null || product.getProductName().isBlank()) {
-            throw new RuntimeException("Vui lòng nhập tên sản phẩm trước khi publish.");
+            throw new RuntimeException("Vui lÃ²ng nháº­p tÃªn sáº£n pháº©m trÆ°á»›c khi publish.");
         }
         if (product.getVariety() == null) {
-            throw new RuntimeException("Vui lòng chọn variety trước khi publish.");
+            throw new RuntimeException("Vui lÃ²ng chá»n variety trÆ°á»›c khi publish.");
         }
         if (product.getSegment() == null) {
-            throw new RuntimeException("Vui lòng chọn segment trước khi publish.");
+            throw new RuntimeException("Vui lÃ²ng chá»n segment trÆ°á»›c khi publish.");
         }
         validateRequiredSpecifications(
                 product.getAge(),
@@ -418,25 +448,38 @@ public class ArtisanProductService {
                 product.getStyle()
         );
         if (product.getPrice() == null || product.getPrice().compareTo(BigDecimal.ZERO) <= 0) {
-            throw new RuntimeException("Vui lòng nhập giá sản phẩm hợp lệ trước khi publish.");
+            throw new RuntimeException("Vui lÃ²ng nháº­p giÃ¡ sáº£n pháº©m há»£p lá»‡ trÆ°á»›c khi publish.");
         }
         if (productMediaRepository.findByProductOrderByDisplayOrderAscMediaIdAsc(product).isEmpty()) {
-            throw new RuntimeException("Cần ít nhất một ảnh hoặc video trước khi publish.");
+            throw new RuntimeException("Cáº§n Ã­t nháº¥t má»™t áº£nh hoáº·c video trÆ°á»›c khi publish.");
         }
+        ensureImageThumbnail(productMediaRepository.findByProductOrderByDisplayOrderAscMediaIdAsc(product));
     }
 
     private void validateRequiredSpecifications(Integer age, Float height, Float trunkDiameter, String style) {
         if (age == null) {
             throw new RuntimeException("Vui lòng nhập tuổi cây.");
         }
+        if (age <= 0) {
+            throw new RuntimeException("Tuổi cây phải lớn hơn 0.");
+        }
         if (height == null) {
             throw new RuntimeException("Vui lòng nhập chiều cao cây.");
+        }
+        if (height <= 0) {
+            throw new RuntimeException("Chiều cao cây phải lớn hơn 0.");
         }
         if (trunkDiameter == null) {
             throw new RuntimeException("Vui lòng nhập đường kính thân cây.");
         }
+        if (trunkDiameter <= 0) {
+            throw new RuntimeException("Đường kính thân cây phải lớn hơn 0.");
+        }
         if (style == null || style.isBlank()) {
             throw new RuntimeException("Vui lòng nhập style cây.");
+        }
+        if (!style.trim().matches("^[\\p{L}\\s]+$")) {
+            throw new RuntimeException("Style chỉ được nhập chữ.");
         }
     }
 
@@ -477,34 +520,34 @@ public class ArtisanProductService {
 
     private void ensureNotSold(Product product) {
         if (isSold(product)) {
-            throw new RuntimeException("Sản phẩm đã bán không thể chỉnh sửa.");
+            throw new RuntimeException("Sáº£n pháº©m Ä‘Ã£ bÃ¡n khÃ´ng thá»ƒ chá»‰nh sá»­a.");
         }
     }
 
     private void ensureEditable(Product product) {
         if (!isEditable(product)) {
-            throw new RuntimeException("Chỉ có thể sửa sản phẩm nháp hoặc đã ẩn.");
+            throw new RuntimeException("Chá»‰ cÃ³ thá»ƒ sá»­a sáº£n pháº©m nhÃ¡p hoáº·c Ä‘Ã£ áº©n.");
         }
     }
 
     private void ensureDraft(Product product) {
         if (product == null || !"DRAFT".equalsIgnoreCase(product.getProductStatus())) {
-            throw new RuntimeException("Chỉ có thể xóa sản phẩm nháp.");
+            throw new RuntimeException("Chá»‰ cÃ³ thá»ƒ xÃ³a sáº£n pháº©m nhÃ¡p.");
         }
     }
 
     private void ensureHideable(Product product) {
         if (!isHideable(product)) {
-            throw new RuntimeException("Chỉ có thể ẩn sản phẩm đang được bán.");
+            throw new RuntimeException("Chá»‰ cÃ³ thá»ƒ áº©n sáº£n pháº©m Ä‘ang Ä‘Æ°á»£c bÃ¡n.");
         }
     }
 
     private void ensureShowable(Product product) {
         if (product == null || "DRAFT".equalsIgnoreCase(product.getProductStatus())) {
-            throw new RuntimeException("Sản phẩm nháp cần đăng bán, không thể chỉ bật hiển thị.");
+            throw new RuntimeException("Sáº£n pháº©m nhÃ¡p cáº§n Ä‘Äƒng bÃ¡n, khÃ´ng thá»ƒ chá»‰ báº­t hiá»ƒn thá»‹.");
         }
         if ("RESERVED".equalsIgnoreCase(product.getProductStatus())) {
-            throw new RuntimeException("Không thể hiện sản phẩm đang được đặt.");
+            throw new RuntimeException("KhÃ´ng thá»ƒ hiá»‡n sáº£n pháº©m Ä‘ang Ä‘Æ°á»£c Ä‘áº·t.");
         }
     }
 
@@ -548,6 +591,65 @@ public class ArtisanProductService {
         return "IMAGE";
     }
 
+    private void validateMediaFile(MultipartFile file, String mediaType) {
+        long maxSize = "VIDEO".equals(mediaType) ? MAX_VIDEO_SIZE_BYTES : MAX_IMAGE_SIZE_BYTES;
+        if (file.getSize() > maxSize) {
+            throw new RuntimeException(("VIDEO".equals(mediaType) ? "Video" : "áº¢nh")
+                    + " vÆ°á»£t quÃ¡ dung lÆ°á»£ng tá»‘i Ä‘a "
+                    + formatMegabytes(maxSize)
+                    + "MB!");
+        }
+    }
+
+    private int findDefaultThumbnailIndex(List<MultipartFile> files, List<String> mediaTypes, boolean shouldSelectDefault) {
+        if (!shouldSelectDefault) {
+            return -1;
+        }
+
+        for (int index = 0; index < files.size(); index++) {
+            if ("IMAGE".equals(resolveMediaType(files.get(index), getListValue(mediaTypes, index)))) {
+                return index;
+            }
+        }
+
+        return -1;
+    }
+
+    private void ensureImageThumbnail(List<ProductMedia> mediaList) {
+        boolean hasVideoThumbnail = mediaList.stream()
+                .anyMatch(media -> Boolean.TRUE.equals(media.getIsThumbnail()) && "VIDEO".equals(media.getMediaType()));
+        boolean hasImageThumbnail = mediaList.stream()
+                .anyMatch(media -> Boolean.TRUE.equals(media.getIsThumbnail()) && "IMAGE".equals(media.getMediaType()));
+
+        if (!hasVideoThumbnail && hasImageThumbnail) {
+            return;
+        }
+
+        ProductMedia firstImage = mediaList.stream()
+                .filter(media -> "IMAGE".equals(media.getMediaType()))
+                .findFirst()
+                .orElse(null);
+
+        if (firstImage == null) {
+            mediaList.stream()
+                    .filter(media -> Boolean.TRUE.equals(media.getIsThumbnail()))
+                    .forEach(media -> {
+                        media.setIsThumbnail(false);
+                        productMediaRepository.save(media);
+                    });
+            return;
+        }
+
+        mediaList.forEach(media -> {
+            media.setIsThumbnail(media.getMediaId().equals(firstImage.getMediaId()));
+            productMediaRepository.save(media);
+        });
+    }
+
+    private long formatMegabytes(long bytes) {
+        return bytes / 1024 / 1024;
+    }
+
     private Integer getNextDisplayOrder(List<ProductMedia> existingMedia) {
         return existingMedia.stream()
                 .map(ProductMedia::getDisplayOrder)
@@ -563,12 +665,12 @@ public class ArtisanProductService {
         }
 
         if (shotType == null || shotType.isBlank()) {
-            throw new RuntimeException("Vui lòng chọn góc chụp!");
+            throw new RuntimeException("Vui lÃ²ng chá»n gÃ³c chá»¥p!");
         }
 
         String normalizedShotType = shotType.trim().toUpperCase(Locale.ROOT);
         if (!VALID_SHOT_TYPES.contains(normalizedShotType)) {
-            throw new RuntimeException("Góc chụp không hợp lệ!");
+            throw new RuntimeException("GÃ³c chá»¥p khÃ´ng há»£p lá»‡!");
         }
 
         return normalizedShotType;
@@ -621,4 +723,5 @@ public class ArtisanProductService {
         return suffix.toString();
     }
 }
+
 

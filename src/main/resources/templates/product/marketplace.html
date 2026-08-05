@@ -63,22 +63,22 @@
 <!-- ===================================================== -->
 <div class="container mt-4">
     <div class="category-tabs-container">
-        <a th:href="@{/marketplace(keyword=${keyword}, availableOnly=${availableOnly}, ages=${ages}, species=${species}, styles=${styles}, sort=${sort})}" 
+        <a th:href="@{/marketplace(keyword=${keyword}, availableOnly=${availableOnly}, ages=${ages}, species=${species}, styles=${styles}, tagIds=${tagIds}, sort=${sort})}" 
            class="category-tab-pill" 
            th:classappend="${segment == null && minPrice == null && (maxPrice == null || maxPrice == 20000000)} ? 'active'"
            th:text="${#locale.language == 'en' ? 'All Bonsai Trees' : 'Tất Cả Cây'}">All Bonsai Trees</a>
         
-        <a th:href="@{/marketplace(segment='Popular Picks', keyword=${keyword}, availableOnly=${availableOnly}, ages=${ages}, species=${species}, styles=${styles}, sort=${sort})}" 
+        <a th:href="@{/marketplace(segment='Popular Picks', keyword=${keyword}, availableOnly=${availableOnly}, ages=${ages}, species=${species}, styles=${styles}, tagIds=${tagIds}, sort=${sort})}" 
            class="category-tab-pill" 
            th:classappend="${segment == 'Popular Picks'} ? 'active'"
            th:text="${#locale.language == 'en' ? 'Popular Picks' : 'Được yêu thích'}">Popular Picks</a>
         
-        <a th:href="@{/marketplace(segment='Budget', keyword=${keyword}, availableOnly=${availableOnly}, ages=${ages}, species=${species}, styles=${styles}, sort=${sort})}" 
+        <a th:href="@{/marketplace(segment='Budget', keyword=${keyword}, availableOnly=${availableOnly}, ages=${ages}, species=${species}, styles=${styles}, tagIds=${tagIds}, sort=${sort})}" 
            class="category-tab-pill" 
            th:classappend="${segment == 'Budget'} ? 'active'"
            th:text="${#locale.language == 'en' ? 'Affordable Trees (Budget)' : 'Bonsai Bình Dân'}">Affordable Trees (Budget)</a>
         
-        <a th:href="@{/marketplace(segment='Mid', keyword=${keyword}, availableOnly=${availableOnly}, ages=${ages}, species=${species}, styles=${styles}, sort=${sort})}" 
+        <a th:href="@{/marketplace(segment='Mid', keyword=${keyword}, availableOnly=${availableOnly}, ages=${ages}, species=${species}, styles=${styles}, tagIds=${tagIds}, sort=${sort})}" 
            class="category-tab-pill" 
            th:classappend="${segment == 'Mid'} ? 'active'"
            th:text="${#locale.language == 'en' ? 'Mid-range Trees' : 'Bonsai Tầm Trung'}">Mid-range Trees</a>
@@ -191,6 +191,24 @@
                             </label>
                         </div>
                     </div>
+
+                    <!-- Tag Checklist -->
+                    <div class="filter-block" th:if="${tags != null && !tags.isEmpty()}">
+                        <div class="filter-block-title">
+                            <span>Thẻ nhãn</span>
+                            <i class="fa-solid fa-chevron-up"></i>
+                        </div>
+                        <div class="filter-block-content">
+                            <label class="checkbox-label" th:each="tag : ${tags}">
+                                <span th:text="${tag.tagName}">Cổ thụ</span>
+                                <input type="checkbox"
+                                       name="tagIds"
+                                       th:value="${tag.tagId}"
+                                       th:checked="${tagIds != null && tagIds.contains(tag.tagId)}">
+                                <span class="checkbox-checkmark"></span>
+                            </label>
+                        </div>
+                    </div>
     
                     <!-- Price Filter -->
                     <div class="filter-block">
@@ -292,9 +310,10 @@
             <!-- Product Card Grid (4 columns on desktop) -->
             <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-xl-4 g-3">
 
-                <!-- DYNAMIC PRODUCT CARDS LOOP -->
                 <div class="col" th:each="product : ${products}">
                     <div class="product-card"
+                         style="cursor: pointer;"
+                         th:onclick="|if(!event.target.closest('.card-btn-wishlist, .btn-card-cart-icon, video, a, button')) { window.location.href='@{/product/{id}(id=${product.productId})}' }|"
                          th:with="primaryMediaUrl=${product.primaryMediaUrl},
                                   primaryMediaType=${product.primaryMediaType},
                                   isMidSegment=${product.midSegment}"
@@ -314,7 +333,7 @@
                             Wishlist icon kept UI-only.
                             Reason: Wishlist interaction logic is not requested for this task.
                             -->
-                            <button class="card-btn-wishlist" title="Yêu thích"><i class="fa-regular fa-heart"></i></button>
+                            <button sec:authorize="isAnonymous() or hasRole('CUSTOMER')" class="card-btn-wishlist" th:data-product-id="${product.productId}" title="Yêu thích"><i class="fa-regular fa-heart"></i></button>
                             
                             <span class="card-segment-ribbon" th:if="${isMidSegment}">
                                 <i class="fa-solid fa-gem"></i> <span th:text="#{product.selected}">Selected</span>
@@ -415,6 +434,7 @@
                        ages=${ages},
                        species=${species},
                        styles=${styles},
+                       tagIds=${tagIds},
                        sort=${sort},
                        segment=${segment},
                        category=${category}
@@ -432,6 +452,7 @@
                        ages=${ages},
                        species=${species},
                        styles=${styles},
+                       tagIds=${tagIds},
                        sort=${sort},
                        segment=${segment},
                        category=${category}
@@ -449,6 +470,7 @@
                        ages=${ages},
                        species=${species},
                        styles=${styles},
+                       tagIds=${tagIds},
                        sort=${sort},
                        segment=${segment},
                        category=${category}

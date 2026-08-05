@@ -4,6 +4,7 @@ import com.example.bonsai_shop.entity.Product;
 import com.example.bonsai_shop.entity.ProductMedia;
 import com.example.bonsai_shop.artisan.service.ProductJournalService;
 import com.example.bonsai_shop.product.service.ProductService;
+import com.example.bonsai_shop.product.service.ReviewService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -38,6 +39,7 @@ public class MarketplaceController {
 
     private final ProductService productService;
     private final ProductJournalService productJournalService;
+    private final ReviewService reviewService;
 
     @GetMapping("/marketplace")
     public String marketplace(
@@ -52,6 +54,7 @@ public class MarketplaceController {
             @RequestParam(required = false) List<String> ages,
             @RequestParam(required = false) List<String> species,
             @RequestParam(required = false) List<String> styles,
+            @RequestParam(required = false) List<Integer> tagIds,
             @RequestParam(required = false) List<String> priceRanges,
             @RequestParam(required = false) String sort,
             Model model) {
@@ -80,6 +83,7 @@ public class MarketplaceController {
                 ages,
                 species,
                 styles,
+                tagIds,
                 priceRanges,
                 PageRequest.of(page, 12, springSort));
 
@@ -94,6 +98,8 @@ public class MarketplaceController {
         model.addAttribute("ages", ages);
         model.addAttribute("species", species);
         model.addAttribute("styles", styles);
+        model.addAttribute("tagIds", tagIds);
+        model.addAttribute("tags", productService.getTags());
         model.addAttribute("priceRanges", priceRanges);
         model.addAttribute("sort", sort);
         model.addAttribute("activePage", "marketplace");
@@ -148,6 +154,9 @@ public class MarketplaceController {
                 product.getCreatedBy() == null ? null : product.getCreatedBy().getUserId()
         ));
         model.addAttribute("journalEvents", productJournalService.getPublicEvents(product));
+        model.addAttribute("relatedProducts", productService.getRelatedProducts(product, 4));
+        model.addAttribute("reviews", reviewService.getApprovedReviewsByProduct(product.getProductId()));
+        model.addAttribute("averageRating", reviewService.getAverageRating(product.getProductId()));
         model.addAttribute("activePage", "marketplace");
         return "product/product-detail";
     }

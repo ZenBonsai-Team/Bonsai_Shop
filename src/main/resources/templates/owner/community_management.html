@@ -2,27 +2,21 @@
 <html lang="vi" xmlns:th="http://www.thymeleaf.org"
       th:replace="~{fragments/dashboard-layout :: layout(~{::title}, ~{::#community-content}, ~{::styles}, ~{::scripts})}">
 <head>
-    <title>Quản trị Cộng đồng - Bonsai Shop</title>
+    <title>Quản trị Cộng đồng - Minh Kỷ Garden</title>
     <th:block th:fragment="styles">
         <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+        <link rel="stylesheet" th:href="@{/css/moderator-orders.css}">
         <style>
-            .table th {
-                font-weight: 600;
-                font-size: 0.95rem;
-                letter-spacing: 0.02em;
-            }
-            .table td {
-                padding: 18px 12px;
-            }
             .post-title-link {
                 font-size: 1.05rem;
                 transition: color 0.2s ease;
+                font-family: 'Plus Jakarta Sans', sans-serif;
             }
             .post-title-link:hover {
-                color: var(--accent-color) !important;
+                color: #2E7D32 !important;
             }
             .stt-column {
-                font-size: 1.1rem;
+                font-size: 1rem;
                 font-weight: 600;
                 color: var(--text-muted);
                 width: 60px;
@@ -34,35 +28,28 @@
             .modal-content {
                 border-radius: 16px;
                 border: none;
-                box-shadow: var(--shadow-lg);
+                box-shadow: 0 10px 30px rgba(0,0,0,0.1);
             }
             .modal-header {
                 border-bottom: 1px solid var(--border-color);
-                background: var(--bg-beige);
+                background: #f7f9f6;
                 border-top-left-radius: 16px;
                 border-top-right-radius: 16px;
             }
             .modal-footer {
                 border-top: 1px solid var(--border-color);
             }
-            .form-select, .form-control {
-                border-color: var(--border-color);
-                border-radius: 8px;
-            }
-            .form-select:focus, .form-control:focus {
-                border-color: var(--accent-color);
-                box-shadow: 0 0 0 3px rgba(184, 146, 106, 0.15);
-            }
             .btn-action {
                 width: 78px;
                 display: inline-flex;
                 align-items: center;
                 justify-content: center;
-                font-size: 0.85rem;
+                font-size: 0.82rem;
                 font-weight: 500;
                 padding: 5px 10px;
                 height: 30px;
                 white-space: nowrap;
+                border-radius: 6px;
             }
         </style>
     </th:block>
@@ -72,7 +59,9 @@
 <div id="community-content" th:with="paramActivePage='community'">
     <header class="dashboard-header-title mb-4">
         <div>
-            <h1 class="serif-text mb-1">Quản lý Cộng đồng</h1>
+            <h1 class="serif-text mb-1" style="font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; color: #1c3322; font-size: 1.8rem;">
+                Quản lý Cộng đồng
+            </h1>
             <p class="text-secondary mb-0">Xem và quản lý các bài chia sẻ kinh nghiệm cùng bình luận trên diễn đàn.</p>
         </div>
     </header>
@@ -94,37 +83,56 @@
     </div>
 
     <!-- Tabbed navigation -->
-    <div class="card border-0 shadow-sm mb-4" style="border-radius: 16px;">
-        <div class="card-body p-4">
-            <!-- Search & Status Filter Bar -->
-            <form method="get" th:action="@{/moderator/community}" class="mb-4">
+    <div class="management-card p-4">
+        <!-- Toolbar Header: Search & Sort -->
+        <div class="toolbar-header mb-4">
+            <form method="get" th:action="@{/moderator/community}">
                 <input type="hidden" name="tab" th:value="${activeTab}">
-                <div class="d-flex flex-column flex-lg-row justify-content-between align-items-stretch align-items-lg-center gap-3 p-3 bg-light rounded-4 border">
+                <input type="hidden" name="status" th:value="${statusFilter}">
+                
+                <div class="toolbar-search-row">
                     <!-- Search Input -->
-                    <div class="input-group" style="max-width: 480px;">
-                        <span class="input-group-text bg-white border-end-0"><i class="fa-solid fa-magnifying-glass text-secondary"></i></span>
-                        <input type="text" name="search" th:value="${search}" class="form-control border-start-0 ps-0" placeholder="Tìm kiếm tiêu đề, nội dung hoặc tác giả...">
-                        <button class="btn btn-dark px-3" type="submit">Tìm kiếm</button>
+                    <div class="search-input-wrapper">
+                        <span class="search-icon"><i class="fa-solid fa-magnifying-glass"></i></span>
+                        <input type="text" name="search" th:value="${search}" placeholder="Tìm kiếm tiêu đề, nội dung hoặc tác giả...">
                     </div>
-
-                    <!-- Status Filter Pills -->
-                    <div class="d-flex flex-wrap align-items-center gap-2">
-                        <span class="text-secondary small fw-semibold me-1"><i class="fa-solid fa-filter me-1"></i>Lọc trạng thái:</span>
-                        <div class="d-flex flex-wrap gap-1">
-                            <a th:href="@{/moderator/community(tab=${activeTab}, search=${search}, status='ALL')}" class="btn btn-sm rounded-pill px-3" th:classappend="${statusFilter == 'ALL'} ? 'btn-dark' : 'btn-outline-secondary'">Tất cả</a>
-                            <a th:href="@{/moderator/community(tab=${activeTab}, search=${search}, status='APPROVED')}" class="btn btn-sm rounded-pill px-3" th:classappend="${statusFilter == 'APPROVED'} ? 'btn-success text-white' : 'btn-outline-success'">Công khai</a>
-                            <a th:href="@{/moderator/community(tab=${activeTab}, search=${search}, status='FLAGGED')}" class="btn btn-sm rounded-pill px-3" th:classappend="${statusFilter == 'FLAGGED'} ? 'btn-warning text-dark fw-bold border-warning' : 'btn-outline-warning'">⚠️ Chờ kiểm duyệt</a>
-                            <a th:if="${activeTab == 'posts'}" th:href="@{/moderator/community(tab=${activeTab}, search=${search}, status='HIDDEN')}" class="btn btn-sm rounded-pill px-3" th:classappend="${statusFilter == 'HIDDEN'} ? 'btn-danger text-white' : 'btn-outline-danger'">Tạm ẩn</a>
-                        </div>
+                    
+                    <div class="toolbar-filters-group">
+                        <button class="btn btn-primary rounded-pill px-4" type="submit" style="font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 600; font-size: 0.85rem; background-color: #1c3322; border-color: #1c3322;">
+                            Tìm kiếm
+                        </button>
                     </div>
                 </div>
             </form>
+            
+            <!-- Status Filter Tabs -->
+            <div class="filter-tabs mt-3">
+                <a th:href="@{/moderator/community(tab=${activeTab}, search=${search}, status='ALL')}" 
+                   class="tab-btn" th:classappend="${statusFilter == 'ALL'} ? 'active' : ''">Tất cả</a>
+                
+                <a th:href="@{/moderator/community(tab=${activeTab}, search=${search}, status='APPROVED')}" 
+                   class="tab-btn" th:classappend="${statusFilter == 'APPROVED'} ? 'active' : ''">
+                   <i class="fa-solid fa-circle-check text-success me-1"></i>Công khai
+                </a>
+                
+                <a th:href="@{/moderator/community(tab=${activeTab}, search=${search}, status='FLAGGED')}" 
+                   class="tab-btn" th:classappend="${statusFilter == 'FLAGGED'} ? 'active' : ''">
+                    <i class="fa-solid fa-triangle-exclamation text-warning me-1"></i> Chờ kiểm duyệt
+                </a>
+                
+                <a th:if="${activeTab == 'posts'}" 
+                   th:href="@{/moderator/community(tab=${activeTab}, search=${search}, status='HIDDEN')}" 
+                   class="tab-btn" th:classappend="${statusFilter == 'HIDDEN'} ? 'active' : ''">
+                   <i class="fa-solid fa-eye-slash text-danger me-1"></i>Tạm ẩn
+                </a>
+            </div>
+        </div>
 
             <!-- Tab content: Posts -->
             <div th:if="${activeTab == 'posts'}">
                 <div class="table-responsive">
-                    <table class="table table-hover align-middle">
-                        <thead class="table-light">
+                    <table class="orders-table">
+                        <thead>
                             <tr>
                                 <th class="text-center" style="width: 60px;">STT</th>
                                 <th style="width: 120px;">Ảnh bìa</th>
@@ -221,29 +229,25 @@
                 </div>
 
                 <!-- Pagination Controls for Posts -->
-                <div class="d-flex justify-content-between align-items-center mt-4" th:if="${postTotalPages > 0}">
-                    <span class="text-secondary small" th:text="'Trang ' + (${postCurrentPage} + 1) + ' / ' + ${postTotalPages}">Trang 1 / 1</span>
-                    <nav aria-label="Page navigation">
-                        <ul class="pagination pagination-sm mb-0">
-                            <li class="page-item" th:classappend="${postCurrentPage == 0} ? 'disabled'">
-                                <a class="page-link" th:href="@{/moderator/community(tab='posts', postPage=${postCurrentPage - 1}, commentPage=${commentCurrentPage})}">Trước</a>
-                            </li>
-                            <li class="page-item" th:if="${postTotalPages > 0}" th:each="i : ${#numbers.sequence(0, postTotalPages - 1)}" th:classappend="${i == postCurrentPage} ? 'active'">
-                                <a class="page-link" th:href="@{/moderator/community(tab='posts', postPage=${i}, commentPage=${commentCurrentPage})}" th:text="${i + 1}">1</a>
-                            </li>
-                            <li class="page-item" th:classappend="${postCurrentPage == postTotalPages - 1} ? 'disabled'">
-                                <a class="page-link" th:href="@{/moderator/community(tab='posts', postPage=${postCurrentPage + 1}, commentPage=${commentCurrentPage})}">Sau</a>
-                            </li>
-                        </ul>
-                    </nav>
+                <div class="pagination-footer mt-3" th:if="${postTotalPages > 0}">
+                    <div class="pagination-info" th:text="'Trang ' + (${postCurrentPage} + 1) + ' / ' + ${postTotalPages}">
+                        Trang 1 / 1
+                    </div>
+                    <div class="pagination-controls">
+                        <a class="page-btn" th:classappend="${postCurrentPage == 0} ? 'disabled'" th:href="@{/moderator/community(tab='posts', postPage=${postCurrentPage - 1}, commentPage=${commentCurrentPage})}">Trước</a>
+                        <th:block th:each="i : ${#numbers.sequence(0, postTotalPages - 1)}">
+                            <a class="page-btn" th:classappend="${i == postCurrentPage} ? 'active'" th:href="@{/moderator/community(tab='posts', postPage=${i}, commentPage=${commentCurrentPage})}" th:text="${i + 1}">1</a>
+                        </th:block>
+                        <a class="page-btn" th:classappend="${postCurrentPage == postTotalPages - 1} ? 'disabled'" th:href="@{/moderator/community(tab='posts', postPage=${postCurrentPage + 1}, commentPage=${commentCurrentPage})}">Sau</a>
+                    </div>
                 </div>
             </div>
 
             <!-- Tab content: Comments -->
             <div th:if="${activeTab == 'comments'}">
                 <div class="table-responsive">
-                    <table class="table table-hover align-middle">
-                        <thead class="table-light">
+                    <table class="orders-table">
+                        <thead>
                             <tr>
                                 <th class="text-center" style="width: 50px;">STT</th>
                                 <th style="width: 160px;">Người viết</th>
@@ -326,26 +330,21 @@
                 </div>
 
                 <!-- Pagination Controls for Comments -->
-                <div class="d-flex justify-content-between align-items-center mt-4" th:if="${commentTotalPages > 0}">
-                    <span class="text-secondary small" th:text="'Trang ' + (${commentCurrentPage} + 1) + ' / ' + ${commentTotalPages}">Trang 1 / 1</span>
-                    <nav aria-label="Page navigation">
-                        <ul class="pagination pagination-sm mb-0">
-                            <li class="page-item" th:classappend="${commentCurrentPage == 0} ? 'disabled'">
-                                <a class="page-link" th:href="@{/moderator/community(tab='comments', postPage=${postCurrentPage}, commentPage=${commentCurrentPage - 1})}">Trước</a>
-                            </li>
-                            <li class="page-item" th:if="${commentTotalPages > 0}" th:each="i : ${#numbers.sequence(0, commentTotalPages - 1)}" th:classappend="${i == commentCurrentPage} ? 'active'">
-                                <a class="page-link" th:href="@{/moderator/community(tab='comments', postPage=${postCurrentPage}, commentPage=${i})}" th:text="${i + 1}">1</a>
-                            </li>
-                            <li class="page-item" th:classappend="${commentCurrentPage == commentTotalPages - 1} ? 'disabled'">
-                                <a class="page-link" th:href="@{/moderator/community(tab='comments', postPage=${postCurrentPage}, commentPage=${commentCurrentPage + 1})}">Sau</a>
-                            </li>
-                        </ul>
-                    </nav>
+                <div class="pagination-footer mt-3" th:if="${commentTotalPages > 0}">
+                    <div class="pagination-info" th:text="'Trang ' + (${commentCurrentPage} + 1) + ' / ' + ${commentTotalPages}">
+                        Trang 1 / 1
+                    </div>
+                    <div class="pagination-controls">
+                        <a class="page-btn" th:classappend="${commentCurrentPage == 0} ? 'disabled'" th:href="@{/moderator/community(tab='comments', postPage=${postCurrentPage}, commentPage=${commentCurrentPage - 1})}">Trước</a>
+                        <th:block th:each="i : ${#numbers.sequence(0, commentTotalPages - 1)}">
+                            <a class="page-btn" th:classappend="${i == commentCurrentPage} ? 'active'" th:href="@{/moderator/community(tab='comments', postPage=${postCurrentPage}, commentPage=${i})}" th:text="${i + 1}">1</a>
+                        </th:block>
+                        <a class="page-btn" th:classappend="${commentCurrentPage == commentTotalPages - 1} ? 'disabled'" th:href="@{/moderator/community(tab='comments', postPage=${postCurrentPage}, commentPage=${commentCurrentPage + 1})}">Sau</a>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
 
 <th:block th:fragment="scripts">
     <!-- Moderation Popup Modal -->
@@ -573,3 +572,4 @@
 
 </body>
 </html>
+

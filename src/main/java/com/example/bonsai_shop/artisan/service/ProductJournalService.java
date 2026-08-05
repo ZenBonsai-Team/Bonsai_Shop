@@ -19,6 +19,10 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class ProductJournalService {
 
+    private static final int MAX_MEDIA_PER_UPLOAD = 10;
+    private static final long MAX_IMAGE_SIZE_BYTES = 5L * 1024 * 1024;
+    private static final long MAX_VIDEO_SIZE_BYTES = 100L * 1024 * 1024;
+
     private static final Set<String> VALID_EVENT_TYPES = Set.of(
             "PHOTO_UPDATE",
             "GROWTH",
@@ -68,6 +72,9 @@ public class ProductJournalService {
         }
         if (title == null || title.isBlank()) {
             throw new RuntimeException("Vui lòng nhập tiêu đề cập nhật.");
+        }
+        if (!hasUploadedFiles(files)) {
+            throw new RuntimeException("Vui lòng chọn ít nhất một ảnh/video để tạo cập nhật.");
         }
 
         ProductJournalEvent event = ProductJournalEvent.builder()
@@ -139,7 +146,7 @@ public class ProductJournalService {
         ProductJournalEvent event = journalEventRepository.findByEventIdAndProduct(eventId, product)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy cập nhật cây."));
 
-        if (files == null || files.stream().allMatch(file -> file == null || file.isEmpty())) {
+        if (!hasUploadedFiles(files)) {
             throw new RuntimeException("Vui lòng chọn ít nhất một ảnh/video để bổ sung.");
         }
 
@@ -153,18 +160,25 @@ public class ProductJournalService {
             return;
         }
 
+        List<MultipartFile> validFiles = files.stream()
+                .filter(file -> file != null && !file.isEmpty())
+                .toList();
+        if (validFiles.isEmpty()) {
+            return;
+        }
+        if (validFiles.size() > MAX_MEDIA_PER_UPLOAD) {
+            throw new RuntimeException("Má»—i láº§n chá»‰ Ä‘Æ°á»£c táº£i lÃªn tá»‘i Ä‘a 10 media nháº­t kÃ½.");
+        }
+        validFiles.forEach(file -> validateMediaFile(file, resolveMediaType(file)));
+
         int displayOrder = event.getMediaList() == null ? 0 : event.getMediaList().stream()
                 .map(ProductJournalMedia::getDisplayOrder)
                 .filter(order -> order != null)
                 .max(Integer::compareTo)
                 .orElse(-1) + 1;
-        for (MultipartFile file : files) {
-            if (file == null || file.isEmpty()) {
-                continue;
-            }
+        for (MultipartFile file : validFiles) {
             String mediaUrl = mediaStorageService.storeProductMedia(file);
-            String contentType = file.getContentType();
-            String mediaType = contentType != null && contentType.startsWith("video/") ? "VIDEO" : "IMAGE";
+            String mediaType = resolveMediaType(file);
             event.getMediaList().add(ProductJournalMedia.builder()
                     .event(event)
                     .mediaUrl(mediaUrl)
@@ -172,6 +186,28 @@ public class ProductJournalService {
                     .displayOrder(displayOrder++)
                     .build());
         }
+    }
+
+    private boolean hasUploadedFiles(List<MultipartFile> files) {
+        return files != null && files.stream().anyMatch(file -> file != null && !file.isEmpty());
+    }
+
+    private void validateMediaFile(MultipartFile file, String mediaType) {
+        long maxSize = "VIDEO".equals(mediaType) ? MAX_VIDEO_SIZE_BYTES : MAX_IMAGE_SIZE_BYTES;
+        if (file.getSize() > maxSize) {
+            String label = "VIDEO".equals(mediaType) ? "Video" : "áº¢nh";
+            String sizeLabel = "VIDEO".equals(mediaType) ? "100MB" : "5MB";
+            throw new RuntimeException(label + " nháº­t kÃ½ vÆ°á»£t quÃ¡ dung lÆ°á»£ng tá»‘i Ä‘a " + sizeLabel + ".");
+        }
+    }
+
+    private String resolveMediaType(MultipartFile file) {
+        String contentType = file.getContentType();
+        String filename = file.getOriginalFilename();
+        boolean isVideo = (contentType != null && contentType.startsWith("video/"))
+                || (filename != null && (filename.toLowerCase().endsWith(".mp4")
+                || filename.toLowerCase().endsWith(".webm")));
+        return isVideo ? "VIDEO" : "IMAGE";
     }
 
     private void ensureNotSold(Product product) {

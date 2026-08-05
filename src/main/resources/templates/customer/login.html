@@ -14,10 +14,10 @@
     <!-- BÊN TRÁI: ẢNH + TAGLINE -->
     <div class="login-left">
 
-        <div class="brand">
+        <a th:href="@{/home}" class="brand" style="display: flex; align-items: center; gap: 8px; text-decoration: none; cursor: pointer;">
             <img th:src="@{/images/logo.png}" alt="Logo" style="width: 32px; height: 32px; border-radius: 6px; object-fit: contain;">
-            <span class="brand-name" style="font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; color: #ffffff;">Bonsai Shop</span>
-        </div>
+            <span class="brand-name" style="font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; color: #ffffff;">Minh Kỷ Garden</span>
+        </a>
 
         <div class="tagline">
             <div class="tagline-line"></div>
@@ -50,7 +50,7 @@
 
             <!-- THÔNG BÁO LỖI -->
             <div th:if="${param.error}" class="alert alert-error">
-                ❌ Email hoặc mật khẩu không đúng!
+                ❌ <span th:text="${errorMsg != null ? errorMsg : 'Email hoặc mật khẩu không đúng!'}">Email hoặc mật khẩu không đúng!</span>
             </div>
             <div th:if="${param.logout}" class="alert alert-success">
                 ✅ Đăng xuất thành công!

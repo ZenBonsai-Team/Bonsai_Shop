@@ -20,7 +20,9 @@
     <div class="register-card">
 
         <div class="register-header">
-            <img th:src="@{/images/logo.png}" alt="Logo" class="register-logo" style="width: 80px; height: 80px; border-radius: 16px; object-fit: contain; margin-bottom: 14px; box-shadow: 0 4px 12px rgba(0,0,0,0.08);">
+            <a th:href="@{/home}">
+                <img th:src="@{/images/logo.png}" alt="Logo" class="register-logo" style="width: 80px; height: 80px; border-radius: 16px; object-fit: contain; margin-bottom: 14px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); cursor: pointer;">
+            </a>
             <h1 th:text="#{auth.register.heading}">BSMS</h1>
             <p th:text="#{auth.register.subheading}">Nơi nghệ thuật và đam mê hội tụ.</p>
         </div>

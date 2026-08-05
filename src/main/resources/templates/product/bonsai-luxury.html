@@ -1,9 +1,11 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="vi"
       xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.w3.org/1999/xhtml">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf.token}">
+    <meta name="_csrf_header" th:content="${_csrf.headerName}">
     <title>Bonsai Luxury — Bonsai di sản cho không gian cao cấp</title>
     <meta name="description"
           content="Bonsai Luxury — bộ sưu tập bonsai di sản, tác phẩm độc bản, tư vấn nghệ nhân, bàn giao cao cấp và chăm sóc riêng sau sở hữu.">
@@ -350,6 +352,13 @@
                                     <strong>Giá theo yêu cầu</strong>
                                 </div>
                                 <div class="card-actions">
+                                    <button sec:authorize="isAnonymous() or hasRole('CUSTOMER')"
+                                            class="card-btn-wishlist"
+                                            type="button"
+                                            th:data-product-id="${item.productId}"
+                                            title="Yêu thích">
+                                        <i class="fa-regular fa-heart"></i>
+                                    </button>
                                     <a th:href="@{'/bonsai-luxury-detail/' + ${item.productId}}" class="btn-detail-luxury">
                                         <span class="btn-text">Xem chi tiết</span>
                                         <span class="btn-arrow" aria-hidden="true">→</span>
@@ -496,3 +505,4 @@
 </script>
 </body>
 </html>
+

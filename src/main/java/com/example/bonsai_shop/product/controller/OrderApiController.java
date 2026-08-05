@@ -100,14 +100,6 @@ public class OrderApiController {
         if (!productIds.isEmpty()) {
             List<Product> products = orderService.getProductsByIds(productIds);
 
-            try {
-                orderService.validateOrderLimit(products);
-            } catch (IllegalArgumentException e) {
-                response.put("success", false);
-                response.put("message", e.getMessage());
-                return ResponseEntity.badRequest().body(response);
-            }
-
             // UX Validation Layer â€” kiá»ƒm tra tráº¡ng thÃ¡i sáº£n pháº©m
             // LÆ¯U Ã: Ä‘Ã¢y KHÃ”NG pháº£i data guard. reserveIfAvailable() trong createOrder() má»›i lÃ  lá»›p báº£o vá»‡ cuá»‘i cÃ¹ng.
             List<Product> unavailableProducts = orderService.validateProductAvailability(products);
@@ -539,15 +531,6 @@ public class OrderApiController {
             return ResponseEntity.status(403).body(response);
         }
 
-        // Kiá»ƒm tra giá»›i háº¡n Ä‘Æ¡n hÃ ng (â‰¤ 200 triá»‡u VNÄ) sá»›m trÆ°á»›c khi yÃªu cáº§u/xÃ¡c thá»±c OTP
-        try {
-            orderService.validateOrderLimit(dto, customer);
-        } catch (IllegalArgumentException e) {
-            response.put("success", false);
-            response.put("message", e.getMessage());
-            return ResponseEntity.badRequest().body(response);
-        }
-
         // [Má»šI] Pre-validate tráº¡ng thÃ¡i sáº£n pháº©m cho Logged-in User
         // Guest: Ä‘Ã£ Ä‘Æ°á»£c validate trong /send-guest-otp trÆ°á»›c khi gá»­i OTP
         // LÆ¯U Ã: Ä‘Ã¢y lÃ  UX layer â€” khÃ´ng thay tháº¿ Ä‘Æ°á»£c reserveIfAvailable() trong createOrder()
@@ -603,7 +586,7 @@ public class OrderApiController {
         try {
             Order createdOrder = orderService.createOrder(dto, customer);
             response.put("success", true);
-            response.put("paymentMethod", dto.getPaymentMethod() != null ? dto.getPaymentMethod() : "COD");
+            response.put("paymentMethod", dto.getPaymentMethod() != null ? dto.getPaymentMethod() : "DEPOSIT");
             response.put("orderCode", createdOrder.getOrderCode());
             return ResponseEntity.ok(response);
         } catch (IllegalArgumentException | IllegalStateException e) {
@@ -764,7 +747,7 @@ public class OrderApiController {
         }
 
         if (resolvedPaymentMethod == null) {
-            resolvedPaymentMethod = isDepositFlow ? "COD" : "VNPAY";
+            resolvedPaymentMethod = isDepositFlow ? "DEPOSIT" : "VNPAY";
         }
 
         BigDecimal immediatePaymentAmount;

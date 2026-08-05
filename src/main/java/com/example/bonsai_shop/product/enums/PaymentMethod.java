@@ -34,5 +34,10 @@ public enum PaymentMethod {
      * Tách riêng với CASH để phân biệt rõ phương thức.
      * Hiện tại chưa sử dụng.
      */
-    BANK_TRANSFER
+    BANK_TRANSFER,
+
+    /**
+     * Đặt cọc trước (thanh toán khoản cọc trực tuyến/bằng phương thức cọc, phần còn lại thu khi nhận cây).
+     */
+    DEPOSIT
 }

@@ -18,5 +18,8 @@ public class ProductDetailResponseDTO {
     private String style;
     private BigDecimal price;
     private String productStatus;
+    private Boolean isVisible;
+    private Integer segmentId;
+    private String segmentName;
     private String imageUrl;
 }

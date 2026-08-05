@@ -31,4 +31,12 @@ public class ModerationNotification {
     @Builder.Default
     @Column(name = "CreatedAt")
     private LocalDateTime createdAt = LocalDateTime.now();
+
+    public Boolean getIsRead() {
+        return this.isRead;
+    }
+
+    public void setIsRead(Boolean isRead) {
+        this.isRead = isRead;
+    }
 }

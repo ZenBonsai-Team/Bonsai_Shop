@@ -18,6 +18,7 @@ import com.example.bonsai_shop.product.repository.ProductMediaRepository;
 import com.example.bonsai_shop.product.repository.ProductRepository;
 import com.example.bonsai_shop.product.repository.ProductSpecifications;
 import com.example.bonsai_shop.product.repository.ProductTagRepository;
+import com.example.bonsai_shop.product.repository.TagRepository;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 
@@ -27,6 +28,7 @@ public class ProductService {
     private final ProductRepository productRepository;
     private final ProductMediaRepository productMediaRepository;
     private final ProductTagRepository productTagRepository;
+    private final TagRepository tagRepository;
 
     public Page<ProductCardDTO> getMarketplaceProducts(Pageable pageable) {
         return productRepository.findMarketplaceProducts(pageable);
@@ -51,14 +53,20 @@ public class ProductService {
             List<String> ages,
             List<String> species,
             List<String> styles,
+            List<Integer> tagIds,
             List<String> priceRanges,
             Pageable pageable) {
         return productRepository.findAll(
                 ProductSpecifications.filterProducts(
-                        keyword, status, availableOnly, segment, category, minPrice, maxPrice, ages, species, styles, priceRanges
+                        keyword, status, availableOnly, segment, category, minPrice, maxPrice, ages, species, styles, tagIds, priceRanges
                 ),
                 pageable
         );
+    }
+
+    @Transactional(readOnly = true)
+    public List<Tag> getTags() {
+        return tagRepository.findAll();
     }
 
     public Page<ProductCardDTO> getPremiumProducts(Pageable pageable) {
@@ -107,9 +115,6 @@ public class ProductService {
     @Transactional(readOnly = true)
     public Product getProductById(Integer id) {
         Product product = productRepository.findById(id).orElse(null);
-        if (product != null && Boolean.FALSE.equals(product.getIsVisible())) {
-            return null;
-        }
         if (product != null) {
             if (product.getProductMedias() != null) {
                 product.getProductMedias().size();
@@ -141,6 +146,64 @@ public class ProductService {
         return productRepository
                 .findTop5ByProductStatusAndIsVisibleTrueOrderByViewCountDesc("AVAILABLE");
     }
+
+    @Transactional(readOnly = true)
+    public List<Product> getRelatedProducts(Product product, int limit) {
+        if (product == null || product.getVariety() == null) {
+            return List.of();
+        }
+        Integer varietyId = product.getVariety().getVarietyId();
+        Integer currentProductId = product.getProductId();
+        
+        final List<Product> relatedByVariety = productRepository.findAll().stream()
+                .filter(p -> p.getVariety() != null 
+                        && varietyId.equals(p.getVariety().getVarietyId())
+                        && !currentProductId.equals(p.getProductId())
+                        && !Boolean.FALSE.equals(p.getIsVisible())
+                        && !"DRAFT".equalsIgnoreCase(p.getProductStatus()))
+                .limit(limit)
+                .toList();
+                
+        List<Product> related = new java.util.ArrayList<>(relatedByVariety);
+                
+        if (related.size() < limit && product.getVariety().getCategory() != null) {
+            Integer categoryId = product.getVariety().getCategory().getCategoryId();
+            final List<Product> currentRelated = List.copyOf(related);
+            List<Product> additional = productRepository.findAll().stream()
+                    .filter(p -> p.getVariety() != null 
+                            && p.getVariety().getCategory() != null
+                            && categoryId.equals(p.getVariety().getCategory().getCategoryId())
+                            && !currentProductId.equals(p.getProductId())
+                            && !Boolean.FALSE.equals(p.getIsVisible())
+                            && !"DRAFT".equalsIgnoreCase(p.getProductStatus())
+                            && !currentRelated.contains(p))
+                    .limit(limit - related.size())
+                    .toList();
+            
+            related.addAll(additional);
+        }
+        
+        if (related.size() < limit) {
+            final List<Product> currentRelated = List.copyOf(related);
+            List<Product> fallback = productRepository.findAll().stream()
+                    .filter(p -> !currentProductId.equals(p.getProductId())
+                            && !Boolean.FALSE.equals(p.getIsVisible())
+                            && !"DRAFT".equalsIgnoreCase(p.getProductStatus())
+                            && !currentRelated.contains(p))
+                    .limit(limit - related.size())
+                    .toList();
+            related.addAll(fallback);
+        }
+        
+        related.forEach(p -> {
+            if (p.getProductMedias() != null) {
+                p.getProductMedias().size();
+            }
+        });
+        
+        return related;
+    }
+
 
     private ProductMediaDTO toProductMediaDTO(ProductMedia media) {
         return new ProductMediaDTO(

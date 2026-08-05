@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
@@ -254,9 +254,23 @@
             document.querySelectorAll('.filter-chip').forEach((chip) => chip.classList.remove('active'));
             button.classList.add('active');
             currentStatus = button.dataset.status;
+            const url = new URL(window.location.href);
+            url.searchParams.set('status', currentStatus);
+            window.history.replaceState({}, '', url);
             applyProductFilters();
         });
     });
+
+    const initialStatus = new URLSearchParams(window.location.search).get('status');
+    const initialStatusButton = initialStatus
+        ? document.querySelector(`.filter-chip[data-status="${initialStatus.toUpperCase()}"]`)
+        : null;
+    if (initialStatusButton) {
+        document.querySelectorAll('.filter-chip').forEach((chip) => chip.classList.remove('active'));
+        initialStatusButton.classList.add('active');
+        currentStatus = initialStatusButton.dataset.status;
+        applyProductFilters();
+    }
 
     productSearch.addEventListener('input', applyProductFilters);
 
@@ -400,3 +414,4 @@
 </script>
 </body>
 </html>
+

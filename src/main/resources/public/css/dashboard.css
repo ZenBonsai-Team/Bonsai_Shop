@@ -1527,6 +1527,7 @@ body:has(.artisan-topbar) .artisan-dashboard-hero {
 }
 
 .status-breakdown div,
+.status-breakdown a,
 .attention-cards div {
     align-items: center;
     background: #FAF8F5;
@@ -1535,6 +1536,17 @@ body:has(.artisan-topbar) .artisan-dashboard-hero {
     display: flex;
     justify-content: space-between;
     padding: 16px 18px;
+    text-decoration: none;
+}
+
+.status-breakdown a {
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.status-breakdown a:hover {
+    border-color: #D8C5AA;
+    box-shadow: 0 12px 28px rgba(28, 51, 34, 0.08);
+    transform: translateY(-1px);
 }
 
 .status-breakdown span,

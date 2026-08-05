@@ -180,17 +180,41 @@ class OrderActionServiceTest {
     }
 
     @Test
+    void manualActionCannotBypassModeratorAssignment() {
+        User assignedModerator = moderator(40);
+        User otherModerator = moderator(41);
+        Order order = assignedOrder("BSMS-ASSIGN", "DEPOSITED", assignedModerator);
+
+        when(orderRepository.findByOrderCode("BSMS-ASSIGN")).thenReturn(Optional.of(order));
+
+        assertThatThrownBy(() -> orderActionService.executeAction("BSMS-ASSIGN", request("complete"), otherModerator))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("Bạn không phụ trách đơn này");
+
+        verify(orderService, never()).confirmRemainingPayment(any(), any(), any());
+        verify(orderService, never()).completePaidOrder(any(), any());
+    }
+
+    @Test
+    void customerNoShowRequiresReasonBeforeCallingBackendWorkflow() {
+        User moderator = moderator(42);
+        Order order = assignedOrder("BSMS-NOSHOW", "DEPOSITED", moderator);
+
+        when(orderRepository.findByOrderCode("BSMS-NOSHOW")).thenReturn(Optional.of(order));
+
+        assertThatThrownBy(() -> orderActionService.executeAction("BSMS-NOSHOW", request("customer_no_show"), moderator))
+                .isInstanceOf(IllegalArgumentException.class);
+
+        verify(orderService, never()).markDepositedOrderCustomerNoShow(any(), any(), any());
+    }
+
+    @Test
     void faultRefundActionCallsDedicatedManualRefundWorkflow() {
         User moderator = moderator(32);
         Order order = assignedOrder("BSMS-007", "PAID", moderator);
         OrderActionRequestDTO request = request("record_fault_refund");
         request.setFaultParty("NURSERY");
-        request.setRefundAmount(new BigDecimal("500000"));
         request.setReason("Tree damaged before handover");
-        request.setEvidenceNote("Photo evidence");
-        request.setExternalReference("REF-001");
-        request.setCustomerKeepsTree(false);
-        request.setProductResolution("RETURNED_AND_RESELLABLE");
 
         when(orderRepository.findByOrderCode("BSMS-007")).thenReturn(Optional.of(order));
         when(orderHandlingRepository.findByOrderOrderIdOrderByHandledAtDesc(order.getOrderId()))
@@ -202,12 +226,12 @@ class OrderActionServiceTest {
         verify(orderService).recordFaultRefundAndCancel(
                 "BSMS-007",
                 "NURSERY",
-                new BigDecimal("500000"),
+                null,
                 "Tree damaged before handover",
-                "Photo evidence",
-                "REF-001",
-                false,
-                "RETURNED_AND_RESELLABLE",
+                null,
+                null,
+                null,
+                null,
                 moderator
         );
     }

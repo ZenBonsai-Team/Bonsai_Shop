@@ -149,7 +149,7 @@ class FinancialLedgerServiceTest {
 
         ArgumentCaptor<FinancialLedger> captor = ArgumentCaptor.forClass(FinancialLedger.class);
         verify(financialLedgerRepository).save(captor.capture());
-        assertThat(captor.getValue().getLedgerType()).isEqualTo(FinancialLedgerType.PARTIAL_REFUND);
+        assertThat(captor.getValue().getLedgerType()).isEqualTo(FinancialLedgerType.FULL_REFUND);
         assertThat(captor.getValue().getDirection()).isEqualTo(FinancialLedgerDirection.OUTFLOW);
         assertThat(captor.getValue().getFaultParty()).isEqualTo(FaultParty.NURSERY);
     }
@@ -187,7 +187,7 @@ class FinancialLedgerServiceTest {
         Payment deposit = payment(14, order, PaymentType.DEPOSIT.name(), "SUCCESS", "1000000");
         FinancialLedger previousRefund = FinancialLedger.builder()
                 .order(order)
-                .ledgerType(FinancialLedgerType.PARTIAL_REFUND)
+                .ledgerType(FinancialLedgerType.FULL_REFUND)
                 .direction(FinancialLedgerDirection.OUTFLOW)
                 .ledgerStatus(FinancialLedgerStatus.RECORDED)
                 .amount(new BigDecimal("300000"))
@@ -202,6 +202,84 @@ class FinancialLedgerServiceTest {
                 FaultParty.NURSERY,
                 new BigDecimal("800000"),
                 "Wrong tree delivered",
+                null,
+                null,
+                moderator(99)
+        )).isInstanceOf(IllegalArgumentException.class);
+
+        verify(financialLedgerRepository, never()).save(any(FinancialLedger.class));
+    }
+
+    @Test
+    void refundableCashIgnoresNonSuccessfulPaymentsAndVoidedRefunds() {
+        Order order = order(8);
+        Payment success = payment(15, order, PaymentType.FULL_PAYMENT.name(), "SUCCESS", "1000000");
+        Payment pending = payment(16, order, PaymentType.DEPOSIT.name(), "PENDING", "2000000");
+        Payment failed = payment(17, order, PaymentType.DEPOSIT.name(), "FAILED", "3000000");
+        Payment cancelled = payment(18, order, PaymentType.DEPOSIT.name(), "CANCELLED", "4000000");
+        FinancialLedger recordedRefund = FinancialLedger.builder()
+                .order(order)
+                .ledgerType(FinancialLedgerType.FULL_REFUND)
+                .direction(FinancialLedgerDirection.OUTFLOW)
+                .ledgerStatus(FinancialLedgerStatus.RECORDED)
+                .amount(new BigDecimal("250000"))
+                .build();
+
+        when(paymentRepository.findByOrderOrderIdOrderByPaymentIdAsc(8))
+                .thenReturn(List.of(success, pending, failed, cancelled));
+        when(financialLedgerRepository.findByOrderOrderIdAndLedgerStatus(8, FinancialLedgerStatus.RECORDED))
+                .thenReturn(List.of(recordedRefund));
+
+        BigDecimal refundable = financialLedgerService.calculateRefundableCash(order);
+
+        assertThat(refundable).isEqualByComparingTo("750000");
+    }
+
+    @Test
+    void refundableCashNeverReturnsNegativeAmount() {
+        Order order = order(9);
+        Payment success = payment(19, order, PaymentType.FULL_PAYMENT.name(), "SUCCESS", "100000");
+        FinancialLedger recordedRefund = FinancialLedger.builder()
+                .order(order)
+                .ledgerType(FinancialLedgerType.FULL_REFUND)
+                .direction(FinancialLedgerDirection.OUTFLOW)
+                .ledgerStatus(FinancialLedgerStatus.RECORDED)
+                .amount(new BigDecimal("200000"))
+                .build();
+
+        when(paymentRepository.findByOrderOrderIdOrderByPaymentIdAsc(9)).thenReturn(List.of(success));
+        when(financialLedgerRepository.findByOrderOrderIdAndLedgerStatus(9, FinancialLedgerStatus.RECORDED))
+                .thenReturn(List.of(recordedRefund));
+
+        BigDecimal refundable = financialLedgerService.calculateRefundableCash(order);
+
+        assertThat(refundable).isEqualByComparingTo("0");
+    }
+
+    @Test
+    void zeroAndNegativeRefundAmountsAreRejected() {
+        Order order = order(10);
+        Payment success = payment(20, order, PaymentType.FULL_PAYMENT.name(), "SUCCESS", "1000000");
+
+        when(paymentRepository.findByOrderOrderIdOrderByPaymentIdAsc(10)).thenReturn(List.of(success));
+        when(financialLedgerRepository.findByOrderOrderIdAndLedgerStatus(10, FinancialLedgerStatus.RECORDED))
+                .thenReturn(List.of());
+
+        assertThatThrownBy(() -> financialLedgerService.recordManualFaultRefund(
+                order,
+                FaultParty.NURSERY,
+                BigDecimal.ZERO,
+                "Compensation",
+                null,
+                null,
+                moderator(99)
+        )).isInstanceOf(IllegalArgumentException.class);
+
+        assertThatThrownBy(() -> financialLedgerService.recordManualFaultRefund(
+                order,
+                FaultParty.NURSERY,
+                new BigDecimal("-1"),
+                "Compensation",
                 null,
                 null,
                 moderator(99)

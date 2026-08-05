@@ -70,6 +70,9 @@ public class Order {
     @Column(name = "assigned_at")
     private LocalDateTime assignedAt;
 
+    @Column(name = "CompletedAt")
+    private LocalDateTime completedAt;
+
     @Version
     @Column(name = "version")
     private Integer version = 0;

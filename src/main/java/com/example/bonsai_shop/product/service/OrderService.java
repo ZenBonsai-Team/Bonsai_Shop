@@ -40,6 +40,8 @@ import com.example.bonsai_shop.product.repository.OrderLogRepository;
 import com.example.bonsai_shop.product.repository.OrderRepository;
 import com.example.bonsai_shop.product.repository.PaymentRepository;
 import com.example.bonsai_shop.product.repository.ProductRepository;
+import com.example.bonsai_shop.customer.repository.ModerationNotificationRepository;
+import com.example.bonsai_shop.entity.ModerationNotification;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -49,7 +51,6 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class OrderService {
 
-    public static final BigDecimal MAX_ORDER_AMOUNT = new BigDecimal("200000000");
     private static final String STATUS_PENDING_PAYMENT = "PENDING_PAYMENT";
     private static final String STATUS_PENDING = "PENDING";
     private static final BigDecimal ZERO = BigDecimal.ZERO;
@@ -63,6 +64,7 @@ public class OrderService {
     private final MailService mailService;
     private final CartService cartService;
     private final FinancialLedgerService financialLedgerService;
+    private final ModerationNotificationRepository notificationRepository;
 
     @Transactional(readOnly = true)
     public Page<Order> getFilteredOrders(String search, String status, String sort, int page, int limit) {
@@ -249,6 +251,7 @@ public class OrderService {
             if (depositAmount == null || depositAmount.compareTo(ZERO) <= 0) {
                 throw new IllegalArgumentException("Vui lòng nhập số tiền đặt cọc.");
             }
+            validateWholeNumberAmount(depositAmount, "Tiền đặt cọc");
             if (depositAmount.compareTo(newTotal) > 0) {
                 throw new IllegalArgumentException("Số tiền đặt cọc không được vượt quá tổng giá trị cây.");
             }
@@ -444,27 +447,6 @@ public class OrderService {
         return productsToBuy;
     }
 
-    public void validateOrderLimit(List<Product> products) {
-        BigDecimal totalAmount = products.stream()
-                .map(Product::getPrice)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-        if (totalAmount.compareTo(MAX_ORDER_AMOUNT) > 0) {
-            throw new IllegalArgumentException(
-                    "Tổng giá trị đơn hàng vượt quá giới hạn tối đa cho phép (tối đa 200.000.000 VNĐ)!");
-        }
-    }
-
-    public void validateOrderLimit(PurchaseOrderRequestDTO dto, User customer) {
-        validateOrderLimit(resolveProductsToBuy(dto, customer));
-    }
-
-    public void validateProductIdsLimit(List<Integer> productIds) {
-        if (productIds == null || productIds.isEmpty()) {
-            return;
-        }
-        validateOrderLimit(productRepository.findAllById(productIds));
-    }
-
     public List<Product> getProductsByIds(List<Integer> productIds) {
         if (productIds == null || productIds.isEmpty()) {
             return new ArrayList<>();
@@ -493,8 +475,6 @@ public class OrderService {
         if (productsToBuy.isEmpty()) {
             throw new IllegalArgumentException("Giỏ hàng của bạn đang trống! Vui lòng chọn sản phẩm trước.");
         }
-
-        validateOrderLimit(productsToBuy);
 
         for (Product prod : productsToBuy) {
             if (!"AVAILABLE".equalsIgnoreCase(prod.getProductStatus())) {
@@ -538,8 +518,8 @@ public class OrderService {
         Order savedOrder = orderRepository.save(order);
 
         // Khởi tạo bản ghi Payment PENDING ban đầu duy nhất theo 1-N Model
-        String rawMethod = dto.getPaymentMethod() != null ? dto.getPaymentMethod() : "COD";
-        String pType = ("DEPOSIT".equalsIgnoreCase(rawMethod) || "COD".equalsIgnoreCase(rawMethod)) 
+        String rawMethod = dto.getPaymentMethod() != null ? dto.getPaymentMethod() : PaymentMethod.DEPOSIT.name();
+        String pType = (PaymentMethod.DEPOSIT.name().equalsIgnoreCase(rawMethod) || "COD".equalsIgnoreCase(rawMethod)) 
                 ? PaymentType.DEPOSIT.name() 
                 : PaymentType.FULL_PAYMENT.name();
 
@@ -601,10 +581,108 @@ public class OrderService {
         // Trường hợp FULL_PAYMENT hoặc fallback
         order.setOrderStatus("PAID");
         orderRepository.save(order);
-        markProductsAsSold(order);
+        sendReviewReminderNotification(order);
 
         eventPublisher.publishEvent(new OrderPaidEvent(order));
         return true;
+    }
+
+    @Transactional
+    public boolean processPaymentFailure(String orderCode, String responseCode, String transactionStatus, String source) {
+        Order order = orderRepository.findByOrderCode(orderCode).orElse(null);
+        if (order == null) {
+            return false;
+        }
+
+        Payment pendingPayment = paymentRepository
+                .findTopByOrderOrderIdAndPaymentStatusOrderByPaymentIdDesc(order.getOrderId(), "PENDING")
+                .orElse(null);
+
+        if (pendingPayment == null) {
+            return paymentRepository.findByOrderOrderIdOrderByPaymentIdAsc(order.getOrderId()).stream()
+                    .anyMatch(payment -> "FAILED".equalsIgnoreCase(payment.getPaymentStatus()));
+        }
+
+        pendingPayment.setPaymentStatus("FAILED");
+        pendingPayment.setNotes(buildVnPayFailureNote(responseCode, transactionStatus, source));
+        paymentRepository.save(pendingPayment);
+
+        if (STATUS_PENDING_PAYMENT.equalsIgnoreCase(order.getOrderStatus())) {
+            appendOrderNote(order, "Thanh toán VNPay thất bại. Khách có thể thử thanh toán lại nếu đơn còn hiệu lực.");
+            orderRepository.save(order);
+        }
+
+        return true;
+    }
+
+    @Transactional
+    public Payment preparePendingVnPayPayment(String orderCode) {
+        Order order = orderRepository.findByOrderCode(orderCode)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy đơn hàng: " + orderCode));
+
+        if (!STATUS_PENDING_PAYMENT.equalsIgnoreCase(order.getOrderStatus())) {
+            throw new IllegalStateException("Đơn hàng hiện không ở trạng thái chờ thanh toán.");
+        }
+
+        Payment pendingPayment = paymentRepository
+                .findTopByOrderOrderIdAndPaymentStatusOrderByPaymentIdDesc(order.getOrderId(), "PENDING")
+                .orElse(null);
+        if (pendingPayment != null) {
+            return pendingPayment;
+        }
+
+        List<Payment> payments = paymentRepository.findByOrderOrderIdOrderByPaymentIdAsc(order.getOrderId());
+        Payment latestFailedVnPayPayment = payments.stream()
+                .filter(payment -> PaymentMethod.VNPAY.name().equalsIgnoreCase(payment.getPaymentMethod())
+                        || PaymentType.DEPOSIT.name().equalsIgnoreCase(payment.getPaymentType())
+                        || PaymentType.FULL_PAYMENT.name().equalsIgnoreCase(payment.getPaymentType()))
+                .filter(payment -> "FAILED".equalsIgnoreCase(payment.getPaymentStatus())
+                        || "EXPIRED".equalsIgnoreCase(payment.getPaymentStatus()))
+                .reduce((first, second) -> second)
+                .orElse(null);
+
+        String paymentType = latestFailedVnPayPayment != null && latestFailedVnPayPayment.getPaymentType() != null
+                ? latestFailedVnPayPayment.getPaymentType()
+                : (order.getDepositAmount() != null && order.getDepositAmount().compareTo(ZERO) > 0
+                ? PaymentType.DEPOSIT.name()
+                : PaymentType.FULL_PAYMENT.name());
+
+        BigDecimal amount = latestFailedVnPayPayment != null && latestFailedVnPayPayment.getAmount() != null
+                ? latestFailedVnPayPayment.getAmount()
+                : (PaymentType.DEPOSIT.name().equalsIgnoreCase(paymentType)
+                ? order.getDepositAmount()
+                : order.getTotalAmount());
+
+        if (amount == null || amount.compareTo(ZERO) <= 0) {
+            throw new IllegalStateException("Số tiền thanh toán không hợp lệ.");
+        }
+
+        String retryPaymentMethod = PaymentType.DEPOSIT.name().equalsIgnoreCase(paymentType)
+                ? PaymentMethod.DEPOSIT.name()
+                : PaymentMethod.VNPAY.name();
+
+        Payment retryPayment = Payment.builder()
+                .order(order)
+                .paymentType(paymentType)
+                .paymentMethod(retryPaymentMethod)
+                .paymentStatus("PENDING")
+                .amount(amount)
+                .notes("Retry VNPay payment after previous failed/expired attempt")
+                .build();
+        return paymentRepository.save(retryPayment);
+    }
+
+    private String buildVnPayFailureNote(String responseCode, String transactionStatus, String source) {
+        String note = "VNPay payment failed"
+                + " source=" + safeGatewayValue(source)
+                + ", responseCode=" + safeGatewayValue(responseCode)
+                + ", transactionStatus=" + safeGatewayValue(transactionStatus)
+                + ", at=" + LocalDateTime.now();
+        return note.length() > 500 ? note.substring(0, 500) : note;
+    }
+
+    private String safeGatewayValue(String value) {
+        return value == null || value.isBlank() ? "N/A" : value.trim();
     }
 
     @Transactional
@@ -650,7 +728,9 @@ public class OrderService {
         String oldStatus = order.getOrderStatus();
         LocalDateTime completedAt = LocalDateTime.now();
         order.setOrderStatus("COMPLETED");
+        order.setCompletedAt(completedAt);
         orderRepository.save(order);
+        sendReviewReminderNotification(order);
         markProductsAsSold(order);
         recordCompletedRevenueLedger(order, moderator, completedAt);
 
@@ -660,7 +740,7 @@ public class OrderService {
                 .actionType("REMAINING_PAYMENT_CONFIRMED")
                 .fromStatus(oldStatus)
                 .toStatus("COMPLETED")
-                .actionAt(LocalDateTime.now())
+                .actionAt(completedAt)
                 .build();
         orderLogRepository.save(logEntry);
 
@@ -693,9 +773,16 @@ public class OrderService {
     private BigDecimal normalizeNonNegativeAmount(BigDecimal amount, String label) {
         BigDecimal normalized = amount != null ? amount : ZERO;
         if (normalized.compareTo(ZERO) < 0) {
-            throw new IllegalArgumentException(label + " khÃ´ng Ä‘Æ°á»£c Ã¢m.");
+            throw new IllegalArgumentException(label + " không được âm.");
         }
+        validateWholeNumberAmount(normalized, label);
         return normalized;
+    }
+
+    private void validateWholeNumberAmount(BigDecimal amount, String label) {
+        if (amount != null && amount.stripTrailingZeros().scale() > 0) {
+            throw new IllegalArgumentException(label + " phải là số nguyên.");
+        }
     }
 
     @Transactional
@@ -757,51 +844,43 @@ public class OrderService {
             throw new IllegalArgumentException("Bên chịu trách nhiệm phải là nhà vườn hoặc quá trình vận chuyển.");
         }
 
+        // Tự động xác định số tiền hoàn 100% dựa trên tổng số tiền thực tế khách đã thanh toán
+        BigDecimal refundableCash = financialLedgerService.calculateRefundableCash(order);
+        if (refundableCash == null || refundableCash.compareTo(ZERO) <= 0) {
+            throw new IllegalStateException("Đơn hàng này không có khoản thanh toán thành công nào còn có thể hoàn tiền.");
+        }
+
+        BigDecimal calculatedRefundAmount = refundableCash;
         String normalizedReason = requireReason(reason);
+
         FinancialLedger refundLedger = financialLedgerService.recordManualFaultRefund(
                 order,
                 faultParty,
-                refundAmount,
+                calculatedRefundAmount,
                 normalizedReason,
                 evidenceNote,
                 externalReference,
                 moderator
         );
 
-        appendOrderNote(order, normalizedReason + " Hoàn tiền chỉ được ghi nhận thủ công, không tự động chuyển khoản.");
-        boolean keepsTree = Boolean.TRUE.equals(customerKeepsTree);
-        String newStatus;
-        if (keepsTree) {
-            if (!"PAID".equalsIgnoreCase(oldStatus) && !"COMPLETED".equalsIgnoreCase(oldStatus)) {
-                throw new IllegalStateException("Chỉ có thể để khách giữ cây khi đơn đã thanh toán toàn bộ.");
-            }
-            LocalDateTime completedAt = LocalDateTime.now();
-            order.setOrderStatus("COMPLETED");
-            orderRepository.save(order);
-            markProductsAsSold(order);
-            recordCompletedRevenueLedger(order, moderator, completedAt);
-            newStatus = "COMPLETED";
-        } else {
-            String normalizedProductResolution = requireProductResolution(productResolution);
-            order.setOrderStatus("CANCELLED");
-            orderRepository.save(order);
-            applyProductResolution(order, normalizedProductResolution);
-            newStatus = "CANCELLED";
-        }
+        appendOrderNote(order, normalizedReason + " Hoàn tiền 100% chỉ được ghi nhận thủ công, không tự động chuyển khoản.");
+
+        // Nghiệp vụ cố định: Đơn chuyển CANCELLED, khách không giữ cây, toàn bộ cây trong đơn trả về AVAILABLE
+        order.setOrderStatus("CANCELLED");
+        orderRepository.save(order);
+        releaseProducts(order);
 
         OrderLog logEntry = OrderLog.builder()
                 .order(order)
                 .actionBy(moderator)
                 .actionType(refundLedger.getLedgerType().name() + "_RECORDED")
                 .fromStatus(oldStatus)
-                .toStatus(newStatus)
+                .toStatus("CANCELLED")
                 .actionAt(LocalDateTime.now())
                 .build();
         orderLogRepository.save(logEntry);
 
-        if ("CANCELLED".equals(newStatus)) {
-            eventPublisher.publishEvent(new OrderRejectedEvent(order, normalizedReason));
-        }
+        eventPublisher.publishEvent(new OrderRejectedEvent(order, normalizedReason));
         return true;
     }
 
@@ -813,13 +892,22 @@ public class OrderService {
         }
         validateAssignedModerator(order, moderator);
         if (!"PAID".equalsIgnoreCase(order.getOrderStatus())) {
-            throw new IllegalStateException("Chỉ có thể hoàn thành đơn hàng đang ở trạng thái PAID.");
+            throw new IllegalStateException("Trạng thái hiện tại của đơn không cho phép xác nhận hoàn thành.");
+        }
+
+        BigDecimal refundableCash = financialLedgerService.calculateRefundableCash(order);
+        BigDecimal totalRequired = order.getTotalAmount() != null ? order.getTotalAmount() : ZERO;
+        if (refundableCash == null || refundableCash.compareTo(totalRequired) < 0) {
+            throw new IllegalStateException("Không thể hoàn thành đơn vì khách hàng chưa thanh toán đầy đủ.");
         }
 
         String oldStatus = order.getOrderStatus();
         LocalDateTime completedAt = LocalDateTime.now();
         order.setOrderStatus("COMPLETED");
+        order.setCompletedAt(completedAt);
         orderRepository.save(order);
+        sendReviewReminderNotification(order);
+        markProductsAsSold(order);
         recordCompletedRevenueLedger(order, moderator, completedAt);
 
         OrderLog logEntry = OrderLog.builder()
@@ -967,4 +1055,22 @@ public class OrderService {
             }
         }
     }
+
+    private void sendReviewReminderNotification(Order order) {
+        if (order != null && order.getCustomer() != null && order.getCustomer().getEmail() != null) {
+            try {
+                ModerationNotification notification = ModerationNotification.builder()
+                        .targetUsername(order.getCustomer().getEmail())
+                        .message("🎉 Đơn hàng " + order.getOrderCode() + " đã được thanh toán đầy đủ / hoàn thành! Hãy đánh giá và cho sao (Review & Rating) cho cây bonsai bạn đã mua nhé!")
+                        .isRead(false)
+                        .createdAt(LocalDateTime.now())
+                        .build();
+                notificationRepository.save(notification);
+            } catch (Exception e) {
+                log.error("Failed to send review reminder notification for order: " + order.getOrderCode(), e);
+            }
+        }
+    }
 }
+
+

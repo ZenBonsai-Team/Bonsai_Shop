@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="vi"
       xmlns:th="http://www.thymeleaf.org"
       th:replace="~{fragments/dashboard-layout :: layout(~{::title}, ~{::#moderator-content}, ~{::#page-styles}, ~{::#page-scripts})}"
@@ -285,8 +285,13 @@
                         </td>
                         <td class="col-age">
                             <span class="age-timer-element"
+                                  th:if="${order.orderStatus == null or (#strings.toUpperCase(order.orderStatus) != 'COMPLETED' and #strings.toUpperCase(order.orderStatus) != 'CANCELLED')}"
                                   th:data-timestamp="${order.statusTimestamp != null ? order.statusTimestamp : ''}"
                                   th:text="${order.ageFormatted}">-</span>
+                            <span class="age-static"
+                                  th:if="${order.orderStatus != null and #strings.toUpperCase(order.orderStatus) == 'COMPLETED'}">Đã hoàn thành</span>
+                            <span class="age-static"
+                                  th:if="${order.orderStatus != null and #strings.toUpperCase(order.orderStatus) == 'CANCELLED'}">Đã hủy</span>
                         </td>
                         <td class="col-status">
                             <span th:class="'badge-status badge-status-' + ${#strings.toLowerCase(order.orderStatus != null ? order.orderStatus : 'pending')}"
@@ -313,3 +318,4 @@
     </th:block>
 </body>
 </html>
+

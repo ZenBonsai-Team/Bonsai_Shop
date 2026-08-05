@@ -30,4 +30,10 @@ public class Review {
 
     @Column(name = "CreatedAt")
     private LocalDateTime createdAt = LocalDateTime.now();
+
+    @Column(name = "ReviewStatus", length = 20)
+    private String reviewStatus = "PENDING"; // PENDING, APPROVED, REJECTED
+
+    @Column(name = "Response", length = 1000)
+    private String response;
 }

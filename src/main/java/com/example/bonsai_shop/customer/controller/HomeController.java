@@ -3,6 +3,7 @@ package com.example.bonsai_shop.customer.controller;
 import com.example.bonsai_shop.entity.Product;
 import com.example.bonsai_shop.entity.User;
 import com.example.bonsai_shop.customer.repository.UserRepository;
+import com.example.bonsai_shop.livestream.repository.LiveSessionRepository;
 import com.example.bonsai_shop.product.service.ProductService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -21,6 +22,7 @@ public class HomeController {
 
     private final UserRepository userRepository;
     private final ProductService productService;
+    private final LiveSessionRepository liveSessionRepository;
 
     @GetMapping("/")
     public String index() {
@@ -50,6 +52,13 @@ public class HomeController {
         // Lấy top 5 sản phẩm xem nhiều nhất
         List<Product> topProducts = productService.getTop5MostViewed();
         model.addAttribute("topProducts", topProducts);
+
+        // Lấy danh sách nghệ nhân từ DB
+        List<User> artisans = userRepository.findFeaturedArtisans();
+        if (artisans.isEmpty()) {
+            artisans = userRepository.findByRoleRoleId(3); // 3: ARTISAN
+        }
+        model.addAttribute("artisans", artisans);
 
         // Lấy email user nếu đã đăng nhập
         if (principal instanceof UserDetails userDetails) {
@@ -99,5 +108,13 @@ public class HomeController {
         return "redirect:/contact?tab=privacy";
     }
 
+    @GetMapping("/live")
+    public String live(Model model) {
+        // Find the currently active session to show it
+        liveSessionRepository.findFirstByStatusOrderByStartTimeDesc("ONGOING")
+                .ifPresent(session -> model.addAttribute("activeSession", session));
+        model.addAttribute("activePage", "live");
+        return "customer/live";
+    }
 
 }
