@@ -8,4 +8,5 @@ public interface ModerationNotificationRepository extends JpaRepository<Moderati
     List<ModerationNotification> findByTargetUsernameOrderByCreatedAtDesc(String targetUsername);
     List<ModerationNotification> findTop10ByTargetUsernameOrderByCreatedAtDesc(String targetUsername);
     long countByTargetUsernameAndIsReadFalse(String targetUsername);
+    boolean existsByTargetUsernameAndMessageContaining(String targetUsername, String keyword);
 }

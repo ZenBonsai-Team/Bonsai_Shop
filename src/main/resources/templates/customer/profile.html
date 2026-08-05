@@ -57,7 +57,7 @@
                 Bài viết đã lưu
             </a>
 
-            <a href="#orderHistorySection">
+            <a sec:authorize="hasRole('CUSTOMER')" href="#orderHistorySection">
                 <i class="fa-solid fa-bag-shopping"></i>
                 Đơn hàng
             </a>
@@ -165,7 +165,7 @@
         <div th:if="${error}" th:text="${error}" class="alert alert-error"></div>
 
         <!-- ORDER HISTORY -->
-        <section class="order-section" id="orderHistorySection" style="scroll-margin-top: 20px;">
+        <section sec:authorize="hasRole('CUSTOMER')" class="order-section" id="orderHistorySection" style="scroll-margin-top: 20px;">
 
             <div class="section-title d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
                 <div>
@@ -335,16 +335,34 @@
                                                      <div class="d-flex flex-column gap-1">
                                                          <div class="fw-semibold text-dark" th:text="${detail.product != null ? detail.product.productName : 'Sản phẩm'}">Bonsai Tùng Cối</div>
                                                          <!-- Review Button -->
-                                                         <button th:if="${order.orderStatus == 'COMPLETED' and detail.product != null}" 
-                                                                 class="btn btn-sm btn-warning text-dark py-1 px-3 rounded-pill mt-2 write-review-btn fw-bold" 
-                                                                 style="font-size: 12px; width: fit-content; border: none; box-shadow: 0 4px 10px rgba(255, 179, 0, 0.4); background: #ffb300; transition: all 0.2s; color: #1c3322 !important;"
-                                                                 th:data-product-id="${detail.product.productId}"
-                                                                 th:data-product-name="${detail.product.productName}"
-                                                                 th:data-product-image="${detail.product.firstImageUrl != null ? detail.product.firstImageUrl : '/images/bonsai-1.png'}"
-                                                                 data-bs-toggle="modal" 
-                                                                 data-bs-target="#writeReviewModal">
-                                                             <i class="fa-solid fa-star me-1 text-dark"></i>Viết đánh giá
-                                                         </button>
+                                                         <div th:if="${order.orderStatus == 'COMPLETED' and detail.product != null}"
+                                                              th:with="completedTime=${order.completedAt != null ? order.completedAt : order.orderDate}">
+                                                            <!-- Đã đánh giá -->
+                                                            <button th:if="${reviewedProductIds != null and reviewedProductIds.contains(detail.product.productId)}" 
+                                                                    class="btn btn-sm btn-light text-muted py-1 px-3 rounded-pill mt-2 fw-semibold" 
+                                                                    style="font-size: 12px; width: fit-content; border: 1px solid var(--border-color);" 
+                                                                    disabled>
+                                                                <i class="fa-solid fa-circle-check me-1 text-success"></i>Đã đánh giá
+                                                            </button>
+                                                            <!-- Đã quá hạn 30 ngày -->
+                                                            <button th:elif="${!T(java.time.LocalDateTime).now().minusDays(30).isBefore(completedTime)}" 
+                                                                    class="btn btn-sm btn-light text-muted py-1 px-3 rounded-pill mt-2 fw-semibold" 
+                                                                    style="font-size: 12px; width: fit-content; border: 1px solid var(--border-color);" 
+                                                                    disabled>
+                                                                <i class="fa-solid fa-lock me-1"></i>Hết hạn đánh giá
+                                                            </button>
+                                                            <!-- Chưa đánh giá & còn hạn -->
+                                                            <button th:unless="${reviewedProductIds != null and reviewedProductIds.contains(detail.product.productId)}" 
+                                                                    class="btn btn-sm btn-warning text-dark py-1 px-3 rounded-pill mt-2 write-review-btn fw-bold" 
+                                                                    style="font-size: 12px; width: fit-content; border: none; box-shadow: 0 4px 10px rgba(255, 179, 0, 0.4); background: #ffb300; transition: all 0.2s; color: #1c3322 !important;"
+                                                                    th:data-product-id="${detail.product.productId}"
+                                                                    th:data-product-name="${detail.product.productName}"
+                                                                    th:data-product-image="${detail.product.firstImageUrl != null ? detail.product.firstImageUrl : '/images/bonsai-1.png'}"
+                                                                    data-bs-toggle="modal" 
+                                                                    data-bs-target="#writeReviewModal">
+                                                                <i class="fa-solid fa-star me-1 text-dark"></i>Viết đánh giá
+                                                            </button>
+                                                        </div>
                                                      </div>
                                                  </div>
                                             </td>

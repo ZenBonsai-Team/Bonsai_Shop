@@ -728,6 +728,7 @@ public class OrderService {
         String oldStatus = order.getOrderStatus();
         LocalDateTime completedAt = LocalDateTime.now();
         order.setOrderStatus("COMPLETED");
+        order.setCompletedAt(completedAt);
         orderRepository.save(order);
         sendReviewReminderNotification(order);
         markProductsAsSold(order);
@@ -903,6 +904,7 @@ public class OrderService {
         String oldStatus = order.getOrderStatus();
         LocalDateTime completedAt = LocalDateTime.now();
         order.setOrderStatus("COMPLETED");
+        order.setCompletedAt(completedAt);
         orderRepository.save(order);
         sendReviewReminderNotification(order);
         markProductsAsSold(order);

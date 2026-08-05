@@ -54,9 +54,9 @@ public class ReviewService {
         if (reviewRepository.existsByCustomerUserIdAndProductProductId(customerId, productId)) {
             return false;
         }
-        // Check if there's a completed order with this product
-        return orderRepository.existsByCustomerUserIdAndOrderStatusAndOrderDetails_Product_ProductId(
-                customerId, "COMPLETED", productId);
+        // Check if there's a completed order with this product within the last 30 days
+        LocalDateTime thirtyDaysAgo = LocalDateTime.now().minusDays(30);
+        return orderRepository.existsEligibleOrderForReview(customerId, productId, thirtyDaysAgo);
     }
 
     /**

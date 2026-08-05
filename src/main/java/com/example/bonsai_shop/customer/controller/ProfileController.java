@@ -10,6 +10,8 @@ import com.example.bonsai_shop.entity.CommunityPostBookmark;
 import com.example.bonsai_shop.entity.Order;
 import com.example.bonsai_shop.entity.User;
 import com.example.bonsai_shop.product.service.OrderService;
+import com.example.bonsai_shop.product.repository.ReviewRepository;
+import com.example.bonsai_shop.entity.Review;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -33,6 +35,7 @@ public class ProfileController {
     private final CommunityPostBookmarkRepository bookmarkRepository;
     private final UserRepository userRepository;
     private final OrderService orderService;
+    private final ReviewRepository reviewRepository;
 
     private String extractEmail(Object principal) {
         if (principal instanceof UserDetails userDetails) {
@@ -78,10 +81,17 @@ public class ProfileController {
         // Lấy lịch sử đơn hàng của người dùng
         List<Order> orders = orderService.getOrdersByCustomerId(user.getUserId());
 
+        // Lấy danh sách ID sản phẩm người dùng đã đánh giá
+        List<Review> userReviews = reviewRepository.findByCustomerUserId(user.getUserId());
+        java.util.Set<Integer> reviewedProductIds = userReviews.stream()
+                .map(r -> r.getProduct().getProductId())
+                .collect(Collectors.toSet());
+
         model.addAttribute("user", user);
         model.addAttribute("myBonsaiPosts", myBonsaiPosts);
         model.addAttribute("savedPosts", savedPosts);
         model.addAttribute("orders", orders);
+        model.addAttribute("reviewedProductIds", reviewedProductIds);
         return "customer/profile"; // templates/customer/profile.html
 
     }
