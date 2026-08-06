@@ -13,4 +13,5 @@ public interface ProductJournalEventRepository extends JpaRepository<ProductJour
     List<ProductJournalEvent> findByProductAndIsPublicTrueOrderByEventDateDescEventIdDesc(Product product);
 
     Optional<ProductJournalEvent> findByEventIdAndProduct(Integer eventId, Product product);
+
 }
