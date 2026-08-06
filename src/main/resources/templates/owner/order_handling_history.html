@@ -154,12 +154,12 @@
             </table>
         </div>
 
-        <div class="history-pagination" th:if="${historyPage.totalPages > 1}">
+        <div class="history-pagination" th:if="${historyPage.totalPages > 0}">
             <a th:classappend="${historyPage.first ? ' disabled' : ''}"
                th:href="@{/owner/order-handling-history(page=${historyPage.number - 1}, search=${search})}">
                 Trước
             </a>
-            <span th:text="${'Trang ' + (historyPage.number + 1) + ' / ' + historyPage.totalPages}">Trang 1 / 1</span>
+            <span th:text="${'Trang ' + (historyPage.number + 1) + ' / ' + (historyPage.totalPages == 0 ? 1 : historyPage.totalPages)}">Trang 1 / 1</span>
             <a th:classappend="${historyPage.last ? ' disabled' : ''}"
                th:href="@{/owner/order-handling-history(page=${historyPage.number + 1}, search=${search})}">
                 Sau

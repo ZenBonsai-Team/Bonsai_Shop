@@ -16,7 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class OrderHandlingHistoryService {
 
-    private static final int DEFAULT_PAGE_SIZE = 15;
+    private static final int DEFAULT_PAGE_SIZE = 10;
     private static final int MAX_PAGE_SIZE = 100;
 
     private final OrderHandlingRepository orderHandlingRepository;

@@ -161,14 +161,14 @@
             </table>
         </div>
 
-        <div class="pagination-footer" th:if="${orders.totalPages > 1}">
-            <div class="pagination-info" th:text="${'Hiển thị trang ' + (orders.number + 1) + ' / ' + orders.totalPages}">Hiển thị trang 1 / 1</div>
+        <div class="pagination-footer" th:if="${orders.totalPages > 0}">
+            <div class="pagination-info" th:text="${'Hiển thị trang ' + (orders.number + 1) + ' / ' + (orders.totalPages == 0 ? 1 : orders.totalPages)}">Hiển thị trang 1 / 1</div>
             <div class="pagination-controls">
                 <a class="page-btn"
-                   th:if="${orders.hasPrevious()}"
+                   th:classappend="${!orders.hasPrevious() ? ' disabled' : ''}"
                    th:href="@{/owner/in-person-order-history(status=${selectedStatus}, search=${search}, page=${orders.number - 1})}">Trước</a>
                 <a class="page-btn"
-                   th:if="${orders.hasNext()}"
+                   th:classappend="${!orders.hasNext() ? ' disabled' : ''}"
                    th:href="@{/owner/in-person-order-history(status=${selectedStatus}, search=${search}, page=${orders.number + 1})}">Sau</a>
             </div>
         </div>

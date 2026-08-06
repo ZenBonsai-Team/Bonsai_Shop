@@ -21,11 +21,13 @@
         <a th:href="@{/owner/users/create}" class="btn-premium-action">Tạo tài khoản</a>
     </div>
 
-    <div class="search-box">
-        <span class="search-icon">🔍</span>
-        <label for="searchEmail"></label>
-        <input type="text" id="searchEmail" placeholder="Tìm kiếm theo email..." autocomplete="off"/>
-        <button type="button" id="clearSearchBtn" class="btn-clear">×</button>
+    <div class="search-panel mb-4" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); display: flex; align-items: center; justify-content: space-between; gap: 16px;">
+        <div class="search-box-wrapper" style="position: relative; flex: 1; max-width: 450px;">
+            <span class="search-icon" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #64748b; font-size: 0.95rem;">🔍</span>
+            <label for="searchEmail"></label>
+            <input type="text" id="searchEmail" placeholder="Tìm kiếm theo email..." autocomplete="off" style="width: 100%; padding: 10px 40px 10px 38px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem; outline: none; transition: all 0.2s ease;"/>
+            <button type="button" id="clearSearchBtn" class="btn-clear" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; font-size: 1.15rem; color: #94a3b8; cursor: pointer; display: none;">×</button>
+        </div>
     </div>
 
     <table>

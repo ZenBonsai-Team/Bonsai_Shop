@@ -284,8 +284,8 @@
         }
 
         // Auto-dismiss status toast pop-up handler
-        const successMsg = [[${success}]];
-        const errorMsg = [[${error}]];
+        const successMsg = /*[[${success}]]*/ null;
+        const errorMsg = /*[[${error}]]*/ null;
         
         document.addEventListener('DOMContentLoaded', () => {
             const toast = document.getElementById('statusToast');
