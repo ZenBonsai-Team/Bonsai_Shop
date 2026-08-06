@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org"
       th:replace="~{fragments/dashboard-layout :: layout(~{::title}, ~{::#user-list-content}, ~{::styles}, ~{::scripts})}">
 <head>
@@ -13,11 +13,12 @@
     <div th:if="${success}" th:text="${success}" class="alert alert-success"></div>
     <div th:if="${error}" th:text="${error}" class="alert alert-error"></div>
 
-    <div class="dashboard-header mb-4">
+    <div class="page-header">
         <div>
             <h1 class="serif-text mb-0">Quản lý người dùng</h1>
+            <p class="text-secondary mb-0">Xem thông tin chi tiết và quản lý phân quyền các tài khoản trong hệ thống</p>
         </div>
-        <a th:href="@{/owner/users/create}" class="btn-home">Tạo tài khoản</a>
+        <a th:href="@{/owner/users/create}" class="btn-premium-action">Tạo tài khoản</a>
     </div>
 
     <div class="search-box">

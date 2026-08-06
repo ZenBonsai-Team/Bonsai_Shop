@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org"
       th:replace="~{fragments/dashboard-layout :: layout(~{::title}, ~{::#admin-dashboard-content}, ~{::styles}, ~{})}">
 <head>
@@ -10,12 +10,12 @@
 <body>
 
 <div id="admin-dashboard-content" th:with="paramActivePage='dashboard'">
-    <header class="dashboard-header">
+    <div class="page-header">
         <div>
-            <h1 class="serif-text mb-1">Bảng điều khiển</h1>
+            <h1 class="serif-text mb-0">Bảng điều khiển</h1>
             <p class="text-secondary mb-0">Tổng quan hệ thống và hoạt động quản trị.</p>
         </div>
-    </header>
+    </div>
 
     <section class="dashboard-kpis">
         <div class="kpi-card">

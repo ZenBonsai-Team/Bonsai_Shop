@@ -220,7 +220,7 @@
 
 .dashboard-main {
     min-width: 0;
-    max-width: calc(100vw - 280px);
+    flex: 1;
     overflow: visible;
     padding: 28px 36px;
 }
