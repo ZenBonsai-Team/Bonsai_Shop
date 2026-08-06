@@ -9,10 +9,6 @@
 <!-- HEADER GIỐNG MARKETPLACE -->
 <div th:replace="~{fragments/navbar :: navbar}" th:with="activePage='home'"></div>
 
-<button id="toggleNavbarBtn" class="toggle-navbar-btn">
-    ⬆
-</button>
-
 <!-- THÔNG BÁO ĐĂNG KÝ THÀNH CÔNG (Toast Notification) -->
 <div th:if="${registrationSuccess}" class="toast-notification toast-success" id="registrationToast">
     <div class="toast-content">
@@ -257,22 +253,7 @@
         }
     });
 
-    // Toggle Navbar function
-    document.addEventListener('DOMContentLoaded', () => {
-        const toggleBtn = document.getElementById('toggleNavbarBtn');
-        const nav = document.querySelector('.navbar');
-        if (toggleBtn && nav) {
-            toggleBtn.addEventListener('click', () => {
-                if (nav.style.transform === 'translateY(-100%)') {
-                    nav.style.transform = 'translateY(0)';
-                    toggleBtn.innerHTML = '⬆';
-                } else {
-                    nav.style.transform = 'translateY(-100%)';
-                    toggleBtn.innerHTML = '⬇';
-                }
-            });
-        }
-    });
+
 </script>
 </body>
 </html>

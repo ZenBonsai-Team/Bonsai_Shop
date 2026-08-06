@@ -5,6 +5,20 @@
     <title>Cấu hình hệ thống - Minh Kỷ Garden</title>
     <th:block th:fragment="styles">
         <style>
+            .page-header {
+                background: #ffffff;
+                border: 1px solid #e2e8f0;
+                border-radius: 16px;
+                padding: 1.5rem 2rem;
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
+                margin-bottom: 2rem;
+                border-left: 5px solid #2e7d32;
+            }
+            .page-header h1 {
+                font-size: 1.75rem;
+                font-weight: 700;
+                color: #0f172a;
+            }
             .config-card {
                 background: #ffffff;
                 border: 1px solid #e2e8f0;
@@ -32,7 +46,7 @@
             }
             .preview-img-container {
                 width: 100%;
-                max-height: 180px;
+                height: 240px;
                 border-radius: 12px;
                 overflow: hidden;
                 border: 1px solid #cbd5e1;
@@ -41,6 +55,7 @@
                 display: flex;
                 align-items: center;
                 justify-content: center;
+                box-shadow: inset 0 2px 8px rgba(0,0,0,0.05);
             }
             .preview-img-container img {
                 width: 100%;
@@ -56,7 +71,7 @@
                 padding: 1rem 1.5rem;
                 display: flex;
                 justify-content: flex-end;
-                z-index: 10;
+                z-index: 100;
                 margin-top: 2rem;
                 border-radius: 0 0 16px 16px;
             }
@@ -64,7 +79,7 @@
                 background: #2e7d32;
                 color: #ffffff;
                 border: none;
-                padding: 0.75rem 2rem;
+                padding: 0.75rem 2.5rem;
                 border-radius: 50px;
                 font-weight: 600;
                 transition: all 0.2s ease;
@@ -81,15 +96,17 @@
 <body>
 
 <div id="system-config-content" th:with="paramActivePage='system-config'">
-    <div class="dashboard-header mb-4">
-        <div>
-            <h1 class="serif-text mb-0">Cấu hình hệ thống</h1>
-            <p class="text-secondary mb-0">Quản lý banner, tiêu đề và hình ảnh hiển thị của các trang chính</p>
-        </div>
+    
+    <!-- Toast Notification -->
+    <div id="statusToast" class="toast-notification" style="display: none; position: fixed; bottom: 24px; right: 24px; background: #ffffff; border-left: 5px solid #2e7d32; border-radius: 8px; padding: 14px 20px; box-shadow: 0 8px 24px rgba(0,0,0,0.12); z-index: 9999; align-items: center; gap: 12px; min-width: 320px; transition: all 0.3s ease;">
+        <span id="toastIcon" style="font-size: 1.2rem;">✅</span>
+        <span id="toastMessage" style="font-weight: 600; font-size: 0.92rem; color: #1e293b;">Thông báo thành công</span>
     </div>
 
-    <div th:if="${success}" th:text="${success}" class="alert alert-success border-0 shadow-sm mb-4"></div>
-    <div th:if="${error}" th:text="${error}" class="alert alert-error border-0 shadow-sm mb-4"></div>
+    <div class="page-header">
+        <h1 class="serif-text mb-1">Cấu hình hệ thống</h1>
+        <p class="text-secondary mb-0">Quản lý banner, tiêu đề và hình ảnh hiển thị của các trang chính</p>
+    </div>
 
     <form method="post" th:action="@{/owner/system-config}" enctype="multipart/form-data">
         <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
@@ -102,7 +119,8 @@
             </div>
             <div class="config-card-body">
                 <div class="row">
-                    <div class="col-md-8">
+                    <!-- Text inputs take 1/3 width -->
+                    <div class="col-md-4">
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Tiêu đề Banner</label>
                             <input type="text" name="home_banner_title" 
@@ -111,14 +129,15 @@
                         </div>
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Mô tả Banner</label>
-                            <textarea name="home_banner_subtitle" rows="3" class="form-control" 
+                            <textarea name="home_banner_subtitle" rows="5" class="form-control" 
                                       placeholder="Nhập mô tả chi tiết..."
                                       th:text="${sysConfig.getValue('home_banner_subtitle', 'Nâng tầm không gian sống bằng nghệ thuật tạo hình cây cảnh độc bản')}"></textarea>
                         </div>
                     </div>
-                    <div class="col-md-4">
+                    <!-- Image preview takes 2/3 width -->
+                    <div class="col-md-8">
                         <div class="mb-3">
-                            <label class="form-label fw-semibold">Ảnh Banner</label>
+                            <label class="form-label fw-semibold">Ảnh Banner (Tỉ lệ 2/3 hiển thị rộng)</label>
                             <input type="file" name="home_banner_image_file" class="form-control mb-2" onchange="previewImage(this, 'home-preview')">
                             <input type="hidden" name="home_banner_image" th:value="${sysConfig.getValue('home_banner_image', '/images/hero-bonsai.png')}">
                             <div class="preview-img-container">
@@ -138,7 +157,8 @@
             </div>
             <div class="config-card-body">
                 <div class="row">
-                    <div class="col-md-8">
+                    <!-- Text inputs take 1/3 width -->
+                    <div class="col-md-4">
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Tiêu đề Banner</label>
                             <input type="text" name="marketplace_banner_title" 
@@ -147,14 +167,15 @@
                         </div>
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Mô tả Banner</label>
-                            <textarea name="marketplace_banner_subtitle" rows="3" class="form-control" 
+                            <textarea name="marketplace_banner_subtitle" rows="5" class="form-control" 
                                       placeholder="Nhập mô tả chi tiết..."
                                       th:text="${sysConfig.getValue('marketplace_banner_subtitle', 'Nơi lưu giữ hồn xưa đất Việt qua từng thế cây, dáng đá. Mỗi tác phẩm đều đi kèm hồ sơ nghệ nhân, phả hệ minh bạch và chứng nhận thẩm định từ nhà vườn.')}"></textarea>
                         </div>
                     </div>
-                    <div class="col-md-4">
+                    <!-- Image preview takes 2/3 width -->
+                    <div class="col-md-8">
                         <div class="mb-3">
-                            <label class="form-label fw-semibold">Ảnh Banner</label>
+                            <label class="form-label fw-semibold">Ảnh Banner (Tỉ lệ 2/3 hiển thị rộng)</label>
                             <input type="file" name="marketplace_banner_image_file" class="form-control mb-2" onchange="previewImage(this, 'market-preview')">
                             <input type="hidden" name="marketplace_banner_image" th:value="${sysConfig.getValue('marketplace_banner_image', '/images/hero-banner-1.jpg')}">
                             <div class="preview-img-container">
@@ -174,7 +195,8 @@
             </div>
             <div class="config-card-body">
                 <div class="row">
-                    <div class="col-md-8">
+                    <!-- Text inputs take 1/3 width -->
+                    <div class="col-md-4">
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Tiêu đề Banner</label>
                             <input type="text" name="community_banner_title" 
@@ -183,14 +205,15 @@
                         </div>
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Mô tả Banner</label>
-                            <textarea name="community_banner_subtitle" rows="3" class="form-control" 
+                            <textarea name="community_banner_subtitle" rows="5" class="form-control" 
                                       placeholder="Nhập mô tả chi tiết..."
                                       th:text="${sysConfig.getValue('community_banner_subtitle', 'Nơi giao lưu, chia sẻ kinh nghiệm tạo tác và chăm sóc cây cảnh cùng các nghệ nhân hàng đầu.')}"></textarea>
                         </div>
                     </div>
-                    <div class="col-md-4">
+                    <!-- Image preview takes 2/3 width -->
+                    <div class="col-md-8">
                         <div class="mb-3">
-                            <label class="form-label fw-semibold">Ảnh Banner</label>
+                            <label class="form-label fw-semibold">Ảnh Banner (Tỉ lệ 2/3 hiển thị rộng)</label>
                             <input type="file" name="community_banner_image_file" class="form-control mb-2" onchange="previewImage(this, 'community-preview')">
                             <input type="hidden" name="community_banner_image" th:value="${sysConfig.getValue('community_banner_image', '/images/hero-banner-1.jpg')}">
                             <div class="preview-img-container">
@@ -210,7 +233,8 @@
             </div>
             <div class="config-card-body">
                 <div class="row">
-                    <div class="col-md-8">
+                    <!-- Text inputs take 1/3 width -->
+                    <div class="col-md-4">
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Tiêu đề Banner</label>
                             <input type="text" name="luxury_banner_title" 
@@ -219,14 +243,15 @@
                         </div>
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Mô tả Banner</label>
-                            <textarea name="luxury_banner_subtitle" rows="3" class="form-control" 
+                            <textarea name="luxury_banner_subtitle" rows="5" class="form-control" 
                                       placeholder="Nhập mô tả chi tiết..."
                                       th:text="${sysConfig.getValue('luxury_banner_subtitle', 'Bộ sưu tập siêu phẩm Bonsai quý hiếm, đỉnh cao nghệ thuật dành cho các nhà sưu tầm thượng lưu.')}"></textarea>
                         </div>
                     </div>
-                    <div class="col-md-4">
+                    <!-- Image preview takes 2/3 width -->
+                    <div class="col-md-8">
                         <div class="mb-3">
-                            <label class="form-label fw-semibold">Ảnh Banner</label>
+                            <label class="form-label fw-semibold">Ảnh Banner (Tỉ lệ 2/3 hiển thị rộng)</label>
                             <input type="file" name="luxury_banner_image_file" class="form-control mb-2" onchange="previewImage(this, 'luxury-preview')">
                             <input type="hidden" name="luxury_banner_image" th:value="${sysConfig.getValue('luxury_banner_image', '/images/hero-banner-bonsai.jpg')}">
                             <div class="preview-img-container">
@@ -245,7 +270,8 @@
 </div>
 
 <th:block th:fragment="scripts">
-    <script>
+    <script th:inline="javascript">
+        /*<![CDATA[*/
         function previewImage(input, previewId) {
             const preview = document.getElementById(previewId);
             if (input.files && input.files[0]) {
@@ -256,6 +282,46 @@
                 reader.readAsDataURL(input.files[0]);
             }
         }
+
+        // Auto-dismiss status toast pop-up handler
+        const successMsg = [[${success}]];
+        const errorMsg = [[${error}]];
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            const toast = document.getElementById('statusToast');
+            const toastMessage = document.getElementById('toastMessage');
+            const toastIcon = document.getElementById('toastIcon');
+            
+            if (toast && toastMessage && toastIcon) {
+                if (successMsg) {
+                    toastMessage.innerText = successMsg;
+                    toastIcon.innerText = '✅';
+                    toast.style.borderLeftColor = '#2e7d32';
+                    showToast(toast);
+                } else if (errorMsg) {
+                    toastMessage.innerText = errorMsg;
+                    toastIcon.innerText = '❌';
+                    toast.style.borderLeftColor = '#ef4444';
+                    showToast(toast);
+                }
+            }
+        });
+
+        function showToast(toast) {
+            toast.style.display = 'flex';
+            toast.style.opacity = '1';
+            toast.style.transform = 'translateY(0)';
+            
+            // Auto hide after 4 seconds
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(20px)';
+                setTimeout(() => {
+                    toast.style.display = 'none';
+                }, 300);
+            }, 4000);
+        }
+        /*]]>*/
     </script>
 </th:block>
 </body>

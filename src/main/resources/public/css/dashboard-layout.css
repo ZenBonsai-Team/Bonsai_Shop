@@ -67,6 +67,9 @@ h1, h2, h3, h4, h5, h6, .brand-name, .section-title {
 /* Premium Sidebar Layout */
 .dashboard-sidebar {
     width: 280px;
+    height: 100vh;
+    position: sticky;
+    top: 0;
     background: var(--primary-color);
     color: #fff;
     display: flex;
@@ -74,7 +77,53 @@ h1, h2, h3, h4, h5, h6, .brand-name, .section-title {
     flex-shrink: 0;
     transition: var(--transition);
     border-right: 1px solid rgba(255, 255, 255, 0.03);
-    z-index: 100;
+    z-index: 1005;
+}
+
+/* Sidebar Collapsed State on Desktop */
+.dashboard-sidebar.collapsed {
+    width: 96px;
+}
+
+.dashboard-sidebar.collapsed .sidebar-brand {
+    padding: 20px 8px;
+    justify-content: center;
+}
+
+.dashboard-sidebar.collapsed .sidebar-brand-link {
+    gap: 0 !important;
+    justify-content: center;
+}
+
+.dashboard-sidebar.collapsed .sidebar-brand-link img {
+    width: 48px !important;
+    height: 48px !important;
+    min-width: 48px !important;
+}
+
+.dashboard-sidebar.collapsed .sidebar-brand-link span,
+.dashboard-sidebar.collapsed .sidebar-nav-item span:not(.nav-icon),
+.dashboard-sidebar.collapsed .sidebar-logout-btn span {
+    display: none !important;
+}
+
+.dashboard-sidebar.collapsed .sidebar-nav {
+    padding: 20px 8px;
+}
+
+.dashboard-sidebar.collapsed .sidebar-nav-item {
+    padding: 14px 0;
+    justify-content: center;
+    border-left: none;
+}
+
+.dashboard-sidebar.collapsed .sidebar-footer {
+    padding: 16px 8px;
+}
+
+.dashboard-sidebar.collapsed .sidebar-logout-btn {
+    padding: 12px 0;
+    justify-content: center;
 }
 
 .sidebar-brand {
@@ -193,7 +242,7 @@ h1, h2, h3, h4, h5, h6, .brand-name, .section-title {
     box-shadow: var(--shadow-subtle);
     position: sticky;
     top: 0;
-    z-index: 90;
+    z-index: 1010;
 }
 
 .header-left {
@@ -209,7 +258,7 @@ h1, h2, h3, h4, h5, h6, .brand-name, .section-title {
     font-size: 24px;
     cursor: pointer;
     color: var(--text-main);
-    display: none;
+    display: block;
 }
 
 /* Breadcrumbs */
@@ -323,6 +372,8 @@ h1, h2, h3, h4, h5, h6, .brand-name, .section-title {
     padding: 40px;
     overflow-y: auto;
     max-width: 100%;
+    min-height: calc(100vh - 64px);
+    background: #f8fafc;
 }
 
 /* Responsive queries */
