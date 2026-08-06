@@ -418,3 +418,76 @@ h1, h2, h3, h4, h5, h6, .brand-name, .section-title {
 .nav-icon i {
     font-size: 18px;
 }
+
+/* Standardized Premium Pagination Styles */
+.dashboard-pagination,
+.pagination,
+.history-pagination,
+.pagination-footer,
+.pagination-controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    margin-top: 2rem;
+    padding: 10px 0;
+}
+
+.dashboard-pagination a,
+.dashboard-pagination button,
+.pagination a,
+.pagination button,
+.history-pagination a,
+.history-pagination button,
+.pagination-controls a,
+.pagination-controls button,
+.page-btn {
+    background: #ffffff !important;
+    border: 1px solid #cbd5e1 !important;
+    color: #334155 !important;
+    padding: 8px 16px !important;
+    font-size: 0.88rem !important;
+    font-weight: 600 !important;
+    border-radius: 8px !important;
+    text-decoration: none !important;
+    transition: all 0.2s ease !important;
+    cursor: pointer !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+    display: inline-block !important;
+}
+
+.dashboard-pagination a:hover,
+.dashboard-pagination button:hover,
+.pagination a:hover,
+.pagination button:hover,
+.history-pagination a:hover,
+.history-pagination button:hover,
+.pagination-controls a:hover,
+.pagination-controls button:hover,
+.page-btn:hover {
+    border-color: #2e7d32 !important;
+    color: #2e7d32 !important;
+    background: #f0fdf4 !important;
+}
+
+.dashboard-pagination .disabled,
+.dashboard-pagination button:disabled,
+.pagination .disabled,
+.pagination button:disabled,
+.history-pagination .disabled,
+.history-pagination button:disabled,
+.pagination-controls a.disabled,
+.page-btn.disabled {
+    opacity: 0.5 !important;
+    pointer-events: none !important;
+    background: #f1f5f9 !important;
+    color: #94a3b8 !important;
+    border-color: #e2e8f0 !important;
+    cursor: not-allowed !important;
+}
+
+.pagination-info {
+    font-size: 0.9rem !important;
+    font-weight: 500 !important;
+    color: #475569 !important;
+}
