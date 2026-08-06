@@ -97,19 +97,6 @@ a {
     max-width: var(--lux-container);
 }
 
-.appointment-shell .navbar-custom .container {
-    width: 100%;
-    max-width: 1320px;
-    column-gap: normal;
-}
-
-.appointment-shell .navbar-brand-custom {
-    margin-right: 1rem;
-}
-
-.appointment-shell .navbar-custom .navbar-collapse {
-    gap: 0;
-}
 
 .luxury-shell .navbar-brand-custom img {
     border-color: rgba(185, 145, 75, 0.22) !important;
