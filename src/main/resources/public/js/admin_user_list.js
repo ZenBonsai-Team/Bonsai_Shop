@@ -1,6 +1,8 @@
 document.addEventListener('DOMContentLoaded', function () {
     const searchInput = document.getElementById('searchEmail');
     const clearBtn = document.getElementById('clearSearchBtn');
+    const filterRole = document.getElementById('filterRole');
+    const filterStatus = document.getElementById('filterStatus');
     const tableRows = Array.from(document.querySelectorAll('#userTableBody tr[data-email]'));
     const noResultRow = document.getElementById('noResultRow');
     
@@ -57,35 +59,57 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // Input event listener for search box
-    searchInput.addEventListener('input', function () {
-        const keyword = this.value.trim().toLowerCase();
-        
-        // Show/hide X clear button
+    // Main filter function triggered on any input change
+    function runFilters() {
+        const keyword = searchInput.value.trim().toLowerCase();
+        const selectedRole = filterRole.value;
+        const selectedStatus = filterStatus.value;
+
+        // Show/hide clear button
         if (keyword.length > 0) {
             clearBtn.style.display = 'block';
         } else {
             clearBtn.style.display = 'none';
         }
 
-        // Filter rows matching keyword
+        // Filter rows based on all constraints
         filteredRows = tableRows.filter(row => {
             const email = row.getAttribute('data-email').toLowerCase();
-            return email.includes(keyword);
+            const role = row.getAttribute('data-role');
+            const status = row.getAttribute('data-status');
+
+            // Email matching
+            const matchesEmail = email.includes(keyword);
+
+            // Role matching (handle both OWNER and ROLE_OWNER formats)
+            let matchesRole = true;
+            if (selectedRole !== 'ALL') {
+                const normRole = role.replace('ROLE_', '');
+                const normSelRole = selectedRole.replace('ROLE_', '');
+                matchesRole = (normRole === normSelRole);
+            }
+
+            // Status matching
+            const matchesStatus = (selectedStatus === 'ALL' || status === selectedStatus);
+
+            return matchesEmail && matchesRole && matchesStatus;
         });
 
-        // Reset page to 1 on new filter and display
+        // Reset page to 1 on filter run and refresh view
         currentPage = 1;
         displayTable();
-    });
+    }
 
-    // Clear search button handler
+    // Add change listeners
+    searchInput.addEventListener('input', runFilters);
+    filterRole.addEventListener('change', runFilters);
+    filterStatus.addEventListener('change', runFilters);
+
+    // Clear search handler
     clearBtn.addEventListener('click', function () {
         searchInput.value = '';
         clearBtn.style.display = 'none';
-        filteredRows = [...tableRows];
-        currentPage = 1;
-        displayTable();
+        runFilters();
         searchInput.focus();
     });
 

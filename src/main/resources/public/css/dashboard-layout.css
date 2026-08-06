@@ -104,7 +104,7 @@ h1, h2, h3, h4, h5, h6, .brand-name, .section-title {
 
 .dashboard-sidebar.collapsed .sidebar-brand-link span,
 .dashboard-sidebar.collapsed .sidebar-nav-item span:not(.nav-icon),
-.dashboard-sidebar.collapsed .sidebar-logout-btn span {
+.dashboard-sidebar.collapsed .sidebar-logout-btn span:not(.logout-icon) {
     display: none !important;
 }
 

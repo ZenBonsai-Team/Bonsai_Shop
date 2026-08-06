@@ -21,12 +21,38 @@
         <a th:href="@{/owner/users/create}" class="btn-premium-action">Tạo tài khoản</a>
     </div>
 
-    <div class="search-panel mb-4" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); display: flex; align-items: center; justify-content: space-between; gap: 16px;">
-        <div class="search-box-wrapper" style="position: relative; flex: 1; max-width: 450px;">
-            <span class="search-icon" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #64748b; font-size: 0.95rem;">🔍</span>
-            <label for="searchEmail"></label>
-            <input type="text" id="searchEmail" placeholder="Tìm kiếm theo email..." autocomplete="off" style="width: 100%; padding: 10px 40px 10px 38px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem; outline: none; transition: all 0.2s ease;"/>
-            <button type="button" id="clearSearchBtn" class="btn-clear" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; font-size: 1.15rem; color: #94a3b8; cursor: pointer; display: none;">×</button>
+    <div class="search-panel mb-4" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.02); display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px;">
+        <div class="search-filters d-flex flex-wrap align-items-center gap-3" style="flex: 1; min-width: 300px;">
+            <!-- Tìm kiếm theo email -->
+            <div class="search-box-wrapper" style="position: relative; flex: 1; min-width: 250px; max-width: 320px;">
+                <span class="search-icon" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #64748b; font-size: 0.95rem;">🔍</span>
+                <input type="text" id="searchEmail" placeholder="Tìm kiếm theo email..." autocomplete="off" style="width: 100%; padding: 10px 40px 10px 38px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem; outline: none; transition: all 0.2s ease;"/>
+                <button type="button" id="clearSearchBtn" class="btn-clear" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; font-size: 1.15rem; color: #94a3b8; cursor: pointer; display: none;">×</button>
+            </div>
+            
+            <!-- Lọc theo chức năng (Role) -->
+            <div class="filter-select-wrapper" style="display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 0.88rem; font-weight: 600; color: #475569;">Vai trò:</span>
+                <select id="filterRole" style="padding: 10px 16px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem; outline: none; background: #ffffff; color: #334155; cursor: pointer; min-width: 180px;">
+                    <option value="ALL">Tất cả vai trò</option>
+                    <option value="ROLE_OWNER">Chủ vườn (Owner)</option>
+                    <option value="ROLE_ARTISAN">Nghệ nhân (Artisan)</option>
+                    <option value="ROLE_MODERATOR">Nhân viên điều phối</option>
+                    <option value="ROLE_CONTENT_MODERATOR">Nhân viên duyệt nội dung</option>
+                    <option value="ROLE_CUSTOMER">Khách hàng</option>
+                </select>
+            </div>
+
+            <!-- Lọc theo trạng thái -->
+            <div class="filter-select-wrapper" style="display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 0.88rem; font-weight: 600; color: #475569;">Trạng thái:</span>
+                <select id="filterStatus" style="padding: 10px 16px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem; outline: none; background: #ffffff; color: #334155; cursor: pointer; min-width: 160px;">
+                    <option value="ALL">Tất cả trạng thái</option>
+                    <option value="ACTIVE">Hoạt động</option>
+                    <option value="PENDING">Chờ duyệt</option>
+                    <option value="LOCKED">Đã khóa</option>
+                </select>
+            </div>
         </div>
     </div>
 
@@ -37,22 +63,22 @@
             <th>Họ tên</th>
             <th>Email</th>
             <th>Trạng thái</th>
-            <th>Phân quyền</th>
+            <th>Phân quyền (Vai trò)</th>
             <th>Hành động</th>
         </tr>
         </thead>
         <tbody id="userTableBody">
-        <tr th:each="user : ${users}" th:attr="data-email=${user.email}">
+        <tr th:each="user : ${users}" th:attr="data-email=${user.email}, data-role=${user.role.roleName}, data-status=${user.status}">
             <td th:text="${user.userId}">1</td>
             <td th:text="${user.fullName}">Họ tên</td>
             <td th:text="${user.email}">email@example.com</td>
             <td>
                 <span class="status-badge"
                       th:classappend="${user.status == 'ACTIVE' ? 'status-active' : (user.status == 'PENDING' ? 'status-pending' : 'status-locked')}"
-                      th:text="${user.status}">ACTIVE</span>
+                      th:text="${user.status == 'ACTIVE' ? 'Hoạt động' : (user.status == 'PENDING' ? 'Chờ duyệt' : 'Đã khóa')}">ACTIVE</span>
             </td>
             <td>
-                <span th:text="${user.role.roleName}">ROLE_CUSTOMER</span>
+                <span th:text="${user.role.roleName == 'ROLE_OWNER' || user.role.roleName == 'OWNER' ? 'Chủ vườn' : (user.role.roleName == 'ROLE_ARTISAN' || user.role.roleName == 'ARTISAN' ? 'Nghệ nhân' : (user.role.roleName == 'ROLE_MODERATOR' || user.role.roleName == 'MODERATOR' ? 'Nhân viên điều phối' : (user.role.roleName == 'ROLE_CONTENT_MODERATOR' || user.role.roleName == 'CONTENT_MODERATOR' ? 'Nhân viên duyệt nội dung' : 'Khách hàng')))}">ROLE_CUSTOMER</span>
             </td>
             <td>
                 <form th:if="${user.role.roleName != 'OWNER' && user.role.roleName != 'ROLE_OWNER'}" method="post" th:action="@{/owner/users/toggle-status}">
