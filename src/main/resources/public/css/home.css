@@ -16,7 +16,7 @@ a {
 }
 
 /* NAVBAR */
-.navbar {
+/* .navbar {
     position: absolute;
     top: 0;
     left: 0;
@@ -28,7 +28,7 @@ a {
     align-items: center;
     justify-content: space-between;
     color: white;
-}
+} */
 
 .logo {
     font-size: 25px;
