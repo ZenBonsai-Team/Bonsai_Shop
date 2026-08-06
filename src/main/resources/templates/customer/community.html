@@ -25,11 +25,12 @@
 <div th:replace="~{fragments/navbar :: navbar}"></div>
 
 <!-- Header -->
-<header class="community-header">
+<header class="community-header" 
+        th:style="'background: linear-gradient(rgba(250, 248, 245, 0.88), rgba(250, 248, 245, 0.88)), url(' + ${sysConfig.getValue('community_banner_image', '/images/hero-banner-1.jpg')} + ') no-repeat center center; background-size: cover;'">
     <div class="container">
-        <h1 class="community-title" th:text="#{community.header.title}">Nơi chia sẻ kinh nghiệm và tri thức về cây cảnh & nghệ thuật Bonsai</h1>
-        <p class="community-desc" th:text="#{community.header.desc}">
-            Cộng đồng BSMS — nơi người yêu cây chia sẻ tất tần tật, tuốt tuồn tuột về niềm đam mê với Bonsai.
+        <h1 class="community-title" th:text="${sysConfig.getValue('community_banner_title', 'Cộng Đồng Bonsai Việt Nam')}">Cộng Đồng Bonsai Việt Nam</h1>
+        <p class="community-desc" th:text="${sysConfig.getValue('community_banner_subtitle', 'Nơi giao lưu, chia sẻ kinh nghiệm tạo tác và chăm sóc cây cảnh cùng các nghệ nhân hàng đầu.')}">
+            Nơi giao lưu, chia sẻ kinh nghiệm tạo tác và chăm sóc cây cảnh cùng các nghệ nhân hàng đầu.
         </p>
         
         <div class="community-controls">

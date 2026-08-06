@@ -20,7 +20,7 @@ import java.util.Set;
 public class ProductJournalService {
 
     private static final int MAX_MEDIA_PER_UPLOAD = 10;
-    private static final long MAX_IMAGE_SIZE_BYTES = 5L * 1024 * 1024;
+    private static final long MAX_IMAGE_SIZE_BYTES = 7L * 1024 * 1024;
     private static final long MAX_VIDEO_SIZE_BYTES = 100L * 1024 * 1024;
 
     private static final Set<String> VALID_EVENT_TYPES = Set.of(
@@ -195,9 +195,9 @@ public class ProductJournalService {
     private void validateMediaFile(MultipartFile file, String mediaType) {
         long maxSize = "VIDEO".equals(mediaType) ? MAX_VIDEO_SIZE_BYTES : MAX_IMAGE_SIZE_BYTES;
         if (file.getSize() > maxSize) {
-            String label = "VIDEO".equals(mediaType) ? "Video" : "áº¢nh";
-            String sizeLabel = "VIDEO".equals(mediaType) ? "100MB" : "5MB";
-            throw new RuntimeException(label + " nháº­t kÃ½ vÆ°á»£t quÃ¡ dung lÆ°á»£ng tá»‘i Ä‘a " + sizeLabel + ".");
+            String label = "VIDEO".equals(mediaType) ? "Video" : "Ảnh";
+            String sizeLabel = "VIDEO".equals(mediaType) ? "100MB" : "7MB";
+            throw new RuntimeException(label + " nhật ký vượt quá dung lượng tối đa " + sizeLabel + ".");
         }
     }
 
