@@ -40,7 +40,7 @@ public class ArtisanProductService {
     private static final Set<String> VALID_SHOT_TYPES = Set.of("FRONT", "BACK", "LEFT", "RIGHT", "DETAIL", "TRUNK", "BRANCH", "POT", "OVERVIEW");
     private static final int MAX_MEDIA_PER_UPLOAD = 10;
     private static final int MAX_TAGS_PER_PRODUCT = 12;
-    private static final long MAX_IMAGE_SIZE_BYTES = 5L * 1024 * 1024;
+    private static final long MAX_IMAGE_SIZE_BYTES = 7L * 1024 * 1024;
     private static final long MAX_VIDEO_SIZE_BYTES = 100L * 1024 * 1024;
 
     private final ProductRepository productRepository;

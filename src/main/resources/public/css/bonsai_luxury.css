@@ -97,6 +97,14 @@ section {
     backdrop-filter: blur(18px);
 }
 
+.luxury-shell .brand-text-navbar span:first-child {
+    color: var(--lux-gold) !important;
+}
+
+.luxury-shell .brand-text-navbar span:last-child {
+    color: var(--lux-gold-soft) !important;
+}
+
 .luxury-shell .navbar-custom .container {
     width: min(calc(100% - 40px), var(--lux-container));
 }

@@ -18,9 +18,12 @@
 
     <!-- SIDEBAR -->
     <aside class="sidebar">
-        <a th:href="@{/home}" class="sidebar-logo d-flex align-items-center gap-2 text-decoration-none">
-            <img th:src="@{/images/logo.png}" alt="Logo" style="width: 32px; height: 32px; object-fit: contain;">
-            <span style="font-size: 22px; font-weight: 700; color: #06210f; white-space: nowrap; font-family: 'Plus Jakarta Sans', sans-serif;">Minh Kỷ Garden</span>
+        <a th:href="@{/home}" class="sidebar-logo d-flex align-items-center gap-3 text-decoration-none" style="padding-top: 15px; padding-bottom: 15px; border-bottom: 1px solid rgba(0, 0, 0, 0.05); margin-bottom: 20px;">
+            <img th:src="@{/images/logo.png}" alt="Logo" style="width: 64px; height: 64px; object-fit: contain; min-width: 64px;">
+            <span class="d-flex flex-column text-start" style="font-size: 22px; font-weight: 700; color: #06210f; font-family: 'Plus Jakarta Sans', sans-serif; line-height: 1.2;">
+                <span>Minh Kỷ</span>
+                <span style="color: #2e7d32;">Garden</span>
+            </span>
         </a>
 
         <nav class="sidebar-menu">

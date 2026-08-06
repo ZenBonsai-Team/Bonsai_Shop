@@ -8,42 +8,7 @@
 }
 
 /* SIDEBAR */
-.dashboard-sidebar {
-    width: 280px;
-    background-color: var(--primary-color);
-    color: white;
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    box-shadow: var(--shadow-subtle);
-    z-index: 1040;
-    transition: var(--transition);
-}
 
-.dashboard-sidebar.collapsed {
-    margin-left: -280px;
-}
-
-.dashboard-sidebar .sidebar-brand {
-    padding: 24px;
-    font-family: var(--font-serif);
-    font-size: 1.5rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.dashboard-sidebar .sidebar-brand a {
-    color: var(--accent-color);
-    text-decoration: none;
-}
-
-.dashboard-sidebar .sidebar-nav {
-    flex: 1;
-    overflow-y: auto;
-    padding: 24px 16px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
 
 .nav-section-title {
     font-size: 0.75rem;
@@ -58,39 +23,7 @@
     margin-top: 0;
 }
 
-.dashboard-sidebar a {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 12px 16px;
-    border-radius: 8px;
-    color: rgba(255, 255, 255, 0.8);
-    text-decoration: none;
-    font-weight: 500;
-    transition: var(--transition);
-}
 
-.dashboard-sidebar a i {
-    width: 20px;
-    text-align: center;
-    font-size: 1.1rem;
-}
-
-.dashboard-sidebar a:hover {
-    background-color: rgba(255, 255, 255, 0.1);
-    color: white;
-}
-
-.dashboard-sidebar a.active {
-    background-color: var(--accent-color);
-    color: white;
-    font-weight: 600;
-}
-
-.dashboard-sidebar .sidebar-footer {
-    padding: 24px 16px;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-}
 
 .btn-sidebar-logout,
 .sidebar-logout-btn {
@@ -283,78 +216,11 @@
     border: 1px solid var(--border-color);
 }
 
-/* Artisan portal aligned with moderator dashboard design */
-.dashboard-layout {
-    min-height: calc(100vh - 96px);
-    height: auto;
-    overflow-x: hidden;
-    overflow-y: visible;
-    background: #FAF8F5;
-}
 
-.dashboard-sidebar {
-    width: 280px;
-    flex: 0 0 280px;
-    min-height: calc(100vh - 96px);
-    height: auto;
-    background: #1C3322;
-    border-right: 1px solid rgba(250, 248, 245, 0.06);
-    box-shadow: 0 4px 20px rgba(28, 51, 34, 0.03);
-}
-
-.dashboard-sidebar.collapsed {
-    margin-left: -280px;
-}
-
-.dashboard-sidebar .sidebar-brand {
-    padding: 28px 24px;
-    border-bottom: 1px solid rgba(250, 248, 245, 0.06);
-    font-size: 1.35rem;
-}
-
-.dashboard-sidebar .sidebar-brand a {
-    color: #fff;
-}
-
-.dashboard-sidebar .sidebar-nav {
-    padding: 28px 18px;
-    gap: 8px;
-}
-
-.dashboard-sidebar a {
-    border-left: 3px solid transparent;
-    border-radius: 4px;
-    color: rgba(250, 248, 245, 0.72);
-    letter-spacing: 0.02em;
-    padding: 13px 18px;
-}
-
-.dashboard-sidebar a:hover {
-    background: rgba(250, 248, 245, 0.045);
-    color: #fff;
-}
-
-.dashboard-sidebar a.active {
-    background: rgba(250, 248, 245, 0.065);
-    border-left-color: #B8926A;
-    color: #fff;
-}
-
-.dashboard-sidebar .sidebar-footer {
-    padding: 24px;
-    border-top: 1px solid rgba(250, 248, 245, 0.06);
-}
-
-.btn-sidebar-logout {
-    background: transparent;
-    border: 1px solid rgba(250, 248, 245, 0.16);
-    border-radius: 4px;
-    color: rgba(250, 248, 245, 0.68);
-}
 
 .dashboard-main {
     min-width: 0;
-    max-width: calc(100vw - 280px);
+    flex: 1;
     overflow: visible;
     padding: 28px 36px;
 }
@@ -555,21 +421,7 @@
     }
 }
 
-@media (max-width: 900px) {
-    .dashboard-layout {
-        display: block;
-    }
 
-    .dashboard-sidebar,
-    .dashboard-main {
-        max-width: 100%;
-        width: 100%;
-    }
-
-    .dashboard-main {
-        padding: 20px;
-    }
-}
 
 /* Final artisan portal redesign - aligned to moderator reference */
 body:has(.artisan-topbar) {
@@ -578,146 +430,7 @@ body:has(.artisan-topbar) {
     overflow-y: auto;
 }
 
-body:has(.artisan-topbar) .dashboard-layout {
-    background: #FAF8F5;
-    display: flex;
-    height: auto;
-    min-height: 100vh;
-    overflow: visible;
-}
 
-body:has(.artisan-topbar) .dashboard-sidebar {
-    background: #1C3322;
-    border-right: 1px solid rgba(255,255,255,0.04);
-    box-shadow: none;
-    color: #fff;
-    flex: 0 0 280px;
-    height: auto;
-    min-height: 100vh;
-    width: 280px;
-}
-
-body:has(.artisan-topbar) .dashboard-sidebar .sidebar-brand {
-    border-bottom: 1px solid rgba(250,248,245,0.06);
-    padding: 42px 20px 40px;
-}
-
-body:has(.artisan-topbar) .sidebar-brand-link {
-    align-items: center;
-    color: #fff;
-    display: flex;
-    gap: 18px;
-    text-decoration: none;
-}
-
-body:has(.artisan-topbar) .artisan-brand-mark {
-    align-items: center;
-    background: #B8926A;
-    border-radius: 999px;
-    color: #1C3322;
-    display: flex;
-    flex: 0 0 46px;
-    font-size: 1.25rem;
-    height: 46px;
-    justify-content: center;
-    width: 46px;
-}
-
-body:has(.artisan-topbar) .artisan-brand-text {
-    color: #fff;
-    font-family: var(--font-sans);
-    font-size: 1.55rem;
-    font-weight: 800;
-    letter-spacing: 0.08em;
-    line-height: 1.25;
-}
-
-body:has(.artisan-topbar) .dashboard-sidebar .sidebar-nav {
-    gap: 10px;
-    padding: 36px 14px;
-}
-
-body:has(.artisan-topbar) .dashboard-sidebar .nav-section-title {
-    display: none;
-}
-
-body:has(.artisan-topbar) .dashboard-sidebar a {
-    align-items: center;
-    border-left: 3px solid transparent;
-    border-radius: 4px;
-    color: rgba(250,248,245,0.68);
-    display: flex;
-    font-size: 1.02rem;
-    font-weight: 700;
-    gap: 16px;
-    letter-spacing: 0.01em;
-    padding: 16px 22px;
-    text-decoration: none;
-}
-
-body:has(.artisan-topbar) .dashboard-sidebar a i {
-    color: currentColor;
-    font-size: 1.05rem;
-    width: 22px;
-}
-
-body:has(.artisan-topbar) .dashboard-sidebar a:hover {
-    background: rgba(250,248,245,0.045);
-    color: #fff;
-}
-
-body:has(.artisan-topbar) .dashboard-sidebar a.active {
-    background: rgba(250,248,245,0.06);
-    border-left-color: #B8926A;
-    color: #fff;
-}
-
-body:has(.artisan-topbar) .dashboard-sidebar .sidebar-footer {
-    border-top: 0;
-    margin-top: auto;
-    padding: 24px 20px;
-}
-
-body:has(.artisan-topbar) .btn-sidebar-logout,
-body:has(.artisan-topbar) .sidebar-logout-btn {
-    align-items: center;
-    background: transparent;
-    border: 1px solid rgba(250,248,245,0.18);
-    border-radius: 4px;
-    color: rgba(250,248,245,0.72);
-    display: flex;
-    font-weight: 800;
-    gap: 12px;
-    justify-content: flex-start;
-    letter-spacing: 0.02em;
-    padding: 14px 16px;
-    width: 100%;
-}
-
-body:has(.artisan-topbar) .btn-sidebar-logout:hover,
-body:has(.artisan-topbar) .sidebar-logout-btn:hover {
-    background: rgba(255,82,82,0.08);
-    border-color: #ff5252;
-    color: #ff6b6b;
-}
-
-body:has(.artisan-topbar) .sidebar-logout-btn .logout-icon {
-    align-items: center;
-    display: inline-flex;
-    justify-content: center;
-    width: 22px;
-}
-
-body:has(.artisan-topbar) .dashboard-main {
-    background: #FAF8F5;
-    flex: 1;
-    height: auto;
-    max-width: calc(100% - 300px);
-    min-height: 100vh;
-    min-width: 0;
-    overflow: visible;
-    padding: 0 0 48px;
-}
 
 .artisan-topbar {
     align-items: center;
@@ -1100,36 +813,7 @@ body:has(.artisan-topbar) .artisan-profile-actions {
     }
 }
 
-/* Artisan sidebar/profile final alignment */
-body:has(.artisan-topbar) .dashboard-sidebar {
-    height: 100vh;
-    max-height: 100vh;
-    min-height: 100vh;
-    overflow: hidden;
-    position: sticky;
-    top: 0;
-}
 
-body:has(.artisan-topbar) .dashboard-sidebar .sidebar-brand,
-body:has(.artisan-topbar) .dashboard-sidebar .sidebar-footer {
-    flex: 0 0 auto;
-}
-
-body:has(.artisan-topbar) .dashboard-sidebar .sidebar-nav {
-    flex: 1 1 auto;
-    min-height: 0;
-    overflow-y: auto;
-    padding-bottom: 20px;
-}
-
-body:has(.artisan-topbar) .dashboard-sidebar .sidebar-nav::-webkit-scrollbar {
-    width: 6px;
-}
-
-body:has(.artisan-topbar) .dashboard-sidebar .sidebar-nav::-webkit-scrollbar-thumb {
-    background: rgba(250,248,245,0.22);
-    border-radius: 999px;
-}
 
 body:has(.artisan-topbar) .dashboard-main > .page-header {
     margin-left: auto;
@@ -1154,14 +838,6 @@ body:has(.artisan-topbar) .artisan-profile-actions {
 }
 
 @media (max-width: 980px) {
-    body:has(.artisan-topbar) .dashboard-sidebar {
-        height: auto;
-        max-height: none;
-        min-height: auto;
-        overflow: visible;
-        position: static;
-    }
-
     body:has(.artisan-topbar) .dashboard-main > .page-header,
     body:has(.artisan-topbar) .artisan-profile-card {
         width: calc(100% - 40px);

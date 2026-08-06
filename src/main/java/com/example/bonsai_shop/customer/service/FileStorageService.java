@@ -29,9 +29,9 @@ public class FileStorageService {
                 throw new RuntimeException("Chỉ được upload file ảnh!");
             }
 
-            // Validate kích thước (tối đa 5MB)
-            if (file.getSize() > 5 * 1024 * 1024) {
-                throw new RuntimeException("Ảnh không được vượt quá 5MB!");
+            // Validate kích thước (tối đa 7MB)
+            if (file.getSize() > 7 * 1024 * 1024) {
+                throw new RuntimeException("Ảnh không được vượt quá 7MB!");
             }
 
             // Tạo tên file unique

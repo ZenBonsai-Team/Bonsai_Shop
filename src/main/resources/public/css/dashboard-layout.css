@@ -67,6 +67,8 @@ h1, h2, h3, h4, h5, h6, .brand-name, .section-title {
 /* Premium Sidebar Layout */
 .dashboard-sidebar {
     width: 280px;
+    min-height: 100vh;
+    height: auto;
     background: var(--primary-color);
     color: #fff;
     display: flex;
@@ -74,7 +76,61 @@ h1, h2, h3, h4, h5, h6, .brand-name, .section-title {
     flex-shrink: 0;
     transition: var(--transition);
     border-right: 1px solid rgba(255, 255, 255, 0.03);
-    z-index: 100;
+    z-index: 1005;
+}
+
+/* Sidebar Collapsed State on Desktop */
+.dashboard-sidebar.collapsed {
+    width: 96px;
+    min-height: 100vh;
+    height: auto;
+}
+
+.dashboard-sidebar.collapsed .sidebar-brand {
+    padding: 20px 8px;
+    justify-content: center;
+}
+
+.dashboard-sidebar.collapsed .sidebar-brand-link {
+    gap: 0 !important;
+    justify-content: center;
+}
+
+.dashboard-sidebar.collapsed .sidebar-brand-link img {
+    width: 48px !important;
+    height: 48px !important;
+    min-width: 48px !important;
+}
+
+.dashboard-sidebar.collapsed .sidebar-brand-link span,
+.dashboard-sidebar.collapsed .sidebar-nav-item span:not(.nav-icon),
+.dashboard-sidebar.collapsed .sidebar-logout-btn span:not(.logout-icon) {
+    display: none !important;
+}
+
+.dashboard-sidebar.collapsed .sidebar-nav {
+    padding: 20px 8px;
+}
+
+.dashboard-sidebar.collapsed .sidebar-nav-item {
+    padding: 14px 0;
+    justify-content: center;
+    border-left: none;
+}
+
+.dashboard-sidebar.collapsed .sidebar-footer {
+    padding: 16px 8px;
+}
+
+.dashboard-sidebar.collapsed .sidebar-logout-btn {
+    padding: 12px 0;
+    justify-content: center;
+}
+
+.dashboard-sidebar.collapsed .sidebar-logout-btn i {
+    font-size: 1.25rem !important;
+    margin: 0 !important;
+    display: inline-block !important;
 }
 
 .sidebar-brand {
@@ -193,7 +249,7 @@ h1, h2, h3, h4, h5, h6, .brand-name, .section-title {
     box-shadow: var(--shadow-subtle);
     position: sticky;
     top: 0;
-    z-index: 90;
+    z-index: 1010;
 }
 
 .header-left {
@@ -209,7 +265,7 @@ h1, h2, h3, h4, h5, h6, .brand-name, .section-title {
     font-size: 24px;
     cursor: pointer;
     color: var(--text-main);
-    display: none;
+    display: block;
 }
 
 /* Breadcrumbs */
@@ -323,6 +379,8 @@ h1, h2, h3, h4, h5, h6, .brand-name, .section-title {
     padding: 40px;
     overflow-y: auto;
     max-width: 100%;
+    min-height: calc(100vh - 64px);
+    background: #f8fafc;
 }
 
 /* Responsive queries */
@@ -366,4 +424,130 @@ h1, h2, h3, h4, h5, h6, .brand-name, .section-title {
 
 .nav-icon i {
     font-size: 18px;
+}
+
+/* Standardized Premium Pagination Styles */
+.dashboard-pagination,
+.pagination,
+.history-pagination,
+.pagination-footer,
+.pagination-controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    margin-top: 2rem;
+    padding: 10px 0;
+}
+
+.dashboard-pagination a,
+.dashboard-pagination button,
+.pagination a,
+.pagination button,
+.history-pagination a,
+.history-pagination button,
+.pagination-controls a,
+.pagination-controls button,
+.page-btn {
+    background: #ffffff !important;
+    border: 1px solid #cbd5e1 !important;
+    color: #334155 !important;
+    padding: 8px 16px !important;
+    font-size: 0.88rem !important;
+    font-weight: 600 !important;
+    border-radius: 8px !important;
+    text-decoration: none !important;
+    transition: all 0.2s ease !important;
+    cursor: pointer !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+    display: inline-block !important;
+}
+
+.dashboard-pagination a:hover,
+.dashboard-pagination button:hover,
+.pagination a:hover,
+.pagination button:hover,
+.history-pagination a:hover,
+.history-pagination button:hover,
+.pagination-controls a:hover,
+.pagination-controls button:hover,
+.page-btn:hover {
+    border-color: #2e7d32 !important;
+    color: #2e7d32 !important;
+    background: #f0fdf4 !important;
+}
+
+.dashboard-pagination .disabled,
+.dashboard-pagination button:disabled,
+.pagination .disabled,
+.pagination button:disabled,
+.history-pagination .disabled,
+.history-pagination button:disabled,
+.pagination-controls a.disabled,
+.page-btn.disabled {
+    opacity: 0.5 !important;
+    pointer-events: none !important;
+    background: #f1f5f9 !important;
+    color: #94a3b8 !important;
+    border-color: #e2e8f0 !important;
+    cursor: not-allowed !important;
+}
+
+.pagination-info {
+    font-size: 0.9rem !important;
+    font-weight: 500 !important;
+    color: #475569 !important;
+}
+
+/* Global Premium Page Headers */
+.page-header {
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 16px !important;
+    padding: 1.5rem 2rem !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02) !important;
+    margin-bottom: 2rem !important;
+    border-left: 5px solid #2e7d32 !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    width: 100% !important;
+}
+
+.page-header h1 {
+    font-size: 1.75rem !important;
+    font-weight: 700 !important;
+    color: #0f172a !important;
+    margin: 0 !important;
+}
+
+.page-header p {
+    font-size: 0.9rem !important;
+    color: #64748b !important;
+    margin: 0 !important;
+}
+
+/* Premium Dashboard Action Buttons */
+.btn-save-config,
+.btn-premium-action {
+    background: #2e7d32 !important;
+    color: #ffffff !important;
+    border: none !important;
+    padding: 0.75rem 2rem !important;
+    border-radius: 50px !important;
+    font-weight: 600 !important;
+    text-decoration: none !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transition: all 0.2s ease !important;
+    box-shadow: 0 4px 12px rgba(46, 125, 50, 0.2) !important;
+    cursor: pointer !important;
+}
+
+.btn-save-config:hover,
+.btn-premium-action:hover {
+    background: #1b5e20 !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 16px rgba(46, 125, 50, 0.3) !important;
 }
