@@ -292,7 +292,7 @@ public class ArtisanProductController {
                                        RedirectAttributes redirectAttributes) {
         try {
             productJournalService.addMediaToEvent(userDetails.getUsername(), productId, eventId, files);
-            redirectAttributes.addFlashAttribute("success", "Đã bổ sung ảnh/video cho cập nhật cây.");
+            redirectAttributes.addFlashAttribute("success", "Đã bổ sung ảnh cho cập nhật cây.");
         } catch (RuntimeException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }

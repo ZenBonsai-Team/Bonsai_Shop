@@ -52,8 +52,6 @@ public class CustomUserDetailsService implements UserDetailsService {
         mappedAuthorities.add(roleAuthority);
         if ("ROLE_OWNER".equals(normRole)) {
             mappedAuthorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
-        } else if ("ROLE_ARTISAN".equals(normRole)) {
-            mappedAuthorities.add(new SimpleGrantedAuthority("ROLE_SELLER"));
         }
 
         List<SimpleGrantedAuthority> allAuthorities = Stream

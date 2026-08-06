@@ -98,8 +98,8 @@ public class SecurityConfig {
                                                 .requestMatchers("/moderator/reviews", "/moderator/reviews/**").hasRole("CONTENT_MODERATOR")
                                                 // Chỉ MODERATOR mới vào được /moderator và /moderator/**
                                                 .requestMatchers("/moderator", "/moderator/**").hasRole("MODERATOR")
-                                                // Chỉ ARTISAN hoặc SELLER mới vào được /artisan và /artisan/**
-                                                .requestMatchers("/artisan", "/artisan/**").hasAnyRole("ARTISAN", "SELLER")
+                                                // Chỉ ARTISAN mới vào được /artisan và /artisan/**
+                                                .requestMatchers("/artisan", "/artisan/**").hasRole("ARTISAN")
                                                 // Chặn theo Action cụ thể (permission-based)
                                                 .requestMatchers("/products/create", "/products/edit/**",
                                                                 "/prodcuts/delete/**")
