@@ -41,7 +41,7 @@ public class ViewingAppointmentController {
             String roleName = user.getRole().getRoleName();
             if ("ROLE_OWNER".equals(roleName) || "ROLE_ARTISAN".equals(roleName)
                     || "ROLE_MODERATOR".equals(roleName) || "ROLE_CONTENT_MODERATOR".equals(roleName)
-                    || "ROLE_ADMIN".equals(roleName) || "ROLE_SELLER".equals(roleName)) {
+                    || "ROLE_ADMIN".equals(roleName)) {
                 redirectAttributes.addFlashAttribute("error", "Tài khoản quản trị / nhà vườn / kiểm duyệt viên không được phép đặt lịch thăm vườn!");
                 return "redirect:/appointments";
             }
