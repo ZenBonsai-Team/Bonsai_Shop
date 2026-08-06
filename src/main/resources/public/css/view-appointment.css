@@ -84,6 +84,14 @@ a {
     backdrop-filter: blur(18px);
 }
 
+.luxury-shell .brand-text-navbar span:first-child {
+    color: #b9914b !important;
+}
+
+.luxury-shell .brand-text-navbar span:last-child {
+    color: #eadbc0 !important;
+}
+
 .luxury-shell .navbar-custom .container {
     width: min(calc(100% - 40px), var(--lux-container));
     max-width: var(--lux-container);
