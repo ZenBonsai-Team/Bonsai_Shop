@@ -523,7 +523,7 @@ public class OrderApiController {
                 .anyMatch(a -> a.getAuthority().equals("ROLE_OWNER") || a.getAuthority().equals("ROLE_ARTISAN")
                         || a.getAuthority().equals("ROLE_MODERATOR")
                         || a.getAuthority().equals("ROLE_CONTENT_MODERATOR")
-                        || a.getAuthority().equals("ROLE_ADMIN") || a.getAuthority().equals("ROLE_SELLER"));
+                        || a.getAuthority().equals("ROLE_ADMIN"));
         if (isStaffOrAdmin) {
             response.put("success", false);
             response.put("message",

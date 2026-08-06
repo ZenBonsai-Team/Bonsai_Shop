@@ -396,7 +396,7 @@
             white-space: pre-line;
         }
 
-        /* --- SELLER SUMMARY ROW --- */
+        /* --- ARTISAN SUMMARY ROW --- */
         .artisan-summary-box {
             display: flex;
             align-items: center;
@@ -637,7 +637,7 @@
             background-color: #C0392B;
         }
 
-        /* --- SELLER PROFILE BANNER --- */
+        /* --- ARTISAN PROFILE BANNER --- */
         .artisan-profile-banner {
             border: 1px solid var(--border-color);
             background-color: #FFFFFF;
