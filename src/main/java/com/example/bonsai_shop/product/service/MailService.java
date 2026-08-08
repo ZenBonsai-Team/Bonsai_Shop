@@ -161,7 +161,7 @@ public class MailService {
               .append("<td style=\"padding: 10px 12px; color: #4a5568;\">").append(stt++).append("</td>")
               .append("<td style=\"padding: 10px 12px; color: #2d3748;\"><strong>").append(pName).append("</strong></td>")
               .append("<td style=\"padding: 10px 12px; text-align: center; color: #4a5568;\">").append(qty).append("</td>")
-              .append("<td style=\"padding: 10px 12px; text-align: right; color: #2d3748; font-weight: 500;\">").append(price).append(" VND</td>")
+              .append("<td style=\"padding: 10px 12px; text-align: right; color: #2d3748; font-weight: 500;\">").append(formatVND(price)).append("</td>")
               .append("</tr>");
         }
         return sb.toString();
@@ -408,7 +408,7 @@ public class MailService {
                 "    <table style=\"width: 100%; border-collapse: collapse; margin: 20px 0;\">" +
                 "      <tr style=\"background-color: #f0fff4; font-weight: bold; color: #22543d;\">" +
                 "        <td style=\"padding: 12px;\">Tổng tiền đã thanh toán hoàn tất:</td>" +
-                "        <td style=\"text-align: right; padding: 12px;\">" + total + " VND</td>" +
+                "        <td style=\"text-align: right; padding: 12px;\">" + formatVND(total) + "</td>" +
                 "      </tr>" +
                 "    </table>" +
                 "  </div>" +
@@ -499,7 +499,7 @@ public class MailService {
                 "      </tr>" +
                 "      <tr style=\"background-color: #f0fff4; font-weight: bold; color: #276749;\">" +
                 "        <td style=\"padding: 12px;\">Tạm tính giá trị cây:</td>" +
-                "        <td style=\"text-align: right; padding: 12px;\">" + total + " VND</td>" +
+                "        <td style=\"text-align: right; padding: 12px;\">" + formatVND(total) + "</td>" +
                 "      </tr>" +
                 "    </table>" +
                 "  </div>" +

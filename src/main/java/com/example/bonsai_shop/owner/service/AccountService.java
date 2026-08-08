@@ -46,6 +46,9 @@ public class AccountService {
                 .createdAt(LocalDateTime.now())
                 .build();
 
+         if(password.length() < 6){
+             throw new RuntimeException("Mật khẩu phải có ít nhất 6 ký tự!");
+         }
         accountRepository.save(user);
     }
 
