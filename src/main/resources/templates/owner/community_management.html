@@ -58,11 +58,17 @@
 
 <div id="community-content" th:with="paramActivePage='community'">
     <header class="dashboard-header-title mb-4">
-        <div>
+        <div th:if="${activeTab == 'posts'}">
             <h1 class="serif-text mb-1" style="font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; color: #1c3322; font-size: 1.8rem;">
-                Quản lý Cộng đồng
+                Quản lý bài viết
             </h1>
-            <p class="text-secondary mb-0">Xem và quản lý các bài chia sẻ kinh nghiệm cùng bình luận trên diễn đàn.</p>
+            <p class="text-secondary mb-0">Xem và quản lý các bài viết chia sẻ kinh nghiệm trên diễn đàn cộng đồng.</p>
+        </div>
+        <div th:if="${activeTab == 'comments'}">
+            <h1 class="serif-text mb-1" style="font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; color: #1c3322; font-size: 1.8rem;">
+                Quản lý bình luận
+            </h1>
+            <p class="text-secondary mb-0">Kiểm duyệt và quản lý các bình luận của người dùng trên các bài đăng.</p>
         </div>
     </header>
 

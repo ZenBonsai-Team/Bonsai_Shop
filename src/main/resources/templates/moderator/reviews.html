@@ -181,7 +181,6 @@
                                 <th>Đánh giá sao</th>
                                 <th>Cảm nhận & Phản hồi</th>
                                 <th>Ngày gửi</th>
-                                <th class="text-end" style="width: 150px;">Hành động</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -223,15 +222,6 @@
                                     </div>
                                 </td>
                                 <td th:text="${#temporals.format(review.createdAt, 'dd/MM/yyyy HH:mm')}"></td>
-                                <td>
-                                    <div class="d-flex justify-content-end">
-                                        <button class="btn btn-outline-primary btn-sm rounded-pill px-3"
-                                                th:attr="data-review-id=${review.reviewId}"
-                                                onclick="openResponseModal(this.getAttribute('data-review-id'))">
-                                            <i class="fa-solid fa-reply me-1"></i>Phản hồi
-                                        </button>
-                                    </div>
-                                </td>
                             </tr>
                         </tbody>
                     </table>
@@ -317,30 +307,6 @@
     </div>
 
     <!-- Response Modal -->
-    <div class="modal fade" id="responseModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content rounded-4 border-0 shadow">
-                <div class="modal-header bg-primary text-white py-3">
-                    <h5 class="modal-title fw-bold"><i class="fa-solid fa-reply me-2"></i>Phản hồi đánh giá</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body p-4">
-                    <input type="hidden" id="responseReviewId">
-                    <div class="mb-3">
-                        <label for="responseText" class="form-label text-dark fw-semibold">Nội dung phản hồi từ nhà vườn</label>
-                        <textarea id="responseText" class="form-control rounded-3" rows="4"
-                                  placeholder="Nhập phản hồi của nhà vườn gửi tới khách hàng..."></textarea>
-                    </div>
-                </div>
-                <div class="modal-footer border-0 p-3 bg-light d-flex gap-2">
-                    <button class="btn btn-outline-secondary rounded-pill flex-grow-1 py-2 btn-sm fw-semibold" data-bs-dismiss="modal">Hủy bỏ</button>
-                    <button class="btn btn-primary rounded-pill flex-grow-1 py-2 btn-sm fw-semibold" onclick="submitResponse()">
-                        <i class="fa-solid fa-paper-plane me-1"></i>Gửi phản hồi
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
 </div>
 
 <th:block id="page-scripts">
@@ -408,47 +374,7 @@
             });
         }
 
-        function openResponseModal(reviewId) {
-            document.getElementById('responseReviewId').value = reviewId;
-            document.getElementById('responseText').value = '';
-            const modalEl = document.getElementById('responseModal');
-            const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
-            modal.show();
-        }
 
-        function submitResponse() {
-            const reviewId = document.getElementById('responseReviewId').value;
-            const response = document.getElementById('responseText').value.trim();
-            if (!response) { alert('Vui lòng nhập nội dung phản hồi'); return; }
-
-            fetch(`/api/reviews/${reviewId}/respond`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    [csrfHeader]: csrfToken
-                },
-                body: JSON.stringify({ response })
-            })
-            .then(async (res) => {
-                if (!res.ok) {
-                    const text = await res.text();
-                    throw new Error(text || `HTTP error ${res.status}`);
-                }
-                return res.json();
-            })
-            .then(d => {
-                if (d.success) { 
-                    alert('Đã gửi phản hồi!'); 
-                    location.reload(); 
-                } else {
-                    alert('Lỗi: ' + (d.error || 'Yêu cầu không thành công'));
-                }
-            })
-            .catch(err => {
-                console.error(err);
-                alert('Có lỗi xảy ra: ' + err.message);
-            });
-        }
 
         // --- Client-side Pagination, Live Filtering & Search Logic ---
         const PAGE_SIZE = 10;

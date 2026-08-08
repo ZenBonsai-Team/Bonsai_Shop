@@ -129,20 +129,22 @@
 <body>
 
 <div id="moderator-content">
-    <div class="d-flex justify-content-between align-items-center mb-3">
+    <header class="dashboard-header-title mb-4 d-flex justify-content-between align-items-center">
         <div>
-            <h3 class="fw-bold text-dark m-0"><i class="fa-solid fa-tower-broadcast text-success me-2"></i>Live Stream Control Room</h3>
-            <p class="text-muted small mb-0">Quản lý buổi live, lọc comment bắt số điện thoại và sản phẩm thời gian thực</p>
+            <h1 class="serif-text mb-1" style="font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; color: #1c3322; font-size: 1.8rem;">
+                Live Stream Control Room
+            </h1>
+            <p class="text-secondary mb-0">Quản lý buổi live, lọc comment bắt số điện thoại và sản phẩm thời gian thực.</p>
         </div>
         <div>
-            <button th:if="${activeSession == null}" class="btn btn-success rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#startSessionModal">
+            <button th:if="${activeSession == null}" class="btn btn-success rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#startSessionModal" style="background-color: #2E7D32; border-color: #2E7D32;">
                 <i class="fa-solid fa-play me-2"></i>Bắt đầu phiên Live
             </button>
             <button th:if="${activeSession != null}" class="btn btn-danger rounded-pill px-4" th:onclick="|endLiveSession(${activeSession?.sessionId})|">
                 <i class="fa-solid fa-stop me-2"></i>Kết thúc phiên Live
             </button>
         </div>
-    </div>
+    </header>
 
     <!-- Active Session Banner -->
     <div th:if="${activeSession != null}" class="alert alert-success border-0 rounded-4 shadow-sm mb-4 p-3 d-flex justify-content-between align-items-center">
