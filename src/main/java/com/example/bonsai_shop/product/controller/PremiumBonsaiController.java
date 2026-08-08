@@ -17,7 +17,7 @@ import java.util.List;
 
 @Controller
 @RequiredArgsConstructor
-public class PreniumBonsaiController {
+public class PremiumBonsaiController {
     private final ProductService productService;
 
     @GetMapping("/bonsai-luxury")

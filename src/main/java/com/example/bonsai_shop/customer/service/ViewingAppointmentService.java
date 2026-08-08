@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 
 @Service
@@ -33,6 +34,14 @@ public class ViewingAppointmentService {
             throw new RuntimeException("Nhà vườn đang tạm ngừng nhận lịch trong khoảng thời gian này.\n"
                                        + "Lý do : " + setting.getPauseReason());
         }
+
+        LocalTime appointmentTime = viewingAppointment.getAppointmentDate().toLocalTime();
+
+        if (appointmentTime.isBefore(LocalTime.of(8, 0))
+                || appointmentTime.isAfter(LocalTime.of(17, 0))) {
+            throw new RuntimeException("Chỉ được đặt lịch trong khung giờ từ 08:00 đến 17:00.");
+        }
+
         if(viewingAppointmentRepository.existsByCustomerAndStatusIn(viewingAppointment.getCustomer(),List.of("PENDING","APPROVED"))){
             throw new RuntimeException(
                     "Bạn đã có một lịch hẹn đang diễn ra. Vui lòng hoàn thành lịch hẹn hiện tại trước khi đặt lịch mới."
@@ -71,6 +80,16 @@ public class ViewingAppointmentService {
         if (!appointment.getStatus().equals("PENDING")) {
             throw new RuntimeException("Không thể chỉnh sửa lịch sau khi đã xác nhận");
         }
+
+        LocalTime time = appointmentDate.toLocalTime();
+
+        if (time.isBefore(LocalTime.of(8, 0))
+                || time.isAfter(LocalTime.of(17, 0))) {
+            throw new RuntimeException(
+                    "Chỉ được cập nhật lịch trong giờ hành chính (08:00 - 17:00)"
+            );
+        }
+
 
         appointment.setAppointmentDate(appointmentDate);
         appointment.setNote(note);
