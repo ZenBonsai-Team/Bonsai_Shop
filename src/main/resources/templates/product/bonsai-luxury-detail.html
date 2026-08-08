@@ -216,7 +216,7 @@
                     </button>
                 </div>
 
-                <div sec:authorize="isAuthenticated() and !hasAnyRole('OWNER', 'ARTISAN', 'MODERATOR', 'CONTENT_MODERATOR', 'ADMIN', 'SELLER')" class="action-row">
+                <div sec:authorize="isAuthenticated() and !hasAnyRole('OWNER', 'ARTISAN', 'MODERATOR', 'CONTENT_MODERATOR', 'ADMIN')" class="action-row">
                     <button class="btn-primary schedule-btn"
                             type="button"
                             th:if="${product != null and (product.status == null or product.status == 'AVAILABLE')}"
@@ -237,7 +237,7 @@
                     </button>
                 </div>
 
-                <div sec:authorize="hasAnyRole('OWNER', 'ARTISAN', 'MODERATOR', 'CONTENT_MODERATOR', 'ADMIN', 'SELLER')" class="role-note">
+                <div sec:authorize="hasAnyRole('OWNER', 'ARTISAN', 'MODERATOR', 'CONTENT_MODERATOR', 'ADMIN')" class="role-note">
                     <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
                     <span>Tài khoản quản trị, nhà vườn hoặc kiểm duyệt chỉ có quyền xem thông tin tác phẩm.</span>
                 </div>
@@ -367,7 +367,7 @@
                 <div class="artisan-profile-right">
                     <button class="btn-view-profile-outline schedule-btn"
                             type="button"
-                            sec:authorize="isAuthenticated() and !hasAnyRole('OWNER', 'ARTISAN', 'MODERATOR', 'CONTENT_MODERATOR', 'ADMIN', 'SELLER')"
+                            sec:authorize="isAuthenticated() and !hasAnyRole('OWNER', 'ARTISAN', 'MODERATOR', 'CONTENT_MODERATOR', 'ADMIN')"
                             th:if="${product != null and (product.status == null or product.status == 'AVAILABLE')}"
                             th:data-id="${product != null ? product.productId : ''}"
                             th:data-title="${product != null && product.productName != null ? product.productName : 'Tác phẩm Bonsai Luxury'}"
@@ -379,9 +379,9 @@
                        th:if="${product != null and (product.status == null or product.status == 'AVAILABLE')}"
                        th:href="@{/login}">Đăng nhập để đặt lịch</a>
                     <span class="btn-view-profile-outline is-disabled"
-                          sec:authorize="!hasAnyRole('OWNER', 'ARTISAN', 'MODERATOR', 'CONTENT_MODERATOR', 'ADMIN', 'SELLER')"
+                          sec:authorize="!hasAnyRole('OWNER', 'ARTISAN', 'MODERATOR', 'CONTENT_MODERATOR', 'ADMIN')"
                           th:unless="${product != null and (product.status == null or product.status == 'AVAILABLE')}">Tác phẩm chưa mở lịch</span>
-                    <span class="btn-view-profile-outline is-disabled" sec:authorize="hasAnyRole('OWNER', 'ARTISAN', 'MODERATOR', 'CONTENT_MODERATOR', 'ADMIN', 'SELLER')">Chỉ xem hồ sơ</span>
+                    <span class="btn-view-profile-outline is-disabled" sec:authorize="hasAnyRole('OWNER', 'ARTISAN', 'MODERATOR', 'CONTENT_MODERATOR', 'ADMIN')">Chỉ xem hồ sơ</span>
                 </div>
             </div>
         </div>

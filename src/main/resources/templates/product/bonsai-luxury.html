@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi"
       xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.w3.org/1999/xhtml">
 <head>
@@ -32,15 +32,15 @@
          ============================================================ -->
     <section class="hero hero-luxury-fullbleed" aria-label="Giới thiệu không gian nghệ thuật">
         <div class="hero-fullbleed-media" aria-hidden="true">
-            <img th:src="@{/images/hero-banner-bonsai.jpg}" alt="">
+            <img th:src="${sysConfig.getValue('luxury_banner_image', '/images/hero-banner-bonsai.jpg')}" alt="">
             <div class="hero-fullbleed-scrim"></div>
         </div>
 
         <div class="container hero-fullbleed-content">
             <span class="hero-pill-badge luxury-hero-pill" th:text="#{luxury.hero.badge}">Showroom riêng • Hồ sơ sưu tầm</span>
-            <h1 class="hero-main-title serif-text luxury-hero-title" th:text="#{luxury.hero.title}">Bonsai di sản cho bộ sưu tập riêng</h1>
-            <p class="hero-subtitle-desc luxury-hero-desc" th:text="#{luxury.hero.desc}">
-                Tuyển chọn những tác phẩm có tuổi, dáng và chất thân rõ nét; phù hợp cho biệt thự, phòng khách lớn và không gian trưng bày cao cấp.
+            <h1 class="hero-main-title serif-text luxury-hero-title" th:text="${sysConfig.getValue('luxury_banner_title', 'Hàng Tuyển Tác Phẩm Độc Bản')}">Hàng Tuyển Tác Phẩm Độc Bản</h1>
+            <p class="hero-subtitle-desc luxury-hero-desc" th:text="${sysConfig.getValue('luxury_banner_subtitle', 'Bộ sưu tập siêu phẩm Bonsai quý hiếm, đỉnh cao nghệ thuật dành cho các nhà sưu tầm thượng lưu.')}">
+                Bộ sưu tập siêu phẩm Bonsai quý hiếm, đỉnh cao nghệ thuật dành cho các nhà sưu tầm thượng lưu.
             </p>
             <div class="hero-marketplace-actions">
                 <a href="#collection" class="btn btn-hero-solid luxury-hero-solid text-decoration-none" th:text="#{luxury.hero.explore}">Khám phá bộ sưu tập</a>

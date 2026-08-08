@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org" th:fragment="layout(title, content, styles, scripts)">
 <head>
     <meta charset="UTF-8">
@@ -42,10 +42,20 @@
             const toggleBtn = document.querySelector('.sidebar-toggle-btn');
             const sidebar = document.querySelector('.dashboard-sidebar');
             
+            // Check if collapsed state is saved in localStorage
+            if (sidebar && localStorage.getItem('sidebar-collapsed') === 'true' && window.innerWidth > 992) {
+                sidebar.classList.add('collapsed');
+            }
+
             if (toggleBtn && sidebar) {
                 toggleBtn.addEventListener('click', (e) => {
                     e.stopPropagation();
-                    sidebar.classList.toggle('open');
+                    if (window.innerWidth > 992) {
+                        sidebar.classList.toggle('collapsed');
+                        localStorage.setItem('sidebar-collapsed', sidebar.classList.contains('collapsed'));
+                    } else {
+                        sidebar.classList.toggle('open');
+                    }
                 });
                 
                 // Close sidebar when clicking outside on mobile devices

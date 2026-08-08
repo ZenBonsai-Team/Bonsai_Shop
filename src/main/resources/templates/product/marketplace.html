@@ -32,11 +32,12 @@
 <!-- ===================================================== -->
 <!-- HERO -->
 <!-- ===================================================== -->
-<header class="hero-centered">
+<header class="hero-centered" 
+        th:style="'background: linear-gradient(rgba(250, 248, 245, 0.88), rgba(250, 248, 245, 0.88)), url(' + ${sysConfig.getValue('marketplace_banner_image', '/images/hero-banner-1.jpg')} + ') no-repeat center center; background-size: cover;'">
     <div class="container">
-        <h1 class="hero-main-title serif-text" th:utext="#{hero.title}">Sở Hữu Tác Phẩm Cây Cảnh<br>Nghệ Thuật Độc Bản</h1>
-        <p class="hero-subtitle-desc" th:text="#{hero.subtitle}">
-            Mỗi tác phẩm bonsai là một di sản nghệ thuật có hồ sơ phả hệ rõ ràng, tuyển chọn từ nhà vườn nghệ nhân Bắc Bộ.
+        <h1 class="hero-main-title serif-text" th:text="${sysConfig.getValue('marketplace_banner_title', 'Tác Phẩm Bonsai Di Sản & Nghệ Thuật Độc Bản')}">Tác Phẩm Bonsai Di Sản & Nghệ Thuật Độc Bản</h1>
+        <p class="hero-subtitle-desc" th:text="${sysConfig.getValue('marketplace_banner_subtitle', 'Nơi lưu giữ hồn xưa đất Việt qua từng thế cây, dáng đá. Mỗi tác phẩm đều đi kèm hồ sơ nghệ nhân, phả hệ minh bạch và chứng nhận thẩm định từ nhà vườn.')}">
+            Nơi lưu giữ hồn xưa đất Việt qua từng thế cây, dáng đá. Mỗi tác phẩm đều đi kèm hồ sơ nghệ nhân, phả hệ minh bạch và chứng nhận thẩm định từ nhà vườn.
         </p>
         <div class="d-flex justify-content-center align-items-center">
             <a href="#marketplace-anchor" class="btn btn-hero-solid text-decoration-none" th:text="#{hero.explore}">Khám phá bộ sưu tập</a>

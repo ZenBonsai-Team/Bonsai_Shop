@@ -4,8 +4,6 @@ import com.example.bonsai_shop.customer.repository.RoleActionRepository;
 import com.example.bonsai_shop.customer.repository.UserRepository;
 import com.example.bonsai_shop.entity.User;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.authentication.DisabledException;
-import org.springframework.security.authentication.LockedException;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -52,8 +50,6 @@ public class CustomUserDetailsService implements UserDetailsService {
         mappedAuthorities.add(roleAuthority);
         if ("ROLE_OWNER".equals(normRole)) {
             mappedAuthorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
-        } else if ("ROLE_ARTISAN".equals(normRole)) {
-            mappedAuthorities.add(new SimpleGrantedAuthority("ROLE_SELLER"));
         }
 
         List<SimpleGrantedAuthority> allAuthorities = Stream

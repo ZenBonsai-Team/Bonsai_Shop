@@ -1,6 +1,7 @@
 package com.example.bonsai_shop.product.controller;
 
 import com.example.bonsai_shop.entity.Product;
+import com.example.bonsai_shop.entity.ProductJournalEvent;
 import com.example.bonsai_shop.entity.ProductMedia;
 import com.example.bonsai_shop.artisan.service.ProductJournalService;
 import com.example.bonsai_shop.product.service.ProductService;
@@ -153,7 +154,11 @@ public class MarketplaceController {
         model.addAttribute("artisanManagedProductCount", productService.countManagedProductsByArtisan(
                 product.getCreatedBy() == null ? null : product.getCreatedBy().getUserId()
         ));
-        model.addAttribute("journalEvents", productJournalService.getPublicEvents(product));
+        List<ProductJournalEvent> journalEvents = productJournalService.getPublicEvents(product);
+        List<ProductJournalEvent> journalEventsAscending = new ArrayList<>(journalEvents);
+        Collections.reverse(journalEventsAscending);
+        model.addAttribute("journalEvents", journalEvents);
+        model.addAttribute("journalEventsAscending", journalEventsAscending);
         model.addAttribute("relatedProducts", productService.getRelatedProducts(product, 4));
         model.addAttribute("reviews", reviewService.getApprovedReviewsByProduct(product.getProductId()));
         model.addAttribute("averageRating", reviewService.getAverageRating(product.getProductId()));

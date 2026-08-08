@@ -18,6 +18,7 @@ public class WishlistItemResponseDTO {
     private String productName;
     private String productImage;
     private BigDecimal price;
+    private Boolean isPublicPrice;
     private String productStatus;
     private Boolean isVisible;
     private Integer segmentId;

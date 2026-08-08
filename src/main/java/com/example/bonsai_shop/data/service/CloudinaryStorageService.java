@@ -72,13 +72,13 @@ public class CloudinaryStorageService {
 
         long maxSize = expectedType.equals("video")
                 ? 100L * 1024 * 1024
-                : 5L * 1024 * 1024;
+                : 7L * 1024 * 1024;
 
         if (file.getSize() > maxSize) {
             throw new RuntimeException(
                     expectedType.equals("video")
                             ? "Video không được vượt quá 100MB!"
-                            : "Ảnh không được vượt quá 5MB!"
+                            : "Ảnh không được vượt quá 7MB!"
             );
         }
     }

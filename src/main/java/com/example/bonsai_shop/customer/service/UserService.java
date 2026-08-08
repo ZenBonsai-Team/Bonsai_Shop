@@ -213,38 +213,6 @@ public class UserService {
         userRepository.save(user);
     }
 
-    // ===== LẤY DANH SÁCH TẤT CẢ USER (cho Admin) =====
-    public List<User> getAllUsers() {
-        return userRepository.findAll();
-    }
-
-    // ===== ĐỔI ROLE CHO USER =====
-    @Transactional
-    public void changeUserRole(Integer userId, Integer newRoleId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy user!"));
-
-        Role newRole = roleRepository.findById(newRoleId)
-                .orElseThrow(() -> new RuntimeException("Role không tồn tại!"));
-
-        user.setRole(newRole);
-        userRepository.save(user);
-    }
-
-    // ===== KHÓA / MỞ KHÓA TÀI KHOẢN =====
-    @Transactional
-    public void toggleUserStatus(Integer userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy user!"));
-
-        if ("ACTIVE".equals(user.getStatus())) {
-            user.setStatus("LOCKED");
-        } else {
-            user.setStatus("ACTIVE");
-        }
-        userRepository.save(user);
-    }
-
     public void checkProfileEmailAndPhone(User user) {
         if(user.getPhone() == null || user.getPhone().isBlank()) {
             throw new RuntimeException("Vui lòng cập nhật số điện thoại trước khi đặt lịch");

@@ -37,6 +37,7 @@
         .journal-timeline::-webkit-scrollbar { width: 8px; }
         .journal-timeline::-webkit-scrollbar-thumb { background: #cfd8d1; border-radius: 999px; }
         .journal-event { display: grid; grid-template-columns: 104px minmax(0, 1fr) auto; gap: 14px; align-items: center; min-height: 104px; padding: 10px 14px 10px 10px; border: 1px solid #e2e7e2; border-radius: 10px; background: #fff; box-shadow: none; }
+        .journal-event.is-unpublished { border-color: #f1c75b; background: linear-gradient(90deg, #fff9e8 0%, #ffffff 42%); }
         .journal-cover-link { display: block; width: 104px; height: 84px; border: 0; padding: 0; border-radius: 4px; overflow: hidden; background: #edf2ee; cursor: zoom-in; }
         .journal-cover { width: 100%; height: 100%; border-radius: 0; object-fit: cover; background: #edf2ee; display: block; }
         .journal-event h3 { margin: 0 0 5px; color: #183322; font-size: 15px; line-height: 1.25; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -47,9 +48,11 @@
         .journal-add-media { display: flex; align-items: center; gap: 8px; min-width: 0; }
         .journal-add-media input[type="file"] { width: 150px; max-width: 42vw; border: 1px solid #dfe6df; border-radius: 8px; padding: 5px; font-size: 12px; }
         .journal-add-media button { color: #246b49; white-space: nowrap; }
-        .journal-visibility button { color: #536257; white-space: nowrap; }
-        .journal-visibility button.is-public { color: #8a6200; }
-        .journal-visibility button.is-private { color: #246b49; }
+        .journal-visibility button { display: inline-flex; align-items: center; gap: 7px; white-space: nowrap; border-radius: 999px; padding: 7px 11px; transition: .18s ease; }
+        .journal-visibility button.is-public { color: #8a6200; background: #fff7db; border: 1px solid #f1d37b; }
+        .journal-visibility button.is-private { color: #6b4400; background: #ffd45a; border: 1px solid #d99a00; box-shadow: 0 8px 18px rgba(217, 154, 0, 0.22); }
+        .journal-visibility button.is-private:hover { background: #ffc928; color: #422a00; }
+        .journal-attention-note { display: inline-flex; align-items: center; gap: 6px; width: fit-content; margin-top: 6px; border-radius: 999px; background: #fff1c2; color: #7a4d00; padding: 5px 9px; font-size: 12px; font-weight: 800; }
         .journal-edit-toggle summary { cursor: pointer; color: #246b49; font-weight: 800; list-style: none; }
         .journal-edit-toggle summary::-webkit-details-marker { display: none; }
         .journal-edit-form { display: grid; gap: 8px; grid-column: 1 / -1; width: 100%; margin-top: 4px; padding: 10px; border: 1px solid #e2e7e2; border-radius: 10px; background: #f8fbf8; }
@@ -113,16 +116,15 @@
 
         <div class="journal-layout">
             <section class="form-card">
-                <h2>Thêm cập nhật mới</h2>
-                <form class="journal-form-grid" method="post" enctype="multipart/form-data"
+                <h2>Tạo nhật ký mới</h2>
+                <form class="journal-form-grid" method="post" enctype="multipart/form-data" data-min-journal-images="3"
                       th:action="@{/artisan/products/{id}/journal(id=${product.productId})}">
-                    <label>Ngày cập nhật
+                    <label>Ngày ghi nhận
                         <input type="date" th:value="${today}" th:min="${today}" th:max="${today}" disabled>
                     </label>
-                    <label>Loại cập nhật
+                    <label>Tình trạng cây
                         <select name="eventType">
-                            <option value="PHOTO_UPDATE">Cập nhật ảnh</option>
-                            <option value="GROWTH">Phát triển</option>
+                            <option value="GROWTH">Phát triển tốt</option>
                             <option value="PRUNING">Cắt tỉa</option>
                             <option value="WIRING">Uốn/kẽm</option>
                             <option value="REPOTTING">Thay chậu</option>
@@ -131,41 +133,39 @@
                             <option value="PEST_TREATMENT">Xử lý sâu bệnh</option>
                             <option value="HEALTH_CHECK">Kiểm tra sức khỏe</option>
                             <option value="ACQUISITION">Nhập cây</option>
+                            <option value="PHOTO_UPDATE">Ghi nhận hình ảnh</option>
                         </select>
                     </label>
                     <label>Tiêu đề
-                        <input name="title" maxlength="255" placeholder="VD: Cập nhật tán lá tuần này" required>
+                        <input name="title" maxlength="255" placeholder="VD: Một mùa tán mới của Hoàng Mai" required>
                     </label>
-                    <label>Mô tả
-                        <textarea name="description" placeholder="Ghi chú thay đổi, thao tác chăm sóc, tình trạng cây..."></textarea>
+                    <label>Câu chuyện
+                        <textarea name="description" placeholder="Sau khoảng hai tháng chăm sóc, cây bắt đầu bước vào giai đoạn phát triển mạnh..."></textarea>
                     </label>
-                    <label>Ảnh/video trạng thái
-                        <input type="file" name="files" accept="image/*,video/mp4,video/webm" multiple required>
-                        <span class="muted-text">Tối đa 10 media/lần. Ảnh tối đa 5MB, video tối đa 100MB.</span>
+                    <label>Hình ảnh của lần cập nhật
+                        <input type="file" name="files" accept="image/*" multiple required>
+                        <span class="muted-text">Tối thiểu 3 ảnh khi tạo nhật ký mới. Mỗi lần tối đa 10 ảnh, mỗi ảnh tối đa 5MB.</span>
                     </label>
-                    <label class="checkbox">
-                        <input type="checkbox" name="isPublic" value="true" checked>
-                        Hiển thị cho khách trên trang sản phẩm
-                    </label>
-                    <button type="submit">Lưu cập nhật</button>
+                    <span class="muted-text">Cập nhật mới mặc định được lưu nội bộ, chưa hiển thị cho khách.</span>
+                    <button type="submit">Cập nhật</button>
                 </form>
             </section>
 
             <section class="journal-panel">
                 <div class="journal-panel-head">
-                    <h2>Lịch sử cập nhật</h2>
-                    <span class="journal-count" th:text="${journalEvents == null ? '0 cập nhật' : #lists.size(journalEvents) + ' cập nhật'}">0 cập nhật</span>
+                    <h2>Hành trình của cây</h2>
+                    <span class="journal-count" th:text="${journalEvents == null ? '0 kỳ' : #lists.size(journalEvents) + ' kỳ'}">0 kỳ</span>
                 </div>
                 <div class="journal-timeline">
                 <article class="journal-event" th:if="${journalEvents == null or #lists.isEmpty(journalEvents)}">
                     <div class="journal-cover journal-placeholder"><i class="fa-solid fa-seedling"></i></div>
                     <div>
                         <div class="journal-meta"><span class="journal-date">Chưa có cập nhật</span></div>
-                        <p class="muted-text">Thêm ảnh và ghi chú đầu tiên để tạo hồ sơ phát triển cho cây.</p>
+                        <p class="muted-text">Đăng kỳ đầu tiên để tạo hành trình chăm sóc cho cây.</p>
                     </div>
                 </article>
 
-                <article class="journal-event" th:each="event : ${journalEvents}">
+                <article class="journal-event" th:each="event : ${journalEvents}" th:classappend="${!event.isPublic} ? ' is-unpublished' : ''">
                     <button type="button" class="journal-cover-link" th:if="${event.firstMedia != null}" th:attr="data-open-journal-modal=${event.eventId}">
                         <img class="journal-cover" th:if="${event.firstMedia.mediaType == 'IMAGE'}" th:src="${event.firstMedia.mediaUrl}" alt="">
                         <video class="journal-cover" th:if="${event.firstMedia.mediaType == 'VIDEO'}" th:src="${event.firstMedia.mediaUrl}" muted></video>
@@ -190,6 +190,10 @@
                         </div>
                         <h3 th:text="${event.title}">Tiêu đề</h3>
                         <p th:if="${event.description != null && !event.description.isBlank()}" th:text="${event.description}">Mô tả</p>
+                        <span class="journal-attention-note" th:if="${!event.isPublic}">
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                            Chưa hiển thị cho khách
+                        </span>
                         <div class="journal-gallery" th:if="${event.mediaList != null && !#lists.isEmpty(event.mediaList)}">
                             <th:block th:each="media : ${event.mediaList}">
                                 <img th:if="${media.mediaType == 'IMAGE'}" th:src="${media.mediaUrl}" alt="">
@@ -209,13 +213,16 @@
                                   th:action="@{/artisan/products/{productId}/journal/{eventId}/visibility(productId=${product.productId},eventId=${event.eventId})}">
                                 <input type="hidden" name="isPublic" th:value="${!event.isPublic}">
                                 <button type="submit"
-                                        th:classappend="${event.isPublic} ? ' is-public' : ' is-private'"
-                                        th:text="${event.isPublic} ? 'Ẩn với khách' : 'Hiển thị với khách'">Ẩn với khách</button>
+                                        th:classappend="${event.isPublic} ? ' is-public' : ' is-private'">
+                                    <i th:if="${!event.isPublic}" class="fa-solid fa-bullhorn"></i>
+                                    <i th:if="${event.isPublic}" class="fa-solid fa-eye-slash"></i>
+                                    <span th:text="${event.isPublic} ? 'Ẩn với khách' : 'Hiển thị với khách'">Hiển thị với khách</span>
+                                </button>
                             </form>
                             <form class="journal-add-media" method="post" enctype="multipart/form-data"
                                   th:action="@{/artisan/products/{productId}/journal/{eventId}/media(productId=${product.productId},eventId=${event.eventId})}">
-                                <input type="file" name="files" accept="image/*,video/mp4,video/webm" multiple required>
-                                <button type="submit">Bổ sung media</button>
+                                <input type="file" name="files" accept="image/*" multiple required>
+                                <button type="submit">Bổ sung ảnh</button>
                             </form>
                             <form method="post" th:action="@{/artisan/products/{productId}/journal/{eventId}/delete(productId=${product.productId},eventId=${event.eventId})}">
                                 <button type="submit" class="text-danger">Xóa cập nhật</button>
@@ -278,7 +285,6 @@
 <script>
     const JOURNAL_MAX_MEDIA_PER_UPLOAD = 10;
     const JOURNAL_MAX_IMAGE_SIZE = 5 * 1024 * 1024;
-    const JOURNAL_MAX_VIDEO_SIZE = 100 * 1024 * 1024;
 
     function showJournalError(message) {
         if (window.BSMSToast) {
@@ -288,27 +294,35 @@
         alert(message);
     }
 
-    function isJournalVideo(file) {
-        return file.type.startsWith('video/') || /\.(mp4|webm)$/i.test(file.name);
+    function isJournalImage(file) {
+        return file.type.startsWith('image/') || /\.(jpg|jpeg|png|webp|gif)$/i.test(file.name);
     }
 
-    function validateJournalMediaInput(input) {
+    function validateJournalMediaInput(input, minImages = 1) {
         if (!input || !input.files || input.files.length === 0) {
             return true;
         }
 
         const files = Array.from(input.files);
+        if (files.length < minImages) {
+            showJournalError('Vui lòng chọn tối thiểu ' + minImages + ' ảnh để tạo nhật ký mới.');
+            input.value = '';
+            return false;
+        }
         if (files.length > JOURNAL_MAX_MEDIA_PER_UPLOAD) {
-            showJournalError('Mỗi lần chỉ được tải lên tối đa 10 media nhật ký.');
+            showJournalError('Mỗi lần chỉ được tải lên tối đa 10 ảnh nhật ký.');
             input.value = '';
             return false;
         }
 
         for (const file of files) {
-            const isVideo = isJournalVideo(file);
-            const maxSize = isVideo ? JOURNAL_MAX_VIDEO_SIZE : JOURNAL_MAX_IMAGE_SIZE;
-            if (file.size > maxSize) {
-                showJournalError((isVideo ? 'Video' : 'Ảnh') + ' nhật ký "' + file.name + '" vượt quá dung lượng tối đa ' + (isVideo ? '100MB.' : '5MB.'));
+            if (!isJournalImage(file)) {
+                showJournalError('Nhật ký cây chỉ hỗ trợ ảnh. Vui lòng không tải video hoặc tệp khác.');
+                input.value = '';
+                return false;
+            }
+            if (file.size > JOURNAL_MAX_IMAGE_SIZE) {
+                showJournalError('Ảnh nhật ký "' + file.name + '" vượt quá dung lượng tối đa 5MB.');
                 input.value = '';
                 return false;
             }
@@ -320,13 +334,16 @@
     document.addEventListener('change', function (event) {
         const input = event.target.closest('input[type="file"][name="files"]');
         if (input) {
-            validateJournalMediaInput(input);
+            const form = input.closest('form');
+            const minImages = Number(form?.dataset.minJournalImages || 1);
+            validateJournalMediaInput(input, minImages);
         }
     });
 
     document.addEventListener('submit', function (event) {
         const input = event.target.querySelector('input[type="file"][name="files"]');
-        if (input && !validateJournalMediaInput(input)) {
+        const minImages = Number(event.target.dataset.minJournalImages || 1);
+        if (input && !validateJournalMediaInput(input, minImages)) {
             event.preventDefault();
         }
     });

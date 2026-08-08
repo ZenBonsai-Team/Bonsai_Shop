@@ -17,6 +17,7 @@ public class ProductDetailResponseDTO {
     private Float trunkDiameter;
     private String style;
     private BigDecimal price;
+    private Boolean isPublicPrice;
     private String productStatus;
     private Boolean isVisible;
     private Integer segmentId;

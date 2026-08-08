@@ -114,8 +114,6 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
         if ("ROLE_OWNER".equals(normRole)) {
             mappedAuthorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
-        } else if ("ROLE_ARTISAN".equals(normRole)) {
-            mappedAuthorities.add(new SimpleGrantedAuthority("ROLE_SELLER"));
         }
 
         List<SimpleGrantedAuthority> actionAuthorities = roleActionRepository

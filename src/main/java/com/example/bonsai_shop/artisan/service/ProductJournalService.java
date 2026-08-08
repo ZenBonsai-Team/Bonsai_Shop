@@ -20,8 +20,8 @@ import java.util.Set;
 public class ProductJournalService {
 
     private static final int MAX_MEDIA_PER_UPLOAD = 10;
-    private static final long MAX_IMAGE_SIZE_BYTES = 5L * 1024 * 1024;
-    private static final long MAX_VIDEO_SIZE_BYTES = 100L * 1024 * 1024;
+    private static final int MIN_INITIAL_IMAGE_COUNT = 3;
+    private static final long MAX_IMAGE_SIZE_BYTES = 7L * 1024 * 1024;
 
     private static final Set<String> VALID_EVENT_TYPES = Set.of(
             "PHOTO_UPDATE",
@@ -73,9 +73,11 @@ public class ProductJournalService {
         if (title == null || title.isBlank()) {
             throw new RuntimeException("Vui lòng nhập tiêu đề cập nhật.");
         }
-        if (!hasUploadedFiles(files)) {
-            throw new RuntimeException("Vui lòng chọn ít nhất một ảnh/video để tạo cập nhật.");
+        List<MultipartFile> validFiles = getValidFiles(files);
+        if (validFiles.size() < MIN_INITIAL_IMAGE_COUNT) {
+            throw new RuntimeException("Vui lòng chọn tối thiểu 3 ảnh để tạo cập nhật nhật ký.");
         }
+        validateUploadBatch(validFiles);
 
         ProductJournalEvent event = ProductJournalEvent.builder()
                 .product(product)
@@ -89,7 +91,7 @@ public class ProductJournalService {
                 .updatedAt(LocalDateTime.now())
                 .build();
 
-        addUploadedMedia(event, files);
+        addUploadedMedia(event, validFiles);
         journalEventRepository.save(event);
     }
 
@@ -146,11 +148,13 @@ public class ProductJournalService {
         ProductJournalEvent event = journalEventRepository.findByEventIdAndProduct(eventId, product)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy cập nhật cây."));
 
-        if (!hasUploadedFiles(files)) {
-            throw new RuntimeException("Vui lòng chọn ít nhất một ảnh/video để bổ sung.");
+        List<MultipartFile> validFiles = getValidFiles(files);
+        if (validFiles.isEmpty()) {
+            throw new RuntimeException("Vui lòng chọn ít nhất một ảnh để bổ sung.");
         }
+        validateUploadBatch(validFiles);
 
-        addUploadedMedia(event, files);
+        addUploadedMedia(event, validFiles);
         event.setUpdatedAt(LocalDateTime.now());
         journalEventRepository.save(event);
     }
@@ -160,56 +164,63 @@ public class ProductJournalService {
             return;
         }
 
-        List<MultipartFile> validFiles = files.stream()
-                .filter(file -> file != null && !file.isEmpty())
-                .toList();
-        if (validFiles.isEmpty()) {
-            return;
-        }
-        if (validFiles.size() > MAX_MEDIA_PER_UPLOAD) {
-            throw new RuntimeException("Má»—i láº§n chá»‰ Ä‘Æ°á»£c táº£i lÃªn tá»‘i Ä‘a 10 media nháº­t kÃ½.");
-        }
-        validFiles.forEach(file -> validateMediaFile(file, resolveMediaType(file)));
-
         int displayOrder = event.getMediaList() == null ? 0 : event.getMediaList().stream()
                 .map(ProductJournalMedia::getDisplayOrder)
                 .filter(order -> order != null)
                 .max(Integer::compareTo)
                 .orElse(-1) + 1;
-        for (MultipartFile file : validFiles) {
+        for (MultipartFile file : files) {
             String mediaUrl = mediaStorageService.storeProductMedia(file);
-            String mediaType = resolveMediaType(file);
             event.getMediaList().add(ProductJournalMedia.builder()
                     .event(event)
                     .mediaUrl(mediaUrl)
-                    .mediaType(mediaType)
+                    .mediaType("IMAGE")
                     .displayOrder(displayOrder++)
                     .build());
         }
     }
 
-    private boolean hasUploadedFiles(List<MultipartFile> files) {
-        return files != null && files.stream().anyMatch(file -> file != null && !file.isEmpty());
+    private List<MultipartFile> getValidFiles(List<MultipartFile> files) {
+        if (files == null || files.isEmpty()) {
+            return List.of();
+        }
+        return files.stream()
+                .filter(file -> file != null && !file.isEmpty())
+                .toList();
     }
 
-    private void validateMediaFile(MultipartFile file, String mediaType) {
-        long maxSize = "VIDEO".equals(mediaType) ? MAX_VIDEO_SIZE_BYTES : MAX_IMAGE_SIZE_BYTES;
-        if (file.getSize() > maxSize) {
-            String label = "VIDEO".equals(mediaType) ? "Video" : "áº¢nh";
-            String sizeLabel = "VIDEO".equals(mediaType) ? "100MB" : "5MB";
-            throw new RuntimeException(label + " nháº­t kÃ½ vÆ°á»£t quÃ¡ dung lÆ°á»£ng tá»‘i Ä‘a " + sizeLabel + ".");
+    private void validateUploadBatch(List<MultipartFile> files) {
+        if (files.size() > MAX_MEDIA_PER_UPLOAD) {
+            throw new RuntimeException("Mỗi lần chỉ được tải lên tối đa 10 ảnh nhật ký.");
+        }
+        files.forEach(this::validateImageFile);
+    }
+
+    private void validateImageFile(MultipartFile file) {
+        if (!isImageFile(file)) {
+            throw new RuntimeException("Nhật ký cây chỉ hỗ trợ tải ảnh. Vui lòng không tải video.");
+        }
+        if (file.getSize() > MAX_IMAGE_SIZE_BYTES) {
+            throw new RuntimeException("Ảnh nhật ký vượt quá dung lượng tối đa 7MB.");
         }
     }
 
-    private String resolveMediaType(MultipartFile file) {
+    private boolean isImageFile(MultipartFile file) {
         String contentType = file.getContentType();
+        if (contentType != null) {
+            return contentType.startsWith("image/");
+        }
         String filename = file.getOriginalFilename();
-        boolean isVideo = (contentType != null && contentType.startsWith("video/"))
-                || (filename != null && (filename.toLowerCase().endsWith(".mp4")
-                || filename.toLowerCase().endsWith(".webm")));
-        return isVideo ? "VIDEO" : "IMAGE";
+        if (filename == null) {
+            return false;
+        }
+        String normalizedFilename = filename.toLowerCase();
+        return normalizedFilename.endsWith(".jpg")
+                || normalizedFilename.endsWith(".jpeg")
+                || normalizedFilename.endsWith(".png")
+                || normalizedFilename.endsWith(".webp")
+                || normalizedFilename.endsWith(".gif");
     }
-
     private void ensureNotSold(Product product) {
         if (artisanProductService.isSold(product)) {
             throw new RuntimeException("Sản phẩm đã bán nên không thể thao tác nhật ký cây.");
