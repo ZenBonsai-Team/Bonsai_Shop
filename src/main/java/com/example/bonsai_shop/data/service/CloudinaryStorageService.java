@@ -54,6 +54,11 @@ public class CloudinaryStorageService {
             String url = uploadResult.get("secure_url").toString();
             String publicId = uploadResult.get("public_id").toString();
 
+            // Tự động nén chất lượng (q_auto) và chuyển định dạng tối ưu (f_auto) khi hiển thị
+            if ("image".equals(resourceType) && url.contains("/upload/")) {
+                url = url.replace("/upload/", "/upload/q_auto,f_auto/");
+            }
+
             return new CloudinaryUploadResponse(url, publicId, resourceType);
         } catch (IOException e) {
             throw new RuntimeException("Upload file lên Cloudinary thất bại!");
