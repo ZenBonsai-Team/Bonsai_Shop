@@ -38,30 +38,7 @@
         </div>
     </header>
 
-    <!-- KPI Row -->
-    <section class="kpi-row">
-        <div class="kpi-card kpi-pending">
-            <div class="kpi-icon-wrapper" style="width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: #FAF3E6; color: #C07F37;"><i class="fa-solid fa-clock"></i></div>
-            <div class="kpi-data">
-                <span class="kpi-label">Đang chờ duyệt</span>
-                <span class="kpi-value" th:text="${pendingReviews != null ? pendingReviews.size() : 0}">0</span>
-            </div>
-        </div>
-        <div class="kpi-card kpi-approved">
-            <div class="kpi-icon-wrapper" style="width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: #E8F3EB; color: #1C3322;"><i class="fa-solid fa-circle-check"></i></div>
-            <div class="kpi-data">
-                <span class="kpi-label">Đã phê duyệt</span>
-                <span class="kpi-value" th:text="${approvedReviews != null ? approvedReviews.size() : 0}">0</span>
-            </div>
-        </div>
-        <div class="kpi-card kpi-rejected">
-            <div class="kpi-icon-wrapper" style="width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: #FDF2F2; color: #9C2A2A;"><i class="fa-solid fa-circle-xmark"></i></div>
-            <div class="kpi-data">
-                <span class="kpi-label">Đã từ chối</span>
-                <span class="kpi-value" th:text="${rejectedReviews != null ? rejectedReviews.size() : 0}">0</span>
-            </div>
-        </div>
-    </section>
+
 
     <!-- Main Container -->
     <div class="management-card">
@@ -142,9 +119,13 @@
                                     </div>
                                 </td>
                                 <td>
-                                    <div class="d-flex flex-column">
-                                        <strong class="text-dark" th:text="${review.product?.productName}"></strong>
-                                        <span class="text-muted small" th:text="'#' + ${review.product?.productCode}"></span>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <img th:src="${review.product != null && review.product.getPrimaryMediaUrl() != null ? review.product.getPrimaryMediaUrl() : '/images/default-bonsai.png'}" 
+                                             alt="Product Image" class="rounded" style="width: 55px; height: 55px; object-fit: cover; border: 1px solid var(--border-color);">
+                                        <div class="d-flex flex-column">
+                                            <strong class="text-dark" style="font-size: 0.88rem;" th:text="${review.product?.productName}"></strong>
+                                            <span class="text-muted small" style="font-size: 0.78rem;" th:text="'#' + ${review.product?.productCode}"></span>
+                                        </div>
                                     </div>
                                 </td>
                                 <td>
@@ -207,9 +188,13 @@
                                     </div>
                                 </td>
                                 <td>
-                                    <div class="d-flex flex-column">
-                                        <strong class="text-dark" th:text="${review.product?.productName}"></strong>
-                                        <span class="text-muted small" th:text="'#' + ${review.product?.productCode}"></span>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <img th:src="${review.product != null && review.product.getPrimaryMediaUrl() != null ? review.product.getPrimaryMediaUrl() : '/images/default-bonsai.png'}" 
+                                             alt="Product Image" class="rounded" style="width: 55px; height: 55px; object-fit: cover; border: 1px solid var(--border-color);">
+                                        <div class="d-flex flex-column">
+                                            <strong class="text-dark" style="font-size: 0.88rem;" th:text="${review.product?.productName}"></strong>
+                                            <span class="text-muted small" style="font-size: 0.78rem;" th:text="'#' + ${review.product?.productCode}"></span>
+                                        </div>
                                     </div>
                                 </td>
                                 <td>
@@ -275,9 +260,13 @@
                                     </div>
                                 </td>
                                 <td>
-                                    <div class="d-flex flex-column">
-                                        <strong class="text-dark" th:text="${review.product?.productName}"></strong>
-                                        <span class="text-muted small" th:text="'#' + ${review.product?.productCode}"></span>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <img th:src="${review.product != null && review.product.getPrimaryMediaUrl() != null ? review.product.getPrimaryMediaUrl() : '/images/default-bonsai.png'}" 
+                                             alt="Product Image" class="rounded" style="width: 55px; height: 55px; object-fit: cover; border: 1px solid var(--border-color);">
+                                        <div class="d-flex flex-column">
+                                            <strong class="text-dark" style="font-size: 0.88rem;" th:text="${review.product?.productName}"></strong>
+                                            <span class="text-muted small" style="font-size: 0.78rem;" th:text="'#' + ${review.product?.productCode}"></span>
+                                        </div>
                                     </div>
                                 </td>
                                 <td>
