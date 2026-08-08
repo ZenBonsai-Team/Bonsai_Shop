@@ -249,7 +249,7 @@ class MailServiceTest {
     // =========================================================================
 
     @Test
-    @DisplayName("Kiểm tra email phê duyệt đơn đặt cọc với bộ dữ liệu chuẩn của người dùng")
+    @DisplayName("UT-UUT12-017: Kiểm tra email phê duyệt đơn đặt cọc với bộ dữ liệu chuẩn của người dùng")
     void testBuildApprovedTemplate_DepositOrder_CalculatesAmountsCorrectly() {
         Product p = Product.builder().productName("Tác phẩm Bonsai Siêu Cổ").price(new BigDecimal("100000000")).build();
         OrderDetail detail = OrderDetail.builder().product(p).quantity(1).priceAtPurchase(new BigDecimal("100000000")).build();
@@ -285,7 +285,7 @@ class MailServiceTest {
     }
 
     @Test
-    @DisplayName("Kiểm tra email phê duyệt đơn thanh toán 100% không bị ảnh hưởng")
+    @DisplayName("UT-UUT12-018: Kiểm tra email phê duyệt đơn thanh toán 100% không bị ảnh hưởng")
     void testBuildApprovedTemplate_FullPaymentOrder_RemainsCorrect() {
         Product p = Product.builder().productName("Cây Tùng Nhật").price(new BigDecimal("50000000")).build();
         OrderDetail detail = OrderDetail.builder().product(p).quantity(1).priceAtPurchase(new BigDecimal("50000000")).build();
