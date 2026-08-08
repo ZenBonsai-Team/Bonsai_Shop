@@ -85,7 +85,7 @@ public class LiveStreamApiController {
                         "status", session.getStatus(),
                         "startTime", session.getStartTime().toString()
                 )))
-                .orElse(ResponseEntity.ok(Map.of("sessionId", (Object) null)));
+                .orElse(ResponseEntity.ok(java.util.Collections.singletonMap("sessionId", null)));
     }
 
     /**
