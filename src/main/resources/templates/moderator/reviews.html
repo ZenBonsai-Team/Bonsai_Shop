@@ -6,7 +6,6 @@
 <head>
     <title>Quản lý Đánh giá - Moderator Portal</title>
     <th:block id="page-styles">
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
         <link rel="stylesheet" th:href="@{/css/moderator-orders.css}">
         <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}"/>
         <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : 'X-CSRF-TOKEN'}"/>
@@ -23,6 +22,13 @@
                 font-size: 13px;
                 color: #475569;
                 margin-top: 8px;
+            }
+            .product-hover-link {
+                text-decoration: none;
+                transition: opacity 0.2s ease;
+            }
+            .product-hover-link:hover .text-dark {
+                color: #2E7D32 !important;
             }
         </style>
     </th:block>
@@ -49,13 +55,13 @@
                 <!-- Search Input -->
                 <div class="search-input-wrapper">
                     <span class="search-icon"><i class="fa-solid fa-magnifying-glass"></i></span>
-                    <input type="text" id="reviewSearchInput" placeholder="Tìm kiếm theo tên khách, email, tên cây hoặc nội dung đánh giá...">
+                    <input type="text" id="reviewSearchInput" aria-label="Tìm kiếm đánh giá" placeholder="Tìm kiếm theo tên khách, email, tên cây hoặc nội dung đánh giá...">
                 </div>
                 
                 <!-- Filters -->
                 <div class="toolbar-filters-group">
                     <div class="sort-select-wrapper">
-                        <select id="ratingFilterSelect" class="form-select">
+                        <select id="ratingFilterSelect" aria-label="Lọc theo số sao" class="form-select">
                             <option value="ALL">Tất cả đánh giá sao</option>
                             <option value="5">5 Sao ★★★★★</option>
                             <option value="4">4 Sao ★★★★☆</option>
@@ -92,7 +98,7 @@
                     <i class="fa-regular fa-face-smile fa-3x mb-3 text-secondary opacity-50"></i>
                     <p class="mb-0 fw-semibold">Không có đánh giá nào đang chờ duyệt.</p>
                 </div>
-                <div th:if="${pendingReviews != null and !pendingReviews.isEmpty()}" class="table-container">
+                <div th:if="${pendingReviews != null and !pendingReviews.isEmpty()}" class="table-container" style="min-height: 485px;">
                     <table class="orders-table">
                         <thead>
                             <tr>
@@ -119,14 +125,14 @@
                                     </div>
                                 </td>
                                 <td>
-                                    <div class="d-flex align-items-center gap-2">
+                                    <a th:href="@{'/product/' + ${review.product?.productId}}" target="_blank" class="text-decoration-none d-flex align-items-center gap-2 product-hover-link">
                                         <img th:src="${review.product != null && review.product.getPrimaryMediaUrl() != null ? review.product.getPrimaryMediaUrl() : '/images/default-bonsai.png'}" 
-                                             alt="Product Image" class="rounded" style="width: 55px; height: 55px; object-fit: cover; border: 1px solid var(--border-color);">
+                                             alt="Product Thumbnail" class="rounded" style="width: 55px; height: 55px; object-fit: cover; border: 1px solid var(--border-color);">
                                         <div class="d-flex flex-column">
                                             <strong class="text-dark" style="font-size: 0.88rem;" th:text="${review.product?.productName}"></strong>
                                             <span class="text-muted small" style="font-size: 0.78rem;" th:text="'#' + ${review.product?.productCode}"></span>
                                         </div>
-                                    </div>
+                                    </a>
                                 </td>
                                 <td>
                                     <div class="star-display">
@@ -153,6 +159,11 @@
                         </tbody>
                     </table>
                 </div>
+                <!-- Pagination Footer -->
+                <div class="pagination-footer mt-3" id="pendingPagination" style="display: none;">
+                    <div class="pagination-info" id="pendingPaginationInfo">Trang 1 / 1</div>
+                    <div class="pagination-controls" id="pendingPaginationControls"></div>
+                </div>
             </div>
 
             <!-- APPROVED REVIEWS -->
@@ -161,7 +172,7 @@
                     <i class="fa-regular fa-star fa-3x mb-3 text-secondary opacity-50"></i>
                     <p class="mb-0 fw-semibold">Chưa có đánh giá nào được duyệt.</p>
                 </div>
-                <div th:if="${approvedReviews != null and !approvedReviews.isEmpty()}" class="table-container">
+                <div th:if="${approvedReviews != null and !approvedReviews.isEmpty()}" class="table-container" style="min-height: 485px;">
                     <table class="orders-table">
                         <thead>
                             <tr>
@@ -188,14 +199,14 @@
                                     </div>
                                 </td>
                                 <td>
-                                    <div class="d-flex align-items-center gap-2">
+                                    <a th:href="@{'/product/' + ${review.product?.productId}}" target="_blank" class="text-decoration-none d-flex align-items-center gap-2 product-hover-link">
                                         <img th:src="${review.product != null && review.product.getPrimaryMediaUrl() != null ? review.product.getPrimaryMediaUrl() : '/images/default-bonsai.png'}" 
-                                             alt="Product Image" class="rounded" style="width: 55px; height: 55px; object-fit: cover; border: 1px solid var(--border-color);">
+                                             alt="Product Thumbnail" class="rounded" style="width: 55px; height: 55px; object-fit: cover; border: 1px solid var(--border-color);">
                                         <div class="d-flex flex-column">
                                             <strong class="text-dark" style="font-size: 0.88rem;" th:text="${review.product?.productName}"></strong>
                                             <span class="text-muted small" style="font-size: 0.78rem;" th:text="'#' + ${review.product?.productCode}"></span>
                                         </div>
-                                    </div>
+                                    </a>
                                 </td>
                                 <td>
                                     <div class="star-display">
@@ -225,6 +236,11 @@
                         </tbody>
                     </table>
                 </div>
+                <!-- Pagination Footer -->
+                <div class="pagination-footer mt-3" id="approvedPagination" style="display: none;">
+                    <div class="pagination-info" id="approvedPaginationInfo">Trang 1 / 1</div>
+                    <div class="pagination-controls" id="approvedPaginationControls"></div>
+                </div>
             </div>
 
             <!-- REJECTED REVIEWS -->
@@ -233,7 +249,7 @@
                     <i class="fa-solid fa-ban fa-3x mb-3 text-secondary opacity-50"></i>
                     <p class="mb-0 fw-semibold">Không có đánh giá nào bị từ chối.</p>
                 </div>
-                <div th:if="${rejectedReviews != null and !rejectedReviews.isEmpty()}" class="table-container">
+                <div th:if="${rejectedReviews != null and !rejectedReviews.isEmpty()}" class="table-container" style="min-height: 485px;">
                     <table class="orders-table">
                         <thead>
                             <tr>
@@ -260,14 +276,14 @@
                                     </div>
                                 </td>
                                 <td>
-                                    <div class="d-flex align-items-center gap-2">
+                                    <a th:href="@{'/product/' + ${review.product?.productId}}" target="_blank" class="text-decoration-none d-flex align-items-center gap-2 product-hover-link">
                                         <img th:src="${review.product != null && review.product.getPrimaryMediaUrl() != null ? review.product.getPrimaryMediaUrl() : '/images/default-bonsai.png'}" 
-                                             alt="Product Image" class="rounded" style="width: 55px; height: 55px; object-fit: cover; border: 1px solid var(--border-color);">
+                                             alt="Product Thumbnail" class="rounded" style="width: 55px; height: 55px; object-fit: cover; border: 1px solid var(--border-color);">
                                         <div class="d-flex flex-column">
                                             <strong class="text-dark" style="font-size: 0.88rem;" th:text="${review.product?.productName}"></strong>
                                             <span class="text-muted small" style="font-size: 0.78rem;" th:text="'#' + ${review.product?.productCode}"></span>
                                         </div>
-                                    </div>
+                                    </a>
                                 </td>
                                 <td>
                                     <div class="star-display">
@@ -291,39 +307,43 @@
                         </tbody>
                     </table>
                 </div>
+                <!-- Pagination Footer -->
+                <div class="pagination-footer mt-3" id="rejectedPagination" style="display: none;">
+                    <div class="pagination-info" id="rejectedPaginationInfo">Trang 1 / 1</div>
+                    <div class="pagination-controls" id="rejectedPaginationControls"></div>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-<!-- Response Modal -->
-<div class="modal fade" id="responseModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content rounded-4 border-0 shadow">
-            <div class="modal-header bg-primary text-white py-3">
-                <h5 class="modal-title fw-bold"><i class="fa-solid fa-reply me-2"></i>Phản hồi đánh giá</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body p-4">
-                <input type="hidden" id="responseReviewId">
-                <div class="mb-3">
-                    <label class="form-label text-dark fw-semibold">Nội dung phản hồi từ nhà vườn</label>
-                    <textarea id="responseText" class="form-control rounded-3" rows="4"
-                              placeholder="Nhập phản hồi của nhà vườn gửi tới khách hàng..."></textarea>
+    <!-- Response Modal -->
+    <div class="modal fade" id="responseModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-4 border-0 shadow">
+                <div class="modal-header bg-primary text-white py-3">
+                    <h5 class="modal-title fw-bold"><i class="fa-solid fa-reply me-2"></i>Phản hồi đánh giá</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-            </div>
-            <div class="modal-footer border-0 p-3 bg-light d-flex gap-2">
-                <button class="btn btn-outline-secondary rounded-pill flex-grow-1 py-2 btn-sm fw-semibold" data-bs-dismiss="modal">Hủy bỏ</button>
-                <button class="btn btn-primary rounded-pill flex-grow-1 py-2 btn-sm fw-semibold" onclick="submitResponse()">
-                    <i class="fa-solid fa-paper-plane me-1"></i>Gửi phản hồi
-                </button>
+                <div class="modal-body p-4">
+                    <input type="hidden" id="responseReviewId">
+                    <div class="mb-3">
+                        <label for="responseText" class="form-label text-dark fw-semibold">Nội dung phản hồi từ nhà vườn</label>
+                        <textarea id="responseText" class="form-control rounded-3" rows="4"
+                                  placeholder="Nhập phản hồi của nhà vườn gửi tới khách hàng..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 p-3 bg-light d-flex gap-2">
+                    <button class="btn btn-outline-secondary rounded-pill flex-grow-1 py-2 btn-sm fw-semibold" data-bs-dismiss="modal">Hủy bỏ</button>
+                    <button class="btn btn-primary rounded-pill flex-grow-1 py-2 btn-sm fw-semibold" onclick="submitResponse()">
+                        <i class="fa-solid fa-paper-plane me-1"></i>Gửi phản hồi
+                    </button>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
 <th:block id="page-scripts">
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         const csrfToken = document.querySelector('meta[name="_csrf"]')?.content || '';
         const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.content || 'X-CSRF-TOKEN';
@@ -391,7 +411,9 @@
         function openResponseModal(reviewId) {
             document.getElementById('responseReviewId').value = reviewId;
             document.getElementById('responseText').value = '';
-            new bootstrap.Modal(document.getElementById('responseModal')).show();
+            const modalEl = document.getElementById('responseModal');
+            const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+            modal.show();
         }
 
         function submitResponse() {
@@ -428,7 +450,115 @@
             });
         }
 
-        // --- Client-side Live Filtering & Search Logic ---
+        // --- Client-side Pagination, Live Filtering & Search Logic ---
+        const PAGE_SIZE = 10;
+        const currentPages = {
+            pending: 0,
+            approved: 0,
+            rejected: 0
+        };
+
+        function updatePagination(panelType) {
+            const panel = document.getElementById(panelType + '-panel');
+            if (!panel) return;
+
+            // Get all rows in this panel
+            const allRows = Array.from(panel.querySelectorAll('tbody tr'));
+            
+            // Get visible rows after filtering
+            const visibleRows = allRows.filter(row => {
+                return row.dataset.hiddenByFilter !== 'true';
+            });
+
+            const totalRows = visibleRows.length;
+            const totalPages = Math.ceil(totalRows / PAGE_SIZE) || 1;
+
+            // Clamp current page
+            if (currentPages[panelType] >= totalPages) {
+                currentPages[panelType] = totalPages - 1;
+            }
+            if (currentPages[panelType] < 0) {
+                currentPages[panelType] = 0;
+            }
+
+            const currentPage = currentPages[panelType];
+
+            // Hide/show rows according to current page
+            visibleRows.forEach((row, idx) => {
+                if (idx >= currentPage * PAGE_SIZE && idx < (currentPage + 1) * PAGE_SIZE) {
+                    row.style.setProperty('display', '', 'important');
+                } else {
+                    row.style.setProperty('display', 'none', 'important');
+                }
+            });
+
+            // Update pagination info & controls
+            const footer = document.getElementById(panelType + 'Pagination');
+            if (!footer) return;
+
+            if (totalRows === 0) {
+                footer.style.setProperty('display', 'none', 'important');
+                return;
+            }
+            footer.style.setProperty('display', 'flex', 'important');
+
+            const info = document.getElementById(panelType + 'PaginationInfo');
+            if (info) {
+                info.textContent = `Trang ${currentPage + 1} / ${totalPages}`;
+            }
+
+            const controls = document.getElementById(panelType + 'PaginationControls');
+            if (controls) {
+                renderControls(controls, totalPages, currentPage, panelType);
+            }
+        }
+
+        function renderControls(controls, totalPages, currentPage, panelType) {
+            controls.innerHTML = '';
+
+            // Prev button
+            const prevBtn = document.createElement('a');
+            prevBtn.className = 'page-btn' + (currentPage === 0 ? ' disabled' : '');
+            prevBtn.href = '#';
+            prevBtn.textContent = 'Trước';
+            prevBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                if (currentPage > 0) {
+                    currentPages[panelType]--;
+                    updatePagination(panelType);
+                }
+            });
+            controls.appendChild(prevBtn);
+
+            // Page number buttons
+            for (let i = 0; i < totalPages; i++) {
+                const pageBtn = document.createElement('a');
+                pageBtn.className = 'page-btn' + (i === currentPage ? ' active' : '');
+                pageBtn.href = '#';
+                pageBtn.textContent = i + 1;
+                pageBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    currentPages[panelType] = i;
+                    updatePagination(panelType);
+                });
+                controls.appendChild(pageBtn);
+            }
+
+            // Next button
+            const nextBtn = document.createElement('a');
+            nextBtn.className = 'page-btn' + (currentPage === totalPages - 1 ? ' disabled' : '');
+            nextBtn.href = '#';
+            nextBtn.textContent = 'Sau';
+            nextBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                if (currentPage < totalPages - 1) {
+                    currentPages[panelType]++;
+                    updatePagination(panelType);
+                }
+            });
+            controls.appendChild(nextBtn);
+        }
+
         function applyFilters() {
             const searchVal = document.getElementById('reviewSearchInput').value.toLowerCase().trim();
             const ratingVal = document.getElementById('ratingFilterSelect').value;
@@ -436,20 +566,23 @@
             // Get active tab pane
             const activeTabButton = document.querySelector('#reviewFilterTabs .tab-btn.active');
             if (!activeTabButton) return;
-            const targetId = activeTabButton.getAttribute('data-bs-target');
+            const targetId = activeTabButton.dataset.bsTarget;
             const activePanel = document.querySelector(targetId);
             if (!activePanel) return;
+
+            // Get panel type (pending, approved, rejected)
+            const panelType = activeTabButton.dataset.tab;
 
             const rows = activePanel.querySelectorAll('tbody tr');
             let visibleCount = 0;
 
             rows.forEach(row => {
-                const author = (row.getAttribute('data-author') || '').toLowerCase();
-                const email = (row.getAttribute('data-email') || '').toLowerCase();
-                const product = (row.getAttribute('data-product') || '').toLowerCase();
-                const code = (row.getAttribute('data-code') || '').toLowerCase();
-                const comment = (row.getAttribute('data-comment') || '').toLowerCase();
-                const rating = row.getAttribute('data-rating');
+                const author = (row.dataset.author || '').toLowerCase();
+                const email = (row.dataset.email || '').toLowerCase();
+                const product = (row.dataset.product || '').toLowerCase();
+                const code = (row.dataset.code || '').toLowerCase();
+                const comment = (row.dataset.comment || '').toLowerCase();
+                const rating = row.dataset.rating;
 
                 const matchesSearch = !searchVal || 
                     author.includes(searchVal) || 
@@ -461,20 +594,20 @@
                 const matchesRating = ratingVal === 'ALL' || rating === ratingVal;
 
                 if (matchesSearch && matchesRating) {
-                    row.style.display = '';
+                    row.dataset.hiddenByFilter = 'false';
                     visibleCount++;
                 } else {
-                    row.style.display = 'none';
+                    row.dataset.hiddenByFilter = 'true';
+                    row.style.setProperty('display', 'none', 'important');
                 }
             });
 
             // Handle empty state if no rows match filter
             let emptyState = activePanel.querySelector('.empty-state-search-hint');
             const tableContainer = activePanel.querySelector('.table-container');
-            const defaultEmptyState = activePanel.querySelector('.empty-state-container');
 
             if (visibleCount === 0 && rows.length > 0) {
-                if (tableContainer) tableContainer.style.display = 'none';
+                if (tableContainer) tableContainer.style.setProperty('display', 'none', 'important');
                 if (!emptyState) {
                     emptyState = document.createElement('div');
                     emptyState.className = 'text-center py-5 text-muted empty-state-search-hint';
@@ -484,9 +617,13 @@
                     `;
                     activePanel.appendChild(emptyState);
                 }
+                const footer = document.getElementById(panelType + 'Pagination');
+                if (footer) footer.style.setProperty('display', 'none', 'important');
             } else {
                 if (emptyState) emptyState.remove();
-                if (tableContainer) tableContainer.style.display = '';
+                if (tableContainer) tableContainer.style.setProperty('display', '', 'important');
+                // Run client-side pagination for this panel
+                updatePagination(panelType);
             }
         }
 
@@ -501,7 +638,9 @@
 
             tabButtons.forEach(btn => {
                 btn.addEventListener('shown.bs.tab', () => {
-                    // Bootstrap 5 fires shown.bs.tab when tab is changed
+                    // Reset current page when switching tabs
+                    const panelType = btn.dataset.tab;
+                    currentPages[panelType] = 0;
                     applyFilters();
                 });
                 
@@ -510,6 +649,11 @@
                     setTimeout(applyFilters, 50);
                 });
             });
+
+            // Initial pagination on load
+            updatePagination('pending');
+            updatePagination('approved');
+            updatePagination('rejected');
         });
     </script>
 </th:block>
