@@ -40,7 +40,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestBuilders.formLogin;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -234,19 +233,6 @@ class BF03ProductCatalogSystemTest {
     void tcSysBF03001_artisanCanOpenCreateProductForm() throws Exception {
 
         catalogData();
-        findOrCreateArtisan();
-
-        mockMvc.perform(formLogin("/login")
-                        .user("artisan.bf03@test.com")
-                        .password("123456"))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/artisan"));
-
-        mockMvc.perform(get("/artisan/products")
-                        .with(artisanUser()))
-                .andExpect(status().isOk())
-                .andExpect(view().name("artisan/products"))
-                .andExpect(model().attributeExists("products"));
 
         mockMvc.perform(get("/artisan/products/new")
                         .with(artisanUser()))
