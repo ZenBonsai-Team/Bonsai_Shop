@@ -95,46 +95,89 @@
                         <span th:if="${product.productStatus != 'DRAFT' && product.isVisible == false}" class="badge bg-danger-subtle text-danger px-2 py-1 rounded-pill small">Đang ẩn</span>
                     </td>
                     <td class="table-actions">
-                        <a th:if="${product.productStatus == 'DRAFT' || (product.isVisible == false && product.productStatus != 'SOLD' && product.productStatus != 'RESERVED')}" th:href="@{/artisan/products/{id}/edit(id=${product.productId})}">Chỉnh sửa</a>
-                        <a th:if="${product.productStatus == 'DRAFT' || (product.isVisible == false && product.productStatus != 'SOLD' && product.productStatus != 'RESERVED')}" th:href="@{/artisan/products/{id}/media(id=${product.productId})}">Hình ảnh</a>
-                        <a th:if="${product.productStatus != 'SOLD'}" th:href="@{/artisan/products/{id}/journal(id=${product.productId})}">Nhật ký cây</a>
-                        <a th:href="@{/artisan/products/{id}/preview(id=${product.productId})}">Xem trước</a>
-                        <form th:if="${product.productStatus == 'DRAFT'}" method="post" th:action="@{/artisan/products/{id}/publish(id=${product.productId})}">
-                            <button type="button"
-                                    data-open-publish-modal
-                                    th:attr="data-product-name=${product.productName}">
-                                Đăng bán
-                            </button>
-                        </form>
-                        <form th:if="${product.isVisible != false && (product.productStatus == 'AVAILABLE' || product.productStatus == 'SOLD')}" method="post" th:action="@{/artisan/products/{id}/hide(id=${product.productId})}">
-                            <button type="button"
-                                    class="text-warning"
-                                    data-open-hide-modal
-                                    th:attr="data-product-name=${product.productName}">
-                                Ẩn
-                            </button>
-                        </form>
-                        <form th:if="${product.isVisible == false && product.productStatus != 'DRAFT' && product.productStatus != 'RESERVED'}" method="post" th:action="@{/artisan/products/{id}/show(id=${product.productId})}">
-                            <button type="button"
-                                    class="text-success"
-                                    data-open-show-modal
-                                    th:attr="data-product-name=${product.productName}">
-                                Hiện
-                            </button>
-                        </form>
-                        <form th:if="${product.productStatus == 'DRAFT'}" method="post" th:action="@{/artisan/products/{id}/delete(id=${product.productId})}">
-                            <button type="button"
-                                    class="text-danger"
-                                    data-open-delete-modal
-                                    th:attr="data-product-name=${product.productName}">
-                                Xóa
-                            </button>
-                        </form>
-                        <span th:if="${product.productStatus != 'DRAFT' && product.productStatus != 'AVAILABLE'}" class="badge bg-secondary-subtle text-secondary px-2 py-1 rounded-pill"><i class="fa-solid fa-lock me-1"></i>Đã khóa</span>
+                        <a class="action-primary" th:href="@{/artisan/products/{id}/preview(id=${product.productId})}">
+                            <i class="fa-solid fa-eye"></i>
+                            Xem trước
+                        </a>
+                        <details class="action-menu">
+                            <summary>Thao tác</summary>
+                            <div class="action-menu-panel">
+                                <a th:if="${product.productStatus == 'DRAFT' || (product.isVisible == false && product.productStatus != 'SOLD' && product.productStatus != 'RESERVED')}" th:href="@{/artisan/products/{id}/edit(id=${product.productId})}">
+                                    <i class="fa-solid fa-pen"></i>
+                                    Chỉnh sửa
+                                </a>
+                                <a th:if="${product.productStatus == 'DRAFT' || (product.isVisible == false && product.productStatus != 'SOLD' && product.productStatus != 'RESERVED')}" th:href="@{/artisan/products/{id}/media(id=${product.productId})}">
+                                    <i class="fa-solid fa-image"></i>
+                                    Hình ảnh
+                                </a>
+                                <a th:if="${product.productStatus != 'SOLD'}" th:href="@{/artisan/products/{id}/journal(id=${product.productId})}">
+                                    <i class="fa-solid fa-book"></i>
+                                    Nhật ký cây
+                                </a>
+                                <form th:if="${product.productStatus == 'DRAFT'}" method="post" th:action="@{/artisan/products/{id}/publish(id=${product.productId})}">
+                                    <button type="button"
+                                            data-open-publish-modal
+                                            th:attr="data-product-name=${product.productName}">
+                                        <i class="fa-solid fa-upload"></i>
+                                        Đăng bán
+                                    </button>
+                                </form>
+                                <form th:if="${product.isVisible != false && (product.productStatus == 'AVAILABLE' || product.productStatus == 'SOLD')}" method="post" th:action="@{/artisan/products/{id}/hide(id=${product.productId})}">
+                                    <button type="button"
+                                            class="text-warning"
+                                            data-open-hide-modal
+                                            th:attr="data-product-name=${product.productName}">
+                                        <i class="fa-solid fa-eye-slash"></i>
+                                        Ẩn
+                                    </button>
+                                </form>
+                                <form th:if="${product.isVisible == false && product.productStatus != 'DRAFT' && product.productStatus != 'RESERVED'}" method="post" th:action="@{/artisan/products/{id}/show(id=${product.productId})}">
+                                    <button type="button"
+                                            class="text-success"
+                                            data-open-show-modal
+                                            th:attr="data-product-name=${product.productName}">
+                                        <i class="fa-solid fa-eye"></i>
+                                        Hiện
+                                    </button>
+                                </form>
+                                <form th:if="${product.productStatus == 'DRAFT'}" method="post" th:action="@{/artisan/products/{id}/delete(id=${product.productId})}">
+                                    <button type="button"
+                                            class="text-danger"
+                                            data-open-delete-modal
+                                            th:attr="data-product-name=${product.productName}">
+                                        <i class="fa-solid fa-trash"></i>
+                                        Xóa
+                                    </button>
+                                </form>
+                                <span th:if="${product.productStatus != 'DRAFT' && product.productStatus != 'AVAILABLE'}" class="action-locked">
+                                    <i class="fa-solid fa-lock"></i>
+                                    Đã khóa
+                                </span>
+                            </div>
+                        </details>
                     </td>
                 </tr>
                 </tbody>
             </table>
+            </div>
+
+            <div class="pagination-footer" th:if="${productPage != null && productPage.totalPages > 1}">
+                <div class="pagination-info"
+                     th:text="${'Hiển thị trang ' + (productPage.number + 1) + ' / ' + productPage.totalPages}"></div>
+                <div class="pagination-controls">
+                    <a class="page-btn"
+                       th:classappend="${!productPage.hasPrevious()} ? 'disabled'"
+                       th:href="@{/artisan/products(page=${productPage.number - 1},status=${selectedStatus})}">Trước</a>
+                    <a class="page-btn"
+                       th:each="pageNumber : ${#numbers.sequence(0, productPage.totalPages - 1)}"
+                       th:if="${pageNumber == 0 || pageNumber == productPage.totalPages - 1 || (pageNumber >= productPage.number - 2 && pageNumber <= productPage.number + 2)}"
+                       th:classappend="${pageNumber == productPage.number} ? 'active'"
+                       th:href="@{/artisan/products(page=${pageNumber},status=${selectedStatus})}"
+                       th:text="${pageNumber + 1}"></a>
+                    <a class="page-btn"
+                       th:classappend="${!productPage.hasNext()} ? 'disabled'"
+                       th:href="@{/artisan/products(page=${productPage.number + 1},status=${selectedStatus})}">Sau</a>
+                </div>
             </div>
         </section>
     </main>
@@ -259,6 +302,7 @@
             currentStatus = button.dataset.status;
             const url = new URL(window.location.href);
             url.searchParams.set('status', currentStatus);
+            url.searchParams.set('page', '0');
             window.history.replaceState({}, '', url);
             applyProductFilters();
         });
