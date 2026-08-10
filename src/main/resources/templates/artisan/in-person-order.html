@@ -671,6 +671,8 @@
     });
 
     createConfirmSubmit.addEventListener('click', function () {
+        if (createConfirmSubmit.disabled) return;
+        createConfirmSubmit.disabled = true;
         allowCreateSubmit = true;
         createForm.submit();
     });
@@ -722,6 +724,9 @@
         cancelReasonInput.value = '';
         allowPaymentSubmit = false;
         allowCancelSubmit = false;
+        paymentConfirmSubmit.disabled = false;
+        createConfirmSubmit.disabled = false;
+        cancelConfirmSubmit.disabled = false;
         paymentConfirmModal.classList.add('hidden');
         cancelConfirmModal.classList.add('hidden');
         footer.style.display = data.orderStatus === pendingStatus ? 'flex' : 'none';
@@ -767,6 +772,8 @@
     });
 
     paymentConfirmSubmit.addEventListener('click', function () {
+        if (paymentConfirmSubmit.disabled) return;
+        paymentConfirmSubmit.disabled = true;
         allowPaymentSubmit = true;
         confirmForm.submit();
     });
@@ -817,6 +824,8 @@
     });
 
     cancelConfirmSubmit.addEventListener('click', function () {
+        if (cancelConfirmSubmit.disabled) return;
+        cancelConfirmSubmit.disabled = true;
         allowCancelSubmit = true;
         cancelForm.submit();
     });

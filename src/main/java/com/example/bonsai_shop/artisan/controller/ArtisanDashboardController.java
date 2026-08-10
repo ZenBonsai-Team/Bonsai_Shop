@@ -2,6 +2,7 @@ package com.example.bonsai_shop.artisan.controller;
 
 import com.example.bonsai_shop.entity.Product;
 import com.example.bonsai_shop.entity.User;
+import com.example.bonsai_shop.finance.dto.ArtisanDashboardSourceDTO;
 import com.example.bonsai_shop.finance.enums.FinancialLedgerStatus;
 import com.example.bonsai_shop.finance.enums.FinancialLedgerType;
 import com.example.bonsai_shop.finance.repository.FinancialLedgerRepository;
@@ -87,6 +88,41 @@ public class ArtisanDashboardController {
                 nextMonthStart
         );
         monthlyRevenue = monthlyProductRevenue;
+        List<ArtisanDashboardSourceDTO> completedRevenueSources = financialLedgerRepository.findCompletedRevenueSourcesByArtisan(
+                artisanUser.getUserId(),
+                FinancialLedgerType.COMPLETED_ORDER_REVENUE,
+                FinancialLedgerStatus.RECORDED,
+                monthStart,
+                nextMonthStart
+        );
+        List<ArtisanDashboardSourceDTO> forfeitedDepositSources = financialLedgerRepository.findForfeitedDepositSourcesByArtisan(
+                artisanUser.getUserId(),
+                FinancialLedgerType.FORFEITED_DEPOSIT_INCOME,
+                FinancialLedgerStatus.RECORDED,
+                monthStart,
+                nextMonthStart
+        );
+        List<ArtisanDashboardSourceDTO> refundSources = financialLedgerRepository.findRefundSourcesByArtisan(
+                artisanUser.getUserId(),
+                FinancialLedgerType.FULL_REFUND,
+                FinancialLedgerStatus.RECORDED,
+                monthStart,
+                nextMonthStart
+        );
+        List<ArtisanDashboardSourceDTO> shippingFeeSources = financialLedgerRepository.findShippingFeeSourcesByArtisan(
+                artisanUser.getUserId(),
+                feeLedgerTypes,
+                FinancialLedgerStatus.RECORDED,
+                monthStart,
+                nextMonthStart
+        );
+        List<ArtisanDashboardSourceDTO> craneFeeSources = financialLedgerRepository.findCraneFeeSourcesByArtisan(
+                artisanUser.getUserId(),
+                feeLedgerTypes,
+                FinancialLedgerStatus.RECORDED,
+                monthStart,
+                nextMonthStart
+        );
 
         User artisanOrAdmin = artisanProductService.getArtisanUser(userDetails.getUsername());
 
@@ -104,6 +140,11 @@ public class ArtisanDashboardController {
         model.addAttribute("monthlyCraneFee", monthlyCraneFee);
         model.addAttribute("monthlyForfeitedDepositIncome", monthlyForfeitedDepositIncome);
         model.addAttribute("monthlyRefundAmount", monthlyRefundAmount);
+        model.addAttribute("completedRevenueSources", completedRevenueSources);
+        model.addAttribute("forfeitedDepositSources", forfeitedDepositSources);
+        model.addAttribute("refundSources", refundSources);
+        model.addAttribute("shippingFeeSources", shippingFeeSources);
+        model.addAttribute("craneFeeSources", craneFeeSources);
         model.addAttribute("draftProducts", products.stream()
                 .filter(product -> "DRAFT".equals(product.getProductStatus()))
                 .count());
