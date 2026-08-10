@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.EnumSet;
 import java.util.List;
 
@@ -37,6 +38,7 @@ public class ArtisanDashboardController {
 
         LocalDateTime monthStart = LocalDate.now().withDayOfMonth(1).atStartOfDay();
         LocalDateTime nextMonthStart = monthStart.plusMonths(1);
+        String reportPeriodLabel = "Số liệu tháng " + monthStart.format(DateTimeFormatter.ofPattern("MM/yyyy"));
         List<FinancialLedgerType> feeLedgerTypes = List.copyOf(EnumSet.of(
                 FinancialLedgerType.COMPLETED_ORDER_REVENUE,
                 FinancialLedgerType.FORFEITED_DEPOSIT_INCOME,
@@ -135,6 +137,7 @@ public class ArtisanDashboardController {
                 .count());
 
         model.addAttribute("monthlySoldItems", monthlySoldItems);
+        model.addAttribute("reportPeriodLabel", reportPeriodLabel);
         model.addAttribute("monthlyRevenue", monthlyRevenue);
         model.addAttribute("monthlyShippingFee", monthlyShippingFee);
         model.addAttribute("monthlyCraneFee", monthlyCraneFee);

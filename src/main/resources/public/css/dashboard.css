@@ -918,6 +918,23 @@ body:has(.artisan-topbar) .artisan-dashboard-hero {
     max-width: 560px;
 }
 
+.dashboard-title-row {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.65rem;
+}
+
+.report-period-badge {
+    background: #EEF7F0;
+    border-radius: 999px;
+    color: #2f855a;
+    font-size: 0.78rem;
+    font-weight: 850;
+    padding: 0.28rem 0.68rem;
+    white-space: nowrap;
+}
+
 .artisan-dashboard-hero .btn {
     align-items: center;
     background: #fff;
