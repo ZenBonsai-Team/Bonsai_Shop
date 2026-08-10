@@ -95,6 +95,23 @@
         .journal-form-actions button,
         .journal-form-actions .btn { border-radius: 10px; padding: 10px 14px; }
         .journal-form-actions .btn.secondary { background: #eef3ee; color: #1f3026; }
+        .journal-media-manager { display: grid; gap: 14px; }
+        .journal-media-manager h3 { color: #183322; font-size: 16px; margin: 0; }
+        .journal-media-list { display: grid; gap: 12px; }
+        .journal-media-item { align-items: start; border: 1px solid #e2e7e2; border-radius: 12px; display: grid; gap: 12px; grid-template-columns: 112px minmax(0, 1fr); padding: 12px; }
+        .journal-media-item img,
+        .journal-media-item video { border-radius: 8px; height: 88px; object-fit: cover; width: 112px; }
+        .journal-media-fields { display: grid; gap: 10px; min-width: 0; }
+        .journal-media-inline-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+        .journal-media-inline-actions form { margin: 0; }
+        .journal-media-inline-actions button,
+        .journal-media-inline-actions .btn { align-items: center; background: #fff; border: 1px solid #dfe6df; border-radius: 8px; color: #1f3026; display: inline-flex; gap: 6px; font-weight: 700; padding: 8px 10px; }
+        .journal-media-inline-actions .btn-cover { border-color: #2d6a4f; color: #2d6a4f; }
+        .journal-media-inline-actions .btn-replace { border-color: #0d6efd; color: #0d6efd; }
+        .journal-media-inline-actions .btn-delete { border-color: #ef4444; color: #dc3545; }
+        .journal-media-replace-form { align-items: center; display: flex; flex-wrap: wrap; gap: 8px; }
+        .journal-media-replace-form input[type="file"] { max-width: 220px; padding: 7px; }
+        .journal-media-empty { border: 1px dashed #d7dfd8; border-radius: 12px; color: #66736b; padding: 16px; text-align: center; }
         .journal-placeholder { display: grid; place-items: center; color: #67806d; font-size: 34px; }
         .journal-meta { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 0; }
         .journal-date { font-weight: 900; color: #17251c; font-size: 15px; }
@@ -267,7 +284,7 @@
                                     </button>
                                     <button type="button" class="journal-menu-action" th:attr="data-open-journal-form-modal=|journal-upload-modal-${event.eventId}|">
                                         <i class="fa-solid fa-images"></i>
-                                        Bổ sung ảnh
+                                        Quản lý ảnh
                                     </button>
                                     <form method="post"
                                           onsubmit="return confirm('Bạn chắc chắn muốn xóa cập nhật nhật ký này?');"
@@ -307,22 +324,54 @@
                     <div class="journal-form-modal" th:id="|journal-upload-modal-${event.eventId}|">
                         <div class="journal-form-dialog" role="dialog" aria-modal="true">
                             <header>
-                                <h2>Bổ sung ảnh nhật ký</h2>
+                                <h2>Quản lý ảnh nhật ký</h2>
                                 <button type="button" class="journal-form-close" th:attr="data-close-journal-form-modal=|journal-upload-modal-${event.eventId}|">&times;</button>
                             </header>
-                            <form method="post" enctype="multipart/form-data"
-                                  th:action="@{/artisan/products/{productId}/journal/{eventId}/media(productId=${product.productId},eventId=${event.eventId})}">
-                                <div class="journal-form-modal-body">
+                            <div class="journal-form-modal-body">
+                                <div class="journal-media-manager">
+                                    <h3>Bổ sung ảnh mới</h3>
+                                    <form method="post" enctype="multipart/form-data"
+                                          th:action="@{/artisan/products/{productId}/journal/{eventId}/media(productId=${product.productId},eventId=${event.eventId})}">
                                     <label>Chọn ảnh bổ sung
                                         <input type="file" name="files" accept="image/*" multiple required>
                                     </label>
                                     <span class="muted-text">Mỗi lần tối đa 10 ảnh, mỗi ảnh tối đa 5MB.</span>
+                                        <div class="journal-form-actions">
+                                            <button type="submit" class="btn">Tải ảnh lên</button>
+                                        </div>
+                                    </form>
+
+                                    <h3>Ảnh hiện có</h3>
+                                    <div class="journal-media-empty" th:if="${event.mediaList == null || #lists.isEmpty(event.mediaList)}">Chưa có ảnh trong nhật ký này.</div>
+                                    <div class="journal-media-list" th:if="${event.mediaList != null && !#lists.isEmpty(event.mediaList)}">
+                                        <div class="journal-media-item" th:each="media, mediaStat : ${event.mediaList}">
+                                            <img th:if="${media.mediaType == 'IMAGE'}" th:src="${media.mediaUrl}" alt="">
+                                            <video th:if="${media.mediaType == 'VIDEO'}" th:src="${media.mediaUrl}" muted></video>
+                                            <div class="journal-media-fields">
+                                                <div class="journal-media-inline-actions">
+                                                    <form method="post" th:if="${mediaStat.index > 0}"
+                                                          th:action="@{/artisan/products/{productId}/journal/{eventId}/media/{mediaId}/cover(productId=${product.productId},eventId=${event.eventId},mediaId=${media.mediaId})}">
+                                                        <button type="submit" class="btn-cover"><i class="fa-solid fa-star"></i> Đặt làm cover</button>
+                                                    </form>
+                                                    <form class="journal-media-replace-form" method="post" enctype="multipart/form-data"
+                                                          th:action="@{/artisan/products/{productId}/journal/{eventId}/media/{mediaId}/replace(productId=${product.productId},eventId=${event.eventId},mediaId=${media.mediaId})}">
+                                                        <input type="file" name="file" accept="image/*" required>
+                                                        <button type="submit" class="btn-replace"><i class="fa-solid fa-rotate"></i> Thay ảnh</button>
+                                                    </form>
+                                                    <form method="post"
+                                                          onsubmit="return confirm('Bạn chắc chắn muốn xóa ảnh nhật ký này?');"
+                                                          th:action="@{/artisan/products/{productId}/journal/{eventId}/media/{mediaId}/delete(productId=${product.productId},eventId=${event.eventId},mediaId=${media.mediaId})}">
+                                                        <button type="submit" class="btn-delete"><i class="fa-solid fa-trash"></i> Xóa ảnh</button>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="journal-form-actions">
-                                    <button type="button" class="btn secondary" th:attr="data-close-journal-form-modal=|journal-upload-modal-${event.eventId}|">Hủy</button>
-                                    <button type="submit" class="btn">Tải ảnh lên</button>
-                                </div>
-                            </form>
+                            </div>
+                            <div class="journal-form-actions">
+                                <button type="button" class="btn secondary" th:attr="data-close-journal-form-modal=|journal-upload-modal-${event.eventId}|">Đóng</button>
+                            </div>
                         </div>
                     </div>
                     <div class="journal-modal" th:if="${event.firstMedia != null}" th:id="|journal-modal-${event.eventId}|">

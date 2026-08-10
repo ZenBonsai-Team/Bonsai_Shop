@@ -143,10 +143,7 @@ public class ProductJournalService {
 
     @Transactional
     public void addMediaToEvent(String artisanEmail, Integer productId, Integer eventId, List<MultipartFile> files) {
-        Product product = artisanProductService.getMyProduct(artisanEmail, productId);
-        ensureNotSold(product);
-        ProductJournalEvent event = journalEventRepository.findByEventIdAndProduct(eventId, product)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy cập nhật cây."));
+        ProductJournalEvent event = getEditableEvent(artisanEmail, productId, eventId);
 
         List<MultipartFile> validFiles = getValidFiles(files);
         if (validFiles.isEmpty()) {
@@ -155,6 +152,58 @@ public class ProductJournalService {
         validateUploadBatch(validFiles);
 
         addUploadedMedia(event, validFiles);
+        event.setUpdatedAt(LocalDateTime.now());
+        journalEventRepository.save(event);
+    }
+
+    @Transactional
+    public void setCoverMedia(String artisanEmail, Integer productId, Integer eventId, Integer mediaId) {
+        ProductJournalEvent event = getEditableEvent(artisanEmail, productId, eventId);
+        ProductJournalMedia coverMedia = findEventMedia(event, mediaId);
+
+        int displayOrder = 1;
+        coverMedia.setDisplayOrder(0);
+        for (ProductJournalMedia media : event.getMediaList()) {
+            if (!media.getMediaId().equals(mediaId)) {
+                media.setDisplayOrder(displayOrder++);
+            }
+        }
+
+        event.setUpdatedAt(LocalDateTime.now());
+        journalEventRepository.save(event);
+    }
+
+    @Transactional
+    public void replaceMedia(String artisanEmail,
+                             Integer productId,
+                             Integer eventId,
+                             Integer mediaId,
+                             MultipartFile file) {
+        ProductJournalEvent event = getEditableEvent(artisanEmail, productId, eventId);
+        ProductJournalMedia media = findEventMedia(event, mediaId);
+        List<MultipartFile> validFiles = getValidFiles(file == null ? null : List.of(file));
+        if (validFiles.isEmpty()) {
+            throw new RuntimeException("Vui lòng chọn ảnh thay thế.");
+        }
+        validateUploadBatch(validFiles);
+
+        String oldMediaUrl = media.getMediaUrl();
+        String newMediaUrl = mediaStorageService.storeProductMedia(validFiles.get(0));
+        media.setMediaUrl(newMediaUrl);
+        media.setMediaType("IMAGE");
+        event.setUpdatedAt(LocalDateTime.now());
+        journalEventRepository.save(event);
+        mediaStorageService.deleteProductMedia(oldMediaUrl);
+    }
+
+    @Transactional
+    public void deleteMedia(String artisanEmail, Integer productId, Integer eventId, Integer mediaId) {
+        ProductJournalEvent event = getEditableEvent(artisanEmail, productId, eventId);
+        ProductJournalMedia media = findEventMedia(event, mediaId);
+
+        event.getMediaList().remove(media);
+        mediaStorageService.deleteProductMedia(media.getMediaUrl());
+        normalizeMediaOrder(event);
         event.setUpdatedAt(LocalDateTime.now());
         journalEventRepository.save(event);
     }
@@ -177,6 +226,32 @@ public class ProductJournalService {
                     .mediaType("IMAGE")
                     .displayOrder(displayOrder++)
                     .build());
+        }
+    }
+
+    private ProductJournalEvent getEditableEvent(String artisanEmail, Integer productId, Integer eventId) {
+        Product product = artisanProductService.getMyProduct(artisanEmail, productId);
+        ensureNotSold(product);
+        return journalEventRepository.findByEventIdAndProduct(eventId, product)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy cập nhật cây."));
+    }
+
+    private ProductJournalMedia findEventMedia(ProductJournalEvent event, Integer mediaId) {
+        if (mediaId == null || event.getMediaList() == null) {
+            throw new RuntimeException("Không tìm thấy ảnh nhật ký.");
+        }
+        return event.getMediaList().stream()
+                .filter(media -> mediaId.equals(media.getMediaId()))
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy ảnh nhật ký."));
+    }
+
+    private void normalizeMediaOrder(ProductJournalEvent event) {
+        if (event.getMediaList() == null) {
+            return;
+        }
+        for (int index = 0; index < event.getMediaList().size(); index++) {
+            event.getMediaList().get(index).setDisplayOrder(index);
         }
     }
 
