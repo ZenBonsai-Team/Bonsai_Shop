@@ -430,6 +430,17 @@ body:has(.artisan-topbar) {
     overflow-y: auto;
 }
 
+body:has(.artisan-topbar) .dashboard-layout {
+    height: auto;
+    min-height: 100vh;
+    overflow: visible;
+}
+
+body:has(.artisan-topbar) .dashboard-main {
+    min-height: 100vh;
+    overflow: visible;
+}
+
 
 
 .artisan-topbar {
@@ -631,11 +642,14 @@ body:has(.artisan-topbar) .portal-card .product-table {
 body:has(.artisan-topbar) .portal-card .table-container {
     margin: 0 -20px;
     margin-top: 0;
+    overflow-x: auto;
 }
 
 body:has(.artisan-topbar) .portal-card table {
     border-radius: 0;
     box-shadow: none;
+    min-width: 860px;
+    width: 100%;
 }
 
 body:has(.artisan-topbar) .compact-table th,
