@@ -1529,31 +1529,51 @@ textarea {
 .table-actions button,
 .table-actions summary {
     align-items: center;
-    background: #eef0e8;
-    border: 0;
+    background: #ffffff;
+    border: 1px solid #dfe6df;
     border-radius: 8px;
-    color: #1f2d24;
+    color: #1f3026;
     display: inline-flex;
     gap: 6px;
     justify-content: center;
-    padding: 7px 10px;
+    padding: 8px 14px;
     text-decoration: none;
     white-space: nowrap;
+    font-weight: 700;
+    transition: background 0.16s ease, border-color 0.16s ease, color 0.16s ease;
+}
+
+.table-actions a:hover,
+.table-actions button:hover,
+.table-actions summary:hover {
+    background: #f8fbf8;
+    border-color: #2d6a4f;
+    color: #2d6a4f;
 }
 
 .table-actions .text-warning {
-    background: #fff7e6;
+    background: #ffffff;
+    border-color: #f0b429;
     color: #9a6700;
 }
 
 .table-actions .text-danger {
-    background: transparent;
+    background: #ffffff;
+    border-color: #ef4444;
     color: #b02a37;
 }
 
 .table-actions .action-primary {
-    background: #eef0e8;
     flex: 0 0 auto;
+    font-weight: 700;
+    border-color: #0d6efd;
+    color: #0d6efd;
+}
+
+.table-actions .action-primary:hover {
+    background: #f5f9ff;
+    border-color: #0b5ed7;
+    color: #0b5ed7;
 }
 
 .action-menu {
@@ -1590,13 +1610,17 @@ textarea {
     margin-top: 8px;
     min-width: 170px;
     padding: 6px;
-    position: static;
+    position: absolute;
+    right: 0;
+    top: 100%;
+    z-index: 30;
 }
 
 .action-menu-panel a,
 .action-menu-panel button,
 .action-menu-panel .action-locked {
     background: transparent;
+    border: 0;
     border-radius: 8px;
     color: #1f2d24;
     display: flex;

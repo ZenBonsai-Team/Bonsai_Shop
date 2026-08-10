@@ -453,6 +453,39 @@ body:has(.artisan-topbar) .dashboard-main {
     padding: 0 44px;
 }
 
+.artisan-topbar-left {
+    align-items: center;
+    color: #1E221F;
+    display: flex;
+    gap: 22px;
+    min-width: 0;
+}
+
+.artisan-sidebar-toggle {
+    align-items: center;
+    background: transparent;
+    border: 0;
+    color: #1E221F;
+    cursor: pointer;
+    display: inline-flex;
+    font-size: 1.45rem;
+    height: 42px;
+    justify-content: center;
+    padding: 0;
+    width: 42px;
+}
+
+.artisan-sidebar-toggle:hover {
+    color: #2d6a4f;
+}
+
+.artisan-topbar-title {
+    color: #1E221F;
+    font-size: 1rem;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
 .artisan-breadcrumb {
     align-items: center;
     color: #536257;
@@ -918,6 +951,67 @@ body:has(.artisan-topbar) .artisan-dashboard-hero {
     max-width: 560px;
 }
 
+.dashboard-title-row {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.65rem;
+}
+
+.report-period-badge {
+    background: #EEF7F0;
+    border-radius: 999px;
+    color: #2f855a;
+    font-size: 0.78rem;
+    font-weight: 850;
+    padding: 0.28rem 0.68rem;
+    white-space: nowrap;
+}
+
+.dashboard-header-actions {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    justify-content: flex-end;
+}
+
+.revenue-summary-toolbar {
+    align-items: center;
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 0.35rem;
+}
+
+.dashboard-month-filter {
+    align-items: center;
+    background: #fffdf9;
+    border: 1px solid #EFE9DF;
+    border-radius: 16px;
+    display: flex;
+    gap: 0.5rem;
+    padding: 0.45rem;
+}
+
+.dashboard-month-filter label {
+    color: #66736b;
+    font-size: 0.78rem;
+    font-weight: 800;
+    margin: 0;
+    white-space: nowrap;
+}
+
+.dashboard-month-filter input {
+    background: #FAF8F5;
+    border: 1px solid #E8E4DD;
+    border-radius: 12px;
+    color: #1C3322;
+    font-size: 0.82rem;
+    font-weight: 800;
+    padding: 0.34rem 0.55rem;
+}
+
 .artisan-dashboard-hero .btn {
     align-items: center;
     background: #fff;
@@ -1366,6 +1460,11 @@ body:has(.artisan-topbar) .artisan-dashboard-hero {
     padding: 16px;
 }
 
+.revenue-summary-card > div {
+    min-width: 0;
+    width: 100%;
+}
+
 .summary-icon {
     align-items: center;
     background: #EAF7EE;
@@ -1397,8 +1496,7 @@ body:has(.artisan-topbar) .artisan-dashboard-hero {
     font-size: clamp(0.82rem, 1.1vw, 0.95rem);
     letter-spacing: -0.03em;
     line-height: 1.2;
-    overflow-wrap: anywhere;
-    word-break: break-word;
+    white-space: nowrap;
 }
 
 .status-breakdown {
@@ -1439,6 +1537,12 @@ body:has(.artisan-topbar) .artisan-dashboard-hero {
     font-weight: 900;
 }
 
+@media (max-width: 1320px) {
+    .revenue-summary-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
 @media (max-width: 900px) {
     .artisan-metric-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1447,11 +1551,32 @@ body:has(.artisan-topbar) .artisan-dashboard-hero {
     .artisan-dashboard-panel-grid {
         grid-template-columns: 1fr;
     }
+
+    .revenue-summary-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
 }
 
 @media (max-width: 760px) {
     .artisan-dashboard-content {
         margin: 24px 20px 40px;
+    }
+
+    .dashboard-header-title {
+        align-items: flex-start !important;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .dashboard-header-actions {
+        justify-content: flex-start;
+        width: 100%;
+    }
+
+    .dashboard-month-filter,
+    .revenue-summary-toolbar {
+        justify-content: center;
+        width: 100%;
     }
 
     .artisan-dashboard-hero {

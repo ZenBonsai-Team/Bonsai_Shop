@@ -543,6 +543,67 @@ class ProductJournalServiceTest {
     }
 
     @Test
+    void setCoverMedia_WhenMediaExists_ShouldMoveMediaToFirstDisplayOrder() {
+        Product product = product(101, "AVAILABLE");
+        ProductJournalEvent event = event(1, product);
+        ProductJournalMedia first = journalMedia(event, 11, "https://cdn.test/first.jpg", 0);
+        ProductJournalMedia second = journalMedia(event, 12, "https://cdn.test/second.jpg", 1);
+        event.getMediaList().add(first);
+        event.getMediaList().add(second);
+
+        when(artisanProductService.getMyProduct("artisan@test.com", 101)).thenReturn(product);
+        when(artisanProductService.isSold(product)).thenReturn(false);
+        when(journalEventRepository.findByEventIdAndProduct(1, product)).thenReturn(Optional.of(event));
+
+        productJournalService.setCoverMedia("artisan@test.com", 101, 1, 12);
+
+        assertThat(second.getDisplayOrder()).isEqualTo(0);
+        assertThat(first.getDisplayOrder()).isEqualTo(1);
+        verify(journalEventRepository).save(event);
+    }
+
+    @Test
+    void replaceMedia_WhenImageIsValid_ShouldStoreNewImageAndDeleteOldImage() {
+        Product product = product(101, "AVAILABLE");
+        ProductJournalEvent event = event(1, product);
+        ProductJournalMedia media = journalMedia(event, 11, "https://cdn.test/old.jpg", 0);
+        event.getMediaList().add(media);
+        MultipartFile replacement = image("replacement.jpg", 1024);
+
+        when(artisanProductService.getMyProduct("artisan@test.com", 101)).thenReturn(product);
+        when(artisanProductService.isSold(product)).thenReturn(false);
+        when(journalEventRepository.findByEventIdAndProduct(1, product)).thenReturn(Optional.of(event));
+        when(mediaStorageService.storeProductMedia(replacement)).thenReturn("https://cdn.test/new.jpg");
+
+        productJournalService.replaceMedia("artisan@test.com", 101, 1, 11, replacement);
+
+        assertThat(media.getMediaUrl()).isEqualTo("https://cdn.test/new.jpg");
+        verify(journalEventRepository).save(event);
+        verify(mediaStorageService).deleteProductMedia("https://cdn.test/old.jpg");
+    }
+
+    @Test
+    void deleteMedia_WhenMediaExists_ShouldRemoveMediaAndDeleteStoredFile() {
+        Product product = product(101, "AVAILABLE");
+        ProductJournalEvent event = event(1, product);
+        ProductJournalMedia first = journalMedia(event, 11, "https://cdn.test/first.jpg", 0);
+        ProductJournalMedia second = journalMedia(event, 12, "https://cdn.test/second.jpg", 1);
+        event.getMediaList().add(first);
+        event.getMediaList().add(second);
+
+        when(artisanProductService.getMyProduct("artisan@test.com", 101)).thenReturn(product);
+        when(artisanProductService.isSold(product)).thenReturn(false);
+        when(journalEventRepository.findByEventIdAndProduct(1, product)).thenReturn(Optional.of(event));
+
+        productJournalService.deleteMedia("artisan@test.com", 101, 1, 11);
+
+        assertThat(event.getMediaList()).containsExactly(second);
+        assertThat(second.getDisplayOrder()).isEqualTo(0);
+        verify(mediaStorageService).deleteProductMedia("https://cdn.test/first.jpg");
+        verify(journalEventRepository).save(event);
+    }
+
+    @Test
     void writeOperations_WhenProductIsSold_ShouldThrowExceptionBeforeJournalMutation() {
         Product soldProduct = product(101, "SOLD");
 
@@ -612,7 +673,12 @@ class ProductJournalServiceTest {
     }
 
     private ProductJournalMedia journalMedia(ProductJournalEvent event, String mediaUrl, Integer displayOrder) {
+        return journalMedia(event, displayOrder + 1, mediaUrl, displayOrder);
+    }
+
+    private ProductJournalMedia journalMedia(ProductJournalEvent event, Integer mediaId, String mediaUrl, Integer displayOrder) {
         return ProductJournalMedia.builder()
+                .mediaId(mediaId)
                 .event(event)
                 .mediaUrl(mediaUrl)
                 .mediaType("IMAGE")
