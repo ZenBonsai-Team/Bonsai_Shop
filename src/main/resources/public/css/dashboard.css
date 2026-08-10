@@ -453,6 +453,39 @@ body:has(.artisan-topbar) .dashboard-main {
     padding: 0 44px;
 }
 
+.artisan-topbar-left {
+    align-items: center;
+    color: #1E221F;
+    display: flex;
+    gap: 22px;
+    min-width: 0;
+}
+
+.artisan-sidebar-toggle {
+    align-items: center;
+    background: transparent;
+    border: 0;
+    color: #1E221F;
+    cursor: pointer;
+    display: inline-flex;
+    font-size: 1.45rem;
+    height: 42px;
+    justify-content: center;
+    padding: 0;
+    width: 42px;
+}
+
+.artisan-sidebar-toggle:hover {
+    color: #2d6a4f;
+}
+
+.artisan-topbar-title {
+    color: #1E221F;
+    font-size: 1rem;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
 .artisan-breadcrumb {
     align-items: center;
     color: #536257;
