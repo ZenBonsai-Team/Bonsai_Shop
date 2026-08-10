@@ -76,6 +76,13 @@
                 </table>
             </div>
 
+            <div class="revenue-summary-toolbar">
+                <form class="dashboard-month-filter" method="get" th:action="@{/artisan}">
+                    <label for="artisanReportMonth">Tháng báo cáo</label>
+                    <input id="artisanReportMonth" type="month" name="month" th:value="${selectedMonth}" onchange="this.form.submit()">
+                </form>
+            </div>
+
             <div class="revenue-summary-grid">
                 <div class="revenue-summary-card">
                     <span class="summary-icon"><i class="fa-solid fa-wallet"></i></span>
@@ -125,13 +132,6 @@
                         <a class="summary-source-link" href="#" data-source-target="crane-fee-sources">
                             <span class="summary-source-action">Chi tiết <i class="fa-solid fa-arrow-right"></i></span>
                         </a>
-                    </div>
-                </div>
-                <div class="revenue-summary-card">
-                    <span class="summary-icon"><i class="fa-solid fa-clipboard-list"></i></span>
-                    <div>
-                        <small>Tổng đơn hàng</small>
-                        <strong th:text="${monthlySoldItems}">0</strong>
                     </div>
                 </div>
             </div>
