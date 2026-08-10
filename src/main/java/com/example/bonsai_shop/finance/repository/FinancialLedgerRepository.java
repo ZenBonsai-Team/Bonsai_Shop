@@ -12,6 +12,7 @@ import org.springframework.stereotype.Repository;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface FinancialLedgerRepository extends JpaRepository<FinancialLedger, Integer> {
@@ -23,6 +24,10 @@ public interface FinancialLedgerRepository extends JpaRepository<FinancialLedger
     boolean existsByOrderOrderIdAndLedgerTypeAndLedgerStatus(Integer orderId,
                                                             FinancialLedgerType ledgerType,
                                                             FinancialLedgerStatus ledgerStatus);
+
+    Optional<FinancialLedger> findFirstByOrderOrderIdAndLedgerTypeAndLedgerStatus(Integer orderId,
+                                                                                  FinancialLedgerType ledgerType,
+                                                                                  FinancialLedgerStatus ledgerStatus);
 
     boolean existsByRelatedPaymentPaymentIdAndLedgerTypeAndLedgerStatus(Integer relatedPaymentId,
                                                                         FinancialLedgerType ledgerType,
