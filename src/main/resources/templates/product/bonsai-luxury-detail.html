@@ -223,10 +223,7 @@
                             th:data-id="${product != null ? product.productId : ''}"
                             th:data-title="${product != null && product.productName != null ? product.productName : 'Tác phẩm Bonsai Luxury'}"
                             data-available="true">
-                        Đặt lịch xem riêng
-                    </button>
-                    <button class="btn-disabled" type="button" disabled th:unless="${product != null and (product.status == null or product.status == 'AVAILABLE')}">
-                        Tác phẩm chưa mở lịch
+                        Đặt lịch tham quan vườn
                     </button>
                 </div>
 
@@ -284,27 +281,27 @@
                     <tbody>
                     <tr>
                         <td class="specs-table-lbl">Mã tác phẩm</td>
-                        <td class="specs-table-val" th:text="${product != null && product.productCode != null ? product.productCode : 'BL-COLLECTOR'}">BL-COLLECTOR</td>
+                        <td class="specs-table-val" th:text="${product != null && product.productCode != null ? product.productCode : 'BL-COLLECTOR'}"></td>
                     </tr>
                     <tr>
                         <td class="specs-table-lbl">Tên tác phẩm</td>
-                        <td class="specs-table-val" th:text="${product != null && product.productName != null ? product.productName : 'Tùng La Hán Tuyệt Tác'}">Tùng La Hán Tuyệt Tác</td>
+                        <td class="specs-table-val" th:text="${product != null && product.productName != null ? product.productName : 'Tùng La Hán Tuyệt Tác'}"></td>
                     </tr>
                     <tr>
                         <td class="specs-table-lbl">Loại cây</td>
-                        <td class="specs-table-val" th:text="${product != null && product.varietyName != null ? product.varietyName : 'Tùng La Hán'}">Tùng La Hán</td>
+                        <td class="specs-table-val" th:text="${product != null && product.varietyName != null ? product.varietyName : 'Tùng La Hán'}"></td>
                     </tr>
                     <tr>
                         <td class="specs-table-lbl">Tuổi cây</td>
-                        <td class="specs-table-val" th:text="${product != null && product.age != null ? product.age + ' năm' : 'Đang cập nhật'}">Đang cập nhật</td>
+                        <td class="specs-table-val" th:text="${product != null && product.age != null ? product.age + ' năm' : 'Đang cập nhật'}"></td>
                     </tr>
                     <tr>
                         <td class="specs-table-lbl">Chiều cao</td>
-                        <td class="specs-table-val" th:text="${product != null && product.height != null ? product.height + ' cm' : 'Đang cập nhật'}">Đang cập nhật</td>
+                        <td class="specs-table-val" th:text="${product != null && product.height != null ? product.height + ' cm' : 'Đang cập nhật'}"></td>
                     </tr>
                     <tr>
                         <td class="specs-table-lbl">Đường kính thân</td>
-                        <td class="specs-table-val" th:text="${product != null && product.trunkDiameter != null ? product.trunkDiameter + ' cm' : 'Đang cập nhật'}">Đang cập nhật</td>
+                        <td class="specs-table-val" th:text="${product != null && product.trunkDiameter != null ? product.trunkDiameter + ' cm' : 'Đang cập nhật'}"></td>
                     </tr>
                     <tr>
                         <td class="specs-table-lbl">Nghệ nhân phụ trách</td>
@@ -367,7 +364,7 @@
                 <div class="artisan-profile-right">
                     <button class="btn-view-profile-outline schedule-btn"
                             type="button"
-                            sec:authorize="isAuthenticated() and !hasAnyRole('OWNER', 'ARTISAN', 'MODERATOR', 'CONTENT_MODERATOR', 'ADMIN')"
+                            sec:authorize="isAuthenticated() and !hasAnyRole('OWNER', 'ARTISAN', 'MODERATOR', 'CONTENT_MODERATOR')"
                             th:if="${product != null and (product.status == null or product.status == 'AVAILABLE')}"
                             th:data-id="${product != null ? product.productId : ''}"
                             th:data-title="${product != null && product.productName != null ? product.productName : 'Tác phẩm Bonsai Luxury'}"
@@ -379,9 +376,9 @@
                        th:if="${product != null and (product.status == null or product.status == 'AVAILABLE')}"
                        th:href="@{/login}">Đăng nhập để đặt lịch</a>
                     <span class="btn-view-profile-outline is-disabled"
-                          sec:authorize="!hasAnyRole('OWNER', 'ARTISAN', 'MODERATOR', 'CONTENT_MODERATOR', 'ADMIN')"
+                          sec:authorize="!hasAnyRole('OWNER', 'ARTISAN', 'MODERATOR', 'CONTENT_MODERATOR')"
                           th:unless="${product != null and (product.status == null or product.status == 'AVAILABLE')}">Tác phẩm chưa mở lịch</span>
-                    <span class="btn-view-profile-outline is-disabled" sec:authorize="hasAnyRole('OWNER', 'ARTISAN', 'MODERATOR', 'CONTENT_MODERATOR', 'ADMIN')">Chỉ xem hồ sơ</span>
+                    <span class="btn-view-profile-outline is-disabled" sec:authorize="hasAnyRole('OWNER', 'ARTISAN', 'MODERATOR', 'CONTENT_MODERATOR')">Chỉ xem hồ sơ</span>
                 </div>
             </div>
         </div>
@@ -447,9 +444,7 @@
             <i class="fa-solid fa-xmark" aria-hidden="true"></i>
         </button>
         <div class="booking-header">
-            <span>Private appointment</span>
-            <h2 id="bookingTitle">Yêu cầu đặt lịch xem</h2>
-            <p>Tác phẩm: <strong id="modalProductTitle">—</strong></p>
+            <h2 id="bookingTitle">Yêu cầu đặt lịch thăm vườn</h2>
         </div>
         <form class="booking-form" th:action="@{/appointments/create}" method="post" id="actualBookingForm">
             <input type="hidden" name="_csrf" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">

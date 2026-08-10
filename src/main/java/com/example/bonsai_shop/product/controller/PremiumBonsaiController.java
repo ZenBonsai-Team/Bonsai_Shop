@@ -6,6 +6,7 @@ import com.example.bonsai_shop.product.service.ProductService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -24,7 +25,9 @@ public class PremiumBonsaiController {
     public String premium(
             @RequestParam(defaultValue = "0") int page,
             Model model) {
-        Page<ProductCardDTO> product = productService.getPremiumProducts(PageRequest.of(page, 8));
+        Pageable pageable = PageRequest.of(Math.max(page, 0), 8);
+
+        Page<ProductCardDTO> product = productService.getPremiumProducts(pageable);
         model.addAttribute("product", product);
         return "product/bonsai-luxury";
     }
@@ -41,7 +44,6 @@ public class PremiumBonsaiController {
         }
         List<ProductMediaDTO> mediaList = productService.getPremiumProductMedia(productId);
         model.addAttribute("product", product);
-        model.addAttribute("mediaList", mediaList);
         model.addAttribute("imageMediaList", mediaList.stream()
                 .filter(media -> !"VIDEO".equalsIgnoreCase(media.getMediaType()))
                 .toList());
