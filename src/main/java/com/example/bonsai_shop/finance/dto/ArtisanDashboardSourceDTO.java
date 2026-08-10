@@ -8,6 +8,7 @@ public record ArtisanDashboardSourceDTO(
         String customerName,
         LocalDateTime sourceDate,
         String orderStatus,
+        String productCode,
         String productName,
         BigDecimal productAmount,
         BigDecimal depositAmount,

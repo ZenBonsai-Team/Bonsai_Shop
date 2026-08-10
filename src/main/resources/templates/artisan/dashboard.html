@@ -79,8 +79,9 @@
                     <div>
                         <small>Doanh thu đơn hoàn thành</small>
                         <strong class="money-value" th:text="${#numbers.formatDecimal(monthlyRevenue, 0, 'POINT', 0, 'POINT') + ' VNĐ'}">0 VNĐ</strong>
-                        <a class="summary-source-link" href="#completed-revenue-sources"
-                           th:text="|Từ ${#lists.size(completedRevenueSources)} dòng đơn|">Xem nguồn</a>
+                        <a class="summary-source-link" href="#" data-source-target="completed-revenue-sources">
+                            <span class="summary-source-action">Chi tiết <i class="fa-solid fa-arrow-right"></i></span>
+                        </a>
                     </div>
                 </div>
                 <div class="revenue-summary-card">
@@ -88,8 +89,9 @@
                     <div>
                         <small>Cọc khách bỏ</small>
                         <strong class="money-value" th:text="${#numbers.formatDecimal(monthlyForfeitedDepositIncome, 0, 'POINT', 0, 'POINT') + ' VNĐ'}">0 VNĐ</strong>
-                        <a class="summary-source-link" href="#forfeited-deposit-sources"
-                           th:text="|Từ ${#lists.size(forfeitedDepositSources)} giao dịch|">Xem nguồn</a>
+                        <a class="summary-source-link" href="#" data-source-target="forfeited-deposit-sources">
+                            <span class="summary-source-action">Chi tiết <i class="fa-solid fa-arrow-right"></i></span>
+                        </a>
                     </div>
                 </div>
                 <div class="revenue-summary-card">
@@ -97,8 +99,9 @@
                     <div>
                         <small>Hoàn lại khách</small>
                         <strong class="money-value" th:text="${#numbers.formatDecimal(monthlyRefundAmount, 0, 'POINT', 0, 'POINT') + ' VNĐ'}">0 VNĐ</strong>
-                        <a class="summary-source-link" href="#refund-sources"
-                           th:text="|Từ ${#lists.size(refundSources)} giao dịch|">Xem nguồn</a>
+                        <a class="summary-source-link" href="#" data-source-target="refund-sources">
+                            <span class="summary-source-action">Chi tiết <i class="fa-solid fa-arrow-right"></i></span>
+                        </a>
                     </div>
                 </div>
                 <div class="revenue-summary-card">
@@ -106,8 +109,9 @@
                     <div>
                         <small>Phí ship</small>
                         <strong class="money-value" th:text="${#numbers.formatDecimal(monthlyShippingFee, 0, 'POINT', 0, 'POINT') + ' VNĐ'}">0 VNĐ</strong>
-                        <a class="summary-source-link" href="#shipping-fee-sources"
-                           th:text="|Từ ${#lists.size(shippingFeeSources)} đơn|">Xem nguồn</a>
+                        <a class="summary-source-link" href="#" data-source-target="shipping-fee-sources">
+                            <span class="summary-source-action">Chi tiết <i class="fa-solid fa-arrow-right"></i></span>
+                        </a>
                     </div>
                 </div>
                 <div class="revenue-summary-card">
@@ -115,8 +119,9 @@
                     <div>
                         <small>Phí cẩu</small>
                         <strong class="money-value" th:text="${#numbers.formatDecimal(monthlyCraneFee, 0, 'POINT', 0, 'POINT') + ' VNĐ'}">0 VNĐ</strong>
-                        <a class="summary-source-link" href="#crane-fee-sources"
-                           th:text="|Từ ${#lists.size(craneFeeSources)} đơn|">Xem nguồn</a>
+                        <a class="summary-source-link" href="#" data-source-target="crane-fee-sources">
+                            <span class="summary-source-action">Chi tiết <i class="fa-solid fa-arrow-right"></i></span>
+                        </a>
                     </div>
                 </div>
                 <div class="revenue-summary-card">
@@ -128,27 +133,29 @@
                 </div>
             </div>
 
-            <div class="artisan-source-report">
-                <div class="source-report-heading">
-                    <div>
-                        <span>Nguồn cộng</span>
-                        <h3>Chi tiết các đơn/giao dịch tạo nên số liệu tháng này</h3>
+            <div id="artisanSourceModal" class="artisan-source-modal hidden" aria-hidden="true">
+                <div class="artisan-source-dialog" role="dialog" aria-modal="true" aria-labelledby="sourceReportTitle">
+                    <div class="source-modal-header">
+                        <div>
+                            <span>Nguồn cộng</span>
+                            <h3 id="sourceReportTitle">Chi tiết các đơn/giao dịch tạo nên số liệu tháng này</h3>
+                        </div>
+                        <button type="button" class="source-modal-close" aria-label="Đóng báo cáo">&times;</button>
                     </div>
-                </div>
-
-                <details id="completed-revenue-sources" class="source-report-block" open>
-                    <summary>Doanh thu đơn hoàn thành <strong th:text="${#numbers.formatDecimal(monthlyRevenue, 0, 'POINT', 0, 'POINT') + ' VNĐ'}">0 VNĐ</strong></summary>
+                    <div class="artisan-source-report">
+                <section id="completed-revenue-sources" class="source-report-block hidden" data-source-panel>
+                    <div class="source-report-summary">Doanh thu đơn hoàn thành <strong th:text="${#numbers.formatDecimal(monthlyRevenue, 0, 'POINT', 0, 'POINT') + ' VNĐ'}">0 VNĐ</strong></div>
                     <div class="table-responsive">
                         <table class="table table-sm align-middle source-report-table">
                             <thead>
-                            <tr><th>Ngày ghi nhận</th><th>Mã đơn</th><th>Khách hàng</th><th>Sản phẩm</th><th>Trạng thái</th><th class="text-end">Số tiền cộng</th></tr>
+                            <tr><th>Ngày ghi nhận</th><th>Mã đơn</th><th>Khách hàng</th><th>Mã SP</th><th>Trạng thái</th><th class="text-end">Số tiền cộng</th></tr>
                             </thead>
                             <tbody>
                             <tr th:each="source : ${completedRevenueSources}">
                                 <td th:text="${source.sourceDate() != null ? #temporals.format(source.sourceDate(), 'dd/MM/yyyy HH:mm') : '-'}">-</td>
                                 <td class="fw-semibold" th:text="${source.orderCode()}">DH001</td>
                                 <td th:text="${source.customerName() ?: '-'}">Khách hàng</td>
-                                <td th:text="${source.productName() ?: '-'}">Sản phẩm</td>
+                                <td th:text="${source.productCode() ?: '-'}">SP001</td>
                                 <td th:text="${source.orderStatus()}">COMPLETED</td>
                                 <td class="text-end fw-semibold" th:text="${#numbers.formatDecimal(source.sourceAmount(), 0, 'POINT', 0, 'POINT') + ' VNĐ'}">0 VNĐ</td>
                             </tr>
@@ -156,91 +163,97 @@
                             </tbody>
                         </table>
                     </div>
-                </details>
+                </section>
 
-                <details id="forfeited-deposit-sources" class="source-report-block">
-                    <summary>Cọc khách bỏ <strong th:text="${#numbers.formatDecimal(monthlyForfeitedDepositIncome, 0, 'POINT', 0, 'POINT') + ' VNĐ'}">0 VNĐ</strong></summary>
+                <section id="forfeited-deposit-sources" class="source-report-block hidden" data-source-panel>
+                    <div class="source-report-summary">Cọc khách bỏ <strong th:text="${#numbers.formatDecimal(monthlyForfeitedDepositIncome, 0, 'POINT', 0, 'POINT') + ' VNĐ'}">0 VNĐ</strong></div>
                     <div class="table-responsive">
                         <table class="table table-sm align-middle source-report-table">
                             <thead>
-                            <tr><th>Ngày ghi nhận</th><th>Mã đơn</th><th>Khách hàng</th><th>Trạng thái</th><th class="text-end">Cọc giữ lại</th></tr>
+                            <tr><th>Ngày ghi nhận</th><th>Mã đơn</th><th>Khách hàng</th><th>Mã SP</th><th>Trạng thái</th><th class="text-end">Cọc giữ lại</th></tr>
                             </thead>
                             <tbody>
                             <tr th:each="source : ${forfeitedDepositSources}">
                                 <td th:text="${source.sourceDate() != null ? #temporals.format(source.sourceDate(), 'dd/MM/yyyy HH:mm') : '-'}">-</td>
                                 <td class="fw-semibold" th:text="${source.orderCode()}">DH001</td>
                                 <td th:text="${source.customerName() ?: '-'}">Khách hàng</td>
+                                <td th:text="${source.productCode() ?: '-'}">SP001</td>
                                 <td th:text="${source.orderStatus()}">CANCELLED</td>
                                 <td class="text-end fw-semibold" th:text="${#numbers.formatDecimal(source.sourceAmount(), 0, 'POINT', 0, 'POINT') + ' VNĐ'}">0 VNĐ</td>
                             </tr>
-                            <tr th:if="${#lists.isEmpty(forfeitedDepositSources)}"><td colspan="5" class="text-center text-muted py-3">Không có nguồn ghi nhận trong tháng này.</td></tr>
+                            <tr th:if="${#lists.isEmpty(forfeitedDepositSources)}"><td colspan="6" class="text-center text-muted py-3">Không có nguồn ghi nhận trong tháng này.</td></tr>
                             </tbody>
                         </table>
                     </div>
-                </details>
+                </section>
 
-                <details id="refund-sources" class="source-report-block">
-                    <summary>Hoàn lại khách <strong th:text="${#numbers.formatDecimal(monthlyRefundAmount, 0, 'POINT', 0, 'POINT') + ' VNĐ'}">0 VNĐ</strong></summary>
+                <section id="refund-sources" class="source-report-block hidden" data-source-panel>
+                    <div class="source-report-summary">Hoàn lại khách <strong th:text="${#numbers.formatDecimal(monthlyRefundAmount, 0, 'POINT', 0, 'POINT') + ' VNĐ'}">0 VNĐ</strong></div>
                     <div class="table-responsive">
                         <table class="table table-sm align-middle source-report-table">
                             <thead>
-                            <tr><th>Ngày ghi nhận</th><th>Mã đơn</th><th>Khách hàng</th><th>Trạng thái</th><th class="text-end">Số tiền hoàn</th></tr>
+                            <tr><th>Ngày ghi nhận</th><th>Mã đơn</th><th>Khách hàng</th><th>Mã SP</th><th>Trạng thái</th><th class="text-end">Số tiền hoàn</th></tr>
                             </thead>
                             <tbody>
                             <tr th:each="source : ${refundSources}">
                                 <td th:text="${source.sourceDate() != null ? #temporals.format(source.sourceDate(), 'dd/MM/yyyy HH:mm') : '-'}">-</td>
                                 <td class="fw-semibold" th:text="${source.orderCode()}">DH001</td>
                                 <td th:text="${source.customerName() ?: '-'}">Khách hàng</td>
+                                <td th:text="${source.productCode() ?: '-'}">SP001</td>
                                 <td th:text="${source.orderStatus()}">CANCELLED</td>
                                 <td class="text-end fw-semibold" th:text="${#numbers.formatDecimal(source.sourceAmount(), 0, 'POINT', 0, 'POINT') + ' VNĐ'}">0 VNĐ</td>
                             </tr>
-                            <tr th:if="${#lists.isEmpty(refundSources)}"><td colspan="5" class="text-center text-muted py-3">Không có nguồn ghi nhận trong tháng này.</td></tr>
+                            <tr th:if="${#lists.isEmpty(refundSources)}"><td colspan="6" class="text-center text-muted py-3">Không có nguồn ghi nhận trong tháng này.</td></tr>
                             </tbody>
                         </table>
                     </div>
-                </details>
+                </section>
 
-                <details id="shipping-fee-sources" class="source-report-block">
-                    <summary>Phí ship <strong th:text="${#numbers.formatDecimal(monthlyShippingFee, 0, 'POINT', 0, 'POINT') + ' VNĐ'}">0 VNĐ</strong></summary>
+                <section id="shipping-fee-sources" class="source-report-block hidden" data-source-panel>
+                    <div class="source-report-summary">Phí ship <strong th:text="${#numbers.formatDecimal(monthlyShippingFee, 0, 'POINT', 0, 'POINT') + ' VNĐ'}">0 VNĐ</strong></div>
                     <div class="table-responsive">
                         <table class="table table-sm align-middle source-report-table">
                             <thead>
-                            <tr><th>Ngày ghi nhận</th><th>Mã đơn</th><th>Khách hàng</th><th>Trạng thái</th><th class="text-end">Phí ship</th></tr>
+                            <tr><th>Ngày ghi nhận</th><th>Mã đơn</th><th>Khách hàng</th><th>Mã SP</th><th>Trạng thái</th><th class="text-end">Phí ship</th></tr>
                             </thead>
                             <tbody>
                             <tr th:each="source : ${shippingFeeSources}">
                                 <td th:text="${source.sourceDate() != null ? #temporals.format(source.sourceDate(), 'dd/MM/yyyy HH:mm') : '-'}">-</td>
                                 <td class="fw-semibold" th:text="${source.orderCode()}">DH001</td>
                                 <td th:text="${source.customerName() ?: '-'}">Khách hàng</td>
+                                <td th:text="${source.productCode() ?: '-'}">SP001</td>
                                 <td th:text="${source.orderStatus()}">COMPLETED</td>
                                 <td class="text-end fw-semibold" th:text="${#numbers.formatDecimal(source.sourceAmount(), 0, 'POINT', 0, 'POINT') + ' VNĐ'}">0 VNĐ</td>
                             </tr>
-                            <tr th:if="${#lists.isEmpty(shippingFeeSources)}"><td colspan="5" class="text-center text-muted py-3">Không có nguồn ghi nhận trong tháng này.</td></tr>
+                            <tr th:if="${#lists.isEmpty(shippingFeeSources)}"><td colspan="6" class="text-center text-muted py-3">Không có nguồn ghi nhận trong tháng này.</td></tr>
                             </tbody>
                         </table>
                     </div>
-                </details>
+                </section>
 
-                <details id="crane-fee-sources" class="source-report-block">
-                    <summary>Phí cẩu <strong th:text="${#numbers.formatDecimal(monthlyCraneFee, 0, 'POINT', 0, 'POINT') + ' VNĐ'}">0 VNĐ</strong></summary>
+                <section id="crane-fee-sources" class="source-report-block hidden" data-source-panel>
+                    <div class="source-report-summary">Phí cẩu <strong th:text="${#numbers.formatDecimal(monthlyCraneFee, 0, 'POINT', 0, 'POINT') + ' VNĐ'}">0 VNĐ</strong></div>
                     <div class="table-responsive">
                         <table class="table table-sm align-middle source-report-table">
                             <thead>
-                            <tr><th>Ngày ghi nhận</th><th>Mã đơn</th><th>Khách hàng</th><th>Trạng thái</th><th class="text-end">Phí cẩu</th></tr>
+                            <tr><th>Ngày ghi nhận</th><th>Mã đơn</th><th>Khách hàng</th><th>Mã SP</th><th>Trạng thái</th><th class="text-end">Phí cẩu</th></tr>
                             </thead>
                             <tbody>
                             <tr th:each="source : ${craneFeeSources}">
                                 <td th:text="${source.sourceDate() != null ? #temporals.format(source.sourceDate(), 'dd/MM/yyyy HH:mm') : '-'}">-</td>
                                 <td class="fw-semibold" th:text="${source.orderCode()}">DH001</td>
                                 <td th:text="${source.customerName() ?: '-'}">Khách hàng</td>
+                                <td th:text="${source.productCode() ?: '-'}">SP001</td>
                                 <td th:text="${source.orderStatus()}">COMPLETED</td>
                                 <td class="text-end fw-semibold" th:text="${#numbers.formatDecimal(source.sourceAmount(), 0, 'POINT', 0, 'POINT') + ' VNĐ'}">0 VNĐ</td>
                             </tr>
-                            <tr th:if="${#lists.isEmpty(craneFeeSources)}"><td colspan="5" class="text-center text-muted py-3">Không có nguồn ghi nhận trong tháng này.</td></tr>
+                            <tr th:if="${#lists.isEmpty(craneFeeSources)}"><td colspan="6" class="text-center text-muted py-3">Không có nguồn ghi nhận trong tháng này.</td></tr>
                             </tbody>
                         </table>
                     </div>
-                </details>
+                </section>
+                    </div>
+                </div>
             </div>
         </article>
 
@@ -264,6 +277,14 @@
                     <span>Bản nháp</span>
                     <strong th:text="${draftProducts}">0</strong>
                 </a>
+                <a th:href="@{/artisan/products}">
+                    <span>Thiếu mô tả</span>
+                    <strong th:text="${missingDescriptionProducts}">0</strong>
+                </a>
+                <a th:href="@{/artisan/products}">
+                    <span>Ẩn giá</span>
+                    <strong th:text="${hiddenPriceProducts}">0</strong>
+                </a>
                 <a th:href="@{/artisan/products(status='INVISIBLE')}">
                     <span>Đang ẩn</span>
                     <strong th:text="${hiddenProducts}">0</strong>
@@ -279,36 +300,46 @@
             </div>
         </article>
     </section>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const modal = document.getElementById('artisanSourceModal');
+        if (!modal) return;
 
-    <section class="artisan-dashboard-panel artisan-attention-panel mt-4">
-        <div class="panel-heading">
-            <div>
-                <span>Cần chú ý</span>
-                <h2>Các mục cần xử lý</h2>
-            </div>
-            <a th:href="@{/artisan/products}">Quản lý sản phẩm</a>
-        </div>
-        <div class="attention-cards">
-            <div>
-                <strong th:text="${draftProducts}">0</strong>
-                <span>Sản phẩm nháp cần publish</span>
-            </div>
-            <div>
-                <strong th:text="${missingDescriptionProducts}">0</strong>
-                <span>Sản phẩm thiếu mô tả</span>
-            </div>
-            <div>
-                <strong th:text="${hiddenPriceProducts}">0</strong>
-                <span>Sản phẩm đang ẩn giá</span>
-            </div>
-            <div>
-                <strong th:text="${hiddenProducts}">0</strong>
-                <span>Sản phẩm đang bị ẩn</span>
-            </div>
-        </div>
-    </section>
+        const panels = modal.querySelectorAll('[data-source-panel]');
+        const closeButton = modal.querySelector('.source-modal-close');
+
+        function closeModal() {
+            modal.classList.add('hidden');
+            modal.setAttribute('aria-hidden', 'true');
+        }
+
+        function openModal(targetId) {
+            panels.forEach(panel => panel.classList.toggle('hidden', panel.id !== targetId));
+            modal.classList.remove('hidden');
+            modal.setAttribute('aria-hidden', 'false');
+        }
+
+        document.querySelectorAll('[data-source-target]').forEach(link => {
+            link.addEventListener('click', function (event) {
+                event.preventDefault();
+                openModal(link.dataset.sourceTarget);
+            });
+        });
+
+        closeButton?.addEventListener('click', closeModal);
+        modal.addEventListener('click', function (event) {
+            if (event.target === modal) {
+                closeModal();
+            }
+        });
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape' && !modal.classList.contains('hidden')) {
+                closeModal();
+            }
+        });
+    });
+</script>
 </div>
 
 </body>
 </html>
-

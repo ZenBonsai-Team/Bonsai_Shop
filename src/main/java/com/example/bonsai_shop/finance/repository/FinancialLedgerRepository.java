@@ -149,6 +149,7 @@ public interface FinancialLedgerRepository extends JpaRepository<FinancialLedger
                 od.order.customerName,
                 fl.recognizedAt,
                 od.order.orderStatus,
+                od.product.productCode,
                 od.product.productName,
                 od.priceAtPurchase * od.quantity,
                 od.order.depositAmount,
@@ -179,6 +180,12 @@ public interface FinancialLedgerRepository extends JpaRepository<FinancialLedger
                 fl.order.customerName,
                 fl.recognizedAt,
                 fl.order.orderStatus,
+                (
+                    SELECT MIN(od.product.productCode)
+                    FROM OrderDetail od
+                    WHERE od.order = fl.order
+                      AND od.product.createdBy.userId = :artisanUserId
+                ),
                 null,
                 null,
                 fl.amount,
@@ -213,6 +220,12 @@ public interface FinancialLedgerRepository extends JpaRepository<FinancialLedger
                 fl.order.customerName,
                 fl.recognizedAt,
                 fl.order.orderStatus,
+                (
+                    SELECT MIN(od.product.productCode)
+                    FROM OrderDetail od
+                    WHERE od.order = fl.order
+                      AND od.product.createdBy.userId = :artisanUserId
+                ),
                 null,
                 null,
                 fl.order.depositAmount,
@@ -247,6 +260,12 @@ public interface FinancialLedgerRepository extends JpaRepository<FinancialLedger
                 o.customerName,
                 MAX(fl.recognizedAt),
                 o.orderStatus,
+                (
+                    SELECT MIN(od.product.productCode)
+                    FROM OrderDetail od
+                    WHERE od.order = o
+                      AND od.product.createdBy.userId = :artisanUserId
+                ),
                 null,
                 null,
                 o.depositAmount,
@@ -285,6 +304,12 @@ public interface FinancialLedgerRepository extends JpaRepository<FinancialLedger
                 o.customerName,
                 MAX(fl.recognizedAt),
                 o.orderStatus,
+                (
+                    SELECT MIN(od.product.productCode)
+                    FROM OrderDetail od
+                    WHERE od.order = o
+                      AND od.product.createdBy.userId = :artisanUserId
+                ),
                 null,
                 null,
                 o.depositAmount,
