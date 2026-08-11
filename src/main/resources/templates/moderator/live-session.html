@@ -222,8 +222,8 @@
             <div class="chat-input-area">
                 <input type="text" class="form-control form-control-sm rounded-pill px-3" id="simUser" placeholder="Tên khách" value="Khách xem live">
                 <input type="text" class="form-control form-control-sm rounded-pill px-3 flex-grow-1" id="simComment" placeholder="Nội dung bình luận...">
-                <button class="btn btn-sm btn-success rounded-circle" style="width: 32px; height: 32px; padding: 0;" onclick="submitSimulatedComment()">
-                    <i class="fa-solid fa-paper-plane"></i>
+                <button class="btn btn-sm btn-success rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; min-width: 32px; min-height: 32px; flex-shrink: 0; padding: 0;" onclick="submitSimulatedComment()">
+                    <i class="fa-solid fa-paper-plane" style="font-size: 13px; margin: 0;"></i>
                 </button>
             </div>
         </div>
@@ -231,9 +231,20 @@
 
     <!-- Captured Leads List Panel -->
     <div class="leads-wrapper shadow-sm" th:if="${activeSession != null}">
-        <div class="d-flex justify-content-between align-items-center mb-3">
+        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
             <h5 class="fw-bold text-dark m-0"><i class="fa-solid fa-phone-volume text-success me-2"></i>Danh sách số điện thoại / đơn hàng lọc được</h5>
-            <span class="badge bg-danger rounded-pill px-3 py-1 font-monospace" id="leadCounter">0 Lead</span>
+            <div class="d-flex align-items-center gap-2">
+                <button class="btn btn-sm btn-outline-primary rounded-pill px-3" onclick="copyLeadsToClipboard()">
+                    <i class="fa-regular fa-copy me-1"></i> Sao chép
+                </button>
+                <button class="btn btn-sm btn-outline-success rounded-pill px-3" onclick="exportLeadsToCSV()">
+                    <i class="fa-solid fa-file-excel me-1"></i> Xuất Excel
+                </button>
+                <button class="btn btn-sm btn-outline-secondary rounded-pill px-3" onclick="printLeadsList()">
+                    <i class="fa-solid fa-print me-1"></i> In
+                </button>
+                <span class="badge bg-danger rounded-pill px-3 py-1 font-monospace ms-2" id="leadCounter">0 Khách cần liên hệ</span>
+            </div>
         </div>
 
         <div class="table-responsive">
@@ -247,7 +258,6 @@
                         <th>Ý định</th>
                         <th>Ghi chú cuộc gọi</th>
                         <th>Trạng thái</th>
-                        <th class="text-end">Hành động</th>
                     </tr>
                 </thead>
                 <tbody id="leadsTableBody">
@@ -479,7 +489,7 @@
                 .then(leads => {
                     const table = document.getElementById('leadsTableBody');
                     table.innerHTML = '';
-                    document.getElementById('leadCounter').textContent = leads.length + ' Lead';
+                    document.getElementById('leadCounter').textContent = leads.length + ' Khách cần liên hệ';
                     leads.forEach(lead => addLeadRow(lead, false));
                 });
         }
@@ -522,7 +532,7 @@
                 <td class="small text-muted" style="max-width: 250px;">${lead.rawComment}</td>
                 <td><span class="intent-badge ${intentClass}">${intentLabels[lead.intentType] || lead.intentType}</span></td>
                 <td>
-                    <input type="text" class="form-control form-control-sm" id="notes-${lead.leadId}" value="${lead.notes || ''}" placeholder="Ghi chú cuộc gọi...">
+                    <input type="text" class="form-control form-control-sm" id="notes-${lead.leadId}" value="${lead.notes || ''}" placeholder="Ghi chú cuộc gọi..." onchange="updateLead(${lead.leadId})" onkeydown="if(event.key==='Enter') { this.blur(); }">
                 </td>
                 <td>
                     <select class="form-select form-select-sm" id="status-${lead.leadId}" onchange="updateLead(${lead.leadId})">
@@ -532,16 +542,13 @@
                         <option value="CANCELLED" ${lead.leadStatus === 'CANCELLED' ? 'selected' : ''}>Hủy bỏ</option>
                     </select>
                 </td>
-                <td class="text-end">
-                    <button class="btn btn-sm btn-success rounded-pill px-3" onclick="updateLead(${lead.leadId})">Lưu</button>
-                </td>
             `;
 
             table.insertBefore(row, table.firstChild);
             
             // Update counter
             const currentCount = table.children.length;
-            document.getElementById('leadCounter').textContent = currentCount + ' Lead';
+            document.getElementById('leadCounter').textContent = currentCount + ' Khách cần liên hệ';
         }
 
         function updateLead(leadId) {
@@ -680,6 +687,154 @@
                 statusEl.textContent = 'Lỗi đồng bộ: ' + err.message + '. Hệ thống sẽ thử lại.';
                 statusEl.className = 'alert alert-warning py-2 small';
             });
+        }
+
+        function extractLeadFromRow(row) {
+            const cells = row.querySelectorAll('td');
+            if (cells.length < 7) return null;
+
+            const name = cells[0].textContent.trim();
+            const phoneSpan = cells[1].querySelector('span');
+            const phone = phoneSpan ? phoneSpan.textContent.trim() : cells[1].textContent.trim();
+            
+            const treeCodeBadge = cells[2].querySelector('.badge');
+            const treeCode = treeCodeBadge ? treeCodeBadge.textContent.trim() : '';
+            const treeNameSpan = cells[2].querySelector('.small');
+            const treeName = treeNameSpan ? treeNameSpan.textContent.trim() : '';
+            
+            const comment = cells[3].textContent.trim();
+            const intent = cells[4].textContent.trim();
+            const notesInput = cells[5].querySelector('input');
+            const notes = notesInput ? notesInput.value.trim() : '';
+            const statusSelect = cells[6].querySelector('select');
+            const statusText = statusSelect ? statusSelect.options[statusSelect.selectedIndex].text : '';
+
+            return { name, phone, treeCode, treeName, comment, intent, notes, statusText };
+        }
+
+        function copyLeadsToClipboard() {
+            const table = document.getElementById('leadsTableBody');
+            const rows = table.querySelectorAll('tr');
+            if (rows.length === 0) {
+                alert('Không có thông tin khách hàng để sao chép.');
+                return;
+            }
+            let text = "DANH SÁCH KHÁCH HÀNG CẦN LIÊN HỆ TƯ VẤN\n";
+            text += "=========================================\n\n";
+            rows.forEach((row, index) => {
+                const lead = extractLeadFromRow(row);
+                if (lead) {
+                    text += `${index + 1}. Khách hàng: ${lead.name}\n`;
+                    text += `   SĐT: ${lead.phone}\n`;
+                    if (lead.treeCode && lead.treeCode !== 'N/A') {
+                        text += `   Sản phẩm: ${lead.treeName} (${lead.treeCode})\n`;
+                    }
+                    text += `   Ý định: ${lead.intent}\n`;
+                    text += `   Bình luận: "${lead.comment}"\n`;
+                    if (lead.notes) {
+                        text += `   Ghi chú: ${lead.notes}\n`;
+                    }
+                    text += `   Trạng thái: ${lead.statusText}\n`;
+                    text += `-----------------------------------------\n`;
+                }
+            });
+
+            navigator.clipboard.writeText(text)
+                .then(() => {
+                    alert('Đã sao chép danh sách khách hàng vào bộ nhớ tạm!');
+                })
+                .catch(err => {
+                    console.error('Lỗi khi sao chép:', err);
+                    alert('Không thể tự động sao chép. Vui lòng thử lại.');
+                });
+        }
+
+        function exportLeadsToCSV() {
+            const table = document.getElementById('leadsTableBody');
+            const rows = table.querySelectorAll('tr');
+            if (rows.length === 0) {
+                alert('Không có dữ liệu để xuất file.');
+                return;
+            }
+
+            // UTF-8 BOM to prevent Excel Vietnamese font issues
+            let csvContent = "\uFEFF";
+            csvContent += "STT,Khách hàng,Số điện thoại,Mã Cây,Tên Cây,Nội dung bình luận,Ý định,Ghi chú cuộc gọi,Trạng thái\n";
+
+            rows.forEach((row, index) => {
+                const lead = extractLeadFromRow(row);
+                if (lead) {
+                    const name = lead.name.replaceAll('"', '""');
+                    const phone = lead.phone;
+                    const treeCode = lead.treeCode.replaceAll('"', '""');
+                    const treeName = lead.treeName.replaceAll('"', '""');
+                    const comment = lead.comment.replaceAll('"', '""');
+                    const intent = lead.intent.replaceAll('"', '""');
+                    const notes = lead.notes.replaceAll('"', '""');
+                    const statusText = lead.statusText;
+
+                    csvContent += `${index + 1},"${name}","${phone}","${treeCode}","${treeName}","${comment}","${intent}","${notes}","${statusText}"\n`;
+                }
+            });
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.setAttribute("href", url);
+            link.setAttribute("download", `Danh_sach_Khach_hang_LiveStream_${new Date().toISOString().slice(0,10)}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+        }
+
+        function printLeadsList() {
+            const table = document.getElementById('leadsTableBody');
+            const rows = table.querySelectorAll('tr');
+            if (rows.length === 0) {
+                alert('Không có thông tin để in.');
+                return;
+            }
+
+            let printWindow = window.open('', '_blank', 'height=600,width=800');
+            printWindow.document.write('<html><head><title>Danh sách khách hàng tư vấn Live Stream</title>');
+            printWindow.document.write('<style>');
+            printWindow.document.write('body { font-family: "Segoe UI", Arial, sans-serif; padding: 20px; color: #333; }');
+            printWindow.document.write('h2 { color: #1c3322; border-bottom: 2px solid #2E7D32; padding-bottom: 8px; }');
+            printWindow.document.write('table { width: 100%; border-collapse: collapse; margin-top: 15px; }');
+            printWindow.document.write('th, td { border: 1px solid #ddd; padding: 10px 12px; text-align: left; font-size: 13px; }');
+            printWindow.document.write('th { background-color: #f1f5f9; font-weight: bold; }');
+            printWindow.document.write('</style></head><body>');
+            printWindow.document.write('<h2>DANH SÁCH KHÁCH HÀNG TƯ VẤN LIVE STREAM</h2>');
+            printWindow.document.write('<p>Ngày xuất: ' + new Date().toLocaleString('vi-VN') + '</p>');
+            
+            printWindow.document.write('<table><thead><tr>');
+            printWindow.document.write('<th>STT</th><th>Khách hàng</th><th>Số điện thoại</th><th>Sản phẩm</th><th>Nội dung bình luận</th><th>Ý định</th><th>Ghi chú</th><th>Trạng thái</th>');
+            printWindow.document.write('</tr></thead><tbody>');
+
+            rows.forEach((row, index) => {
+                const lead = extractLeadFromRow(row);
+                if (lead) {
+                    const product = lead.treeCode !== 'N/A' ? lead.treeName + ' (' + lead.treeCode + ')' : 'N/A';
+                    printWindow.document.write('<tr>');
+                    printWindow.document.write('<td>' + (index + 1) + '</td>');
+                    printWindow.document.write('<td><strong>' + lead.name + '</strong></td>');
+                    printWindow.document.write('<td>' + lead.phone + '</td>');
+                    printWindow.document.write('<td>' + product + '</td>');
+                    printWindow.document.write('<td>' + lead.comment + '</td>');
+                    printWindow.document.write('<td>' + lead.intent + '</td>');
+                    printWindow.document.write('<td>' + lead.notes + '</td>');
+                    printWindow.document.write('<td>' + lead.statusText + '</td>');
+                    printWindow.document.write('</tr>');
+                }
+            });
+
+            printWindow.document.write('</tbody></table></body></html>');
+            printWindow.document.close();
+            printWindow.focus();
+            setTimeout(() => {
+                printWindow.print();
+                printWindow.close();
+            }, 500);
         }
         /*]]>*/
     </script>
