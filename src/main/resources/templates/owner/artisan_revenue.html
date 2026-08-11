@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/dashboard-layout :: layout(~{::title}, ~{::#owner-artisan-revenue-content}, ~{::styles}, ~{})}">
+<head>
+    <title>Artisan Revenue - Minh Ky Garden</title>
+    <th:block th:fragment="styles">
+        <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+    </th:block>
+</head>
+<body>
+
+<div id="owner-artisan-revenue-content" class="owner-report-page" th:with="paramActivePage='dashboard'">
+    <header class="owner-report-header">
+        <div>
+            <span class="owner-eyebrow">Owner Dashboard</span>
+            <h1>Revenue by Artisan</h1>
+            <p th:text="|Completed product revenue for ${reportMonth}.|">Completed product revenue for 08/2026.</p>
+        </div>
+        <a class="owner-back-link" th:href="@{/owner}">
+            <i class="fa-solid fa-arrow-left"></i>
+            Dashboard
+        </a>
+    </header>
+
+    <section class="owner-panel owner-report-panel">
+        <div class="owner-report-summary">
+            <span>Artisans with revenue</span>
+            <strong th:text="${#lists.size(artisanRevenue)}">0</strong>
+        </div>
+
+        <div class="owner-report-table-wrap">
+            <table class="owner-report-table">
+                <thead>
+                <tr>
+                    <th>Artisan</th>
+                    <th>Email</th>
+                    <th class="text-end">Trees Sold</th>
+                    <th class="text-end">Revenue</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="item : ${artisanRevenue}">
+                    <td class="fw-semibold" th:text="${item.artisanName() ?: '-'}">Artisan</td>
+                    <td th:text="${item.artisanEmail() ?: '-'}">artisan@example.com</td>
+                    <td class="text-end" th:text="${item.treesSold()}">0</td>
+                    <td class="text-end owner-money-cell" th:text="${#numbers.formatDecimal(item.revenue(), 0, 'POINT', 0, 'POINT') + ' VND'}">0 VND</td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(artisanRevenue)}">
+                    <td colspan="4" class="owner-empty-state">No artisan revenue has been recorded this month.</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>
+
+</body>
+</html>

@@ -34,6 +34,55 @@ public interface FinancialLedgerRepository extends JpaRepository<FinancialLedger
                                                                         FinancialLedgerStatus ledgerStatus);
 
     @Query("""
+            SELECT COALESCE(SUM(
+                CASE
+                    WHEN fl.direction = com.example.bonsai_shop.finance.enums.FinancialLedgerDirection.INCOME THEN fl.amount
+                    WHEN fl.direction = com.example.bonsai_shop.finance.enums.FinancialLedgerDirection.OUTFLOW THEN -fl.amount
+                    ELSE 0
+                END
+            ), 0)
+            FROM FinancialLedger fl
+            WHERE fl.ledgerStatus = :ledgerStatus
+            """)
+    BigDecimal sumNetRevenue(@Param("ledgerStatus") FinancialLedgerStatus ledgerStatus);
+
+    @Query("""
+            SELECT COALESCE(SUM(
+                CASE
+                    WHEN fl.direction = com.example.bonsai_shop.finance.enums.FinancialLedgerDirection.INCOME THEN fl.amount
+                    WHEN fl.direction = com.example.bonsai_shop.finance.enums.FinancialLedgerDirection.OUTFLOW THEN -fl.amount
+                    ELSE 0
+                END
+            ), 0)
+            FROM FinancialLedger fl
+            WHERE fl.ledgerStatus = :ledgerStatus
+              AND fl.recognizedAt >= :startDate
+              AND fl.recognizedAt < :endDate
+            """)
+    BigDecimal sumNetRevenueBetween(@Param("ledgerStatus") FinancialLedgerStatus ledgerStatus,
+                                    @Param("startDate") LocalDateTime startDate,
+                                    @Param("endDate") LocalDateTime endDate);
+
+    @Query(value = """
+            SELECT DATE_FORMAT(fl.RecognizedAt, '%Y-%m') AS month_key,
+                   COALESCE(SUM(
+                       CASE
+                           WHEN fl.Direction = 'INCOME' THEN fl.Amount
+                           WHEN fl.Direction = 'OUTFLOW' THEN -fl.Amount
+                           ELSE 0
+                       END
+                   ), 0) AS revenue
+            FROM financial_ledger fl
+            WHERE fl.LedgerStatus = 'RECORDED'
+              AND fl.RecognizedAt >= :startDate
+              AND fl.RecognizedAt < :endDate
+            GROUP BY DATE_FORMAT(fl.RecognizedAt, '%Y-%m')
+            ORDER BY month_key
+            """, nativeQuery = true)
+    List<Object[]> findMonthlyNetRevenueBetween(@Param("startDate") LocalDateTime startDate,
+                                                @Param("endDate") LocalDateTime endDate);
+
+    @Query("""
             SELECT COALESCE(SUM(od.priceAtPurchase * od.quantity), 0)
             FROM OrderDetail od
             WHERE od.product.createdBy.userId = :artisanUserId
