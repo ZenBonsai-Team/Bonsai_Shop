@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi"
       xmlns:th="http://www.thymeleaf.org"
       th:replace="~{fragments/dashboard-layout :: layout(~{::title}, ~{::#moderator-content}, ~{::#page-styles}, ~{::#page-scripts})}"
@@ -135,7 +135,8 @@
             .my-orders-table .col-status,
             .my-orders-table .col-action { text-align: center; }
             .my-orders-table .col-age { font-size: 13px; color: #4a5568; white-space: nowrap; }
-            .my-orders-table .col-action { padding-right: 22px; white-space: nowrap; }
+            .my-orders-table .col-status { padding: 14px 8px; }
+            .my-orders-table .col-action { padding: 14px 10px; white-space: nowrap; }
             .badge-priority, .badge-status { display: inline-block; white-space: nowrap; }
             .badge-priority { padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; }
             .badge-priority-critical { background: #fed7d7; color: #9b2c2c; border: 1px solid #feb2b2; }
@@ -222,16 +223,6 @@
                     <option value="LOW" th:selected="${priority == 'LOW'}">Ưu tiên thấp</option>
                 </select>
 
-                <select id="statusFilterSelect">
-                    <option value="ALL" th:selected="${status == 'ALL'}">T&#7845;t c&#7843; tr&#7841;ng th&#225;i</option>
-                    <option value="PENDING" th:selected="${status == 'PENDING'}">Chờ kiểm duyệt</option>
-                    <option value="PENDING_PAYMENT" th:selected="${status == 'PENDING_PAYMENT'}">Chờ khách thanh toán</option>
-                    <option value="DEPOSITED" th:selected="${status == 'DEPOSITED'}">Đã thanh toán tiền đặt cọc</option>
-                    <option value="PAID" th:selected="${status == 'PAID'}">Đã thanh toán toàn bộ</option>
-                    <option value="COMPLETED" th:selected="${status == 'COMPLETED'}">Đã hoàn thành</option>
-                    <option value="CANCELLED" th:selected="${status == 'CANCELLED'}">Đã chấm dứt đơn hàng</option>
-                </select>
-
                 <select id="orderSortSelect">
                     <option value="date_desc" th:selected="${sort == 'date_desc'}">M&#7899;i nh&#7845;t x&#7871;p tr&#432;&#7899;c</option>
                     <option value="date_asc" th:selected="${sort == 'date_asc'}">C&#361; nh&#7845;t x&#7871;p tr&#432;&#7899;c</option>
@@ -244,14 +235,14 @@
         <div class="my-orders-table-wrapper">
             <table class="my-orders-table">
                 <colgroup>
-                    <col style="width: 10%;">
-                    <col style="width: 24%;">
                     <col style="width: 11%;">
-                    <col style="width: 11%;">
-                    <col style="width: 10%;">
+                    <col style="width: 19%;">
                     <col style="width: 9%;">
+                    <col style="width: 10%;">
                     <col style="width: 11%;">
-                    <col style="width: 14%;">
+                    <col style="width: 7%;">
+                    <col style="width: 21%;">
+                    <col style="width: 12%;">
                 </colgroup>
                 <thead>
                     <tr>
@@ -305,8 +296,14 @@
             </table>
 
             <div class="my-pagination-footer">
-                <div id="paginationInfo">Hi&#7875;n th&#7883; &#273;&#417;n h&#224;ng</div>
-                <div id="paginationControls" class="d-flex gap-1"></div>
+                <div id="paginationInfo" th:text="${totalCount != null and totalCount > 0 ? 'Hiển thị ' + ((currentPage - 1) * 8 + 1) + ' - ' + (currentPage * 8 > totalCount ? totalCount : currentPage * 8) + ' trên tổng số ' + totalCount + ' đơn hàng' : 'Hiển thị 0 đơn hàng'}">Hiển thị đơn hàng</div>
+                <div id="paginationControls" class="d-flex gap-1">
+                    <button th:if="${totalPages != null and totalPages > 1}" class="btn btn-sm btn-outline-secondary" th:classappend="${currentPage == 1 ? 'disabled' : ''}" th:onclick="|fetchMyOrders(${currentPage - 1})|">Trước</button>
+                    <th:block th:if="${totalPages != null and totalPages > 1}" th:each="i : ${#numbers.sequence(1, totalPages)}">
+                        <button class="btn btn-sm" th:classappend="${i == currentPage ? 'btn-primary' : 'btn-outline-secondary'}" th:text="${i}" th:onclick="|fetchMyOrders(${i})|">1</button>
+                    </th:block>
+                    <button th:if="${totalPages != null and totalPages > 1}" class="btn btn-sm btn-outline-secondary" th:classappend="${currentPage == totalPages ? 'disabled' : ''}" th:onclick="|fetchMyOrders(${currentPage + 1})|">Sau</button>
+                </div>
             </div>
         </div>
     </div>
