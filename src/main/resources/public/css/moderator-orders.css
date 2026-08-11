@@ -68,7 +68,7 @@
 
 /* Toolbar Toolbar (Search, Filter, Sort) */
 .toolbar-header {
-    padding: 16px 20px 0 20px;
+    padding: 16px 20px 16px 20px;
     gap: 16px;
 }
 

@@ -43,7 +43,7 @@ public class MailService {
         }
 
         String emailContent = buildCreatedTemplate(order);
-        sendHtmlEmailWithRetry(toEmail, "Xác nhận ghi nhận đơn hàng #" + orderCode + " - Minh Kỷ Garden", emailContent, orderCode);
+        sendHtmlEmailWithRetry(toEmail, "Xác nhận ghi nhận đơn hàng " + orderCode + " - Minh Kỷ Garden", emailContent, orderCode);
     }
 
     public void sendOrderApprovedEmail(Order order) {
@@ -70,7 +70,7 @@ public class MailService {
         String paymentLink = baseUrl + "/vnpay/pay-order?orderCode=" + orderCode;
         String emailContent = buildAprovedTemplate(order, paymentLink);
 
-        sendHtmlEmailWithRetry(toEmail, "Xác nhận đơn hàng #" + orderCode + " - Minh Kỷ Garden", emailContent, orderCode);
+        sendHtmlEmailWithRetry(toEmail, "Xác nhận đơn hàng " + orderCode + " - Minh Kỷ Garden", emailContent, orderCode);
     }
 
     public void sendOrderDepositedEmail(Order order) {
@@ -82,7 +82,7 @@ public class MailService {
             return;
         }
         String emailContent = buildDepositedTemplate(order);
-        sendHtmlEmailWithRetry(toEmail, "Xác nhận đặt cọc thành công #" + orderCode + " - Minh Kỷ Garden", emailContent, orderCode);
+        sendHtmlEmailWithRetry(toEmail, "Xác nhận đặt cọc thành công " + orderCode + " - Minh Kỷ Garden", emailContent, orderCode);
     }
 
     public void sendOrderFinalReceiptEmail(Order order) {
@@ -94,7 +94,7 @@ public class MailService {
             return;
         }
         String emailContent = buildFinalReceiptTemplate(order);
-        sendHtmlEmailWithRetry(toEmail, "Hóa đơn hoàn tất thanh toán #" + orderCode + " - Minh Kỷ Garden", emailContent, orderCode);
+        sendHtmlEmailWithRetry(toEmail, "Hóa đơn hoàn tất thanh toán " + orderCode + " - Minh Kỷ Garden", emailContent, orderCode);
     }
 
     public void sendInPersonOrderPaidEmail(Order order) {
@@ -107,7 +107,7 @@ public class MailService {
         }
 
         String emailContent = buildInPersonPaidTemplate(order);
-        sendHtmlEmailWithRetry(toEmail, "Xác nhận thanh toán tại cửa hàng #" + orderCode + " - Minh Kỷ Garden", emailContent, orderCode);
+        sendHtmlEmailWithRetry(toEmail, "Xác nhận thanh toán tại cửa hàng " + orderCode + " - Minh Kỷ Garden", emailContent, orderCode);
     }
 
     public void sendOrderRejectedEmail(Order order, String reason) {
@@ -119,7 +119,7 @@ public class MailService {
             return;
         }
         String emailContent = buildRejectedTemplate(order, reason);
-        sendHtmlEmailWithRetry(toEmail, "Thông báo hủy đơn hàng #" + orderCode + " - Minh Kỷ Garden", emailContent,
+        sendHtmlEmailWithRetry(toEmail, "Thông báo hủy đơn hàng " + orderCode + " - Minh Kỷ Garden", emailContent,
                 orderCode);
     }
 
@@ -175,11 +175,11 @@ public class MailService {
         return "<div style=\"font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 25px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff;\">"
                 + "  <div style=\"text-align: center; background: linear-gradient(135deg, #c53030, #e53e3e); color: white; padding: 20px; border-radius: 8px 8px 0 0;\">"
                 + "    <h2 style=\"margin: 0;\">Thông Báo Từ Chối Đơn Hàng</h2>"
-                + "    <p style=\"margin: 5px 0 0 0;\">Mã đơn hàng: #" + order.getOrderCode() + "</p>"
+                + "    <p style=\"margin: 5px 0 0 0;\">Mã đơn hàng: " + order.getOrderCode() + "</p>"
                 + "  </div>"
                 + "  <div style=\"padding: 20px 0; color: #1a202c; line-height: 1.6;\">"
                 + "    <p>Xin chào <strong>" + customerName + "</strong>,</p>"
-                + "    <p>Rất tiếc, đơn đặt hàng sản phẩm <strong>" + productSummary + "</strong> (Mã đơn hàng: <strong>#" + order.getOrderCode() + "</strong>) của bạn đã bị hủy.</p>"
+                + "    <p>Rất tiếc, đơn đặt hàng sản phẩm <strong>" + productSummary + "</strong> (Mã đơn hàng: <strong>" + order.getOrderCode() + "</strong>) của bạn đã bị hủy.</p>"
                 + "    <div style=\"background-color: #fff5f5; border-left: 4px solid #e53e3e; padding: 15px; border-radius: 4px; margin: 20px 0;\">"
                 + "      <h4 style=\"margin: 0 0 5px 0; color: #9b2c2c;\">Lý do hủy:</h4>"
                 + "      <p style=\"margin: 0; color: #c53030;\">" + reason + "</p>"
@@ -283,7 +283,7 @@ public class MailService {
         return "<div style=\"font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 25px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff;\">"
                 + "  <div style=\"text-align: center; background: linear-gradient(135deg, #2e7d32, #4caf50); color: white; padding: 20px; border-radius: 8px 8px 0 0;\">"
                 + "    <h2 style=\"margin: 0;\">Đơn Hàng Đã Được Phê Duyệt!</h2>"
-                + "    <p style=\"margin: 5px 0 0 0;\">Mã đơn hàng: #" + order.getOrderCode() + "</p>"
+                + "    <p style=\"margin: 5px 0 0 0;\">Mã đơn hàng: " + order.getOrderCode() + "</p>"
                 + "  </div>"
                 + "  <div style=\"padding: 20px 0; color: #1a202c; line-height: 1.6;\">"
                 + "    <p>Xin chào <strong>" + customerName + "</strong>,</p>"
@@ -341,7 +341,7 @@ public class MailService {
         return "<div style=\"font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 25px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff;\">" +
                 "  <div style=\"text-align: center; background: linear-gradient(135deg, #2b6cb0, #3182ce); color: white; padding: 20px; border-radius: 8px 8px 0 0;\">" +
                 "    <h2 style=\"margin: 0;\">Xác Nhận Thanh Toán Nấc 1 Thành Công</h2>" +
-                "    <p style=\"margin: 5px 0 0 0;\">Mã đơn hàng: #" + order.getOrderCode() + "</p>" +
+                "    <p style=\"margin: 5px 0 0 0;\">Mã đơn hàng: " + order.getOrderCode() + "</p>" +
                 "  </div>" +
                 "  <div style=\"padding: 20px 0; color: #1a202c; line-height: 1.6;\">" +
                 "    <p>Xin chào <strong>" + customerName + "</strong>,</p>" +
@@ -388,11 +388,11 @@ public class MailService {
         return "<div style=\"font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 25px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff;\">" +
                 "  <div style=\"text-align: center; background: linear-gradient(135deg, #276749, #2f855a); color: white; padding: 20px; border-radius: 8px 8px 0 0;\">" +
                 "    <h2 style=\"margin: 0;\">Hóa Đơn Hoàn Tất Thanh Toán 100%</h2>" +
-                "    <p style=\"margin: 5px 0 0 0;\">Mã đơn hàng: #" + order.getOrderCode() + "</p>" +
+                "    <p style=\"margin: 5px 0 0 0;\">Mã đơn hàng: " + order.getOrderCode() + "</p>" +
                 "  </div>" +
                 "  <div style=\"padding: 20px 0; color: #1a202c; line-height: 1.6;\">" +
                 "    <p>Xin chào <strong>" + customerName + "</strong>,</p>" +
-                "    <p>Giao dịch đơn hàng <strong>#" + order.getOrderCode() + "</strong> đã hoàn thành thanh toán 100%. Cảm ơn bạn đã tin tưởng và chọn mua tác phẩm Bonsai tại cửa hàng của chúng tôi!</p>" +
+                "    <p>Giao dịch đơn hàng <strong>" + order.getOrderCode() + "</strong> đã hoàn thành thanh toán 100%. Cảm ơn bạn đã tin tưởng và chọn mua tác phẩm Bonsai tại cửa hàng của chúng tôi!</p>" +
                 "    <h4 style=\"color: #2d3748; margin: 20px 0 10px 0;\">Danh sách tác phẩm Bonsai đã mua:</h4>" +
                 "    <table style=\"width: 100%; border-collapse: collapse; margin-bottom: 20px;\">" +
                 "      <thead>" +
@@ -432,11 +432,11 @@ public class MailService {
         return "<div style=\"font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 25px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff;\">" +
                 "  <div style=\"text-align: center; background: linear-gradient(135deg, #276749, #2f855a); color: white; padding: 20px; border-radius: 8px 8px 0 0;\">" +
                 "    <h2 style=\"margin: 0;\">Thanh Toán Tại Cửa Hàng Thành Công</h2>" +
-                "    <p style=\"margin: 5px 0 0 0;\">Mã đơn hàng: #" + order.getOrderCode() + "</p>" +
+                "    <p style=\"margin: 5px 0 0 0;\">Mã đơn hàng: " + order.getOrderCode() + "</p>" +
                 "  </div>" +
                 "  <div style=\"padding: 20px 0; color: #1a202c; line-height: 1.6;\">" +
                 "    <p>Xin chào <strong>" + customerName + "</strong>,</p>" +
-                "    <p>Minh Kỷ Garden xác nhận đơn hàng <strong>#" + order.getOrderCode() + "</strong> đã được thanh toán thành công tại cửa hàng.</p>" +
+                "    <p>Minh Kỷ Garden xác nhận đơn hàng <strong>" + order.getOrderCode() + "</strong> đã được thanh toán thành công tại cửa hàng.</p>" +
                 "    <h4 style=\"color: #2d3748; margin: 20px 0 10px 0;\">Danh sách tác phẩm Bonsai đã mua:</h4>" +
                 "    <table style=\"width: 100%; border-collapse: collapse; margin-bottom: 20px;\">" +
                 "      <thead>" +
@@ -471,7 +471,7 @@ public class MailService {
         return "<div style=\"font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 25px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff;\">" +
                 "  <div style=\"text-align: center; background: linear-gradient(135deg, #319795, #3182ce); color: white; padding: 20px; border-radius: 8px 8px 0 0;\">" +
                 "    <h2 style=\"margin: 0;\">Hệ Thống Đã Ghi Nhận Đơn Hàng!</h2>" +
-                "    <p style=\"margin: 5px 0 0 0;\">Mã đơn hàng: #" + order.getOrderCode() + "</p>" +
+                "    <p style=\"margin: 5px 0 0 0;\">Mã đơn hàng: " + order.getOrderCode() + "</p>" +
                 "  </div>" +
                 "  <div style=\"padding: 20px 0; color: #1a202c; line-height: 1.6;\">" +
                 "    <p>Xin chào <strong>" + customerName + "</strong>,</p>" +
