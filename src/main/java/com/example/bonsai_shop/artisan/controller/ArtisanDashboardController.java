@@ -2,6 +2,7 @@ package com.example.bonsai_shop.artisan.controller;
 
 import com.example.bonsai_shop.entity.Product;
 import com.example.bonsai_shop.entity.User;
+import com.example.bonsai_shop.finance.dto.ArtisanDashboardSourceDTO;
 import com.example.bonsai_shop.finance.enums.FinancialLedgerStatus;
 import com.example.bonsai_shop.finance.enums.FinancialLedgerType;
 import com.example.bonsai_shop.finance.repository.FinancialLedgerRepository;
@@ -13,10 +14,13 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.YearMonth;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.EnumSet;
 import java.util.List;
 
@@ -29,13 +33,16 @@ public class ArtisanDashboardController {
     private final FinancialLedgerRepository financialLedgerRepository;
 
     @GetMapping
-    public String dashboard(@AuthenticationPrincipal UserDetails userDetails, Model model) {
+    public String dashboard(@AuthenticationPrincipal UserDetails userDetails,
+                            @RequestParam(value = "month", required = false) String month,
+                            Model model) {
         List<Product> products;
-        long monthlySoldItems;
         BigDecimal monthlyRevenue;
 
-        LocalDateTime monthStart = LocalDate.now().withDayOfMonth(1).atStartOfDay();
+        YearMonth selectedMonth = parseSelectedMonth(month);
+        LocalDateTime monthStart = selectedMonth.atDay(1).atStartOfDay();
         LocalDateTime nextMonthStart = monthStart.plusMonths(1);
+        String reportPeriodLabel = "Số liệu tháng " + monthStart.format(DateTimeFormatter.ofPattern("MM/yyyy"));
         List<FinancialLedgerType> feeLedgerTypes = List.copyOf(EnumSet.of(
                 FinancialLedgerType.COMPLETED_ORDER_REVENUE,
                 FinancialLedgerType.FORFEITED_DEPOSIT_INCOME,
@@ -44,13 +51,6 @@ public class ArtisanDashboardController {
 
         products = artisanProductService.getMyProducts(userDetails.getUsername());
         User artisanUser = artisanProductService.getArtisanUser(userDetails.getUsername());
-        monthlySoldItems = financialLedgerRepository.countCompletedSoldItemsByArtisan(
-                artisanUser.getUserId(),
-                FinancialLedgerType.COMPLETED_ORDER_REVENUE,
-                FinancialLedgerStatus.RECORDED,
-                monthStart,
-                nextMonthStart
-        );
         BigDecimal monthlyProductRevenue = financialLedgerRepository.sumCompletedProductRevenueByArtisan(
                 artisanUser.getUserId(),
                 FinancialLedgerType.COMPLETED_ORDER_REVENUE,
@@ -87,6 +87,41 @@ public class ArtisanDashboardController {
                 nextMonthStart
         );
         monthlyRevenue = monthlyProductRevenue;
+        List<ArtisanDashboardSourceDTO> completedRevenueSources = financialLedgerRepository.findCompletedRevenueSourcesByArtisan(
+                artisanUser.getUserId(),
+                FinancialLedgerType.COMPLETED_ORDER_REVENUE,
+                FinancialLedgerStatus.RECORDED,
+                monthStart,
+                nextMonthStart
+        );
+        List<ArtisanDashboardSourceDTO> forfeitedDepositSources = financialLedgerRepository.findForfeitedDepositSourcesByArtisan(
+                artisanUser.getUserId(),
+                FinancialLedgerType.FORFEITED_DEPOSIT_INCOME,
+                FinancialLedgerStatus.RECORDED,
+                monthStart,
+                nextMonthStart
+        );
+        List<ArtisanDashboardSourceDTO> refundSources = financialLedgerRepository.findRefundSourcesByArtisan(
+                artisanUser.getUserId(),
+                FinancialLedgerType.FULL_REFUND,
+                FinancialLedgerStatus.RECORDED,
+                monthStart,
+                nextMonthStart
+        );
+        List<ArtisanDashboardSourceDTO> shippingFeeSources = financialLedgerRepository.findShippingFeeSourcesByArtisan(
+                artisanUser.getUserId(),
+                feeLedgerTypes,
+                FinancialLedgerStatus.RECORDED,
+                monthStart,
+                nextMonthStart
+        );
+        List<ArtisanDashboardSourceDTO> craneFeeSources = financialLedgerRepository.findCraneFeeSourcesByArtisan(
+                artisanUser.getUserId(),
+                feeLedgerTypes,
+                FinancialLedgerStatus.RECORDED,
+                monthStart,
+                nextMonthStart
+        );
 
         User artisanOrAdmin = artisanProductService.getArtisanUser(userDetails.getUsername());
 
@@ -98,12 +133,18 @@ public class ArtisanDashboardController {
                 .filter(product -> "SOLD".equals(product.getProductStatus()))
                 .count());
 
-        model.addAttribute("monthlySoldItems", monthlySoldItems);
+        model.addAttribute("reportPeriodLabel", reportPeriodLabel);
+        model.addAttribute("selectedMonth", selectedMonth.toString());
         model.addAttribute("monthlyRevenue", monthlyRevenue);
         model.addAttribute("monthlyShippingFee", monthlyShippingFee);
         model.addAttribute("monthlyCraneFee", monthlyCraneFee);
         model.addAttribute("monthlyForfeitedDepositIncome", monthlyForfeitedDepositIncome);
         model.addAttribute("monthlyRefundAmount", monthlyRefundAmount);
+        model.addAttribute("completedRevenueSources", completedRevenueSources);
+        model.addAttribute("forfeitedDepositSources", forfeitedDepositSources);
+        model.addAttribute("refundSources", refundSources);
+        model.addAttribute("shippingFeeSources", shippingFeeSources);
+        model.addAttribute("craneFeeSources", craneFeeSources);
         model.addAttribute("draftProducts", products.stream()
                 .filter(product -> "DRAFT".equals(product.getProductStatus()))
                 .count());
@@ -134,5 +175,16 @@ public class ArtisanDashboardController {
 
         model.addAttribute("artisan", artisanOrAdmin);
         return "artisan/dashboard";
+    }
+
+    private YearMonth parseSelectedMonth(String month) {
+        if (month == null || month.isBlank()) {
+            return YearMonth.now();
+        }
+        try {
+            return YearMonth.parse(month);
+        } catch (DateTimeParseException ignored) {
+            return YearMonth.now();
+        }
     }
 }

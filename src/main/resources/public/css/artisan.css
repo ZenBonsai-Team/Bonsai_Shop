@@ -169,7 +169,7 @@ textarea {
     display: grid;
     align-items: stretch;
     gap: 18px;
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
     margin-top: 24px;
 }
 
@@ -178,6 +178,7 @@ textarea {
     display: flex;
     flex-direction: column;
     gap: 14px;
+    min-width: 0;
     overflow: hidden;
     padding: 14px;
 }
@@ -227,6 +228,7 @@ textarea {
 .media-card-body {
     display: grid;
     gap: 8px;
+    min-width: 0;
 }
 
 .media-card-body strong {
@@ -240,6 +242,14 @@ textarea {
 
 .media-card-body label {
     margin: 0;
+    min-width: 0;
+}
+
+.media-card-body input,
+.media-card-body select {
+    max-width: 100%;
+    min-width: 0;
+    width: 100%;
 }
 
 .media-order-stepper {
@@ -291,6 +301,7 @@ textarea {
 
 .media-card-actions {
     justify-content: space-between;
+    min-width: 0;
 }
 
 .media-current-thumbnail {
@@ -303,21 +314,33 @@ textarea {
     display: flex;
     flex-wrap: wrap;
     gap: 6px;
-    justify-content: flex-end;
+    justify-content: flex-start;
     width: 100%;
 }
 
 .media-position-label {
-    align-items: center;
+    align-items: flex-start;
     color: #44544a;
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
-    justify-content: space-between;
+    justify-content: flex-start;
 }
 
 .media-position-text {
+    margin-left: auto;
     font-weight: 700;
+}
+
+@media (max-width: 520px) {
+    .media-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .media-position-text {
+        margin-left: 0;
+        width: 100%;
+    }
 }
 
 .media-delete-modal {
@@ -1492,8 +1515,10 @@ textarea {
 .table-actions {
     align-items: center;
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     gap: 8px;
+    min-width: 210px;
+    position: relative;
 }
 
 .table-actions form {
@@ -1501,23 +1526,134 @@ textarea {
 }
 
 .table-actions a,
-.table-actions button {
-    background: #eef0e8;
-    border: 0;
+.table-actions button,
+.table-actions summary {
+    align-items: center;
+    background: #ffffff;
+    border: 1px solid #dfe6df;
     border-radius: 8px;
-    color: #1f2d24;
-    padding: 7px 10px;
+    color: #1f3026;
+    display: inline-flex;
+    gap: 6px;
+    justify-content: center;
+    padding: 8px 14px;
     text-decoration: none;
+    white-space: nowrap;
+    font-weight: 700;
+    transition: background 0.16s ease, border-color 0.16s ease, color 0.16s ease;
+}
+
+.table-actions a:hover,
+.table-actions button:hover,
+.table-actions summary:hover {
+    background: #f8fbf8;
+    border-color: #2d6a4f;
+    color: #2d6a4f;
 }
 
 .table-actions .text-warning {
-    background: #fff7e6;
+    background: #ffffff;
+    border-color: #f0b429;
     color: #9a6700;
 }
 
 .table-actions .text-danger {
+    background: #ffffff;
+    border-color: #ef4444;
+    color: #b02a37;
+}
+
+.table-actions .action-primary {
+    flex: 0 0 auto;
+    font-weight: 700;
+    border-color: #0d6efd;
+    color: #0d6efd;
+}
+
+.table-actions .action-primary:hover {
+    background: #f5f9ff;
+    border-color: #0b5ed7;
+    color: #0b5ed7;
+}
+
+.action-menu {
+    flex: 0 0 auto;
+    position: relative;
+}
+
+.action-menu summary {
+    cursor: pointer;
+    list-style: none;
+}
+
+.action-menu summary::-webkit-details-marker {
+    display: none;
+}
+
+.action-menu summary::after {
+    content: "▾";
+    font-size: 0.7rem;
+    margin-left: 2px;
+}
+
+.action-menu[open] summary::after {
+    content: "▴";
+}
+
+.action-menu-panel {
+    background: #fff;
+    border: 1px solid #E8E4DD;
+    border-radius: 10px;
+    box-shadow: 0 12px 30px rgba(28, 51, 34, 0.14);
+    display: grid;
+    gap: 4px;
+    margin-top: 8px;
+    min-width: 170px;
+    padding: 6px;
+    position: absolute;
+    right: 0;
+    top: 100%;
+    z-index: 30;
+}
+
+.action-menu-panel a,
+.action-menu-panel button,
+.action-menu-panel .action-locked {
+    background: transparent;
+    border: 0;
+    border-radius: 8px;
+    color: #1f2d24;
+    display: flex;
+    justify-content: flex-start;
+    padding: 8px 10px;
+    text-align: left;
+    width: 100%;
+}
+
+.action-menu-panel a:hover,
+.action-menu-panel button:hover {
+    background: #f4f1ea;
+}
+
+.action-menu-panel .text-warning {
+    background: transparent;
+    color: #9a6700;
+}
+
+.action-menu-panel .text-success {
+    background: transparent;
+    color: #198754;
+}
+
+.action-menu-panel .text-danger {
     background: transparent;
     color: #b02a37;
+}
+
+.action-menu-panel .action-locked {
+    color: #6b7280;
+    font-size: 0.88rem;
+    font-weight: 700;
 }
 
 .artisan-delete-modal-backdrop,

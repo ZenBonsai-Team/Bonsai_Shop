@@ -141,7 +141,7 @@ public class ArtisanInPersonOrderService {
     @Transactional
     public Order cancelInPersonOrder(String artisanEmail, Integer orderId, String reason) {
         User artisanUser = artisanProductService.getArtisanUser(artisanEmail);
-        Order order = orderRepository.findById(orderId)
+        Order order = orderRepository.findByIdWithDetailsForUpdate(orderId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy in-person order."));
 
         Product product = getSingleProduct(order);
@@ -183,7 +183,7 @@ public class ArtisanInPersonOrderService {
                                      String customerEmail,
                                      String notes) {
         User artisanUser = artisanProductService.getArtisanUser(artisanEmail);
-        Order order = orderRepository.findById(orderId)
+        Order order = orderRepository.findByIdWithDetailsForUpdate(orderId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy in-person order."));
 
         Product product = getSingleProduct(order);
@@ -231,11 +231,14 @@ public class ArtisanInPersonOrderService {
     @Transactional
     public Order confirmPayment(String artisanEmail, Integer orderId) {
         User artisanUser = artisanProductService.getArtisanUser(artisanEmail);
-        Order order = orderRepository.findById(orderId)
+        Order order = orderRepository.findByIdWithDetailsForUpdate(orderId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy in-person order."));
 
         Product product = getSingleProduct(order);
         ensureOwnedByArtisan(product, artisanUser);
+        if (STATUS_COMPLETED.equalsIgnoreCase(order.getOrderStatus())) {
+            return order;
+        }
         if (!STATUS_PENDING_PAYMENT.equalsIgnoreCase(order.getOrderStatus())) {
             throw new RuntimeException("Chỉ xác nhận thanh toán cho in-person order đang chờ tiền.");
         }
@@ -370,3 +373,4 @@ public class ArtisanInPersonOrderService {
         return paymentRepository.findTopByOrderOrderIdAndPaymentStatusOrderByPaymentIdDesc(order.getOrderId(), "PENDING").orElse(null);
     }
 }
+

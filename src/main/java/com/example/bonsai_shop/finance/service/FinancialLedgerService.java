@@ -15,6 +15,7 @@ import com.example.bonsai_shop.moderator.util.ModeratorDisplayLabelMapper;
 import com.example.bonsai_shop.product.enums.PaymentType;
 import com.example.bonsai_shop.product.repository.PaymentRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -57,7 +58,7 @@ public class FinancialLedgerService {
         }
 
         BigDecimal amount = calculateCompletedOrderRevenue(order);
-        return financialLedgerRepository.save(FinancialLedger.builder()
+        FinancialLedger ledger = FinancialLedger.builder()
                 .order(order)
                 .recordedBy(actor)
                 .ledgerType(FinancialLedgerType.COMPLETED_ORDER_REVENUE)
@@ -67,7 +68,16 @@ public class FinancialLedgerService {
                 .ledgerStatus(FinancialLedgerStatus.RECORDED)
                 .recognizedAt(recognizedAt != null ? recognizedAt : LocalDateTime.now())
                 .createdAt(LocalDateTime.now())
-                .build());
+                .build();
+        try {
+            return financialLedgerRepository.saveAndFlush(ledger);
+        } catch (DataIntegrityViolationException duplicateLedger) {
+            return financialLedgerRepository.findFirstByOrderOrderIdAndLedgerTypeAndLedgerStatus(
+                    order.getOrderId(),
+                    FinancialLedgerType.COMPLETED_ORDER_REVENUE,
+                    FinancialLedgerStatus.RECORDED
+            ).orElse(null);
+        }
     }
 
     @Transactional

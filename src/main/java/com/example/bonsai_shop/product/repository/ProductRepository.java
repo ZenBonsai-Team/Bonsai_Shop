@@ -2,6 +2,7 @@ package com.example.bonsai_shop.product.repository;
 
 import com.example.bonsai_shop.product.dto.ProductCardDTO;
 import com.example.bonsai_shop.entity.Product;
+import com.example.bonsai_shop.owner.dto.OwnerGardenTreeDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -23,6 +24,43 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
     boolean existsByVarietyCategoryCategoryId(Integer categoryId);
     boolean existsByVarietyVarietyId(Integer varietyId);
     List<Product> findTop5ByProductStatusAndIsVisibleTrueOrderByViewCountDesc(String productStatus);
+    long countByProductStatus(String productStatus);
+
+    @Query("""
+        SELECT COUNT(p)
+        FROM Product p
+        WHERE p.productStatus IS NULL OR p.productStatus <> 'SOLD'
+    """)
+    long countTreesInGarden();
+
+    @Query("""
+        SELECT p
+        FROM Product p
+        WHERE COALESCE(p.isVisible, true) = true
+          AND (p.productStatus IS NULL OR p.productStatus <> 'DRAFT')
+        ORDER BY COALESCE(p.viewCount, 0) DESC, p.createdAt DESC
+    """)
+    List<Product> findTopViewedTrees(Pageable pageable);
+
+    @Query("""
+        SELECT new com.example.bonsai_shop.owner.dto.OwnerGardenTreeDTO(
+            p.productId,
+            p.productCode,
+            p.productName,
+            p.variety.varietyName,
+            artisan.fullName,
+            p.productStatus,
+            p.price,
+            COALESCE(p.viewCount, 0),
+            p.createdAt
+        )
+        FROM Product p
+        LEFT JOIN p.createdBy artisan
+        WHERE p.productStatus IS NULL OR p.productStatus <> 'SOLD'
+        ORDER BY p.createdAt DESC, p.productId DESC
+    """)
+    List<OwnerGardenTreeDTO> findOwnerGardenTrees();
+
    @Modifying
     @Query("""
         UPDATE Product p

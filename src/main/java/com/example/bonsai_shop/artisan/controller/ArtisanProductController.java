@@ -8,6 +8,9 @@ import com.example.bonsai_shop.artisan.service.ArtisanProductService;
 import com.example.bonsai_shop.artisan.service.ProductJournalService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
@@ -34,9 +37,24 @@ public class ArtisanProductController {
     private final ProductJournalService productJournalService;
 
     @GetMapping
-    public String myProducts(@AuthenticationPrincipal UserDetails userDetails, Model model) {
+    public String myProducts(@AuthenticationPrincipal UserDetails userDetails,
+                             @RequestParam(defaultValue = "ALL") String status,
+                             @RequestParam(defaultValue = "0") int page,
+                             Model model) {
         List<Product> products = artisanProductService.getMyProducts(userDetails.getUsername());
-        model.addAttribute("products", products);
+        int pageSize = 10;
+        int totalPages = Math.max((int) Math.ceil((double) products.size() / pageSize), 1);
+        int safePage = Math.min(Math.max(page, 0), totalPages - 1);
+        int fromIndex = Math.min(safePage * pageSize, products.size());
+        int toIndex = Math.min(fromIndex + pageSize, products.size());
+        Page<Product> productPage = new PageImpl<>(
+                products.subList(fromIndex, toIndex),
+                PageRequest.of(safePage, pageSize),
+                products.size()
+        );
+        model.addAttribute("products", productPage.getContent());
+        model.addAttribute("productPage", productPage);
+        model.addAttribute("selectedStatus", status);
         return "artisan/products";
     }
 
@@ -293,6 +311,52 @@ public class ArtisanProductController {
         try {
             productJournalService.addMediaToEvent(userDetails.getUsername(), productId, eventId, files);
             redirectAttributes.addFlashAttribute("success", "Đã bổ sung ảnh cho cập nhật cây.");
+        } catch (RuntimeException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/artisan/products/" + productId + "/journal";
+    }
+
+    @PostMapping("/{productId}/journal/{eventId}/media/{mediaId}/cover")
+    public String setJournalEventCoverMedia(@AuthenticationPrincipal UserDetails userDetails,
+                                            @PathVariable Integer productId,
+                                            @PathVariable Integer eventId,
+                                            @PathVariable Integer mediaId,
+                                            RedirectAttributes redirectAttributes) {
+        try {
+            productJournalService.setCoverMedia(userDetails.getUsername(), productId, eventId, mediaId);
+            redirectAttributes.addFlashAttribute("success", "Đã đặt ảnh đại diện cho nhật ký.");
+        } catch (RuntimeException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/artisan/products/" + productId + "/journal";
+    }
+
+    @PostMapping("/{productId}/journal/{eventId}/media/{mediaId}/replace")
+    public String replaceJournalEventMedia(@AuthenticationPrincipal UserDetails userDetails,
+                                           @PathVariable Integer productId,
+                                           @PathVariable Integer eventId,
+                                           @PathVariable Integer mediaId,
+                                           @RequestParam MultipartFile file,
+                                           RedirectAttributes redirectAttributes) {
+        try {
+            productJournalService.replaceMedia(userDetails.getUsername(), productId, eventId, mediaId, file);
+            redirectAttributes.addFlashAttribute("success", "Đã thay ảnh nhật ký.");
+        } catch (RuntimeException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/artisan/products/" + productId + "/journal";
+    }
+
+    @PostMapping("/{productId}/journal/{eventId}/media/{mediaId}/delete")
+    public String deleteJournalEventMedia(@AuthenticationPrincipal UserDetails userDetails,
+                                          @PathVariable Integer productId,
+                                          @PathVariable Integer eventId,
+                                          @PathVariable Integer mediaId,
+                                          RedirectAttributes redirectAttributes) {
+        try {
+            productJournalService.deleteMedia(userDetails.getUsername(), productId, eventId, mediaId);
+            redirectAttributes.addFlashAttribute("success", "Đã xóa ảnh nhật ký.");
         } catch (RuntimeException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
