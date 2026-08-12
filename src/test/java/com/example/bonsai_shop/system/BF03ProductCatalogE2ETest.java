@@ -35,7 +35,6 @@ import java.net.URLEncoder;
 import java.nio.file.Path;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
-import java.util.List;
 
 import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -44,7 +43,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-class BF03ProductCatalogE2EIT {
+class BF03ProductCatalogE2ETest {
 
     private static final String ARTISAN_EMAIL = "artisan.bf03.e2e@test.com";
     private static final String CUSTOMER_EMAIL = "customer.bf03.e2e@test.com";
@@ -94,8 +93,8 @@ class BF03ProductCatalogE2EIT {
 
         playwright = Playwright.create();
         browser = playwright.chromium().launch(new BrowserType.LaunchOptions()
-                .setHeadless(Boolean.parseBoolean(System.getProperty("playwright.headless", "true")))
-                .setSlowMo(Double.parseDouble(System.getProperty("playwright.slowMo", "0"))));
+                .setHeadless(Boolean.parseBoolean(System.getProperty("playwright.headless", "false")))
+                .setSlowMo(Double.parseDouble(System.getProperty("playwright.slowMo", "1000"))));
         page = browser.newPage();
         blockExternalAssets();
     }
@@ -133,8 +132,7 @@ class BF03ProductCatalogE2EIT {
                 "10",
                 "45.5",
                 "7.5",
-                "Formal"
-        );
+                "Formal");
         page.locator("form.form-card button[type='submit']")
                 .click(new Locator.ClickOptions().setForce(true));
         page.waitForURL("**/artisan/products/*/media");
@@ -160,9 +158,9 @@ class BF03ProductCatalogE2EIT {
                 "15",
                 "70.5",
                 "12.5",
-                "Cascade"
-        );
-        assertThat(page.locator("select[name='segmentId']")).hasValue(String.valueOf(catalogData.eliteSegment().getSegmentId()));
+                "Cascade");
+        assertThat(page.locator("select[name='segmentId']"))
+                .hasValue(String.valueOf(catalogData.eliteSegment().getSegmentId()));
         page.locator("form.form-card button[type='submit']")
                 .click(new Locator.ClickOptions().setForce(true));
         page.waitForURL("**/artisan/products/*/preview");
@@ -193,8 +191,7 @@ class BF03ProductCatalogE2EIT {
         assertTrue(
                 page.url().contains("/login")
                         || page.locator("body").textContent().contains("403")
-                        || page.locator("body").textContent().toLowerCase().contains("forbidden")
-        );
+                        || page.locator("body").textContent().toLowerCase().contains("forbidden"));
     }
 
     @Test
@@ -222,14 +219,14 @@ class BF03ProductCatalogE2EIT {
     }
 
     private void fillProductForm(String productName,
-                                 CatalogData catalogData,
-                                 ProductSegment segment,
-                                 String description,
-                                 String treeStory,
-                                 String age,
-                                 String height,
-                                 String trunkDiameter,
-                                 String style) {
+            CatalogData catalogData,
+            ProductSegment segment,
+            String description,
+            String treeStory,
+            String age,
+            String height,
+            String trunkDiameter,
+            String style) {
         page.locator("input[name='productName']").fill(productName);
         page.locator("#categorySelect").selectOption(String.valueOf(catalogData.category().getCategoryId()));
         page.locator("select[name='varietyId']").selectOption(String.valueOf(catalogData.variety().getVarietyId()));
@@ -347,8 +344,7 @@ class BF03ProductCatalogE2EIT {
                 .thenReturn(new CloudinaryUploadResponse(
                         "https://res.cloudinary.com/test/image/upload/bf03-e2e-bonsai.png",
                         "bf03-e2e-bonsai",
-                        "image"
-                ));
+                        "image"));
     }
 
     private record CatalogData(
@@ -356,7 +352,6 @@ class BF03ProductCatalogE2EIT {
             Variety variety,
             ProductSegment standardSegment,
             ProductSegment eliteSegment,
-            Tag tag
-    ) {
+            Tag tag) {
     }
 }
