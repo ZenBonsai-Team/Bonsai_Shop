@@ -916,13 +916,9 @@ h1, h2, h3, h4, h5, h6, .serif-text {
     }
 }
 
-/* --- NATIVE PAGE TRANSITIONS --- */
+/* --- PAGE BACKGROUND --- */
 html {
     background-color: var(--bg-body, #FAFAF8);
-}
-
-@view-transition {
-    navigation: auto;
 }
 
 /* Custom Language Dropdown styling */

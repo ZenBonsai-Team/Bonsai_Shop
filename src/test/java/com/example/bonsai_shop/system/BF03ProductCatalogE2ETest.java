@@ -17,13 +17,17 @@ import com.example.bonsai_shop.product.repository.TagRepository;
 import com.example.bonsai_shop.product.repository.VarietyRepository;
 import com.example.bonsai_shop.customer.repository.RoleRepository;
 import com.microsoft.playwright.Browser;
+import com.microsoft.playwright.BrowserContext;
 import com.microsoft.playwright.BrowserType;
 import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.Playwright;
 import com.microsoft.playwright.options.LoadState;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -43,6 +47,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class BF03ProductCatalogE2ETest {
 
     private static final String ARTISAN_EMAIL = "artisan.bf03.e2e@test.com";
@@ -81,26 +86,47 @@ class BF03ProductCatalogE2ETest {
 
     private Playwright playwright;
     private Browser browser;
+    private BrowserContext context;
     private Page page;
     private String baseUrl;
 
-    @BeforeEach
-    void setUp() {
+    @BeforeAll
+    void setUpAll() {
         baseUrl = "http://localhost:" + port;
+        cleanExistingBf03Products();
         createUser(ARTISAN_EMAIL, "BF03 E2E Artisan", findRole("ARTISAN", "ROLE_ARTISAN"));
         createUser(CUSTOMER_EMAIL, "BF03 E2E Customer", findRole("CUSTOMER", "ROLE_CUSTOMER"));
         mockImageUpload();
 
         playwright = Playwright.create();
         browser = playwright.chromium().launch(new BrowserType.LaunchOptions()
-                .setHeadless(Boolean.parseBoolean(System.getProperty("playwright.headless", "false")))
-                .setSlowMo(Double.parseDouble(System.getProperty("playwright.slowMo", "1000"))));
-        page = browser.newPage();
-        blockExternalAssets();
+                .setHeadless(false)
+                .setSlowMo(1000));
+    }
+
+    @BeforeEach
+    void setUp() {
+        context = browser.newContext();
+        page = context.newPage();
+        page.onConsoleMessage(message -> System.out.println("[BF03 BROWSER CONSOLE] "
+                + message.type() + ": " + message.text()));
+        page.onPageError(error -> System.out.println("[BF03 BROWSER ERROR] " + error));
+        page.onResponse(response -> {
+            if (response.status() >= 400) {
+                System.out.println("[BF03 HTTP " + response.status() + "] " + response.url());
+            }
+        });
     }
 
     @AfterEach
     void tearDown() {
+        if (context != null) {
+            context.close();
+        }
+    }
+
+    @AfterAll
+    void tearDownAll() {
         if (browser != null) {
             browser.close();
         }
@@ -134,9 +160,13 @@ class BF03ProductCatalogE2ETest {
                 "7.5",
                 "Formal");
         page.locator("form.form-card button[type='submit']")
-                .click(new Locator.ClickOptions().setForce(true));
+                .click();
         page.waitForURL("**/artisan/products/*/media");
+        page.waitForLoadState(LoadState.LOAD);
         assertTrue(page.url().contains("/media"));
+        assertThat(page.locator("body")).containsText("Bước 2");
+        assertThat(page.locator(".dashboard-layout")).isVisible();
+        assertThat(page.locator(".page-header h1")).isVisible();
         Integer productId = extractProductIdFromCurrentUrl();
 
         uploadMedia();
@@ -162,12 +192,14 @@ class BF03ProductCatalogE2ETest {
         assertThat(page.locator("select[name='segmentId']"))
                 .hasValue(String.valueOf(catalogData.eliteSegment().getSegmentId()));
         page.locator("form.form-card button[type='submit']")
-                .click(new Locator.ClickOptions().setForce(true));
+                .click();
         page.waitForURL("**/artisan/products/*/preview");
+        page.waitForLoadState(LoadState.LOAD);
 
-        page.locator("[data-open-publish-modal]").click(new Locator.ClickOptions().setForce(true));
-        page.locator("#artisanPublishModal .btn-modal-confirm").click(new Locator.ClickOptions().setForce(true));
+        page.locator("[data-open-publish-modal]").click();
+        page.locator("#artisanPublishModal .btn-modal-confirm").click();
         page.waitForURL("**/artisan/products");
+        page.waitForLoadState(LoadState.LOAD);
         assertThat(page.locator("body")).containsText(productName);
 
         Product publishedProduct = productRepository.findById(productId).orElseThrow();
@@ -201,7 +233,7 @@ class BF03ProductCatalogE2ETest {
         assertTrue(page.url().endsWith("/artisan/products"));
 
         page.waitForNavigation(() -> page.locator(".sidebar-logout-btn").first()
-                .click(new Locator.ClickOptions().setForce(true)));
+                .click());
         assertTrue(page.url().contains("/login"));
 
         page.navigate(baseUrl + "/artisan/products");
@@ -210,12 +242,11 @@ class BF03ProductCatalogE2ETest {
     }
 
     private void loginAs(String email) {
-        page.context().clearCookies();
         page.navigate(baseUrl + "/login");
-        page.locator("input[name='username']").fill(email);
-        page.locator("input[name='password']").fill(PASSWORD);
-        page.locator("button[type='submit']").click(new Locator.ClickOptions().setForce(true));
-        page.waitForLoadState(LoadState.DOMCONTENTLOADED);
+        page.locator("#email").fill(email);
+        page.locator("#password").fill(PASSWORD);
+        page.locator("button.btn-signin").click();
+        page.waitForURL(url -> !url.contains("/login"));
     }
 
     private void fillProductForm(String productName,
@@ -242,12 +273,14 @@ class BF03ProductCatalogE2ETest {
     }
 
     private void uploadMedia() {
-        page.setInputFiles("input[type='file'][name='files']", Path.of("src/test/resources/e2e/bf03-bonsai.png"));
-        page.locator("select[name='slotTypes']").selectOption("OVERVIEW");
-        page.locator("input[name='captions']").fill("E2E overview image");
-        page.locator("input[name='thumbnailIndex']").check();
-        page.locator("#uploadAllBtn").click(new Locator.ClickOptions().setForce(true));
+        page.waitForSelector(".media-upload-item input[type='file'][name='files']");
+        page.setInputFiles(".media-upload-item input[type='file'][name='files']", Path.of("src/test/resources/e2e/bf03-bonsai.png"));
+        page.locator(".media-upload-item select[name='slotTypes']").selectOption("OVERVIEW");
+        page.locator(".media-upload-item input[name='captions']").fill("E2E overview image");
+        page.locator(".media-upload-item input[name='thumbnailIndex']").check();
+        page.locator("#uploadAllBtn").click();
         page.waitForLoadState(LoadState.DOMCONTENTLOADED);
+        page.waitForSelector(".media-card");
     }
 
     private Integer extractProductIdFromCurrentUrl() {
@@ -262,21 +295,6 @@ class BF03ProductCatalogE2ETest {
         int idEnd = url.indexOf('/', idStart);
         String productId = idEnd < 0 ? url.substring(idStart) : url.substring(idStart, idEnd);
         return Integer.valueOf(productId);
-    }
-
-    private void blockExternalAssets() {
-        page.route("**/*", route -> {
-            String url = route.request().url();
-            if (url.contains("fonts.googleapis.com")
-                    || url.contains("fonts.gstatic.com")
-                    || url.contains("cdnjs.cloudflare.com")
-                    || url.contains("cdn.jsdelivr.net")
-                    || url.contains("ui-avatars.com")) {
-                route.abort();
-                return;
-            }
-            route.resume();
-        });
     }
 
     private User createUser(String email, String fullName, Role role) {
@@ -295,6 +313,13 @@ class BF03ProductCatalogE2ETest {
         user.setStatus("ACTIVE");
         user.setCreatedAt(LocalDateTime.now());
         return accountRepository.save(user);
+    }
+
+    private void cleanExistingBf03Products() {
+        productRepository.findAll().stream()
+                .filter(product -> product.getProductName() != null
+                        && product.getProductName().startsWith("BF03 E2E Bonsai "))
+                .forEach(productRepository::delete);
     }
 
     private Role findRole(String... roleNames) {
@@ -342,7 +367,7 @@ class BF03ProductCatalogE2ETest {
     private void mockImageUpload() {
         when(cloudinaryStorageService.uploadImage(any(), any()))
                 .thenReturn(new CloudinaryUploadResponse(
-                        "https://res.cloudinary.com/test/image/upload/bf03-e2e-bonsai.png",
+                        "/images/bonsai-1.png",
                         "bf03-e2e-bonsai",
                         "image"));
     }
