@@ -41,3 +41,6 @@ docs/
 # File upload directories (dynamic local runtime files)
 /uploads/
 
+# Playwright browser cache
+/.playwright-browsers/
+

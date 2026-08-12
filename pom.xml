@@ -99,6 +99,12 @@
             <artifactId>spring-boot-starter-webmvc-test</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>com.microsoft.playwright</groupId>
+            <artifactId>playwright</artifactId>
+            <version>1.61.0</version>
+            <scope>test</scope>
+        </dependency>
 
         <!-- Spring Boot Mail -->
         <dependency>
