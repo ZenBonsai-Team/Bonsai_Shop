@@ -1851,6 +1851,13 @@ textarea {
     pointer-events: none;
 }
 
+.portal-card.is-loading .table-container,
+#walkInOrdersSection.is-loading #walkInOrdersTableContainer {
+    opacity: 0.55;
+    pointer-events: none;
+    transition: opacity 0.16s ease;
+}
+
 @media (min-width: 901px) {
     body:has(.artisan-topbar) .portal-card .table-container {
         overflow: visible;
