@@ -30,6 +30,7 @@ public class ViewingAppointmentController {
 
     @PostMapping("/appointments/create")
     public String createAppointment(
+            @RequestParam Integer productId,
             @RequestParam LocalDate appointmentDate,
             @RequestParam String appointmentTime,
             @RequestParam(required = false) String note,
@@ -66,9 +67,7 @@ public class ViewingAppointmentController {
             );
         } catch (RuntimeException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
-            redirectAttributes.addFlashAttribute("appointmentDate", appointmentDate);
-            redirectAttributes.addFlashAttribute("appointmentTime", appointmentTime);
-            redirectAttributes.addFlashAttribute("note", note);
+            return "redirect:/bonsai-luxury-detail/" + productId;
         }
 
         return "redirect:/appointments";

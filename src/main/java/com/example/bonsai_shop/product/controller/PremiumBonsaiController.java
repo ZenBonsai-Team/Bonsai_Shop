@@ -15,10 +15,23 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
+import java.util.Map;
 
 @Controller
 @RequiredArgsConstructor
 public class PremiumBonsaiController {
+    private static final Map<String, String> SLOT_TYPE_LABELS = Map.of(
+            "FRONT", "Mặt trước",
+            "BACK", "Mặt sau",
+            "LEFT", "Bên trái",
+            "RIGHT", "Bên phải",
+            "DETAIL", "Cận cảnh chi tiết",
+            "TRUNK", "Cận cảnh thân cây",
+            "BRANCH", "Cận cảnh cành",
+            "POT", "Chậu cây",
+            "OVERVIEW", "Tổng quan"
+    );
+
     private final ProductService productService;
 
     @GetMapping("/bonsai-luxury")
@@ -44,6 +57,7 @@ public class PremiumBonsaiController {
         }
         List<ProductMediaDTO> mediaList = productService.getPremiumProductMedia(productId);
         model.addAttribute("product", product);
+        model.addAttribute("slotTypeLabels", SLOT_TYPE_LABELS);
         model.addAttribute("imageMediaList", mediaList.stream()
                 .filter(media -> !"VIDEO".equalsIgnoreCase(media.getMediaType()))
                 .toList());
