@@ -1,10 +1,13 @@
 <!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{fragments/dashboard-layout :: layout(~{::title}, ~{::#owner-garden-trees-content}, ~{::styles}, ~{})}">
+      th:replace="~{fragments/dashboard-layout :: layout(~{::title}, ~{::#owner-garden-trees-content}, ~{::styles}, ~{::scripts})}">
 <head>
     <title>Trees in Garden - Minh Ky Garden</title>
     <th:block th:fragment="styles">
         <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+    </th:block>
+    <th:block th:fragment="scripts">
+        <script th:src="@{/js/owner-report-pagination.js}"></script>
     </th:block>
 </head>
 <body>
@@ -41,8 +44,8 @@
                     <th class="text-end">Price</th>
                 </tr>
                 </thead>
-                <tbody>
-                <tr th:each="tree : ${gardenTrees}">
+                <tbody data-owner-paginated-list data-page-size="10" data-report-label="garden trees">
+                <tr th:each="tree : ${gardenTrees}" data-page-entry>
                     <td>
                         <a class="owner-tree-link" th:href="@{/product/{id}(id=${tree.productId()})}" th:text="${tree.productName()}">Tree name</a>
                         <small th:text="${tree.productCode()}">TREE001</small>
@@ -59,6 +62,10 @@
                 </tr>
                 </tbody>
             </table>
+        </div>
+        <div class="pagination-footer owner-report-pagination" data-owner-pagination hidden>
+            <div class="pagination-info" data-owner-pagination-info></div>
+            <div class="pagination-controls" data-owner-pagination-controls></div>
         </div>
     </section>
 </div>

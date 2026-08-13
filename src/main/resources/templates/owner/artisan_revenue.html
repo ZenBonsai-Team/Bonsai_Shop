@@ -1,10 +1,13 @@
 <!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{fragments/dashboard-layout :: layout(~{::title}, ~{::#owner-artisan-revenue-content}, ~{::styles}, ~{})}">
+      th:replace="~{fragments/dashboard-layout :: layout(~{::title}, ~{::#owner-artisan-revenue-content}, ~{::styles}, ~{::scripts})}">
 <head>
     <title>Artisan Revenue - Minh Ky Garden</title>
     <th:block th:fragment="styles">
         <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+    </th:block>
+    <th:block th:fragment="scripts">
+        <script th:src="@{/js/owner-report-pagination.js}"></script>
     </th:block>
 </head>
 <body>
@@ -38,8 +41,8 @@
                     <th class="text-end">Revenue</th>
                 </tr>
                 </thead>
-                <tbody>
-                <tr th:each="item : ${artisanRevenue}">
+                <tbody data-owner-paginated-list data-page-size="10" data-report-label="artisan revenue entries">
+                <tr th:each="item : ${artisanRevenue}" data-page-entry>
                     <td class="fw-semibold" th:text="${item.artisanName() ?: '-'}">Artisan</td>
                     <td th:text="${item.artisanEmail() ?: '-'}">artisan@example.com</td>
                     <td class="text-end" th:text="${item.treesSold()}">0</td>
@@ -50,6 +53,10 @@
                 </tr>
                 </tbody>
             </table>
+        </div>
+        <div class="pagination-footer owner-report-pagination" data-owner-pagination hidden>
+            <div class="pagination-info" data-owner-pagination-info></div>
+            <div class="pagination-controls" data-owner-pagination-controls></div>
         </div>
     </section>
 </div>
