@@ -30,6 +30,7 @@ public class ViewingAppointmentController {
 
     @PostMapping("/appointments/create")
     public String createAppointment(
+            @RequestParam Integer productId,
             @RequestParam LocalDate appointmentDate,
             @RequestParam String appointmentTime,
             @RequestParam(required = false) String note,
@@ -41,7 +42,7 @@ public class ViewingAppointmentController {
             String roleName = user.getRole().getRoleName();
             if ("ROLE_OWNER".equals(roleName) || "ROLE_ARTISAN".equals(roleName)
                     || "ROLE_MODERATOR".equals(roleName) || "ROLE_CONTENT_MODERATOR".equals(roleName)
-                    || "ROLE_ADMIN".equals(roleName)) {
+                    ) {
                 redirectAttributes.addFlashAttribute("error", "Tài khoản quản trị / nhà vườn / kiểm duyệt viên không được phép đặt lịch thăm vườn!");
                 return "redirect:/appointments";
             }
@@ -66,9 +67,7 @@ public class ViewingAppointmentController {
             );
         } catch (RuntimeException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
-            redirectAttributes.addFlashAttribute("appointmentDate", appointmentDate);
-            redirectAttributes.addFlashAttribute("appointmentTime", appointmentTime);
-            redirectAttributes.addFlashAttribute("note", note);
+            return "redirect:/bonsai-luxury-detail/" + productId;
         }
 
         return "redirect:/appointments";

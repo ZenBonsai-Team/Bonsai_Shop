@@ -915,6 +915,14 @@ a {
     color: rgba(66, 80, 70, 0.58);
 }
 
+.btn-apt-luxury:disabled,
+.btn-apt-luxury.is-submitting {
+    cursor: wait;
+    opacity: 0.72;
+    pointer-events: none;
+    transform: none;
+}
+
 .empty-appointment-state {
     max-width: 660px;
     margin: 26px auto 0;
@@ -1204,28 +1212,60 @@ select.input-luxury {
     color: var(--lux-gold);
 }
 
-.luxury-toast {
+.flash-container {
     position: fixed;
-    right: 24px;
-    bottom: 24px;
-    z-index: 1600;
-    max-width: min(380px, calc(100vw - 32px));
-    padding: 14px 16px;
-    border: 1px solid rgba(185, 145, 75, 0.38);
+    top: 182px;
+    right: 28px;
+    z-index: 1300;
+    display: grid;
+    gap: 12px;
+    width: min(420px, calc(100vw - 32px));
+}
+
+.flash-message {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 18px;
+    border: 1px solid var(--lux-line);
+    border-left-width: 5px;
     border-radius: 18px;
-    background: rgba(16, 47, 33, 0.96);
-    color: var(--lux-panel);
-    box-shadow: var(--lux-shadow-strong);
-    font-size: 0.84rem;
-    font-weight: 750;
+    background: rgba(255, 250, 241, 0.97);
+    color: var(--lux-ink);
+    box-shadow: 0 22px 60px rgba(16, 47, 33, 0.18);
+    backdrop-filter: blur(14px);
+    animation: flashIn 240ms ease, flashOut 260ms ease 4.74s forwards;
 }
 
-.luxury-toast.danger {
-    background: rgba(157, 61, 51, 0.96);
+.flash-message i {
+    width: 30px;
+    height: 30px;
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    font-size: 0.86rem;
 }
 
-.luxury-toast.success {
-    background: rgba(16, 47, 33, 0.96);
+.flash-success {
+    border-color: rgba(15, 90, 57, 0.28);
+    border-left-color: #168957;
+}
+
+.flash-success i {
+    background: rgba(22, 137, 87, 0.12);
+    color: #0f5a39;
+}
+
+.flash-error {
+    border-color: rgba(183, 59, 58, 0.34);
+    border-left-color: #b73b3a;
+}
+
+.flash-error i {
+    background: rgba(183, 59, 58, 0.12);
+    color: #b73b3a;
 }
 
 .reveal-pending {
@@ -1253,6 +1293,26 @@ select.input-luxury {
     to {
         opacity: 0.88;
         transform: translate3d(-28px, 18px, 0) scale(1.04);
+    }
+}
+
+@keyframes flashIn {
+    from {
+        opacity: 0;
+        transform: translateX(30px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes flashOut {
+    to {
+        opacity: 0;
+        transform: translateX(30px);
+        visibility: hidden;
     }
 }
 

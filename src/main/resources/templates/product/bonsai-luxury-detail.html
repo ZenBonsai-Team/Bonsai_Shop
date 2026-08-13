@@ -23,16 +23,17 @@
 <body class="luxury-shell luxury-detail-shell" th:data-authenticated="${#authorization.expression('isAuthenticated()')}">
 <div th:replace="~{fragments/navbar :: navbar}" th:with="activePage='luxury'"></div>
 
-<div class="flash-container" aria-live="polite">
-    <div th:if="${success}" class="flash-message flash-success">
+<div class="flash-container" aria-live="polite" th:if="${success != null || error != null}">
+    <div th:if="${success != null}" class="flash-message flash-success">
         <i class="fa-solid fa-check" aria-hidden="true"></i>
         <span th:text="${success}">Đặt lịch thành công.</span>
     </div>
-    <div th:if="${error}" class="flash-message flash-error">
+    <div th:if="${error != null}" class="flash-message flash-error">
         <i class="fa-solid fa-xmark" aria-hidden="true"></i>
         <span th:text="${error}">Có lỗi xảy ra.</span>
     </div>
 </div>
+
 
 <main class="lux-detail">
     <section class="detail-hero">
@@ -48,7 +49,7 @@
                 <ol class="detail-breadcrumb">
                     <li><a th:href="@{/home}">Trang chủ</a></li>
                     <li><a th:href="@{/bonsai-luxury}">Bonsai Luxury</a></li>
-                    <li aria-current="page" th:text="${product != null && product.productName != null ? product.productName : 'Chi tiết tác phẩm'}">Chi tiết tác phẩm</li>
+                    <li aria-current="page" th:text="${product != null && product.productName != null ? product.productName : 'N/A'}"></li>
                 </ol>
             </nav>
         </div>
@@ -56,49 +57,32 @@
         <div class="lux-container hero-grid">
             <div class="media-column">
                 <div class="main-image-wrap"
-                     th:with="hasVideo=${videoMediaList != null && !#lists.isEmpty(videoMediaList)}, firstVideo=${hasVideo ? videoMediaList[0] : null}, hasImageMedia=${imageMediaList != null && !#lists.isEmpty(imageMediaList)}, firstImage=${hasImageMedia ? imageMediaList[0] : null}, hasThumbnail=${product != null && product.thumbnailUrl != null && !#strings.isEmpty(product.thumbnailUrl)}">
+                     th:with=" hasImageMedia=${imageMediaList != null && !#lists.isEmpty(imageMediaList)}
+                     , firstImage=${hasImageMedia ? imageMediaList[0] : null}
+                     , hasThumbnail=${product != null && product.thumbnailUrl != null && !#strings.isEmpty(product.thumbnailUrl)}">
+
                     <span class="collection-label">Hồ sơ sưu tầm</span>
+
                     <button class="main-media-nav main-media-prev"
                             type="button"
                             aria-label="Media trước"
-                            th:if="${hasVideo || hasImageMedia}">
+                            th:if="${hasImageMedia}">
                         <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
                     </button>
+
                     <button class="main-media-nav main-media-next"
                             type="button"
                             aria-label="Media sau"
-                            th:if="${hasVideo || hasImageMedia}">
+                            th:if="${hasImageMedia}">
                         <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
                     </button>
-                    <div class="media-control-row" th:if="${hasVideo || hasImageMedia || hasThumbnail}">
-                        <button id="expandMediaBtn"
-                                class="media-control-btn"
-                                type="button"
-                                aria-label="Phóng to media"
-                                th:attr="data-src=${hasVideo ? firstVideo.mediaUrl : (hasImageMedia ? firstImage.mediaUrl : product.thumbnailUrl)},data-type=${hasVideo ? 'VIDEO' : 'IMAGE'},data-alt=${product != null && product.productName != null ? product.productName : 'Bonsai Luxury'}">
-                            <i class="fa-solid fa-up-right-and-down-left-from-center" aria-hidden="true"></i>
-                        </button>
-                        <button id="toggleSoundBtn"
-                                class="media-control-btn"
-                                type="button"
-                                th:if="${hasVideo}"
-                                aria-label="Bật tiếng video">
-                            <i class="fa-solid fa-volume-xmark" aria-hidden="true"></i>
-                        </button>
-                    </div>
-                    <video id="mainVideo"
-                           class="main-video"
-                           th:if="${hasVideo}"
-                           th:src="${firstVideo.mediaUrl}"
-                           controls
-                           muted
-                           playsinline
-                           preload="metadata"></video>
+
                     <img id="mainImage"
                          th:if="${hasImageMedia || hasThumbnail}"
-                         th:classappend="${hasVideo ? 'is-hidden' : ''}"
                          th:src="${hasImageMedia ? firstImage.mediaUrl : product.thumbnailUrl}"
-                         th:alt="${product != null && product.productName != null ? product.productName : 'Bonsai Luxury'}">
+                         th:alt="${product != null && product.productName != null
+                                  ? product.productName
+                                   : 'N/A'}">
                 </div>
                 <div class="thumb-carousel" th:if="${imageMediaList != null && !#lists.isEmpty(imageMediaList)}">
                     <button class="thumb-nav thumb-nav-prev" type="button" aria-label="Ảnh trước">
@@ -109,9 +93,21 @@
                                 th:each="media, mediaStat : ${imageMediaList}"
                                 th:classappend="${!#lists.isEmpty(videoMediaList) ? '' : (mediaStat.index == 0 ? 'is-active' : '')}"
                                 type="button"
-                                th:attr="data-src=${media.mediaUrl},data-type='IMAGE',data-alt=${media.caption != null && !#strings.isEmpty(media.caption) ? media.caption : (product != null ? product.productName : 'Bonsai Luxury')}">
+                                th:attr="
+                                data-src=${media.mediaUrl},
+                                data-type=${media.mediaType},
+                                data-slot-type=${media.slotType},
+                                data-alt=${media.caption != null && !#strings.isEmpty(media.caption)
+                                ? media.caption
+                                : (product != null ? product.productName : 'N/A')}
+                                ">
                             <img th:src="${media.mediaUrl}"
-                                 th:alt="${media.caption != null && !#strings.isEmpty(media.caption) ? media.caption : 'Ảnh chi tiết tác phẩm'}">
+                                 th:alt="${media.caption != null && !#strings.isEmpty(media.caption) ? media.caption : 'N/A'}">
+
+                            <span class="slotType"
+                                  th:if="${media.slotType != null && !#strings.isEmpty(media.slotType)}"
+                                  th:text="${slotTypeLabels != null && slotTypeLabels[media.slotType] != null
+                                  ? slotTypeLabels[media.slotType] : media.slotType}"></span>
                         </button>
                     </div>
                     <button class="thumb-nav thumb-nav-next" type="button" aria-label="Ảnh sau">
@@ -120,9 +116,11 @@
                 </div>
                 <div class="thumb-carousel"
                      th:if="${(imageMediaList == null || #lists.isEmpty(imageMediaList)) && product != null && product.thumbnailUrl != null && !#strings.isEmpty(product.thumbnailUrl)}">
+
                     <button class="thumb-nav thumb-nav-prev" type="button" aria-label="Ảnh trước">
                         <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
                     </button>
+
                     <div class="thumb-row" aria-label="Ảnh chi tiết">
                         <button class="thumb-item is-active" type="button" data-type="IMAGE"
                                 th:attr="data-src=${product.thumbnailUrl}">
@@ -134,9 +132,14 @@
                         <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
                     </button>
                 </div>
-                <div class="media-note">
-                    <span>Collector view</span>
-                    <p>Ảnh chính, chi tiết dáng cây và gợi ý bố trí trong không gian trưng bày.</p>
+                <div class="video" th:if="${videoMediaList != null && !#lists.isEmpty(videoMediaList)}">
+                    <div class="video-item" th:each="video : ${videoMediaList}">
+                        <video controls
+                           playsinline
+                           preload="metadata"
+                           th:src="${video.mediaUrl}">
+                        </video>
+                    </div>
                 </div>
             </div>
 
@@ -144,11 +147,11 @@
                 <span class="summary-pillar">Bonsai Luxury Private Showroom</span>
                 <div class="summary-kicker">
                     <span>Bonsai Luxury</span>
-                    <span th:text="${product != null && product.productCode != null ? product.productCode : 'BL-COLLECTOR'}">BL-COLLECTOR</span>
+                    <span th:text="${product != null && product.productCode != null ? product.productCode : 'N/A'}"></span>
                 </div>
                 <span class="artisan-seal" aria-hidden="true">匠</span>
-                <h1 id="productTitle" th:text="${product != null && product.productName != null ? product.productName : 'Tùng La Hán Tuyệt Tác'}">
-                    Tùng La Hán Tuyệt Tác
+                <h1 id="productTitle" th:text="${product != null && product.productName != null ? product.productName : 'N/A'}">
+
                 </h1>
                 <p class="lead">Tác phẩm độc bản được tuyển chọn cho showroom cao cấp, không gian biệt thự và bộ sưu tập riêng.</p>
 
@@ -159,9 +162,7 @@
 
                 <div class="price-panel" sec:authorize="hasAnyRole('OWNER', 'ARTISAN')">
                     <span>Giá tác phẩm</span>
-                    <strong th:text="${product != null && product.price != null ? #numbers.formatDecimal(product.price, 0, 'POINT', 0, 'POINT') + ' đ' : 'Đang cập nhật'}">
-                        Đang cập nhật
-                    </strong>
+                    <strong th:text="${product != null && product.price != null ? #numbers.formatDecimal(product.price, 0, 'POINT', 0, 'POINT') + ' đ' : 'Đang cập nhật'}"></strong>
                 </div>
 
                 <div class="price-panel" sec:authorize="!hasAnyRole('OWNER', 'ARTISAN')">
@@ -172,30 +173,30 @@
                 <dl class="spec-grid">
                     <div>
                         <dt>Loại cây</dt>
-                        <dd th:text="${product != null && product.varietyName != null ? product.varietyName : 'Tùng La Hán'}">Tùng La Hán</dd>
+                        <dd th:text="${product != null && product.varietyName != null ? product.varietyName : 'Đang cập nhật'}"></dd>
                     </div>
                     <div>
                         <dt>Tuổi cây</dt>
-                        <dd><span th:text="${product != null && product.age != null ? product.age : '120'}">120</span> năm</dd>
+                        <dd><span th:text="${product != null && product.age != null ? product.age : 'Đang cập nhật'}"></span> năm tuổi</dd>
                     </div>
                     <div>
                         <dt>Chiều cao</dt>
-                        <dd><span th:text="${product != null && product.height != null ? product.height : '85'}">85</span> cm</dd>
+                        <dd><span th:text="${product != null && product.height != null ? product.height : 'Đang cập nhật'}"></span> cm</dd>
                     </div>
                     <div>
                         <dt>Đường kính thân</dt>
-                        <dd><span th:text="${product != null && product.trunkDiameter != null ? product.trunkDiameter : '15'}">15</span> cm</dd>
+                        <dd><span th:text="${product != null && product.trunkDiameter != null ? product.trunkDiameter : 'Đang cập nhật'}"></span> cm</dd>
                     </div>
                     <div>
                         <dt>Nghệ nhân</dt>
-                        <dd th:text="${product != null && product.artisanName != null ? product.artisanName : 'Nghệ nhân Bonsai Luxury'}">Nghệ nhân Bonsai Luxury</dd>
+                        <dd th:text="${product != null && product.artisanName != null ? product.artisanName : 'Đang cập nhật'}"></dd>
                     </div>
                     <div>
                         <dt>Trạng thái</dt>
                         <dd>
                             <span class="status-pill"
                                   th:classappend="${product != null && product.status != null ? 'status-' + #strings.toLowerCase(product.status) : 'status-available'}"
-                                  th:text="${product != null && product.status != null ? product.status : 'AVAILABLE'}">AVAILABLE</span>
+                                  th:text="${product != null && product.status != null ? product.status : 'N/A'}"></span>
                         </dd>
                     </div>
                 </dl>
@@ -219,22 +220,13 @@
                 <div sec:authorize="isAuthenticated() and !hasAnyRole('OWNER', 'ARTISAN', 'MODERATOR', 'CONTENT_MODERATOR', 'ADMIN')" class="action-row">
                     <button class="btn-primary schedule-btn"
                             type="button"
-                            th:if="${product != null and (product.status == null or product.status == 'AVAILABLE')}"
-                            th:data-id="${product != null ? product.productId : ''}"
-                            th:data-title="${product != null && product.productName != null ? product.productName : 'Tác phẩm Bonsai Luxury'}"
                             data-available="true">
-                        Đặt lịch xem riêng
-                    </button>
-                    <button class="btn-disabled" type="button" disabled th:unless="${product != null and (product.status == null or product.status == 'AVAILABLE')}">
-                        Tác phẩm chưa mở lịch
+                        Đặt lịch tham quan vườn
                     </button>
                 </div>
 
                 <div sec:authorize="!isAuthenticated()" class="action-row">
-                    <a class="btn-primary" th:if="${product != null and (product.status == null or product.status == 'AVAILABLE')}" th:href="@{/login}">Đăng nhập để đặt lịch</a>
-                    <button class="btn-disabled" type="button" disabled th:unless="${product != null and (product.status == null or product.status == 'AVAILABLE')}">
-                        Tác phẩm chưa mở lịch
-                    </button>
+                    <a class="btn-primary" th:href="@{/login}">Đăng nhập để đặt lịch thăm quan vườn</a>
                 </div>
 
                 <div sec:authorize="hasAnyRole('OWNER', 'ARTISAN', 'MODERATOR', 'CONTENT_MODERATOR', 'ADMIN')" class="role-note">
@@ -284,38 +276,38 @@
                     <tbody>
                     <tr>
                         <td class="specs-table-lbl">Mã tác phẩm</td>
-                        <td class="specs-table-val" th:text="${product != null && product.productCode != null ? product.productCode : 'BL-COLLECTOR'}">BL-COLLECTOR</td>
+                        <td class="specs-table-val" th:text="${product != null && product.productCode != null ? product.productCode : 'Đang cập nhật'}"></td>
                     </tr>
                     <tr>
                         <td class="specs-table-lbl">Tên tác phẩm</td>
-                        <td class="specs-table-val" th:text="${product != null && product.productName != null ? product.productName : 'Tùng La Hán Tuyệt Tác'}">Tùng La Hán Tuyệt Tác</td>
+                        <td class="specs-table-val" th:text="${product != null && product.productName != null ? product.productName : 'Đang cập nhật'}"></td>
                     </tr>
                     <tr>
                         <td class="specs-table-lbl">Loại cây</td>
-                        <td class="specs-table-val" th:text="${product != null && product.varietyName != null ? product.varietyName : 'Tùng La Hán'}">Tùng La Hán</td>
+                        <td class="specs-table-val" th:text="${product != null && product.varietyName != null ? product.varietyName : 'Đang cập nhật'}"></td>
                     </tr>
                     <tr>
                         <td class="specs-table-lbl">Tuổi cây</td>
-                        <td class="specs-table-val" th:text="${product != null && product.age != null ? product.age + ' năm' : 'Đang cập nhật'}">Đang cập nhật</td>
+                        <td class="specs-table-val" th:text="${product != null && product.age != null ? product.age + ' năm tuổi' : 'Đang cập nhật'}"></td>
                     </tr>
                     <tr>
                         <td class="specs-table-lbl">Chiều cao</td>
-                        <td class="specs-table-val" th:text="${product != null && product.height != null ? product.height + ' cm' : 'Đang cập nhật'}">Đang cập nhật</td>
+                        <td class="specs-table-val" th:text="${product != null && product.height != null ? product.height + ' cm' : 'Đang cập nhật'}"></td>
                     </tr>
                     <tr>
                         <td class="specs-table-lbl">Đường kính thân</td>
-                        <td class="specs-table-val" th:text="${product != null && product.trunkDiameter != null ? product.trunkDiameter + ' cm' : 'Đang cập nhật'}">Đang cập nhật</td>
+                        <td class="specs-table-val" th:text="${product != null && product.trunkDiameter != null ? product.trunkDiameter + ' cm' : 'Đang cập nhật'}"></td>
                     </tr>
                     <tr>
                         <td class="specs-table-lbl">Nghệ nhân phụ trách</td>
-                        <td class="specs-table-val" th:text="${product != null && product.artisanName != null ? product.artisanName : 'Bonsai Luxury Studio'}">Bonsai Luxury Studio</td>
+                        <td class="specs-table-val" th:text="${product != null && product.artisanName != null ? product.artisanName : 'Đang cập nhật'}"></td>
                     </tr>
                     <tr>
                         <td class="specs-table-lbl">Trạng thái</td>
                         <td class="specs-table-val">
                             <span class="table-status-badge"
                                   th:classappend="${product != null && product.status != null ? ' status-' + #strings.toLowerCase(product.status) : ' status-available'}"
-                                  th:text="${product != null && product.status != null ? product.status : 'AVAILABLE'}">AVAILABLE</span>
+                                  th:text="${product != null && product.status != null ? product.status : 'Đang cập nhật'}"></span>
                         </td>
                     </tr>
                     <tr>
@@ -335,7 +327,6 @@
                     <p class="section-kicker">Collector dossier</p>
                     <h2>Hồ sơ bàn giao</h2>
                 </div>
-                <p>Phần này gom các cam kết sau khi sở hữu, tương tự product-detail nhưng được trình bày theo chuẩn private showroom.</p>
             </div>
             <div class="profile-grid">
                 <article><span>01</span><h3>Định danh tác phẩm</h3><p>Mã tác phẩm, giống cây, tuổi ước tính và nghệ nhân phụ trách được ghi rõ.</p></article>
@@ -345,43 +336,30 @@
 
             <div class="artisan-profile-banner">
                 <div class="artisan-profile-left">
-                    <div class="artisan-large-avatar" aria-hidden="true">
-                        <span>BL</span>
-                    </div>
                     <div>
                         <span class="artisan-badge-gold">Verified Bonsai Luxury Studio</span>
-                        <h3 class="artisan-large-name" th:text="${product != null && product.artisanName != null ? product.artisanName : 'Bonsai Luxury Studio'}">Bonsai Luxury Studio</h3>
+                        <h3 class="artisan-large-name" th:text="${product != null && product.artisanName != null ? product.artisanName : 'Đang cập nhật '}"></h3>
                         <p class="artisan-large-location">
                             <i class="fa-solid fa-location-dot" aria-hidden="true"></i>
                             Private Showroom · Tư vấn trưng bày và chăm sóc sau sở hữu
                         </p>
-                        <div class="artisan-large-stats">
-                            <span><i class="fa-solid fa-star" aria-hidden="true"></i><strong>4.9</strong> đánh giá showroom</span>
-                            <span>·</span>
-                            <span><strong>120+</strong> tác phẩm tuyển chọn</span>
-                            <span>·</span>
-                            <span>25 năm kinh nghiệm</span>
-                        </div>
                     </div>
                 </div>
                 <div class="artisan-profile-right">
                     <button class="btn-view-profile-outline schedule-btn"
                             type="button"
-                            sec:authorize="isAuthenticated() and !hasAnyRole('OWNER', 'ARTISAN', 'MODERATOR', 'CONTENT_MODERATOR', 'ADMIN')"
-                            th:if="${product != null and (product.status == null or product.status == 'AVAILABLE')}"
-                            th:data-id="${product != null ? product.productId : ''}"
-                            th:data-title="${product != null && product.productName != null ? product.productName : 'Tác phẩm Bonsai Luxury'}"
+                            sec:authorize="isAuthenticated() and !hasAnyRole('OWNER', 'ARTISAN', 'MODERATOR', 'CONTENT_MODERATOR')"
                             data-available="true">
-                        Đặt lịch tư vấn
+                        Đặt lịch thăm quan vườn
                     </button>
                     <a class="btn-view-profile-outline"
                        sec:authorize="!isAuthenticated()"
-                       th:if="${product != null and (product.status == null or product.status == 'AVAILABLE')}"
-                       th:href="@{/login}">Đăng nhập để đặt lịch</a>
+                       th:href="@{/login}">Đăng nhập để đặt lịch
+                    </a>
                     <span class="btn-view-profile-outline is-disabled"
-                          sec:authorize="!hasAnyRole('OWNER', 'ARTISAN', 'MODERATOR', 'CONTENT_MODERATOR', 'ADMIN')"
-                          th:unless="${product != null and (product.status == null or product.status == 'AVAILABLE')}">Tác phẩm chưa mở lịch</span>
-                    <span class="btn-view-profile-outline is-disabled" sec:authorize="hasAnyRole('OWNER', 'ARTISAN', 'MODERATOR', 'CONTENT_MODERATOR', 'ADMIN')">Chỉ xem hồ sơ</span>
+                          sec:authorize="hasAnyRole('OWNER', 'ARTISAN', 'MODERATOR', 'CONTENT_MODERATOR')">
+                            Chỉ xem hồ sơ
+                    </span>
                 </div>
             </div>
         </div>
@@ -438,8 +416,6 @@
 <div id="contact" class="footer-anchor"></div>
 <div th:replace="~{fragments/footer :: footer}"></div>
 
-<div id="overlayRoot" aria-hidden="true"></div>
-
 <div id="bookingModal" class="booking-modal" role="dialog" aria-modal="true" aria-labelledby="bookingTitle" hidden>
     <div class="booking-backdrop" data-close-modal></div>
     <div class="booking-card">
@@ -447,9 +423,7 @@
             <i class="fa-solid fa-xmark" aria-hidden="true"></i>
         </button>
         <div class="booking-header">
-            <span>Private appointment</span>
-            <h2 id="bookingTitle">Yêu cầu đặt lịch xem</h2>
-            <p>Tác phẩm: <strong id="modalProductTitle">—</strong></p>
+            <h2 id="bookingTitle">Yêu cầu đặt lịch thăm vườn</h2>
         </div>
         <form class="booking-form" th:action="@{/appointments/create}" method="post" id="actualBookingForm">
             <input type="hidden" name="_csrf" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
@@ -500,4 +474,3 @@
 <script th:src="@{/js/bonsai-luxury-detail.js}"></script>
 </body>
 </html>
-

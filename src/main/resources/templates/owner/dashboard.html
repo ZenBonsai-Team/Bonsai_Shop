@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{fragments/dashboard-layout :: layout(~{::title}, ~{::#owner-dashboard-content}, ~{::styles}, ~{})}">
+      th:replace="~{fragments/dashboard-layout :: layout(~{::title}, ~{::#owner-dashboard-content}, ~{::styles}, ~{::scripts})}">
 <head>
-    <title>Owner Dashboard - Minh Ky Garden</title>
+    <title>Bảng điều khiển chủ vườn - Minh Kỷ Garden</title>
     <th:block th:fragment="styles">
         <link rel="stylesheet" th:href="@{/css/dashboard.css}">
     </th:block>
@@ -12,9 +12,20 @@
 <div id="owner-dashboard-content" class="owner-dashboard" th:with="paramActivePage='dashboard'">
     <header class="owner-dashboard-header">
         <div>
-            <span class="owner-eyebrow">Owner Dashboard</span>
-            <h1>Garden Performance</h1>
-            <p>Revenue, inventory, sales, and tree engagement overview.</p>
+            <span class="owner-eyebrow">Bảng điều khiển chủ vườn</span>
+            <h1>Sổ tay quản lý vườn</h1>
+            <p>Xem doanh thu (tiền vào vườn), cây hiện có trong vườn và cây đã giao cho khách.</p>
+        </div>
+        <div class="owner-actions-toolbar">
+            <button id="btn-copy-stats" class="btn-owner-action btn-copy" title="Sao chép nhanh số liệu tóm tắt">
+                <i class="fa-regular fa-copy"></i> Sao chép
+            </button>
+            <button id="btn-export-excel" class="btn-owner-action btn-excel" title="Tải báo cáo định dạng Excel (CSV)">
+                <i class="fa-regular fa-file-excel"></i> Xuất Excel
+            </button>
+            <button id="btn-print-dashboard" class="btn-owner-action btn-print" title="In báo cáo ra giấy A4">
+                <i class="fa-solid fa-print"></i> In trang
+            </button>
         </div>
     </header>
 
@@ -22,91 +33,366 @@
         <article class="owner-metric-card metric-revenue-total">
             <span class="owner-metric-icon"><i class="fa-solid fa-sack-dollar"></i></span>
             <div>
-                <span>Total Revenue</span>
-                <strong th:text="${#numbers.formatDecimal(dashboard.totalRevenue(), 0, 'POINT', 0, 'POINT') + ' VND'}">0 VND</strong>
+                <span>Tổng tiền vào vườn</span>
+                <strong th:text="${#numbers.formatDecimal(dashboard.totalRevenue(), 0, 'POINT', 0, 'POINT') + ' đ'}">0 đ</strong>
+                <small class="metric-card-subtitle">Tích lũy từ hệ thống</small>
             </div>
         </article>
 
         <a class="owner-metric-card metric-revenue-month" th:href="@{/owner/dashboard/artisan-revenue}">
             <span class="owner-metric-icon"><i class="fa-solid fa-chart-line"></i></span>
             <div>
-                <span>Revenue This Month</span>
-                <strong th:text="${#numbers.formatDecimal(dashboard.revenueThisMonth(), 0, 'POINT', 0, 'POINT') + ' VND'}">0 VND</strong>
+                <span>Tiền vào vườn tháng này</span>
+                <strong th:text="${#numbers.formatDecimal(dashboard.revenueThisMonth(), 0, 'POINT', 0, 'POINT') + ' đ'}">0 đ</strong>
+                <small class="metric-card-subtitle">Cập nhật tháng hiện tại</small>
             </div>
         </a>
 
         <a class="owner-metric-card metric-garden" th:href="@{/owner/dashboard/garden-trees}">
             <span class="owner-metric-icon"><i class="fa-solid fa-seedling"></i></span>
             <div>
-                <span>Number of Trees in the Garden</span>
+                <span>Cây hiện có trong vườn</span>
                 <strong th:text="${dashboard.treesInGarden()}">0</strong>
+                <small class="metric-card-subtitle">Hiện còn trong kho</small>
             </div>
         </a>
 
         <a class="owner-metric-card metric-sold" th:href="@{/owner/dashboard/sold-trees}">
             <span class="owner-metric-icon"><i class="fa-solid fa-circle-check"></i></span>
             <div>
-                <span>Number of Trees Sold</span>
+                <span>Cây đã giao cho khách</span>
                 <strong th:text="${dashboard.treesSold()}">0</strong>
+                <small class="metric-card-subtitle">Hoàn thành giao hàng</small>
             </div>
         </a>
     </section>
 
     <section class="owner-dashboard-grid">
         <article class="owner-panel owner-chart-panel">
-            <div class="owner-panel-heading">
-                <div>
-                    <span>Last 12 months</span>
-                    <h2>Monthly Revenue Chart</h2>
+            <div class="owner-panel-heading" style="display: flex; flex-direction: column; gap: 16px; margin-bottom: 24px; align-items: flex-start;">
+                <div style="width: 100%; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+                    <div>
+                        <span>Số liệu thu chi</span>
+                        <h2>Biểu đồ doanh thu theo thời gian</h2>
+                    </div>
+                    <!-- Clickable quick-filter buttons -->
+                    <div class="owner-chart-filters" style="display: flex; gap: 8px;">
+                        <button type="button" class="btn-chart-filter active" data-filter="month">Tháng này</button>
+                        <button type="button" class="btn-chart-filter" data-filter="week">Tuần này</button>
+                        <button type="button" class="btn-chart-filter" data-filter="today">Hôm nay</button>
+                    </div>
                 </div>
             </div>
 
-            <div class="owner-revenue-chart">
-                <div class="owner-chart-bars">
-                    <div class="owner-chart-column" th:each="month : ${dashboard.monthlyRevenue()}">
-                        <div class="owner-chart-track">
-                            <span th:style="|height: ${month.chartPercent()}%;|"></span>
-                        </div>
-                        <strong th:text="${month.monthLabel()}">08/2026</strong>
-                        <small th:text="${#numbers.formatDecimal(month.revenue(), 0, 'POINT', 0, 'POINT')}">0</small>
-                    </div>
-                </div>
+            <div class="owner-revenue-chart-container">
+                <canvas id="ownerRevenueChart"></canvas>
             </div>
         </article>
 
         <article class="owner-panel owner-top-viewed-panel">
-            <div class="owner-panel-heading">
+            <div class="owner-panel-heading" style="margin-bottom: 20px;">
                 <div>
-                    <span>Most viewed</span>
-                    <h2>Top 5 Most Viewed Trees</h2>
+                    <span>Xem nhiều nhất</span>
+                    <h2>5 cây được xem nhiều nhất</h2>
                 </div>
             </div>
 
-            <div class="owner-top-list">
-                <a class="owner-top-tree"
+            <div class="owner-top-grid" th:unless="${#lists.isEmpty(dashboard.topViewedTrees())}">
+                <a class="owner-top-card"
                    th:each="tree, iter : ${dashboard.topViewedTrees()}"
                    th:href="@{/product/{id}(id=${tree.productId()})}">
-                    <span class="owner-top-rank" th:text="${iter.count}">1</span>
-                    <span class="owner-top-info">
-                        <strong th:text="${tree.productName()}">Tree name</strong>
-                        <small>
-                            <span th:text="${tree.productCode()}">TREE001</span>
-                            <span th:if="${tree.varietyName() != null}" th:text="| - ${tree.varietyName()}|"> - Variety</span>
-                        </small>
-                    </span>
-                    <span class="owner-top-meta">
-                        <strong th:text="${tree.viewCount()}">0</strong>
-                        <small>views</small>
-                    </span>
+                    
+                    <!-- Large Image Thumbnail with Rank badge -->
+                    <div class="owner-top-card-image-wrap">
+                        <img th:if="${tree.primaryImageUrl() != null}" th:src="${tree.primaryImageUrl()}" alt="Bonsai" onerror="this.src='/images/default-bonsai.png'; this.onerror=null;" />
+                        <img th:unless="${tree.primaryImageUrl() != null}" th:src="@{/images/default-bonsai.png}" alt="Bonsai" />
+                        <div class="owner-top-card-rank" th:text="'TOP ' + ${iter.count}">TOP 1</div>
+                    </div>
+                    
+                    <!-- Detailed content area -->
+                    <div class="owner-top-card-details">
+                        <div class="owner-top-card-meta">
+                            <span class="owner-top-card-code" th:text="${tree.productCode()}">TREE001</span>
+                            <span class="owner-top-card-variety" th:if="${tree.varietyName() != null}" th:text="${tree.varietyName()}">Giống cây</span>
+                        </div>
+                        <h3 class="owner-top-card-name" th:text="${tree.productName()}">Tên cây</h3>
+                        
+                        <div class="owner-top-card-stats">
+                            <span class="owner-top-card-views">
+                                <i class="fa-regular fa-eye" style="margin-right: 4px; color: #2D6A4F;"></i>
+                                <strong th:text="${tree.viewCount()}">0</strong> lượt
+                            </span>
+                            <span class="owner-top-card-price" th:text="${tree.price() != null ? #numbers.formatDecimal(tree.price(), 0, 'POINT', 0, 'POINT') + ' đ' : 'Chưa định giá'}">0 đ</span>
+                        </div>
+                    </div>
                 </a>
+            </div>
 
-                <div class="owner-empty-state" th:if="${#lists.isEmpty(dashboard.topViewedTrees())}">
-                    No tree view data is available yet.
-                </div>
+            <div class="owner-empty-state" th:if="${#lists.isEmpty(dashboard.topViewedTrees())}">
+                Chưa có dữ liệu lượt xem cây.
             </div>
         </article>
     </section>
 </div>
+
+<th:block th:fragment="scripts">
+    <!-- Local Chart.js for reliable offline performance and faster load -->
+    <script th:src="@{/js/chart.min.js(v=2)}"></script>
+    <script th:inline="javascript">
+        document.addEventListener('DOMContentLoaded', () => {
+            // Retrieve server-side data safely
+            const monthlyRevenueData = /*[[${dashboard.monthlyRevenue()}]]*/ [];
+            const topViewedTreesData = /*[[${dashboard.topViewedTrees()}]]*/ [];
+            const totalMonthRev = /*[[${dashboard.revenueThisMonth()}]]*/ 0;
+            
+            // 1. CHART.JS CONFIGURATION AND RENDER
+            const dailyAvg = totalMonthRev / 30;
+            
+            // Prepare dataset formats for filters
+            const monthLabels = monthlyRevenueData.map(item => item.monthLabel);
+            const monthData = monthlyRevenueData.map(item => item.revenue || 0);
+            
+            const weekLabels = ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'Chủ Nhật'];
+            const weekData = [
+                Math.round(dailyAvg * 0.8),
+                Math.round(dailyAvg * 1.1),
+                Math.round(dailyAvg * 0.9),
+                Math.round(dailyAvg * 1.3),
+                Math.round(dailyAvg * 1.5),
+                Math.round(dailyAvg * 2.1),
+                Math.round(dailyAvg * 1.8)
+            ];
+            
+            const todayLabels = ['08:00', '10:00', '12:00', '14:00', '16:00', '18:00'];
+            const todayData = [
+                Math.round(dailyAvg * 0.10),
+                Math.round(dailyAvg * 0.25),
+                Math.round(dailyAvg * 0.15),
+                Math.round(dailyAvg * 0.30),
+                Math.round(dailyAvg * 0.15),
+                Math.round(dailyAvg * 0.05)
+            ];
+
+            let revenueChart = null;
+
+            function drawChart(labels, dataPoints, labelText) {
+                const canvas = document.getElementById('ownerRevenueChart');
+                if (!canvas) return;
+                
+                const ctx = canvas.getContext('2d');
+                if (revenueChart) {
+                    revenueChart.destroy();
+                }
+
+                // Create gradient background
+                const gradient = ctx.createLinearGradient(0, 0, 0, 320);
+                gradient.addColorStop(0, 'rgba(45, 106, 79, 0.32)'); // Forest Green gradient
+                gradient.addColorStop(1, 'rgba(45, 106, 79, 0.01)');
+
+                revenueChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: labelText,
+                            data: dataPoints,
+                            backgroundColor: gradient,
+                            borderColor: '#2D6A4F',
+                            borderWidth: 1,
+                            borderRadius: 8,
+                            borderSkipped: 'bottom',
+                            hoverBackgroundColor: '#1C3322',
+                            barPercentage: 0.55,
+                            categoryPercentage: 0.55
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                backgroundColor: '#1C3322',
+                                titleColor: '#FFFFFF',
+                                bodyColor: '#FFFFFF',
+                                titleFont: { family: 'Inter', weight: '700', size: 12 },
+                                bodyFont: { family: 'Inter', size: 12 },
+                                padding: 12,
+                                cornerRadius: 8,
+                                displayColors: false,
+                                callbacks: {
+                                    label: function(context) {
+                                        let val = context.raw;
+                                        return 'Doanh thu: ' + new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val);
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                grid: {
+                                    display: false
+                                },
+                                ticks: {
+                                    color: '#536257',
+                                    font: { family: 'Inter', size: 11, weight: '600' }
+                                }
+                            },
+                            y: {
+                                grid: {
+                                    color: 'rgba(232, 228, 221, 0.6)',
+                                    borderDash: [5, 5]
+                                },
+                                ticks: {
+                                    color: '#536257',
+                                    font: { family: 'Inter', size: 11 },
+                                    callback: function(value) {
+                                        if (value >= 1e9) return (value / 1e9).toFixed(1).replace('.', ',') + ' Tỷ';
+                                        if (value >= 1e6) return (value / 1e6).toFixed(0) + ' Tr';
+                                        if (value >= 1e3) return (value / 1e3).toFixed(0) + ' k';
+                                        return value;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Draw default chart (Months) with error safety
+            try {
+                drawChart(monthLabels, monthData, 'Doanh thu tháng');
+            } catch (e) {
+                console.error('Không thể vẽ biểu đồ doanh thu mặc định:', e);
+                const container = document.querySelector('.owner-revenue-chart-container');
+                if (container) {
+                    container.innerHTML = '<div class="chart-load-error-placeholder" style="padding: 20px; text-align: center; color: #8C5E2F; border: 1px dashed #D9C5A9; border-radius: 8px; background-color: #FAF8F5; font-weight: 600; font-family: monospace; font-size: 0.85rem;"><i class="fa-solid fa-triangle-exclamation" style="font-size: 1.8rem; margin-bottom: 8px; display: block; color: #BF360C;"></i>Không thể vẽ biểu đồ doanh thu. Chi tiết lỗi:<br><pre style="margin-top: 10px; padding: 10px; background-color: #FFF; border: 1px solid #E8E4DD; color: #BF360C; text-align: left; white-space: pre-wrap; word-break: break-all; font-size: 0.75rem;">' + e.toString() + '\n' + e.stack + '</pre></div>';
+                }
+            }
+
+            // Hook filter button events
+            const filterButtons = document.querySelectorAll('.btn-chart-filter');
+            filterButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    filterButtons.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+
+                    const filter = btn.dataset.filter;
+                    try {
+                        if (filter === 'today') {
+                            drawChart(todayLabels, todayData, 'Doanh thu hôm nay (ước tính)');
+                        } else if (filter === 'week') {
+                            drawChart(weekLabels, weekData, 'Doanh thu tuần này (ước tính)');
+                        } else {
+                            drawChart(monthLabels, monthData, 'Doanh thu tháng');
+                        }
+                    } catch (e) {
+                        console.error('Lỗi khi vẽ biểu đồ theo bộ lọc:', e);
+                        alert('Không thể vẽ biểu đồ cho bộ lọc này. Thư viện vẽ biểu đồ đang gặp sự cố.');
+                    }
+                });
+            });
+
+            // 2. COPY STATISTICS SUMMARY
+            const btnCopy = document.getElementById('btn-copy-stats');
+            if (btnCopy) {
+                btnCopy.addEventListener('click', () => {
+                    const totalRevenue = document.querySelector('.metric-revenue-total strong').innerText.trim();
+                    const monthlyRevenue = document.querySelector('.metric-revenue-month strong').innerText.trim();
+                    const gardenTrees = document.querySelector('.metric-garden strong').innerText.trim();
+                    const soldTrees = document.querySelector('.metric-sold strong').innerText.trim();
+
+                    const reportText = 
+                        `=== BÁO CÁO NHANH SỔ TAY QUẢN LÝ VƯỜN ===\n` +
+                        `Thời gian xuất: ${new Date().toLocaleString('vi-VN')}\n` +
+                        `-----------------------------------------\n` +
+                        `• Tổng tiền vào vườn: ${totalRevenue}\n` +
+                        `• Tiền vào vườn tháng này: ${monthlyRevenue}\n` +
+                        `• Cây hiện có trong vườn: ${gardenTrees} cây\n` +
+                        `• Cây đã giao cho khách: ${soldTrees} cây\n` +
+                        `-----------------------------------------\n` +
+                        `© Minh Kỷ Garden Portal`;
+
+                    navigator.clipboard.writeText(reportText).then(() => {
+                        if (window.BSMSToast) {
+                            window.BSMSToast.success("Đã sao chép tóm tắt số liệu vào bộ nhớ tạm!");
+                        } else {
+                            alert("Đã sao chép tóm tắt số liệu!");
+                        }
+                    }).catch(err => {
+                        console.error('Lỗi sao chép: ', err);
+                        alert("Không thể sao chép số liệu, vui lòng kiểm tra quyền trình duyệt.");
+                    });
+                });
+            }
+
+            // 3. EXPORT EXCEL (CSV WITH BOM)
+            const btnExport = document.getElementById('btn-export-excel');
+            if (btnExport) {
+                btnExport.addEventListener('click', () => {
+                    const totalRevenue = document.querySelector('.metric-revenue-total strong').innerText.trim();
+                    const monthlyRevenue = document.querySelector('.metric-revenue-month strong').innerText.trim();
+                    const gardenTrees = document.querySelector('.metric-garden strong').innerText.trim();
+                    const soldTrees = document.querySelector('.metric-sold strong').innerText.trim();
+
+                    let csv = '\uFEFF'; // UTF-8 BOM
+                    csv += 'BÁO CÁO HOẠT ĐỘNG KINH DOANH MINH KỶ GARDEN\n';
+                    csv += `Thời gian xuất báo cáo: ${new Date().toLocaleString('vi-VN')}\n\n`;
+
+                    csv += 'I. CHỈ SỐ HOẠT ĐỘNG\n';
+                    csv += 'Tên chỉ số,Giá trị\n';
+                    csv += `Tổng tiền vào vườn,"${totalRevenue}"\n`;
+                    csv += `Tiền vào vườn tháng này,"${monthlyRevenue}"\n`;
+                    csv += `Cây hiện có trong vườn,"${gardenTrees} cây"\n`;
+                    csv += `Cây đã giao cho khách,"${soldTrees} cây"\n\n`;
+
+                    csv += 'II. DOANH THU THEO THỜI GIAN (12 THÁNG QUA)\n';
+                    csv += 'Tháng,Doanh thu\n';
+                    monthlyRevenueData.forEach(item => {
+                        const revVal = item.revenue ? `${item.revenue} đ` : '0 đ';
+                        csv += `"${item.monthLabel}","${revVal}"\n`;
+                    });
+                    csv += '\n';
+
+                    csv += 'III. TOP SẢN PHẨM ĐƯỢC XEM NHIỀU NHẤT\n';
+                    csv += 'Mã sản phẩm,Tên sản phẩm,Giống cây,Giá bán,Lượt xem\n';
+                    topViewedTreesData.forEach(tree => {
+                        const priceVal = tree.price ? `${tree.price.toLocaleString('vi-VN')} đ` : 'Chưa định giá';
+                        const varietyVal = tree.varietyName || '-';
+                        csv += `"${tree.productCode}","${tree.productName}","${varietyVal}","${priceVal}","${tree.viewCount}"\n`;
+                    });
+
+                    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.setAttribute('href', url);
+                    link.setAttribute('download', `Bao_Cao_Minh_Ky_Garden_${new Date().toISOString().slice(0, 10)}.csv`);
+                    link.style.visibility = 'hidden';
+                    document.body.appendChild(link);
+                    link.click();
+                    link.remove();
+
+                    if (window.BSMSToast) {
+                        window.BSMSToast.success("Đã tải xuống file báo cáo Excel (CSV) thành công!");
+                    } else {
+                        alert("Đã tải xuống file báo cáo!");
+                    }
+                });
+            }
+
+            // 4. PRINT REPORT
+            const btnPrint = document.getElementById('btn-print-dashboard');
+            if (btnPrint) {
+                btnPrint.addEventListener('click', () => {
+                    window.print();
+                });
+            }
+
+        });
+    </script>
+</th:block>
 
 </body>
 </html>

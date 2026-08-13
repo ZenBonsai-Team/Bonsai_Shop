@@ -13,20 +13,45 @@ document.addEventListener("DOMContentLoaded", () => {
         return element;
     };
 
-    const showToast = (message, type = "info") => {
-        const oldToast = $(".luxury-toast");
-        if (oldToast) oldToast.remove();
-
-        const toast = createElement("div", `luxury-toast ${type}`, message);
-        document.body.appendChild(toast);
-        window.setTimeout(() => toast.remove(), 4200);
+    const createIcon = (className) => {
+        const icon = createElement("i", className);
+        icon.setAttribute("aria-hidden", "true");
+        return icon;
     };
 
-    const initFlashMessages = () => {
-        const success = $("#carrier-success")?.textContent?.trim();
-        const error = $("#carrier-error")?.textContent?.trim();
-        if (success) showToast(success, "success");
-        if (error) showToast(error, "danger");
+    const showToast = (message, type = "success") => {
+        let container = $(".flash-container");
+        if (!container) {
+            container = createElement("div", "flash-container");
+            container.setAttribute("aria-live", "polite");
+            document.body.appendChild(container);
+        }
+
+        const toastType = type === "error" || type === "danger" ? "error" : "success";
+        const toast = createElement("div", `flash-message flash-${toastType}`);
+        toast.appendChild(createIcon(toastType === "success" ? "fa-solid fa-check" : "fa-solid fa-xmark"));
+        toast.appendChild(createElement("span", "", message));
+        container.appendChild(toast);
+        window.setTimeout(() => toast.remove(), 5000);
+    };
+
+    const setButtonLoading = (button, isLoading, loadingText = "Đang xử lý...") => {
+        if (!button) return;
+
+        if (isLoading) {
+            button.dataset.originalText = button.textContent.trim();
+            button.disabled = true;
+            button.classList.add("is-submitting");
+            button.textContent = loadingText;
+            return;
+        }
+
+        button.disabled = false;
+        button.classList.remove("is-submitting");
+        if (button.dataset.originalText) {
+            button.textContent = button.dataset.originalText;
+            delete button.dataset.originalText;
+        }
     };
 
     const initReveal = () => {
@@ -137,14 +162,14 @@ document.addEventListener("DOMContentLoaded", () => {
                 const id = button.dataset.id;
                 if (!id) return;
 
-                showToast("Đang tải chi tiết lịch hẹn...", "info");
+                setButtonLoading(button, true, "Đang tải...");
                 try {
                     const response = await fetch(`/appointments/detail/${id}`);
                     if (!response.ok) throw new Error("Không thể tải thông tin lịch hẹn.");
                     const data = await response.json();
                     const dateTime = formatDateTime(data.appointmentDate);
 
-                    $("#detailName").textContent = "Lịch thăm vườn Bonsai Luxury";
+                    $("#detailName").textContent = "Lịch thăm vườn cây Bonsai";
                     $("#detailCode").textContent = `APT-${data.appointmentId || id}`;
                     $("#detailDate").textContent = dateTime.date;
                     $("#detailTime").textContent = dateTime.time || data.appointmentTime || "";
@@ -153,7 +178,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
                     openModal(modal);
                 } catch (error) {
-                    showToast(error.message, "danger");
+                    showToast(error.message, "error");
+                } finally {
+                    setButtonLoading(button, false);
                 }
             });
         });
@@ -181,14 +208,14 @@ document.addEventListener("DOMContentLoaded", () => {
                 const card = button.closest(".appointment-card");
                 const status = $(".appointment-status-tag", card)?.dataset.status || "";
                 if (status !== "PENDING") {
-                    showToast("Chỉ lịch hẹn PENDING mới được cập nhật.", "danger");
+                    showToast("Chỉ lịch hẹn PENDING mới được cập nhật.", "error");
                     return;
                 }
 
                 const id = button.dataset.id;
                 if (!id) return;
 
-                showToast("Đang tải dữ liệu chỉnh sửa...", "info");
+                setButtonLoading(button, true, "Đang tải...");
                 try {
                     const response = await fetch(`/appointments/detail/${id}`);
                     if (!response.ok) throw new Error("Không thể tải thông tin chỉnh sửa.");
@@ -198,20 +225,23 @@ document.addEventListener("DOMContentLoaded", () => {
                     $("#updateName").textContent = "Lịch thăm vườn Bonsai Luxury";
                     $("#updateCode").textContent = `APT-${data.appointmentId || id}`;
                     $("#updateNote").value = data.note || "";
-                    form.setAttribute("action", `/appointments/update/${id}`);
+
 
                     if (dateInput) {
                         dateInput.value = dateTime.dateValue && dateTime.dateValue >= tomorrowValue ? dateTime.dateValue : tomorrowValue;
                     }
 
                     if (timeInput) {
-                        const safeTime = dateTime.time && dateTime.time >= "08:00" && dateTime.time <= "17:00" ? dateTime.time : "09:00";
-                        timeInput.value = safeTime;
+                        timeInput.value = dateTime.time && dateTime.time >= "08:00" && dateTime.time <= "17:00" ? dateTime.time : "09:00";
                     }
+
+                    form.setAttribute("action", `/appointments/update/${id}`);
 
                     openModal(modal);
                 } catch (error) {
-                    showToast(error.message, "danger");
+                    showToast(error.message, "error");
+                } finally {
+                    setButtonLoading(button, false);
                 }
             });
         });
@@ -223,16 +253,19 @@ document.addEventListener("DOMContentLoaded", () => {
         form.addEventListener("submit", (event) => {
             if (!dateInput?.value || dateInput.value < tomorrowValue) {
                 event.preventDefault();
-                showToast("Vui lòng chọn ngày xem từ ngày mai trở đi.", "danger");
+                showToast("Vui lòng chọn ngày xem từ ngày mai trở đi.", "error");
                 dateInput?.focus();
                 return;
             }
 
             if (!timeInput?.value || timeInput.value < "08:00" || timeInput.value > "17:00") {
                 event.preventDefault();
-                showToast("Vui lòng chọn giờ xem trong khung 08:00 - 17:00.", "danger");
+                showToast("Vui lòng chọn giờ xem trong khung 08:00 - 17:00.", "error");
                 timeInput?.focus();
+                return;
             }
+
+            setButtonLoading($("button[type='submit']", form), true);
         });
 
         return { close };
@@ -250,7 +283,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 const card = button.closest(".appointment-card");
                 const status = $(".appointment-status-tag", card)?.dataset.status || "";
                 if (status !== "PENDING") {
-                    showToast("Chỉ lịch hẹn PENDING mới được hủy.", "danger");
+                    showToast("Chỉ lịch hẹn PENDING mới được hủy.", "error");
                     return;
                 }
 
@@ -267,7 +300,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
 
         form.addEventListener("submit", () => {
-            showToast("Đang xử lý yêu cầu hủy...", "info");
+            setButtonLoading($("button[type='submit']", form), true);
         });
 
         return { close };
@@ -291,7 +324,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const year = $("#year");
     if (year) year.textContent = String(new Date().getFullYear());
 
-    initFlashMessages();
     initReveal();
     initPointerGlow();
 });

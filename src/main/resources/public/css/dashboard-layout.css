@@ -168,18 +168,18 @@ h1, h2, h3, h4, h5, h6, .brand-name, .section-title {
     padding: 32px 18px;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 16px; /* Increased gap between items to prevent accidental misclicks */
 }
 
 .sidebar-nav-item {
     display: flex;
     align-items: center;
     gap: 14px;
-    padding: 14px 20px;
-    color: rgba(250, 248, 245, 0.7);
+    padding: 18px 24px; /* Increased padding for at least 48px click target area */
+    color: rgba(255, 255, 255, 0.95); /* High-contrast white */
     text-decoration: none;
-    font-size: 0.98rem;
-    font-weight: 500;
+    font-size: 1.25rem; /* Larger font size: 20px */
+    font-weight: 600; /* Bold font for better readability */
     letter-spacing: 0.05em;
     border-radius: var(--radius-sm);
     transition: var(--transition);
@@ -187,14 +187,14 @@ h1, h2, h3, h4, h5, h6, .brand-name, .section-title {
 }
 
 .sidebar-nav-item:hover {
-    background: rgba(250, 248, 245, 0.04);
+    background: rgba(250, 248, 245, 0.08);
     color: #ffffff;
 }
 
 .sidebar-nav-item.active {
-    background: rgba(250, 248, 245, 0.06);
+    background: rgba(250, 248, 245, 0.12);
     color: #ffffff;
-    font-weight: 600;
+    font-weight: 700;
     border-left-color: var(--accent-color);
 }
 
