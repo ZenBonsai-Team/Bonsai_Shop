@@ -1,10 +1,13 @@
 <!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{fragments/dashboard-layout :: layout(~{::title}, ~{::#owner-garden-trees-content}, ~{::styles}, ~{})}">
+      th:replace="~{fragments/dashboard-layout :: layout(~{::title}, ~{::#owner-garden-trees-content}, ~{::styles}, ~{::scripts})}">
 <head>
-    <title>Trees in Garden - Minh Ky Garden</title>
+    <title>Cây trong vườn - Minh Kỷ Garden</title>
     <th:block th:fragment="styles">
         <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+    </th:block>
+    <th:block th:fragment="scripts">
+        <script th:src="@{/js/owner-report-pagination.js}"></script>
     </th:block>
 </head>
 <body>
@@ -12,19 +15,19 @@
 <div id="owner-garden-trees-content" class="owner-report-page" th:with="paramActivePage='dashboard'">
     <header class="owner-report-header">
         <div>
-            <span class="owner-eyebrow">Owner Dashboard</span>
-            <h1>Trees in the Garden</h1>
-            <p>Current inventory that has not been marked as sold.</p>
+            <span class="owner-eyebrow">Bảng điều khiển chủ vườn</span>
+            <h1>Cây còn trong vườn</h1>
+            <p>Danh sách cây hiện còn trong kho và chưa được đánh dấu đã bán.</p>
         </div>
         <a class="owner-back-link" th:href="@{/owner}">
             <i class="fa-solid fa-arrow-left"></i>
-            Dashboard
+            Bảng điều khiển
         </a>
     </header>
 
     <section class="owner-panel owner-report-panel">
         <div class="owner-report-summary">
-            <span>Trees remaining</span>
+            <span>Số cây còn lại</span>
             <strong th:text="${#lists.size(gardenTrees)}">0</strong>
         </div>
 
@@ -32,33 +35,38 @@
             <table class="owner-report-table">
                 <thead>
                 <tr>
-                    <th>Tree</th>
-                    <th>Variety</th>
-                    <th>Artisan</th>
-                    <th>Status</th>
-                    <th>Created</th>
-                    <th>Views</th>
-                    <th class="text-end">Price</th>
+                    <th>Cây</th>
+                    <th>Giống cây</th>
+                    <th>Nghệ nhân</th>
+                    <th>Trạng thái</th>
+                    <th>Ngày tạo</th>
+                    <th>Lượt xem</th>
+                    <th class="text-end">Giá</th>
                 </tr>
                 </thead>
-                <tbody>
-                <tr th:each="tree : ${gardenTrees}">
+                <tbody data-owner-paginated-list data-page-size="10" data-report-label="cây trong vườn">
+                <tr th:each="tree : ${gardenTrees}" data-page-entry>
                     <td>
-                        <a class="owner-tree-link" th:href="@{/product/{id}(id=${tree.productId()})}" th:text="${tree.productName()}">Tree name</a>
+                        <a class="owner-tree-link" th:href="@{/product/{id}(id=${tree.productId()})}" th:text="${tree.productName()}">Tên cây</a>
                         <small th:text="${tree.productCode()}">TREE001</small>
                     </td>
-                    <td th:text="${tree.varietyName() ?: '-'}">Variety</td>
-                    <td th:text="${tree.artisanName() ?: '-'}">Artisan</td>
-                    <td><span class="owner-status-pill" th:text="${tree.productStatus() ?: 'UNKNOWN'}">AVAILABLE</span></td>
+                    <td th:text="${tree.varietyName() ?: '-'}">Giống cây</td>
+                    <td th:text="${tree.artisanName() ?: '-'}">Nghệ nhân</td>
+                    <td><span class="owner-status-pill"
+                              th:text="${tree.productStatus() == 'AVAILABLE' ? 'Đang bán' : (tree.productStatus() == 'RESERVED' ? 'Đã giữ chỗ' : (tree.productStatus() == 'DRAFT' ? 'Bản nháp' : (tree.productStatus() == 'HIDDEN' ? 'Đang ẩn' : (tree.productStatus() ?: 'Không xác định'))))}">Đang bán</span></td>
                     <td th:text="${tree.createdAt() != null ? #temporals.format(tree.createdAt(), 'dd/MM/yyyy HH:mm') : '-'}">11/08/2026 13:10</td>
                     <td th:text="${tree.viewCount()}">0</td>
                     <td class="text-end" th:text="${tree.price() != null ? #numbers.formatDecimal(tree.price(), 0, 'POINT', 0, 'POINT') + ' VND' : '-'}">0 VND</td>
                 </tr>
                 <tr th:if="${#lists.isEmpty(gardenTrees)}">
-                    <td colspan="7" class="owner-empty-state">No trees remain in the garden.</td>
+                    <td colspan="7" class="owner-empty-state">Không còn cây nào trong vườn.</td>
                 </tr>
                 </tbody>
             </table>
+        </div>
+        <div class="pagination-footer owner-report-pagination" data-owner-pagination hidden>
+            <div class="pagination-info" data-owner-pagination-info></div>
+            <div class="pagination-controls" data-owner-pagination-controls></div>
         </div>
     </section>
 </div>

@@ -28,7 +28,7 @@
             <div class="product-toolbar-top">
                 <div>
                     <h2>Danh sách đơn tại vườn</h2>
-                    <p>Chỉ bao gồm order có loại IN_PERSON và handler là tài khoản artisan.</p>
+                    <p>Chỉ bao gồm đơn bán tại vườn và người phụ trách là tài khoản nghệ nhân.</p>
                 </div>
             </div>
 
@@ -38,7 +38,7 @@
                     <input type="text"
                            name="search"
                            th:value="${search}"
-                           placeholder="Tìm theo mã đơn, khách hàng, handler hoặc sản phẩm"
+                           placeholder="Tìm theo mã đơn, khách hàng, người phụ trách hoặc sản phẩm"
                            autocomplete="off">
                 </div>
                 <button class="btn-mini btn-mini-primary" type="submit">Tìm</button>
@@ -79,7 +79,7 @@
                 <tr>
                     <th>Mã đơn </th>
                     <th>Khách hàng</th>
-                    <th>Handler</th>
+                    <th>Người phụ trách</th>
                     <th>Sản phẩm </th>
                     <th class="col-price">Tổng tiền</th>
                     <th>Ngày tạo</th>
@@ -91,14 +91,14 @@
                 <tr th:each="order : ${orders.content}">
                     <td class="col-code" data-label="Mã đơn" th:text="${order.orderCode}">BSMS-517407</td>
                     <td data-label="Khách hàng">
-                        <strong th:text="${order.customerName}">In-person customer</strong>
+                        <strong th:text="${order.customerName}">Khách tại vườn</strong>
                         <small class="d-block text-muted" th:text="${order.customerPhone}">SĐT</small>
                     </td>
-                    <td data-label="Handler">
-                        <strong th:text="${order.handlerName}">Artisan</strong>
+                    <td data-label="Người phụ trách">
+                        <strong th:text="${order.handlerName}">Nghệ nhân</strong>
                         <small class="d-block text-muted" th:text="${order.handlerEmail}">artisan@example.com</small>
                     </td>
-                    <td data-label="Sản phẩm" th:text="${order.productName}">Product</td>
+                    <td data-label="Sản phẩm" th:text="${order.productName}">Sản phẩm</td>
                     <td data-label="Tổng tiền"
                         class="col-price money-cell"
                         th:text="${order.totalAmount != null
@@ -154,7 +154,7 @@
                     <td colspan="8" class="empty-state">
                         <div class="empty-state-icon"><i class="fa-solid fa-cash-register"></i></div>
                         <div class="empty-state-title">Chưa có đơn tại vườn.</div>
-                        <div class="empty-state-desc">Các đơn IN_PERSON thuộc tài khoản artisan sẽ hiển thị tại đây.</div>
+                        <div class="empty-state-desc">Các đơn bán tại vườn thuộc tài khoản nghệ nhân sẽ hiển thị tại đây.</div>
                     </td>
                 </tr>
                 </tbody>
