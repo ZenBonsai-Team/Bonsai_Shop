@@ -48,15 +48,15 @@
                 entry.hidden = index < startIndex || index >= endIndex;
             });
 
-            info.textContent = `Showing ${startIndex + 1} - ${endIndex} of ${entries.length} ${reportLabel}`;
+            info.textContent = `Hiển thị ${startIndex + 1} - ${endIndex} trong tổng số ${entries.length} ${reportLabel}`;
             controls.innerHTML = '';
-            controls.appendChild(createPageButton('Previous', currentPage - 1, currentPage, totalPages, renderPage));
+            controls.appendChild(createPageButton('Trước', currentPage - 1, currentPage, totalPages, renderPage));
 
             for (let pageNumber = 1; pageNumber <= totalPages; pageNumber += 1) {
                 controls.appendChild(createPageButton(String(pageNumber), pageNumber, currentPage, totalPages, renderPage));
             }
 
-            controls.appendChild(createPageButton('Next', currentPage + 1, currentPage, totalPages, renderPage));
+            controls.appendChild(createPageButton('Sau', currentPage + 1, currentPage, totalPages, renderPage));
             pagination.hidden = false;
         }
 

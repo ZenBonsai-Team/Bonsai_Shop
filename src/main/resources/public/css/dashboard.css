@@ -1765,15 +1765,15 @@ a.owner-metric-card:hover {
 
 .owner-chart-bars {
     align-items: end;
-    background: linear-gradient(180deg, #FAF8F5 0%, #F4F1EA 100%);
+    background: #FAF8F5;
     border: 1px solid #EFE9DF;
     border-radius: 8px;
     display: grid;
-    gap: 12px;
+    gap: 16px;
     grid-template-columns: repeat(12, minmax(54px, 1fr));
     min-height: 340px;
     min-width: 760px;
-    padding: 22px 18px 16px;
+    padding: 28px 22px 16px;
 }
 
 .owner-chart-column {
@@ -1784,23 +1784,30 @@ a.owner-metric-card:hover {
     min-width: 0;
 }
 
-.owner-chart-track {
+.owner-chart-value {
     align-items: end;
-    background: rgba(255, 255, 255, 0.76);
-    border: 1px solid #ECE7DF;
-    border-radius: 999px 999px 8px 8px;
     display: flex;
+    justify-content: center;
     height: 240px;
-    overflow: hidden;
     width: 100%;
 }
 
-.owner-chart-track span {
-    background: linear-gradient(180deg, #3B8A50, #1C3322);
-    border-radius: 999px 999px 8px 8px;
+.owner-chart-bar {
+    background: linear-gradient(180deg, #4F86D9, #235DAA);
+    border-radius: 999px;
+    box-shadow: 0 6px 14px rgba(35, 93, 170, 0.16);
     display: block;
-    min-height: 0;
-    width: 100%;
+    min-height: 8px;
+    width: 22px;
+}
+
+.owner-chart-zero {
+    background: #CBD5E1;
+    border-radius: 999px;
+    display: block;
+    height: 4px;
+    margin-bottom: 2px;
+    width: 22px;
 }
 
 .owner-chart-column strong,
