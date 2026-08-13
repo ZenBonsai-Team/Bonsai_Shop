@@ -166,7 +166,7 @@
                 </div>
             </div>
 
-            <div class="table-container">
+            <div class="table-container" id="walkInOrdersTableContainer">
                 <table class="orders-table">
                     <thead>
                     <tr>
@@ -233,7 +233,7 @@
                 </table>
             </div>
 
-            <div class="catalog-table-footer walkin-pagination-footer" th:if="${orders != null}">
+            <div class="catalog-table-footer walkin-pagination-footer" id="walkInOrdersPagination" th:if="${orders != null}">
                 <span th:text="${orders.totalElements == 0
                     ? 'Không có đơn tại vườn'
                     : 'Hiển thị ' + (orders.number * orders.size + 1) + '–' + (orders.number * orders.size + orders.numberOfElements) + ' trong ' + orders.totalElements + ' đơn'}"></span>
@@ -520,12 +520,6 @@
     const cancelConfirmCode = document.getElementById('walkInCancelConfirmCode');
     const cancelConfirmClose = cancelConfirmModal.querySelector('.artisan-action-modal-close');
     const cancelConfirmCancel = cancelConfirmModal.querySelector('.btn-modal-cancel');
-    document.getElementById('walkInPageSize')?.addEventListener('change', (event) => {
-        const url = new URL(window.location.href);
-        url.searchParams.set('size', event.target.value);
-        url.searchParams.set('page', '0');
-        window.location.href = url.toString();
-    });
     const cancelConfirmSubmit = cancelConfirmModal.querySelector('.btn-modal-confirm');
     let allowCancelSubmit = false;
     const editButton = document.getElementById('walkInEditButton');
@@ -764,12 +758,62 @@
         panel.classList.remove('show');
     }
 
-    document.querySelectorAll('.js-open-walkin-drawer').forEach(trigger => {
-        trigger.addEventListener('click', function (event) {
+    function loadWalkInOrdersPage(url, pushHistory = true) {
+        const targetUrl = url.toString();
+        document.getElementById('walkInOrdersSection')?.classList.add('is-loading');
+        return fetch(targetUrl, {headers: {'X-Requested-With': 'XMLHttpRequest'}})
+            .then(response => {
+                if (!response.ok) throw new Error('Không tải được danh sách đơn.');
+                return response.text();
+            })
+            .then(html => {
+                const doc = new DOMParser().parseFromString(html, 'text/html');
+                const nextTable = doc.getElementById('walkInOrdersTableContainer');
+                const nextPagination = doc.getElementById('walkInOrdersPagination');
+                const currentTable = document.getElementById('walkInOrdersTableContainer');
+                const currentPagination = document.getElementById('walkInOrdersPagination');
+                if (!nextTable || !currentTable) throw new Error('Không tìm thấy bảng đơn tại vườn.');
+                currentTable.replaceWith(nextTable);
+                if (currentPagination && nextPagination) {
+                    currentPagination.replaceWith(nextPagination);
+                } else if (currentPagination && !nextPagination) {
+                    currentPagination.remove();
+                } else if (!currentPagination && nextPagination) {
+                    document.getElementById('walkInOrdersSection')?.appendChild(nextPagination);
+                }
+                if (pushHistory) {
+                    window.history.pushState({}, '', targetUrl);
+                }
+            })
+            .catch(() => {
+                window.location.href = targetUrl;
+            })
+            .finally(() => document.getElementById('walkInOrdersSection')?.classList.remove('is-loading'));
+    }
+
+    document.addEventListener('click', function (event) {
+        const trigger = event.target.closest('.js-open-walkin-drawer');
+        if (trigger) {
             event.stopPropagation();
             openDrawer(trigger);
-        });
+            return;
+        }
+
+        const pageLink = event.target.closest('.walkin-pagination-controls .product-page-nav');
+        if (!pageLink || pageLink.classList.contains('disabled')) return;
+        event.preventDefault();
+        loadWalkInOrdersPage(new URL(pageLink.href));
     });
+
+    document.addEventListener('change', function (event) {
+        if (event.target.id !== 'walkInPageSize') return;
+        const url = new URL(window.location.href);
+        url.searchParams.set('size', event.target.value);
+        url.searchParams.set('page', '0');
+        loadWalkInOrdersPage(url);
+    });
+
+    window.addEventListener('popstate', () => loadWalkInOrdersPage(new URL(window.location.href), false));
 
     confirmForm.addEventListener('submit', function (event) {
         if (!allowPaymentSubmit) {
