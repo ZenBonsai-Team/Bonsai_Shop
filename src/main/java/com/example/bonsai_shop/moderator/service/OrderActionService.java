@@ -226,13 +226,14 @@ public class OrderActionService {
             throw new OrderNotFoundException("Mã đơn hàng không hợp lệ");
         }
 
-        Order order = orderRepository.findByOrderCode(normalized)
-                .orElseGet(() -> {
-                    if (normalized.matches("\\d+")) {
-                        return orderRepository.findById(Integer.parseInt(normalized)).orElse(null);
-                    }
-                    return null;
-                });
+        Order order = orderRepository.findByOrderCodeWithDetails(normalized)
+                .orElseGet(() -> orderRepository.findByOrderCode(normalized)
+                        .orElseGet(() -> {
+                            if (normalized.matches("\\d+")) {
+                                return orderRepository.findById(Integer.parseInt(normalized)).orElse(null);
+                            }
+                            return null;
+                        }));
 
         if (order == null) {
             throw new OrderNotFoundException("Không tìm thấy đơn hàng: " + normalized);
