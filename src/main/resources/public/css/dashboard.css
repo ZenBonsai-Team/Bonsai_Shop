@@ -1,4 +1,4 @@
-﻿/* --- DASHBOARD LAYOUT STYLES --- */
+/* --- DASHBOARD LAYOUT STYLES --- */
 
 .dashboard-layout {
     display: flex;
@@ -1626,11 +1626,79 @@ body:has(.artisan-topbar) .artisan-dashboard-hero {
     padding: 24px 28px;
 }
 
+/* Action Toolbar */
+.owner-actions-toolbar {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.btn-owner-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-size: 0.92rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid #E8E4DD;
+    background-color: #FFFFFF;
+    color: #2E3B32;
+}
+
+.btn-owner-action i {
+    font-size: 0.95rem;
+}
+
+.btn-owner-action:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(28, 51, 34, 0.08);
+}
+
+.btn-owner-action:active {
+    transform: translateY(0);
+}
+
+.btn-copy {
+    border-color: #D9C5A9;
+    color: #8C5E2F;
+    background: linear-gradient(135deg, #FFFFFF, #FAF6F0);
+}
+
+.btn-copy:hover {
+    border-color: #8C5E2F;
+    background: linear-gradient(135deg, #FAF6F0, #F3ECE2);
+}
+
+.btn-excel {
+    border-color: #C8E6C9;
+    color: #1B5E20;
+    background: linear-gradient(135deg, #FFFFFF, #F4FBF5);
+}
+
+.btn-excel:hover {
+    background: linear-gradient(135deg, #F4FBF5, #E8F5E9);
+    border-color: #2E7D32;
+}
+
+.btn-print {
+    border-color: #BBDEFB;
+    color: #0D47A1;
+    background: linear-gradient(135deg, #FFFFFF, #F1F8FF);
+}
+
+.btn-print:hover {
+    background: linear-gradient(135deg, #F1F8FF, #E3F2FD);
+    border-color: #1976D2;
+}
+
 .owner-eyebrow,
 .owner-panel-heading span {
-    color: #A5723D;
+    color: #8C5E2F; /* Darker brown for high contrast */
     display: block;
-    font-size: 0.76rem;
+    font-size: 0.85rem; /* Larger */
     font-weight: 800;
     letter-spacing: 0.1em;
     text-transform: uppercase;
@@ -1638,20 +1706,21 @@ body:has(.artisan-topbar) .artisan-dashboard-hero {
 
 .owner-dashboard-header h1 {
     color: #1C3322;
-    font-size: 2rem;
+    font-size: 2.2rem; /* Larger */
     font-weight: 800;
     margin: 6px 0;
 }
 
 .owner-dashboard-header p {
-    color: #536257;
+    color: #2E3B32; /* Darker color for high contrast */
+    font-size: 1.05rem;
     margin: 0;
 }
 
 .owner-metric-grid {
     display: grid;
-    gap: 16px;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 20px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .owner-metric-card {
@@ -1661,49 +1730,89 @@ body:has(.artisan-topbar) .artisan-dashboard-hero {
     border-radius: 8px;
     box-shadow: 0 8px 26px rgba(28, 51, 34, 0.04);
     display: flex;
-    gap: 16px;
-    min-height: 116px;
+    gap: 20px;
+    min-height: 130px;
     min-width: 0;
-    padding: 20px;
+    padding: 24px;
     text-decoration: none;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 a.owner-metric-card:hover {
     border-color: #D9C5A9;
-    box-shadow: 0 14px 30px rgba(28, 51, 34, 0.08);
-    transform: translateY(-1px);
+    box-shadow: 0 16px 36px rgba(28, 51, 34, 0.08);
+    transform: translateY(-3px);
 }
 
 .owner-metric-icon {
     align-items: center;
-    border-radius: 16px;
+    border-radius: 18px;
     display: flex;
-    flex: 0 0 52px;
-    font-size: 1.25rem;
-    height: 52px;
+    flex: 0 0 64px;
+    font-size: 1.8rem; /* Larger icon */
+    height: 64px;
     justify-content: center;
-    width: 52px;
+    width: 64px;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
 }
 
-.metric-revenue-total .owner-metric-icon {
-    background: #EAF7EE;
-    color: #1F7A3E;
+/* Redesigned Card Color Themes with beautiful soft gradients */
+.metric-revenue-total,
+.metric-revenue-month {
+    background: linear-gradient(135deg, #FFFFFF, #EAF7EE); /* Soft organic green gradient */
+    border-color: #C8E6C9;
 }
-
+.metric-revenue-total .owner-metric-icon,
 .metric-revenue-month .owner-metric-icon {
-    background: #EEF4FF;
-    color: #315BB8;
+    background: #C8E6C9;
+    color: #1B5E20;
+}
+.metric-revenue-total span,
+.metric-revenue-month span {
+    color: #2E7D32 !important;
+}
+.metric-revenue-total strong,
+.metric-revenue-month strong {
+    color: #1B5E20 !important;
 }
 
+.metric-garden {
+    background: linear-gradient(135deg, #FFFFFF, #FFF8F0); /* Soft earthy orange/brown gradient */
+    border-color: #FFE0B2;
+}
 .metric-garden .owner-metric-icon {
-    background: #FFF6E7;
-    color: #A56619;
+    background: #FFE0B2;
+    color: #A63F00;
+}
+.metric-garden span {
+    color: #A63F00 !important;
+}
+.metric-garden strong {
+    color: #1C3322 !important; /* High contrast garden forest green */
 }
 
+.metric-sold {
+    background: linear-gradient(135deg, #FFFFFF, #F0F7FF); /* Soft calm blue gradient */
+    border-color: #BBDEFB;
+}
 .metric-sold .owner-metric-icon {
-    background: #F2EDFF;
-    color: #6944B4;
+    background: #BBDEFB;
+    color: #0D47A1;
+}
+.metric-sold span {
+    color: #0D47A1 !important;
+}
+.metric-sold strong {
+    color: #1C3322 !important; /* High contrast garden forest green */
+}
+
+.metric-card-subtitle {
+    display: block;
+    font-size: 0.8rem;
+    color: #66736B;
+    margin-top: 4px;
+    font-weight: 500;
+    text-transform: none !important;
 }
 
 .owner-metric-card div {
@@ -1711,27 +1820,25 @@ a.owner-metric-card:hover {
 }
 
 .owner-metric-card span:not(.owner-metric-icon) {
-    color: #66736B;
     display: block;
-    font-size: 0.78rem;
+    font-size: 0.85rem; /* Larger */
     font-weight: 800;
     margin-bottom: 8px;
     text-transform: uppercase;
 }
 
 .owner-metric-card strong {
-    color: #1C3322;
     display: block;
-    font-size: clamp(1.25rem, 1.7vw, 1.72rem);
+    font-size: 2.8rem; /* Massive numbers */
     font-weight: 900;
-    line-height: 1.15;
+    line-height: 1.1;
     overflow-wrap: anywhere;
 }
 
 .owner-dashboard-grid {
     display: grid;
-    gap: 22px;
-    grid-template-columns: minmax(0, 1.45fr) minmax(340px, 0.55fr);
+    gap: 24px;
+    grid-template-columns: 1fr;
 }
 
 .owner-panel {
@@ -1753,9 +1860,39 @@ a.owner-metric-card:hover {
 
 .owner-panel-heading h2 {
     color: #1C3322;
-    font-size: 1.25rem;
+    font-size: 1.4rem; /* Larger */
     font-weight: 800;
     margin: 6px 0 0;
+}
+
+/* Quick chart filter buttons styling */
+.owner-chart-filters {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-chart-filter {
+    background: #FFFFFF;
+    border: 1px solid #D9C5A9;
+    color: #1C3322;
+    border-radius: 6px;
+    padding: 10px 18px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-chart-filter:hover {
+    background: #FAF8F5;
+    border-color: #A5723D;
+}
+
+.btn-chart-filter.active {
+    background: #1C3322;
+    border-color: #1C3322;
+    color: #FFFFFF;
+    box-shadow: 0 4px 10px rgba(28, 51, 34, 0.15);
 }
 
 .owner-revenue-chart {
@@ -1763,9 +1900,18 @@ a.owner-metric-card:hover {
     padding-bottom: 6px;
 }
 
+.owner-revenue-chart-container {
+    position: relative;
+    height: 350px;
+    width: 100%;
+    margin-top: 8px;
+}
+
 .owner-chart-bars {
     align-items: end;
-    background: #FAF8F5;
+    /* Soft grid lines via CSS linear-gradient */
+    background: #FAF8F5 linear-gradient(to bottom, rgba(232, 228, 221, 0.6) 1px, transparent 1px);
+    background-size: 100% 48px;
     border: 1px solid #EFE9DF;
     border-radius: 8px;
     display: grid;
@@ -1774,22 +1920,34 @@ a.owner-metric-card:hover {
     min-height: 340px;
     min-width: 760px;
     padding: 28px 22px 16px;
+    position: relative;
 }
 
 .owner-chart-column {
     align-items: center;
     display: grid;
     gap: 8px;
-    grid-template-rows: 240px auto auto;
+    grid-template-rows: 240px auto; /* 2 rows since small is deleted */
     min-width: 0;
 }
 
 .owner-chart-value {
-    align-items: end;
+    align-items: center;
     display: flex;
-    justify-content: center;
+    flex-direction: column;
+    justify-content: flex-end;
     height: 240px;
     width: 100%;
+    position: relative;
+}
+
+.owner-chart-datalabel {
+    color: #1A1A1A;
+    font-size: 0.8rem;
+    font-weight: 800;
+    margin-bottom: 6px;
+    text-align: center;
+    white-space: nowrap;
 }
 
 .owner-chart-bar {
@@ -1810,104 +1968,153 @@ a.owner-metric-card:hover {
     width: 22px;
 }
 
-.owner-chart-column strong,
-.owner-chart-column small {
-    color: #536257;
+.owner-chart-column strong {
+    color: #1C3322;
     display: block;
-    font-size: 0.72rem;
+    font-size: 0.9rem; /* Larger and high-contrast */
     font-weight: 800;
     text-align: center;
     white-space: nowrap;
+    margin-top: 4px;
 }
 
-.owner-chart-column small {
-    color: #1C3322;
-    font-size: 0.7rem;
-    max-width: 64px;
+/* --- TOP VIEWS CARD GRID SHOWCASE --- */
+
+.owner-top-grid {
+    display: grid;
+    gap: 20px;
+    grid-template-columns: repeat(5, 1fr);
+    margin-top: 16px;
+}
+
+.owner-top-card {
+    background: #FFFFFF;
+    border: 1px solid #E8E4DD;
+    border-radius: 12px;
     overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.owner-top-list {
-    display: grid;
-    gap: 12px;
-}
-
-.owner-top-tree {
-    align-items: center;
-    background: #FAF8F5;
-    border: 1px solid #EFE9DF;
-    border-radius: 8px;
-    color: inherit;
-    display: grid;
-    gap: 12px;
-    grid-template-columns: 38px minmax(0, 1fr) auto;
-    min-height: 72px;
-    padding: 12px 14px;
-    text-decoration: none;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
-}
-
-.owner-top-tree:hover {
-    border-color: #D9C5A9;
-    box-shadow: 0 10px 24px rgba(28, 51, 34, 0.08);
-    transform: translateY(-1px);
-}
-
-.owner-top-rank {
-    align-items: center;
-    background: #1C3322;
-    border-radius: 50%;
-    color: #fff;
     display: flex;
-    font-size: 0.86rem;
-    font-weight: 900;
-    height: 38px;
-    justify-content: center;
-    width: 38px;
+    flex-direction: column;
+    text-decoration: none;
+    color: inherit;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 12px rgba(28, 51, 34, 0.02);
 }
 
-.owner-top-info {
-    min-width: 0;
+.owner-top-card:hover {
+    transform: translateY(-4px);
+    border-color: #D9C5A9;
+    box-shadow: 0 12px 28px rgba(28, 51, 34, 0.08);
 }
 
-.owner-top-info strong {
-    color: #1C3322;
-    display: block;
-    font-size: 0.94rem;
-    font-weight: 850;
+.owner-top-card-image-wrap {
+    position: relative;
+    width: 100%;
+    height: 180px;
+    background: #F4F1EA;
+    border-bottom: 1px solid #EFE9DF;
+    overflow: hidden;
+}
+
+.owner-top-card-image-wrap img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.4s ease;
+}
+
+.owner-top-card:hover .owner-top-card-image-wrap img {
+    transform: scale(1.05);
+}
+
+.owner-top-card-rank {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: #1C3322;
+    color: #FFFFFF;
+    font-size: 0.75rem;
+    font-weight: 800;
+    padding: 4px 10px;
+    border-radius: 20px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    letter-spacing: 0.05em;
+}
+
+.owner-top-card-details {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    flex-grow: 1;
+}
+
+.owner-top-card-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.78rem;
+    font-weight: 700;
+}
+
+.owner-top-card-code {
+    background: #FAF8F5;
+    border: 1px solid #E8E4DD;
+    color: #536257;
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+.owner-top-card-variety {
+    color: #8C5E2F;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
-.owner-top-info small,
-.owner-top-meta small {
-    color: #66736B;
-    display: block;
-    font-size: 0.75rem;
-    font-weight: 700;
-    margin-top: 4px;
-}
-
-.owner-top-meta {
-    text-align: right;
-}
-
-.owner-top-meta strong {
+.owner-top-card-name {
     color: #1C3322;
-    display: block;
+    font-size: 1.05rem;
+    font-weight: 800;
+    margin: 0;
+    line-height: 1.4;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    height: 2.8em; /* height for 2 lines */
+}
+
+.owner-top-card-stats {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 6px;
+    padding-top: 10px;
+    border-top: 1px dashed #EFE9DF;
+}
+
+.owner-top-card-views {
+    font-size: 0.8rem;
+    color: #536257;
+    font-weight: 700;
+}
+
+.owner-top-card-price {
+    color: #2D6A4F;
     font-size: 1.15rem;
     font-weight: 900;
+    font-family: 'Inter', sans-serif;
 }
 
 .owner-empty-state {
     background: #FAF8F5;
     border: 1px dashed #D9C5A9;
     border-radius: 8px;
-    color: #66736B;
-    font-size: 0.9rem;
-    padding: 22px;
+    color: #2E3B32;
+    font-size: 0.95rem;
+    padding: 32px;
     text-align: center;
 }
 
@@ -2090,6 +2297,27 @@ a.owner-metric-card:hover {
     .owner-dashboard-grid {
         grid-template-columns: 1fr;
     }
+
+    .owner-top-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 992px) {
+    .owner-dashboard-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 20px;
+    }
+
+    .owner-actions-toolbar {
+        width: 100%;
+        justify-content: flex-start;
+    }
+
+    .owner-top-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
 }
 
 @media (max-width: 760px) {
@@ -2109,5 +2337,80 @@ a.owner-metric-card:hover {
         align-items: flex-start;
         flex-direction: column;
         padding: 20px;
+    }
+
+    .owner-top-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Print Stylesheet */
+@media print {
+    body, html {
+        background: #FFFFFF !important;
+        color: #000000 !important;
+        font-size: 11pt !important;
+    }
+    
+    /* Hide navigation sidebars, topbars and interactive elements */
+    .dashboard-sidebar,
+    .dashboard-main header,
+    .admin-top-navbar,
+    .owner-actions-toolbar,
+    .owner-chart-filters,
+    .owner-back-link,
+    .btn-chart-filter,
+    .owner-report-pagination {
+        display: none !important;
+    }
+    
+    .dashboard-layout {
+        display: block !important;
+        background: none !important;
+    }
+    
+    .dashboard-main {
+        padding: 0 !important;
+        margin: 0 !important;
+        width: 100% !important;
+    }
+    
+    /* Format panels nicely for paper */
+    .owner-panel,
+    .owner-dashboard-header,
+    .owner-metric-card,
+    .owner-report-panel {
+        border: 1px solid #000000 !important;
+        box-shadow: none !important;
+        background: #FFFFFF !important;
+        color: #000000 !important;
+        page-break-inside: avoid;
+        margin-bottom: 20px !important;
+    }
+    
+    .owner-metric-card strong,
+    .owner-metric-card span,
+    .owner-metric-card small {
+        color: #000000 !important;
+    }
+    
+    .owner-top-tree {
+        border: 1px solid #000000 !important;
+        background: #FFFFFF !important;
+        box-shadow: none !important;
+        page-break-inside: avoid;
+    }
+    
+    .owner-top-price,
+    .owner-top-name,
+    .owner-top-code,
+    .owner-top-variety,
+    .owner-top-views-count {
+        color: #000000 !important;
+    }
+    
+    /* Ensure the chart takes the full width and prints nicely */
+    .owner-revenue-chart-container {
+        height: 300px !important;
     }
 }
