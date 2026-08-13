@@ -979,7 +979,8 @@ body:has(.artisan-topbar) .artisan-dashboard-hero {
 .revenue-summary-toolbar {
     align-items: center;
     display: flex;
-    gap: 1rem;
+    flex-wrap: wrap;
+    gap: 0.6rem;
     justify-content: center;
     margin-top: 0.35rem;
 }
@@ -988,15 +989,15 @@ body:has(.artisan-topbar) .artisan-dashboard-hero {
     align-items: center;
     background: #fffdf9;
     border: 1px solid #EFE9DF;
-    border-radius: 16px;
+    border-radius: 14px;
     display: flex;
     gap: 0.5rem;
-    padding: 0.45rem;
+    padding: 0.35rem;
 }
 
 .dashboard-month-filter label {
     color: #66736b;
-    font-size: 0.78rem;
+    font-size: 0.76rem;
     font-weight: 800;
     margin: 0;
     white-space: nowrap;
@@ -1005,11 +1006,11 @@ body:has(.artisan-topbar) .artisan-dashboard-hero {
 .dashboard-month-filter input {
     background: #FAF8F5;
     border: 1px solid #E8E4DD;
-    border-radius: 12px;
+    border-radius: 10px;
     color: #1C3322;
-    font-size: 0.82rem;
+    font-size: 0.8rem;
     font-weight: 800;
-    padding: 0.34rem 0.55rem;
+    padding: 0.3rem 0.5rem;
 }
 
 .artisan-dashboard-hero .btn {
@@ -1022,9 +1023,9 @@ body:has(.artisan-topbar) .artisan-dashboard-hero {
 
 .artisan-metric-grid {
     display: grid;
-    gap: 18px;
+    gap: 12px;
     grid-template-columns: repeat(4, minmax(0, 1fr));
-    margin-bottom: 22px;
+    margin-bottom: 18px;
 }
 
 .artisan-metric-card,
@@ -1032,15 +1033,24 @@ body:has(.artisan-topbar) .artisan-dashboard-hero {
     background: #fff;
     border: 1px solid #E8E4DD;
     border-radius: 18px;
-    box-shadow: 0 14px 35px rgba(28,51,34,0.06);
+    box-shadow: 0 10px 28px rgba(28,51,34,0.045);
 }
 
 .artisan-metric-card {
     align-items: center;
+    color: inherit;
     display: flex;
-    gap: 16px;
-    min-height: 122px;
-    padding: 22px;
+    gap: 12px;
+    min-height: 82px;
+    padding: 14px 16px;
+    text-decoration: none;
+    transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+a.artisan-metric-card:hover {
+    border-color: #CFE5D5;
+    color: inherit;
+    transform: translateY(-1px);
 }
 
 .artisan-metric-card > div:last-child,
@@ -1050,13 +1060,13 @@ body:has(.artisan-topbar) .artisan-dashboard-hero {
 
 .metric-icon {
     align-items: center;
-    border-radius: 18px;
+    border-radius: 12px;
     display: flex;
-    flex: 0 0 54px;
-    font-size: 1.35rem;
-    height: 54px;
+    flex: 0 0 40px;
+    font-size: 1rem;
+    height: 40px;
     justify-content: center;
-    width: 54px;
+    width: 40px;
 }
 
 .metric-total .metric-icon {
@@ -1074,23 +1084,28 @@ body:has(.artisan-topbar) .artisan-dashboard-hero {
     color: #B66A00;
 }
 
+.metric-attention .metric-icon {
+    background: #FFF7E6;
+    color: #A15C00;
+}
+
 .metric-revenue .metric-icon {
-    background: #F3ECFF;
-    color: #7342c8;
+    background: #EAF7EE;
+    color: #2f7d46;
 }
 
 .artisan-metric-card span {
     color: #66736b;
     display: block;
-    font-size: 0.82rem;
+    font-size: 0.78rem;
     font-weight: 800;
-    margin-bottom: 8px;
+    margin-bottom: 5px;
 }
 
 .artisan-metric-card strong {
     color: #1C3322;
     display: block;
-    font-size: 1.75rem;
+    font-size: 1.45rem;
     font-weight: 900;
     line-height: 1.1;
 }
@@ -1103,47 +1118,50 @@ body:has(.artisan-topbar) .artisan-dashboard-hero {
     word-break: break-word;
 }
 
-.summary-source-link {
-    align-items: center;
-    display: inline-flex;
-    margin-top: 0.45rem;
-    font-size: 0.75rem;
-    text-decoration: none;
-    transition: color 0.2s ease;
+.artisan-metric-card .metric-icon {
+    display: flex;
+    font-size: 1rem;
+    margin-bottom: 0;
 }
 
-.summary-source-action {
+.finance-card-detail {
     align-items: center;
-    display: inline-flex;
-    min-width: 0;
-    white-space: nowrap;
-}
-
-.summary-source-action {
-    gap: 0.24rem;
+    border-top: 1px solid #E8E4DD;
     color: #2f855a;
+    display: inline-flex;
+    font-size: 0.76rem;
     font-weight: 900;
-    flex: 0 0 auto;
+    gap: 0.32rem;
+    justify-content: space-between;
+    margin-top: 0.72rem;
+    padding-top: 0.52rem;
+    text-decoration: none;
+    transition: color 0.16s ease;
+    white-space: nowrap;
+    width: 100%;
 }
 
-.summary-source-action i {
-    font-size: 0.66rem;
-    transition: transform 0.2s ease;
-}
-
-.summary-source-link:hover,
-.summary-source-link:focus {
-    outline: none;
+.finance-card-detail:hover,
+.finance-card-detail:focus {
+    color: #155d32;
     text-decoration: none;
 }
 
-.summary-source-link:hover .summary-source-action,
-.summary-source-link:focus .summary-source-action {
-    color: #155d32;
+.finance-card-detail i {
+    align-items: center;
+    background: #EAF6ED;
+    border-radius: 999px;
+    display: inline-flex;
+    font-size: 0.58rem;
+    height: 20px;
+    justify-content: center;
+    transition: background-color 0.16s ease, transform 0.16s ease;
+    width: 20px;
 }
 
-.summary-source-link:hover .summary-source-action i,
-.summary-source-link:focus .summary-source-action i {
+.finance-card-detail:hover i,
+.finance-card-detail:focus i {
+    background: #DDF0E2;
     transform: translateX(2px);
 }
 
@@ -1296,13 +1314,13 @@ body:has(.artisan-topbar) .artisan-dashboard-hero {
 
 .artisan-dashboard-panel-grid {
     display: grid;
-    gap: 22px;
-    grid-template-columns: minmax(0, 1.35fr) minmax(320px, 0.65fr);
-    margin-bottom: 22px;
+    gap: 18px;
+    grid-template-columns: minmax(0, 3fr) minmax(250px, 1fr);
+    margin-bottom: 18px;
 }
 
 .artisan-dashboard-panel {
-    padding: 24px;
+    padding: 20px;
 }
 
 .panel-heading {
@@ -1310,14 +1328,18 @@ body:has(.artisan-topbar) .artisan-dashboard-hero {
     display: flex;
     justify-content: space-between;
     gap: 16px;
-    margin-bottom: 22px;
+    margin-bottom: 12px;
 }
 
 .panel-heading h2 {
     color: #1C3322;
-    font-size: 1.25rem;
+    font-size: 1.12rem;
     font-weight: 850;
-    margin: 6px 0 0;
+    margin: 4px 0 0;
+}
+
+.compact-panel-heading {
+    margin-bottom: 14px;
 }
 
 .panel-heading > strong {
@@ -1350,14 +1372,177 @@ body:has(.artisan-topbar) .artisan-dashboard-hero {
 }
 
 .artisan-chart-panel {
-    padding: 22px;
+    padding: 20px;
+}
+
+.recent-products-panel .table-responsive {
+    margin-bottom: 0;
+    overflow: visible;
+}
+
+.artisan-product-table {
+    margin-bottom: 0;
+}
+
+.artisan-product-table th {
+    color: #6a756e;
+    font-size: 0.74rem;
+    font-weight: 850;
+    letter-spacing: 0.02em;
+    padding: 0.7rem 0.65rem;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.artisan-product-table td {
+    color: #2f3d34;
+    font-size: 0.88rem;
+    padding: 0.65rem;
+    vertical-align: middle;
+}
+
+.artisan-product-table tr {
+    transition: background-color 0.16s ease;
+}
+
+.artisan-product-table tbody tr:hover {
+    position: relative;
+    z-index: 5;
+}
+
+.artisan-product-table th:first-child,
+.artisan-product-table td:first-child {
+    width: 52%;
+}
+
+.artisan-product-table th:nth-child(2),
+.artisan-product-table td:nth-child(2) {
+    width: 20%;
+    white-space: nowrap;
+}
+
+.artisan-product-table th:nth-child(3),
+.artisan-product-table td:nth-child(3),
+.artisan-product-table th:nth-child(4),
+.artisan-product-table td:nth-child(4) {
+    width: 14%;
+    white-space: nowrap;
+}
+
+.product-cell {
+    align-items: center;
+    color: inherit;
+    display: inline-flex;
+    gap: 12px;
+    min-width: 240px;
+    text-decoration: none;
+}
+
+.product-cell:hover strong {
+    color: #2f855a;
+}
+
+.product-cell:focus-visible,
+.finance-card-detail:focus-visible,
+.attention-list a:focus-visible {
+    outline: 2px solid #9DD5AA;
+    outline-offset: 3px;
+}
+
+.product-thumb-wrap {
+    border: 1px solid #E8E4DD;
+    border-radius: 10px;
+    display: inline-flex;
+    flex: 0 0 60px;
+    height: 60px;
+    overflow: visible;
+    position: relative;
+    width: 60px;
+    z-index: 1;
+}
+
+.product-thumbnail {
+    background: #fff;
+    border-radius: 10px;
+    display: block;
+    height: 60px;
+    object-fit: cover;
+    width: 60px;
+}
+
+.product-thumbnail-preview {
+    background: #111611;
+    border: 1px solid rgba(17, 22, 17, 0.18);
+    border-radius: 14px;
+    box-shadow: 0 18px 40px rgba(28, 51, 34, 0.18);
+    height: 220px;
+    left: 72px;
+    object-fit: contain;
+    opacity: 0;
+    pointer-events: none;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%) scale(0.96);
+    transition: opacity 0.16s ease, transform 0.16s ease;
+    visibility: hidden;
+    width: 220px;
+    z-index: 30;
+}
+
+.product-cell:hover .product-thumbnail-preview,
+.product-cell:focus-visible .product-thumbnail-preview {
+    opacity: 1;
+    transform: translateY(-50%) scale(1);
+    visibility: visible;
+}
+
+.product-cell strong,
+.product-cell small {
+    display: block;
+    line-height: 1.25;
+}
+
+.product-cell strong {
+    color: #1C3322;
+    font-weight: 850;
+}
+
+.product-cell small,
+.price-note {
+    color: #7a857d;
+    font-size: 0.75rem;
+}
+
+.price-note {
+    display: block;
+    margin-top: 2px;
+}
+
+.artisan-finance-section {
+    margin-bottom: 18px;
+    padding: 18px;
+}
+
+.finance-section-heading {
+    align-items: center;
+    display: flex;
+    gap: 18px;
+    justify-content: space-between;
+    margin-bottom: 14px;
+}
+
+.finance-section-heading h2 {
+    color: #1C3322;
+    font-size: 1.28rem;
+    font-weight: 900;
+    margin: 3px 0 0;
 }
 
 .revenue-panel-heading {
     align-items: center;
     display: flex;
     justify-content: space-between;
-    margin-bottom: 18px;
+    margin-bottom: 12px;
 }
 
 .revenue-panel-heading h2 {
@@ -1445,19 +1630,42 @@ body:has(.artisan-topbar) .artisan-dashboard-hero {
 
 .revenue-summary-grid {
     display: grid;
-    gap: 14px;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    margin-top: 18px;
+    gap: 10px;
+    grid-template-columns: minmax(0, 1.45fr) repeat(4, minmax(0, 1fr));
+    margin-top: 0;
 }
 
 .revenue-summary-card {
-    align-items: center;
+    align-items: flex-start;
     background: #FAF8F5;
     border: 1px solid #EFE9DF;
-    border-radius: 14px;
+    border-radius: 16px;
     display: flex;
-    gap: 12px;
-    padding: 16px;
+    gap: 9px;
+    min-width: 0;
+    min-height: 104px;
+    padding: 16px 14px;
+    transition: background-color 0.16s ease, border-color 0.16s ease;
+}
+
+.revenue-summary-card:hover {
+    background: #fffdf9;
+    border-color: #DED3C4;
+}
+
+.attention-subheading {
+    color: #B8926A;
+    font-size: 0.72rem;
+    font-weight: 900;
+    letter-spacing: 0.12em;
+    margin: 4px 0 2px;
+    padding: 0;
+    text-transform: uppercase;
+}
+
+.revenue-summary-primary {
+    background: #F3FBF5;
+    border-color: #CFE5D5;
 }
 
 .revenue-summary-card > div {
@@ -1467,22 +1675,25 @@ body:has(.artisan-topbar) .artisan-dashboard-hero {
 
 .summary-icon {
     align-items: center;
-    background: #EAF7EE;
-    border-radius: 12px;
+    background: #EAF6ED;
+    border-radius: 10px;
     color: #2f7d46;
     display: flex;
-    flex: 0 0 38px;
-    height: 38px;
+    flex: 0 0 32px;
+    font-size: 0.86rem;
+    height: 32px;
     justify-content: center;
-    width: 38px;
+    margin-top: 26px;
+    width: 32px;
 }
 
 .revenue-summary-card small {
     color: #66736b;
     display: block;
-    font-size: 0.73rem;
+    font-size: 0.72rem;
     font-weight: 800;
-    margin-bottom: 4px;
+    line-height: 1.2;
+    margin-bottom: 5px;
 }
 
 .revenue-summary-card strong {
@@ -1493,15 +1704,19 @@ body:has(.artisan-topbar) .artisan-dashboard-hero {
 }
 
 .revenue-summary-card .money-value {
-    font-size: clamp(0.82rem, 1.1vw, 0.95rem);
+    font-size: clamp(0.82rem, 0.9vw, 0.94rem);
     letter-spacing: -0.03em;
-    line-height: 1.2;
+    line-height: 1.15;
     white-space: nowrap;
+}
+
+.revenue-summary-primary .money-value {
+    font-size: clamp(1.08rem, 1.45vw, 1.34rem);
 }
 
 .status-breakdown {
     display: grid;
-    gap: 14px;
+    gap: 0;
 }
 
 .status-breakdown div,
@@ -1516,14 +1731,83 @@ body:has(.artisan-topbar) .artisan-dashboard-hero {
     text-decoration: none;
 }
 
+.attention-list a {
+    background: transparent;
+    border: 0;
+    border-bottom: 1px solid #EFE9DF;
+    border-radius: 0;
+    display: grid;
+    gap: 3px 12px;
+    grid-template-columns: 1fr auto;
+    padding: 12px 0;
+}
+
+.attention-list a:first-child {
+    padding-top: 2px;
+}
+
+.attention-list a:last-child {
+    border-bottom: 0;
+    padding-bottom: 0;
+}
+
+.attention-list .overview-row {
+    grid-template-columns: 1fr auto;
+    padding-block: 10px;
+}
+
+.attention-list .overview-row span {
+    color: #66736b;
+    font-size: 0.86rem;
+}
+
+.attention-list .overview-row strong {
+    font-size: 1.25rem;
+    grid-row: auto;
+}
+
+.attention-list .overview-row + .attention-subheading {
+    border-top: 1px solid #EFE9DF;
+    margin-top: 8px;
+    padding-top: 14px;
+}
+
+.attention-list span {
+    color: #1C3322;
+    font-weight: 850;
+}
+
+.attention-list strong {
+    grid-row: span 2;
+}
+
+.attention-list em {
+    color: #2f855a;
+    font-size: 0.78rem;
+    font-style: normal;
+    font-weight: 850;
+}
+
 .status-breakdown a {
     transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
 }
 
 .status-breakdown a:hover {
     border-color: #D8C5AA;
-    box-shadow: 0 12px 28px rgba(28, 51, 34, 0.08);
+    box-shadow: 0 8px 18px rgba(28, 51, 34, 0.05);
     transform: translateY(-1px);
+}
+
+.attention-list a:hover {
+    background: #FAF8F5;
+    border-color: #EFE9DF;
+    box-shadow: none;
+    margin-inline: -10px;
+    padding-inline: 10px;
+}
+
+.attention-list a:hover em {
+    color: #155d32;
 }
 
 .status-breakdown span {
@@ -1541,6 +1825,10 @@ body:has(.artisan-topbar) .artisan-dashboard-hero {
     .revenue-summary-grid {
         grid-template-columns: repeat(3, minmax(0, 1fr));
     }
+
+    .revenue-summary-card {
+        min-height: 96px;
+    }
 }
 
 @media (max-width: 900px) {
@@ -1554,6 +1842,11 @@ body:has(.artisan-topbar) .artisan-dashboard-hero {
 
     .revenue-summary-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .finance-section-heading {
+        align-items: flex-start;
+        flex-direction: column;
     }
 }
 
@@ -1588,6 +1881,19 @@ body:has(.artisan-topbar) .artisan-dashboard-hero {
     .artisan-metric-grid,
     .revenue-summary-grid {
         grid-template-columns: 1fr;
+    }
+
+    .product-cell {
+        min-width: 190px;
+    }
+
+    .recent-products-panel .table-responsive {
+        overflow-x: auto;
+        overflow-y: visible;
+    }
+
+    .product-thumbnail-preview {
+        display: none;
     }
 
     .artisan-source-modal {

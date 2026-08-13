@@ -1484,7 +1484,6 @@ textarea {
 
 .product-table-thumb {
     background: #f3f0ea;
-    border: 1px solid #E8E4DD;
     border-radius: 10px;
     display: block;
     height: 44px;
@@ -1496,9 +1495,64 @@ textarea {
     display: inline-flex;
 }
 
-.product-preview-link:hover .product-table-thumb {
+.product-table-thumb-wrap {
+    border: 1px solid #E8E4DD;
+    border-radius: 10px;
+    display: inline-flex;
+    height: 44px;
+    overflow: visible;
+    position: relative;
+    width: 58px;
+    z-index: 1;
+}
+
+.product-table-thumb-preview {
+    background: #111611;
+    border: 1px solid rgba(17, 22, 17, 0.18);
+    border-radius: 14px;
+    box-shadow: 0 18px 40px rgba(28, 51, 34, 0.18);
+    height: 220px;
+    left: 72px;
+    object-fit: contain;
+    opacity: 0;
+    pointer-events: none;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%) scale(0.96);
+    transition: opacity 0.16s ease, transform 0.16s ease;
+    visibility: hidden;
+    width: 220px;
+    z-index: 40;
+}
+
+.product-preview-link:hover .product-table-thumb-wrap,
+.product-preview-link:focus-visible .product-table-thumb-wrap {
     border-color: #B8926A;
     box-shadow: 0 6px 16px rgba(28, 51, 34, 0.14);
+}
+
+.product-preview-link:hover .product-table-thumb-preview,
+.product-preview-link:focus-visible .product-table-thumb-preview {
+    opacity: 1;
+    transform: translateY(-50%) scale(1);
+    visibility: visible;
+}
+
+.product-table tbody tr:hover {
+    position: relative;
+    z-index: 6;
+}
+
+@media (min-width: 901px) {
+    body:has(.artisan-topbar) .portal-card .table-container {
+        overflow: visible;
+    }
+}
+
+@media (max-width: 900px) {
+    .product-table-thumb-preview {
+        display: none;
+    }
 }
 
 .product-name-link {

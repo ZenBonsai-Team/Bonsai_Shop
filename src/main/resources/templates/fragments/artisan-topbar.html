@@ -18,11 +18,11 @@
             </button>
             <div id="artisanBellDropdownMenu" class="dropdown-menu dropdown-menu-end shadow-lg p-0 border-0 d-none position-absolute mt-2" style="width: 320px; max-height: 400px; overflow-y: auto; right: 0; z-index: 1050; border-radius: 12px; background: #ffffff;">
                 <div class="p-3 border-bottom d-flex justify-content-between align-items-center bg-light" style="border-top-left-radius: 12px; border-top-right-radius: 12px;">
-                    <strong class="text-dark" style="font-size: 0.95rem;">ThÃ´ng bÃ¡o há»‡ thá»‘ng</strong>
-                    <button type="button" class="btn btn-link p-0 text-decoration-none small text-success" onclick="markAllArtisanNotificationsRead()" style="font-size: 0.8rem;">ÄÃ£ Ä‘á»c táº¥t cáº£</button>
+                    <strong class="text-dark" style="font-size: 0.95rem;">Thông báo hệ thống</strong>
+                    <button type="button" class="btn btn-link p-0 text-decoration-none small text-success" onclick="markAllArtisanNotificationsRead()" style="font-size: 0.8rem;">Đã đọc tất cả</button>
                 </div>
                 <div id="artisanBellNotificationList" class="list-group list-group-flush">
-                    <div class="text-center py-4 text-muted small">Äang táº£i thÃ´ng bÃ¡o...</div>
+                    <div class="text-center py-4 text-muted small">Đang tải thông báo...</div>
                 </div>
             </div>
         </div>
@@ -44,7 +44,7 @@
                         }
 
                         if (!data.notifications || data.notifications.length === 0) {
-                            list.innerHTML = '<div class="text-center py-4 text-muted small"><i class="fa-regular fa-bell-slash me-1"></i> ChÆ°a cÃ³ thÃ´ng bÃ¡o má»›i.</div>';
+                            list.innerHTML = '<div class="text-center py-4 text-muted small"><i class="fa-regular fa-bell-slash me-1"></i> Chưa có thông báo mới.</div>';
                             return;
                         }
 
@@ -118,8 +118,8 @@
                  style="object-fit: cover; width: 36px; height: 36px; border-radius: 50%;">
         </a>
         <div class="artisan-user-meta">
-            <strong th:text="${#authentication.principal != null and #authentication.principal.fullName != null ? #authentication.principal.fullName : #authentication.name}">Nghá»‡ nhÃ¢n</strong>
-            <span>Nghá»‡ nhÃ¢n</span>
+            <strong th:text="${#authentication.principal != null and #authentication.principal.fullName != null ? #authentication.principal.fullName : #authentication.name}">Nghệ nhân</strong>
+            <span>Nghệ nhân</span>
         </div>
     </div>
 <script>

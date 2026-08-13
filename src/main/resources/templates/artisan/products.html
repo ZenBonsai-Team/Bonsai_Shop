@@ -67,9 +67,14 @@
                     th:attr="data-status=${product.productStatus},data-visibility=${product.productStatus == 'DRAFT' || product.isVisible == false ? 'INVISIBLE' : 'VISIBLE'},data-search-text=${product.productCode + ' ' + product.productName}">
                     <td>
                         <a class="product-preview-link" th:href="@{/artisan/products/{id}/preview(id=${product.productId})}">
-                            <img class="product-table-thumb"
-                                 th:src="${product.getFirstImageUrl() != null ? product.getFirstImageUrl() : '/images/default-bonsai.png'}"
-                                 alt="Ảnh sản phẩm">
+                            <span class="product-table-thumb-wrap">
+                                <img class="product-table-thumb"
+                                     th:src="${product.getFirstImageUrl() != null ? product.getFirstImageUrl() : '/images/default-bonsai.png'}"
+                                     alt="Ảnh sản phẩm">
+                                <img class="product-table-thumb-preview"
+                                     th:src="${product.getFirstImageUrl() != null ? product.getFirstImageUrl() : '/images/default-bonsai.png'}"
+                                     alt="">
+                            </span>
                         </a>
                     </td>
                     <td th:text="${product.productCode}"></td>
