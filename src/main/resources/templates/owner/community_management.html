@@ -58,11 +58,17 @@
 
 <div id="community-content" th:with="paramActivePage='community'">
     <header class="dashboard-header-title mb-4">
-        <div>
+        <div th:if="${activeTab == 'posts'}">
             <h1 class="serif-text mb-1" style="font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; color: #1c3322; font-size: 1.8rem;">
-                Quản lý Cộng đồng
+                Quản lý bài viết
             </h1>
-            <p class="text-secondary mb-0">Xem và quản lý các bài chia sẻ kinh nghiệm cùng bình luận trên diễn đàn.</p>
+            <p class="text-secondary mb-0">Xem và quản lý các bài viết chia sẻ kinh nghiệm trên diễn đàn cộng đồng.</p>
+        </div>
+        <div th:if="${activeTab == 'comments'}">
+            <h1 class="serif-text mb-1" style="font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; color: #1c3322; font-size: 1.8rem;">
+                Quản lý bình luận
+            </h1>
+            <p class="text-secondary mb-0">Kiểm duyệt và quản lý các bình luận của người dùng trên các bài đăng.</p>
         </div>
     </header>
 
@@ -72,14 +78,14 @@
             <i class="fa-solid fa-circle-check"></i>
             <span th:text="${success}">Thành công!</span>
         </div>
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng"></button>
     </div>
     <div th:if="${error}" class="alert alert-danger alert-dismissible fade show border-0 shadow-sm mb-4" role="alert" style="border-radius: 12px; background-color: #ffebee; color: #c62828;">
         <div class="d-flex align-items-center gap-2">
             <i class="fa-solid fa-circle-exclamation"></i>
             <span th:text="${error}">Lỗi!</span>
         </div>
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng"></button>
     </div>
 
     <!-- Tabbed navigation -->
@@ -130,7 +136,7 @@
 
             <!-- Tab content: Posts -->
             <div th:if="${activeTab == 'posts'}">
-                <div class="table-responsive">
+                <div class="table-responsive" style="min-height: 485px;">
                     <table class="orders-table">
                         <thead>
                             <tr>
@@ -148,7 +154,7 @@
                             <tr th:each="post, postStat : ${posts}" th:classappend="${post.status == 'FLAGGED'} ? 'table-warning'">
                                 <td class="text-center stt-column" th:text="${postCurrentPage * 10 + postStat.count}">1</td>
                                 <td>
-                                    <img th:src="${post.imageUrl}" alt="Cover" class="rounded" style="width: 110px; height: 75px; object-fit: cover; border: 1px solid var(--border-color);">
+                                    <img th:src="${post.imageUrl}" alt="Ảnh bìa" class="rounded" style="width: 110px; height: 75px; object-fit: cover; border: 1px solid var(--border-color);">
                                 </td>
                                 <td>
                                     <div class="d-flex flex-column gap-1">
@@ -160,7 +166,7 @@
                                 </td>
                                 <td>
                                     <div class="d-flex align-items-center gap-2">
-                                        <img th:src="${post.authorAvatar}" alt="Avatar" class="rounded-circle" style="width: 32px; height: 32px; object-fit: cover; border: 1px solid var(--border-color);">
+                                        <img th:src="${post.authorAvatar}" alt="Ảnh đại diện" class="rounded-circle" style="width: 32px; height: 32px; object-fit: cover; border: 1px solid var(--border-color);">
                                         <span class="fw-semibold" th:text="${post.authorName}">Tên tác giả</span>
                                     </div>
                                 </td>
@@ -245,7 +251,7 @@
 
             <!-- Tab content: Comments -->
             <div th:if="${activeTab == 'comments'}">
-                <div class="table-responsive">
+                <div class="table-responsive" style="min-height: 485px;">
                     <table class="orders-table">
                         <thead>
                             <tr>
@@ -264,7 +270,7 @@
                                 <td>
                                     <div class="d-flex align-items-center gap-2">
                                         <img th:src="${comment.authorAvatar != null && !comment.authorAvatar.isEmpty() ? comment.authorAvatar : 'https://ui-avatars.com/api/?name=' + comment.authorName}" 
-                                             alt="Avatar" class="rounded-circle" style="width: 36px; height: 36px; object-fit: cover; border: 1px solid var(--border-color);">
+                                             alt="Ảnh đại diện" class="rounded-circle" style="width: 36px; height: 36px; object-fit: cover; border: 1px solid var(--border-color);">
                                         <span class="fw-bold text-dark" th:text="${comment.authorName}">Tên người viết</span>
                                     </div>
                                 </td>
@@ -274,7 +280,7 @@
                                 <td>
                                     <div class="d-flex align-items-center gap-2" th:with="parentPost=${postsMap[comment.postId]}">
                                         <img th:src="${parentPost != null && parentPost.imageUrl != null ? parentPost.imageUrl : '/images/default-bonsai.png'}" 
-                                             alt="Post Cover" class="rounded" style="width: 80px; height: 55px; object-fit: cover; border: 1px solid var(--border-color);">
+                                             alt="Ảnh bìa bài viết" class="rounded" style="width: 80px; height: 55px; object-fit: cover; border: 1px solid var(--border-color);">
                                         <div>
                                             <a th:href="@{/community/post/{id}(id=${comment.postId})}" target="_blank" 
                                                class="text-decoration-none fw-bold text-dark post-title-link d-inline-block text-truncate" 
@@ -353,7 +359,7 @@
             <div class="modal-content shadow-lg" style="border-radius: 16px;">
                 <div class="modal-header">
                     <h5 class="modal-title fw-bold text-dark" id="moderationModalLabel">Lý do điều phối</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
                 </div>
                 <form id="moderationForm" method="post">
                     <div class="modal-body p-4">
@@ -391,12 +397,12 @@
                         <i class="fa-solid fa-file-shield text-success fs-4"></i>
                         <h5 class="modal-title fw-bold text-dark mb-0" id="reviewModalLabel">Đánh giá & Duyệt nội dung</h5>
                     </div>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
                 </div>
                 <div class="modal-body p-4">
                     <div class="mb-4">
                         <div class="d-flex justify-content-between align-items-center mb-3">
-                            <span class="text-secondary small fw-semibold"><i class="fa-solid fa-user me-1"></i>Người viết: <strong class="text-dark" id="reviewAuthor">N/A</strong></span>
+                            <span class="text-secondary small fw-semibold"><i class="fa-solid fa-user me-1"></i>Người viết: <strong class="text-dark" id="reviewAuthor">Chưa có</strong></span>
                             <span id="reviewStatusBadge" class="badge px-3 py-2 rounded-pill">Trạng thái</span>
                         </div>
                         <h4 class="fw-bold text-dark mb-3" id="reviewTitleContainer" style="display: none;">

@@ -317,6 +317,52 @@ public class ArtisanProductController {
         return "redirect:/artisan/products/" + productId + "/journal";
     }
 
+    @PostMapping("/{productId}/journal/{eventId}/media/{mediaId}/cover")
+    public String setJournalEventCoverMedia(@AuthenticationPrincipal UserDetails userDetails,
+                                            @PathVariable Integer productId,
+                                            @PathVariable Integer eventId,
+                                            @PathVariable Integer mediaId,
+                                            RedirectAttributes redirectAttributes) {
+        try {
+            productJournalService.setCoverMedia(userDetails.getUsername(), productId, eventId, mediaId);
+            redirectAttributes.addFlashAttribute("success", "Đã đặt ảnh đại diện cho nhật ký.");
+        } catch (RuntimeException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/artisan/products/" + productId + "/journal";
+    }
+
+    @PostMapping("/{productId}/journal/{eventId}/media/{mediaId}/replace")
+    public String replaceJournalEventMedia(@AuthenticationPrincipal UserDetails userDetails,
+                                           @PathVariable Integer productId,
+                                           @PathVariable Integer eventId,
+                                           @PathVariable Integer mediaId,
+                                           @RequestParam MultipartFile file,
+                                           RedirectAttributes redirectAttributes) {
+        try {
+            productJournalService.replaceMedia(userDetails.getUsername(), productId, eventId, mediaId, file);
+            redirectAttributes.addFlashAttribute("success", "Đã thay ảnh nhật ký.");
+        } catch (RuntimeException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/artisan/products/" + productId + "/journal";
+    }
+
+    @PostMapping("/{productId}/journal/{eventId}/media/{mediaId}/delete")
+    public String deleteJournalEventMedia(@AuthenticationPrincipal UserDetails userDetails,
+                                          @PathVariable Integer productId,
+                                          @PathVariable Integer eventId,
+                                          @PathVariable Integer mediaId,
+                                          RedirectAttributes redirectAttributes) {
+        try {
+            productJournalService.deleteMedia(userDetails.getUsername(), productId, eventId, mediaId);
+            redirectAttributes.addFlashAttribute("success", "Đã xóa ảnh nhật ký.");
+        } catch (RuntimeException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/artisan/products/" + productId + "/journal";
+    }
+
     @GetMapping("/{productId}/preview")
     public String preview(@AuthenticationPrincipal UserDetails userDetails,
                           @PathVariable Integer productId,

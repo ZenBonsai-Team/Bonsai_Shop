@@ -13,7 +13,10 @@
     <header class="dashboard-header-title d-flex justify-content-between align-items-center mb-4">
         <div>
             <span class="artisan-eyebrow text-muted" style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px;">Tổng quan Nghệ nhân</span>
-            <h1 class="serif-text mb-1">Không Gian Làm Việc</h1>
+            <div class="dashboard-title-row">
+                <h1 class="serif-text mb-1">Không Gian Làm Việc</h1>
+                <span class="report-period-badge" th:text="${reportPeriodLabel}">Số liệu tháng 08/2026</span>
+            </div>
             <p class="text-secondary mb-0">Theo dõi nhanh tình trạng sản phẩm, doanh thu và các mục cần xử lý.</p>
         </div>
         <a class="btn btn-success rounded-pill px-4" th:href="@{/artisan/products/new}">
@@ -73,6 +76,13 @@
                 </table>
             </div>
 
+            <div class="revenue-summary-toolbar">
+                <form class="dashboard-month-filter" method="get" th:action="@{/artisan}">
+                    <label for="artisanReportMonth">Tháng báo cáo</label>
+                    <input id="artisanReportMonth" type="month" name="month" th:value="${selectedMonth}" onchange="this.form.submit()">
+                </form>
+            </div>
+
             <div class="revenue-summary-grid">
                 <div class="revenue-summary-card">
                     <span class="summary-icon"><i class="fa-solid fa-wallet"></i></span>
@@ -122,13 +132,6 @@
                         <a class="summary-source-link" href="#" data-source-target="crane-fee-sources">
                             <span class="summary-source-action">Chi tiết <i class="fa-solid fa-arrow-right"></i></span>
                         </a>
-                    </div>
-                </div>
-                <div class="revenue-summary-card">
-                    <span class="summary-icon"><i class="fa-solid fa-clipboard-list"></i></span>
-                    <div>
-                        <small>Tổng đơn hàng</small>
-                        <strong th:text="${monthlySoldItems}">0</strong>
                     </div>
                 </div>
             </div>

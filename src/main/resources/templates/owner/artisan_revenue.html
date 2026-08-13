@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/dashboard-layout :: layout(~{::title}, ~{::#owner-artisan-revenue-content}, ~{::styles}, ~{::scripts})}">
+<head>
+    <title>Doanh thu theo nghệ nhân - Minh Kỷ Garden</title>
+    <th:block th:fragment="styles">
+        <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+    </th:block>
+    <th:block th:fragment="scripts">
+        <script th:src="@{/js/owner-report-pagination.js}"></script>
+    </th:block>
+</head>
+<body>
+
+<div id="owner-artisan-revenue-content" class="owner-report-page" th:with="paramActivePage='dashboard'">
+    <header class="owner-report-header">
+        <div>
+            <span class="owner-eyebrow">Bảng điều khiển chủ vườn</span>
+            <h1>Doanh thu theo nghệ nhân</h1>
+            <p th:text="|Doanh thu sản phẩm đã hoàn tất trong ${reportMonth}.|">Doanh thu sản phẩm đã hoàn tất trong 08/2026.</p>
+        </div>
+        <a class="owner-back-link" th:href="@{/owner}">
+            <i class="fa-solid fa-arrow-left"></i>
+            Bảng điều khiển
+        </a>
+    </header>
+
+    <section class="owner-panel owner-report-panel">
+        <div class="owner-report-summary">
+            <span>Nghệ nhân có doanh thu</span>
+            <strong th:text="${#lists.size(artisanRevenue)}">0</strong>
+        </div>
+
+        <div class="owner-report-table-wrap">
+            <table class="owner-report-table">
+                <thead>
+                <tr>
+                    <th>Nghệ nhân</th>
+                    <th>Email</th>
+                    <th class="text-end">Cây đã bán</th>
+                    <th class="text-end">Doanh thu</th>
+                </tr>
+                </thead>
+                <tbody data-owner-paginated-list data-page-size="10" data-report-label="dòng doanh thu nghệ nhân">
+                <tr th:each="item : ${artisanRevenue}" data-page-entry>
+                    <td class="fw-semibold" th:text="${item.artisanName() ?: '-'}">Nghệ nhân</td>
+                    <td th:text="${item.artisanEmail() ?: '-'}">artisan@example.com</td>
+                    <td class="text-end" th:text="${item.treesSold()}">0</td>
+                    <td class="text-end owner-money-cell" th:text="${#numbers.formatDecimal(item.revenue(), 0, 'POINT', 0, 'POINT') + ' VND'}">0 VND</td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(artisanRevenue)}">
+                    <td colspan="4" class="owner-empty-state">Chưa có doanh thu nghệ nhân nào trong tháng này.</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="pagination-footer owner-report-pagination" data-owner-pagination hidden>
+            <div class="pagination-info" data-owner-pagination-info></div>
+            <div class="pagination-controls" data-owner-pagination-controls></div>
+        </div>
+    </section>
+</div>
+
+</body>
+</html>

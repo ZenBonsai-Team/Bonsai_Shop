@@ -1,4 +1,4 @@
-﻿/**
+/**
  * My Orders Page JavaScript - Isolated Module for Moderator Portal
  */
 document.addEventListener('DOMContentLoaded', () => {
@@ -12,16 +12,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const cardElements = document.querySelectorAll('.my-kpi-card');
     const searchInput = document.getElementById('orderSearchInput');
     const prioritySelect = document.getElementById('priorityFilterSelect');
-    const statusSelect = document.getElementById('statusFilterSelect');
     const sortSelect = document.getElementById('orderSortSelect');
     const tableBody = document.getElementById('myOrdersTableBody');
     const paginationInfo = document.getElementById('paginationInfo');
     const paginationControls = document.getElementById('paginationControls');
 
-    // Initialize Event Listeners
+    // Initialize Event Listeners & Fetch Initial Page
     initCardFilterEvents();
     initToolbarEvents();
     startAgeRefreshTimer();
+    fetchMyOrders(1);
 
     // 1. KPI Card Click Handler (Toggle & Switch Filter)
     function initCardFilterEvents() {
@@ -38,6 +38,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     cardElements.forEach(c => c.classList.remove('active'));
                     activeCardFilter = targetFilter;
                     card.classList.add('active');
+                }
+
+                // Reset priority dropdown filter to ALL when switching KPI card
+                if (prioritySelect) {
+                    prioritySelect.value = 'ALL';
                 }
 
                 fetchMyOrders(1);
@@ -60,10 +65,6 @@ document.addEventListener('DOMContentLoaded', () => {
             prioritySelect.addEventListener('change', () => fetchMyOrders(1));
         }
 
-        if (statusSelect) {
-            statusSelect.addEventListener('change', () => fetchMyOrders(1));
-        }
-
         if (sortSelect) {
             sortSelect.addEventListener('change', () => fetchMyOrders(1));
         }
@@ -77,7 +78,7 @@ document.addEventListener('DOMContentLoaded', () => {
             search: searchInput ? searchInput.value.trim() : '',
             cardFilter: activeCardFilter,
             priority: prioritySelect ? prioritySelect.value : 'ALL',
-            status: statusSelect ? statusSelect.value : 'ALL',
+            status: 'ALL',
             sort: sortSelect ? sortSelect.value : 'date_desc',
             page: page,
             limit: 8

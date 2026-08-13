@@ -133,23 +133,60 @@ function renderPagination(result) {
     const infoEl = document.getElementById('paginationInfo');
     const controlsEl = document.getElementById('paginationControls');
 
+    const totalCount = result.totalCount || 0;
+    const totalPages = result.pages || (totalCount > 0 ? Math.ceil(totalCount / DashboardState.pageSize) : 1);
+    const currentPage = DashboardState.currentPage || 1;
+    const pageSize = DashboardState.pageSize || 8;
+
     if (infoEl) {
-        infoEl.textContent = `Hiển thị ${result.orders ? result.orders.length : 0} trong tổng số ${result.totalCount || 0} đơn hàng chờ tiếp nhận`;
+        const start = totalCount > 0 ? (currentPage - 1) * pageSize + 1 : 0;
+        const end = Math.min(currentPage * pageSize, totalCount);
+        infoEl.textContent = `Hiển thị ${start} - ${end} trên tổng số ${totalCount} đơn hàng chờ tiếp nhận`;
     }
+
     if (!controlsEl) return;
     controlsEl.innerHTML = '';
-    if (!result.pages || result.pages <= 1) return;
+    if (totalPages <= 1) return;
 
-    for (let i = 1; i <= result.pages; i++) {
-        const btn = document.createElement('button');
-        btn.className = `btn btn-sm mx-1 ${DashboardState.currentPage === i ? 'btn-primary' : 'btn-outline-secondary'}`;
-        btn.textContent = i;
-        btn.addEventListener('click', () => {
-            DashboardState.currentPage = i;
+    // Previous Button
+    const prevBtn = document.createElement('button');
+    prevBtn.className = `btn btn-sm btn-outline-secondary ${currentPage === 1 ? 'disabled' : ''}`;
+    prevBtn.textContent = 'Trước';
+    prevBtn.disabled = currentPage === 1;
+    prevBtn.addEventListener('click', () => {
+        if (DashboardState.currentPage > 1) {
+            DashboardState.currentPage--;
             renderPool();
-        });
-        controlsEl.appendChild(btn);
+        }
+    });
+    controlsEl.appendChild(prevBtn);
+
+    // Page Number Buttons
+    for (let i = 1; i <= totalPages; i++) {
+        if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) {
+            const btn = document.createElement('button');
+            btn.className = `btn btn-sm mx-1 ${currentPage === i ? 'btn-primary' : 'btn-outline-secondary'}`;
+            btn.textContent = i;
+            btn.addEventListener('click', () => {
+                DashboardState.currentPage = i;
+                renderPool();
+            });
+            controlsEl.appendChild(btn);
+        }
     }
+
+    // Next Button
+    const nextBtn = document.createElement('button');
+    nextBtn.className = `btn btn-sm btn-outline-secondary ${currentPage === totalPages ? 'disabled' : ''}`;
+    nextBtn.textContent = 'Sau';
+    nextBtn.disabled = currentPage === totalPages;
+    nextBtn.addEventListener('click', () => {
+        if (DashboardState.currentPage < totalPages) {
+            DashboardState.currentPage++;
+            renderPool();
+        }
+    });
+    controlsEl.appendChild(nextBtn);
 }
 
 async function openProductDetailDrawer(productId) {

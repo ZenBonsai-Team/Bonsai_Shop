@@ -45,6 +45,7 @@
             // Check if collapsed state is saved in localStorage
             if (sidebar && localStorage.getItem('sidebar-collapsed') === 'true' && window.innerWidth > 992) {
                 sidebar.classList.add('collapsed');
+                if (toggleBtn) toggleBtn.classList.add('active');
             }
 
             if (toggleBtn && sidebar) {
@@ -52,9 +53,21 @@
                     e.stopPropagation();
                     if (window.innerWidth > 992) {
                         sidebar.classList.toggle('collapsed');
-                        localStorage.setItem('sidebar-collapsed', sidebar.classList.contains('collapsed'));
+                        const isCollapsed = sidebar.classList.contains('collapsed');
+                        localStorage.setItem('sidebar-collapsed', isCollapsed);
+                        if (isCollapsed) {
+                            toggleBtn.classList.add('active');
+                        } else {
+                            toggleBtn.classList.remove('active');
+                        }
                     } else {
                         sidebar.classList.toggle('open');
+                        const isOpen = sidebar.classList.contains('open');
+                        if (isOpen) {
+                            toggleBtn.classList.add('active');
+                        } else {
+                            toggleBtn.classList.remove('active');
+                        }
                     }
                 });
                 
@@ -64,6 +77,7 @@
                         !sidebar.contains(e.target) && 
                         !toggleBtn.contains(e.target)) {
                         sidebar.classList.remove('open');
+                        toggleBtn.classList.remove('active');
                     }
                 });
             }

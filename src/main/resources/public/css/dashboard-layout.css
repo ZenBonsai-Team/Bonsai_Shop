@@ -260,12 +260,34 @@ h1, h2, h3, h4, h5, h6, .brand-name, .section-title {
 
 /* Mobile toggle button */
 .sidebar-toggle-btn {
-    background: none;
-    border: none;
-    font-size: 24px;
+    background: #f1f5f9;
+    border: 1px solid #cbd5e1;
+    font-size: 16px;
+    width: 36px;
+    height: 36px;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
     cursor: pointer;
-    color: var(--text-main);
-    display: block;
+    color: #475569;
+    transition: all 0.25s ease;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.sidebar-toggle-btn:hover {
+    background: #e2e8f0;
+    color: #1e293b;
+}
+
+.sidebar-toggle-btn.active {
+    background-color: #2E7D32 !important;
+    color: #ffffff !important;
+    border-color: #2E7D32 !important;
+}
+
+.sidebar-toggle-btn.active i {
+    transform: rotate(90deg);
 }
 
 /* Breadcrumbs */

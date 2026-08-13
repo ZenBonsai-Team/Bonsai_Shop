@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/dashboard-layout :: layout(~{::title}, ~{::#owner-sold-trees-content}, ~{::styles}, ~{::scripts})}">
+<head>
+    <title>Cây đã bán - Minh Kỷ Garden</title>
+    <th:block th:fragment="styles">
+        <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+    </th:block>
+    <th:block th:fragment="scripts">
+        <script th:src="@{/js/owner-report-pagination.js}"></script>
+    </th:block>
+</head>
+<body>
+
+<div id="owner-sold-trees-content" class="owner-report-page" th:with="paramActivePage='dashboard'">
+    <header class="owner-report-header">
+        <div>
+            <span class="owner-eyebrow">Bảng điều khiển chủ vườn</span>
+            <h1>Cây đã bán</h1>
+            <p>Danh sách giao dịch hoàn tất kèm ngày và giờ bán của từng cây.</p>
+        </div>
+        <a class="owner-back-link" th:href="@{/owner}">
+            <i class="fa-solid fa-arrow-left"></i>
+            Bảng điều khiển
+        </a>
+    </header>
+
+    <section class="owner-panel owner-report-panel">
+        <div class="owner-report-summary">
+            <span>Tổng số cây đã bán</span>
+            <strong th:text="${#lists.size(soldTrees)}">0</strong>
+        </div>
+
+        <div class="owner-report-table-wrap">
+            <table class="owner-report-table">
+                <thead>
+                <tr>
+                    <th>Cây</th>
+                    <th>Nghệ nhân</th>
+                    <th>Đơn hàng</th>
+                    <th>Khách hàng</th>
+                    <th>Ngày bán</th>
+                    <th>Giờ bán</th>
+                    <th class="text-end">Số tiền</th>
+                </tr>
+                </thead>
+                <tbody data-owner-paginated-list data-page-size="10" data-report-label="cây đã bán">
+                <tr th:each="tree : ${soldTrees}" data-page-entry>
+                    <td>
+                        <a class="owner-tree-link" th:href="@{/product/{id}(id=${tree.productId()})}" th:text="${tree.productName()}">Tên cây</a>
+                        <small>
+                            <span th:text="${tree.productCode()}">TREE001</span>
+                            <span th:if="${tree.varietyName() != null}" th:text="| - ${tree.varietyName()}|"> - Giống cây</span>
+                        </small>
+                    </td>
+                    <td th:text="${tree.artisanName() ?: '-'}">Nghệ nhân</td>
+                    <td th:text="${tree.orderCode()}">ORDER001</td>
+                    <td th:text="${tree.customerName() ?: '-'}">Khách hàng</td>
+                    <td th:text="${tree.soldAt() != null ? #temporals.format(tree.soldAt(), 'dd/MM/yyyy') : '-'}">11/08/2026</td>
+                    <td th:text="${tree.soldAt() != null ? #temporals.format(tree.soldAt(), 'HH:mm') : '-'}">13:10</td>
+                    <td class="text-end" th:text="${#numbers.formatDecimal(tree.soldAmount(), 0, 'POINT', 0, 'POINT') + ' VND'}">0 VND</td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(soldTrees)}">
+                    <td colspan="7" class="owner-empty-state">Chưa có cây nào được bán.</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="pagination-footer owner-report-pagination" data-owner-pagination hidden>
+            <div class="pagination-info" data-owner-pagination-info></div>
+            <div class="pagination-controls" data-owner-pagination-controls></div>
+        </div>
+    </section>
+</div>
+
+</body>
+</html>

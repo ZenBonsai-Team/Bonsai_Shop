@@ -1,52 +1,117 @@
 <!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{fragments/dashboard-layout :: layout(~{::title}, ~{::#admin-dashboard-content}, ~{::styles}, ~{})}">
+      th:replace="~{fragments/dashboard-layout :: layout(~{::title}, ~{::#owner-dashboard-content}, ~{::styles}, ~{})}">
 <head>
-    <title>Quản trị - Minh Kỷ Garden</title>
+    <title>Bảng điều khiển chủ vườn - Minh Kỷ Garden</title>
     <th:block th:fragment="styles">
         <link rel="stylesheet" th:href="@{/css/dashboard.css}">
     </th:block>
 </head>
 <body>
 
-<div id="admin-dashboard-content" th:with="paramActivePage='dashboard'">
-    <div class="page-header">
+<div id="owner-dashboard-content" class="owner-dashboard" th:with="paramActivePage='dashboard'">
+    <header class="owner-dashboard-header">
         <div>
-            <h1 class="serif-text mb-0">Bảng điều khiển</h1>
-            <p class="text-secondary mb-0">Tổng quan hệ thống và hoạt động quản trị.</p>
+            <span class="owner-eyebrow">Bảng điều khiển chủ vườn</span>
+            <h1>Hiệu quả hoạt động của vườn</h1>
+            <p>Tổng quan doanh thu, tồn kho, doanh số và mức độ quan tâm tới cây.</p>
         </div>
-    </div>
+    </header>
 
-    <section class="dashboard-kpis">
-        <div class="kpi-card">
-            <div class="kpi-icon"><i class="fa-solid fa-users"></i></div>
-            <div class="kpi-info">
-                <strong>150</strong>
-                <span>Total Users</span>
+    <section class="owner-metric-grid">
+        <article class="owner-metric-card metric-revenue-total">
+            <span class="owner-metric-icon"><i class="fa-solid fa-sack-dollar"></i></span>
+            <div>
+                <span>Tổng doanh thu</span>
+                <strong th:text="${#numbers.formatDecimal(dashboard.totalRevenue(), 0, 'POINT', 0, 'POINT') + ' VND'}">0 VND</strong>
             </div>
-        </div>
-        <div class="kpi-card">
-            <div class="kpi-icon"><i class="fa-solid fa-leaf"></i></div>
-            <div class="kpi-info">
-                <strong>340</strong>
-                <span>Total Bonsai</span>
+        </article>
+
+        <a class="owner-metric-card metric-revenue-month" th:href="@{/owner/dashboard/artisan-revenue}">
+            <span class="owner-metric-icon"><i class="fa-solid fa-chart-line"></i></span>
+            <div>
+                <span>Doanh thu tháng này</span>
+                <strong th:text="${#numbers.formatDecimal(dashboard.revenueThisMonth(), 0, 'POINT', 0, 'POINT') + ' VND'}">0 VND</strong>
             </div>
-        </div>
-        <div class="kpi-card">
-            <div class="kpi-icon"><i class="fa-solid fa-chart-line"></i></div>
-            <div class="kpi-info">
-                <strong>1.2B VNĐ</strong>
-                <span>Revenue</span>
+        </a>
+
+        <a class="owner-metric-card metric-garden" th:href="@{/owner/dashboard/garden-trees}">
+            <span class="owner-metric-icon"><i class="fa-solid fa-seedling"></i></span>
+            <div>
+                <span>Số cây còn trong vườn</span>
+                <strong th:text="${dashboard.treesInGarden()}">0</strong>
             </div>
-        </div>
+        </a>
+
+        <a class="owner-metric-card metric-sold" th:href="@{/owner/dashboard/sold-trees}">
+            <span class="owner-metric-icon"><i class="fa-solid fa-circle-check"></i></span>
+            <div>
+                <span>Số cây đã bán</span>
+                <strong th:text="${dashboard.treesSold()}">0</strong>
+            </div>
+        </a>
     </section>
 
-    <section class="dashboard-content-box mt-4">
-        <h2 class="serif-text mb-3">Hoạt động gần đây</h2>
-        <p class="text-secondary">Tính năng này đang được phát triển...</p>
+    <section class="owner-dashboard-grid">
+        <article class="owner-panel owner-chart-panel">
+            <div class="owner-panel-heading">
+                <div>
+                    <span>12 tháng gần nhất</span>
+                    <h2>Biểu đồ doanh thu theo tháng</h2>
+                </div>
+            </div>
+
+            <div class="owner-revenue-chart">
+                <div class="owner-chart-bars">
+                    <div class="owner-chart-column" th:each="month : ${dashboard.monthlyRevenue()}">
+                        <div class="owner-chart-value">
+                            <span class="owner-chart-bar"
+                                  th:if="${month.revenue() != null && month.revenue().signum() > 0}"
+                                  th:style="|height: ${month.chartPercent()}%;|"></span>
+                            <span class="owner-chart-zero"
+                                  th:unless="${month.revenue() != null && month.revenue().signum() > 0}"
+                                  aria-label="Không có doanh thu"></span>
+                        </div>
+                        <strong th:text="${month.monthLabel()}">08/2026</strong>
+                        <small th:text="${#numbers.formatDecimal(month.revenue(), 0, 'POINT', 0, 'POINT')}">0</small>
+                    </div>
+                </div>
+            </div>
+        </article>
+
+        <article class="owner-panel owner-top-viewed-panel">
+            <div class="owner-panel-heading">
+                <div>
+                    <span>Xem nhiều nhất</span>
+                    <h2>5 cây được xem nhiều nhất</h2>
+                </div>
+            </div>
+
+            <div class="owner-top-list">
+                <a class="owner-top-tree"
+                   th:each="tree, iter : ${dashboard.topViewedTrees()}"
+                   th:href="@{/product/{id}(id=${tree.productId()})}">
+                    <span class="owner-top-rank" th:text="${iter.count}">1</span>
+                    <span class="owner-top-info">
+                        <strong th:text="${tree.productName()}">Tên cây</strong>
+                        <small>
+                            <span th:text="${tree.productCode()}">TREE001</span>
+                            <span th:if="${tree.varietyName() != null}" th:text="| - ${tree.varietyName()}|"> - Giống cây</span>
+                        </small>
+                    </span>
+                    <span class="owner-top-meta">
+                        <strong th:text="${tree.viewCount()}">0</strong>
+                        <small>lượt xem</small>
+                    </span>
+                </a>
+
+                <div class="owner-empty-state" th:if="${#lists.isEmpty(dashboard.topViewedTrees())}">
+                    Chưa có dữ liệu lượt xem cây.
+                </div>
+            </div>
+        </article>
     </section>
 </div>
 
 </body>
 </html>
-

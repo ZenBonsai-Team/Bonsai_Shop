@@ -68,7 +68,7 @@
 
 /* Toolbar Toolbar (Search, Filter, Sort) */
 .toolbar-header {
-    padding: 16px 20px 0 20px;
+    padding: 16px 20px 16px 20px;
     gap: 16px;
 }
 
@@ -166,8 +166,9 @@
 }
 
 .tab-btn.active {
-    color: var(--primary-color);
-    border-bottom-color: var(--accent-color);
+    background: transparent !important;
+    color: var(--primary-color) !important;
+    border-bottom-color: var(--accent-color) !important;
     font-weight: 600;
 }
 

@@ -56,7 +56,7 @@
                 </ul>
 
                 <!-- Auth & Cart -->
-                <div class="d-flex align-items-center gap-3">
+                <div class="d-flex align-items-center gap-3 flex-shrink-0" style="flex-wrap: nowrap;">
                     <!-- Language Selector -->
                     <div class="dropdown" style="position: relative;">
                         <button class="btn btn-link text-dark p-0 border-0 text-decoration-none shadow-none nav-icon-link dropdown-toggle" 
@@ -70,7 +70,7 @@
                         </ul>
                     </div>
 
-                    <div sec:authorize="isAnonymous()" class="d-flex align-items-center gap-2">
+                    <div sec:authorize="isAnonymous()" class="d-flex align-items-center gap-2 flex-shrink-0" style="flex-wrap: nowrap;">
                         <a th:href="@{/login}" class="btn-auth-signin" th:text="#{nav.login}">Đăng nhập</a>
                         <a th:href="@{/register}" class="btn btn-auth-register" th:text="#{nav.register}">Đăng ký</a>
                     </div>
