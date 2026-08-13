@@ -874,10 +874,6 @@
         renderDayPanel();
     }
 
-    function renderLivePanels() {
-        renderReminderPanel();
-        renderDayPanel();
-    }
 
     function init() {
         state.selectedDate = getSelectedDateFromPage();

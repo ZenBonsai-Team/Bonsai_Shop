@@ -1,8 +1,6 @@
 ﻿<!DOCTYPE html>
 <html lang="vi"
-      xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
-
+      xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -20,8 +18,16 @@
 <body class="luxury-shell appointment-shell">
 <div th:replace="~{fragments/navbar :: navbar}" th:with="activePage='appointments'"></div>
 
-<div id="carrier-success" th:if="${success}" th:text="${success}" hidden></div>
-<div id="carrier-error" th:if="${error}" th:text="${error}" hidden></div>
+<div class="flash-container" aria-live="polite" th:if="${success != null || error != null}">
+    <div th:if="${success != null}" class="flash-message flash-success">
+        <i class="fa-solid fa-check" aria-hidden="true"></i>
+        <span th:text="${success}"></span>
+    </div>
+    <div th:if="${error != null}" class="flash-message flash-error">
+        <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+        <span th:text="${error}"></span>
+    </div>
+</div>
 
 <main class="appointment-page">
     <section class="appointment-hero" aria-label="Tổng quan lịch hẹn">
@@ -85,23 +91,23 @@
                             <h3>Lịch thăm vườn Bonsai Luxury</h3>
                         </div>
                         <div class="appointment-date-block">
-                            <span th:text="${#temporals.format(appointment.appointmentDate,'dd')}">12</span>
-                            <small th:text="${#temporals.format(appointment.appointmentDate,'MM/yyyy')}">05/2026</small>
+                            <span th:text="${#temporals.format(appointment.appointmentDate,'dd')}"></span>
+                            <small th:text="${#temporals.format(appointment.appointmentDate,'MM/yyyy')}"></small>
                         </div>
                     </div>
 
                     <dl class="appointment-details-list">
                         <div>
                             <dt><i class="fa-regular fa-calendar" aria-hidden="true"></i> Ngày xem</dt>
-                            <dd th:text="${#temporals.format(appointment.appointmentDate,'dd/MM/yyyy')}">12/05/2026</dd>
+                            <dd th:text="${#temporals.format(appointment.appointmentDate,'dd/MM/yyyy')}"></dd>
                         </div>
                         <div>
                             <dt><i class="fa-regular fa-clock" aria-hidden="true"></i> Giờ xem</dt>
-                            <dd th:text="${#temporals.format(appointment.appointmentDate,'HH:mm')}">14:30</dd>
+                            <dd th:text="${#temporals.format(appointment.appointmentDate,'HH:mm')}"></dd>
                         </div>
                         <div class="full-width" th:if="${appointment.note != null && !#strings.isEmpty(appointment.note)}">
                             <dt><i class="fa-regular fa-note-sticky" aria-hidden="true"></i> Ghi chú</dt>
-                            <dd class="note-paragraph" th:text="${appointment.note}">Yêu cầu xem riêng.</dd>
+                            <dd class="note-paragraph" th:text="${appointment.note}"></dd>
                         </div>
                     </dl>
 
@@ -255,7 +261,6 @@
 
 <div id="contact" class="footer-anchor"></div>
 <div th:replace="~{fragments/footer :: footer}"></div>
-
 <script th:src="@{/js/view-appointment.js}"></script>
 </body>
 </html>
