@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -58,6 +59,38 @@ public class ArtisanCatalogService {
                 .filter(tag -> productTagRepository.existsForTagId(tag.getTagId()))
                 .map(Tag::getTagId)
                 .collect(Collectors.toSet());
+    }
+
+    public Map<Integer, Long> getVarietyCountByCategoryId() {
+        return varietyRepository.findAll().stream()
+                .collect(Collectors.groupingBy(
+                        variety -> variety.getCategory().getCategoryId(),
+                        Collectors.counting()
+                ));
+    }
+
+    public Map<Integer, Long> getProductCountByCategoryId() {
+        return categoryRepository.findAll().stream()
+                .collect(Collectors.toMap(
+                        Category::getCategoryId,
+                        category -> productRepository.countByVarietyCategoryCategoryId(category.getCategoryId())
+                ));
+    }
+
+    public Map<Integer, Long> getProductCountByVarietyId() {
+        return varietyRepository.findAll().stream()
+                .collect(Collectors.toMap(
+                        Variety::getVarietyId,
+                        variety -> productRepository.countByVarietyVarietyId(variety.getVarietyId())
+                ));
+    }
+
+    public Map<Integer, Long> getProductCountByTagId() {
+        return tagRepository.findAll().stream()
+                .collect(Collectors.toMap(
+                        Tag::getTagId,
+                        tag -> productTagRepository.countByTagTagId(tag.getTagId())
+                ));
     }
 
     @Transactional

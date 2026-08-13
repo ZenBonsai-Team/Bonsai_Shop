@@ -30,13 +30,16 @@ public class ArtisanInPersonOrderController {
     public String index(@AuthenticationPrincipal UserDetails userDetails,
                         @RequestParam(defaultValue = "ALL") String status,
                         @RequestParam(defaultValue = "0") int page,
+                        @RequestParam(defaultValue = "10") int size,
                         Model model) {
         List<Product> availableProducts = inPersonOrderService.getAvailableProducts(userDetails.getUsername());
-        Page<Order> orders = inPersonOrderService.getInPersonOrders(userDetails.getUsername(), status, page, 10);
+        int pageSize = Math.min(Math.max(size, 1), 50);
+        Page<Order> orders = inPersonOrderService.getInPersonOrders(userDetails.getUsername(), status, page, pageSize);
 
         model.addAttribute("availableProducts", availableProducts);
         model.addAttribute("orders", orders);
         model.addAttribute("selectedStatus", status);
+        model.addAttribute("selectedSize", pageSize);
         model.addAttribute("pendingPaymentStatus", ArtisanInPersonOrderService.STATUS_PENDING_PAYMENT);
         model.addAttribute("completedStatus", ArtisanInPersonOrderService.STATUS_COMPLETED);
         model.addAttribute("cancelledStatus", ArtisanInPersonOrderService.STATUS_CANCELLED);

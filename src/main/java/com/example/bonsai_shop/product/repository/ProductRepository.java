@@ -23,6 +23,8 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
     Optional<Product> findByProductCode(String productCode);
     boolean existsByVarietyCategoryCategoryId(Integer categoryId);
     boolean existsByVarietyVarietyId(Integer varietyId);
+    long countByVarietyCategoryCategoryId(Integer categoryId);
+    long countByVarietyVarietyId(Integer varietyId);
     List<Product> findTop5ByProductStatusAndIsVisibleTrueOrderByViewCountDesc(String productStatus);
     long countByProductStatus(String productStatus);
 

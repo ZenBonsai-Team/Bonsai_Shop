@@ -40,9 +40,10 @@ public class ArtisanProductController {
     public String myProducts(@AuthenticationPrincipal UserDetails userDetails,
                              @RequestParam(defaultValue = "ALL") String status,
                              @RequestParam(defaultValue = "0") int page,
+                             @RequestParam(defaultValue = "10") int size,
                              Model model) {
         List<Product> products = artisanProductService.getMyProducts(userDetails.getUsername());
-        int pageSize = 10;
+        int pageSize = Math.min(Math.max(size, 1), 50);
         int totalPages = Math.max((int) Math.ceil((double) products.size() / pageSize), 1);
         int safePage = Math.min(Math.max(page, 0), totalPages - 1);
         int fromIndex = Math.min(safePage * pageSize, products.size());
@@ -55,6 +56,7 @@ public class ArtisanProductController {
         model.addAttribute("products", productPage.getContent());
         model.addAttribute("productPage", productPage);
         model.addAttribute("selectedStatus", status);
+        model.addAttribute("selectedSize", pageSize);
         return "artisan/products";
     }
 
