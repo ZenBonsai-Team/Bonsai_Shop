@@ -46,7 +46,7 @@
         <div class="actions media-toolbar">
             <button type="button" class="btn secondary" id="addMediaItemBtn">+ Thêm media khác</button>
         </div>
-        <p class="form-hint">Mỗi lượt tối đa 10 media. Ảnh tối đa 5MB, video tối đa 100MB. Video không cần góc chụp và không dùng làm media đại diện.</p>
+        <p class="form-hint">Mỗi lượt tối đa 10 media. Ảnh tối đa 7MB, video tối đa 100MB. Video không cần góc chụp và không dùng làm media đại diện.</p>
         <button type="submit" id="uploadAllBtn">Tải lên tất cả 1 media</button>
     </form>
 
@@ -124,7 +124,7 @@
     const uploadAllBtn = document.getElementById('uploadAllBtn');
     const mediaUploadForm = document.getElementById('mediaUploadForm');
     const maxMediaPerUpload = 10;
-    const maxImageSizeBytes = 5 * 1024 * 1024;
+    const maxImageSizeBytes = 7 * 1024 * 1024;
     const maxVideoSizeBytes = 100 * 1024 * 1024;
     const shotTypeOptions = `
         <option value="">-- Chọn góc chụp --</option>
