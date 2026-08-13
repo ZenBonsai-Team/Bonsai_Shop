@@ -110,7 +110,7 @@
                 loadArtisanNotifications();
             });
         </script>
-        <a th:href="@{/artisan/profile}" class="artisan-user-avatar" title="Artisan Profile">
+        <a th:href="@{/profile}" class="artisan-user-avatar" title="Profile">
             <img th:src="${#authentication.principal != null and #authentication.principal.avatar != null and !#authentication.principal.avatar.trim().isEmpty() ? #authentication.principal.avatar : ('https://ui-avatars.com/api/?name=' + (#authentication.principal != null and #authentication.principal.fullName != null ? #authentication.principal.fullName : #authentication.name) + '&background=2E7D32&color=fff')}" 
                  alt="Artisan avatar" 
                  referrerpolicy="no-referrer"
