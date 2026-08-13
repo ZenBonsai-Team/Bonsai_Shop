@@ -40,9 +40,9 @@ public class OwnerDashboardService {
     @Transactional(readOnly = true)
     public OwnerDashboardDTO getDashboard() {
         YearMonth currentMonth = YearMonth.now();
-        LocalDateTime monthStart = currentMonth.atDay(1).atStartOfDay();
-        LocalDateTime nextMonthStart = monthStart.plusMonths(1);
-        YearMonth firstChartMonth = currentMonth.minusMonths(11);
+        LocalDateTime monthStart = currentMonth.atDay(1).atStartOfDay(); // tạo thời điểm tháng hiện tại
+        LocalDateTime nextMonthStart = monthStart.plusMonths(1); // xác định thời điểm bắt đầu tháng tiếp theo để tính doanh thu tháng hiện tại
+        YearMonth firstChartMonth = currentMonth.minusMonths(11); // xác định 12 tháng cho biểu đồ
 
         List<OwnerMonthlyRevenueDTO> monthlyRevenue = buildMonthlyRevenue(
                 firstChartMonth,
