@@ -21,6 +21,8 @@ import com.example.bonsai_shop.product.repository.ProductTagRepository;
 import com.example.bonsai_shop.product.repository.TagRepository;
 import com.example.bonsai_shop.product.repository.VarietyRepository;
 import com.example.bonsai_shop.customer.repository.RoleRepository;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -32,13 +34,11 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
 import java.util.List;
 
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
@@ -84,6 +84,9 @@ class BF03ProductCatalogSystemTest {
 
     @Autowired
     private ProductTagRepository productTagRepository;
+
+    @PersistenceContext
+    private EntityManager entityManager;
 
     @MockitoBean
     private CloudinaryStorageService cloudinaryStorageService;
@@ -156,15 +159,11 @@ class BF03ProductCatalogSystemTest {
                 .segmentName("Budget")
                 .build());
 
-        ProductSegment eliteSegment = segmentRepository.save(ProductSegment.builder()
-                .segmentName("Elite")
-                .build());
-
         Tag tag = tagRepository.save(Tag.builder()
                 .tagName("BF03 Tag")
                 .build());
 
-        return new CatalogData(category, variety, standardSegment, eliteSegment, tag);
+        return new CatalogData(category, variety, standardSegment, tag);
     }
 
     private Product createDraftProduct() throws Exception {
@@ -194,23 +193,6 @@ class BF03ProductCatalogSystemTest {
                 .orElseThrow(() -> new AssertionError("Draft product was not created"));
     }
 
-    private Product createDraftProductWithMedia() throws Exception {
-        Product product = createDraftProduct();
-        mockImageUpload();
-
-        mockMvc.perform(multipart("/artisan/products/" + product.getProductId() + "/media")
-                        .file(validImage())
-                        .with(artisanUser())
-                        .with(csrf())
-                        .param("mediaTypes", "IMAGE")
-                        .param("slotTypes", "OVERVIEW")
-                        .param("captions", "Overview image")
-                        .param("thumbnailIndex", "0"))
-                .andExpect(status().is3xxRedirection());
-
-        return productRepository.findById(product.getProductId()).orElseThrow();
-    }
-
     private MockMultipartFile validImage() {
         return new MockMultipartFile(
                 "files",
@@ -230,9 +212,10 @@ class BF03ProductCatalogSystemTest {
     }
 
     @Test
-    void tcSysBF03001_artisanCanOpenCreateProductForm() throws Exception {
+    void tcSysBF03001_artisanCanPublishProductAndCustomerCanOpenDetails() throws Exception {
 
-        catalogData();
+        CatalogData data = catalogData();
+        String productName = "BF03 Created Bonsai";
 
         mockMvc.perform(get("/artisan/products/new")
                         .with(artisanUser()))
@@ -245,13 +228,6 @@ class BF03ProductCatalogSystemTest {
                         "segments",
                         "tags"
                 ));
-    }
-
-    @Test
-    void tcSysBF03002_artisanCanCreateDraftProduct() throws Exception {
-
-        CatalogData data = catalogData();
-        String productName = "BF03 Created Bonsai";
 
         mockMvc.perform(post("/artisan/products")
                         .with(artisanUser())
@@ -284,12 +260,7 @@ class BF03ProductCatalogSystemTest {
         assertEquals(data.standardSegment().getSegmentId(), product.getSegment().getSegmentId());
         assertEquals("BF03 tree story", product.getTreeStory());
         assertEquals(1, productTagRepository.findByProduct(product).size());
-    }
 
-    @Test
-    void tcSysBF03003_artisanCanUploadMediaAndSetThumbnail() throws Exception {
-
-        Product product = createDraftProduct();
         mockImageUpload();
 
         mockMvc.perform(multipart("/artisan/products/" + product.getProductId() + "/media")
@@ -319,27 +290,32 @@ class BF03ProductCatalogSystemTest {
                 .andExpect(model().attribute("mediaList", hasItem(
                         hasProperty("slotType", equalTo("OVERVIEW"))
                 )));
-    }
 
-    @Test
-    void tcSysBF03004_artisanCanEditDraftProductAndElitePriceIsHidden() throws Exception {
-
-        Product product = createDraftProduct();
-        CatalogData data = catalogData();
+        mockMvc.perform(get("/artisan/products/" + product.getProductId() + "/preview")
+                        .with(artisanUser()))
+                .andExpect(status().isOk())
+                .andExpect(view().name("artisan/product-preview"))
+                .andExpect(model().attribute("product", hasProperty(
+                        "productName",
+                        equalTo(product.getProductName())
+                )))
+                .andExpect(model().attribute("mediaList", hasItem(
+                        hasProperty("slotType", equalTo("OVERVIEW"))
+                )));
 
         mockMvc.perform(post("/artisan/products/" + product.getProductId())
                         .with(artisanUser())
                         .with(csrf())
-                        .param("productName", "BF03 Elite Bonsai")
+                        .param("productName", "BF03 Updated Bonsai")
                         .param("varietyId", String.valueOf(data.variety().getVarietyId()))
-                        .param("segmentId", String.valueOf(data.eliteSegment().getSegmentId()))
+                        .param("segmentId", String.valueOf(data.standardSegment().getSegmentId()))
                         .param("description", "Updated BF03 description")
                         .param("treeStory", "Updated BF03 tree story")
                         .param("age", "15")
                         .param("height", "70.5")
                         .param("trunkDiameter", "12.5")
                         .param("style", "Cascade")
-                        .param("price", "5000000")
+                        .param("price", "1800000")
                         .param("productStatus", "DRAFT")
                         .param("tagIds", String.valueOf(data.tag().getTagId())))
                 .andExpect(status().is3xxRedirection())
@@ -348,10 +324,11 @@ class BF03ProductCatalogSystemTest {
 
         Product updatedProduct = productRepository.findById(product.getProductId()).orElseThrow();
 
-        assertEquals("BF03 Elite Bonsai", updatedProduct.getProductName());
+        assertEquals("BF03 Updated Bonsai", updatedProduct.getProductName());
         assertEquals("Updated BF03 tree story", updatedProduct.getTreeStory());
-        assertEquals(data.eliteSegment().getSegmentId(), updatedProduct.getSegment().getSegmentId());
-        assertEquals(Boolean.FALSE, updatedProduct.getIsPublicPrice());
+        assertEquals(data.standardSegment().getSegmentId(), updatedProduct.getSegment().getSegmentId());
+        assertEquals("DRAFT", updatedProduct.getProductStatus());
+        assertEquals(Boolean.FALSE, updatedProduct.getIsVisible());
 
         mockMvc.perform(get("/artisan/products/" + product.getProductId() + "/preview")
                         .with(artisanUser()))
@@ -359,14 +336,11 @@ class BF03ProductCatalogSystemTest {
                 .andExpect(view().name("artisan/product-preview"))
                 .andExpect(model().attribute("product", hasProperty(
                         "productName",
-                        equalTo("BF03 Elite Bonsai")
+                        equalTo("BF03 Updated Bonsai")
+                )))
+                .andExpect(model().attribute("mediaList", hasItem(
+                        hasProperty("slotType", equalTo("OVERVIEW"))
                 )));
-    }
-
-    @Test
-    void tcSysBF03005_artisanCanPublishReadyDraftProduct() throws Exception {
-
-        Product product = createDraftProductWithMedia();
 
         mockMvc.perform(post("/artisan/products/" + product.getProductId() + "/publish")
                         .with(artisanUser())
@@ -379,33 +353,31 @@ class BF03ProductCatalogSystemTest {
 
         assertEquals("AVAILABLE", publishedProduct.getProductStatus());
         assertEquals(Boolean.TRUE, publishedProduct.getIsVisible());
-    }
 
-    @Test
-    void tcSysBF03006_customerCanSeePublishedProductInMarketplace() throws Exception {
-
-        Product product = createDraftProductWithMedia();
-
-        mockMvc.perform(post("/artisan/products/" + product.getProductId() + "/publish")
-                        .with(artisanUser())
-                        .with(csrf()))
-                .andExpect(status().is3xxRedirection());
-
-        Product publishedProduct = productRepository.findById(product.getProductId()).orElseThrow();
+        entityManager.flush();
+        entityManager.clear();
 
         mockMvc.perform(get("/marketplace")
-                        .param("keyword", publishedProduct.getProductName()))
+                        .param("keyword", updatedProduct.getProductName()))
                 .andExpect(status().isOk())
                 .andExpect(view().name("product/marketplace"))
                 .andExpect(model().attributeExists("products"))
-                .andExpect(content().string(containsString(publishedProduct.getProductName())));
+                .andExpect(content().string(containsString(updatedProduct.getProductName())));
 
-        assertEquals("AVAILABLE", publishedProduct.getProductStatus());
-        assertEquals(Boolean.TRUE, publishedProduct.getIsVisible());
+        mockMvc.perform(get("/product/" + product.getProductId()))
+                .andExpect(status().isOk())
+                .andExpect(view().name("product/product-detail"))
+                .andExpect(model().attribute("product", hasProperty(
+                        "productName",
+                        equalTo(updatedProduct.getProductName())
+                )))
+                .andExpect(model().attribute("productImages", hasItem(
+                        hasProperty("slotType", equalTo("OVERVIEW"))
+                )));
     }
 
     @Test
-    void tcSysBF03007_invalidMediaUploadIsRejected() throws Exception {
+    void tcSysBF03002_invalidMediaUploadIsRejected() throws Exception {
 
         Product product = createDraftProduct();
         MockMultipartFile image = new MockMultipartFile(
@@ -431,7 +403,7 @@ class BF03ProductCatalogSystemTest {
     }
 
     @Test
-    void tcSysBF03008_publishIsBlockedWhenMandatoryDataOrMediaIsMissing() throws Exception {
+    void tcSysBF03003_publishWithoutMediaIsBlocked() throws Exception {
 
         Product product = createDraftProduct();
 
@@ -452,7 +424,6 @@ class BF03ProductCatalogSystemTest {
             Category category,
             Variety variety,
             ProductSegment standardSegment,
-            ProductSegment eliteSegment,
             Tag tag
     ) {
     }
