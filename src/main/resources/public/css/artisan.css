@@ -1822,6 +1822,35 @@ textarea {
     z-index: 6;
 }
 
+.product-pagination-footer {
+    border-top: 0;
+}
+
+.catalog-pagination-controls .product-page-nav {
+    align-items: center;
+    background: #fff;
+    border: 1px solid #E8E4DD;
+    border-radius: 10px;
+    color: #1C3322;
+    display: inline-flex;
+    min-height: 38px;
+    justify-content: center;
+    min-width: 38px;
+    padding: 0 10px;
+    text-decoration: none;
+}
+
+.catalog-pagination-controls .product-page-nav:hover {
+    border-color: #1F6246;
+    color: #1F6246;
+}
+
+.catalog-pagination-controls .product-page-nav.disabled {
+    cursor: not-allowed;
+    opacity: 0.45;
+    pointer-events: none;
+}
+
 @media (min-width: 901px) {
     body:has(.artisan-topbar) .portal-card .table-container {
         overflow: visible;
@@ -1831,6 +1860,16 @@ textarea {
 @media (max-width: 900px) {
     .product-table-thumb-preview {
         display: none;
+    }
+
+    .product-pagination-footer {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .product-pagination-controls {
+        flex-wrap: wrap;
     }
 }
 
@@ -2383,6 +2422,7 @@ h1, h2, h3, h4, h5, h6, .serif-text {
 .catalog-data-table {
     border-collapse: collapse;
     min-width: 900px;
+    table-layout: fixed;
     width: 100%;
 }
 
@@ -2409,6 +2449,12 @@ h1, h2, h3, h4, h5, h6, .serif-text {
 .catalog-data-table .catalog-number-cell {
     text-align: center;
     white-space: nowrap;
+    width: 110px;
+}
+
+.catalog-data-table th:last-child,
+.catalog-data-table td:last-child {
+    width: 132px;
 }
 
 .catalog-data-table tbody tr {
@@ -2460,6 +2506,20 @@ h1, h2, h3, h4, h5, h6, .serif-text {
     display: block;
     font-size: 0.78rem;
     margin-top: 2px;
+}
+
+.catalog-description-cell {
+    max-width: 360px;
+}
+
+.catalog-description-text {
+    display: -webkit-box;
+    line-height: 1.35;
+    max-height: 2.7em;
+    overflow: hidden;
+    overflow-wrap: anywhere;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
 }
 
 .catalog-entity-icon {

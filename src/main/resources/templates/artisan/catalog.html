@@ -94,7 +94,11 @@
                                 </span>
                             </div>
                         </td>
-                        <td class="muted-cell" th:text="${category.description ?: '—'}">—</td>
+                        <td class="muted-cell catalog-description-cell">
+                            <span class="catalog-description-text"
+                                  th:text="${category.description ?: '—'}"
+                                  th:title="${category.description ?: '—'}">—</span>
+                        </td>
                         <td class="catalog-number-cell"><span class="count-badge" th:text="${(varietyCountByCategoryId.get(category.categoryId) ?: 0) + ' giống'}">0 giống</span></td>
                         <td class="catalog-number-cell" th:text="${productCountByCategoryId.get(category.categoryId) ?: 0}">0</td>
                         <td class="text-end">
@@ -162,7 +166,11 @@
                             </div>
                         </td>
                         <td th:text="${variety.category.categoryName}">Dòng Sanh</td>
-                        <td class="muted-cell" th:text="${variety.description ?: '—'}">—</td>
+                        <td class="muted-cell catalog-description-cell">
+                            <span class="catalog-description-text"
+                                  th:text="${variety.description ?: '—'}"
+                                  th:title="${variety.description ?: '—'}">—</span>
+                        </td>
                         <td class="catalog-number-cell" th:text="${productCountByVarietyId.get(variety.varietyId) ?: 0}">0</td>
                         <td class="text-end">
                             <details class="catalog-action-menu">

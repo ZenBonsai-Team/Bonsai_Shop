@@ -166,22 +166,27 @@
             </table>
             </div>
 
-            <div class="pagination-footer" th:if="${productPage != null && productPage.totalPages > 1}">
-                <div class="pagination-info"
-                     th:text="${'Hiển thị trang ' + (productPage.number + 1) + ' / ' + productPage.totalPages}"></div>
-                <div class="pagination-controls">
-                    <a class="page-btn"
+            <div class="catalog-table-footer product-pagination-footer" th:if="${productPage != null}">
+                <span
+                     th:text="${productPage.totalElements == 0
+                        ? 'Không có sản phẩm'
+                        : 'Hiển thị ' + (productPage.number * productPage.size + 1) + '–' + (productPage.number * productPage.size + productPage.numberOfElements) + ' trong ' + productPage.totalElements + ' sản phẩm'}"></span>
+                <div class="catalog-pagination-controls product-pagination-controls">
+                    <select id="productPageSize" class="product-page-size" aria-label="Số sản phẩm mỗi trang">
+                        <option value="10" th:selected="${selectedSize == 10}">10 / trang</option>
+                        <option value="20" th:selected="${selectedSize == 20}">20 / trang</option>
+                        <option value="50" th:selected="${selectedSize == 50}">50 / trang</option>
+                    </select>
+                    <a class="product-page-nav"
                        th:classappend="${!productPage.hasPrevious()} ? 'disabled'"
-                       th:href="@{/artisan/products(page=${productPage.number - 1},status=${selectedStatus})}">Trước</a>
-                    <a class="page-btn"
-                       th:each="pageNumber : ${#numbers.sequence(0, productPage.totalPages - 1)}"
-                       th:if="${pageNumber == 0 || pageNumber == productPage.totalPages - 1 || (pageNumber >= productPage.number - 2 && pageNumber <= productPage.number + 2)}"
-                       th:classappend="${pageNumber == productPage.number} ? 'active'"
-                       th:href="@{/artisan/products(page=${pageNumber},status=${selectedStatus})}"
-                       th:text="${pageNumber + 1}"></a>
-                    <a class="page-btn"
+                       th:href="@{/artisan/products(page=${productPage.hasPrevious() ? productPage.number - 1 : 0},size=${selectedSize},status=${selectedStatus})}"
+                       aria-label="Trang trước">‹</a>
+                    <span
+                          th:text="${'Trang ' + (productPage.number + 1) + ' / ' + productPage.totalPages}">Trang 1 / 1</span>
+                    <a class="product-page-nav"
                        th:classappend="${!productPage.hasNext()} ? 'disabled'"
-                       th:href="@{/artisan/products(page=${productPage.number + 1},status=${selectedStatus})}">Sau</a>
+                       th:href="@{/artisan/products(page=${productPage.hasNext() ? productPage.number + 1 : productPage.number},size=${selectedSize},status=${selectedStatus})}"
+                       aria-label="Trang sau">›</a>
                 </div>
             </div>
         </section>
@@ -311,6 +316,13 @@
             window.history.replaceState({}, '', url);
             applyProductFilters();
         });
+    });
+
+    document.getElementById('productPageSize')?.addEventListener('change', (event) => {
+        const url = new URL(window.location.href);
+        url.searchParams.set('size', event.target.value);
+        url.searchParams.set('page', '0');
+        window.location.href = url.toString();
     });
 
     const initialStatus = new URLSearchParams(window.location.search).get('status');

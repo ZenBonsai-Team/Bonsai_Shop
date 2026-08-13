@@ -1444,6 +1444,7 @@ a.artisan-metric-card:hover {
 
 .product-cell:focus-visible,
 .finance-card-detail:focus-visible,
+.revenue-summary-card:focus-visible,
 .attention-list a:focus-visible {
     outline: 2px solid #9DD5AA;
     outline-offset: 3px;
@@ -1640,6 +1641,7 @@ a.artisan-metric-card:hover {
     background: #FAF8F5;
     border: 1px solid #EFE9DF;
     border-radius: 16px;
+    cursor: pointer;
     display: flex;
     gap: 9px;
     min-width: 0;

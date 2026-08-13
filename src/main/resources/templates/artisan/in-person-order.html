@@ -153,16 +153,16 @@
                 <div class="filter-tabs product-filter-chips" style="margin:0;">
                     <a class="tab-btn text-decoration-none"
                        th:classappend="${selectedStatus == 'ALL'} ? ' active'"
-                       th:href="@{/artisan/in-person-order(status='ALL')}">Tất cả</a>
+                       th:href="@{/artisan/in-person-order(status='ALL',size=${selectedSize})}">Tất cả</a>
                     <a class="tab-btn text-decoration-none"
                        th:classappend="${selectedStatus == pendingPaymentStatus} ? ' active'"
-                       th:href="@{/artisan/in-person-order(status=${pendingPaymentStatus})}">Chờ nhận tiền</a>
+                       th:href="@{/artisan/in-person-order(status=${pendingPaymentStatus},size=${selectedSize})}">Chờ nhận tiền</a>
                     <a class="tab-btn text-decoration-none"
                        th:classappend="${selectedStatus == completedStatus} ? ' active'"
-                       th:href="@{/artisan/in-person-order(status=${completedStatus})}">Hoàn thành</a>
+                       th:href="@{/artisan/in-person-order(status=${completedStatus},size=${selectedSize})}">Hoàn thành</a>
                     <a class="tab-btn text-decoration-none"
                        th:classappend="${selectedStatus == cancelledStatus} ? ' active'"
-                       th:href="@{/artisan/in-person-order(status=${cancelledStatus})}">Đã hủy</a>
+                       th:href="@{/artisan/in-person-order(status=${cancelledStatus},size=${selectedSize})}">Đã hủy</a>
                 </div>
             </div>
 
@@ -233,11 +233,25 @@
                 </table>
             </div>
 
-            <div class="pagination-footer" th:if="${orders.totalPages > 1}">
-                <div class="pagination-info" th:text="${'Hiển thị trang ' + (orders.number + 1) + ' / ' + orders.totalPages}"></div>
-                <div class="pagination-controls">
-                    <a class="page-btn" th:if="${orders.hasPrevious()}" th:href="@{/artisan/in-person-order(status=${selectedStatus},page=${orders.number - 1})}">Trước</a>
-                    <a class="page-btn" th:if="${orders.hasNext()}" th:href="@{/artisan/in-person-order(status=${selectedStatus},page=${orders.number + 1})}">Sau</a>
+            <div class="catalog-table-footer walkin-pagination-footer" th:if="${orders != null}">
+                <span th:text="${orders.totalElements == 0
+                    ? 'Không có đơn tại vườn'
+                    : 'Hiển thị ' + (orders.number * orders.size + 1) + '–' + (orders.number * orders.size + orders.numberOfElements) + ' trong ' + orders.totalElements + ' đơn'}"></span>
+                <div class="catalog-pagination-controls walkin-pagination-controls">
+                    <select id="walkInPageSize" class="product-page-size" aria-label="Số đơn mỗi trang">
+                        <option value="10" th:selected="${selectedSize == 10}">10 / trang</option>
+                        <option value="20" th:selected="${selectedSize == 20}">20 / trang</option>
+                        <option value="50" th:selected="${selectedSize == 50}">50 / trang</option>
+                    </select>
+                    <a class="product-page-nav"
+                       th:classappend="${!orders.hasPrevious()} ? 'disabled'"
+                       th:href="@{/artisan/in-person-order(status=${selectedStatus},page=${orders.hasPrevious() ? orders.number - 1 : 0},size=${selectedSize})}"
+                       aria-label="Trang trước">‹</a>
+                    <span th:text="${'Trang ' + (orders.number + 1) + ' / ' + orders.totalPages}">Trang 1 / 1</span>
+                    <a class="product-page-nav"
+                       th:classappend="${!orders.hasNext()} ? 'disabled'"
+                       th:href="@{/artisan/in-person-order(status=${selectedStatus},page=${orders.hasNext() ? orders.number + 1 : orders.number},size=${selectedSize})}"
+                       aria-label="Trang sau">›</a>
                 </div>
             </div>
         </section>
@@ -506,6 +520,12 @@
     const cancelConfirmCode = document.getElementById('walkInCancelConfirmCode');
     const cancelConfirmClose = cancelConfirmModal.querySelector('.artisan-action-modal-close');
     const cancelConfirmCancel = cancelConfirmModal.querySelector('.btn-modal-cancel');
+    document.getElementById('walkInPageSize')?.addEventListener('change', (event) => {
+        const url = new URL(window.location.href);
+        url.searchParams.set('size', event.target.value);
+        url.searchParams.set('page', '0');
+        window.location.href = url.toString();
+    });
     const cancelConfirmSubmit = cancelConfirmModal.querySelector('.btn-modal-confirm');
     let allowCancelSubmit = false;
     const editButton = document.getElementById('walkInEditButton');
@@ -744,10 +764,10 @@
         panel.classList.remove('show');
     }
 
-    document.querySelectorAll('.js-open-walkin-drawer').forEach(button => {
-        button.addEventListener('click', function (event) {
+    document.querySelectorAll('.js-open-walkin-drawer').forEach(trigger => {
+        trigger.addEventListener('click', function (event) {
             event.stopPropagation();
-            openDrawer(button);
+            openDrawer(trigger);
         });
     });
 
