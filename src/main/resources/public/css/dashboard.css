@@ -2050,6 +2050,31 @@ a.owner-metric-card:hover {
     font-weight: 900;
 }
 
+.owner-report-pagination {
+    border-top: 1px solid #E8E4DD;
+    justify-content: space-between;
+    margin-top: 0;
+    padding: 16px 22px;
+}
+
+.owner-report-pagination[hidden] {
+    display: none;
+}
+
+.owner-report-pagination .pagination-controls {
+    margin-top: 0;
+    padding: 0;
+}
+
+.owner-report-pagination .page-btn:disabled {
+    background: #F1F5F9 !important;
+    border-color: #E2E8F0 !important;
+    color: #94A3B8 !important;
+    cursor: not-allowed !important;
+    opacity: 0.65 !important;
+    pointer-events: none !important;
+}
+
 @media (max-width: 1200px) {
     .owner-metric-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
