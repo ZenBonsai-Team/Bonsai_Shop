@@ -9,6 +9,7 @@ public record OwnerTopViewedTreeDTO(
         String varietyName,
         String productStatus,
         BigDecimal price,
-        int viewCount
+        int viewCount,
+        String primaryImageUrl
 ) {
 }

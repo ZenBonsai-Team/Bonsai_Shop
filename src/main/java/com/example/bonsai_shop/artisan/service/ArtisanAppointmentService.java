@@ -78,6 +78,12 @@ public class ArtisanAppointmentService {
             throw new RuntimeException("Chỉ lịch đang chờ duyệt mới được cập nhật.");
         }
 
+        if (appointment.getAppointmentDate().isBefore(LocalDateTime.now())) {
+            throw new RuntimeException(
+                    "Không thể cập nhật lịch đã quá thời gian hẹn."
+            );
+        }
+
         status = status.toUpperCase();
 
         if (!List.of("APPROVED", "REJECTED").contains(status)) {
@@ -99,6 +105,15 @@ public class ArtisanAppointmentService {
         if(!appointment.getStatus().equals("APPROVED")) {
             throw new RuntimeException("Chỉ lịch được duyệt mới được cập nhật.");
         }
+
+        if (appointment.getAppointmentDate()
+                .isAfter(LocalDateTime.now())) {
+
+            throw new RuntimeException(
+                    "Chưa đến thời gian lịch hẹn, không thể cập nhật."
+            );
+        }
+
 
         status = status.toUpperCase();
 
@@ -127,14 +142,10 @@ public class ArtisanAppointmentService {
 
         if (Boolean.TRUE.equals(autoApprove)) {
             validateMinute(autoApproveAfter, "Thời gian tự động duyệt");
-        } else {
-            autoApproveAfter = null;   // hoặc giữ giá trị cũ nếu muốn
         }
 
         if (Boolean.TRUE.equals(autoComplete)) {
             validateMinute(autoCompleteAfter, "Thời gian tự động hoàn thành");
-        } else {
-            autoCompleteAfter = null;
         }
 
         boolean hasPause =
@@ -236,4 +247,6 @@ public class ArtisanAppointmentService {
       }
       return countApprove;
   }
+
+
 }

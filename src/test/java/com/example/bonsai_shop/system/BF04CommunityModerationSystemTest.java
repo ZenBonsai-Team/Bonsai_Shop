@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -104,6 +105,7 @@ class BF04CommunityModerationSystemTest {
                         .param("title", "Bonsai Pine Pruning")
                         .param("content", "Guidelines for beginners")
                         .param("category", "Kỹ thuật"))
+                .andDo(print(System.err))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/community"));
 
@@ -132,6 +134,7 @@ class BF04CommunityModerationSystemTest {
                         .param("title", "đm Cây bonsai")
                         .param("content", "Normal content")
                         .param("category", "Kỹ thuật"))
+                .andDo(print(System.err))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/community"));
 
@@ -176,6 +179,7 @@ class BF04CommunityModerationSystemTest {
                         .param("title", "đm Cây cảnh")
                         .param("content", "Rejection test content")
                         .param("category", "Kỹ thuật"))
+                .andDo(print(System.err))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/community"));
 

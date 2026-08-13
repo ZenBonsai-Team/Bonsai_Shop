@@ -33,11 +33,11 @@ document.addEventListener("DOMContentLoaded", () => {
         toast.appendChild(createIcon(toastType === "success" ? "fa-solid fa-check" : "fa-solid fa-xmark"));
         toast.appendChild(createElement("span", "", message));
         container.appendChild(toast);
-        window.setTimeout(() => toast.remove(), 5400);
+        window.setTimeout(() => toast.remove(), 5000);
     };
 
     const initReveal = () => {
-        const items = $$(".summary-card, .main-image-wrap, .media-note, .detail-trust-strip, .lux-section, .specs-table-card, .profile-grid article, .artisan-profile-banner, .ownership-panel, .ownership-step");
+        const items = $$(".summary-card, .main-image-wrap, .detail-trust-strip, .lux-section, .specs-table-card, .profile-grid article, .artisan-profile-banner, .ownership-panel, .ownership-step");
         if (!items.length || prefersReducedMotion) {
             items.forEach((item) => item.classList.add("visible"));
             return;
@@ -69,66 +69,32 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     };
 
-    const initGallery = (lightbox) => {
+    const initGallery = () => {
         const mainImage = $("#mainImage");
-        const mainVideo = $("#mainVideo");
         const thumbnailButtons = $$(".thumb-item");
         const thumbnailRows = $$(".thumb-row");
         const mainPreviousButton = $(".main-media-prev");
         const mainNextButton = $(".main-media-next");
-        const expandMediaButton = $("#expandMediaBtn");
-        const toggleSoundButton = $("#toggleSoundBtn");
         const galleryItems = [
-            ...(mainVideo?.src ? [{
-                src: mainVideo.src,
-                type: "VIDEO",
-                alt: mainImage?.alt || "Bonsai Luxury",
-                button: null
-            }] : []),
             ...thumbnailButtons.map((button) => ({
                 src: button.dataset.src,
-                type: (button.dataset.type || "IMAGE").toUpperCase(),
                 alt: button.dataset.alt || mainImage?.alt || "Bonsai Luxury",
                 button
             })).filter((item) => item.src)
         ];
-        let activeMediaIndex = galleryItems.findIndex((item) => item.type === "VIDEO" && !mainVideo?.classList.contains("is-hidden"));
+        let activeMediaIndex = galleryItems.findIndex((item) => item.button?.classList.contains("is-active"));
         if (activeMediaIndex < 0) {
-            activeMediaIndex = Math.max(0, galleryItems.findIndex((item) => item.button?.classList.contains("is-active")));
+            activeMediaIndex = 0;
         }
-
-        const syncExpandButton = (mediaUrl, mediaType, mediaAlt) => {
-            if (!expandMediaButton || !mediaUrl) return;
-            expandMediaButton.dataset.src = mediaUrl;
-            expandMediaButton.dataset.type = mediaType || "IMAGE";
-            expandMediaButton.dataset.alt = mediaAlt || "Bonsai Luxury";
-        };
 
         const showImage = (imageUrl, imageAlt) => {
             if (!mainImage || !imageUrl) return;
-            mainVideo?.pause();
-            if (mainVideo) {
-                mainVideo.classList.add("is-hidden");
-                mainVideo.removeAttribute("src");
-                mainVideo.load();
-            }
             mainImage.alt = imageAlt || mainImage.alt || "Bonsai Luxury";
-            mainImage.classList.remove("is-hidden");
             mainImage.classList.add("is-switching");
             const clearState = () => mainImage.classList.remove("is-switching");
             mainImage.addEventListener("load", clearState, { once: true });
             mainImage.src = imageUrl;
-            syncExpandButton(imageUrl, "IMAGE", mainImage.alt);
             window.setTimeout(clearState, 600);
-        };
-
-        const showVideo = (videoUrl) => {
-            if (!mainVideo || !videoUrl) return;
-            mainImage?.classList.add("is-hidden");
-            mainVideo.src = videoUrl;
-            mainVideo.classList.remove("is-hidden");
-            mainVideo.load();
-            syncExpandButton(videoUrl, "VIDEO", mainImage?.alt || "Bonsai Luxury");
         };
 
         const activateMedia = (index) => {
@@ -140,17 +106,12 @@ document.addEventListener("DOMContentLoaded", () => {
             item.button?.classList.add("is-active");
             item.button?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
 
-            if (item.type === "VIDEO") {
-                showVideo(item.src);
-                return;
-            }
             showImage(item.src, item.alt);
         };
 
         thumbnailButtons.forEach((button) => {
             button.addEventListener("click", () => {
                 const nextMediaUrl = button.dataset.src;
-                const nextMediaType = (button.dataset.type || "IMAGE").toUpperCase();
                 if (!nextMediaUrl) return;
 
                 const nextIndex = galleryItems.findIndex((item) => item.button === button);
@@ -158,8 +119,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     activateMedia(nextIndex);
                     return;
                 }
-                if (nextMediaType === "VIDEO") showVideo(nextMediaUrl);
-                else showImage(nextMediaUrl, button.dataset.alt);
+                showImage(nextMediaUrl, button.dataset.alt);
             });
         });
 
@@ -188,91 +148,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 row.scrollBy({ left: getScrollDistance(), behavior: "smooth" });
             });
         });
-
-        expandMediaButton?.addEventListener("click", () => {
-            lightbox?.open(expandMediaButton.dataset.src, expandMediaButton.dataset.alt, expandMediaButton.dataset.type);
-        });
-
-        toggleSoundButton?.addEventListener("click", () => {
-            if (!mainVideo) return;
-            mainVideo.muted = !mainVideo.muted;
-            const icon = $("i", toggleSoundButton);
-            if (icon) {
-                icon.className = mainVideo.muted ? "fa-solid fa-volume-xmark" : "fa-solid fa-volume-high";
-            }
-            toggleSoundButton.setAttribute("aria-label", mainVideo.muted ? "Bật tiếng video" : "Tắt tiếng video");
-        });
-    };
-
-    const initLightbox = () => {
-        const overlayRoot = $("#overlayRoot");
-        if (!overlayRoot) return { close: () => {}, open: () => {} };
-
-        let activeLightbox = null;
-
-        const close = () => {
-            if (!activeLightbox) return;
-
-            activeLightbox.classList.remove("is-open");
-            const currentLightbox = activeLightbox;
-            activeLightbox = null;
-
-            window.setTimeout(() => {
-                currentLightbox.remove();
-                overlayRoot.setAttribute("aria-hidden", "true");
-            }, 180);
-        };
-
-        const open = (mediaUrl, mediaAlt, mediaType = "IMAGE") => {
-            if (!mediaUrl) return;
-            close();
-
-            const normalizedMediaType = (mediaType || "IMAGE").toUpperCase();
-            const lightbox = createElement("div", "lightbox");
-            lightbox.setAttribute("role", "dialog");
-            lightbox.setAttribute("aria-modal", "true");
-            lightbox.setAttribute("aria-label", normalizedMediaType === "VIDEO" ? "Video chi tiết Bonsai" : "Ảnh chi tiết Bonsai");
-
-            const panel = createElement("div", "lightbox-panel");
-            const closeButton = createElement("button", "lightbox-close");
-            closeButton.type = "button";
-            closeButton.setAttribute("aria-label", "Đóng media lớn");
-            closeButton.appendChild(createIcon("fa-solid fa-xmark"));
-
-            const mediaElement = normalizedMediaType === "VIDEO"
-                    ? createElement("video", "lightbox-image lightbox-video")
-                    : createElement("img", "lightbox-image");
-            mediaElement.src = mediaUrl;
-            if (normalizedMediaType === "VIDEO") {
-                mediaElement.controls = true;
-                mediaElement.autoplay = true;
-                mediaElement.playsInline = true;
-            } else {
-                mediaElement.alt = mediaAlt || "Ảnh chi tiết Bonsai Luxury";
-            }
-
-            panel.append(closeButton, mediaElement);
-            lightbox.appendChild(panel);
-            overlayRoot.appendChild(lightbox);
-            overlayRoot.removeAttribute("aria-hidden");
-            activeLightbox = lightbox;
-
-            requestAnimationFrame(() => lightbox.classList.add("is-open"));
-            closeButton.addEventListener("click", close);
-            lightbox.addEventListener("click", (event) => {
-                if (event.target === lightbox) close();
-            });
-            closeButton.focus();
-        };
-
-        $$(".gallery-item").forEach((item) => {
-            item.addEventListener("click", () => {
-                const image = $("img", item);
-                open(item.dataset.src || image?.src, image?.alt, "IMAGE");
-            });
-        });
-
-        return { close, open };
     };
 
     const initBooking = () => {
@@ -395,14 +270,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
     initReveal();
     initPointerGlow();
-    const lightbox = initLightbox();
-    initGallery(lightbox);
+    initGallery();
     const booking = initBooking();
     updateYear();
 
     document.addEventListener("keydown", (event) => {
         if (event.key !== "Escape") return;
-        lightbox.close();
         booking.close();
     });
 });
