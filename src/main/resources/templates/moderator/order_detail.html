@@ -456,10 +456,6 @@
                             <span class="od-field-value" th:text="${order.customerInfo.address ?: '---'}">---</span>
                         </div>
                     </div>
-                    <div th:if="${order.customerInfo.customerNote != null and !#strings.isEmpty(order.customerInfo.customerNote)}" style="margin-top:12px;">
-                        <div class="od-field-label" style="margin-bottom:4px;">Ghi chú thêm</div>
-                        <div class="od-note-box" th:text="${order.customerInfo.customerNote}">---</div>
-                    </div>
                 </div>
             </div>
 

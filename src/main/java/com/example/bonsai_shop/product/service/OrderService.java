@@ -81,7 +81,8 @@ public class OrderService {
     }
 
     @Transactional(readOnly = true)
-    public Page<Order> getMyOrders(Integer moderatorId, String search, String status, String sort, int page, int limit) {
+    public Page<Order> getMyOrders(Integer moderatorId, String search, String status, String sort, int page,
+            int limit) {
         Sort springSort = resolveSort(sort);
         Pageable pageable = PageRequest.of(page - 1, limit, springSort);
         return orderRepository.searchMyOrders(moderatorId, resolveStatusFilter(status), search, pageable);
@@ -141,7 +142,8 @@ public class OrderService {
         Map<String, Long> kpis = new HashMap<>();
         kpis.put("total", orderRepository.countByAssignedToUserId(moderatorId));
         kpis.put("pending", orderRepository.countByAssignedToUserIdAndOrderStatus(moderatorId, "PENDING"));
-        kpis.put("approved", orderRepository.countByAssignedToUserIdAndOrderStatus(moderatorId, STATUS_PENDING_PAYMENT));
+        kpis.put("approved",
+                orderRepository.countByAssignedToUserIdAndOrderStatus(moderatorId, STATUS_PENDING_PAYMENT));
         kpis.put("paid", orderRepository.countByAssignedToUserIdAndOrderStatus(moderatorId, "PAID"));
         kpis.put("rejected", orderRepository.countByAssignedToUserIdAndOrderStatus(moderatorId, "CANCELLED"));
         return kpis;
@@ -196,9 +198,9 @@ public class OrderService {
         orderRepository.save(order);
 
         orderHandlingRepository.findAll().stream()
-                .filter(h -> h.getOrder() != null && h.getOrder().getOrderId().equals(order.getOrderId()) 
-                          && h.getModerator() != null && h.getModerator().getUserId().equals(moderator.getUserId())
-                          && Boolean.TRUE.equals(h.getIsActive()))
+                .filter(h -> h.getOrder() != null && h.getOrder().getOrderId().equals(order.getOrderId())
+                        && h.getModerator() != null && h.getModerator().getUserId().equals(moderator.getUserId())
+                        && Boolean.TRUE.equals(h.getIsActive()))
                 .forEach(h -> {
                     h.setIsActive(false);
                     h.setReleasedAt(LocalDateTime.now());
@@ -214,7 +216,8 @@ public class OrderService {
     }
 
     @Transactional
-    public boolean verifyOrder(String orderCode, BigDecimal craneFee, BigDecimal shippingFee, BigDecimal depositAmount, User moderator) {
+    public boolean verifyOrder(String orderCode, BigDecimal craneFee, BigDecimal shippingFee, BigDecimal depositAmount,
+            User moderator) {
         Order order = orderRepository.findByOrderCodeWithDetails(orderCode).orElse(null);
         if (order == null || !STATUS_PENDING.equalsIgnoreCase(order.getOrderStatus())) {
             return false;
@@ -226,7 +229,7 @@ public class OrderService {
         }
 
         String oldStatus = order.getOrderStatus();
-        
+
         // Tính chính xác giá gốc các cây trong đơn hàng (không bao gồm phụ phí)
         BigDecimal treePrice = resolveTreePrice(order);
         BigDecimal normalizedCraneFee = normalizeNonNegativeAmount(craneFee, "Phí cẩu");
@@ -235,17 +238,17 @@ public class OrderService {
         order.setCraneFee(normalizedCraneFee);
         order.setShippingFee(normalizedShippingFee);
 
-        // Tong gia tri thuc te cua toan bo don hang = Tree Price + Crane Fee + Shipping Fee
+        // Tong gia tri thuc te cua toan bo don hang = Tree Price + Crane Fee + Shipping
+        // Fee
         BigDecimal newTotal = treePrice.add(normalizedCraneFee).add(normalizedShippingFee);
         order.setTotalAmount(newTotal);
 
         List<Payment> existingPayments = paymentRepository.findByOrderOrderIdOrderByPaymentIdAsc(order.getOrderId());
-        
-        boolean isDepositFlow = existingPayments.stream().anyMatch(p -> 
-                PaymentType.DEPOSIT.name().equalsIgnoreCase(p.getPaymentType()) ||
-                "DEPOSIT".equalsIgnoreCase(p.getPaymentMethod()) ||
-                "COD".equalsIgnoreCase(p.getPaymentMethod())
-        );
+
+        boolean isDepositFlow = existingPayments.stream()
+                .anyMatch(p -> PaymentType.DEPOSIT.name().equalsIgnoreCase(p.getPaymentType()) ||
+                        "DEPOSIT".equalsIgnoreCase(p.getPaymentMethod()) ||
+                        "COD".equalsIgnoreCase(p.getPaymentMethod()));
 
         if (isDepositFlow) {
             if (depositAmount == null || depositAmount.compareTo(ZERO) <= 0) {
@@ -316,9 +319,9 @@ public class OrderService {
         orderLogRepository.save(log);
 
         orderHandlingRepository.findAll().stream()
-                .filter(h -> h.getOrder() != null && h.getOrder().getOrderId().equals(order.getOrderId()) 
-                          && h.getModerator() != null && h.getModerator().getUserId().equals(moderator.getUserId())
-                          && Boolean.TRUE.equals(h.getIsActive()))
+                .filter(h -> h.getOrder() != null && h.getOrder().getOrderId().equals(order.getOrderId())
+                        && h.getModerator() != null && h.getModerator().getUserId().equals(moderator.getUserId())
+                        && Boolean.TRUE.equals(h.getIsActive()))
                 .forEach(h -> {
                     h.setIsActive(false);
                     h.setReleasedAt(LocalDateTime.now());
@@ -347,7 +350,7 @@ public class OrderService {
 
         String oldStatus = order.getOrderStatus();
         order.setOrderStatus("CANCELLED");
-        order.setNotes("Hủy đơn với lý do: " + reason);
+        appendOrderNote(order, "Hủy đơn với lý do: " + reason);
         orderRepository.save(order);
 
         if (order.getOrderDetails() != null) {
@@ -371,9 +374,9 @@ public class OrderService {
         orderLogRepository.save(log);
 
         orderHandlingRepository.findAll().stream()
-                .filter(h -> h.getOrder() != null && h.getOrder().getOrderId().equals(order.getOrderId()) 
-                          && h.getModerator() != null && h.getModerator().getUserId().equals(moderator.getUserId())
-                          && Boolean.TRUE.equals(h.getIsActive()))
+                .filter(h -> h.getOrder() != null && h.getOrder().getOrderId().equals(order.getOrderId())
+                        && h.getModerator() != null && h.getModerator().getUserId().equals(moderator.getUserId())
+                        && Boolean.TRUE.equals(h.getIsActive()))
                 .forEach(h -> {
                     h.setIsActive(false);
                     h.setReleasedAt(LocalDateTime.now());
@@ -398,7 +401,8 @@ public class OrderService {
     @Transactional
     public boolean recordDepositPayment(String orderCode, BigDecimal depositAmount, User moderator) {
         Order order = orderRepository.findByOrderCode(orderCode).orElse(null);
-        if (order == null || (!"PENDING".equalsIgnoreCase(order.getOrderStatus()) && !STATUS_PENDING_PAYMENT.equalsIgnoreCase(order.getOrderStatus()))) {
+        if (order == null || (!"PENDING".equalsIgnoreCase(order.getOrderStatus())
+                && !STATUS_PENDING_PAYMENT.equalsIgnoreCase(order.getOrderStatus()))) {
             return false;
         }
 
@@ -499,6 +503,7 @@ public class OrderService {
                 .depositAmount(BigDecimal.ZERO)
                 .orderStatus("PENDING")
                 .orderType("ONLINE")
+                .notes(dto.getNotes())
                 .build();
 
         List<OrderDetail> details = productsToBuy.stream().map(prod -> {
@@ -519,8 +524,8 @@ public class OrderService {
 
         // Khởi tạo bản ghi Payment PENDING ban đầu duy nhất theo 1-N Model
         String rawMethod = dto.getPaymentMethod() != null ? dto.getPaymentMethod() : PaymentMethod.DEPOSIT.name();
-        String pType = (PaymentMethod.DEPOSIT.name().equalsIgnoreCase(rawMethod) || "COD".equalsIgnoreCase(rawMethod)) 
-                ? PaymentType.DEPOSIT.name() 
+        String pType = (PaymentMethod.DEPOSIT.name().equalsIgnoreCase(rawMethod) || "COD".equalsIgnoreCase(rawMethod))
+                ? PaymentType.DEPOSIT.name()
                 : PaymentType.FULL_PAYMENT.name();
 
         Payment initialPayment = Payment.builder()
@@ -588,7 +593,8 @@ public class OrderService {
     }
 
     @Transactional
-    public boolean processPaymentFailure(String orderCode, String responseCode, String transactionStatus, String source) {
+    public boolean processPaymentFailure(String orderCode, String responseCode, String transactionStatus,
+            String source) {
         Order order = orderRepository.findByOrderCode(orderCode).orElse(null);
         if (order == null) {
             return false;
@@ -644,14 +650,14 @@ public class OrderService {
         String paymentType = latestFailedVnPayPayment != null && latestFailedVnPayPayment.getPaymentType() != null
                 ? latestFailedVnPayPayment.getPaymentType()
                 : (order.getDepositAmount() != null && order.getDepositAmount().compareTo(ZERO) > 0
-                ? PaymentType.DEPOSIT.name()
-                : PaymentType.FULL_PAYMENT.name());
+                        ? PaymentType.DEPOSIT.name()
+                        : PaymentType.FULL_PAYMENT.name());
 
         BigDecimal amount = latestFailedVnPayPayment != null && latestFailedVnPayPayment.getAmount() != null
                 ? latestFailedVnPayPayment.getAmount()
                 : (PaymentType.DEPOSIT.name().equalsIgnoreCase(paymentType)
-                ? order.getDepositAmount()
-                : order.getTotalAmount());
+                        ? order.getDepositAmount()
+                        : order.getTotalAmount());
 
         if (amount == null || amount.compareTo(ZERO) <= 0) {
             throw new IllegalStateException("Số tiền thanh toán không hợp lệ.");
@@ -693,7 +699,8 @@ public class OrderService {
         }
 
         if (!"DEPOSITED".equalsIgnoreCase(order.getOrderStatus())) {
-            throw new IllegalStateException("Đơn hàng phải ở trạng thái ĐÃ ĐẶT CỌC (DEPOSITED) mới được xác nhận thanh toán phần còn lại!");
+            throw new IllegalStateException(
+                    "Đơn hàng phải ở trạng thái ĐÃ ĐẶT CỌC (DEPOSITED) mới được xác nhận thanh toán phần còn lại!");
         }
 
         validateAssignedModerator(order, moderator);
@@ -701,7 +708,8 @@ public class OrderService {
         // Tính tổng tiền deposit đã thanh toán thành công
         BigDecimal treePrice = resolveTreePrice(order);
 
-        List<Payment> depositPayments = paymentRepository.findByOrderOrderIdAndPaymentType(order.getOrderId(), PaymentType.DEPOSIT.name());
+        List<Payment> depositPayments = paymentRepository.findByOrderOrderIdAndPaymentType(order.getOrderId(),
+                PaymentType.DEPOSIT.name());
         BigDecimal depositPaid = depositPayments.stream()
                 .filter(p -> "SUCCESS".equalsIgnoreCase(p.getPaymentStatus()))
                 .map(Payment::getAmount)
@@ -793,7 +801,8 @@ public class OrderService {
         }
         validateAssignedModerator(order, moderator);
         if (!"DEPOSITED".equalsIgnoreCase(order.getOrderStatus())) {
-            throw new IllegalStateException("Chỉ có thể ghi nhận khách không nhận hàng sau khi khách đã thanh toán tiền đặt cọc.");
+            throw new IllegalStateException(
+                    "Chỉ có thể ghi nhận khách không nhận hàng sau khi khách đã thanh toán tiền đặt cọc.");
         }
 
         String oldStatus = order.getOrderStatus();
@@ -822,9 +831,9 @@ public class OrderService {
 
     @Transactional
     public boolean recordFaultRefundAndCancel(String orderCode, String faultPartyValue, BigDecimal refundAmount,
-                                              String reason, String evidenceNote, String externalReference,
-                                              Boolean customerKeepsTree, String productResolution,
-                                              User moderator) {
+            String reason, String evidenceNote, String externalReference,
+            Boolean customerKeepsTree, String productResolution,
+            User moderator) {
         Order order = orderRepository.findByOrderCode(orderCode).orElse(null);
         if (order == null) {
             throw new IllegalArgumentException("Không tìm thấy đơn hàng: " + orderCode);
@@ -844,10 +853,12 @@ public class OrderService {
             throw new IllegalArgumentException("Bên chịu trách nhiệm phải là nhà vườn hoặc quá trình vận chuyển.");
         }
 
-        // Tự động xác định số tiền hoàn 100% dựa trên tổng số tiền thực tế khách đã thanh toán
+        // Tự động xác định số tiền hoàn 100% dựa trên tổng số tiền thực tế khách đã
+        // thanh toán
         BigDecimal refundableCash = financialLedgerService.calculateRefundableCash(order);
         if (refundableCash == null || refundableCash.compareTo(ZERO) <= 0) {
-            throw new IllegalStateException("Đơn hàng này không có khoản thanh toán thành công nào còn có thể hoàn tiền.");
+            throw new IllegalStateException(
+                    "Đơn hàng này không có khoản thanh toán thành công nào còn có thể hoàn tiền.");
         }
 
         BigDecimal calculatedRefundAmount = refundableCash;
@@ -860,12 +871,13 @@ public class OrderService {
                 normalizedReason,
                 evidenceNote,
                 externalReference,
-                moderator
-        );
+                moderator);
 
-        appendOrderNote(order, normalizedReason + " Hoàn tiền 100% chỉ được ghi nhận thủ công, không tự động chuyển khoản.");
+        appendOrderNote(order,
+                normalizedReason + " Hoàn tiền 100% chỉ được ghi nhận thủ công, không tự động chuyển khoản.");
 
-        // Nghiệp vụ cố định: Đơn chuyển CANCELLED, khách không giữ cây, toàn bộ cây trong đơn trả về AVAILABLE
+        // Nghiệp vụ cố định: Đơn chuyển CANCELLED, khách không giữ cây, toàn bộ cây
+        // trong đơn trả về AVAILABLE
         order.setOrderStatus("CANCELLED");
         orderRepository.save(order);
         releaseProducts(order);
@@ -1061,7 +1073,8 @@ public class OrderService {
             try {
                 ModerationNotification notification = ModerationNotification.builder()
                         .targetUsername(order.getCustomer().getEmail())
-                        .message("🎉 Đơn hàng " + order.getOrderCode() + " đã được thanh toán đầy đủ / hoàn thành! Hãy đánh giá và cho sao (Review & Rating) cho cây bonsai bạn đã mua nhé!")
+                        .message("🎉 Đơn hàng " + order.getOrderCode()
+                                + " đã được thanh toán đầy đủ / hoàn thành! Hãy đánh giá và cho sao (Review & Rating) cho cây bonsai bạn đã mua nhé!")
                         .isRead(false)
                         .createdAt(LocalDateTime.now())
                         .build();
@@ -1072,5 +1085,3 @@ public class OrderService {
         }
     }
 }
-
-
