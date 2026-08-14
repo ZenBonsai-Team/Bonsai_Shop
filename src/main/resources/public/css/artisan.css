@@ -160,6 +160,29 @@ textarea {
     background: #fff3cd;
 }
 
+.field-error {
+    display: none;
+    margin-top: 6px;
+    color: #d32f2f;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.35;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+}
+
+.field-error:not(:empty) {
+    display: block;
+}
+
+.field-invalid input,
+.field-invalid textarea,
+.field-invalid select,
+.field-invalid .input-with-unit {
+    border-color: #d32f2f !important;
+    box-shadow: 0 0 0 2px rgba(211, 47, 47, 0.12);
+}
+
 .muted-text {
     color: #6b7280;
     font-size: 0.9rem;
@@ -1453,6 +1476,7 @@ textarea {
 }
 
 .walk-in-edit-grid {
+    align-items: start;
     display: grid;
     gap: 12px;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1461,12 +1485,23 @@ textarea {
 .walk-in-edit-grid label {
     display: grid;
     gap: 6px;
+    grid-template-rows: auto auto auto;
+    min-width: 0;
+}
+
+.walk-in-edit-grid .walk-in-field-wide {
+    grid-column: 1 / -1;
 }
 
 .walk-in-edit-grid label > span:first-child {
     color: #1c3322;
     font-size: 0.82rem;
     font-weight: 700;
+}
+
+.walk-in-edit-grid .field-error {
+    font-size: 12px;
+    margin-top: 2px;
 }
 
 .walk-in-edit-grid input,

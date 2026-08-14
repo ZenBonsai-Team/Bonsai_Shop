@@ -26,7 +26,7 @@ public class ArtisanInPersonOrderController {
 
     private final ArtisanInPersonOrderService inPersonOrderService;
 
-    @GetMapping
+    @GetMapping({"", "/"})
     public String index(@AuthenticationPrincipal UserDetails userDetails,
                         @RequestParam(defaultValue = "ALL") String status,
                         @RequestParam(defaultValue = "0") int page,
@@ -74,6 +74,10 @@ public class ArtisanInPersonOrderController {
             redirectAttributes.addFlashAttribute("success", "Đã tạo In-person Order " + order.getOrderCode() + " và reserve sản phẩm.");
         } catch (RuntimeException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
+            redirectAttributes.addFlashAttribute("createErrorField", resolveOrderFormErrorField(e.getMessage()));
+            keepCreateForm(redirectAttributes, productId, customerName, customerPhone, shippingAddress,
+                    paymentMethod, craneFee, shippingFee, customerEmail, notes);
+            return "redirect:/artisan/in-person-order/";
         }
         return "redirect:/artisan/in-person-order#walkInOrdersSection";
     }
@@ -133,8 +137,81 @@ public class ArtisanInPersonOrderController {
             redirectAttributes.addFlashAttribute("success", "Đã cập nhật In-person Order " + order.getOrderCode() + ".");
         } catch (RuntimeException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
+            redirectAttributes.addFlashAttribute("editErrorField", resolveOrderFormErrorField(e.getMessage()));
+            keepEditForm(redirectAttributes, orderId, customerName, customerPhone, shippingAddress,
+                    paymentMethod, craneFee, shippingFee, customerEmail, notes);
         }
         return "redirect:/artisan/in-person-order#walkInOrdersSection";
+    }
+
+    private void keepCreateForm(RedirectAttributes redirectAttributes,
+                                Integer productId,
+                                String customerName,
+                                String customerPhone,
+                                String shippingAddress,
+                                String paymentMethod,
+                                BigDecimal craneFee,
+                                BigDecimal shippingFee,
+                                String customerEmail,
+                                String notes) {
+        redirectAttributes.addFlashAttribute("createProductId", productId);
+        redirectAttributes.addFlashAttribute("createCustomerName", customerName);
+        redirectAttributes.addFlashAttribute("createCustomerPhone", customerPhone);
+        redirectAttributes.addFlashAttribute("createShippingAddress", shippingAddress);
+        redirectAttributes.addFlashAttribute("createPaymentMethod", paymentMethod);
+        redirectAttributes.addFlashAttribute("createCraneFee", craneFee);
+        redirectAttributes.addFlashAttribute("createShippingFee", shippingFee);
+        redirectAttributes.addFlashAttribute("createCustomerEmail", customerEmail);
+        redirectAttributes.addFlashAttribute("createNotes", notes);
+    }
+
+    private void keepEditForm(RedirectAttributes redirectAttributes,
+                              Integer orderId,
+                              String customerName,
+                              String customerPhone,
+                              String shippingAddress,
+                              String paymentMethod,
+                              BigDecimal craneFee,
+                              BigDecimal shippingFee,
+                              String customerEmail,
+                              String notes) {
+        redirectAttributes.addFlashAttribute("editOrderId", orderId);
+        redirectAttributes.addFlashAttribute("editCustomerName", customerName);
+        redirectAttributes.addFlashAttribute("editCustomerPhone", customerPhone);
+        redirectAttributes.addFlashAttribute("editShippingAddress", shippingAddress);
+        redirectAttributes.addFlashAttribute("editPaymentMethod", paymentMethod);
+        redirectAttributes.addFlashAttribute("editCraneFee", craneFee);
+        redirectAttributes.addFlashAttribute("editShippingFee", shippingFee);
+        redirectAttributes.addFlashAttribute("editCustomerEmail", customerEmail);
+        redirectAttributes.addFlashAttribute("editNotes", notes);
+    }
+
+    private String resolveOrderFormErrorField(String message) {
+        if (message == null) {
+            return null;
+        }
+        if (message.contains("sản phẩm")) {
+            return "productId";
+        }
+        if (message.contains("Tên khách")) {
+            return "customerName";
+        }
+        if (message.contains("Số điện thoại")) {
+            return "customerPhone";
+        }
+        if (message.contains("Địa chỉ")) {
+            return "shippingAddress";
+        }
+        if (message.contains("Email")) {
+            return "customerEmail";
+        }
+        if (message.contains("Phí")) {
+            return "craneFee";
+        }
+        if (message.contains("Ghi chú")) {
+            return "notes";
+        }
+        return null;
     }
 }
 

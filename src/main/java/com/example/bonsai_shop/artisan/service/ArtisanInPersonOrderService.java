@@ -42,6 +42,12 @@ public class ArtisanInPersonOrderService {
     public static final String PAYMENT_METHOD_CASH = "CASH";
     public static final String PAYMENT_METHOD_VNPAY = "VNPAY";
     public static final String PAYMENT_TYPE_FULL_PAYMENT = "FULL_PAYMENT";
+    private static final int CUSTOMER_NAME_MAX_LENGTH = 100;
+    private static final int CUSTOMER_EMAIL_MAX_LENGTH = 100;
+    private static final int SHIPPING_ADDRESS_MAX_LENGTH = 255;
+    private static final int NOTES_MAX_LENGTH = 500;
+    private static final BigDecimal MAX_FEE_AMOUNT = new BigDecimal("999999999");
+    private static final BigDecimal MAX_MONEY_AMOUNT = new BigDecimal("999999999999.99");
 
     private final ArtisanProductService artisanProductService;
     private final ProductRepository productRepository;
@@ -95,13 +101,14 @@ public class ArtisanInPersonOrderService {
         BigDecimal totalAmount = product.getPrice()
                 .add(normalizedCraneFee)
                 .add(normalizedShippingFee);
+        validateMoney(totalAmount, "Tổng tiền đơn hàng không được vượt quá 999.999.999.999 VNĐ.");
 
         Order order = Order.builder()
                 .orderCode(generateOrderCode())
-                .customerName(requireText(customerName, "Vui lòng nhập tên khách in-person."))
-                .customerPhone(requireText(customerPhone, "Vui lòng nhập số điện thoại khách in-person."))
+                .customerName(requireCustomerName(customerName))
+                .customerPhone(requirePhone(customerPhone))
                 .customerEmail(requireEmail(customerEmail))
-                .shippingAddress(requireText(shippingAddress, "Vui lòng nhập địa chỉ giao/nhận cây."))
+                .shippingAddress(requireShippingAddress(shippingAddress))
                 .orderDate(LocalDateTime.now())
                 .totalAmount(totalAmount)
                 .depositAmount(BigDecimal.ZERO)
@@ -109,7 +116,7 @@ public class ArtisanInPersonOrderService {
                 .shippingFee(normalizedShippingFee)
                 .orderStatus(STATUS_PENDING_PAYMENT)
                 .orderType(ORDER_TYPE_IN_PERSON)
-                .notes(blankToNull(notes))
+                .notes(optionalText(notes, NOTES_MAX_LENGTH, "Ghi chú không được vượt quá 500 ký tự."))
                 .build();
 
         OrderDetail detail = OrderDetail.builder()
@@ -201,15 +208,16 @@ public class ArtisanInPersonOrderService {
         BigDecimal totalAmount = getBasePrice(order, product)
                 .add(normalizedCraneFee)
                 .add(normalizedShippingFee);
+        validateMoney(totalAmount, "Tổng tiền đơn hàng không được vượt quá 999.999.999.999 VNĐ.");
 
-        order.setCustomerName(requireText(customerName, "Vui lòng nhập tên khách in-person."));
-        order.setCustomerPhone(requireText(customerPhone, "Vui lòng nhập số điện thoại khách in-person."));
-        order.setShippingAddress(requireText(shippingAddress, "Vui lòng nhập địa chỉ giao/nhận cây."));
+        order.setCustomerName(requireCustomerName(customerName));
+        order.setCustomerPhone(requirePhone(customerPhone));
+        order.setShippingAddress(requireShippingAddress(shippingAddress));
         order.setCustomerEmail(requireEmail(customerEmail));
         order.setCraneFee(normalizedCraneFee);
         order.setShippingFee(normalizedShippingFee);
         order.setTotalAmount(totalAmount);
-        order.setNotes(blankToNull(notes));
+        order.setNotes(optionalText(notes, NOTES_MAX_LENGTH, "Ghi chú không được vượt quá 500 ký tự."));
 
         Payment payment = getFirstPayment(order);
         if (payment == null) {
@@ -326,16 +334,56 @@ public class ArtisanInPersonOrderService {
         return value.trim();
     }
 
+    private String requireText(String value, String requiredMessage, int maxLength, String lengthMessage) {
+        String normalized = requireText(value, requiredMessage);
+        if (normalized.length() > maxLength) {
+            throw new RuntimeException(lengthMessage);
+        }
+        return normalized;
+    }
+
+    private String optionalText(String value, int maxLength, String lengthMessage) {
+        String normalized = blankToNull(value);
+        if (normalized != null && normalized.length() > maxLength) {
+            throw new RuntimeException(lengthMessage);
+        }
+        return normalized;
+    }
+
     private String blankToNull(String value) {
         return value == null || value.isBlank() ? null : value.trim();
     }
 
     private String requireEmail(String value) {
-        String email = requireText(value, "Vui lòng nhập email khách in-person.");
+        String email = requireText(value, "Vui lòng nhập email khách in-person.", CUSTOMER_EMAIL_MAX_LENGTH, "Email khách không được vượt quá 100 ký tự.");
         if (!email.matches("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$")) {
             throw new RuntimeException("Email khách in-person không hợp lệ.");
         }
         return email;
+    }
+
+    private String requireCustomerName(String value) {
+        String name = requireText(value, "Vui lòng nhập tên khách in-person.", CUSTOMER_NAME_MAX_LENGTH, "Tên khách không được vượt quá 100 ký tự.");
+        if (!name.matches("^[\\p{L}\\p{M}\\s.'-]+$")) {
+            throw new RuntimeException("Tên khách chỉ được chứa chữ cái, khoảng trắng và các dấu . ' -.");
+        }
+        return name;
+    }
+
+    private String requirePhone(String value) {
+        String phone = requireText(value, "Vui lòng nhập số điện thoại khách in-person.");
+        if (!phone.matches("^0[0-9]{9,10}$")) {
+            throw new RuntimeException("Số điện thoại phải gồm 10-11 chữ số và bắt đầu bằng 0.");
+        }
+        return phone;
+    }
+
+    private String requireShippingAddress(String value) {
+        String address = requireText(value, "Vui lòng nhập địa chỉ giao/nhận cây.", SHIPPING_ADDRESS_MAX_LENGTH, "Địa chỉ giao/nhận cây không được vượt quá 255 ký tự.");
+        if (!address.matches("^[\\p{L}\\p{M}\\p{N}\\s,./()\\-]+$")) {
+            throw new RuntimeException("Địa chỉ chỉ được chứa chữ, số, khoảng trắng và các dấu , . / - ( ).");
+        }
+        return address;
     }
 
     private String appendCancelReason(String currentNotes, String reason) {
@@ -353,7 +401,16 @@ public class ArtisanInPersonOrderService {
         if (normalized.compareTo(BigDecimal.ZERO) < 0) {
             throw new RuntimeException(message);
         }
+        if (normalized.compareTo(MAX_FEE_AMOUNT) > 0) {
+            throw new RuntimeException("Phí không được vượt quá 999.999.999 VNĐ.");
+        }
         return normalized;
+    }
+
+    private void validateMoney(BigDecimal value, String message) {
+        if (value != null && value.compareTo(MAX_MONEY_AMOUNT) > 0) {
+            throw new RuntimeException(message);
+        }
     }
 
     private String normalizePaymentMethod(String paymentMethod) {

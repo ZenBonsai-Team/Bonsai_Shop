@@ -227,7 +227,7 @@ class ArtisanInPersonOrderServiceTest {
 
         when(artisanProductService.getArtisanUser("artisan@test.com"))
                 .thenReturn(artisan);
-        when(orderRepository.findById(1))
+        when(orderRepository.findByIdWithDetailsForUpdate(1))
                 .thenReturn(Optional.of(order));
         when(orderRepository.save(order))
                 .thenReturn(order);
@@ -251,7 +251,7 @@ class ArtisanInPersonOrderServiceTest {
 
         when(artisanProductService.getArtisanUser("artisan@test.com"))
                 .thenReturn(artisan);
-        when(orderRepository.findById(1))
+        when(orderRepository.findByIdWithDetailsForUpdate(1))
                 .thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> inPersonOrderService.cancelInPersonOrder("artisan@test.com", 1, "No reason"))
@@ -272,7 +272,7 @@ class ArtisanInPersonOrderServiceTest {
 
         when(artisanProductService.getArtisanUser("artisan@test.com"))
                 .thenReturn(artisan);
-        when(orderRepository.findById(1))
+        when(orderRepository.findByIdWithDetailsForUpdate(1))
                 .thenReturn(Optional.of(order));
 
         assertThatThrownBy(() -> inPersonOrderService.cancelInPersonOrder("artisan@test.com", 1, "No reason"))
@@ -294,7 +294,7 @@ class ArtisanInPersonOrderServiceTest {
 
         when(artisanProductService.getArtisanUser("artisan@test.com"))
                 .thenReturn(artisan);
-        when(orderRepository.findById(1))
+        when(orderRepository.findByIdWithDetailsForUpdate(1))
                 .thenReturn(Optional.of(order));
 
         assertThatThrownBy(() -> inPersonOrderService.cancelInPersonOrder("artisan@test.com", 1, "No reason"))
@@ -316,7 +316,7 @@ class ArtisanInPersonOrderServiceTest {
 
         when(artisanProductService.getArtisanUser("artisan@test.com"))
                 .thenReturn(artisan);
-        when(orderRepository.findById(1))
+        when(orderRepository.findByIdWithDetailsForUpdate(1))
                 .thenReturn(Optional.of(order));
         when(orderRepository.save(order))
                 .thenReturn(order);
@@ -357,7 +357,7 @@ class ArtisanInPersonOrderServiceTest {
 
         when(artisanProductService.getArtisanUser("artisan@test.com"))
                 .thenReturn(artisan);
-        when(orderRepository.findById(1))
+        when(orderRepository.findByIdWithDetailsForUpdate(1))
                 .thenReturn(Optional.of(order));
 
         assertThatThrownBy(() -> updateValidInPersonOrder())
@@ -375,7 +375,7 @@ class ArtisanInPersonOrderServiceTest {
 
         when(artisanProductService.getArtisanUser("artisan@test.com"))
                 .thenReturn(artisan);
-        when(orderRepository.findById(1))
+        when(orderRepository.findByIdWithDetailsForUpdate(1))
                 .thenReturn(Optional.of(order));
 
         assertThatThrownBy(() -> updateValidInPersonOrder())
@@ -394,7 +394,7 @@ class ArtisanInPersonOrderServiceTest {
 
         when(artisanProductService.getArtisanUser("artisan@test.com"))
                 .thenReturn(artisan);
-        when(orderRepository.findById(1))
+        when(orderRepository.findByIdWithDetailsForUpdate(1))
                 .thenReturn(Optional.of(order));
         when(paymentRepository.findTopByOrderOrderIdAndPaymentStatusOrderByPaymentIdDesc(1, "PENDING"))
                 .thenReturn(Optional.empty());
@@ -432,7 +432,7 @@ class ArtisanInPersonOrderServiceTest {
 
         when(artisanProductService.getArtisanUser("artisan@test.com"))
                 .thenReturn(artisan);
-        when(orderRepository.findById(1))
+        when(orderRepository.findByIdWithDetailsForUpdate(1))
                 .thenReturn(Optional.of(order));
         when(orderRepository.save(order))
                 .thenReturn(order);
@@ -462,7 +462,7 @@ class ArtisanInPersonOrderServiceTest {
 
         when(artisanProductService.getArtisanUser("artisan@test.com"))
                 .thenReturn(artisan);
-        when(orderRepository.findById(1))
+        when(orderRepository.findByIdWithDetailsForUpdate(1))
                 .thenReturn(Optional.of(order));
 
         assertThatThrownBy(() -> inPersonOrderService.confirmPayment("artisan@test.com", 1))
@@ -485,7 +485,7 @@ class ArtisanInPersonOrderServiceTest {
 
         when(artisanProductService.getArtisanUser("artisan@test.com"))
                 .thenReturn(artisan);
-        when(orderRepository.findById(1))
+        when(orderRepository.findByIdWithDetailsForUpdate(1))
                 .thenReturn(Optional.of(order));
         when(orderRepository.save(order))
                 .thenReturn(order);
@@ -511,7 +511,7 @@ class ArtisanInPersonOrderServiceTest {
 
         when(artisanProductService.getArtisanUser("artisan@test.com"))
                 .thenReturn(artisan);
-        when(orderRepository.findById(1))
+        when(orderRepository.findByIdWithDetailsForUpdate(1))
                 .thenReturn(Optional.of(order));
         when(orderRepository.save(order))
                 .thenReturn(order);
@@ -536,7 +536,7 @@ class ArtisanInPersonOrderServiceTest {
 
         when(artisanProductService.getArtisanUser("artisan@test.com"))
                 .thenReturn(artisan);
-        when(orderRepository.findById(1))
+        when(orderRepository.findByIdWithDetailsForUpdate(1))
                 .thenReturn(Optional.of(order));
 
         assertThatThrownBy(() -> inPersonOrderService.confirmPayment("artisan@test.com", 1))
@@ -545,6 +545,193 @@ class ArtisanInPersonOrderServiceTest {
         assertThat(payment.getPaymentStatus()).isEqualTo("PENDING");
         verify(productRepository, never()).save(any(Product.class));
         verify(paymentRepository, never()).save(any(Payment.class));
+    }
+
+    @Test
+    void createInPersonOrder_WhenCustomerPhoneContainsLetters_ShouldThrowStaticValidationMessageBeforeSaving() {
+        User artisan = artisan(10);
+        Product product = product(101, artisan, "AVAILABLE");
+
+        when(artisanProductService.getArtisanUser("artisan@test.com"))
+                .thenReturn(artisan);
+        when(productRepository.findByProductIdAndCreatedByUserId(101, 10))
+                .thenReturn(Optional.of(product));
+
+        assertThatThrownBy(() -> inPersonOrderService.createInPersonOrder(
+                "artisan@test.com",
+                101,
+                "Walk-in Customer",
+                "09000abc00",
+                "FPT HCM",
+                "CASH",
+                BigDecimal.ZERO,
+                BigDecimal.ZERO,
+                "customer@test.com",
+                null
+        ))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessage("Số điện thoại phải gồm 10-11 chữ số và bắt đầu bằng 0.");
+
+        verify(productRepository, never()).reserveIfAvailable(any(Integer.class));
+        verify(orderRepository, never()).save(any(Order.class));
+        verify(paymentRepository, never()).save(any(Payment.class));
+        verify(orderLogRepository, never()).save(any(OrderLog.class));
+    }
+
+    @Test
+    void createInPersonOrder_WhenCustomerNameTooLong_ShouldThrowStaticValidationMessageBeforeSaving() {
+        User artisan = artisan(10);
+        Product product = product(101, artisan, "AVAILABLE");
+
+        when(artisanProductService.getArtisanUser("artisan@test.com"))
+                .thenReturn(artisan);
+        when(productRepository.findByProductIdAndCreatedByUserId(101, 10))
+                .thenReturn(Optional.of(product));
+
+        assertThatThrownBy(() -> inPersonOrderService.createInPersonOrder(
+                "artisan@test.com",
+                101,
+                "A".repeat(101),
+                "0900000000",
+                "FPT HCM",
+                "CASH",
+                BigDecimal.ZERO,
+                BigDecimal.ZERO,
+                "customer@test.com",
+                null
+        ))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessage("Tên khách không được vượt quá 100 ký tự.");
+
+        verify(productRepository, never()).reserveIfAvailable(any(Integer.class));
+        verify(orderRepository, never()).save(any(Order.class));
+        verify(paymentRepository, never()).save(any(Payment.class));
+        verify(orderLogRepository, never()).save(any(OrderLog.class));
+    }
+
+    @Test
+    void createInPersonOrder_WhenCustomerNameContainsMarkdown_ShouldThrowStaticValidationMessageBeforeSaving() {
+        User artisan = artisan(10);
+        Product product = product(101, artisan, "AVAILABLE");
+
+        when(artisanProductService.getArtisanUser("artisan@test.com"))
+                .thenReturn(artisan);
+        when(productRepository.findByProductIdAndCreatedByUserId(101, 10))
+                .thenReturn(Optional.of(product));
+
+        assertThatThrownBy(() -> inPersonOrderService.createInPersonOrder(
+                "artisan@test.com",
+                101,
+                "### Hanh trinh **Sanh**",
+                "0900000000",
+                "FPT HCM",
+                "CASH",
+                BigDecimal.ZERO,
+                BigDecimal.ZERO,
+                "customer@test.com",
+                null
+        ))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("Tên khách chỉ được chứa chữ cái");
+
+        verify(productRepository, never()).reserveIfAvailable(any(Integer.class));
+        verify(orderRepository, never()).save(any(Order.class));
+        verify(paymentRepository, never()).save(any(Payment.class));
+        verify(orderLogRepository, never()).save(any(OrderLog.class));
+    }
+
+    @Test
+    void createInPersonOrder_WhenShippingAddressContainsMarkdown_ShouldThrowStaticValidationMessageBeforeSaving() {
+        User artisan = artisan(10);
+        Product product = product(101, artisan, "AVAILABLE");
+
+        when(artisanProductService.getArtisanUser("artisan@test.com"))
+                .thenReturn(artisan);
+        when(productRepository.findByProductIdAndCreatedByUserId(101, 10))
+                .thenReturn(Optional.of(product));
+
+        assertThatThrownBy(() -> inPersonOrderService.createInPersonOrder(
+                "artisan@test.com",
+                101,
+                "Walk-in Customer",
+                "0900000000",
+                "### So 20 **Thach That**",
+                "CASH",
+                BigDecimal.ZERO,
+                BigDecimal.ZERO,
+                "customer@test.com",
+                null
+        ))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("Địa chỉ chỉ được chứa chữ");
+
+        verify(productRepository, never()).reserveIfAvailable(any(Integer.class));
+        verify(orderRepository, never()).save(any(Order.class));
+        verify(paymentRepository, never()).save(any(Payment.class));
+        verify(orderLogRepository, never()).save(any(OrderLog.class));
+    }
+
+    @Test
+    void createInPersonOrder_WhenFeeTooLarge_ShouldThrowStaticValidationMessageBeforeSaving() {
+        User artisan = artisan(10);
+        Product product = product(101, artisan, "AVAILABLE");
+
+        when(artisanProductService.getArtisanUser("artisan@test.com"))
+                .thenReturn(artisan);
+        when(productRepository.findByProductIdAndCreatedByUserId(101, 10))
+                .thenReturn(Optional.of(product));
+
+        assertThatThrownBy(() -> inPersonOrderService.createInPersonOrder(
+                "artisan@test.com",
+                101,
+                "Walk-in Customer",
+                "0900000000",
+                "FPT HCM",
+                "CASH",
+                new BigDecimal("1000000000000"),
+                BigDecimal.ZERO,
+                "customer@test.com",
+                null
+        ))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessage("Phí không được vượt quá 999.999.999 VNĐ.");
+
+        verify(productRepository, never()).reserveIfAvailable(any(Integer.class));
+        verify(orderRepository, never()).save(any(Order.class));
+        verify(paymentRepository, never()).save(any(Payment.class));
+        verify(orderLogRepository, never()).save(any(OrderLog.class));
+    }
+
+    @Test
+    void createInPersonOrder_WhenTotalAmountTooLarge_ShouldThrowStaticValidationMessageBeforeSaving() {
+        User artisan = artisan(10);
+        Product product = product(101, artisan, "AVAILABLE");
+        product.setPrice(new BigDecimal("999999999999"));
+
+        when(artisanProductService.getArtisanUser("artisan@test.com"))
+                .thenReturn(artisan);
+        when(productRepository.findByProductIdAndCreatedByUserId(101, 10))
+                .thenReturn(Optional.of(product));
+
+        assertThatThrownBy(() -> inPersonOrderService.createInPersonOrder(
+                "artisan@test.com",
+                101,
+                "Walk-in Customer",
+                "0900000000",
+                "FPT HCM",
+                "CASH",
+                new BigDecimal("1"),
+                BigDecimal.ZERO,
+                "customer@test.com",
+                null
+        ))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessage("Tổng tiền đơn hàng không được vượt quá 999.999.999.999 VNĐ.");
+
+        verify(productRepository, never()).reserveIfAvailable(any(Integer.class));
+        verify(orderRepository, never()).save(any(Order.class));
+        verify(paymentRepository, never()).save(any(Payment.class));
+        verify(orderLogRepository, never()).save(any(OrderLog.class));
     }
 
     private Order createValidInPersonOrder() {
