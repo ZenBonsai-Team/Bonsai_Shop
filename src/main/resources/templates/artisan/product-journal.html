@@ -24,8 +24,10 @@
         .journal-form-grid > label:not(.checkbox), .journal-field { display: grid; gap: 8px; font-weight: 700; color: #1f3026; }
         .journal-field-text { font-size: 15px; line-height: 1.3; }
         .journal-form-grid input, .journal-form-grid select, .journal-form-grid textarea { width: 100%; min-width: 0; border: 1px solid #d7dfd8; border-radius: 14px; padding: 12px 14px; font-family: inherit; font-size: 14px; line-height: 1.35; background: #fff; color: #1f3026; }
-        .journal-form-grid textarea { min-height: 120px; resize: vertical; }
+        .journal-form-grid textarea { min-height: 180px; resize: vertical; }
         .journal-form-grid input[type="file"] { padding: 10px; cursor: pointer; }
+        .journal-form-grid .field-error, .journal-form-modal-body .field-error, .journal-add-media .field-error, .journal-media-replace-form .field-error { color: #d32f2f; font-size: 12px; font-weight: 700; margin-top: 2px; }
+        .journal-form-grid .field-invalid input, .journal-form-grid .field-invalid textarea, .journal-form-grid .field-invalid select, .journal-form-modal-body .field-invalid input, .journal-form-modal-body .field-invalid textarea, .journal-add-media .field-invalid input, .journal-media-replace-form.field-invalid input { border-color: #d32f2f !important; box-shadow: 0 0 0 2px rgba(211, 47, 47, 0.12); }
         .journal-form-grid > .checkbox, .journal-checkbox { display: flex; align-items: flex-start; gap: 10px; font-weight: 700; color: #1f3026; line-height: 1.35; }
         .journal-form-grid > .checkbox input, .journal-checkbox input { width: 16px; min-width: 16px; height: 16px; margin: 2px 0 0; accent-color: #2d6a4f; }
         .journal-form-grid button[type="submit"], .journal-submit { width: 100%; border: 0; border-radius: 14px; padding: 13px 16px; background: #246b49; color: #fff; font-weight: 800; font-family: inherit; box-shadow: 0 10px 22px rgba(36, 107, 73, 0.18); }
@@ -42,7 +44,7 @@
         .journal-cover-link { display: block; width: 104px; height: 84px; border: 0; padding: 0; border-radius: 4px; overflow: hidden; background: #edf2ee; cursor: zoom-in; }
         .journal-cover { width: 100%; height: 100%; border-radius: 0; object-fit: cover; background: #edf2ee; display: block; }
         .journal-event h3 { margin: 0 0 5px; color: #183322; font-size: 15px; line-height: 1.25; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .journal-event p { margin: 0; color: #29372f; line-height: 1.4; font-size: 13px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .journal-card-body > p { margin: 0; color: #29372f; line-height: 1.4; font-size: 13px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
         .journal-event-actions { align-items: start; display: grid; gap: 10px; justify-items: end; min-width: 138px; }
         .journal-event form { margin-top: 0; }
         .journal-event form button { background: transparent; border: 0; box-shadow: none; font-weight: 700; }
@@ -74,7 +76,7 @@
         .journal-edit-toggle summary::-webkit-details-marker { display: none; }
         .journal-edit-form { display: grid; gap: 8px; grid-column: 1 / -1; width: 100%; margin-top: 4px; padding: 10px; border: 1px solid #e2e7e2; border-radius: 10px; background: #f8fbf8; }
         .journal-edit-form input, .journal-edit-form textarea { width: 100%; border: 1px solid #d7dfd8; border-radius: 8px; padding: 8px 10px; font: inherit; font-size: 13px; }
-        .journal-edit-form textarea { min-height: 70px; resize: vertical; }
+        .journal-edit-form textarea { min-height: 140px; resize: vertical; }
         .journal-edit-form button { justify-self: start; color: #246b49; }
         .journal-delete-button { align-items: center; background: transparent !important; border: 0 !important; border-radius: 8px; color: #dc3545 !important; display: inline-flex; gap: 8px; justify-content: flex-start; padding: 9px 10px !important; text-align: left; width: 100%; }
         .journal-delete-button:hover { background: #fff5f5 !important; color: #b02a37 !important; }
@@ -90,7 +92,9 @@
         .journal-form-modal-body label { color: #1f3026; display: grid; gap: 8px; font-weight: 800; }
         .journal-form-modal-body input,
         .journal-form-modal-body textarea { border: 1px solid #d7dfd8; border-radius: 12px; font: inherit; padding: 12px 14px; width: 100%; }
-        .journal-form-modal-body textarea { min-height: 180px; resize: vertical; }
+        .journal-form-modal-body textarea { min-height: 160px; resize: vertical; }
+        .journal-char-counter { color: #66736b; font-size: 12px; font-weight: 700; justify-self: end; line-height: 1.2; }
+        .journal-char-counter.is-over-limit { color: #d32f2f; }
         .journal-form-actions { align-items: center; display: flex; gap: 10px; justify-content: flex-end; padding: 0 22px 22px; }
         .journal-form-actions button,
         .journal-form-actions .btn { border-radius: 10px; padding: 10px 14px; }
@@ -141,6 +145,38 @@
         .journal-thumb-btn { flex: 0 0 auto; width: 64px; height: 52px; padding: 0; border: 2px solid transparent; border-radius: 6px; background: transparent; overflow: hidden; scroll-snap-align: start; }
         .journal-thumb-btn.active { border-color: #246b49; }
         .journal-thumb-btn img, .journal-thumb-btn video { width: 100%; height: 100%; object-fit: cover; display: block; border-radius: 4px; }
+        .journal-customer-preview { display: none; position: fixed; inset: 0; z-index: 2300; background: rgba(15, 23, 18, 0.66); padding: 28px; overflow-y: auto; }
+        .journal-customer-preview.is-open { display: block; }
+        .journal-customer-preview-card { width: min(1120px, 100%); margin: 0 auto; background: #efe8d8; border-radius: 18px; box-shadow: 0 24px 80px rgba(0,0,0,.28); overflow: hidden; }
+        .journal-customer-preview-head { align-items: center; display: flex; justify-content: space-between; gap: 14px; padding: 14px 18px; background: #10251a; color: #fffaf0; }
+        .journal-customer-preview-head strong { font-size: 18px; }
+        .journal-customer-preview-close { background: transparent; border: 0; color: #fffaf0; font-size: 26px; line-height: 1; padding: 3px 8px; }
+        .journal-customer-preview-spread { display: grid; grid-template-columns: minmax(300px, 38%) minmax(0, 62%); min-height: 560px; }
+        .journal-customer-story { display: flex; flex-direction: column; min-width: 0; overflow-y: auto; padding: clamp(26px, 3vw, 42px); color: #fffaf0; background: #10251a; }
+        .journal-customer-kicker { color: rgba(255,250,240,.9); display: flex; flex-wrap: wrap; gap: 10px; font-size: 12px; font-weight: 900; letter-spacing: .12em; text-transform: uppercase; }
+        .journal-customer-status { color: #f0d88f; }
+        .journal-customer-title { margin: 20px 0 0; color: #fffaf0; font-family: 'Cormorant Garamond', serif; font-size: clamp(30px, 3.4vw, 46px); line-height: .96; font-weight: 700; letter-spacing: .025em; text-transform: uppercase; overflow-wrap: anywhere; }
+        .journal-customer-author { margin: 8px 0 0; color: rgba(255,250,240,.9); font-size: 14px; font-weight: 700; }
+        .journal-customer-story .journal-customer-description { margin: 24px 0 0; color: #fffaf0; display: block; font-size: 15px; font-weight: 600; line-height: 1.75; max-height: 240px; overflow-y: auto; padding-right: 6px; white-space: pre-line; }
+        .journal-customer-work { margin-top: auto; padding-top: 24px; }
+        .journal-customer-work-title { margin: 0 0 10px; color: rgba(255,250,240,.86); font-size: 11px; font-weight: 900; letter-spacing: .13em; text-transform: uppercase; }
+        .journal-customer-work-list { color: #fffaf0; display: flex; flex-wrap: wrap; gap: 8px 10px; font-size: 13px; font-weight: 800; }
+        .journal-customer-gallery { background: linear-gradient(135deg, #f8f4ea 0%, #e8dfcc 100%); display: grid; grid-template-rows: minmax(0, 1fr) auto; gap: 14px; min-height: 560px; min-width: 0; overflow: hidden; padding: clamp(18px, 2.4vw, 30px); }
+        .journal-customer-stage { min-height: 480px; overflow: visible; position: relative; }
+        .journal-customer-slide { display: grid; height: calc(100% - 24px); left: 50%; opacity: 0; place-items: center; pointer-events: none; position: absolute; top: 50%; transform: translate(-50%, -50%) scale(.88); transition: opacity .24s ease, transform .24s ease; width: 68%; }
+        .journal-customer-slide.active { opacity: 1; pointer-events: auto; transform: translate(-50%, -50%) scale(1); z-index: 2; }
+        .journal-customer-slide.is-prev { opacity: .28; transform: translate(-118%, -50%) scale(.78); z-index: 1; }
+        .journal-customer-slide.is-next { opacity: .28; transform: translate(18%, -50%) scale(.78); z-index: 1; }
+        .journal-customer-slide img, .journal-customer-slide video { display: block; height: auto !important; max-height: 100%; max-width: 100%; object-fit: contain; width: auto !important; }
+        .journal-customer-arrow { background: rgba(16, 37, 26, .86); border: 0; border-radius: 999px; color: #fffaf0; display: grid; height: 38px; place-items: center; position: absolute; top: 50%; transform: translateY(-50%); width: 38px; z-index: 4; }
+        .journal-customer-arrow.prev { left: 8px; }
+        .journal-customer-arrow.next { right: 8px; }
+        .journal-customer-meta { color: #516057; display: grid; font-size: 12px; font-weight: 800; gap: 8px; justify-items: center; }
+        .journal-customer-dots { align-items: center; display: flex; gap: 7px; justify-content: center; }
+        .journal-customer-dot { background: #9fb0a3; border-radius: 999px; height: 7px; width: 7px; }
+        .journal-customer-dot.active { background: #246b49; width: 28px; }
+        .journal-customer-empty { color: #78907e; display: grid; font-size: 42px; height: 100%; place-items: center; }
+        @media (max-width: 992px) { .journal-customer-preview-spread { grid-template-columns: 1fr; min-height: auto; } .journal-customer-gallery { order: 1; min-height: 440px; } .journal-customer-story { order: 2; } .journal-customer-stage { min-height: 380px; } }
         @media (max-width: 1200px) { .journal-page { padding: 28px 32px; } .journal-layout { grid-template-columns: 1fr; } .journal-layout .form-card { position: static; } .journal-timeline { max-height: 620px; } }
         @media (max-width: 992px) { .journal-event { grid-template-columns: 88px 1fr; } .journal-event-actions { grid-column: 2; justify-items: start; } .journal-card-tags { justify-items: start; } .journal-card-toolbar { justify-content: flex-start; } .journal-cover-link { width: 88px; height: 72px; } .journal-modal-stage { min-height: 360px; } }
         @media (max-width: 576px) { .journal-page { padding: 22px 18px; } .journal-page .page-header { display: block; } .journal-page .actions { margin-top: 14px; } }
@@ -171,7 +207,7 @@
         <div class="journal-layout">
             <section class="form-card">
                 <h2>Tạo nhật ký mới</h2>
-                <form class="journal-form-grid" method="post" enctype="multipart/form-data" data-min-journal-images="3"
+                <form class="journal-form-grid" method="post" enctype="multipart/form-data" data-min-journal-images="3" novalidate data-journal-validate="create"
                       th:action="@{/artisan/products/{id}/journal(id=${product.productId})}">
                     <label>Ngày ghi nhận
                         <input type="date" th:value="${today}" th:min="${today}" th:max="${today}" disabled>
@@ -191,14 +227,19 @@
                         </select>
                     </label>
                     <label>Tiêu đề
-                        <input name="title" maxlength="255" placeholder="VD: Một mùa tán mới của Hoàng Mai" required>
+                        <input name="title" placeholder="VD: Một mùa tán mới của Hoàng Mai" required>
+                        <span class="journal-char-counter" data-journal-counter-for="title" data-journal-counter-max="100">0/100 ký tự</span>
+                        <span class="field-error"></span>
                     </label>
-                    <label>Câu chuyện
+                    <label>Ghi chú chăm sóc
                         <textarea name="description" placeholder="Sau khoảng hai tháng chăm sóc, cây bắt đầu bước vào giai đoạn phát triển mạnh..."></textarea>
+                        <span class="journal-char-counter" data-journal-counter-for="description">0/500 ký tự</span>
+                        <span class="field-error"></span>
                     </label>
                     <label>Hình ảnh của lần cập nhật
                         <input type="file" name="files" accept="image/*" multiple required>
-                        <span class="muted-text">Tối thiểu 3 ảnh khi tạo nhật ký mới. Mỗi lần tối đa 10 ảnh, mỗi ảnh tối đa 5MB.</span>
+                        <span class="field-error"></span>
+                        <span class="muted-text">Tối thiểu 3 ảnh khi tạo nhật ký mới. Mỗi lần tối đa 10 ảnh, mỗi ảnh tối đa 7MB.</span>
                     </label>
                     <span class="muted-text">Cập nhật mới mặc định được lưu nội bộ, chưa hiển thị cho khách.</span>
                     <button type="submit">Cập nhật</button>
@@ -278,6 +319,10 @@
                                             <span th:text="${event.isPublic} ? 'Ẩn nhật ký' : 'Công khai nhật ký'">Công khai nhật ký</span>
                                         </button>
                                     </form>
+                                    <button type="button" class="journal-menu-action" th:attr="data-open-journal-customer-preview=${event.eventId}">
+                                        <i class="fa-solid fa-eye"></i>
+                                        Preview như khách
+                                    </button>
                                     <button type="button" class="journal-menu-action" th:attr="data-open-journal-form-modal=|journal-edit-modal-${event.eventId}|">
                                         <i class="fa-solid fa-pen"></i>
                                         Sửa nội dung
@@ -286,8 +331,10 @@
                                         <i class="fa-solid fa-images"></i>
                                         Quản lý ảnh
                                     </button>
-                                    <form method="post"
-                                          onsubmit="return confirm('Bạn chắc chắn muốn xóa cập nhật nhật ký này?');"
+                                    <form method="post" class="journal-confirm-delete-form"
+                                          data-confirm-title="Xóa cập nhật nhật ký?"
+                                          data-confirm-message="Bạn có chắc chắn muốn xóa cập nhật nhật ký này? Nội dung và ảnh trong cập nhật này sẽ bị xóa."
+                                          data-confirm-text="Xóa cập nhật"
                                           th:action="@{/artisan/products/{productId}/journal/{eventId}/delete(productId=${product.productId},eventId=${event.eventId})}">
                                         <button type="submit" class="journal-delete-button">
                                             <i class="fa-solid fa-trash"></i>
@@ -298,20 +345,82 @@
                             </details>
                         </div>
                     </div>
+                    <div class="journal-customer-preview" th:id="|journal-customer-preview-${event.eventId}|">
+                        <div class="journal-customer-preview-card" role="dialog" aria-modal="true">
+                            <div class="journal-customer-preview-head">
+                                <strong>Preview nhật ký như khách</strong>
+                                <button type="button" class="journal-customer-preview-close" th:attr="data-close-journal-customer-preview=${event.eventId}">&times;</button>
+                            </div>
+                            <div class="journal-customer-preview-spread">
+                                <div class="journal-customer-story">
+                                    <div class="journal-customer-kicker">
+                                        <span th:text="${#temporals.format(event.eventDate, 'dd/MM/yyyy')}">26/07/2026</span>
+                                        <span class="journal-customer-status" th:text="${event.isPublic} ? 'Đang hiển thị cho khách' : 'Bản nháp riêng tư'">Trạng thái</span>
+                                    </div>
+                                    <h2 class="journal-customer-title" th:text="${event.title}">Tiêu đề nhật ký</h2>
+                                    <p class="journal-customer-author" th:text="${event.createdBy != null ? 'Nghệ nhân ' + event.createdBy.fullName : 'Nghệ nhân BSMS'}">Nghệ nhân BSMS</p>
+                                    <p class="journal-customer-description"
+                                       th:text="${event.description != null && !event.description.isBlank() ? event.description : 'Chưa có ghi chú chăm sóc cho lần cập nhật này.'}">
+                                        Ghi chú chăm sóc
+                                    </p>
+                                    <div class="journal-customer-work">
+                                        <p class="journal-customer-work-title">Công việc chăm sóc</p>
+                                        <div class="journal-customer-work-list">
+                                            <span th:if="${#strings.toString(event.eventType) == 'PHOTO_UPDATE'}">Ghi nhận hình ảnh</span>
+                                            <span th:if="${#strings.toString(event.eventType) == 'GROWTH'}">Theo dõi sinh trưởng · Chăm tán · Ghi nhận lộc mới</span>
+                                            <span th:if="${#strings.toString(event.eventType) == 'PRUNING'}">Cắt tỉa · Định hình tán · Kiểm tra nhánh</span>
+                                            <span th:if="${#strings.toString(event.eventType) == 'WIRING'}">Uốn cành · Cố định dáng · Theo dõi lực kéo</span>
+                                            <span th:if="${#strings.toString(event.eventType) == 'REPOTTING'}">Thay chậu · Kiểm tra rễ · Bổ sung giá thể</span>
+                                            <span th:if="${#strings.toString(event.eventType) == 'FERTILIZING'}">Bón phân · Cân bằng dinh dưỡng · Theo dõi cây</span>
+                                            <span th:if="${#strings.toString(event.eventType) == 'WATERING'}">Tưới nước · Kiểm tra độ ẩm · Theo dõi lá</span>
+                                            <span th:if="${#strings.toString(event.eventType) == 'PEST_TREATMENT'}">Xử lý sâu bệnh · Vệ sinh cây · Theo dõi phục hồi</span>
+                                            <span th:if="${#strings.toString(event.eventType) == 'HEALTH_CHECK'}">Kiểm tra sức khỏe · Đánh giá sức sống · Theo dõi màu lá</span>
+                                            <span th:if="${#strings.toString(event.eventType) == 'ACQUISITION'}">Nhập cây · Ghi nhận hiện trạng · Lập hồ sơ ban đầu</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="journal-customer-gallery" th:attr="data-customer-preview-gallery=${event.eventId}">
+                                    <div class="journal-customer-stage">
+                                        <button type="button" class="journal-customer-arrow prev" th:if="${event.mediaList != null && #lists.size(event.mediaList) > 1}" th:attr="data-customer-preview-prev=${event.eventId}">‹</button>
+                                        <button type="button" class="journal-customer-arrow next" th:if="${event.mediaList != null && #lists.size(event.mediaList) > 1}" th:attr="data-customer-preview-next=${event.eventId}">›</button>
+                                        <th:block th:if="${event.mediaList != null && !#lists.isEmpty(event.mediaList)}" th:each="media, mediaStat : ${event.mediaList}">
+                                            <div class="journal-customer-slide" th:classappend="${mediaStat.index == 0 ? ' active' : (mediaStat.index == 1 ? ' is-next' : '')}" th:attr="data-customer-preview-slide=${event.eventId},data-customer-preview-slide-index=${mediaStat.index}">
+                                                <img th:if="${media.mediaType == 'IMAGE'}" th:src="${media.mediaUrl}" th:alt="${event.title}">
+                                                <video th:if="${media.mediaType == 'VIDEO'}" th:src="${media.mediaUrl}" controls></video>
+                                            </div>
+                                        </th:block>
+                                        <div class="journal-customer-empty" th:if="${event.mediaList == null || #lists.isEmpty(event.mediaList)}">
+                                            <i class="fa-solid fa-leaf"></i>
+                                        </div>
+                                    </div>
+                                    <div class="journal-customer-meta" th:if="${event.mediaList != null && !#lists.isEmpty(event.mediaList)}">
+                                        <div class="journal-customer-dots">
+                                            <span class="journal-customer-dot" th:each="media, mediaStat : ${event.mediaList}" th:classappend="${mediaStat.index == 0} ? ' active' : ''" th:attr="data-customer-preview-dot=${event.eventId},data-customer-preview-dot-index=${mediaStat.index}"></span>
+                                        </div>
+                                        <span><span th:attr="data-customer-preview-current=${event.eventId}">1</span> / <span th:text="${#lists.size(event.mediaList)}">1</span></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     <div class="journal-form-modal" th:id="|journal-edit-modal-${event.eventId}|">
                         <div class="journal-form-dialog" role="dialog" aria-modal="true">
                             <header>
                                 <h2>Sửa nội dung nhật ký</h2>
                                 <button type="button" class="journal-form-close" th:attr="data-close-journal-form-modal=|journal-edit-modal-${event.eventId}|">&times;</button>
                             </header>
-                            <form method="post"
+                            <form method="post" novalidate data-journal-validate="text"
                                   th:action="@{/artisan/products/{productId}/journal/{eventId}(productId=${product.productId},eventId=${event.eventId})}">
                                 <div class="journal-form-modal-body">
                                     <label>Tiêu đề
-                                        <input name="title" maxlength="255" th:value="${event.title}" required>
+                                        <input name="title" th:value="${event.title}" required>
+                                        <span class="journal-char-counter" data-journal-counter-for="title" data-journal-counter-max="100">0/100 ký tự</span>
+                                        <span class="field-error"></span>
                                     </label>
-                                    <label>Câu chuyện
+                                    <label>Ghi chú chăm sóc
                                         <textarea name="description" th:text="${event.description}"></textarea>
+                                        <span class="journal-char-counter" data-journal-counter-for="description">0/500 ký tự</span>
+                                        <span class="field-error"></span>
                                     </label>
                                 </div>
                                 <div class="journal-form-actions">
@@ -330,12 +439,13 @@
                             <div class="journal-form-modal-body">
                                 <div class="journal-media-manager">
                                     <h3>Bổ sung ảnh mới</h3>
-                                    <form method="post" enctype="multipart/form-data"
+                                    <form method="post" enctype="multipart/form-data" novalidate data-journal-validate="media"
                                           th:action="@{/artisan/products/{productId}/journal/{eventId}/media(productId=${product.productId},eventId=${event.eventId})}">
                                     <label>Chọn ảnh bổ sung
                                         <input type="file" name="files" accept="image/*" multiple required>
+                                        <span class="field-error"></span>
                                     </label>
-                                    <span class="muted-text">Mỗi lần tối đa 10 ảnh, mỗi ảnh tối đa 5MB.</span>
+                                    <span class="muted-text">Mỗi lần tối đa 10 ảnh, mỗi ảnh tối đa 7MB.</span>
                                         <div class="journal-form-actions">
                                             <button type="submit" class="btn">Tải ảnh lên</button>
                                         </div>
@@ -353,13 +463,16 @@
                                                           th:action="@{/artisan/products/{productId}/journal/{eventId}/media/{mediaId}/cover(productId=${product.productId},eventId=${event.eventId},mediaId=${media.mediaId})}">
                                                         <button type="submit" class="btn-cover"><i class="fa-solid fa-star"></i> Đặt làm cover</button>
                                                     </form>
-                                                    <form class="journal-media-replace-form" method="post" enctype="multipart/form-data"
+                                                    <form class="journal-media-replace-form" method="post" enctype="multipart/form-data" novalidate data-journal-validate="replace"
                                                           th:action="@{/artisan/products/{productId}/journal/{eventId}/media/{mediaId}/replace(productId=${product.productId},eventId=${event.eventId},mediaId=${media.mediaId})}">
                                                         <input type="file" name="file" accept="image/*" required>
+                                                        <span class="field-error"></span>
                                                         <button type="submit" class="btn-replace"><i class="fa-solid fa-rotate"></i> Thay ảnh</button>
                                                     </form>
-                                                    <form method="post"
-                                                          onsubmit="return confirm('Bạn chắc chắn muốn xóa ảnh nhật ký này?');"
+                                                    <form method="post" class="journal-confirm-delete-form"
+                                                          data-confirm-title="Xóa ảnh nhật ký?"
+                                                          data-confirm-message="Bạn có chắc chắn muốn xóa ảnh nhật ký này?"
+                                                          data-confirm-text="Xóa ảnh"
                                                           th:action="@{/artisan/products/{productId}/journal/{eventId}/media/{mediaId}/delete(productId=${product.productId},eventId=${event.eventId},mediaId=${media.mediaId})}">
                                                         <button type="submit" class="btn-delete"><i class="fa-solid fa-trash"></i> Xóa ảnh</button>
                                                     </form>
@@ -429,14 +542,62 @@
 </div>
 <script>
     const JOURNAL_MAX_MEDIA_PER_UPLOAD = 10;
-    const JOURNAL_MAX_IMAGE_SIZE = 5 * 1024 * 1024;
+    const JOURNAL_MAX_IMAGE_SIZE = 7 * 1024 * 1024;
+    const JOURNAL_MAX_TITLE_LENGTH = 100;
+    const JOURNAL_MAX_DESCRIPTION_LENGTH = 500;
 
-    function showJournalError(message) {
-        if (window.BSMSToast) {
-            BSMSToast.error(message);
+    function setJournalFieldError(field, message) {
+        const wrapper = field?.closest('label') || field?.closest('form');
+        if (!wrapper) {
             return;
         }
-        alert(message);
+        wrapper.classList.toggle('field-invalid', Boolean(message));
+        const error = wrapper.querySelector('.field-error');
+        if (error) {
+            error.textContent = message || '';
+        }
+    }
+
+    function scrollToFirstJournalError(scope) {
+        const firstError = scope.querySelector('.field-error:not(:empty)');
+        const errorWrapper = firstError?.closest('.field-invalid') || firstError?.closest('label') || firstError?.closest('form');
+        if (!errorWrapper) {
+            return;
+        }
+
+        errorWrapper.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        const field = errorWrapper.querySelector('input:not([type="hidden"]):not([disabled]), select:not([disabled]), textarea:not([disabled])');
+        if (field) {
+            setTimeout(() => field.focus({ preventScroll: true }), 250);
+        }
+    }
+
+    function validateJournalTextField(field, label, maxLength, required) {
+        if (!field) {
+            return true;
+        }
+        const value = field.value.trim();
+        if (required && !value) {
+            setJournalFieldError(field, `Vui lòng nhập ${label}.`);
+            return false;
+        }
+        if (value.length > maxLength) {
+            setJournalFieldError(field, `${label.charAt(0).toUpperCase() + label.slice(1)} không được vượt quá ${maxLength} ký tự.`);
+            return false;
+        }
+        setJournalFieldError(field, '');
+        return true;
+    }
+
+    function updateJournalCharCounter(field) {
+        const counter = field?.closest('label')?.querySelector('[data-journal-counter-for="' + field.name + '"]');
+        if (!counter) {
+            return;
+        }
+        const valueLength = field.value.trim().length;
+        const maxLength = Number(counter.dataset.journalCounterMax || (field.name === 'title' ? JOURNAL_MAX_TITLE_LENGTH : JOURNAL_MAX_DESCRIPTION_LENGTH));
+        counter.textContent = `${valueLength}/${maxLength} ký tự`;
+        counter.classList.toggle('is-over-limit', valueLength > maxLength);
     }
 
     function isJournalImage(file) {
@@ -445,35 +606,59 @@
 
     function validateJournalMediaInput(input, minImages = 1) {
         if (!input || !input.files || input.files.length === 0) {
-            return true;
+            setJournalFieldError(input, `Vui lòng chọn ${minImages > 1 ? 'tối thiểu ' + minImages + ' ảnh' : 'ảnh'}.`);
+            return false;
         }
 
         const files = Array.from(input.files);
         if (files.length < minImages) {
-            showJournalError('Vui lòng chọn tối thiểu ' + minImages + ' ảnh để tạo nhật ký mới.');
-            input.value = '';
+            setJournalFieldError(input, 'Vui lòng chọn tối thiểu ' + minImages + ' ảnh để tạo nhật ký mới.');
             return false;
         }
         if (files.length > JOURNAL_MAX_MEDIA_PER_UPLOAD) {
-            showJournalError('Mỗi lần chỉ được tải lên tối đa 10 ảnh nhật ký.');
-            input.value = '';
+            setJournalFieldError(input, 'Mỗi lần chỉ được tải lên tối đa 10 ảnh nhật ký.');
             return false;
         }
 
         for (const file of files) {
             if (!isJournalImage(file)) {
-                showJournalError('Nhật ký cây chỉ hỗ trợ ảnh. Vui lòng không tải video hoặc tệp khác.');
-                input.value = '';
+                setJournalFieldError(input, 'Nhật ký cây chỉ hỗ trợ ảnh. Vui lòng không tải video hoặc tệp khác.');
                 return false;
             }
             if (file.size > JOURNAL_MAX_IMAGE_SIZE) {
-                showJournalError('Ảnh nhật ký "' + file.name + '" vượt quá dung lượng tối đa 5MB.');
-                input.value = '';
+                setJournalFieldError(input, 'Ảnh nhật ký "' + file.name + '" vượt quá dung lượng tối đa 7MB.');
                 return false;
             }
         }
 
+        setJournalFieldError(input, '');
         return true;
+    }
+
+    function validateJournalForm(form) {
+        let isValid = true;
+        const validateMode = form.dataset.journalValidate;
+        const titleInput = form.querySelector('[name="title"]');
+        const descriptionInput = form.querySelector('[name="description"]');
+        const mediaInput = form.querySelector('input[type="file"][name="files"], input[type="file"][name="file"]');
+
+        if (validateMode === 'create' || validateMode === 'text') {
+            if (!validateJournalTextField(titleInput, 'tiêu đề cập nhật', JOURNAL_MAX_TITLE_LENGTH, true)) {
+                isValid = false;
+            }
+            if (!validateJournalTextField(descriptionInput, 'ghi chú chăm sóc', JOURNAL_MAX_DESCRIPTION_LENGTH, false)) {
+                isValid = false;
+            }
+        }
+
+        if (validateMode === 'create' || validateMode === 'media' || validateMode === 'replace') {
+            const minImages = Number(form.dataset.minJournalImages || 1);
+            if (!validateJournalMediaInput(mediaInput, minImages)) {
+                isValid = false;
+            }
+        }
+
+        return isValid;
     }
 
     document.addEventListener('change', function (event) {
@@ -483,15 +668,73 @@
             const minImages = Number(form?.dataset.minJournalImages || 1);
             validateJournalMediaInput(input, minImages);
         }
+        const singleInput = event.target.closest('input[type="file"][name="file"]');
+        if (singleInput) {
+            validateJournalMediaInput(singleInput, 1);
+        }
+    });
+
+    document.addEventListener('input', function (event) {
+        const titleInput = event.target.closest('[data-journal-validate] [name="title"]');
+        if (titleInput) {
+            updateJournalCharCounter(titleInput);
+            validateJournalTextField(titleInput, 'tiêu đề cập nhật', JOURNAL_MAX_TITLE_LENGTH, true);
+        }
+        const descriptionInput = event.target.closest('[data-journal-validate] [name="description"]');
+        if (descriptionInput) {
+            updateJournalCharCounter(descriptionInput);
+            validateJournalTextField(descriptionInput, 'ghi chú chăm sóc', JOURNAL_MAX_DESCRIPTION_LENGTH, false);
+        }
     });
 
     document.addEventListener('submit', function (event) {
-        const input = event.target.querySelector('input[type="file"][name="files"]');
-        const minImages = Number(event.target.dataset.minJournalImages || 1);
-        if (input && !validateJournalMediaInput(input, minImages)) {
+        const form = event.target.closest('[data-journal-validate]');
+        if (form && !validateJournalForm(form)) {
             event.preventDefault();
+            scrollToFirstJournalError(form);
         }
     });
+
+    document.querySelectorAll('.journal-confirm-delete-form').forEach(form => {
+        form.addEventListener('submit', event => {
+            event.preventDefault();
+            if (window.BSMSConfirm) {
+                BSMSConfirm({
+                    title: form.dataset.confirmTitle || 'Xóa mục này?',
+                    message: form.dataset.confirmMessage || 'Bạn có chắc chắn muốn xóa mục này không?',
+                    type: 'danger',
+                    confirmText: form.dataset.confirmText || 'Xóa',
+                    cancelText: 'Hủy bỏ',
+                    onConfirm: () => form.submit()
+                });
+                return;
+            }
+            form.submit();
+        });
+    });
+
+    function setCustomerPreviewMedia(eventId, nextIndex) {
+        const slides = Array.from(document.querySelectorAll('[data-customer-preview-slide="' + eventId + '"]'));
+        if (!slides.length) {
+            return;
+        }
+        const normalizedIndex = (nextIndex + slides.length) % slides.length;
+        slides.forEach((slide, index) => {
+            slide.classList.toggle('active', index === normalizedIndex);
+            slide.classList.toggle('is-prev', slides.length > 1 && index === (normalizedIndex - 1 + slides.length) % slides.length);
+            slide.classList.toggle('is-next', slides.length > 1 && index === (normalizedIndex + 1) % slides.length);
+            if (index !== normalizedIndex) {
+                slide.querySelectorAll('video').forEach(video => video.pause());
+            }
+        });
+        document.querySelectorAll('[data-customer-preview-dot="' + eventId + '"]').forEach((dot, index) => {
+            dot.classList.toggle('active', index === normalizedIndex);
+        });
+        const counter = document.querySelector('[data-customer-preview-current="' + eventId + '"]');
+        if (counter) {
+            counter.textContent = String(normalizedIndex + 1);
+        }
+    }
 
     function setJournalSlide(eventId, nextIndex) {
         const stage = document.querySelector('.journal-modal-stage[data-event-id="' + eventId + '"]');
@@ -524,11 +767,56 @@
     document.addEventListener('click', function (event) {
         const openFormModalButton = event.target.closest('[data-open-journal-form-modal]');
         const closeFormModalButton = event.target.closest('[data-close-journal-form-modal]');
+        const openCustomerPreviewButton = event.target.closest('[data-open-journal-customer-preview]');
+        const closeCustomerPreviewButton = event.target.closest('[data-close-journal-customer-preview]');
+        const customerPreviewPreviousButton = event.target.closest('[data-customer-preview-prev]');
+        const customerPreviewNextButton = event.target.closest('[data-customer-preview-next]');
         const openButton = event.target.closest('[data-open-journal-modal]');
         const closeButton = event.target.closest('[data-close-journal-modal]');
         const previousButton = event.target.closest('[data-gallery-prev]');
         const nextButton = event.target.closest('[data-gallery-next]');
         const thumbButton = event.target.closest('[data-gallery-thumb]');
+
+        if (openCustomerPreviewButton) {
+            const eventId = openCustomerPreviewButton.dataset.openJournalCustomerPreview;
+            const modal = document.getElementById('journal-customer-preview-' + eventId);
+            if (modal) {
+                modal.classList.add('is-open');
+                document.body.style.overflow = 'hidden';
+                openCustomerPreviewButton.closest('.journal-menu')?.removeAttribute('open');
+                setCustomerPreviewMedia(eventId, 0);
+            }
+            return;
+        }
+
+        if (closeCustomerPreviewButton) {
+            const modal = document.getElementById('journal-customer-preview-' + closeCustomerPreviewButton.dataset.closeJournalCustomerPreview);
+            if (modal) {
+                modal.classList.remove('is-open');
+                modal.querySelectorAll('video').forEach(video => video.pause());
+                document.body.style.overflow = '';
+            }
+            return;
+        }
+
+        if (event.target.classList.contains('journal-customer-preview')) {
+            event.target.classList.remove('is-open');
+            event.target.querySelectorAll('video').forEach(video => video.pause());
+            document.body.style.overflow = '';
+            return;
+        }
+
+        if (customerPreviewPreviousButton || customerPreviewNextButton) {
+            const eventId = customerPreviewPreviousButton
+                ? customerPreviewPreviousButton.dataset.customerPreviewPrev
+                : customerPreviewNextButton.dataset.customerPreviewNext;
+            const slides = Array.from(document.querySelectorAll('[data-customer-preview-slide="' + eventId + '"]'));
+            if (slides.length > 1) {
+                const currentIndex = Math.max(0, slides.findIndex(slide => slide.classList.contains('active')));
+                setCustomerPreviewMedia(eventId, customerPreviewPreviousButton ? currentIndex - 1 : currentIndex + 1);
+            }
+            return;
+        }
 
         if (openFormModalButton) {
             const modal = document.getElementById(openFormModalButton.dataset.openJournalFormModal);
@@ -536,6 +824,7 @@
                 modal.classList.add('is-open');
                 document.body.style.overflow = 'hidden';
                 openFormModalButton.closest('.journal-menu')?.removeAttribute('open');
+                modal.querySelectorAll('[name="title"], [name="description"]').forEach(updateJournalCharCounter);
             }
             return;
         }
@@ -676,6 +965,7 @@
     document.addEventListener('DOMContentLoaded', () => {
         const successFlash = document.getElementById('artisanFlashSuccess');
         const errorFlash = document.getElementById('artisanFlashError');
+        document.querySelectorAll('[name="title"], [name="description"]').forEach(updateJournalCharCounter);
 
         if (successFlash?.dataset.message && window.BSMSToast) {
             BSMSToast.success(successFlash.dataset.message);

@@ -365,6 +365,28 @@ class ArtisanCatalogServiceTest {
         verify(tagRepository, never()).deleteById(any(Integer.class));
     }
 
+    @Test
+    void createCatalogItems_WhenNameOrDescriptionInvalid_ShouldThrowException() {
+        assertThatThrownBy(() -> artisanCatalogService.createCategory("a".repeat(256), "Description"))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("Tên không được vượt quá 255 ký tự");
+
+        assertThatThrownBy(() -> artisanCatalogService.createCategory("Outdoor @@@", "Description"))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("Tên chỉ được chứa chữ, số");
+
+        assertThatThrownBy(() -> artisanCatalogService.createCategory("Outdoor", "a".repeat(501)))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("Mô tả không được vượt quá 500 ký tự");
+
+        assertThatThrownBy(() -> artisanCatalogService.createTag("Mini @@@"))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("Tên chỉ được chứa chữ, số");
+
+        verify(categoryRepository, never()).save(any(Category.class));
+        verify(tagRepository, never()).save(any(Tag.class));
+    }
+
     private Category category(Integer categoryId, String categoryName) {
         return Category.builder()
                 .categoryId(categoryId)
