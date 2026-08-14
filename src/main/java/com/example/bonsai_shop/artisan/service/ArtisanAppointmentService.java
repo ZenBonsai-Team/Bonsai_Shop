@@ -170,6 +170,11 @@ public class ArtisanAppointmentService {
             throw new RuntimeException("Thời gian bắt đầu phải lớn hơn thời điểm hiện tại.");
         }
 
+
+        if(pauseReason != null && pauseReason.length() > 500){
+            throw new RuntimeException("Lý do vắng không được vượt quá 500 ký tự.");
+        }
+
         if (!autoApprove) {
             autoApproveAfter = setting.getAutoApproveAfter();
         }

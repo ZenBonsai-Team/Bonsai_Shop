@@ -48,12 +48,12 @@ public class ViewingAppointmentService {
             );
         }
 
-        viewingAppointmentRepository.save(viewingAppointment);
+        String note = viewingAppointment.getNote();
+        if(note.length() > 500){
+            throw new RuntimeException("Lời nhắn không được vượt quá 500 ký tự.");
+        }
 
-        notificationService.createNotification(
-                viewingAppointment.getCustomer(),
-                "Lịch thăm vườn của bạn đã được tạo thành công vào lúc " + viewingAppointment.getAppointmentDate()
-        );
+        viewingAppointmentRepository.save(viewingAppointment);
     }
 
     public List<ViewingAppointment> findByCustomer(User customer) {
@@ -90,6 +90,9 @@ public class ViewingAppointmentService {
             );
         }
 
+        if(note.length() > 500){
+            throw new RuntimeException("Lời nhắn không được vượt quá 500 ký tự.");
+        }
 
         appointment.setAppointmentDate(appointmentDate);
         appointment.setNote(note);

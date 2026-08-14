@@ -211,8 +211,15 @@
                             class="btn-action-square btn-main-wishlist"
                             type="button"
                             th:data-product-id="${product != null ? product.productId : ''}"
-                            title="Yêu thích">
-                        <i class="fa-regular fa-heart"></i>
+                            title="Yêu thích"
+                            aria-label="Thêm vào danh sách yêu thích">
+                        <span class="wishlist-icon-wrap" aria-hidden="true">
+                            <i class="fa-regular fa-heart"></i>
+                        </span>
+                        <span class="wishlist-copy">
+                            <span class="wishlist-title">Yêu thích</span>
+                            <span class="wishlist-subtitle">Lưu vào bộ sưu tập riêng</span>
+                        </span>
                     </button>
                 </div>
             </article>
