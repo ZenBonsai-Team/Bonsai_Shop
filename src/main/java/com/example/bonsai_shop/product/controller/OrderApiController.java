@@ -133,7 +133,7 @@ public class OrderApiController {
                     .between(latestOtp.getCreatedAt(), LocalDateTime.now()).getSeconds();
             long secondsRemaining = 60 - secondsElapsed;
             response.put("success", false);
-            response.put("message", "Vui lÃ²ng Ä‘á»£i " + secondsRemaining + " giÃ¢y trÆ°á»›c khi gá»­i láº¡i mÃ£ OTP.");
+            response.put("message", "Vui lòng đợi " + secondsRemaining + " giây trước khi gửi lại mã OTP.");
             response.put("retryAfterSeconds", secondsRemaining);
             return ResponseEntity.status(429).body(response);
         }
@@ -168,7 +168,7 @@ public class OrderApiController {
         registerOtpRepository.save(otp);
 
         response.put("success", true);
-        response.put("message", "MÃ£ OTP xÃ¡c nháº­n Ä‘Æ¡n hÃ ng Ä‘Ã£ Ä‘Æ°á»£c gá»­i tá»›i Email: " + email);
+        response.put("message", "Mã OTP xác nhận đơn hàng đã được gửi tới Email: " + email);
         return ResponseEntity.ok(response);
     }
 
@@ -561,12 +561,13 @@ public class OrderApiController {
         }
 
         // XÃ¡c thá»±c mÃ£ OTP náº¿u lÃ  KhÃ¡ch vÃ£ng lai (Guest Checkout)
+        // Xác thực mã OTP nếu là Khách vãng lai (Guest Checkout)
         if (customer == null) {
             String otpCode = dto.getOtpCode();
             if (otpCode == null || otpCode.trim().isEmpty()) {
                 response.put("success", false);
                 response.put("requireOtp", true);
-                response.put("message", "Vui lÃ²ng nháº­p mÃ£ OTP xÃ¡c nháº­n Ä‘Æ°á»£c gá»­i vá» Email.");
+                response.put("message", "Vui lòng nhập mã OTP xác nhận được gửi về Email.");
                 return ResponseEntity.badRequest().body(response);
             }
 
@@ -575,7 +576,7 @@ public class OrderApiController {
             if (otp == null || Boolean.TRUE.equals(otp.getIsUsed()) || otp.getExpiredAt().isBefore(LocalDateTime.now())
                     || !otp.getOtpCode().equals(otpCode.trim())) {
                 response.put("success", false);
-                response.put("message", "MÃ£ OTP khÃ´ng há»£p lá»‡ hoáº·c Ä‘Ã£ háº¿t háº¡n. Vui lÃ²ng láº¥y mÃ£ má»›i vÃ  thá»­ láº¡i!");
+                response.put("message", "Mã OTP không hợp lệ hoặc đã hết hạn. Vui lòng lấy mã mới và thử lại!");
                 return ResponseEntity.badRequest().body(response);
             }
 

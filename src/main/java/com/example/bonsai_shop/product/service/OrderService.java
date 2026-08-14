@@ -474,6 +474,19 @@ public class OrderService {
 
     @Transactional
     public Order createOrder(PurchaseOrderRequestDTO dto, User customer) {
+        if (dto.getCustomerName() != null && dto.getCustomerName().length() > 255) {
+            throw new IllegalArgumentException("Tên khách hàng không được vượt quá 255 ký tự.");
+        }
+        if (dto.getCustomerEmail() != null && dto.getCustomerEmail().length() > 255) {
+            throw new IllegalArgumentException("Email không được vượt quá 255 ký tự.");
+        }
+        if (dto.getShippingAddress() != null && dto.getShippingAddress().length() > 500) {
+            throw new IllegalArgumentException("Địa chỉ nhận hàng không được vượt quá 500 ký tự.");
+        }
+        if (dto.getNotes() != null && dto.getNotes().length() > 500) {
+            throw new IllegalArgumentException("Ghi chú không được vượt quá 500 ký tự.");
+        }
+
         List<Product> productsToBuy = resolveProductsToBuy(dto, customer);
 
         if (productsToBuy.isEmpty()) {
