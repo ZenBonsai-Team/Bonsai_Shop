@@ -196,25 +196,6 @@ document.addEventListener("DOMContentLoaded", () => {
         cancelForm.setAttribute("action", `/appointments/cancel/${appointment.appointmentId}`);
     };
 
-    const submitFormInBackground = async (form) => {
-        const response = await fetch(form.getAttribute("action"), {
-            method: "POST",
-            body: new FormData(form),
-            headers: { Accept: "text/html" }
-        });
-
-        if (response.status === 401 || response.redirected && response.url.includes("/login")) {
-            window.location.href = "/login";
-            return false;
-        }
-
-        if (!response.ok) {
-            throw new Error("Không thể xử lý yêu cầu lịch hẹn.");
-        }
-
-        return true;
-    };
-
     listContent.addEventListener("click", async (event) => {
         const button = event.target.closest("[data-view-appointment]");
         if (!button) return;
@@ -274,15 +255,7 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
-        try {
-            const success = await submitFormInBackground(updateForm);
-            if (!success) return;
-            showToast("Đã gửi yêu cầu cập nhật lịch hẹn.");
-            closeModal(detailModal);
-            await loadAppointments();
-        } catch (error) {
-            showToast(error.message, "error");
-        }
+        updateForm.submit();
     });
 
     cancelAppointmentButton?.addEventListener("click", async () => {
@@ -291,17 +264,19 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
-        if (!window.confirm("Bạn có chắc chắn muốn hủy lịch hẹn này?")) return;
+        const confirmed = window.BSMSConfirm
+            ? await window.BSMSConfirm({
+                title: "Xác nhận hủy lịch",
+                message: "Bạn có chắc chắn muốn hủy lịch hẹn này?",
+                type: "danger",
+                confirmText: "Xác nhận hủy",
+                cancelText: "Quay lại"
+            })
+            : true;
 
-        try {
-            const success = await submitFormInBackground(cancelForm);
-            if (!success) return;
-            showToast("Đã gửi yêu cầu hủy lịch hẹn.");
-            closeModal(detailModal);
-            await loadAppointments();
-        } catch (error) {
-            showToast(error.message, "error");
-        }
+        if (!confirmed) return;
+
+        cancelForm.submit();
     });
 
     document.addEventListener("keydown", (event) => {
