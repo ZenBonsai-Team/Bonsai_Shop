@@ -42,6 +42,8 @@ public class ArtisanProductService {
     private static final int MAX_TAGS_PER_PRODUCT = 12;
     private static final long MAX_IMAGE_SIZE_BYTES = 7L * 1024 * 1024;
     private static final long MAX_VIDEO_SIZE_BYTES = 100L * 1024 * 1024;
+    private static final BigDecimal MAX_PRODUCT_PRICE = new BigDecimal("999999999999");
+    private static final int MAX_MEDIA_CAPTION_LENGTH = 255;
 
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
@@ -86,6 +88,7 @@ public class ArtisanProductService {
                 .orElseThrow(() -> new RuntimeException("Segment không tồn tại!"));
 
         validateRequiredSpecifications(form.getAge(), form.getHeight(), form.getTrunkDiameter(), form.getStyle());
+        validateProductPrice(form.getPrice());
 
         Product product = Product.builder()
                 .createdBy(artisanUser)
@@ -124,6 +127,7 @@ public class ArtisanProductService {
                 .orElseThrow(() -> new RuntimeException("Segment không tồn tại!"));
 
         validateRequiredSpecifications(form.getAge(), form.getHeight(), form.getTrunkDiameter(), form.getStyle());
+        validateProductPrice(form.getPrice());
 
         product.setVariety(variety);
         product.setSegment(segment);
@@ -193,6 +197,7 @@ public class ArtisanProductService {
             throw new RuntimeException("Video không thể đặt làm media đại diện!");
         }
         String normalizedShotType = normalizeShotType(slotType, mediaType);
+        String normalizedCaption = normalizeMediaCaption(caption);
         String mediaUrl = mediaStorageService.storeProductMedia(file);
         List<ProductMedia> existingMedia = productMediaRepository.findByProductOrderByDisplayOrderAscMediaIdAsc(product);
         boolean shouldSetThumbnail = "IMAGE".equals(mediaType) && (Boolean.TRUE.equals(isThumbnail) || existingMedia.isEmpty());
@@ -209,7 +214,7 @@ public class ArtisanProductService {
                 .mediaUrl(mediaUrl)
                 .mediaType(mediaType)
                 .slotType(normalizedShotType)
-                .caption(caption)
+                .caption(normalizedCaption)
                 .isThumbnail(shouldSetThumbnail)
                 .displayOrder(getNextDisplayOrder(existingMedia))
                 .build();
@@ -264,6 +269,7 @@ public class ArtisanProductService {
                 throw new RuntimeException("Video không thể đặt làm media đại diện!");
             }
             String normalizedShotType = normalizeShotType(getListValue(slotTypes, index), mediaType);
+            String normalizedCaption = normalizeMediaCaption(getListValue(captions, index));
             String mediaUrl = mediaStorageService.storeProductMedia(file);
 
             ProductMedia media = ProductMedia.builder()
@@ -271,7 +277,7 @@ public class ArtisanProductService {
                     .mediaUrl(mediaUrl)
                     .mediaType(mediaType)
                     .slotType(normalizedShotType)
-                    .caption(blankToNull(getListValue(captions, index)))
+                    .caption(normalizedCaption)
                     .isThumbnail(index == selectedThumbnailIndex)
                     .displayOrder(nextDisplayOrder + index)
                     .build();
@@ -322,7 +328,7 @@ public class ArtisanProductService {
                 media.setSlotType(normalizeShotType(slotTypes.get(index), media.getMediaType()));
             }
             if (captions != null) {
-                media.setCaption(blankToNull(captions.get(index)));
+                media.setCaption(normalizeMediaCaption(captions.get(index)));
             }
             productMediaRepository.save(media);
         }
@@ -463,11 +469,17 @@ public class ArtisanProductService {
         if (age <= 0) {
             throw new RuntimeException("Tuổi cây phải lớn hơn 0.");
         }
+        if (age > 1000) {
+            throw new RuntimeException("Tuổi cây không được vượt quá 1000 năm.");
+        }
         if (height == null) {
             throw new RuntimeException("Vui lòng nhập chiều cao cây.");
         }
         if (height <= 0) {
             throw new RuntimeException("Chiều cao cây phải lớn hơn 0.");
+        }
+        if (height > 1000) {
+            throw new RuntimeException("Chiều cao cây không được vượt quá 1000 cm.");
         }
         if (trunkDiameter == null) {
             throw new RuntimeException("Vui lòng nhập đường kính thân cây.");
@@ -475,11 +487,32 @@ public class ArtisanProductService {
         if (trunkDiameter <= 0) {
             throw new RuntimeException("Đường kính thân cây phải lớn hơn 0.");
         }
-        if (style == null || style.isBlank()) {
-            throw new RuntimeException("Vui lòng nhập style cây.");
+        if (trunkDiameter > 500) {
+            throw new RuntimeException("Đường kính thân cây không được vượt quá 500 cm.");
         }
-        if (!style.trim().matches("^[\\p{L}\\s]+$")) {
-            throw new RuntimeException("Style chỉ được nhập chữ.");
+        if (style == null || style.isBlank()) {
+            throw new RuntimeException("Vui lòng nhập dáng cây.");
+        }
+        if (style.trim().length() > 100) {
+            throw new RuntimeException("Dáng cây không được vượt quá 100 ký tự.");
+        }
+        if (!style.trim().matches("^[\\p{L}\\s'\\-]+$")) {
+            throw new RuntimeException("Dáng cây chỉ được nhập chữ, khoảng trắng và dấu ' -.");
+        }
+    }
+
+    private void validateProductPrice(BigDecimal price) {
+        if (price == null) {
+            throw new RuntimeException("Vui lòng nhập giá sản phẩm.");
+        }
+        if (price.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new RuntimeException("Giá sản phẩm phải lớn hơn 0.");
+        }
+        if (price.compareTo(MAX_PRODUCT_PRICE) > 0) {
+            throw new RuntimeException("Giá sản phẩm không được vượt quá 999.999.999.999 VNĐ.");
+        }
+        if (price.stripTrailingZeros().scale() > 0) {
+            throw new RuntimeException("Giá sản phẩm chỉ được nhập số nguyên VNĐ.");
         }
     }
 
@@ -599,6 +632,14 @@ public class ArtisanProductService {
                     + formatMegabytes(maxSize)
                     + "MB!");
         }
+    }
+
+    private String normalizeMediaCaption(String caption) {
+        String normalizedCaption = blankToNull(caption);
+        if (normalizedCaption != null && normalizedCaption.length() > MAX_MEDIA_CAPTION_LENGTH) {
+            throw new RuntimeException("Chú thích media không được vượt quá " + MAX_MEDIA_CAPTION_LENGTH + " ký tự!");
+        }
+        return normalizedCaption;
     }
 
     private int findDefaultThumbnailIndex(List<MultipartFile> files, List<String> mediaTypes, boolean shouldSelectDefault) {
