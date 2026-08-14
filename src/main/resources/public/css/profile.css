@@ -577,4 +577,31 @@ a {
     transform: translateY(-4px) scale(1.15);
     z-index: 1000 !important;
 }
+
+/* Clickable Order Row styling */
+.order-row-clickable {
+    transition: background-color 0.2s ease;
+}
+
+.order-row-clickable:hover {
+    background-color: rgba(28, 51, 34, 0.03) !important;
+}
+
+/* Modal Product Card styling */
+.product-hover-zoom {
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.product-hover-zoom:hover {
+    transform: scale(1.08);
+}
+
+.hover-text-success {
+    transition: color 0.2s ease;
+}
+
+.hover-text-success:hover {
+    color: #1C3322 !important;
+    text-decoration: underline !important;
+}
 

@@ -90,12 +90,16 @@
 <!-- BREADCRUMB -->
 <!-- ===================================================== -->
 <div class="container breadcrumb-container d-flex align-items-center">
-    <button class="btn btn-outline-dark btn-sm me-3 rounded-pill px-3" onclick="window.history.back()" title="Quay lại">
-        <i class="fa-solid fa-arrow-left me-1"></i> <span th:text="${#locale.language == 'en' ? 'Back' : 'Quay lại'}">Quay lại</span>
+    <button class="btn p-0 me-3 text-secondary d-flex align-items-center gap-1 border-0" 
+            style="font-family: inherit; font-size: 0.82rem; font-weight: 500; background: transparent; transition: color 0.2s;"
+            onclick="window.history.back()" 
+            title="Quay lại">
+        <i class="fa-solid fa-arrow-left"></i> 
+        <span th:text="${#locale.language == 'en' ? 'Back' : 'Quay lại'}">Quay lại</span>
     </button>
+    <div style="width: 1px; height: 12px; background-color: #C5BCB1; margin-right: 12px;"></div>
     <nav aria-label="breadcrumb" class="mb-0">
         <ul class="breadcrumb-list mb-0">
-            <li class="breadcrumb-item"><a th:href="@{/home}" th:text="#{nav.home}">Trang chủ</a></li>
             <li class="breadcrumb-item"><a th:href="@{/marketplace}" th:text="#{nav.marketplace}">Chợ Cây</a></li>
             <!-- CALL DB: product.productName -->
             <li class="breadcrumb-item active" aria-current="page" th:text="${product.productName}">Tùng La Hán Dáng Hoành</li>
@@ -111,10 +115,25 @@
         
         <!-- Left Column: Product Gallery -->
         <section class="col-lg-6">
-            <!-- Main Display Image -->
+            <!-- Main Display Image & Video (Steam-like Carousel) -->
             <!-- CALL DB: product.firstImageUrl, product.productName -->
-            <div class="gallery-main-wrap">
-                <img id="mainGalleryImg" th:src="${product.firstImageUrl != null ? product.firstImageUrl : 'https://images.unsplash.com/photo-1599599810769-bcde5a160d32?auto=format&fit=crop&q=80&w=800'}" th:alt="${product.productName != null ? product.productName : 'Bonsai'}" class="gallery-main-img">
+            <div class="gallery-main-wrap" style="position: relative; overflow: hidden; background: #FAF9F6; border: 1px solid #E2DCD5; border-radius: 12px; display: flex; align-items: center; justify-content: center; aspect-ratio: 4/3;">
+                <!-- Main image: zoomable on click -->
+                <img id="mainGalleryImg" 
+                     style="max-width: 100%; max-height: 100%; object-fit: contain; cursor: zoom-in;" 
+                     th:src="${product.firstImageUrl != null ? product.firstImageUrl : '/images/bonsai-1.png'}" 
+                     th:alt="${product.productName != null ? product.productName : 'Bonsai'}" 
+                     class="gallery-main-img" 
+                     onclick="openImageLightbox()">
+                
+                <!-- Main video player (initially hidden, auto-plays when switched) -->
+                <video id="mainGalleryVideo" 
+                       class="gallery-main-video d-none w-100 h-100" 
+                       controls 
+                       playsinline 
+                       muted 
+                       autoplay
+                       style="object-fit: contain; background: #000; max-height: 100%;"></video>
             </div>
             <p id="mainGalleryCaption"
                class="product-image-caption"
@@ -142,22 +161,28 @@
                             <span class="gallery-thumb-label" th:text="${slot.label}">Overview</span>
                         </div>
                     </th:block>
-                    <!-- HARDCODED Fallback if no media exists in DB -->
+                    <!-- Fallback if no media slots exist in DB: show firstImageUrl -->
                     <th:block th:if="${productImageSlots == null or productImageSlots.isEmpty()}">
-                        <div class="gallery-thumb-item active" onclick="switchMainImage(this, 'https://images.unsplash.com/photo-1599599810769-bcde5a160d32?auto=format&fit=crop&q=80&w=800')">
-                            <!-- HARDCODED --><img src="https://images.unsplash.com/photo-1599599810769-bcde5a160d32?auto=format&fit=crop&q=80&w=150" alt="Front View">
+                        <div class="gallery-thumb-item active" 
+                             th:data-image-url="${product.firstImageUrl != null ? product.firstImageUrl : '/images/bonsai-1.png'}"
+                             th:data-caption="${product.productName}"
+                             onclick="switchMainImage(this, this.getAttribute('data-image-url'))">
+                            <img th:src="${product.firstImageUrl != null ? product.firstImageUrl : '/images/bonsai-1.png'}" th:alt="${product.productName != null ? product.productName : 'Bonsai'}">
+                            <span class="gallery-thumb-label" th:text="${product.productName}">Bonsai</span>
                         </div>
-                        <div class="gallery-thumb-item" onclick="switchMainImage(this, 'https://images.unsplash.com/photo-1592150621744-aca64f48394a?auto=format&fit=crop&q=80&w=800')">
-                            <!-- HARDCODED --><img src="https://images.unsplash.com/photo-1592150621744-aca64f48394a?auto=format&fit=crop&q=80&w=150" alt="Side View">
-                        </div>
-                        <div class="gallery-thumb-item" onclick="switchMainImage(this, 'https://images.unsplash.com/photo-1502082553048-f009c37129b9?auto=format&fit=crop&q=80&w=800')">
-                            <!-- HARDCODED --><img src="https://images.unsplash.com/photo-1502082553048-f009c37129b9?auto=format&fit=crop&q=80&w=150" alt="Root Structure">
-                        </div>
-                        <div class="gallery-thumb-item" onclick="switchMainImage(this, 'https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?auto=format&fit=crop&q=80&w=800')">
-                            <!-- HARDCODED --><img src="https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?auto=format&fit=crop&q=80&w=150" alt="Foliage Detail">
-                        </div>
-                        <div class="gallery-thumb-item" onclick="switchMainImage(this, 'https://images.unsplash.com/photo-1583847268964-b28dc8f51f92?auto=format&fit=crop&q=80&w=800')">
-                            <!-- HARDCODED --><img src="https://images.unsplash.com/photo-1583847268964-b28dc8f51f92?auto=format&fit=crop&q=80&w=150" alt="Pot View">
+                    </th:block>
+                    
+                    <!-- Dynamic video thumbnails (Appended at the end of the row) -->
+                    <th:block th:if="${productVideos != null and !productVideos.isEmpty()}">
+                        <div th:each="video : ${productVideos}"
+                             class="gallery-thumb-item"
+                             th:data-video-url="${video.mediaUrl}"
+                             th:data-caption="${video.caption != null ? video.caption : ''}"
+                             onclick="switchMainVideo(this, this.getAttribute('data-video-url'))">
+                            <div class="video-thumbnail-placeholder d-flex align-items-center justify-content-center bg-dark text-white rounded w-100 h-100 position-relative" style="aspect-ratio: 1/1;">
+                                <i class="fa-solid fa-play fs-4 opacity-75"></i>
+                            </div>
+                            <span class="gallery-thumb-label" th:text="${video.caption != null && !video.caption.isEmpty() ? video.caption : 'Video'}">Video</span>
                         </div>
                     </th:block>
                 </div>
@@ -165,54 +190,18 @@
                     <i class="fa-solid fa-chevron-right"></i>
                 </button>
             </div>
-
-            <div class="product-video-section" th:if="${productVideos != null and !productVideos.isEmpty()}">
-                <h3 class="product-video-title">Video sản phẩm</h3>
-                <div class="product-video-list">
-                    <div class="product-video-card" th:each="media : ${productVideos}">
-                        <video class="product-detail-video"
-                               th:src="${media.mediaUrl}"
-                               controls
-                               playsinline
-                               preload="metadata"></video>
-                        <p class="product-video-caption"
-                           th:if="${media.caption != null && !media.caption.isEmpty()}"
-                           th:text="${media.caption}">Video sản phẩm</p>
-                    </div>
-                </div>
-            </div>
         </section>
 
         <!-- Right Column: Product Information -->
         <section class="col-lg-6">
-            <!-- Badges Row -->
-            <div class="info-badge-row">
-                <!-- CALL DB: product.segment.segmentName -->
-                <span class="badge-premium" th:text="${product.segment != null ? product.segment.segmentName : 'N/A'}">Premium</span>
-                <!-- CALL DB: product.style -->
-                <span class="badge-style" th:text="${product.style != null ? product.style : 'N/A'}">Dáng Hoành</span>
-                <!-- CALL DB: product.productStatus -->
-                <span th:text="${product.productStatus != null ? product.productStatus : 'N/A'}"
-                      th:classappend="${product.productStatus != null ? (product.productStatus == 'AVAILABLE' ? 'avail' : (product.productStatus == 'RESERVED' ? 'resv' : 'sold')) : 'avail'}"
-                      class="badge-status-pill">AVAILABLE</span>
-            </div>
-
-            <!-- Product Title & Scientific Name -->
+            <!-- Product Title (Styled with sans-serif Plus Jakarta Sans) -->
             <!-- CALL DB: product.productName -->
-            <h1 class="product-title" th:text="${product.productName}">Tùng La Hán Dáng Hoành</h1>
-            <!-- HARDCODED: Tên khoa học không có trong database entity (Variety chỉ có varietyName) -->
-            <p class="product-scientific-name"><!-- HARDCODED -->Podocarpus macrophyllus</p>
+            <h1 class="product-title" style="font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; color: #1C3322; font-size: 2.1rem; letter-spacing: -0.5px;" th:text="${product.productName}">Tùng La Hán Dáng Hoành</h1>
 
-            <!-- Star ratings and Product Code -->
-            <div class="rating-code-row">
-                <span class="rating-star-val">
-                    <i class="fa-solid fa-star"></i>
-                    <!-- CALL DB: product.averageRating -->
-                    <span th:text="${product.averageRating != null ? #numbers.formatDecimal(product.averageRating, 1, 1) : '0.0'}">4.9</span>
-                </span>
-                <span class="text-muted">|</span>
+            <!-- Product Code -->
+            <div class="rating-code-row" style="margin-bottom: 20px;">
                 <!-- CALL DB: product.productCode -->
-                <span th:text="${'Mã: ' + product.productCode}">Mã: BSMS-TLH-218</span>
+                <span class="fw-semibold text-dark" style="font-size: 0.9rem;" th:text="${'Mã tác phẩm: ' + product.productCode}">Mã tác phẩm: BSMS-TLH-218</span>
             </div>
 
             <div class="product-tag-row" th:if="${productTags != null and !productTags.isEmpty()}">
@@ -229,40 +218,34 @@
                      th:if="${product.isPublicPrice}"
                      th:text="${#numbers.formatDecimal(product.price, 0, 'POINT', 0, 'POINT') + ' đ'}">8.900.000 đ</div>
                 <div class="price-value-large" th:if="${!product.isPublicPrice}">Liên hệ</div>
-                <p class="price-subtext">Đã bao gồm hồ sơ phả hệ • Phí vận chuyển cẩu chuyên dụng tính riêng</p>
             </div>
 
             <!-- Parameters Grid Spec -->
             <div class="spec-grid-layout">
                 <div class="spec-grid-cell">
                         <div class="spec-cell-lbl"><i class="fa-regular fa-calendar"></i> Tuổi</div>
-                        <!-- CALL DB: product.age (với fallback thiết kế tĩnh) -->
-                        <div class="spec-cell-val" th:text="${product.age != null ? product.age + ' năm' : '18 năm'}">18 năm</div>
+                        <!-- CALL DB: product.age -->
+                        <div class="spec-cell-val" th:text="${product.age != null ? product.age + ' năm' : 'Chưa cập nhật'}">Chưa cập nhật</div>
                 </div>
                 <div class="spec-grid-cell">
                     <div class="spec-cell-lbl"><i class="fa-solid fa-arrows-up-down"></i> Chiều cao</div>
-                    <!-- CALL DB: product.height (với fallback thiết kế tĩnh) -->
-                    <div class="spec-cell-val" th:text="${product.height != null ? product.height + ' cm' : '80 cm'}">80 cm</div>
-                </div>
-                <div class="spec-grid-cell">
-                    <div class="spec-cell-lbl"><i class="fa-solid fa-arrows-left-right"></i> Tán rộng</div>
-                    <!-- HARDCODED: Tán rộng không có trong DB entity -->
-                    <div class="spec-cell-val"><!-- HARDCODED -->70 cm</div>
+                    <!-- CALL DB: product.height -->
+                    <div class="spec-cell-val" th:text="${product.height != null ? product.height + ' cm' : 'Chưa cập nhật'}">Chưa cập nhật</div>
                 </div>
                 <div class="spec-grid-cell">
                     <div class="spec-cell-lbl"><i class="fa-solid fa-circle-notch"></i> Đường kính thân</div>
-                    <!-- CALL DB: product.trunkDiameter (với fallback thiết kế tĩnh) -->
-                    <div class="spec-cell-val" th:text="${product.trunkDiameter != null ? product.trunkDiameter + ' cm' : '22 cm'}">22 cm</div>
+                    <!-- CALL DB: product.trunkDiameter -->
+                    <div class="spec-cell-val" th:text="${product.trunkDiameter != null ? product.trunkDiameter + ' cm' : 'Chưa cập nhật'}">Chưa cập nhật</div>
                 </div>
                 <div class="spec-grid-cell">
                     <div class="spec-cell-lbl"><i class="fa-solid fa-seedling"></i> Loài</div>
-                    <!-- CALL DB: product.variety.varietyName (với fallback thiết kế tĩnh) -->
-                    <div class="spec-cell-val" th:text="${product.variety != null and product.variety.varietyName != null ? product.variety.varietyName : 'Tùng La Hán'}">Tùng La Hán</div>
+                    <!-- CALL DB: product.variety.varietyName -->
+                    <div class="spec-cell-val" th:text="${product.variety != null and product.variety.varietyName != null ? product.variety.varietyName : 'Chưa cập nhật'}">Chưa cập nhật</div>
                 </div>
                 <div class="spec-grid-cell">
                     <div class="spec-cell-lbl"><i class="fa-solid fa-leaf"></i> Thế dáng</div>
-                    <!-- CALL DB: product.style (với fallback thiết kế tĩnh) -->
-                    <div class="spec-cell-val" th:text="${product.style != null ? product.style : 'Dáng Hoành'}">Dáng Hoành</div>
+                    <!-- CALL DB: product.style -->
+                    <div class="spec-cell-val" th:text="${product.style != null ? product.style : 'Chưa cập nhật'}">Chưa cập nhật</div>
                 </div>
             </div>
 
@@ -313,7 +296,7 @@
                         </button>
                         
                         <!-- Share Button -->
-                        <button class="btn-action-square" title="Chia sẻ">
+                        <button class="btn-action-square" id="shareProductBtn" title="Chia sẻ" onclick="shareProduct()">
                             <i class="fa-solid fa-share-nodes"></i>
                         </button>
                     </div>
@@ -432,111 +415,23 @@
 <!-- ===================================================== -->
 <!-- PRODUCT STORY / DESCRIPTION SECTION -->
 <!-- ===================================================== -->
-<article class="story-section">
-    <div class="container">
-        <span class="section-tag-gold">Câu chuyện tác phẩm</span>
+<article class="story-section bg-light-subtle py-5 border-top border-bottom">
+    <div class="container" style="max-width: 800px;">
+        <div class="text-center mb-4">
+            <i class="fa-solid fa-quote-left text-success fs-1 opacity-25"></i>
+            <h4 class="serif-text fw-bold text-dark mt-2" style="font-family: 'Cormorant Garamond', serif; letter-spacing: 1px;">CÂU CHUYỆN TÁC PHẨM</h4>
+            <div class="mx-auto my-2" style="width: 60px; height: 3px; background-color: #B8926A;"></div>
+        </div>
         
-        <!-- CALL DB: product.treeStory -->
-        <p class="story-intro-para"
-           th:text="${product.treeStory != null && !product.treeStory.isBlank() ? product.treeStory : 'Sản phẩm hiện chưa có câu chuyện cây.'}">
-            Tùng được uốn nắn qua hơn 18 năm dưới bàn tay của nghệ nhân Nguyễn Văn Thành tại vùng đất Nam Định — cái nôi của nghệ thuật bonsai Bắc Bộ.
-        </p>
-    </div>
-</article>
-
-<!-- ===================================================== -->
-<!-- DETAILED SPECIFICATIONS SECTION -->
-<!-- ===================================================== -->
-<section class="specs-table-section">
-    <div class="container">
-        <div class="row">
-            
-            <!-- Left Side: Table Title -->
-            <div class="col-lg-4">
-                <div class="specs-side-header">
-                    <span class="section-tag-gold" style="text-align:left;">Thông số chi tiết</span>
-                    <h2 class="specs-side-title" th:text="#{product.specs.title}">Thông số kỹ thuật</h2>
-                    <p class="specs-side-desc" th:text="${#locale.language == 'en' ? 'Technical and legal details of the masterpiece. All information is verified by Minh Ky Garden.' : 'Bảng thông số kỹ thuật và pháp lý đi kèm tác phẩm. Mọi thông tin đều được xác minh bởi Minh Kỷ Garden trước khi niêm yết.'}">
-                        Bảng thông số kỹ thuật và pháp lý đi kèm tác phẩm. Mọi thông tin đều được xác minh bởi Minh Kỷ Garden trước khi niêm yết.
-                    </p>
-                </div>
-            </div>
-
-            <!-- Right Side: Spec Table -->
-            <div class="col-lg-8">
-                <table class="specs-table">
-                    <tbody>
-                        <tr>
-                            <td class="specs-table-lbl">MÃ SẢN PHẨM</td>
-                            <!-- CALL DB: product.productCode (với fallback thiết kế tĩnh) -->
-                            <td class="specs-table-val" th:text="${product.productCode != null ? product.productCode : 'BSMS-TLH-218'}">BSMS-TLH-218</td>
-                        </tr>
-                        <tr>
-                            <td class="specs-table-lbl">TÊN THƯƠNG GỌI</td>
-                            <!-- CALL DB: product.productName (với fallback thiết kế tĩnh) -->
-                            <td class="specs-table-val" th:text="${product.productName != null ? product.productName : 'Tùng La Hán Dáng Hoành'}">Tùng La Hán Dáng Hoành</td>
-                        </tr>
-                        <tr>
-                            <td class="specs-table-lbl">TÊN KHOA HỌC</td>
-                            <!-- HARDCODED: Tên khoa học không có trong DB entity (Variety chỉ có varietyName) -->
-                            <td class="specs-table-val"><i><!-- HARDCODED -->Podocarpus macrophyllus</i></td>
-                        </tr>
-                        <tr>
-                            <td class="specs-table-lbl">LOÀI</td>
-                            <!-- CALL DB: product.variety.varietyName (với fallback thiết kế tĩnh) -->
-                            <td class="specs-table-val" th:text="${product.variety != null and product.variety.varietyName != null ? product.variety.varietyName : 'Tùng La Hán'}">Tùng La Hán</td>
-                        </tr>
-                        <tr>
-                            <td class="specs-table-lbl">THẾ DÁNG</td>
-                            <!-- CALL DB: product.style (với fallback thiết kế tĩnh) -->
-                            <td class="specs-table-val" th:text="${product.style != null ? product.style : 'Dáng Hoành'}">Dáng Hoành</td>
-                        </tr>
-                        <tr>
-                            <td class="specs-table-lbl">TUỔI CÂY</td>
-                            <!-- CALL DB: product.age (với fallback thiết kế tĩnh) -->
-                            <td class="specs-table-val" th:text="${product.age != null ? product.age + ' năm' : '18 năm'}">18 năm</td>
-                        </tr>
-                        <tr>
-                            <td class="specs-table-lbl">CHIỀU CAO</td>
-                            <!-- CALL DB: product.height (với fallback thiết kế tĩnh) -->
-                            <td class="specs-table-val" th:text="${product.height != null ? product.height + ' cm' : '80 cm'}">80 cm</td>
-                        </tr>
-                        <tr>
-                            <td class="specs-table-lbl">TÁN RỘNG</td>
-                            <!-- HARDCODED: Tán rộng không có trong DB entity -->
-                            <td class="specs-table-val"><!-- HARDCODED -->70 cm</td>
-                        </tr>
-                        <tr>
-                            <td class="specs-table-lbl">ĐƯỜNG KÍNH THÂN</td>
-                            <!-- CALL DB: product.trunkDiameter (với fallback thiết kế tĩnh) -->
-                            <td class="specs-table-val" th:text="${product.trunkDiameter != null ? product.trunkDiameter + ' cm' : '22 cm'}">22 cm</td>
-                        </tr>
-                        <tr>
-                            <td class="specs-table-lbl">PHÂN KHÚC</td>
-                            <!-- CALL DB: product.segment.segmentName (với fallback thiết kế tĩnh) -->
-                            <td class="specs-table-val" th:text="${product.segment != null and product.segment.segmentName != null ? product.segment.segmentName : 'Premium'}">Premium</td>
-                        </tr>
-                        <tr>
-                            <td class="specs-table-lbl">TÌNH TRẠNG</td>
-                            <!-- CALL DB: product.productStatus (với fallback thiết kế tĩnh) -->
-                            <td class="specs-table-val">
-                                <span th:text="${product.productStatus != null ? product.productStatus : 'AVAILABLE'}"
-                                      th:classappend="${product.productStatus != null ? (product.productStatus == 'AVAILABLE' ? '' : (product.productStatus == 'RESERVED' ? 'resv' : 'disabled')) : ''}"
-                                      class="table-status-badge">AVAILABLE</span>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="specs-table-lbl">SẴN HÀNG GIAO NGAY</td>
-                            <!-- HARDCODED: Sẵn hàng giao ngay không có trong DB entity -->
-                            <td class="specs-table-val"><!-- HARDCODED -->Có</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-
+        <div class="story-content p-4 rounded-4 shadow-sm bg-white border border-light-subtle position-relative" style="background-image: linear-gradient(to bottom right, #fffaf0, #ffffff);">
+            <p class="story-intro-para m-0 text-secondary text-start lh-lg fs-6" 
+               style="white-space: pre-line; font-family: 'Cormorant Garamond', serif; font-size: 1.15rem !important; font-style: italic;"
+               th:text="${product.treeStory != null && !product.treeStory.isBlank() ? product.treeStory : 'Sản phẩm hiện chưa có câu chuyện cây.'}">
+                Sản phẩm hiện chưa có câu chuyện cây.
+            </p>
         </div>
     </div>
-</section>
+</article>
 
 <!-- CUSTOMER REVIEWS SECTION -->
 <section class="reviews-section" style="padding: 60px 0; border-top: 1px solid #eee; background-color: #fcfdfc;">
@@ -545,13 +440,7 @@
             <h3 class="fw-bold text-dark m-0" style="font-family: 'Cormorant Garamond', serif; font-size: 28px;">
                 <i class="fa-regular fa-comments text-success me-2"></i>Cảm nhận của người mua
             </h3>
-            <div class="d-flex align-items-center gap-2" th:if="${reviews != null and !#lists.isEmpty(reviews)}">
-                <span class="fs-4 fw-bold text-dark" th:text="${#numbers.formatDecimal(averageRating, 1, 1)}">4.8</span>
-                <div class="text-warning">
-                    <i class="fa-solid fa-star" th:each="i : ${#numbers.sequence(1, 5)}" th:class="${i <= averageRating ? 'fa-solid fa-star text-warning' : 'fa-regular fa-star text-secondary'}"></i>
-                </div>
-                <span class="text-muted small" th:text="'(' + ${#lists.size(reviews)} + ' đánh giá)'">(5 đánh giá)</span>
-            </div>
+            <span class="text-muted small" th:if="${reviews != null and !#lists.isEmpty(reviews)}" th:text="'(' + ${#lists.size(reviews)} + ' phản hồi)'">(5 phản hồi)</span>
         </div>
 
         <!-- No Reviews State -->
@@ -567,9 +456,6 @@
                 <div class="d-flex justify-content-between align-items-start mb-2">
                     <div>
                         <div class="fw-bold text-dark mb-1" th:text="${rev.customer != null ? #strings.substring(rev.customer.fullName != null ? rev.customer.fullName : rev.customer.username, 0, 1) + '***' + #strings.substring(rev.customer.fullName != null ? rev.customer.fullName : rev.customer.username, #strings.length(rev.customer.fullName != null ? rev.customer.fullName : rev.customer.username) - 1, #strings.length(rev.customer.fullName != null ? rev.customer.fullName : rev.customer.username)) : 'Khách hàng'}">K***a</div>
-                        <div class="text-warning small">
-                            <i class="fa-solid fa-star" th:each="starVal : ${#numbers.sequence(1, 5)}" th:class="${starVal <= rev.rating ? 'fa-solid fa-star text-warning' : 'fa-regular fa-star text-secondary'}"></i>
-                        </div>
                     </div>
                     <span class="text-muted small" th:text="${#temporals.format(rev.createdAt, 'dd/MM/yyyy HH:mm')}">12/06/2025</span>
                 </div>
@@ -605,16 +491,13 @@
             <div class="col" th:each="related : ${relatedProducts}">
                 <div class="product-card"
                      style="cursor: pointer;"
-                     th:onclick="|if(!event.target.closest('.card-btn-wishlist, .btn-card-cart-icon, video, a, button')) { window.location.href='@{/product/{id}(id=${related.productId})}' }|"
+                     th:onclick="'if(!event.target.closest(\'.card-btn-wishlist, .btn-card-cart-icon, video, a, button\')) { window.location.href=\'' + (${related.segment != null && related.segment.segmentId == 3} ? @{/bonsai-luxury-detail/{id}(id=${related.productId})} : @{/product/{id}(id=${related.productId})}) + '\' }'"
                      th:with="relMediaUrl=${related.primaryMediaUrl},
                               relMediaType=${related.primaryMediaType},
                               isMidRel=${related.midSegment}"
                      th:classappend="${isMidRel} ? ' product-card-mid' : ' product-card-budget'">
                     <div class="card-image-wrap">
-                        <span th:if="${related.productStatus == 'AVAILABLE'}" class="card-status-badge avail" th:text="#{product.available}">AVAILABLE</span>
-                        <span th:if="${related.productStatus == 'RESERVED'}" class="card-status-badge resv" th:text="#{product.reserved}">RESERVED</span>
-                        <span th:if="${related.productStatus == 'SOLD'}" class="card-status-badge sld" th:text="#{product.sold}">SOLD</span>
-                        
+                        <!-- Removed duplicate image status badges, status is communicated by bottom action button -->
                         <button sec:authorize="isAnonymous() or hasRole('CUSTOMER')" class="card-btn-wishlist" th:data-product-id="${related.productId}" title="Yêu thích"><i class="fa-regular fa-heart"></i></button>
 
                         <video th:if="${relMediaUrl != null && !relMediaUrl.isEmpty() && relMediaType == 'VIDEO'}"
@@ -628,33 +511,78 @@
                              th:src="${relMediaUrl != null && !relMediaUrl.isEmpty() ? relMediaUrl : 'https://images.unsplash.com/photo-1599599810769-bcde5a160d32?auto=format&fit=crop&q=80&w=600'}"
                              th:alt="${related.productName}" class="card-img-asset">
                     </div>
-                    <div class="card-content">
-                        <span class="card-species-tag" th:text="${related.variety != null ? related.variety.varietyName : 'Bonsai'}">Variety</span>
-                        <h3 class="card-title-serif" th:text="${related.productName}">Product Name</h3>
-                        <p class="card-pedigree-code text-muted mb-1" style="font-size:0.7rem;" th:text="${(#locale.language == 'en' ? 'Code: ' : 'Mã: ') + related.productCode}">Mã</p>
-                        <p class="card-dimensions-meta text-muted mb-2" 
-                           th:text="${(#locale.language == 'en' ? 'Age: ' : 'Tuổi: ') + (related.age != null ? related.age + (#locale.language == 'en' ? ' yrs' : ' năm') : 'N/A') + ' • ' + (#locale.language == 'en' ? 'Height: ' : 'Cao: ') + (related.height != null ? related.height + 'cm' : 'N/A') + ' • ' + (#locale.language == 'en' ? 'Trunk: ' : 'Thân: ') + (related.trunkDiameter != null ? related.trunkDiameter + 'cm' : 'N/A')}">
-                           Dimensions
-                        </p>
-                        <div class="card-price-rating-row">
-                            <span class="card-price-val"
-                                  th:if="${related.isPublicPrice}"
-                                  th:text="${#numbers.formatDecimal(related.price, 0, 'POINT', 0, 'POINT') + ' đ'}">Price</span>
-                            <span class="card-price-val" th:if="${!related.isPublicPrice}" th:text="${#locale.language == 'en' ? 'Contact' : 'Liên hệ'}">Liên hệ</span>
-                            <span class="card-rating-val">
-                                <span th:text="${related.averageRating != null ? #numbers.formatDecimal(related.averageRating, 1, 1) : '4.8'}">4.8</span>
-                                <i class="fa-solid fa-star"></i>
-                            </span>
+                    
+                    <div class="card-content d-flex flex-column" style="padding: 16px; min-height: 180px; flex-grow: 1;">
+                        <!-- Top Info: Title and Code -->
+                        <div class="card-top-info mb-2">
+                            <h3 class="card-title-serif mb-1" 
+                                style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; height: 2.6em; line-height: 1.3em; font-size: 1.05rem; font-weight: 600;" 
+                                th:text="${related.productName}">Product Name</h3>
+                            <p class="card-pedigree-code text-muted m-0" style="font-size:0.75rem;" th:text="${(#locale.language == 'en' ? 'Code: ' : 'Mã: ') + related.productCode}">Mã</p>
                         </div>
-                        <div class="card-action-row">
-                            <a th:href="@{'/product/' + ${related.productId}}" class="btn-card-view-details" th:text="#{product.view_details}">Xem chi tiết</a>
-                            <button sec:authorize="!hasAnyRole('OWNER', 'ARTISAN', 'MODERATOR', 'CONTENT_MODERATOR')" 
-                                    th:if="${related.productStatus == 'AVAILABLE'}" 
-                                    type="button" 
-                                    class="btn-card-cart-icon" 
-                                    th:onclick="'addToCart(' + ${related.productId} + ')'">
-                                <i class="fa-solid fa-cart-shopping"></i>
-                            </button>
+                        
+                        <!-- Bottom Info Wrap (pushed to bottom via mt-auto) -->
+                        <div class="card-bottom-info mt-auto">
+                            <div class="card-price-rating-row d-flex justify-content-between align-items-center mb-3" style="margin-top: 0; margin-bottom: 12px;">
+                                <!-- Price -->
+                                <span class="card-price-val fw-bold text-dark"
+                                      style="font-size: 1.1rem;"
+                                      th:if="${related.isPublicPrice}"
+                                      th:text="${#numbers.formatDecimal(related.price, 0, 'POINT', 0, 'POINT') + ' đ'}">Price</span>
+                                <span class="card-price-val fw-bold text-dark" 
+                                      style="font-size: 1.1rem;"
+                                      th:if="${!related.isPublicPrice}" th:text="${#locale.language == 'en' ? 'Contact' : 'Liên hệ'}">Liên hệ</span>
+                                
+                                <!-- Rating -->
+                                <span class="card-rating-val text-warning small d-flex align-items-center gap-1">
+                                    <span class="text-dark fw-medium" th:text="${related.averageRating != null ? #numbers.formatDecimal(related.averageRating, 1, 1) : '4.8'}">4.8</span>
+                                    <i class="fa-solid fa-star"></i>
+                                </span>
+                            </div>
+                            
+                            <div class="card-action-row" style="display: block;">
+                                <!-- Case 1: Elite/Luxury segment (Consultation call redirect) -->
+                                <a th:if="${related?.segment?.segmentId == 3}" 
+                                   th:href="@{'/bonsai-luxury-detail/' + ${related.productId}}"
+                                   class="btn w-100 py-2 rounded-3 text-white border-0 fw-bold d-flex align-items-center justify-content-center gap-2 text-decoration-none"
+                                   style="background-color: #B8926A; font-size: 0.85rem;"
+                                   onclick="event.stopPropagation();">
+                                    <i class="fa-solid fa-phone"></i> <span>Liên hệ tư vấn</span>
+                                </a>
+                                
+                                <th:block th:if="${related?.segment?.segmentId != 3}">
+                                    <!-- Case 2: Available (Non-staff can buy) -->
+                                    <button sec:authorize="!hasAnyRole('OWNER', 'ARTISAN', 'MODERATOR', 'CONTENT_MODERATOR')" 
+                                            th:if="${related.productStatus == 'AVAILABLE'}" 
+                                            type="button" 
+                                            class="btn btn-success w-100 py-2 rounded-3 text-white border-0 fw-bold d-flex align-items-center justify-content-center gap-2" 
+                                            style="background-color: #1C3322; border: none; font-size: 0.85rem;"
+                                            th:onclick="'event.stopPropagation(); addToCart(' + ${related.productId} + ')'" 
+                                            th:title="#{product.add_to_cart}">
+                                        <i class="fa-solid fa-cart-plus"></i> <span th:text="#{product.add_to_cart}">Thêm vào giỏ</span>
+                                    </button>
+                                    
+                                    <!-- Case 3: Available (Staff/Admin warning) -->
+                                    <button sec:authorize="hasAnyRole('OWNER', 'ARTISAN', 'MODERATOR', 'CONTENT_MODERATOR')" 
+                                            th:if="${related.productStatus == 'AVAILABLE'}" 
+                                            type="button" 
+                                            class="btn w-100 py-2 rounded-3 text-secondary border border-light-subtle bg-light fw-bold d-flex align-items-center justify-content-center gap-2" 
+                                            style="font-size: 0.85rem;"
+                                            disabled>
+                                        <i class="fa-solid fa-cart-shopping"></i> <span>Chỉ dành cho khách</span>
+                                    </button>
+                                    
+                                    <!-- Case 4: Sold/Reserved -->
+                                    <button th:if="${related.productStatus == 'RESERVED' || related.productStatus == 'SOLD'}" 
+                                            type="button" 
+                                            class="btn w-100 py-2 rounded-3 text-secondary border border-light-subtle bg-light fw-bold d-flex align-items-center justify-content-center gap-2" 
+                                            style="font-size: 0.85rem;"
+                                            disabled>
+                                        <i class="fa-solid fa-lock"></i>
+                                        <span th:text="${related.productStatus == 'RESERVED' ? 'Đã được đặt' : 'Đã bán'}">Đã bán</span>
+                                    </button>
+                                </th:block>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -711,11 +639,52 @@
 <!-- UI SCRIPT FOR DETAIL INTERACTION -->
 <!-- ===================================================== -->
 <script>
+    let slideshowIntervalId = null;
+    let currentMediaIndex = 0;
+
+    function getMediaItems() {
+        return Array.from(document.querySelectorAll('.gallery-thumb-item'));
+    }
+
+    function resetSlideshow() {
+        if (slideshowIntervalId) {
+            clearInterval(slideshowIntervalId);
+        }
+        const items = getMediaItems();
+        if (items.length > 1) {
+            slideshowIntervalId = setInterval(showNextMedia, 5000);
+        }
+    }
+
+    function showNextMedia() {
+        const items = getMediaItems();
+        if (items.length <= 1) return;
+        currentMediaIndex = (currentMediaIndex + 1) % items.length;
+        const targetItem = items[currentMediaIndex];
+        if (targetItem) {
+            // Trigger click simulation
+            targetItem.click();
+        }
+    }
+
     // Switches the main gallery display image when clicking on a thumbnail.
     function switchMainImage(thumbElement, imageUrl) {
-        // Update main image source
+        // Update current media index based on clicked element
+        const items = getMediaItems();
+        const clickedIndex = items.indexOf(thumbElement);
+        if (clickedIndex !== -1) {
+            currentMediaIndex = clickedIndex;
+        }
+
+        // Hide video, show image
+        const mainVideo = document.getElementById('mainGalleryVideo');
+        if (mainVideo) {
+            mainVideo.classList.add('d-none');
+            mainVideo.pause();
+        }
         const mainImg = document.getElementById('mainGalleryImg');
         if (mainImg) {
+            mainImg.classList.remove('d-none');
             mainImg.src = imageUrl;
         }
 
@@ -729,10 +698,49 @@
         // Toggle active border styling on thumbnail list items
         const thumbs = document.querySelectorAll('.gallery-thumb-item');
         thumbs.forEach(t => t.classList.remove('active'));
-        
         if (thumbElement) {
             thumbElement.classList.add('active');
         }
+
+        resetSlideshow();
+    }
+
+    // Switches the main gallery display to a video player
+    function switchMainVideo(thumbElement, videoUrl) {
+        // Update current media index based on clicked element
+        const items = getMediaItems();
+        const clickedIndex = items.indexOf(thumbElement);
+        if (clickedIndex !== -1) {
+            currentMediaIndex = clickedIndex;
+        }
+
+        // Hide image, show video
+        const mainImg = document.getElementById('mainGalleryImg');
+        if (mainImg) {
+            mainImg.classList.add('d-none');
+        }
+        const mainVideo = document.getElementById('mainGalleryVideo');
+        if (mainVideo) {
+            mainVideo.classList.remove('d-none');
+            mainVideo.src = videoUrl;
+            mainVideo.play().catch(err => console.log("Auto-play blocked or failed: ", err));
+        }
+
+        const caption = thumbElement ? (thumbElement.getAttribute('data-caption') || '').trim() : '';
+        const captionElement = document.getElementById('mainGalleryCaption');
+        if (captionElement) {
+            captionElement.textContent = caption;
+            captionElement.classList.toggle('d-none', !caption);
+        }
+
+        // Toggle active border styling on thumbnail list items
+        const thumbs = document.querySelectorAll('.gallery-thumb-item');
+        thumbs.forEach(t => t.classList.remove('active'));
+        if (thumbElement) {
+            thumbElement.classList.add('active');
+        }
+
+        resetSlideshow();
     }
 
     function scrollGalleryThumbs(direction) {
@@ -877,8 +885,46 @@
         if (activeCard) {
             setJournalMedia(activeCard.dataset.eventId, 0);
         }
+        resetSlideshow();
     });
+
+    // Image Lightbox zoom functionality
+    function openImageLightbox() {
+        const mainImgSrc = document.getElementById('mainGalleryImg').src;
+        document.getElementById('lightboxImg').src = mainImgSrc;
+        const myModal = new bootstrap.Modal(document.getElementById('imageLightboxModal'));
+        myModal.show();
+    }
+
+    // Share Product functionality
+    function shareProduct() {
+        if (navigator.share) {
+            navigator.share({
+                title: document.title,
+                url: window.location.href
+            }).catch(console.error);
+        } else {
+            // Fallback: Copy link to clipboard
+            navigator.clipboard.writeText(window.location.href);
+            alert('Đã sao chép liên kết sản phẩm vào bộ nhớ tạm!');
+        }
+    }
 </script>
+
+<!-- Lightbox modal for image zoom -->
+<div class="modal fade" id="imageLightboxModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
+        <div class="modal-content border-0 bg-transparent">
+            <div class="modal-header border-0 p-0 position-absolute top-0 end-0 z-3 m-3">
+                <button type="button" class="btn-close btn-close-white bg-dark p-2 rounded-circle shadow" data-bs-dismiss="modal" aria-label="Close" style="opacity: 0.8;"></button>
+            </div>
+            <div class="modal-body p-0 d-flex justify-content-center align-items-center">
+                <img id="lightboxImg" src="" alt="Bonsai Zoomed" class="img-fluid rounded shadow-lg" style="max-height: 90vh; object-fit: contain; background: #000;">
+            </div>
+        </div>
+    </div>
+</div>
+
 <div th:replace="~{fragments/checkout-modal :: checkoutModal}"></div>
 </body>
 </html>
