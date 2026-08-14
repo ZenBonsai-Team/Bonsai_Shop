@@ -27,9 +27,6 @@
 
 <main id="home">
 
-    <!-- ============================================================
-         SECTION 1: HERO — full-bleed, nội dung căn giữa trên nền ảnh
-         ============================================================ -->
     <section class="hero hero-luxury-fullbleed" aria-label="Giới thiệu không gian nghệ thuật">
         <div class="hero-fullbleed-media" aria-hidden="true">
             <img th:src="${sysConfig.getValue('luxury_banner_image', '/images/hero-banner-bonsai.jpg')}" alt="">
@@ -68,105 +65,6 @@
         </div>
     </section>
 
-    <section class="value-luxury container" aria-label="Tiêu chuẩn tuyển chọn">
-        <div class="value-luxury-grid">
-            <div class="value-luxury-copy">
-                <div class="hero-edition-tag">
-                    <span th:text="#{luxury.left.showroom}">Showroom riêng</span>
-                    <strong th:text="#{luxury.left.curation}">Tác phẩm tuyển chọn giới hạn</strong>
-                </div>
-
-                <p class="hero-kicker" th:text="#{luxury.left.standards.tag}">Tiêu chuẩn tuyển chọn</p>
-                <h2 th:text="#{luxury.left.standards.title}">Tuyển chọn theo tiêu chuẩn sưu tầm</h2>
-                <p class="value-luxury-lead" th:text="#{luxury.left.standards.desc}">Ưu tiên dáng ổn định, bộ rễ khỏe, chất thân rõ tuổi và khả năng trưng bày lâu dài.</p>
-
-                <ul class="value-luxury-list">
-                    <li>
-                        <span class="value-icon"><i class="fa-solid fa-certificate" aria-hidden="true"></i></span>
-                        <div><strong th:text="#{luxury.features.dossier}">Hồ sơ thẩm định</strong></div>
-                    </li>
-                    <li>
-                        <span class="value-icon"><i class="fa-solid fa-door-open" aria-hidden="true"></i></span>
-                        <div><strong th:text="#{luxury.features.showroom}">Xem riêng tại showroom</strong></div>
-                    </li>
-                    <li>
-                        <span class="value-icon"><i class="fa-solid fa-seedling" aria-hidden="true"></i></span>
-                        <div><strong th:text="#{luxury.features.maintenance}">Bảo dưỡng sau bàn giao</strong></div>
-                    </li>
-                </ul>
-
-                <div class="hero-concierge-note" aria-label="Dịch vụ concierge">
-                    <span class="concierge-mark">BL</span>
-                    <div>
-                        <strong th:text="#{luxury.concierge.title}">Tư vấn riêng</strong>
-                        <p th:text="#{luxury.concierge.desc}">Tư vấn chọn cây theo diện tích, hướng sáng và gu nội thất của từng không gian.</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Lưới số liệu bất đối xứng: 2 ô vuông trên + 1 ô ngang lớn dưới -->
-            <div class="value-luxury-stats">
-                <div class="stat-tile">
-                    <strong>120+</strong>
-                    <span th:text="#{luxury.metrics.heritage}">Tác phẩm di sản</span>
-                </div>
-                <div class="stat-tile stat-tile-offset">
-                    <strong>1:1</strong>
-                    <span th:text="#{luxury.metrics.viewing}">Lịch xem riêng</span>
-                </div>
-                <div class="stat-tile stat-tile-wide">
-                    <i class="fa-solid fa-truck-fast stat-tile-icon" aria-hidden="true"></i>
-                    <strong>48h</strong>
-                    <span th:text="#{luxury.metrics.delivery}">Bàn giao tận nơi</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- Slider ảnh giới thiệu (giữ nguyên nội dung/hiệu ứng của #heroSlider cũ) -->
-        <div class="value-luxury-media">
-            <div class="hero-gallery-label">
-                <span>❧</span>
-                <strong>Bộ sưu tập nổi bật</strong>
-            </div>
-
-            <div class="hero-slider" id="heroSlider" aria-live="polite">
-                <div class="slide active">
-                    <img src="https://lh3.googleusercontent.com/aida/AP1WRLvD4DW4De5l6WK5em7ZQd3XMfilMNENkJUaqUPsXOgJy3RV835QSUBcPuglqyIchFEzSgCgrbHYEUcewcDFuYYegG0EUo0ZEdF7ZQfZVqaZyZLO-ye0eRvJFRcK6DM8da2G4ltGcIL617iCQl-iACYqHg0kdPolIk2Ut4USuAHN-G2IfYHgOMy6fH1VSzlyFwMa025Go6iOmFzbQ6n2Mp6tYAWgIAM9gM03_4LCc-HP1emrbd2PgPF5NA" alt="Bonsai cổ thụ trong chậu gốm cao cấp" loading="lazy">
-                    <div class="slide-caption">
-                        <span>Tác phẩm di sản</span>
-                        <strong>Tác phẩm cổ thụ cho phòng khách lớn</strong>
-                    </div>
-                </div>
-                <div class="slide">
-                    <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuArKJkVfoXjaPvkE09Z4IurNtEQtggPvNhmS_03fOLwjo-b4HhEkQ1XMnIyINr3Eyjgw611S_0Ov9OgN2XLB_OYJQ9xkavk31l1dc8CtI_H30iAntsicKR5uN-hCbTKekb2Ls7df7XJCr2CV1-wVp3cmuaIpdLEFDqhzBNRG-lXJIMCN5PtDEmnEnc05I-iKO1HVf07KgEFhKouSnND6rlPrrGuiClK-8fJgWcpbIRhIVxwz5pYYGO48hSrny83c08uTrbA7TGJeiE" alt="Bonsai nghệ thuật trưng bày phòng khách" loading="lazy">
-                    <div class="slide-caption">
-                        <span>Điểm nhấn nội thất</span>
-                        <strong>Điểm nhấn nghệ thuật cho biệt thự</strong>
-                    </div>
-                </div>
-                <div class="slide">
-                    <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuDq9V06hqRe8_IfbfIH4FmmCIBN3GxCW1-w98bjygyxnQpr4Esxdww_U1K2gLsrP5oBy4x6gLhkmMuQwWfO7E37IDBGet1V0BToSLt6N636RDx6LKKKLnpo6SJFBNzDOkICcPtiTMORGap_cnQURDmbGpvyTBFSkARcw5UE1fFlXr7EgaouI8vpCK8SYQMBXxMCydkp9yjCUrh3Su8tu6KeJ1SvBss6Cp5OM-P1XzVfi0e7SLUjBgRU-L3Cdb3FmTX4vFKBWZYwm1M" alt="Bonsai mini đặt trên kệ gỗ" loading="lazy">
-                    <div class="slide-caption">
-                        <span>Trưng bày riêng</span>
-                        <strong>Tinh gọn cho phòng làm việc cao cấp</strong>
-                    </div>
-                </div>
-            </div>
-
-            <div class="slider-controls">
-                <button class="icon-btn prev" aria-label="Ảnh trước">‹</button>
-                <button class="icon-btn next" aria-label="Ảnh tiếp">›</button>
-            </div>
-
-            <div class="hero-spec-card">
-                <span>Dịch vụ đặc tuyển</span>
-                <strong>Bàn giao cao cấp</strong>
-                <small>Bàn giao, đặt vị trí và hướng dẫn chăm sóc tại chỗ.</small>
-            </div>
-        </div>
-    </section>
-
-
     <section id="collection" class="collection container" aria-label="Bộ sưu tập Bonsai">
         <div class="section-heading section-heading-luxury">
             <div>
@@ -183,8 +81,6 @@
                         <span class="results-kicker">Danh mục tuyển chọn</span>
                         <h3>Danh mục tác phẩm đang mở lịch</h3>
                     </div>
-                    <div class="results-count"
-                         th:text="${'Hiển thị ' + product.totalElements + ' tác phẩm'}">Hiển thị 0 tác phẩm</div>
                 </div>
 
                 <div class="grid" id="productGrid">
@@ -391,14 +287,11 @@
 <script th:src="@{/js/bonsai_luxury.js}"></script>
 <script th:if="${error}">
     document.addEventListener("DOMContentLoaded", function () {
-
         const modal = document.getElementById("bookingModal");
         if (!modal) return;
-
         modal.style.display = "flex";
         modal.style.opacity = "1";
         modal.setAttribute("aria-hidden","false");
-
     });
 </script>
 </body>

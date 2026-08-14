@@ -123,10 +123,5 @@ public class ViewingAppointmentService {
         appointment.setStatus("CANCELLED");
         appointment.setUpdatedAt(LocalDateTime.now());
         viewingAppointmentRepository.save(appointment);
-
-        notificationService.createNotification(
-                user,
-                "Lịch thăm vườn của bạn đã hủy thành công vào lúc " + appointment.getUpdatedAt()
-        );
     }
 }

@@ -149,7 +149,6 @@
                     <span>Bonsai Luxury</span>
                     <span th:text="${product != null && product.productCode != null ? product.productCode : 'N/A'}"></span>
                 </div>
-                <span class="artisan-seal" aria-hidden="true">匠</span>
                 <h1 id="productTitle" th:text="${product != null && product.productName != null ? product.productName : 'N/A'}">
 
                 </h1>
@@ -215,23 +214,6 @@
                             title="Yêu thích">
                         <i class="fa-regular fa-heart"></i>
                     </button>
-                </div>
-
-                <div sec:authorize="isAuthenticated() and !hasAnyRole('OWNER', 'ARTISAN', 'MODERATOR', 'CONTENT_MODERATOR', 'ADMIN')" class="action-row">
-                    <button class="btn-primary schedule-btn"
-                            type="button"
-                            data-available="true">
-                        Đặt lịch tham quan vườn
-                    </button>
-                </div>
-
-                <div sec:authorize="!isAuthenticated()" class="action-row">
-                    <a class="btn-primary" th:href="@{/login}">Đăng nhập để đặt lịch thăm quan vườn</a>
-                </div>
-
-                <div sec:authorize="hasAnyRole('OWNER', 'ARTISAN', 'MODERATOR', 'CONTENT_MODERATOR', 'ADMIN')" class="role-note">
-                    <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
-                    <span>Tài khoản quản trị, nhà vườn hoặc kiểm duyệt chỉ có quyền xem thông tin tác phẩm.</span>
                 </div>
             </article>
         </div>
@@ -415,61 +397,6 @@
 
 <div id="contact" class="footer-anchor"></div>
 <div th:replace="~{fragments/footer :: footer}"></div>
-
-<div id="bookingModal" class="booking-modal" role="dialog" aria-modal="true" aria-labelledby="bookingTitle" hidden>
-    <div class="booking-backdrop" data-close-modal></div>
-    <div class="booking-card">
-        <button class="modal-close" id="closeBookingBtn" type="button" aria-label="Đóng bảng đặt lịch">
-            <i class="fa-solid fa-xmark" aria-hidden="true"></i>
-        </button>
-        <div class="booking-header">
-            <h2 id="bookingTitle">Yêu cầu đặt lịch thăm vườn</h2>
-        </div>
-        <form class="booking-form" th:action="@{/appointments/create}" method="post" id="actualBookingForm">
-            <input type="hidden" name="_csrf" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-            <input type="hidden" id="modalProductId" name="productId" th:value="${product != null ? product.productId : ''}">
-            <div class="form-grid">
-                <div class="form-group">
-                    <label for="appointmentDate">Ngày xem</label>
-                    <input type="date" id="appointmentDate" name="appointmentDate" required>
-                    <small class="form-help">Chọn từ ngày mai trở đi</small>
-                </div>
-                <div class="form-group">
-                    <label for="appointmentTime">Giờ xem</label>
-                    <select id="appointmentTime" name="appointmentTime" required>
-                        <option value="">Chọn giờ xem</option>
-                        <option value="08:00">08:00</option>
-                        <option value="08:30">08:30</option>
-                        <option value="09:00" selected>09:00</option>
-                        <option value="09:30">09:30</option>
-                        <option value="10:00">10:00</option>
-                        <option value="10:30">10:30</option>
-                        <option value="11:00">11:00</option>
-                        <option value="11:30">11:30</option>
-                        <option value="13:00">13:00</option>
-                        <option value="13:30">13:30</option>
-                        <option value="14:00">14:00</option>
-                        <option value="14:30">14:30</option>
-                        <option value="15:00">15:00</option>
-                        <option value="15:30">15:30</option>
-                        <option value="16:00">16:00</option>
-                        <option value="16:30">16:30</option>
-                        <option value="17:00">17:00</option>
-                    </select>
-                    <small class="form-help">Khung giờ showroom: 08:00 - 17:00</small>
-                </div>
-                <div class="form-group form-full">
-                    <label for="note">Lời nhắn</label>
-                    <textarea id="note" name="note" rows="4" maxlength="500" placeholder="Yêu cầu về giờ đón tiếp, không gian xem cây hoặc tư vấn chăm sóc."></textarea>
-                </div>
-            </div>
-            <div class="form-actions">
-                <button type="button" id="cancelBookingBtn" class="btn-ghost">Hủy</button>
-                <button type="submit" class="btn-primary submit-booking-btn">Xác nhận đặt lịch</button>
-            </div>
-        </form>
-    </div>
-</div>
 
 <script th:src="@{/js/bonsai-luxury-detail.js}"></script>
 </body>

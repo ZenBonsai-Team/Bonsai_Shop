@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="appointmentListModal">
+    <div id="appointmentListModal" class="apt-list-modal" role="dialog" aria-modal="true" aria-labelledby="appointmentListTitle" hidden>
+        <div class="apt-list-backdrop" data-close-appointment-list></div>
+        <div class="apt-list-card">
+            <button class="apt-list-close" type="button" aria-label="Đóng danh sách lịch hẹn" data-close-appointment-list>
+                <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+            </button>
+
+            <div class="apt-list-header">
+                <span>Lịch showroom</span>
+                <h2 id="appointmentListTitle">Lịch hẹn của tôi</h2>
+                <p>Theo dõi lịch thăm vườn, xem chi tiết và cập nhật khi lịch còn chờ duyệt.</p>
+            </div>
+
+            <div id="appointmentListLoading" class="apt-list-state">
+                <i class="fa-solid fa-spinner" aria-hidden="true"></i>
+                <span>Đang tải lịch hẹn...</span>
+            </div>
+
+            <div id="appointmentListEmpty" class="apt-list-empty" hidden>
+                <i class="fa-solid fa-seedling" aria-hidden="true"></i>
+                <h3>Chưa có lịch hẹn</h3>
+                <p>Bạn chưa có lịch thăm vườn nào. Hãy đặt lịch để showroom chuẩn bị tiếp đón.</p>
+            </div>
+
+            <div id="appointmentListContent" class="apt-list-content" hidden></div>
+        </div>
+    </div>
+
+    <div id="appointmentDetailModal" class="apt-list-modal" role="dialog" aria-modal="true" aria-labelledby="appointmentDetailTitle" hidden>
+        <div class="apt-list-backdrop" data-close-appointment-detail></div>
+        <div class="apt-list-card apt-detail-card">
+            <button class="apt-list-close" type="button" aria-label="Đóng chi tiết lịch hẹn" data-close-appointment-detail>
+                <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+            </button>
+
+            <div class="apt-list-header">
+                <span>Chi tiết lịch hẹn</span>
+                <h2 id="appointmentDetailTitle">Lịch thăm vườn</h2>
+            </div>
+
+            <div class="apt-detail-grid">
+                <div><strong>Mã lịch</strong><span id="aptDetailCode"></span></div>
+                <div><strong>Trạng thái</strong><span id="aptDetailStatus"></span></div>
+                <div><strong>Ngày xem</strong><span id="aptDetailDate"></span></div>
+                <div><strong>Giờ xem</strong><span id="aptDetailTime"></span></div>
+                <div class="apt-full-row"><strong>Ghi chú</strong><span id="aptDetailNote"></span></div>
+            </div>
+
+            <form id="appointmentUpdateForm" class="apt-edit-form" method="post" hidden>
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                <div class="apt-edit-grid">
+                    <div>
+                        <label for="aptUpdateDate">Ngày xem</label>
+                        <input type="date" id="aptUpdateDate" name="appointmentDate" required>
+                    </div>
+                    <div>
+                        <label for="aptUpdateTime">Giờ xem</label>
+                        <select id="aptUpdateTime" name="appointmentTime" required>
+                            <option value="">Chọn giờ xem</option>
+                            <option value="08:00">08:00</option>
+                            <option value="08:30">08:30</option>
+                            <option value="09:00">09:00</option>
+                            <option value="09:30">09:30</option>
+                            <option value="10:00">10:00</option>
+                            <option value="10:30">10:30</option>
+                            <option value="11:00">11:00</option>
+                            <option value="11:30">11:30</option>
+                            <option value="13:00">13:00</option>
+                            <option value="13:30">13:30</option>
+                            <option value="14:00">14:00</option>
+                            <option value="14:30">14:30</option>
+                            <option value="15:00">15:00</option>
+                            <option value="15:30">15:30</option>
+                            <option value="16:00">16:00</option>
+                            <option value="16:30">16:30</option>
+                            <option value="17:00">17:00</option>
+                        </select>
+                    </div>
+                    <div class="apt-full-row">
+                        <label for="aptUpdateNote">Ghi chú</label>
+                        <textarea id="aptUpdateNote" name="note" rows="4"></textarea>
+                    </div>
+                </div>
+                <div class="apt-detail-actions">
+                    <button type="button" class="apt-btn apt-btn-ghost" id="aptCancelEditBtn">Hủy sửa</button>
+                    <button type="submit" class="apt-btn apt-btn-primary">Lưu thay đổi</button>
+                </div>
+            </form>
+
+            <form id="appointmentCancelForm" method="post" hidden>
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+            </form>
+
+            <div class="apt-detail-actions" id="appointmentDetailActions">
+                <button type="button" class="apt-btn apt-btn-ghost" data-close-appointment-detail>Đóng</button>
+                <button type="button" class="apt-btn apt-btn-primary" id="aptShowEditBtn">Sửa lịch</button>
+                <button type="button" class="apt-btn apt-btn-danger" id="aptCancelAppointmentBtn">Hủy lịch</button>
+            </div>
+
+            <p id="appointmentLockedMessage" class="apt-locked-message" hidden>
+                Lịch đã qua trạng thái chờ duyệt nên không thể sửa hoặc hủy.
+            </p>
+        </div>
+    </div>
+</div>
+</body>
+</html>

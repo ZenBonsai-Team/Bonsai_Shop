@@ -271,11 +271,5 @@ document.addEventListener("DOMContentLoaded", () => {
     initReveal();
     initPointerGlow();
     initGallery();
-    const booking = initBooking();
     updateYear();
-
-    document.addEventListener("keydown", (event) => {
-        if (event.key !== "Escape") return;
-        booking.close();
-    });
 });

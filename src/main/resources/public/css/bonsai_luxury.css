@@ -1181,11 +1181,11 @@ section {
     text-transform: uppercase;
 }
 
-/* Lưới sản phẩm — đều 4 cột, mọi ảnh cùng kích thước */
+/* Lưới sản phẩm — đều 2 cột, ảnh lớn nổi bật */
 .grid {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 18px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 26px;
 }
 
 .luxury-product-card {
@@ -1232,7 +1232,7 @@ section {
 .card-media {
     position: relative;
     overflow: hidden;
-    height: 220px;
+    height: 360px;
     background: #101911;
 }
 
@@ -2038,8 +2038,8 @@ section {
         width: min(calc(100% - 42px), 1360px);
     }
 
-    .grid {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+    .card-media {
+        height: 330px;
     }
 }
 
@@ -2069,6 +2069,10 @@ section {
 
     .grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .card-media {
+        height: 300px;
     }
 }
 
@@ -2105,6 +2109,14 @@ section {
     .studio-stats,
     .timeline {
         grid-template-columns: 1fr;
+    }
+
+    .grid {
+        gap: 22px;
+    }
+
+    .card-media {
+        height: 320px;
     }
 
     .hero-trust-strip > div,
@@ -2161,6 +2173,10 @@ section {
     .btn-detail-luxury {
         width: 100%;
         justify-content: center;
+    }
+
+    .card-media {
+        height: 260px;
     }
 }
 
