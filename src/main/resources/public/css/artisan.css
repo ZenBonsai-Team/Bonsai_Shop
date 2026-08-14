@@ -463,6 +463,22 @@ textarea {
     width: 100%;
 }
 
+.media-upload-item .field-error,
+.media-card-body .field-error {
+    color: #d32f2f;
+    font-size: 12px;
+    font-weight: 700;
+    margin-top: 4px;
+}
+
+.media-upload-item .field-invalid input,
+.media-upload-item .field-invalid select,
+.media-card-body .field-invalid input,
+.media-card-body .field-invalid select {
+    border-color: #d32f2f !important;
+    box-shadow: 0 0 0 2px rgba(211, 47, 47, 0.12);
+}
+
 .compact-grid {
     display: grid;
     gap: 12px;
@@ -1919,6 +1935,12 @@ textarea {
     }
 }
 
+@media (min-width: 901px) {
+    .product-table {
+        overflow: visible;
+    }
+}
+
 @media (max-width: 900px) {
     .product-table-thumb-preview {
         display: none;
@@ -2047,7 +2069,7 @@ textarea {
     position: absolute;
     right: 0;
     top: 100%;
-    z-index: 30;
+    z-index: 2200;
 }
 
 .action-menu-panel a,

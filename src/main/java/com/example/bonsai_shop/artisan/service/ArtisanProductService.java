@@ -43,6 +43,7 @@ public class ArtisanProductService {
     private static final long MAX_IMAGE_SIZE_BYTES = 7L * 1024 * 1024;
     private static final long MAX_VIDEO_SIZE_BYTES = 100L * 1024 * 1024;
     private static final BigDecimal MAX_PRODUCT_PRICE = new BigDecimal("999999999999");
+    private static final int MAX_MEDIA_CAPTION_LENGTH = 255;
 
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
@@ -196,6 +197,7 @@ public class ArtisanProductService {
             throw new RuntimeException("Video không thể đặt làm media đại diện!");
         }
         String normalizedShotType = normalizeShotType(slotType, mediaType);
+        String normalizedCaption = normalizeMediaCaption(caption);
         String mediaUrl = mediaStorageService.storeProductMedia(file);
         List<ProductMedia> existingMedia = productMediaRepository.findByProductOrderByDisplayOrderAscMediaIdAsc(product);
         boolean shouldSetThumbnail = "IMAGE".equals(mediaType) && (Boolean.TRUE.equals(isThumbnail) || existingMedia.isEmpty());
@@ -212,7 +214,7 @@ public class ArtisanProductService {
                 .mediaUrl(mediaUrl)
                 .mediaType(mediaType)
                 .slotType(normalizedShotType)
-                .caption(caption)
+                .caption(normalizedCaption)
                 .isThumbnail(shouldSetThumbnail)
                 .displayOrder(getNextDisplayOrder(existingMedia))
                 .build();
@@ -267,6 +269,7 @@ public class ArtisanProductService {
                 throw new RuntimeException("Video không thể đặt làm media đại diện!");
             }
             String normalizedShotType = normalizeShotType(getListValue(slotTypes, index), mediaType);
+            String normalizedCaption = normalizeMediaCaption(getListValue(captions, index));
             String mediaUrl = mediaStorageService.storeProductMedia(file);
 
             ProductMedia media = ProductMedia.builder()
@@ -274,7 +277,7 @@ public class ArtisanProductService {
                     .mediaUrl(mediaUrl)
                     .mediaType(mediaType)
                     .slotType(normalizedShotType)
-                    .caption(blankToNull(getListValue(captions, index)))
+                    .caption(normalizedCaption)
                     .isThumbnail(index == selectedThumbnailIndex)
                     .displayOrder(nextDisplayOrder + index)
                     .build();
@@ -325,7 +328,7 @@ public class ArtisanProductService {
                 media.setSlotType(normalizeShotType(slotTypes.get(index), media.getMediaType()));
             }
             if (captions != null) {
-                media.setCaption(blankToNull(captions.get(index)));
+                media.setCaption(normalizeMediaCaption(captions.get(index)));
             }
             productMediaRepository.save(media);
         }
@@ -629,6 +632,14 @@ public class ArtisanProductService {
                     + formatMegabytes(maxSize)
                     + "MB!");
         }
+    }
+
+    private String normalizeMediaCaption(String caption) {
+        String normalizedCaption = blankToNull(caption);
+        if (normalizedCaption != null && normalizedCaption.length() > MAX_MEDIA_CAPTION_LENGTH) {
+            throw new RuntimeException("Chú thích media không được vượt quá " + MAX_MEDIA_CAPTION_LENGTH + " ký tự!");
+        }
+        return normalizedCaption;
     }
 
     private int findDefaultThumbnailIndex(List<MultipartFile> files, List<String> mediaTypes, boolean shouldSelectDefault) {

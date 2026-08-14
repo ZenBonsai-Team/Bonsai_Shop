@@ -26,6 +26,8 @@
         .journal-form-grid input, .journal-form-grid select, .journal-form-grid textarea { width: 100%; min-width: 0; border: 1px solid #d7dfd8; border-radius: 14px; padding: 12px 14px; font-family: inherit; font-size: 14px; line-height: 1.35; background: #fff; color: #1f3026; }
         .journal-form-grid textarea { min-height: 120px; resize: vertical; }
         .journal-form-grid input[type="file"] { padding: 10px; cursor: pointer; }
+        .journal-form-grid .field-error, .journal-form-modal-body .field-error, .journal-add-media .field-error, .journal-media-replace-form .field-error { color: #d32f2f; font-size: 12px; font-weight: 700; margin-top: 2px; }
+        .journal-form-grid .field-invalid input, .journal-form-grid .field-invalid textarea, .journal-form-grid .field-invalid select, .journal-form-modal-body .field-invalid input, .journal-form-modal-body .field-invalid textarea, .journal-add-media .field-invalid input, .journal-media-replace-form.field-invalid input { border-color: #d32f2f !important; box-shadow: 0 0 0 2px rgba(211, 47, 47, 0.12); }
         .journal-form-grid > .checkbox, .journal-checkbox { display: flex; align-items: flex-start; gap: 10px; font-weight: 700; color: #1f3026; line-height: 1.35; }
         .journal-form-grid > .checkbox input, .journal-checkbox input { width: 16px; min-width: 16px; height: 16px; margin: 2px 0 0; accent-color: #2d6a4f; }
         .journal-form-grid button[type="submit"], .journal-submit { width: 100%; border: 0; border-radius: 14px; padding: 13px 16px; background: #246b49; color: #fff; font-weight: 800; font-family: inherit; box-shadow: 0 10px 22px rgba(36, 107, 73, 0.18); }
@@ -171,7 +173,7 @@
         <div class="journal-layout">
             <section class="form-card">
                 <h2>Tạo nhật ký mới</h2>
-                <form class="journal-form-grid" method="post" enctype="multipart/form-data" data-min-journal-images="3"
+                <form class="journal-form-grid" method="post" enctype="multipart/form-data" data-min-journal-images="3" novalidate data-journal-validate="create"
                       th:action="@{/artisan/products/{id}/journal(id=${product.productId})}">
                     <label>Ngày ghi nhận
                         <input type="date" th:value="${today}" th:min="${today}" th:max="${today}" disabled>
@@ -191,14 +193,17 @@
                         </select>
                     </label>
                     <label>Tiêu đề
-                        <input name="title" maxlength="255" placeholder="VD: Một mùa tán mới của Hoàng Mai" required>
+                        <input name="title" placeholder="VD: Một mùa tán mới của Hoàng Mai" required>
+                        <span class="field-error"></span>
                     </label>
                     <label>Câu chuyện
                         <textarea name="description" placeholder="Sau khoảng hai tháng chăm sóc, cây bắt đầu bước vào giai đoạn phát triển mạnh..."></textarea>
+                        <span class="field-error"></span>
                     </label>
                     <label>Hình ảnh của lần cập nhật
                         <input type="file" name="files" accept="image/*" multiple required>
-                        <span class="muted-text">Tối thiểu 3 ảnh khi tạo nhật ký mới. Mỗi lần tối đa 10 ảnh, mỗi ảnh tối đa 5MB.</span>
+                        <span class="field-error"></span>
+                        <span class="muted-text">Tối thiểu 3 ảnh khi tạo nhật ký mới. Mỗi lần tối đa 10 ảnh, mỗi ảnh tối đa 7MB.</span>
                     </label>
                     <span class="muted-text">Cập nhật mới mặc định được lưu nội bộ, chưa hiển thị cho khách.</span>
                     <button type="submit">Cập nhật</button>
@@ -304,14 +309,16 @@
                                 <h2>Sửa nội dung nhật ký</h2>
                                 <button type="button" class="journal-form-close" th:attr="data-close-journal-form-modal=|journal-edit-modal-${event.eventId}|">&times;</button>
                             </header>
-                            <form method="post"
+                            <form method="post" novalidate data-journal-validate="text"
                                   th:action="@{/artisan/products/{productId}/journal/{eventId}(productId=${product.productId},eventId=${event.eventId})}">
                                 <div class="journal-form-modal-body">
                                     <label>Tiêu đề
-                                        <input name="title" maxlength="255" th:value="${event.title}" required>
+                                        <input name="title" th:value="${event.title}" required>
+                                        <span class="field-error"></span>
                                     </label>
                                     <label>Câu chuyện
                                         <textarea name="description" th:text="${event.description}"></textarea>
+                                        <span class="field-error"></span>
                                     </label>
                                 </div>
                                 <div class="journal-form-actions">
@@ -330,12 +337,13 @@
                             <div class="journal-form-modal-body">
                                 <div class="journal-media-manager">
                                     <h3>Bổ sung ảnh mới</h3>
-                                    <form method="post" enctype="multipart/form-data"
+                                    <form method="post" enctype="multipart/form-data" novalidate data-journal-validate="media"
                                           th:action="@{/artisan/products/{productId}/journal/{eventId}/media(productId=${product.productId},eventId=${event.eventId})}">
                                     <label>Chọn ảnh bổ sung
                                         <input type="file" name="files" accept="image/*" multiple required>
+                                        <span class="field-error"></span>
                                     </label>
-                                    <span class="muted-text">Mỗi lần tối đa 10 ảnh, mỗi ảnh tối đa 5MB.</span>
+                                    <span class="muted-text">Mỗi lần tối đa 10 ảnh, mỗi ảnh tối đa 7MB.</span>
                                         <div class="journal-form-actions">
                                             <button type="submit" class="btn">Tải ảnh lên</button>
                                         </div>
@@ -353,9 +361,10 @@
                                                           th:action="@{/artisan/products/{productId}/journal/{eventId}/media/{mediaId}/cover(productId=${product.productId},eventId=${event.eventId},mediaId=${media.mediaId})}">
                                                         <button type="submit" class="btn-cover"><i class="fa-solid fa-star"></i> Đặt làm cover</button>
                                                     </form>
-                                                    <form class="journal-media-replace-form" method="post" enctype="multipart/form-data"
+                                                    <form class="journal-media-replace-form" method="post" enctype="multipart/form-data" novalidate data-journal-validate="replace"
                                                           th:action="@{/artisan/products/{productId}/journal/{eventId}/media/{mediaId}/replace(productId=${product.productId},eventId=${event.eventId},mediaId=${media.mediaId})}">
                                                         <input type="file" name="file" accept="image/*" required>
+                                                        <span class="field-error"></span>
                                                         <button type="submit" class="btn-replace"><i class="fa-solid fa-rotate"></i> Thay ảnh</button>
                                                     </form>
                                                     <form method="post"
@@ -429,14 +438,51 @@
 </div>
 <script>
     const JOURNAL_MAX_MEDIA_PER_UPLOAD = 10;
-    const JOURNAL_MAX_IMAGE_SIZE = 5 * 1024 * 1024;
+    const JOURNAL_MAX_IMAGE_SIZE = 7 * 1024 * 1024;
+    const JOURNAL_MAX_TITLE_LENGTH = 255;
+    const JOURNAL_MAX_DESCRIPTION_LENGTH = 2000;
 
-    function showJournalError(message) {
-        if (window.BSMSToast) {
-            BSMSToast.error(message);
+    function setJournalFieldError(field, message) {
+        const wrapper = field?.closest('label') || field?.closest('form');
+        if (!wrapper) {
             return;
         }
-        alert(message);
+        wrapper.classList.toggle('field-invalid', Boolean(message));
+        const error = wrapper.querySelector('.field-error');
+        if (error) {
+            error.textContent = message || '';
+        }
+    }
+
+    function scrollToFirstJournalError(scope) {
+        const firstError = scope.querySelector('.field-error:not(:empty)');
+        const errorWrapper = firstError?.closest('.field-invalid') || firstError?.closest('label') || firstError?.closest('form');
+        if (!errorWrapper) {
+            return;
+        }
+
+        errorWrapper.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        const field = errorWrapper.querySelector('input:not([type="hidden"]):not([disabled]), select:not([disabled]), textarea:not([disabled])');
+        if (field) {
+            setTimeout(() => field.focus({ preventScroll: true }), 250);
+        }
+    }
+
+    function validateJournalTextField(field, label, maxLength, required) {
+        if (!field) {
+            return true;
+        }
+        const value = field.value.trim();
+        if (required && !value) {
+            setJournalFieldError(field, `Vui lòng nhập ${label}.`);
+            return false;
+        }
+        if (value.length > maxLength) {
+            setJournalFieldError(field, `${label.charAt(0).toUpperCase() + label.slice(1)} không được vượt quá ${maxLength} ký tự.`);
+            return false;
+        }
+        setJournalFieldError(field, '');
+        return true;
     }
 
     function isJournalImage(file) {
@@ -445,35 +491,59 @@
 
     function validateJournalMediaInput(input, minImages = 1) {
         if (!input || !input.files || input.files.length === 0) {
-            return true;
+            setJournalFieldError(input, `Vui lòng chọn ${minImages > 1 ? 'tối thiểu ' + minImages + ' ảnh' : 'ảnh'}.`);
+            return false;
         }
 
         const files = Array.from(input.files);
         if (files.length < minImages) {
-            showJournalError('Vui lòng chọn tối thiểu ' + minImages + ' ảnh để tạo nhật ký mới.');
-            input.value = '';
+            setJournalFieldError(input, 'Vui lòng chọn tối thiểu ' + minImages + ' ảnh để tạo nhật ký mới.');
             return false;
         }
         if (files.length > JOURNAL_MAX_MEDIA_PER_UPLOAD) {
-            showJournalError('Mỗi lần chỉ được tải lên tối đa 10 ảnh nhật ký.');
-            input.value = '';
+            setJournalFieldError(input, 'Mỗi lần chỉ được tải lên tối đa 10 ảnh nhật ký.');
             return false;
         }
 
         for (const file of files) {
             if (!isJournalImage(file)) {
-                showJournalError('Nhật ký cây chỉ hỗ trợ ảnh. Vui lòng không tải video hoặc tệp khác.');
-                input.value = '';
+                setJournalFieldError(input, 'Nhật ký cây chỉ hỗ trợ ảnh. Vui lòng không tải video hoặc tệp khác.');
                 return false;
             }
             if (file.size > JOURNAL_MAX_IMAGE_SIZE) {
-                showJournalError('Ảnh nhật ký "' + file.name + '" vượt quá dung lượng tối đa 5MB.');
-                input.value = '';
+                setJournalFieldError(input, 'Ảnh nhật ký "' + file.name + '" vượt quá dung lượng tối đa 7MB.');
                 return false;
             }
         }
 
+        setJournalFieldError(input, '');
         return true;
+    }
+
+    function validateJournalForm(form) {
+        let isValid = true;
+        const validateMode = form.dataset.journalValidate;
+        const titleInput = form.querySelector('[name="title"]');
+        const descriptionInput = form.querySelector('[name="description"]');
+        const mediaInput = form.querySelector('input[type="file"][name="files"], input[type="file"][name="file"]');
+
+        if (validateMode === 'create' || validateMode === 'text') {
+            if (!validateJournalTextField(titleInput, 'tiêu đề cập nhật', JOURNAL_MAX_TITLE_LENGTH, true)) {
+                isValid = false;
+            }
+            if (!validateJournalTextField(descriptionInput, 'câu chuyện nhật ký', JOURNAL_MAX_DESCRIPTION_LENGTH, false)) {
+                isValid = false;
+            }
+        }
+
+        if (validateMode === 'create' || validateMode === 'media' || validateMode === 'replace') {
+            const minImages = Number(form.dataset.minJournalImages || 1);
+            if (!validateJournalMediaInput(mediaInput, minImages)) {
+                isValid = false;
+            }
+        }
+
+        return isValid;
     }
 
     document.addEventListener('change', function (event) {
@@ -483,13 +553,28 @@
             const minImages = Number(form?.dataset.minJournalImages || 1);
             validateJournalMediaInput(input, minImages);
         }
+        const singleInput = event.target.closest('input[type="file"][name="file"]');
+        if (singleInput) {
+            validateJournalMediaInput(singleInput, 1);
+        }
+    });
+
+    document.addEventListener('input', function (event) {
+        const titleInput = event.target.closest('[data-journal-validate] [name="title"]');
+        if (titleInput) {
+            validateJournalTextField(titleInput, 'tiêu đề cập nhật', JOURNAL_MAX_TITLE_LENGTH, true);
+        }
+        const descriptionInput = event.target.closest('[data-journal-validate] [name="description"]');
+        if (descriptionInput) {
+            validateJournalTextField(descriptionInput, 'câu chuyện nhật ký', JOURNAL_MAX_DESCRIPTION_LENGTH, false);
+        }
     });
 
     document.addEventListener('submit', function (event) {
-        const input = event.target.querySelector('input[type="file"][name="files"]');
-        const minImages = Number(event.target.dataset.minJournalImages || 1);
-        if (input && !validateJournalMediaInput(input, minImages)) {
+        const form = event.target.closest('[data-journal-validate]');
+        if (form && !validateJournalForm(form)) {
             event.preventDefault();
+            scrollToFirstJournalError(form);
         }
     });
 

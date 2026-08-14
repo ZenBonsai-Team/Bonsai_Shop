@@ -788,6 +788,30 @@ class ArtisanProductServiceTest {
     }
 
     @Test
+    void addMediaBatch_WhenCaptionTooLong_ShouldThrowException() {
+        User artisanUser = artisan(10, "artisan@test.com");
+        Product product = editableDraftProduct(101, artisanUser);
+        MultipartFile file = file("front.jpg", "image/jpeg", 1024);
+
+        mockOwnedProductLookup(artisanUser, product);
+        when(productMediaRepository.findByProductOrderByDisplayOrderAscMediaIdAsc(product)).thenReturn(List.of());
+
+        assertThatThrownBy(() -> artisanProductService.addMediaBatch(
+                "artisan@test.com",
+                101,
+                List.of(file),
+                List.of("IMAGE"),
+                List.of("FRONT"),
+                List.of("a".repeat(256)),
+                null
+        )).isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("Chú thích media không được vượt quá 255 ký tự");
+
+        verify(mediaStorageService, never()).storeProductMedia(any(MultipartFile.class));
+        verify(productMediaRepository, never()).save(any(ProductMedia.class));
+    }
+
+    @Test
     void addMediaBatch_WhenFirstBatchHasNoExplicitThumbnail_ShouldSelectFirstImageAsThumbnail() {
         User artisanUser = artisan(10, "artisan@test.com");
         Product product = editableDraftProduct(101, artisanUser);

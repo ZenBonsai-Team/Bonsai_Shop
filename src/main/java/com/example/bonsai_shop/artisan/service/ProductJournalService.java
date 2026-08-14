@@ -22,6 +22,8 @@ public class ProductJournalService {
     private static final int MAX_MEDIA_PER_UPLOAD = 10;
     private static final int MIN_INITIAL_IMAGE_COUNT = 3;
     private static final long MAX_IMAGE_SIZE_BYTES = 7L * 1024 * 1024;
+    private static final int MAX_TITLE_LENGTH = 255;
+    private static final int MAX_DESCRIPTION_LENGTH = 2000;
 
     private static final Set<String> VALID_EVENT_TYPES = Set.of(
             "PHOTO_UPDATE",
@@ -73,6 +75,8 @@ public class ProductJournalService {
         if (title == null || title.isBlank()) {
             throw new RuntimeException("Vui lòng nhập tiêu đề cập nhật.");
         }
+        String normalizedTitle = normalizeTitle(title);
+        String normalizedDescription = normalizeDescription(description);
         List<MultipartFile> validFiles = getValidFiles(files);
         if (validFiles.size() < MIN_INITIAL_IMAGE_COUNT) {
             throw new RuntimeException("Vui lòng chọn tối thiểu 3 ảnh để tạo cập nhật nhật ký.");
@@ -84,8 +88,8 @@ public class ProductJournalService {
                 .createdBy(artisan)
                 .eventDate(eventDate)
                 .eventType(normalizeEventType(eventType))
-                .title(title.trim())
-                .description(description)
+                .title(normalizedTitle)
+                .description(normalizedDescription)
                 .isPublic(Boolean.TRUE.equals(isPublic))
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
@@ -123,8 +127,11 @@ public class ProductJournalService {
             throw new RuntimeException("Vui lòng nhập tiêu đề cập nhật.");
         }
 
-        event.setTitle(title.trim());
-        event.setDescription(description);
+        String normalizedTitle = normalizeTitle(title);
+        String normalizedDescription = normalizeDescription(description);
+
+        event.setTitle(normalizedTitle);
+        event.setDescription(normalizedDescription);
         event.setUpdatedAt(LocalDateTime.now());
         journalEventRepository.save(event);
     }
@@ -296,6 +303,29 @@ public class ProductJournalService {
                 || normalizedFilename.endsWith(".webp")
                 || normalizedFilename.endsWith(".gif");
     }
+
+    private String normalizeTitle(String title) {
+        if (title == null || title.isBlank()) {
+            throw new RuntimeException("Vui lòng nhập tiêu đề cập nhật.");
+        }
+        String normalizedTitle = title.trim();
+        if (normalizedTitle.length() > MAX_TITLE_LENGTH) {
+            throw new RuntimeException("Tiêu đề nhật ký không được vượt quá " + MAX_TITLE_LENGTH + " ký tự.");
+        }
+        return normalizedTitle;
+    }
+
+    private String normalizeDescription(String description) {
+        if (description == null || description.isBlank()) {
+            return null;
+        }
+        String normalizedDescription = description.trim();
+        if (normalizedDescription.length() > MAX_DESCRIPTION_LENGTH) {
+            throw new RuntimeException("Câu chuyện nhật ký không được vượt quá " + MAX_DESCRIPTION_LENGTH + " ký tự.");
+        }
+        return normalizedDescription;
+    }
+
     private void ensureNotSold(Product product) {
         if (artisanProductService.isSold(product)) {
             throw new RuntimeException("Sản phẩm đã bán nên không thể thao tác nhật ký cây.");

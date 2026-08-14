@@ -177,6 +177,40 @@ class ProductJournalServiceTest {
     }
 
     @Test
+    void addEvent_WhenTitleOrDescriptionTooLong_ShouldThrowException() {
+        Product product = product(101, "AVAILABLE");
+        User artisan = artisan(10);
+
+        mockEditableProduct(product, artisan);
+
+        assertThatThrownBy(() -> productJournalService.addEvent(
+                "artisan@test.com",
+                101,
+                LocalDate.now(),
+                "GROWTH",
+                "a".repeat(256),
+                null,
+                true,
+                threeImages()
+        )).isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("Tiêu đề nhật ký không được vượt quá 255 ký tự");
+
+        assertThatThrownBy(() -> productJournalService.addEvent(
+                "artisan@test.com",
+                101,
+                LocalDate.now(),
+                "GROWTH",
+                "Growth update",
+                "a".repeat(2001),
+                true,
+                threeImages()
+        )).isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("Câu chuyện nhật ký không được vượt quá 2000 ký tự");
+
+        verify(journalEventRepository, never()).save(any(ProductJournalEvent.class));
+    }
+
+    @Test
     void addEvent_WhenLessThanThreeValidImagesProvided_ShouldThrowException() {
         Product product = product(101, "AVAILABLE");
         User artisan = artisan(10);
