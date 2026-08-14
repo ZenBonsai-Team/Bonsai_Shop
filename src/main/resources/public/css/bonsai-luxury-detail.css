@@ -29,6 +29,19 @@
 
 html {
     scroll-behavior: smooth;
+    font-size: 16px;
+}
+
+@media (min-width: 1400px) {
+    html {
+        font-size: 17px;
+    }
+}
+
+@media (min-width: 1920px) {
+    html {
+        font-size: 18px;
+    }
 }
 
 body.luxury-detail-shell {
