@@ -5,8 +5,12 @@
     <meta name="_csrf" th:content="${_csrf.token}">
     <meta name="_csrf_header" th:content="${_csrf.headerName}">
     <link rel="stylesheet" th:href="@{/css/bsms-notification.css}">
+    <link rel="stylesheet" th:href="@{/css/booking-model.css}">
+    <link rel="stylesheet" th:href="@{/css/appointment-list-modal.css}">
     <script th:src="@{/js/bsms-notification.js}"></script>
     <script th:src="@{/js/wishlist.js}" defer></script>
+    <script th:src="@{/js/booking-model.js}" defer></script>
+    <script th:src="@{/js/appointment-list-modal.js}" defer></script>
     <nav class="navbar navbar-expand-lg navbar-custom sticky-top">
         <div class="container">
             <!-- Brand Logo & Text with Separator -->
@@ -38,12 +42,8 @@
                     <li class="nav-item">
                         <a class="nav-link nav-link-custom" th:classappend="${activePage == 'community'} ? 'active' : ''" th:href="@{/community}" th:text="#{nav.community}">Cộng đồng</a>
                     </li>
-
                     <li class="nav-item">
                         <a class="nav-link nav-link-custom" th:classappend="${activePage == 'luxury'} ? 'active' : ''" th:href="@{/bonsai-luxury}" th:text="#{nav.luxury}">Triển lãm VIP</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link nav-link-custom" th:classappend="${activePage == 'appointments'} ? 'active' : ''" th:href="@{/appointments}" th:text="#{nav.appointments}">Lịch hẹn của tôi</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link nav-link-custom" th:classappend="${activePage == 'contact'} ? 'active' : ''" th:href="@{/contact}" th:text="#{nav.contact}">Liên hệ</a>
@@ -458,6 +458,27 @@
         <span class="live-status-dot" id="liveStatusDot"></span>
     </a>
 
+    <button class="floating-booking-bubble js-booking-trigger"
+            id="floatingBookingBubble"
+            type="button"
+            title="Đặt lịch thăm vườn"
+            aria-label="Đặt lịch thăm vườn">
+        <i class="fa-solid fa-calendar-days" aria-hidden="true"></i>
+        <span>Đặt lịch</span>
+    </button>
+
+    <button class="floating-appointment-bubble js-appointment-list-trigger"
+            id="floatingAppointmentBubble"
+            type="button"
+            title="Lịch hẹn của tôi"
+            aria-label="Lịch hẹn của tôi">
+        <i class="fa-regular fa-calendar-check" aria-hidden="true"></i>
+        <span>Lịch hẹn</span>
+    </button>
+
+    <div th:replace="~{fragments/booking_model :: bookingModal}"></div>
+    <div th:replace="~{fragments/appointment_list_modal :: appointmentListModal}"></div>
+
     <style>
         .floating-live-bubble {
             position: fixed;
@@ -485,7 +506,7 @@
             box-shadow: 0 8px 20px rgba(220, 38, 38, 0.45);
             border-color: rgba(255, 255, 255, 0.25);
         }
-        
+
         .floating-live-bubble:hover {
             transform: scale(1.08) translateY(-3px);
             box-shadow: 0 12px 25px rgba(0, 0, 0, 0.35);

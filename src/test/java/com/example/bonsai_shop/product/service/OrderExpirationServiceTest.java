@@ -326,7 +326,7 @@ class OrderExpirationServiceTest {
         when(orderRepository.findExpiredOfflineOrders(any())).thenReturn(List.of());
         when(orderRepository.findExpiredInPersonOrders(any())).thenReturn(List.of(inPersonOrder));
 
-        orderExpirationService.cancelExpiredOrders();
+        orderExpirationService.cancelExpiredInPersonOrders();
 
         assertEquals("CANCELLED", inPersonOrder.getOrderStatus());
         assertTrue(inPersonOrder.getNotes().contains("In-person order quá hạn"));

@@ -243,6 +243,28 @@ class ArtisanProductServiceTest {
     }
 
     @Test
+    void createProduct_WhenPriceExceedsLimit_ShouldThrowException() {
+        User artisanUser = artisan(10, "artisan@test.com");
+        Variety variety = variety(1);
+        ProductSegment segment = segment(2, "Standard");
+        ArtisanProductFormDTO form = validForm();
+        form.setPrice(new BigDecimal("1000000000000"));
+
+        when(userRepository.findByEmail("artisan@test.com"))
+                .thenReturn(Optional.of(artisanUser));
+        when(varietyRepository.findById(1))
+                .thenReturn(Optional.of(variety));
+        when(productSegmentRepository.findById(2))
+                .thenReturn(Optional.of(segment));
+
+        assertThatThrownBy(() -> artisanProductService.createProduct("artisan@test.com", form))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("Giá sản phẩm không được vượt quá");
+
+        verify(productRepository, never()).save(any(Product.class));
+    }
+
+    @Test
     void createProduct_WhenSegmentIsElite_ShouldNotMakePricePublic() {
         User artisanUser = artisan(10, "artisan@test.com");
         Variety variety = variety(1);
@@ -760,6 +782,30 @@ class ArtisanProductServiceTest {
                 List.of("Front", "Back"),
                 2
         )).isInstanceOf(RuntimeException.class);
+
+        verify(mediaStorageService, never()).storeProductMedia(any(MultipartFile.class));
+        verify(productMediaRepository, never()).save(any(ProductMedia.class));
+    }
+
+    @Test
+    void addMediaBatch_WhenCaptionTooLong_ShouldThrowException() {
+        User artisanUser = artisan(10, "artisan@test.com");
+        Product product = editableDraftProduct(101, artisanUser);
+        MultipartFile file = file("front.jpg", "image/jpeg", 1024);
+
+        mockOwnedProductLookup(artisanUser, product);
+        when(productMediaRepository.findByProductOrderByDisplayOrderAscMediaIdAsc(product)).thenReturn(List.of());
+
+        assertThatThrownBy(() -> artisanProductService.addMediaBatch(
+                "artisan@test.com",
+                101,
+                List.of(file),
+                List.of("IMAGE"),
+                List.of("FRONT"),
+                List.of("a".repeat(256)),
+                null
+        )).isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("Chú thích media không được vượt quá 255 ký tự");
 
         verify(mediaStorageService, never()).storeProductMedia(any(MultipartFile.class));
         verify(productMediaRepository, never()).save(any(ProductMedia.class));

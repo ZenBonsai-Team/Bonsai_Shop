@@ -27,9 +27,6 @@
 
 <main id="home">
 
-    <!-- ============================================================
-         SECTION 1: HERO — full-bleed, nội dung căn giữa trên nền ảnh
-         ============================================================ -->
     <section class="hero hero-luxury-fullbleed" aria-label="Giới thiệu không gian nghệ thuật">
         <div class="hero-fullbleed-media" aria-hidden="true">
             <img th:src="${sysConfig.getValue('luxury_banner_image', '/images/hero-banner-bonsai.jpg')}" alt="">
@@ -290,14 +287,11 @@
 <script th:src="@{/js/bonsai_luxury.js}"></script>
 <script th:if="${error}">
     document.addEventListener("DOMContentLoaded", function () {
-
         const modal = document.getElementById("bookingModal");
         if (!modal) return;
-
         modal.style.display = "flex";
         modal.style.opacity = "1";
         modal.setAttribute("aria-hidden","false");
-
     });
 </script>
 </body>

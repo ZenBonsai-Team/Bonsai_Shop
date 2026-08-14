@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="vi">
 <head>
     <meta charset="UTF-8">
@@ -18,14 +18,14 @@
     <link rel="stylesheet" th:href="@{/css/common.css}">
     <style>
         .lookup-hero {
-            background: linear-gradient(135deg, #06210f 0%, #154d24 100%);
+            background: linear-gradient(135deg, #1C3322 0%, #132417 100%);
             color: white;
             padding: 50px 20px;
             border-radius: 16px;
             margin-top: 30px;
             margin-bottom: 40px;
             text-align: center;
-            box-shadow: 0 10px 30px rgba(6, 33, 15, 0.15);
+            box-shadow: 0 10px 30px rgba(28, 51, 34, 0.15);
         }
         .lookup-hero h1 {
             font-family: 'Cormorant Garamond', serif;
@@ -34,7 +34,7 @@
             margin-bottom: 12px;
         }
         .lookup-hero p {
-            color: #d1e7dd;
+            color: #e8e4dd;
             font-size: 1.05rem;
             max-width: 600px;
             margin: 0 auto 30px;
@@ -60,11 +60,11 @@
             letter-spacing: 0.5px;
         }
         .search-input-group input:focus {
-            border-color: #2e7d32;
-            box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.15);
+            border-color: #1C3322;
+            box-shadow: 0 0 0 3px rgba(28, 51, 34, 0.15);
         }
         .search-btn {
-            background-color: #2e7d32;
+            background-color: #1C3322;
             color: white;
             border: none;
             padding: 14px 28px;
@@ -75,7 +75,7 @@
             white-space: nowrap;
         }
         .search-btn:hover {
-            background-color: #1b5e20;
+            background-color: #132417;
             color: white;
         }
         .result-card {
@@ -96,6 +96,21 @@
             border-radius: 30px;
             font-size: 0.9rem;
             font-weight: 600;
+        }
+        
+        /* Product hover and card styles */
+        .product-hover-zoom {
+            transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .product-hover-zoom:hover {
+            transform: scale(1.08);
+        }
+        .hover-text-success {
+            transition: color 0.2s ease;
+        }
+        .hover-text-success:hover {
+            color: #1C3322 !important;
+            text-decoration: underline !important;
         }
     </style>
 </head>
@@ -198,36 +213,42 @@
                 </div>
             </div>
 
-            <!-- TABLE SẢN PHẨM -->
+            <!-- DANH SÁCH SẢN PHẨM -->
             <h6 class="fw-bold text-dark mb-3"><i class="fa-solid fa-cubes text-success me-2"></i>Danh sách sản phẩm trong đơn hàng</h6>
-            <div class="table-responsive mb-4">
-                <table class="table table-bordered align-middle">
-                    <thead class="table-light small text-uppercase">
-                        <tr>
-                            <th>Sản phẩm</th>
-                            <th class="text-center">Đơn giá</th>
-                            <th class="text-center">Số lượng</th>
-                            <th class="text-end">Thành tiền</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr th:each="detail : ${order.orderDetails}">
-                            <td>
-                                <div class="d-flex align-items-center gap-3">
-                                    <img th:src="${detail.product != null and detail.product.firstImageUrl != null ? detail.product.firstImageUrl : '/images/bonsai-1.png'}" 
-                                         onerror="this.onerror=null;this.src='/images/bonsai-1.png';"
-                                         alt="Product" class="rounded" style="width: 54px; height: 54px; object-fit: cover;">
-                                    <div>
-                                        <div class="fw-bold text-dark fs-6" th:text="${detail.product != null ? detail.product.productName : 'Sản phẩm'}">Bonsai Tùng Cối VIP</div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="text-center" th:text="${#numbers.formatDecimal(detail.priceAtPurchase, 0, 'COMMA', 0, 'POINT')} + ' ₫'">1.000.000 ₫</td>
-                            <td class="text-center fw-bold" th:text="${detail.quantity}">1</td>
-                            <td class="text-end fw-bold text-dark" th:text="${#numbers.formatDecimal(detail.priceAtPurchase * detail.quantity, 0, 'COMMA', 0, 'POINT')} + ' ₫'">1.000.000 ₫</td>
-                        </tr>
-                    </tbody>
-                </table>
+            <div class="order-items-list mb-4">
+                <th:block th:each="detail : ${order.orderDetails}">
+                    <div th:if="${detail != null and detail.product != null}" 
+                         class="d-flex align-items-center gap-3 p-3 mb-3 rounded-4 border border-light-subtle shadow-sm bg-white position-relative">
+                        <!-- Product image clickable -->
+                        <a th:href="${detail.product?.segment?.segmentId == 3} ? @{'/bonsai-luxury-detail/' + ${detail.product.productId}} : @{'/product/' + ${detail.product.productId}}"
+                           target="_blank" class="flex-shrink-0 d-block overflow-hidden rounded-3 border border-light-subtle">
+                            <img th:src="${detail.product?.firstImageUrl} ?: '/images/bonsai-1.png'" 
+                                 onerror="this.onerror=null;this.src='/images/bonsai-1.png';"
+                                 alt="Product" 
+                                 style="width: 80px; height: 80px; object-fit: cover; transition: transform 0.2s;"
+                                 class="product-hover-zoom">
+                        </a>
+                        
+                        <!-- Product info clickable -->
+                        <div class="d-flex flex-column justify-content-center">
+                            <a th:href="${detail.product?.segment?.segmentId == 3} ? @{'/bonsai-luxury-detail/' + ${detail.product.productId}} : @{'/product/' + ${detail.product.productId}}"
+                               target="_blank" class="fw-bold text-dark text-decoration-none hover-text-success fs-6"
+                               th:text="${detail.product?.productName} ?: 'Sản phẩm'">Bonsai Tùng Cối</a>
+                            
+                            <div class="text-muted small mt-1">
+                                Đơn giá: <span th:text="${#numbers.formatDecimal(detail.priceAtPurchase, 0, 'COMMA', 0, 'POINT')} + ' ₫'">1.000.000 ₫</span>
+                                <span class="mx-2">|</span>
+                                Số lượng: <span class="fw-bold text-dark" th:text="${detail.quantity}">1</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Item subtotal cost -->
+                        <div class="ms-auto text-end">
+                            <div class="text-muted small" style="font-size: 11px;">Thành tiền</div>
+                            <strong class="text-success fs-6" th:text="${#numbers.formatDecimal(detail.priceAtPurchase * detail.quantity, 0, 'COMMA', 0, 'POINT')} + ' ₫'">1.000.000 ₫</strong>
+                        </div>
+                    </div>
+                </th:block>
             </div>
 
             <!-- TỔNG KẾT TÀI CHÍNH -->
