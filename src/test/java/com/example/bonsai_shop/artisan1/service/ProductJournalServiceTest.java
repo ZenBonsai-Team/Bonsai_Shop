@@ -188,12 +188,12 @@ class ProductJournalServiceTest {
                 101,
                 LocalDate.now(),
                 "GROWTH",
-                "a".repeat(256),
+                "a".repeat(101),
                 null,
                 true,
                 threeImages()
         )).isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("Tiêu đề nhật ký không được vượt quá 255 ký tự");
+                .hasMessageContaining("Tiêu đề nhật ký không được vượt quá 100 ký tự");
 
         assertThatThrownBy(() -> productJournalService.addEvent(
                 "artisan@test.com",
@@ -201,11 +201,11 @@ class ProductJournalServiceTest {
                 LocalDate.now(),
                 "GROWTH",
                 "Growth update",
-                "a".repeat(2001),
+                "a".repeat(501),
                 true,
                 threeImages()
         )).isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("Câu chuyện nhật ký không được vượt quá 2000 ký tự");
+                .hasMessageContaining("Ghi chú chăm sóc không được vượt quá 500 ký tự");
 
         verify(journalEventRepository, never()).save(any(ProductJournalEvent.class));
     }

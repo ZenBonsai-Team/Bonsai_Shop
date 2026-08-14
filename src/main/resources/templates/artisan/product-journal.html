@@ -24,7 +24,7 @@
         .journal-form-grid > label:not(.checkbox), .journal-field { display: grid; gap: 8px; font-weight: 700; color: #1f3026; }
         .journal-field-text { font-size: 15px; line-height: 1.3; }
         .journal-form-grid input, .journal-form-grid select, .journal-form-grid textarea { width: 100%; min-width: 0; border: 1px solid #d7dfd8; border-radius: 14px; padding: 12px 14px; font-family: inherit; font-size: 14px; line-height: 1.35; background: #fff; color: #1f3026; }
-        .journal-form-grid textarea { min-height: 120px; resize: vertical; }
+        .journal-form-grid textarea { min-height: 180px; resize: vertical; }
         .journal-form-grid input[type="file"] { padding: 10px; cursor: pointer; }
         .journal-form-grid .field-error, .journal-form-modal-body .field-error, .journal-add-media .field-error, .journal-media-replace-form .field-error { color: #d32f2f; font-size: 12px; font-weight: 700; margin-top: 2px; }
         .journal-form-grid .field-invalid input, .journal-form-grid .field-invalid textarea, .journal-form-grid .field-invalid select, .journal-form-modal-body .field-invalid input, .journal-form-modal-body .field-invalid textarea, .journal-add-media .field-invalid input, .journal-media-replace-form.field-invalid input { border-color: #d32f2f !important; box-shadow: 0 0 0 2px rgba(211, 47, 47, 0.12); }
@@ -76,7 +76,7 @@
         .journal-edit-toggle summary::-webkit-details-marker { display: none; }
         .journal-edit-form { display: grid; gap: 8px; grid-column: 1 / -1; width: 100%; margin-top: 4px; padding: 10px; border: 1px solid #e2e7e2; border-radius: 10px; background: #f8fbf8; }
         .journal-edit-form input, .journal-edit-form textarea { width: 100%; border: 1px solid #d7dfd8; border-radius: 8px; padding: 8px 10px; font: inherit; font-size: 13px; }
-        .journal-edit-form textarea { min-height: 70px; resize: vertical; }
+        .journal-edit-form textarea { min-height: 140px; resize: vertical; }
         .journal-edit-form button { justify-self: start; color: #246b49; }
         .journal-delete-button { align-items: center; background: transparent !important; border: 0 !important; border-radius: 8px; color: #dc3545 !important; display: inline-flex; gap: 8px; justify-content: flex-start; padding: 9px 10px !important; text-align: left; width: 100%; }
         .journal-delete-button:hover { background: #fff5f5 !important; color: #b02a37 !important; }
@@ -92,7 +92,9 @@
         .journal-form-modal-body label { color: #1f3026; display: grid; gap: 8px; font-weight: 800; }
         .journal-form-modal-body input,
         .journal-form-modal-body textarea { border: 1px solid #d7dfd8; border-radius: 12px; font: inherit; padding: 12px 14px; width: 100%; }
-        .journal-form-modal-body textarea { min-height: 180px; resize: vertical; }
+        .journal-form-modal-body textarea { min-height: 160px; resize: vertical; }
+        .journal-char-counter { color: #66736b; font-size: 12px; font-weight: 700; justify-self: end; line-height: 1.2; }
+        .journal-char-counter.is-over-limit { color: #d32f2f; }
         .journal-form-actions { align-items: center; display: flex; gap: 10px; justify-content: flex-end; padding: 0 22px 22px; }
         .journal-form-actions button,
         .journal-form-actions .btn { border-radius: 10px; padding: 10px 14px; }
@@ -194,10 +196,12 @@
                     </label>
                     <label>Tiêu đề
                         <input name="title" placeholder="VD: Một mùa tán mới của Hoàng Mai" required>
+                        <span class="journal-char-counter" data-journal-counter-for="title" data-journal-counter-max="100">0/100 ký tự</span>
                         <span class="field-error"></span>
                     </label>
-                    <label>Câu chuyện
+                    <label>Ghi chú chăm sóc
                         <textarea name="description" placeholder="Sau khoảng hai tháng chăm sóc, cây bắt đầu bước vào giai đoạn phát triển mạnh..."></textarea>
+                        <span class="journal-char-counter" data-journal-counter-for="description">0/500 ký tự</span>
                         <span class="field-error"></span>
                     </label>
                     <label>Hình ảnh của lần cập nhật
@@ -291,8 +295,10 @@
                                         <i class="fa-solid fa-images"></i>
                                         Quản lý ảnh
                                     </button>
-                                    <form method="post"
-                                          onsubmit="return confirm('Bạn chắc chắn muốn xóa cập nhật nhật ký này?');"
+                                    <form method="post" class="journal-confirm-delete-form"
+                                          data-confirm-title="Xóa cập nhật nhật ký?"
+                                          data-confirm-message="Bạn có chắc chắn muốn xóa cập nhật nhật ký này? Nội dung và ảnh trong cập nhật này sẽ bị xóa."
+                                          data-confirm-text="Xóa cập nhật"
                                           th:action="@{/artisan/products/{productId}/journal/{eventId}/delete(productId=${product.productId},eventId=${event.eventId})}">
                                         <button type="submit" class="journal-delete-button">
                                             <i class="fa-solid fa-trash"></i>
@@ -314,10 +320,12 @@
                                 <div class="journal-form-modal-body">
                                     <label>Tiêu đề
                                         <input name="title" th:value="${event.title}" required>
+                                        <span class="journal-char-counter" data-journal-counter-for="title" data-journal-counter-max="100">0/100 ký tự</span>
                                         <span class="field-error"></span>
                                     </label>
-                                    <label>Câu chuyện
+                                    <label>Ghi chú chăm sóc
                                         <textarea name="description" th:text="${event.description}"></textarea>
+                                        <span class="journal-char-counter" data-journal-counter-for="description">0/500 ký tự</span>
                                         <span class="field-error"></span>
                                     </label>
                                 </div>
@@ -367,8 +375,10 @@
                                                         <span class="field-error"></span>
                                                         <button type="submit" class="btn-replace"><i class="fa-solid fa-rotate"></i> Thay ảnh</button>
                                                     </form>
-                                                    <form method="post"
-                                                          onsubmit="return confirm('Bạn chắc chắn muốn xóa ảnh nhật ký này?');"
+                                                    <form method="post" class="journal-confirm-delete-form"
+                                                          data-confirm-title="Xóa ảnh nhật ký?"
+                                                          data-confirm-message="Bạn có chắc chắn muốn xóa ảnh nhật ký này?"
+                                                          data-confirm-text="Xóa ảnh"
                                                           th:action="@{/artisan/products/{productId}/journal/{eventId}/media/{mediaId}/delete(productId=${product.productId},eventId=${event.eventId},mediaId=${media.mediaId})}">
                                                         <button type="submit" class="btn-delete"><i class="fa-solid fa-trash"></i> Xóa ảnh</button>
                                                     </form>
@@ -439,8 +449,8 @@
 <script>
     const JOURNAL_MAX_MEDIA_PER_UPLOAD = 10;
     const JOURNAL_MAX_IMAGE_SIZE = 7 * 1024 * 1024;
-    const JOURNAL_MAX_TITLE_LENGTH = 255;
-    const JOURNAL_MAX_DESCRIPTION_LENGTH = 2000;
+    const JOURNAL_MAX_TITLE_LENGTH = 100;
+    const JOURNAL_MAX_DESCRIPTION_LENGTH = 500;
 
     function setJournalFieldError(field, message) {
         const wrapper = field?.closest('label') || field?.closest('form');
@@ -483,6 +493,17 @@
         }
         setJournalFieldError(field, '');
         return true;
+    }
+
+    function updateJournalCharCounter(field) {
+        const counter = field?.closest('label')?.querySelector('[data-journal-counter-for="' + field.name + '"]');
+        if (!counter) {
+            return;
+        }
+        const valueLength = field.value.trim().length;
+        const maxLength = Number(counter.dataset.journalCounterMax || (field.name === 'title' ? JOURNAL_MAX_TITLE_LENGTH : JOURNAL_MAX_DESCRIPTION_LENGTH));
+        counter.textContent = `${valueLength}/${maxLength} ký tự`;
+        counter.classList.toggle('is-over-limit', valueLength > maxLength);
     }
 
     function isJournalImage(file) {
@@ -531,7 +552,7 @@
             if (!validateJournalTextField(titleInput, 'tiêu đề cập nhật', JOURNAL_MAX_TITLE_LENGTH, true)) {
                 isValid = false;
             }
-            if (!validateJournalTextField(descriptionInput, 'câu chuyện nhật ký', JOURNAL_MAX_DESCRIPTION_LENGTH, false)) {
+            if (!validateJournalTextField(descriptionInput, 'ghi chú chăm sóc', JOURNAL_MAX_DESCRIPTION_LENGTH, false)) {
                 isValid = false;
             }
         }
@@ -562,11 +583,13 @@
     document.addEventListener('input', function (event) {
         const titleInput = event.target.closest('[data-journal-validate] [name="title"]');
         if (titleInput) {
+            updateJournalCharCounter(titleInput);
             validateJournalTextField(titleInput, 'tiêu đề cập nhật', JOURNAL_MAX_TITLE_LENGTH, true);
         }
         const descriptionInput = event.target.closest('[data-journal-validate] [name="description"]');
         if (descriptionInput) {
-            validateJournalTextField(descriptionInput, 'câu chuyện nhật ký', JOURNAL_MAX_DESCRIPTION_LENGTH, false);
+            updateJournalCharCounter(descriptionInput);
+            validateJournalTextField(descriptionInput, 'ghi chú chăm sóc', JOURNAL_MAX_DESCRIPTION_LENGTH, false);
         }
     });
 
@@ -576,6 +599,24 @@
             event.preventDefault();
             scrollToFirstJournalError(form);
         }
+    });
+
+    document.querySelectorAll('.journal-confirm-delete-form').forEach(form => {
+        form.addEventListener('submit', event => {
+            event.preventDefault();
+            if (window.BSMSConfirm) {
+                BSMSConfirm({
+                    title: form.dataset.confirmTitle || 'Xóa mục này?',
+                    message: form.dataset.confirmMessage || 'Bạn có chắc chắn muốn xóa mục này không?',
+                    type: 'danger',
+                    confirmText: form.dataset.confirmText || 'Xóa',
+                    cancelText: 'Hủy bỏ',
+                    onConfirm: () => form.submit()
+                });
+                return;
+            }
+            form.submit();
+        });
     });
 
     function setJournalSlide(eventId, nextIndex) {
@@ -621,6 +662,7 @@
                 modal.classList.add('is-open');
                 document.body.style.overflow = 'hidden';
                 openFormModalButton.closest('.journal-menu')?.removeAttribute('open');
+                modal.querySelectorAll('[name="title"], [name="description"]').forEach(updateJournalCharCounter);
             }
             return;
         }
@@ -761,6 +803,7 @@
     document.addEventListener('DOMContentLoaded', () => {
         const successFlash = document.getElementById('artisanFlashSuccess');
         const errorFlash = document.getElementById('artisanFlashError');
+        document.querySelectorAll('[name="title"], [name="description"]').forEach(updateJournalCharCounter);
 
         if (successFlash?.dataset.message && window.BSMSToast) {
             BSMSToast.success(successFlash.dataset.message);

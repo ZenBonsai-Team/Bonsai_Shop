@@ -22,8 +22,8 @@ public class ProductJournalService {
     private static final int MAX_MEDIA_PER_UPLOAD = 10;
     private static final int MIN_INITIAL_IMAGE_COUNT = 3;
     private static final long MAX_IMAGE_SIZE_BYTES = 7L * 1024 * 1024;
-    private static final int MAX_TITLE_LENGTH = 255;
-    private static final int MAX_DESCRIPTION_LENGTH = 2000;
+    private static final int MAX_TITLE_LENGTH = 100;
+    private static final int MAX_DESCRIPTION_LENGTH = 500;
 
     private static final Set<String> VALID_EVENT_TYPES = Set.of(
             "PHOTO_UPDATE",
@@ -321,7 +321,7 @@ public class ProductJournalService {
         }
         String normalizedDescription = description.trim();
         if (normalizedDescription.length() > MAX_DESCRIPTION_LENGTH) {
-            throw new RuntimeException("Câu chuyện nhật ký không được vượt quá " + MAX_DESCRIPTION_LENGTH + " ký tự.");
+            throw new RuntimeException("Ghi chú chăm sóc không được vượt quá " + MAX_DESCRIPTION_LENGTH + " ký tự.");
         }
         return normalizedDescription;
     }
