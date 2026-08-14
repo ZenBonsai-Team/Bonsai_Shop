@@ -3,6 +3,7 @@ package com.example.bonsai_shop.artisan.controller;
 import com.example.bonsai_shop.artisan.service.ArtisanInPersonOrderService;
 import com.example.bonsai_shop.entity.Order;
 import com.example.bonsai_shop.entity.Product;
+import com.example.bonsai_shop.product.service.OrderExpirationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -25,6 +26,7 @@ import java.util.List;
 public class ArtisanInPersonOrderController {
 
     private final ArtisanInPersonOrderService inPersonOrderService;
+    private final OrderExpirationService orderExpirationService;
 
     @GetMapping({"", "/"})
     public String index(@AuthenticationPrincipal UserDetails userDetails,
@@ -32,6 +34,8 @@ public class ArtisanInPersonOrderController {
                         @RequestParam(defaultValue = "0") int page,
                         @RequestParam(defaultValue = "10") int size,
                         Model model) {
+        orderExpirationService.cancelExpiredInPersonOrders();
+
         List<Product> availableProducts = inPersonOrderService.getAvailableProducts(userDetails.getUsername());
         int pageSize = Math.min(Math.max(size, 1), 50);
         Page<Order> orders = inPersonOrderService.getInPersonOrders(userDetails.getUsername(), status, page, pageSize);

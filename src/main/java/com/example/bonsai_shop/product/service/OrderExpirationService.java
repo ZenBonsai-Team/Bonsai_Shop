@@ -48,8 +48,14 @@ public class OrderExpirationService {
             cancelSingleOrder(order, "Tự động hủy: Đơn hàng quá hạn 48 giờ chưa chuẩn bị/thanh toán tiền", "CANCELLED");
         }
 
-        LocalDateTime inPersonCutoff = now.minusMinutes(inPersonExpirationMinutes);
+    }
+
+    @Transactional
+    public void cancelExpiredInPersonOrders() {
+        LocalDateTime inPersonCutoff = LocalDateTime.now().minusMinutes(inPersonExpirationMinutes);
         List<Order> expiredInPersonOrders = orderRepository.findExpiredInPersonOrders(inPersonCutoff);
+        log.info("In-person expiration scan: timeout={} minutes, cutoff={}, matchedOrders={}",
+                inPersonExpirationMinutes, inPersonCutoff, expiredInPersonOrders.size());
         for (Order order : expiredInPersonOrders) {
             cancelSingleOrder(order, "Tự động hủy: In-person order quá hạn " + inPersonExpirationMinutes + " phút chưa xác nhận thanh toán", "CANCELLED");
         }

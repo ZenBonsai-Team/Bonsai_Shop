@@ -1027,6 +1027,13 @@
 
     window.addEventListener('popstate', () => loadWalkInOrdersPage(new URL(window.location.href), false));
 
+    setInterval(() => {
+        if (panel.classList.contains('show')) {
+            return;
+        }
+        loadWalkInOrdersPage(new URL(window.location.href), false);
+    }, 15000);
+
     confirmForm.addEventListener('submit', function (event) {
         if (!allowPaymentSubmit) {
             event.preventDefault();
