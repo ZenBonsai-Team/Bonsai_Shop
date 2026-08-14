@@ -564,11 +564,4 @@ a {
     transform: translateY(-4px) scale(1.15);
     z-index: 1000 !important;
 }
-
-/* UI/UX Enhancements for Profile sections to feel premium */
-.profile-top {
-    border-radius: 16px;
-    border: 1px solid #e8e4dd;
-    box-shadow: 0 10px 30px rgba(28, 51, 34, 0.03);
-    background: #ffffff;
-}
+

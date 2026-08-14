@@ -211,33 +211,31 @@
                                 <strong class="text-success font-monospace" th:text="${order.orderCode}">#BSMS-123456</strong>
                             </td>
                             <td>
-                                <span class="small text-muted" th:text="${#temporals.format(order.orderDate, 'dd/MM/yyyy HH:mm')}">12/06/2025 14:30</span>
-                            </td>
-                            <td>
                                  <div class="d-flex align-items-center gap-2" th:if="${order.orderDetails != null and !#lists.isEmpty(order.orderDetails)}">
                                      <!-- Group of tree images (overlapping style for premium look) -->
                                      <div class="d-flex align-items-center me-2">
-                                         <div th:each="detail, iter : ${order.orderDetails}" 
-                                              th:if="${detail.product != null}"
-                                              class="position-relative order-product-thumb" 
-                                              th:style="'z-index: ' + (10 - iter.index) + '; margin-right: -12px;'"
-                                              th:id="'detail-thumb-' + ${detail.orderDetailId}">
-                                             <img th:src="${detail.product.firstImageUrl != null ? detail.product.firstImageUrl : '/images/bonsai-1.png'}" 
-                                                  onerror="this.onerror=null;this.src='/images/bonsai-1.png';"
-                                                  th:alt="${detail.product.productName}"
-                                                  th:title="${detail.product.productName}"
-                                                  class="rounded-circle border border-2 border-white shadow-sm"
-                                                  style="width: 38px; height: 38px; object-fit: cover; background-color: #f7f6f1;">
-                                             <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-dark text-white d-flex align-items-center justify-content-center" 
-                                                   style="font-size: 8px; width: 15px; height: 15px; padding: 0; min-width: 15px;"
-                                                   th:if="${detail.quantity > 1}" th:text="${detail.quantity}">1</span>
-                                         </div>
+                                         <th:block th:each="detail, iter : ${order.orderDetails}">
+                                             <div th:if="${detail != null and detail.product != null}"
+                                                  class="position-relative order-product-thumb" 
+                                                  th:style="|z-index: ${10 - iter.index}; margin-right: -12px;|"
+                                                  th:id="|detail-thumb-${detail.orderDetailId}|">
+                                                 <img th:src="${detail.product?.firstImageUrl} ?: '/images/bonsai-1.png'" 
+                                                      onerror="this.onerror=null;this.src='/images/bonsai-1.png';"
+                                                      th:alt="${detail.product?.productName} ?: 'Sản phẩm'"
+                                                      th:title="${detail.product?.productName} ?: 'Sản phẩm'"
+                                                      class="rounded-circle border border-2 border-white shadow-sm"
+                                                      style="width: 38px; height: 38px; object-fit: cover; background-color: #f7f6f1;">
+                                                 <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-dark text-white d-flex align-items-center justify-content-center" 
+                                                       style="font-size: 8px; width: 15px; height: 15px; padding: 0; min-width: 15px;"
+                                                       th:if="${detail.quantity > 1}" th:text="${detail.quantity}">1</span>
+                                             </div>
+                                         </th:block>
                                      </div>
                                      <div class="ms-2" style="max-width: 180px;">
                                          <!-- If 1 item, show its name -->
                                          <div th:if="${#lists.size(order.orderDetails) == 1}" 
                                               class="fw-semibold text-dark text-truncate small"
-                                              th:text="${order.orderDetails[0].product != null ? order.orderDetails[0].product.productName : 'Sản phẩm'}">Bonsai Tùng Cối</div>
+                                              th:text="${order.orderDetails[0].product?.productName} ?: 'Sản phẩm'">Bonsai Tùng Cối</div>
                                          <!-- If multiple items, show total items count -->
                                          <div th:if="${#lists.size(order.orderDetails) > 1}" 
                                               class="fw-bold text-success small"
