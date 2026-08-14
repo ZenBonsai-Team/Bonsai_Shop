@@ -5,6 +5,7 @@ import java.math.BigDecimal;
 public record OwnerMonthlyRevenueDTO(
         String monthLabel,
         BigDecimal revenue,
-        int chartPercent
+        int chartPercent,
+        String dataLabel
 ) {
 }

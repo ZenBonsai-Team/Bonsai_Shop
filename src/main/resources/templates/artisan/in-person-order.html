@@ -153,20 +153,20 @@
                 <div class="filter-tabs product-filter-chips" style="margin:0;">
                     <a class="tab-btn text-decoration-none"
                        th:classappend="${selectedStatus == 'ALL'} ? ' active'"
-                       th:href="@{/artisan/in-person-order(status='ALL')}">Tất cả</a>
+                       th:href="@{/artisan/in-person-order(status='ALL',size=${selectedSize})}">Tất cả</a>
                     <a class="tab-btn text-decoration-none"
                        th:classappend="${selectedStatus == pendingPaymentStatus} ? ' active'"
-                       th:href="@{/artisan/in-person-order(status=${pendingPaymentStatus})}">Chờ nhận tiền</a>
+                       th:href="@{/artisan/in-person-order(status=${pendingPaymentStatus},size=${selectedSize})}">Chờ nhận tiền</a>
                     <a class="tab-btn text-decoration-none"
                        th:classappend="${selectedStatus == completedStatus} ? ' active'"
-                       th:href="@{/artisan/in-person-order(status=${completedStatus})}">Hoàn thành</a>
+                       th:href="@{/artisan/in-person-order(status=${completedStatus},size=${selectedSize})}">Hoàn thành</a>
                     <a class="tab-btn text-decoration-none"
                        th:classappend="${selectedStatus == cancelledStatus} ? ' active'"
-                       th:href="@{/artisan/in-person-order(status=${cancelledStatus})}">Đã hủy</a>
+                       th:href="@{/artisan/in-person-order(status=${cancelledStatus},size=${selectedSize})}">Đã hủy</a>
                 </div>
             </div>
 
-            <div class="table-container">
+            <div class="table-container" id="walkInOrdersTableContainer">
                 <table class="orders-table">
                     <thead>
                     <tr>
@@ -233,11 +233,25 @@
                 </table>
             </div>
 
-            <div class="pagination-footer" th:if="${orders.totalPages > 1}">
-                <div class="pagination-info" th:text="${'Hiển thị trang ' + (orders.number + 1) + ' / ' + orders.totalPages}"></div>
-                <div class="pagination-controls">
-                    <a class="page-btn" th:if="${orders.hasPrevious()}" th:href="@{/artisan/in-person-order(status=${selectedStatus},page=${orders.number - 1})}">Trước</a>
-                    <a class="page-btn" th:if="${orders.hasNext()}" th:href="@{/artisan/in-person-order(status=${selectedStatus},page=${orders.number + 1})}">Sau</a>
+            <div class="catalog-table-footer walkin-pagination-footer" id="walkInOrdersPagination" th:if="${orders != null}">
+                <span th:text="${orders.totalElements == 0
+                    ? 'Không có đơn tại vườn'
+                    : 'Hiển thị ' + (orders.number * orders.size + 1) + '–' + (orders.number * orders.size + orders.numberOfElements) + ' trong ' + orders.totalElements + ' đơn'}"></span>
+                <div class="catalog-pagination-controls walkin-pagination-controls">
+                    <select id="walkInPageSize" class="product-page-size" aria-label="Số đơn mỗi trang">
+                        <option value="10" th:selected="${selectedSize == 10}">10 / trang</option>
+                        <option value="20" th:selected="${selectedSize == 20}">20 / trang</option>
+                        <option value="50" th:selected="${selectedSize == 50}">50 / trang</option>
+                    </select>
+                    <a class="product-page-nav"
+                       th:classappend="${!orders.hasPrevious()} ? 'disabled'"
+                       th:href="@{/artisan/in-person-order(status=${selectedStatus},page=${orders.hasPrevious() ? orders.number - 1 : 0},size=${selectedSize})}"
+                       aria-label="Trang trước">‹</a>
+                    <span th:text="${'Trang ' + (orders.number + 1) + ' / ' + orders.totalPages}">Trang 1 / 1</span>
+                    <a class="product-page-nav"
+                       th:classappend="${!orders.hasNext()} ? 'disabled'"
+                       th:href="@{/artisan/in-person-order(status=${selectedStatus},page=${orders.hasNext() ? orders.number + 1 : orders.number},size=${selectedSize})}"
+                       aria-label="Trang sau">›</a>
                 </div>
             </div>
         </section>
@@ -744,12 +758,62 @@
         panel.classList.remove('show');
     }
 
-    document.querySelectorAll('.js-open-walkin-drawer').forEach(button => {
-        button.addEventListener('click', function (event) {
+    function loadWalkInOrdersPage(url, pushHistory = true) {
+        const targetUrl = url.toString();
+        document.getElementById('walkInOrdersSection')?.classList.add('is-loading');
+        return fetch(targetUrl, {headers: {'X-Requested-With': 'XMLHttpRequest'}})
+            .then(response => {
+                if (!response.ok) throw new Error('Không tải được danh sách đơn.');
+                return response.text();
+            })
+            .then(html => {
+                const doc = new DOMParser().parseFromString(html, 'text/html');
+                const nextTable = doc.getElementById('walkInOrdersTableContainer');
+                const nextPagination = doc.getElementById('walkInOrdersPagination');
+                const currentTable = document.getElementById('walkInOrdersTableContainer');
+                const currentPagination = document.getElementById('walkInOrdersPagination');
+                if (!nextTable || !currentTable) throw new Error('Không tìm thấy bảng đơn tại vườn.');
+                currentTable.replaceWith(nextTable);
+                if (currentPagination && nextPagination) {
+                    currentPagination.replaceWith(nextPagination);
+                } else if (currentPagination && !nextPagination) {
+                    currentPagination.remove();
+                } else if (!currentPagination && nextPagination) {
+                    document.getElementById('walkInOrdersSection')?.appendChild(nextPagination);
+                }
+                if (pushHistory) {
+                    window.history.pushState({}, '', targetUrl);
+                }
+            })
+            .catch(() => {
+                window.location.href = targetUrl;
+            })
+            .finally(() => document.getElementById('walkInOrdersSection')?.classList.remove('is-loading'));
+    }
+
+    document.addEventListener('click', function (event) {
+        const trigger = event.target.closest('.js-open-walkin-drawer');
+        if (trigger) {
             event.stopPropagation();
-            openDrawer(button);
-        });
+            openDrawer(trigger);
+            return;
+        }
+
+        const pageLink = event.target.closest('.walkin-pagination-controls .product-page-nav');
+        if (!pageLink || pageLink.classList.contains('disabled')) return;
+        event.preventDefault();
+        loadWalkInOrdersPage(new URL(pageLink.href));
     });
+
+    document.addEventListener('change', function (event) {
+        if (event.target.id !== 'walkInPageSize') return;
+        const url = new URL(window.location.href);
+        url.searchParams.set('size', event.target.value);
+        url.searchParams.set('page', '0');
+        loadWalkInOrdersPage(url);
+    });
+
+    window.addEventListener('popstate', () => loadWalkInOrdersPage(new URL(window.location.href), false));
 
     confirmForm.addEventListener('submit', function (event) {
         if (!allowPaymentSubmit) {

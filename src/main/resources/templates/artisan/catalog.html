@@ -1,9 +1,9 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quản lý danh mục & thuộc tính - Minh Kỷ Garden</title>
+    <title>Quản lý dòng cây & thuộc tính - Minh Kỷ Garden</title>
     <link rel="icon" type="image/png" th:href="@{/images/logo.png}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -32,188 +32,283 @@
         <header th:replace="~{fragments/header :: header}"></header>
         <header class="page-header">
             <div>
-                <h1>Quản lý danh mục & thuộc tính</h1>
-                <p>Quản lý Phân loại, Biến thể và Thẻ nhãn dùng khi tạo sản phẩm.</p>
+                <h1>Quản lý dòng cây</h1>
+                <p>Quản lý dòng cây, giống cây và thẻ dùng để phân loại sản phẩm.</p>
             </div>
-            <a class="btn secondary" th:href="@{/artisan/products/new}">Thêm sản phẩm mới</a>
+            <button id="catalogPrimaryAction" type="button" class="btn" data-open-modal="category-modal" data-mode="create">+ Thêm dòng cây</button>
         </header>
 
     <div id="artisanFlashSuccess" th:if="${success}" th:attr="data-message=${success}" hidden></div>
     <div id="artisanFlashError" th:if="${error}" th:attr="data-message=${error}" hidden></div>
 
-    <section class="taxonomy-layout">
-        <div class="taxonomy-panel">
-            <div class="taxonomy-toolbar">
-                <div>
-                    <h2>Danh mục</h2>
-                    <p>Chọn danh mục để xem các loại cây.</p>
-                </div>
-                <button type="button" class="btn small" data-open-modal="category-modal" data-mode="create">+ Thêm danh mục</button>
+    <section class="catalog-shell">
+        <nav class="catalog-tabs" aria-label="Catalog sections">
+            <button type="button" class="catalog-tab active" data-catalog-tab="categories">
+                Dòng cây <span th:text="${#lists.size(categories)}">0</span>
+            </button>
+            <button type="button" class="catalog-tab" data-catalog-tab="varieties">
+                Giống cây <span th:text="${#lists.size(varieties)}">0</span>
+            </button>
+            <button type="button" class="catalog-tab" data-catalog-tab="tags">
+                Thẻ sản phẩm <span th:text="${#lists.size(tags)}">0</span>
+            </button>
+        </nav>
+
+        <div class="catalog-tab-panel active" data-catalog-panel="categories">
+            <div class="catalog-table-toolbar">
+                <label class="catalog-search-control">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input class="catalog-search" data-search-target="category-table-body" placeholder="Tìm kiếm dòng cây...">
+                </label>
+                <select class="catalog-filter-control" data-sort-target="category-table-body">
+                    <option value="name-asc">Sắp xếp A–Z</option>
+                    <option value="name-desc">Sắp xếp Z–A</option>
+                </select>
             </div>
-            <input class="catalog-search" data-search-target="category-master" placeholder="Tìm kiếm danh mục...">
-            <div id="category-master" class="master-list" data-page-size="6">
-                <div th:each="category, iter : ${categories}"
-                     class="master-row"
-                     th:classappend="${iter.index == 0} ? ' active'"
-                     th:attr="data-category-id=${category.categoryId},data-search-text=${category.categoryName}">
-                    <button type="button" class="master-item">
-                        <span th:text="${category.categoryName}"></span>
-                        <small th:text="${category.description}"></small>
-                    </button>
-                    <div class="actions">
-                        <button type="button"
-                                class="btn small"
-                                data-open-modal="category-modal"
-                                data-mode="edit"
-                                th:attr="data-action=@{/artisan/catalog/categories/{id}(id=${category.categoryId})},data-name=${category.categoryName},data-description=${category.description}">
-                            Sửa
-                        </button>
-                        <button th:if="${categoryIdsInUse.contains(category.categoryId)}"
-                                type="button"
-                                class="text-danger catalog-delete-disabled"
-                                disabled
-                                title="Danh mục đang được sử dụng nên không thể xóa">Xóa</button>
-                        <form th:unless="${categoryIdsInUse.contains(category.categoryId)}"
-                              method="post"
-                              th:action="@{/artisan/catalog/categories/{id}/delete(id=${category.categoryId})}">
-                            <button type="submit" class="text-danger" onclick="handleCatalogDelete(event, this, 'danh mục')">Xóa</button>
-                        </form>
-                    </div>
+            <div class="catalog-table-wrap">
+                <table class="catalog-data-table">
+                    <thead>
+                    <tr>
+                        <th>Tên dòng cây</th>
+                        <th>Mô tả</th>
+                        <th class="catalog-number-cell">Giống cây</th>
+                        <th class="catalog-number-cell">Sản phẩm</th>
+                        <th>Thao tác</th>
+                    </tr>
+                    </thead>
+                    <tbody id="category-table-body" data-page-size="10" data-entity-label="dòng cây">
+                    <tr th:each="category, iter : ${categories}"
+                        class="catalog-selectable-row"
+                        th:attr="data-id=${category.categoryId},
+                                 data-name=${category.categoryName},
+                                 data-description=${category.description},
+                                 data-search-text=${category.categoryName + ' ' + (category.description ?: '')},
+                                 data-variety-count=${varietyCountByCategoryId.get(category.categoryId) ?: 0},
+                                 data-product-count=${productCountByCategoryId.get(category.categoryId) ?: 0}">
+                        <td>
+                            <div class="catalog-name-cell">
+                                <span class="catalog-entity-icon"><i class="fa-solid fa-seedling"></i></span>
+                                <span>
+                                    <strong th:text="${category.categoryName}">Dòng Sanh</strong>
+                                    <small th:text="${'CAT-' + #numbers.formatInteger(category.categoryId, 3)}">CAT-001</small>
+                                </span>
+                            </div>
+                        </td>
+                        <td class="muted-cell catalog-description-cell">
+                            <span class="catalog-description-text"
+                                  th:text="${category.description ?: '—'}"
+                                  th:title="${category.description ?: '—'}">—</span>
+                        </td>
+                        <td class="catalog-number-cell"><span class="count-badge" th:text="${(varietyCountByCategoryId.get(category.categoryId) ?: 0) + ' giống'}">0 giống</span></td>
+                        <td class="catalog-number-cell" th:text="${productCountByCategoryId.get(category.categoryId) ?: 0}">0</td>
+                        <td class="text-end">
+                            <details class="catalog-action-menu">
+                                <summary aria-label="Thao tác dòng cây">Thao tác</summary>
+                                <div class="catalog-action-panel align-end">
+                                    <button type="button" data-open-modal="category-modal" data-mode="edit"
+                                            th:attr="data-action=@{/artisan/catalog/categories/{id}(id=${category.categoryId})},data-name=${category.categoryName},data-description=${category.description}">
+                                        Chỉnh sửa
+                                    </button>
+                                    <button th:if="${categoryIdsInUse.contains(category.categoryId)}" type="button" class="catalog-delete-disabled" disabled title="Dòng cây đang được sử dụng nên không thể xóa">Xóa</button>
+                                    <form th:unless="${categoryIdsInUse.contains(category.categoryId)}" method="post" th:action="@{/artisan/catalog/categories/{id}/delete(id=${category.categoryId})}">
+                                        <button type="submit" class="danger" onclick="handleCatalogDelete(event, this, 'dòng cây')">Xóa</button>
+                                    </form>
+                                </div>
+                            </details>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+                <div class="catalog-empty-state" data-empty-for="category-table-body" hidden>
+                    <p>Không tìm thấy dòng cây phù hợp.</p>
+                    <button type="button" class="btn small" data-open-modal="category-modal" data-mode="create">+ Thêm dòng cây</button>
                 </div>
             </div>
-            <div class="pagination" data-pagination-for="category-master"></div>
+            <div class="catalog-table-footer" data-footer-for="category-table-body"></div>
         </div>
 
-        <div class="taxonomy-panel">
-            <div class="taxonomy-toolbar">
-                <div>
-                    <h2>Loại cây (Biến thể)</h2>
-                    <p>Danh sách loại cây theo danh mục.</p>
-                </div>
-                <button type="button" class="btn small" data-open-modal="variety-modal" data-mode="create">+ Thêm loại cây</button>
+        <div class="catalog-tab-panel" data-catalog-panel="varieties">
+            <div class="catalog-table-toolbar">
+                <label class="catalog-search-control">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input class="catalog-search" data-search-target="variety-table-body" placeholder="Tìm kiếm giống cây...">
+                </label>
+                <select class="catalog-filter-control" data-category-filter="variety-table-body">
+                    <option value="">Tất cả dòng cây</option>
+                    <option th:each="category : ${categories}" th:value="${category.categoryId}" th:text="${category.categoryName}"></option>
+                </select>
+                <select class="catalog-filter-control" data-sort-target="variety-table-body">
+                    <option value="name-asc">Sắp xếp A–Z</option>
+                    <option value="name-desc">Sắp xếp Z–A</option>
+                </select>
             </div>
-            <input class="catalog-search" data-search-target="variety-detail" placeholder="Tìm kiếm loại cây...">
-            <table class="compact-table">
-                <thead>
-                <tr>
-                    <th>Tên loại cây</th>
-                    <th>Danh mục</th>
-                    <th>Mô tả</th>
-                    <th>Thao tác</th>
-                </tr>
-                </thead>
-                <tbody id="variety-detail" data-page-size="6">
-                <tr th:each="variety : ${varieties}"
-                    th:attr="data-category-id=${variety.category.categoryId},data-search-text=${variety.varietyName + ' ' + variety.category.categoryName}">
-                    <td th:text="${variety.varietyName}"></td>
-                    <td th:text="${variety.category.categoryName}"></td>
-                    <td th:text="${variety.description}"></td>
-                    <td class="actions">
-                        <button type="button"
-                                class="btn small"
-                                data-open-modal="variety-modal"
-                                data-mode="edit"
-                                th:attr="data-action=@{/artisan/catalog/varieties/{id}(id=${variety.varietyId})},data-category-id=${variety.category.categoryId},data-name=${variety.varietyName},data-description=${variety.description}">
-                            Sửa
-                        </button>
-                        <button th:if="${varietyIdsInUse.contains(variety.varietyId)}"
-                                type="button"
-                                class="text-danger catalog-delete-disabled"
-                                disabled
-                                title="Loại cây đang được sử dụng nên không thể xóa">Xóa</button>
-                        <form th:unless="${varietyIdsInUse.contains(variety.varietyId)}"
-                              method="post"
-                              th:action="@{/artisan/catalog/varieties/{id}/delete(id=${variety.varietyId})}">
-                            <button type="submit" class="text-danger" onclick="handleCatalogDelete(event, this, 'loại cây')">Xóa</button>
-                        </form>
-                    </td>
-                </tr>
-                </tbody>
-            </table>
-            <div class="pagination" data-pagination-for="variety-detail"></div>
+            <div class="catalog-table-wrap">
+                <table class="catalog-data-table">
+                    <thead>
+                    <tr>
+                        <th>Tên giống cây</th>
+                        <th>Dòng cây cha</th>
+                        <th>Mô tả</th>
+                        <th class="catalog-number-cell">Sản phẩm</th>
+                        <th>Thao tác</th>
+                    </tr>
+                    </thead>
+                    <tbody id="variety-table-body" data-page-size="10" data-entity-label="giống cây">
+                    <tr th:each="variety : ${varieties}"
+                        th:attr="data-id=${variety.varietyId},
+                                 data-category-id=${variety.category.categoryId},
+                                 data-name=${variety.varietyName},
+                                 data-search-text=${variety.varietyName + ' ' + variety.category.categoryName + ' ' + (variety.description ?: '')}">
+                        <td>
+                            <div class="catalog-name-cell static">
+                                <span class="catalog-entity-icon"><i class="fa-solid fa-leaf"></i></span>
+                                <span><strong th:text="${variety.varietyName}">Sanh Nam Điền</strong></span>
+                            </div>
+                        </td>
+                        <td th:text="${variety.category.categoryName}">Dòng Sanh</td>
+                        <td class="muted-cell catalog-description-cell">
+                            <span class="catalog-description-text"
+                                  th:text="${variety.description ?: '—'}"
+                                  th:title="${variety.description ?: '—'}">—</span>
+                        </td>
+                        <td class="catalog-number-cell" th:text="${productCountByVarietyId.get(variety.varietyId) ?: 0}">0</td>
+                        <td class="text-end">
+                            <details class="catalog-action-menu">
+                                <summary aria-label="Thao tác giống cây">Thao tác</summary>
+                                <div class="catalog-action-panel align-end">
+                                    <button type="button" data-open-modal="variety-modal" data-mode="edit"
+                                            th:attr="data-action=@{/artisan/catalog/varieties/{id}(id=${variety.varietyId})},data-category-id=${variety.category.categoryId},data-name=${variety.varietyName},data-description=${variety.description}">
+                                        Chỉnh sửa
+                                    </button>
+                                    <button th:if="${varietyIdsInUse.contains(variety.varietyId)}" type="button" class="catalog-delete-disabled" disabled title="Giống cây đang được sử dụng nên không thể xóa">Xóa</button>
+                                    <form th:unless="${varietyIdsInUse.contains(variety.varietyId)}" method="post" th:action="@{/artisan/catalog/varieties/{id}/delete(id=${variety.varietyId})}">
+                                        <button type="submit" class="danger" onclick="handleCatalogDelete(event, this, 'giống cây')">Xóa</button>
+                                    </form>
+                                </div>
+                            </details>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+                <div class="catalog-empty-state" data-empty-for="variety-table-body" hidden>
+                    <p>Không tìm thấy giống cây phù hợp.</p>
+                    <button type="button" class="btn small" data-open-modal="variety-modal" data-mode="create">+ Thêm giống cây</button>
+                </div>
+            </div>
+            <div class="catalog-table-footer" data-footer-for="variety-table-body"></div>
+        </div>
+
+        <div class="catalog-tab-panel" data-catalog-panel="tags">
+            <div class="catalog-table-toolbar">
+                <label class="catalog-search-control">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input class="catalog-search" data-search-target="tag-table-body" placeholder="Tìm kiếm thẻ...">
+                </label>
+                <select class="catalog-filter-control" data-usage-filter="tag-table-body">
+                    <option value="">Tất cả</option>
+                    <option value="used">Đang sử dụng</option>
+                    <option value="unused">Chưa sử dụng</option>
+                </select>
+                <select class="catalog-filter-control" data-sort-target="tag-table-body">
+                    <option value="name-asc">Sắp xếp A–Z</option>
+                    <option value="name-desc">Sắp xếp Z–A</option>
+                </select>
+            </div>
+            <div class="catalog-table-wrap">
+                <table class="catalog-data-table">
+                    <thead>
+                    <tr>
+                        <th>Tên thẻ</th>
+                        <th class="catalog-number-cell">Sản phẩm</th>
+                        <th>Thao tác</th>
+                    </tr>
+                    </thead>
+                    <tbody id="tag-table-body" data-page-size="10" data-entity-label="thẻ">
+                    <tr th:each="tag : ${tags}"
+                        th:attr="data-id=${tag.tagId},
+                                 data-name=${tag.tagName},
+                                 data-usage-count=${productCountByTagId.get(tag.tagId) ?: 0},
+                                 data-search-text=${tag.tagName}">
+                        <td>
+                            <div class="catalog-name-cell static">
+                                <span class="catalog-entity-icon"><i class="fa-solid fa-tag"></i></span>
+                                <span><strong th:text="${tag.tagName}">Thẻ</strong></span>
+                            </div>
+                        </td>
+                        <td class="catalog-number-cell" th:text="${productCountByTagId.get(tag.tagId) ?: 0}">0</td>
+                        <td class="text-end">
+                            <details class="catalog-action-menu">
+                                <summary aria-label="Thao tác thẻ">Thao tác</summary>
+                                <div class="catalog-action-panel align-end">
+                                    <button type="button" data-open-modal="tag-modal" data-mode="edit"
+                                            th:attr="data-action=@{/artisan/catalog/tags/{id}(id=${tag.tagId})},data-name=${tag.tagName}">
+                                        Chỉnh sửa
+                                    </button>
+                                    <button th:if="${tagIdsInUse.contains(tag.tagId)}" type="button" class="catalog-delete-disabled" disabled title="Thẻ đang được sử dụng nên không thể xóa">Xóa</button>
+                                    <form th:unless="${tagIdsInUse.contains(tag.tagId)}" method="post" th:action="@{/artisan/catalog/tags/{id}/delete(id=${tag.tagId})}">
+                                        <button type="submit" class="danger" onclick="handleCatalogDelete(event, this, 'thẻ nhãn')">Xóa</button>
+                                    </form>
+                                </div>
+                            </details>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+                <div class="catalog-empty-state" data-empty-for="tag-table-body" hidden>
+                    <p>Không tìm thấy thẻ phù hợp.</p>
+                    <button type="button" class="btn small" data-open-modal="tag-modal" data-mode="create">+ Thêm thẻ</button>
+                </div>
+            </div>
+            <div class="catalog-table-footer" data-footer-for="tag-table-body"></div>
         </div>
     </section>
 
-    <section class="taxonomy-layout">
-        <div class="taxonomy-panel">
-            <div class="taxonomy-toolbar">
-                <h2>Thẻ nhãn</h2>
-                <button type="button" class="btn small" data-open-modal="tag-modal" data-mode="create">+ Thêm thẻ</button>
-            </div>
-            <input class="catalog-search" data-search-target="tag-table" placeholder="Tìm kiếm thẻ...">
-            <table class="compact-table">
-                <thead>
-                <tr>
-                    <th>Tên thẻ</th>
-                    <th>Thao tác</th>
-                </tr>
-                </thead>
-                <tbody id="tag-table" data-page-size="5">
-                <tr th:each="tag : ${tags}" th:attr="data-search-text=${tag.tagName}">
-                    <td th:text="${tag.tagName}"></td>
-                    <td class="actions">
-                        <button type="button"
-                                class="btn small"
-                                data-open-modal="tag-modal"
-                                data-mode="edit"
-                                th:attr="data-action=@{/artisan/catalog/tags/{id}(id=${tag.tagId})},data-name=${tag.tagName}">
-                            Sửa
-                        </button>
-                        <button th:if="${tagIdsInUse.contains(tag.tagId)}"
-                                type="button"
-                                class="text-danger catalog-delete-disabled"
-                                disabled
-                                title="Thẻ đang được sử dụng nên không thể xóa">Xóa</button>
-                        <form th:unless="${tagIdsInUse.contains(tag.tagId)}"
-                              method="post"
-                              th:action="@{/artisan/catalog/tags/{id}/delete(id=${tag.tagId})}">
-                            <button type="submit" class="text-danger" onclick="handleCatalogDelete(event, this, 'thẻ nhãn')">Xóa</button>
-                        </form>
-                    </td>
-                </tr>
-                </tbody>
-            </table>
-            <div class="pagination" data-pagination-for="tag-table"></div>
-        </div>
-    </section>
 </main>
 </div>
 
 <div id="category-modal" class="modal-backdrop hidden">
     <form class="modal-card" method="post" th:action="@{/artisan/catalog/categories}" data-create-action="/artisan/catalog/categories">
         <header>
-            <h2 data-modal-title>Thêm danh mục mới</h2>
+            <h2 data-modal-title>Thêm dòng cây mới</h2>
             <button type="button" class="modal-close">×</button>
         </header>
-        <label>Tên danh mục
+        <label>Tên dòng cây <span class="required-mark">*</span>
             <input name="categoryName" required data-field="name">
+            <small class="form-helper">Tên hiển thị khi Artisan tạo sản phẩm.</small>
         </label>
         <label>Mô tả
             <input name="description" data-field="description">
         </label>
-        <button type="submit">Lưu lại</button>
+        <footer class="modal-actions">
+            <button type="button" class="btn secondary modal-close">Hủy</button>
+            <button type="submit" class="btn">Lưu lại</button>
+        </footer>
     </form>
 </div>
 
 <div id="variety-modal" class="modal-backdrop hidden">
     <form class="modal-card" method="post" th:action="@{/artisan/catalog/varieties}" data-create-action="/artisan/catalog/varieties">
         <header>
-            <h2 data-modal-title>Thêm loại cây mới</h2>
+            <h2 data-modal-title>Thêm giống cây mới</h2>
             <button type="button" class="modal-close">×</button>
         </header>
-        <label>Danh mục
+        <label>Dòng cây <span class="required-mark">*</span>
             <select name="categoryId" required data-field="categoryId">
-                <option value="">-- Chọn danh mục --</option>
+                <option value="">-- Chọn dòng cây --</option>
                 <option th:each="category : ${categories}" th:value="${category.categoryId}" th:text="${category.categoryName}"></option>
             </select>
         </label>
-        <label>Tên loại cây (Variety)
+        <label>Tên giống cây <span class="required-mark">*</span>
             <input name="varietyName" required data-field="name">
+            <small class="form-helper">Giống cây luôn thuộc một dòng cây cha.</small>
         </label>
         <label>Mô tả
             <input name="description" data-field="description">
         </label>
-        <button type="submit">Lưu lại</button>
+        <footer class="modal-actions">
+            <button type="button" class="btn secondary modal-close">Hủy</button>
+            <button type="submit" class="btn">Lưu lại</button>
+        </footer>
     </form>
 </div>
 
@@ -223,72 +318,197 @@
             <h2 data-modal-title>Thêm thẻ nhãn mới</h2>
             <button type="button" class="modal-close">×</button>
         </header>
-        <label>Tên thẻ (Tag)
+        <label>Tên thẻ <span class="required-mark">*</span>
             <input name="tagName" required data-field="name">
         </label>
-        <button type="submit">Lưu lại</button>
+        <footer class="modal-actions">
+            <button type="button" class="btn secondary modal-close">Hủy</button>
+            <button type="submit" class="btn">Lưu lại</button>
+        </footer>
     </form>
 </div>
 
 <script>
-    const state = {};
+    const tableState = {};
+    const tabConfig = {
+        categories: {modal: 'category-modal', label: '+ Thêm dòng cây'},
+        varieties: {modal: 'variety-modal', label: '+ Thêm giống cây'},
+        tags: {modal: 'tag-modal', label: '+ Thêm thẻ'}
+    };
+
+    function tableRows(container) {
+        return [...container.children];
+    }
 
     function visibleRows(container) {
-        return [...container.children].filter((row) => !row.dataset.filtered && !row.dataset.masterFiltered);
+        return tableRows(container).filter((row) =>
+            !row.dataset.filtered && !row.dataset.categoryFiltered && !row.dataset.usageFiltered
+        );
+    }
+
+    function getState(containerId) {
+        tableState[containerId] = tableState[containerId] || {page: 1, pageSize: Number(document.getElementById(containerId)?.dataset.pageSize || 10)};
+        return tableState[containerId];
+    }
+
+    function sortRows(containerId, mode) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+        const rows = tableRows(container).sort((left, right) => {
+            const leftName = (left.dataset.name || '').localeCompare(right.dataset.name || '', 'vi');
+            return mode === 'name-desc' ? -leftName : leftName;
+        });
+        rows.forEach(row => container.appendChild(row));
     }
 
     function paginate(containerId, page = 1) {
         const container = document.getElementById(containerId);
         if (!container) return;
-        const pageSize = Number(container.dataset.pageSize || 5);
+        const state = getState(containerId);
         const rows = visibleRows(container);
-        const totalPages = Math.max(1, Math.ceil(rows.length / pageSize));
-        state[containerId] = Math.min(page, totalPages);
+        const total = rows.length;
+        const totalPages = Math.max(1, Math.ceil(total / state.pageSize));
+        state.page = Math.min(Math.max(page, 1), totalPages);
+        const fromIndex = total === 0 ? 0 : (state.page - 1) * state.pageSize + 1;
+        const toIndex = Math.min(state.page * state.pageSize, total);
 
-        [...container.children].forEach((row) => row.hidden = true);
+        tableRows(container).forEach(row => row.hidden = true);
         rows.forEach((row, index) => {
-            row.hidden = index < (state[containerId] - 1) * pageSize || index >= state[containerId] * pageSize;
+            row.hidden = index < fromIndex - 1 || index >= toIndex;
         });
 
-        const pagination = document.querySelector(`[data-pagination-for="${containerId}"]`);
-        if (!pagination) return;
-        pagination.innerHTML = '';
-        for (let index = 1; index <= totalPages; index++) {
-            const button = document.createElement('button');
-            button.type = 'button';
-            button.textContent = index;
-            button.className = index === state[containerId] ? 'active' : '';
-            button.addEventListener('click', () => paginate(containerId, index));
-            pagination.appendChild(button);
-        }
+        const table = container.closest('.catalog-table-wrap')?.querySelector('table');
+        const emptyState = document.querySelector(`[data-empty-for="${containerId}"]`);
+        if (table) table.hidden = total === 0;
+        if (emptyState) emptyState.hidden = total !== 0;
+
+        renderFooter(containerId, fromIndex, toIndex, total, totalPages);
     }
 
-    function filterBySearch(input) {
+    function renderFooter(containerId, fromIndex, toIndex, total, totalPages) {
+        const footer = document.querySelector(`[data-footer-for="${containerId}"]`);
+        if (!footer) return;
+        const state = getState(containerId);
+        const label = document.getElementById(containerId)?.dataset.entityLabel || 'mục';
+        footer.innerHTML = '';
+
+        const info = document.createElement('span');
+        info.textContent = total === 0 ? `Không có ${label}` : `Hiển thị ${fromIndex}–${toIndex} trong ${total} ${label}`;
+
+        const controls = document.createElement('div');
+        controls.className = 'catalog-pagination-controls';
+
+        const pageSize = document.createElement('select');
+        [10, 20, 50].forEach(size => {
+            const option = document.createElement('option');
+            option.value = size;
+            option.textContent = `${size} / trang`;
+            option.selected = size === state.pageSize;
+            pageSize.appendChild(option);
+        });
+        pageSize.addEventListener('change', () => {
+            state.pageSize = Number(pageSize.value);
+            paginate(containerId, 1);
+        });
+
+        const prev = document.createElement('button');
+        prev.type = 'button';
+        prev.textContent = '‹';
+        prev.disabled = state.page <= 1;
+        prev.addEventListener('click', () => paginate(containerId, state.page - 1));
+
+        const pages = document.createElement('span');
+        pages.textContent = `Trang ${state.page} / ${totalPages}`;
+
+        const next = document.createElement('button');
+        next.type = 'button';
+        next.textContent = '›';
+        next.disabled = state.page >= totalPages;
+        next.addEventListener('click', () => paginate(containerId, state.page + 1));
+
+        controls.append(pageSize, prev, pages, next);
+        footer.append(info, controls);
+    }
+
+    function applySearch(input) {
         const container = document.getElementById(input.dataset.searchTarget);
         const keyword = input.value.trim().toLowerCase();
-        [...container.children].forEach((row) => {
-            row.dataset.filtered = keyword && !row.dataset.searchText.toLowerCase().includes(keyword) ? 'true' : '';
+        tableRows(container).forEach(row => {
+            row.dataset.filtered = keyword && !(row.dataset.searchText || '').toLowerCase().includes(keyword) ? 'true' : '';
         });
         paginate(container.id, 1);
     }
 
-    function filterVarietiesByCategory(categoryId) {
-        document.querySelectorAll('#category-master .master-row').forEach((item) => {
-            item.classList.toggle('active', item.dataset.categoryId === categoryId);
-        });
-        document.querySelectorAll('#variety-detail tr').forEach((row) => {
-            row.dataset.masterFiltered = row.dataset.categoryId === categoryId ? '' : 'true';
-        });
-        paginate('variety-detail', 1);
+    function setActiveTab(tab) {
+        document.querySelectorAll('.catalog-tab').forEach(button => button.classList.toggle('active', button.dataset.catalogTab === tab));
+        document.querySelectorAll('.catalog-tab-panel').forEach(panel => panel.classList.toggle('active', panel.dataset.catalogPanel === tab));
+        const primaryAction = document.getElementById('catalogPrimaryAction');
+        if (primaryAction) {
+            primaryAction.textContent = tabConfig[tab].label;
+            primaryAction.dataset.openModal = tabConfig[tab].modal;
+            primaryAction.dataset.mode = 'create';
+        }
+        sessionStorage.setItem('artisanCatalogActiveTab', tab);
+        history.replaceState(null, '', `${location.pathname}#${tab}`);
     }
 
-    document.querySelectorAll('[data-search-target]').forEach((input) => {
-        input.addEventListener('input', () => filterBySearch(input));
-    });
+    function closeOpenMenus() {
+        document.querySelectorAll('.catalog-action-menu[open]').forEach(menu => {
+            menu.removeAttribute('open');
+            const panel = menu.querySelector('.catalog-action-panel');
+            if (panel) {
+                panel.classList.remove('floating');
+                panel.removeAttribute('style');
+            }
+        });
+    }
 
-    document.querySelectorAll('#category-master .master-row .master-item').forEach((item) => {
-        item.addEventListener('click', () => filterVarietiesByCategory(item.closest('.master-row').dataset.categoryId));
+    function positionActionMenu(menu) {
+        const panel = menu.querySelector('.catalog-action-panel');
+        const summary = menu.querySelector('summary');
+        if (!panel || !summary || !menu.open) return;
+
+        const rect = summary.getBoundingClientRect();
+        panel.classList.add('floating');
+        panel.style.top = `${rect.bottom + 8}px`;
+        panel.style.right = `${Math.max(window.innerWidth - rect.right, 12)}px`;
+        panel.style.left = 'auto';
+    }
+
+    document.querySelectorAll('.catalog-tab').forEach(button => button.addEventListener('click', () => setActiveTab(button.dataset.catalogTab)));
+    document.querySelectorAll('[data-search-target]').forEach(input => input.addEventListener('input', () => applySearch(input)));
+    document.querySelectorAll('[data-sort-target]').forEach(select => select.addEventListener('change', () => {
+        sortRows(select.dataset.sortTarget, select.value);
+        paginate(select.dataset.sortTarget, 1);
+    }));
+    document.querySelectorAll('[data-category-filter]').forEach(select => select.addEventListener('change', () => {
+        const container = document.getElementById(select.dataset.categoryFilter);
+        tableRows(container).forEach(row => row.dataset.categoryFiltered = select.value && row.dataset.categoryId !== select.value ? 'true' : '');
+        paginate(container.id, 1);
+    }));
+    document.querySelectorAll('[data-usage-filter]').forEach(select => select.addEventListener('change', () => {
+        const container = document.getElementById(select.dataset.usageFilter);
+        tableRows(container).forEach(row => {
+            const used = Number(row.dataset.usageCount || 0) > 0;
+            row.dataset.usageFiltered = (select.value === 'used' && !used) || (select.value === 'unused' && used) ? 'true' : '';
+        });
+        paginate(container.id, 1);
+    }));
+    document.addEventListener('click', event => {
+        if (!event.target.closest('.catalog-action-menu')) closeOpenMenus();
     });
+    document.querySelectorAll('.catalog-action-menu').forEach(menu => {
+        menu.addEventListener('toggle', () => {
+            if (menu.open) {
+                document.querySelectorAll('.catalog-action-menu[open]').forEach(otherMenu => {
+                    if (otherMenu !== menu) otherMenu.removeAttribute('open');
+                });
+                requestAnimationFrame(() => positionActionMenu(menu));
+            }
+        });
+    });
+    window.addEventListener('scroll', closeOpenMenus, true);
+    window.addEventListener('resize', closeOpenMenus);
 
     document.querySelectorAll('[data-open-modal]').forEach((button) => {
         button.addEventListener('click', () => {
@@ -301,8 +521,8 @@
             form.action = mode === 'edit' ? button.dataset.action : form.dataset.createAction;
             
             let itemType = 'thuộc tính';
-            if (button.dataset.openModal === 'category-modal') itemType = 'danh mục';
-            else if (button.dataset.openModal === 'variety-modal') itemType = 'loại cây';
+            if (button.dataset.openModal === 'category-modal') itemType = 'dòng cây';
+            else if (button.dataset.openModal === 'variety-modal') itemType = 'giống cây';
             else if (button.dataset.openModal === 'tag-modal') itemType = 'thẻ nhãn';
             
             title.textContent = mode === 'edit' ? `Chỉnh sửa ${itemType}` : `Thêm ${itemType} mới`;
@@ -323,6 +543,16 @@
         });
     });
 
+    document.querySelectorAll('.modal-card').forEach(form => {
+        form.addEventListener('submit', () => {
+            const submitButton = form.querySelector('button[type="submit"]');
+            if (submitButton) {
+                submitButton.disabled = true;
+                submitButton.textContent = 'Đang luu...';
+            }
+        });
+    });
+
     function handleCatalogDelete(e, btn, itemType) {
         e.preventDefault();
         const form = btn.closest('form');
@@ -336,11 +566,12 @@
         });
     }
 
-    document.querySelectorAll('[data-page-size]').forEach((container) => paginate(container.id));
-    const firstCategory = document.querySelector('#category-master .master-row');
-    if (firstCategory) {
-        filterVarietiesByCategory(firstCategory.dataset.categoryId);
-    }
+    ['category-table-body', 'variety-table-body', 'tag-table-body'].forEach(containerId => {
+        sortRows(containerId, 'name-asc');
+        paginate(containerId, 1);
+    });
+    const initialTab = (location.hash || '').replace('#', '') || sessionStorage.getItem('artisanCatalogActiveTab') || 'categories';
+    setActiveTab(initialTab in tabConfig ? initialTab : 'categories');
 </script>
 <script>
     document.addEventListener('DOMContentLoaded', () => {
