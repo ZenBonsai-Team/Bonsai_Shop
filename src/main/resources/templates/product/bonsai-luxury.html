@@ -27,9 +27,6 @@
 
 <main id="home">
 
-    <!-- ============================================================
-         SECTION 1: HERO — full-bleed, nội dung căn giữa trên nền ảnh
-         ============================================================ -->
     <section class="hero hero-luxury-fullbleed" aria-label="Giới thiệu không gian nghệ thuật">
         <div class="hero-fullbleed-media" aria-hidden="true">
             <img th:src="${sysConfig.getValue('luxury_banner_image', '/images/hero-banner-bonsai.jpg')}" alt="">
@@ -104,7 +101,6 @@
                 </div>
             </div>
 
-            <!-- Lưới số liệu bất đối xứng: 2 ô vuông trên + 1 ô ngang lớn dưới -->
             <div class="value-luxury-stats">
                 <div class="stat-tile">
                     <strong>120+</strong>
@@ -122,7 +118,6 @@
             </div>
         </div>
 
-        <!-- Slider ảnh giới thiệu (giữ nguyên nội dung/hiệu ứng của #heroSlider cũ) -->
         <div class="value-luxury-media">
             <div class="hero-gallery-label">
                 <span>❧</span>
@@ -184,7 +179,7 @@
                         <h3>Danh mục tác phẩm đang mở lịch</h3>
                     </div>
                     <div class="results-count"
-                         th:text="${'Hiển thị ' + product.totalElements + ' tác phẩm'}">Hiển thị 0 tác phẩm</div>
+                         th:text="${'Hiển thị ' + product.totalElements + ' tác phẩm'}"></div>
                 </div>
 
                 <div class="grid" id="productGrid">
@@ -317,10 +312,6 @@
         </div>
     </section>
 
-    <!-- ============================================================
-         SECTION 5: XƯỞNG NGHỆ THUẬT (giữ nguyên, chỉ chỉnh tỷ lệ
-         cột qua CSS cho cân đối hơn theo mẫu)
-         ============================================================ -->
     <section id="about" class="about about-luxury container" aria-label="Xưởng Nghệ Thuật Bonsai Luxury">
         <div class="about-inner showcase atelier-showcase">
             <div class="showcase-left">
@@ -391,14 +382,11 @@
 <script th:src="@{/js/bonsai_luxury.js}"></script>
 <script th:if="${error}">
     document.addEventListener("DOMContentLoaded", function () {
-
         const modal = document.getElementById("bookingModal");
         if (!modal) return;
-
         modal.style.display = "flex";
         modal.style.opacity = "1";
         modal.setAttribute("aria-hidden","false");
-
     });
 </script>
 </body>

@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="">
+<body>
+<div th:fragment="bookingModal">
+    <div id="bookingModal" class="booking-modal" role="dialog" aria-modal="true" aria-labelledby="bookingTitle" hidden>
+        <div class="booking-backdrop" data-close-modal></div>
+        <div class="booking-card">
+            <button class="modal-close" id="closeBookingBtn" type="button" aria-label="Đóng bảng đặt lịch">
+                <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+            </button>
+            <div class="booking-header">
+                <h2 id="bookingTitle">Đặt lịch thăm quan vườn</h2>
+            </div>
+            <form class="booking-form" th:action="@{/appointments/create}" method="post" id="actualBookingForm">
+                <input type="hidden" name="_csrf" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="appointmentDate">Ngày xem</label>
+                        <input type="date" id="appointmentDate" name="appointmentDate" required>
+                        <small class="form-help">Chọn từ ngày mai trở đi</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="appointmentTime">Giờ xem</label>
+                        <select id="appointmentTime" name="appointmentTime" required>
+                            <option value="">Chọn giờ xem</option>
+                            <option value="08:00">08:00</option>
+                            <option value="08:30">08:30</option>
+                            <option value="09:00" selected>09:00</option>
+                            <option value="09:30">09:30</option>
+                            <option value="10:00">10:00</option>
+                            <option value="10:30">10:30</option>
+                            <option value="11:00">11:00</option>
+                            <option value="11:30">11:30</option>
+                            <option value="13:00">13:00</option>
+                            <option value="13:30">13:30</option>
+                            <option value="14:00">14:00</option>
+                            <option value="14:30">14:30</option>
+                            <option value="15:00">15:00</option>
+                            <option value="15:30">15:30</option>
+                            <option value="16:00">16:00</option>
+                            <option value="16:30">16:30</option>
+                            <option value="17:00">17:00</option>
+                        </select>
+                        <small class="form-help">Khung giờ showroom: 08:00 - 17:00</small>
+                    </div>
+                    <div class="form-group form-full">
+                        <label for="note">Lời nhắn</label>
+                        <textarea id="note" name="note" rows="4" maxlength="500" placeholder="Yêu cầu về giờ đón tiếp, không gian xem cây hoặc tư vấn chăm sóc."></textarea>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="button" id="cancelBookingBtn" class="btn-ghost">Hủy</button>
+                    <button type="submit" class="btn-primary submit-booking-btn">Xác nhận đặt lịch</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+</body>
+</html>

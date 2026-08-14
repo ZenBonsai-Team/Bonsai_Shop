@@ -7,7 +7,6 @@ import com.example.bonsai_shop.entity.User;
 import com.example.bonsai_shop.entity.ViewingAppointment;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -30,7 +29,6 @@ public class ViewingAppointmentController {
 
     @PostMapping("/appointments/create")
     public String createAppointment(
-            @RequestParam Integer productId,
             @RequestParam LocalDate appointmentDate,
             @RequestParam String appointmentTime,
             @RequestParam(required = false) String note,
@@ -44,7 +42,7 @@ public class ViewingAppointmentController {
                     || "ROLE_MODERATOR".equals(roleName) || "ROLE_CONTENT_MODERATOR".equals(roleName)
                     ) {
                 redirectAttributes.addFlashAttribute("error", "Tài khoản quản trị / nhà vườn / kiểm duyệt viên không được phép đặt lịch thăm vườn!");
-                return "redirect:/appointments";
+                return "redirect:/home";
             }
         }
 
@@ -67,18 +65,25 @@ public class ViewingAppointmentController {
             );
         } catch (RuntimeException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
-            return "redirect:/bonsai-luxury-detail/" + productId;
+
         }
 
-        return "redirect:/appointments";
+        return "redirect:/home";
     }
-
-    @GetMapping("/appointments")
-    public String myAppointment(Model model, Principal principal) {
+    
+    @GetMapping("/appointments/list")
+    @ResponseBody
+    public List<AppointmentDetailDTO> myAppointmentList(Principal principal) {
         User user = userService.findByEmail(principal.getName());
-        List<ViewingAppointment> viewingAppointments = viewingAppointmentService.findByCustomer(user);
-        model.addAttribute("viewingAppointments", viewingAppointments);
-        return "customer/view-appointment";
+        return viewingAppointmentService.findByCustomer(user)
+                .stream()
+                .map(appointment -> new AppointmentDetailDTO(
+                        appointment.getAppointmentId(),
+                        appointment.getAppointmentDate(),
+                        appointment.getStatus(),
+                        appointment.getNote()
+                ))
+                .toList();
     }
 
     @GetMapping("/appointments/detail/{id}")
@@ -112,7 +117,7 @@ public class ViewingAppointmentController {
         } catch (RuntimeException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
-        return "redirect:/appointments";
+        return "redirect:/home";
     }
 
     @PostMapping("/appointments/cancel/{id}")
@@ -126,6 +131,6 @@ public class ViewingAppointmentController {
         } catch (RuntimeException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
-        return "redirect:/appointments";
+        return "redirect:/home";
     }
 }
