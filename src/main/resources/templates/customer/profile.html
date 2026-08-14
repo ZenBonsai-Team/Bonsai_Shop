@@ -202,7 +202,7 @@
                             <th>Sản phẩm</th>
                             <th>Tổng tiền</th>
                             <th>Trạng thái</th>
-                            <th class="text-end">Chi tiết</th>
+                            <th class="text-center" style="width: 180px; min-width: 180px;">Chi tiết</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -276,8 +276,8 @@
                                     <i class="fa-solid fa-circle-xmark me-1"></i>Đã hủy
                                 </span>
                             </td>
-                            <td class="text-end">
-                                <div class="d-flex justify-content-end align-items-center gap-2">
+                            <td class="text-center">
+                                <div class="d-flex justify-content-center align-items-center gap-2">
                                     <!-- Nút đánh giá nhanh từ bảng chính -->
                                     <div th:if="${order.orderStatus == 'COMPLETED'}">
                                         <th:block th:each="detail : ${order.orderDetails}" th:if="${detail.product != null}">
