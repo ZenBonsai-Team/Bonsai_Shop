@@ -18,55 +18,60 @@
 
     <!-- SIDEBAR -->
     <aside class="sidebar">
+        <!-- Collapsible Toggle Button -->
+        <button type="button" id="sidebarToggleBtn" class="sidebar-toggle-btn" title="Thu gọn / Mở rộng">
+            <i class="fa-solid fa-angle-left"></i>
+        </button>
+
         <a th:href="@{/home}" class="sidebar-logo d-flex align-items-center gap-3 text-decoration-none" style="padding-top: 15px; padding-bottom: 15px; border-bottom: 1px solid rgba(0, 0, 0, 0.05); margin-bottom: 20px;">
-            <img th:src="@{/images/logo.png}" alt="Logo" style="width: 64px; height: 64px; object-fit: contain; min-width: 64px;">
-            <span class="d-flex flex-column text-start" style="font-size: 22px; font-weight: 700; color: #06210f; font-family: 'Plus Jakarta Sans', sans-serif; line-height: 1.2;">
+            <img th:src="@{/images/logo.png}" alt="Logo" style="width: 48px; height: 48px; object-fit: contain; min-width: 48px;">
+            <span class="logo-text d-flex flex-column text-start" style="font-size: 20px; font-weight: 700; color: #1C3322; font-family: 'Plus Jakarta Sans', sans-serif; line-height: 1.2;">
                 <span>Minh Kỷ</span>
-                <span style="color: #2e7d32;">Garden</span>
+                <span style="color: #B8926A;">Garden</span>
             </span>
         </a>
 
         <nav class="sidebar-menu">
             <!-- Nút quay lại dashboard cho các vai trò đặc biệt -->
-            <a sec:authorize="hasRole('OWNER')" th:href="@{/owner}" style="color: #2e7d32; font-weight: bold; background: #e8f5e9;">
+            <a sec:authorize="hasRole('OWNER')" th:href="@{/owner}" style="color: #1C3322; font-weight: bold; background: rgba(28, 51, 34, 0.05);">
                 <i class="fa-solid fa-gauge"></i>
-                Bảng điều khiển Chủ
+                <span>Bảng điều khiển Chủ</span>
             </a>
-            <a sec:authorize="hasRole('CONTENT_MODERATOR')" th:href="@{/moderator/community}" style="color: #2e7d32; font-weight: bold; background: #e8f5e9;">
+            <a sec:authorize="hasRole('CONTENT_MODERATOR')" th:href="@{/moderator/community}" style="color: #1C3322; font-weight: bold; background: rgba(28, 51, 34, 0.05);">
                 <i class="fa-solid fa-gauge"></i>
-                Bảng điều khiển
+                <span>Bảng điều khiển</span>
             </a>
-            <a sec:authorize="hasRole('MODERATOR')" th:href="@{/moderator/orders}" style="color: #2e7d32; font-weight: bold; background: #e8f5e9;">
+            <a sec:authorize="hasRole('MODERATOR')" th:href="@{/moderator/orders}" style="color: #1C3322; font-weight: bold; background: rgba(28, 51, 34, 0.05);">
                 <i class="fa-solid fa-gauge"></i>
-                Bảng điều khiển
+                <span>Bảng điều khiển</span>
             </a>
-            <a sec:authorize="hasRole('ARTISAN')" th:href="@{/artisan}" style="color: #2e7d32; font-weight: bold; background: #e8f5e9;">
+            <a sec:authorize="hasRole('ARTISAN')" th:href="@{/artisan}" style="color: #1C3322; font-weight: bold; background: rgba(28, 51, 34, 0.05);">
                 <i class="fa-solid fa-store"></i>
-                Kênh Nghệ nhân / Người bán
+                <span>Kênh Nghệ nhân / Người bán</span>
             </a>
 
             <a class="active" th:href="@{/profile}">
                 <i class="fa-regular fa-user"></i>
-                Hồ sơ
+                <span>Hồ sơ</span>
             </a>
 
             <a href="#myBonsaiJourneysSection">
                 <i class="fa-solid fa-seedling text-success"></i>
-                Nhật ký Bonsai
+                <span>Nhật ký Bonsai</span>
             </a>
 
             <a href="#savedPostsSection">
                 <i class="fa-regular fa-bookmark text-primary"></i>
-                Bài viết đã lưu
+                <span>Bài viết đã lưu</span>
             </a>
 
             <a sec:authorize="hasRole('CUSTOMER')" href="#orderHistorySection">
                 <i class="fa-solid fa-bag-shopping"></i>
-                Đơn hàng
+                <span>Đơn hàng</span>
             </a>
             <a th:href="@{/profile/change-password}">
                 <i class="fa-solid fa-lock"></i>
-                Đổi mật khẩu
+                <span>Đổi mật khẩu</span>
             </a>
         </nav>
 
@@ -74,7 +79,7 @@
             <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
             <button type="submit">
                 <i class="fa-solid fa-arrow-right-from-bracket"></i>
-                Đăng xuất
+                <span>Đăng xuất</span>
             </button>
         </form>
     </aside>
@@ -209,18 +214,37 @@
                                 <span class="small text-muted" th:text="${#temporals.format(order.orderDate, 'dd/MM/yyyy HH:mm')}">12/06/2025 14:30</span>
                             </td>
                             <td>
-                                <div class="d-flex align-items-center gap-2" th:if="${order.orderDetails != null and !#lists.isEmpty(order.orderDetails)}">
-                                    <img th:src="${order.orderDetails[0].product != null and order.orderDetails[0].product.firstImageUrl != null ? order.orderDetails[0].product.firstImageUrl : '/images/bonsai-1.png'}" 
-                                         onerror="this.onerror=null;this.src='/images/bonsai-1.png';"
-                                         alt="Product" class="rounded" style="width: 40px; height: 40px; object-fit: cover;">
-                                    <div>
-                                        <div class="fw-semibold text-dark text-truncate" style="max-width: 200px;" 
-                                             th:text="${order.orderDetails[0].product != null ? order.orderDetails[0].product.productName : 'Sản phẩm'}">Bonsai Tùng Cối</div>
-                                        <span class="small text-muted" th:if="${#lists.size(order.orderDetails) > 1}" 
-                                              th:text="'+ ' + (${#lists.size(order.orderDetails)} - 1) + ' sản phẩm khác'">+ 1 sản phẩm khác</span>
-                                    </div>
-                                </div>
-                                <span class="text-muted small" th:if="${order.orderDetails == null or #lists.isEmpty(order.orderDetails)}">Không có sản phẩm</span>
+                                 <div class="d-flex align-items-center gap-2" th:if="${order.orderDetails != null and !#lists.isEmpty(order.orderDetails)}">
+                                     <!-- Group of tree images (overlapping style for premium look) -->
+                                     <div class="d-flex align-items-center me-2">
+                                         <div th:each="detail, iter : ${order.orderDetails}" 
+                                              th:if="${detail.product != null}"
+                                              class="position-relative order-product-thumb" 
+                                              th:style="'z-index: ' + (10 - iter.index) + '; margin-right: -12px;'"
+                                              th:id="'detail-thumb-' + ${detail.orderDetailId}">
+                                             <img th:src="${detail.product.firstImageUrl != null ? detail.product.firstImageUrl : '/images/bonsai-1.png'}" 
+                                                  onerror="this.onerror=null;this.src='/images/bonsai-1.png';"
+                                                  th:alt="${detail.product.productName}"
+                                                  th:title="${detail.product.productName}"
+                                                  class="rounded-circle border border-2 border-white shadow-sm"
+                                                  style="width: 38px; height: 38px; object-fit: cover; background-color: #f7f6f1;">
+                                             <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-dark text-white d-flex align-items-center justify-content-center" 
+                                                   style="font-size: 8px; width: 15px; height: 15px; padding: 0; min-width: 15px;"
+                                                   th:if="${detail.quantity > 1}" th:text="${detail.quantity}">1</span>
+                                         </div>
+                                     </div>
+                                     <div class="ms-2" style="max-width: 180px;">
+                                         <!-- If 1 item, show its name -->
+                                         <div th:if="${#lists.size(order.orderDetails) == 1}" 
+                                              class="fw-semibold text-dark text-truncate small"
+                                              th:text="${order.orderDetails[0].product != null ? order.orderDetails[0].product.productName : 'Sản phẩm'}">Bonsai Tùng Cối</div>
+                                         <!-- If multiple items, show total items count -->
+                                         <div th:if="${#lists.size(order.orderDetails) > 1}" 
+                                              class="fw-bold text-success small"
+                                              th:text="${#lists.size(order.orderDetails)} + ' cây đã mua'">3 cây đã mua</div>
+                                     </div>
+                                 </div>
+                                 <span class="text-muted small" th:if="${order.orderDetails == null or #lists.isEmpty(order.orderDetails)}">Không có sản phẩm</span>
                             </td>
                             <td>
                                 <strong class="text-dark" th:text="${#numbers.formatDecimal(order.totalAmount, 0, 'COMMA', 0, 'POINT')} + ' ₫'">2.500.000 ₫</strong>
@@ -783,6 +807,31 @@
                     submitBtn.disabled = false;
                     submitBtn.innerHTML = 'Gửi đánh giá';
                 });
+            });
+        }
+    });
+</script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const layout = document.querySelector('.profile-layout');
+        const toggleBtn = document.getElementById('sidebarToggleBtn');
+        
+        if (localStorage.getItem('profile-sidebar-collapsed') === 'true') {
+            layout.classList.add('collapsed');
+            if (toggleBtn) {
+                toggleBtn.innerHTML = '<i class="fa-solid fa-angle-right"></i>';
+            }
+        }
+        
+        if (toggleBtn) {
+            toggleBtn.addEventListener('click', function() {
+                layout.classList.toggle('collapsed');
+                const isCollapsed = layout.classList.contains('collapsed');
+                localStorage.setItem('profile-sidebar-collapsed', isCollapsed ? 'true' : 'false');
+                toggleBtn.innerHTML = isCollapsed ? 
+                    '<i class="fa-solid fa-angle-right"></i>' : 
+                    '<i class="fa-solid fa-angle-left"></i>';
             });
         }
     });
