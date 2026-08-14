@@ -183,6 +183,26 @@ textarea {
     box-shadow: 0 0 0 2px rgba(211, 47, 47, 0.12);
 }
 
+.product-form-card label {
+    gap: 5px;
+}
+
+.product-form-card .field-error {
+    margin-top: 2px;
+    min-height: 14px;
+    font-size: 11px;
+    line-height: 1.2;
+    font-weight: 600;
+}
+
+.product-form-card .grid {
+    align-items: start;
+}
+
+.product-form-card .input-with-unit {
+    width: 100%;
+}
+
 .muted-text {
     color: #6b7280;
     font-size: 0.9rem;

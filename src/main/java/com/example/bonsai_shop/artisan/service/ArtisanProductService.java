@@ -42,6 +42,7 @@ public class ArtisanProductService {
     private static final int MAX_TAGS_PER_PRODUCT = 12;
     private static final long MAX_IMAGE_SIZE_BYTES = 7L * 1024 * 1024;
     private static final long MAX_VIDEO_SIZE_BYTES = 100L * 1024 * 1024;
+    private static final BigDecimal MAX_PRODUCT_PRICE = new BigDecimal("999999999999");
 
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
@@ -86,6 +87,7 @@ public class ArtisanProductService {
                 .orElseThrow(() -> new RuntimeException("Segment không tồn tại!"));
 
         validateRequiredSpecifications(form.getAge(), form.getHeight(), form.getTrunkDiameter(), form.getStyle());
+        validateProductPrice(form.getPrice());
 
         Product product = Product.builder()
                 .createdBy(artisanUser)
@@ -124,6 +126,7 @@ public class ArtisanProductService {
                 .orElseThrow(() -> new RuntimeException("Segment không tồn tại!"));
 
         validateRequiredSpecifications(form.getAge(), form.getHeight(), form.getTrunkDiameter(), form.getStyle());
+        validateProductPrice(form.getPrice());
 
         product.setVariety(variety);
         product.setSegment(segment);
@@ -463,11 +466,17 @@ public class ArtisanProductService {
         if (age <= 0) {
             throw new RuntimeException("Tuổi cây phải lớn hơn 0.");
         }
+        if (age > 1000) {
+            throw new RuntimeException("Tuổi cây không được vượt quá 1000 năm.");
+        }
         if (height == null) {
             throw new RuntimeException("Vui lòng nhập chiều cao cây.");
         }
         if (height <= 0) {
             throw new RuntimeException("Chiều cao cây phải lớn hơn 0.");
+        }
+        if (height > 1000) {
+            throw new RuntimeException("Chiều cao cây không được vượt quá 1000 cm.");
         }
         if (trunkDiameter == null) {
             throw new RuntimeException("Vui lòng nhập đường kính thân cây.");
@@ -475,11 +484,32 @@ public class ArtisanProductService {
         if (trunkDiameter <= 0) {
             throw new RuntimeException("Đường kính thân cây phải lớn hơn 0.");
         }
-        if (style == null || style.isBlank()) {
-            throw new RuntimeException("Vui lòng nhập style cây.");
+        if (trunkDiameter > 500) {
+            throw new RuntimeException("Đường kính thân cây không được vượt quá 500 cm.");
         }
-        if (!style.trim().matches("^[\\p{L}\\s]+$")) {
-            throw new RuntimeException("Style chỉ được nhập chữ.");
+        if (style == null || style.isBlank()) {
+            throw new RuntimeException("Vui lòng nhập dáng cây.");
+        }
+        if (style.trim().length() > 100) {
+            throw new RuntimeException("Dáng cây không được vượt quá 100 ký tự.");
+        }
+        if (!style.trim().matches("^[\\p{L}\\s'\\-]+$")) {
+            throw new RuntimeException("Dáng cây chỉ được nhập chữ, khoảng trắng và dấu ' -.");
+        }
+    }
+
+    private void validateProductPrice(BigDecimal price) {
+        if (price == null) {
+            throw new RuntimeException("Vui lòng nhập giá sản phẩm.");
+        }
+        if (price.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new RuntimeException("Giá sản phẩm phải lớn hơn 0.");
+        }
+        if (price.compareTo(MAX_PRODUCT_PRICE) > 0) {
+            throw new RuntimeException("Giá sản phẩm không được vượt quá 999.999.999.999 VNĐ.");
+        }
+        if (price.stripTrailingZeros().scale() > 0) {
+            throw new RuntimeException("Giá sản phẩm chỉ được nhập số nguyên VNĐ.");
         }
     }
 

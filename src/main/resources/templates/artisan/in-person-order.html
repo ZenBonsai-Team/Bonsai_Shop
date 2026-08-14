@@ -694,7 +694,7 @@
         } else if (fieldName === 'craneFee' || fieldName === 'shippingFee') {
             const feeValue = Number(value || 0);
             if (feeValue < 0) return 'Phí không được âm.';
-            if (feeValue > 999999999) return 'Phí không được vượt quá 999.999.999 VNĐ.';
+            if (feeValue > 200000000) return 'Phí không được vượt quá 200.000.000 VNĐ.';
         } else if (fieldName === 'notes' && value.length > 500) {
             return 'Ghi chú không được vượt quá 500 ký tự.';
         }

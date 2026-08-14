@@ -694,7 +694,7 @@ class ArtisanInPersonOrderServiceTest {
                 null
         ))
                 .isInstanceOf(RuntimeException.class)
-                .hasMessage("Phí không được vượt quá 999.999.999 VNĐ.");
+                .hasMessage("Phí không được vượt quá 200.000.000 VNĐ.");
 
         verify(productRepository, never()).reserveIfAvailable(any(Integer.class));
         verify(orderRepository, never()).save(any(Order.class));

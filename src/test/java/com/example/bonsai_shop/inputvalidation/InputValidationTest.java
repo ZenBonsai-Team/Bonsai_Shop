@@ -152,7 +152,7 @@ class InputValidationTest {
         }
 
         @Test
-        @DisplayName("Negative Test: Submit field 'style' chứa số/ký tự đặc biệt vi phạm Pattern @Pattern(regexp = '^[\\p{L}\\s]+$')")
+        @DisplayName("Negative Test: Submit field 'style' chứa số/ký tự đặc biệt vi phạm Pattern")
         void testCreateProduct_InvalidStylePattern_FailsValidation() {
             // Arrange
             ArtisanProductFormDTO form = ArtisanProductFormDTO.builder()
@@ -171,7 +171,28 @@ class InputValidationTest {
 
             // Assert
             assertThat(violations).hasSize(1);
-            assertThat(violations.iterator().next().getMessage()).isEqualTo("Style chỉ được nhập chữ.");
+            assertThat(violations.iterator().next().getMessage()).isEqualTo("Dáng cây chỉ được nhập chữ, khoảng trắng và dấu ' -.");
+        }
+
+        @Test
+        @DisplayName("Negative Test: Submit giá sản phẩm vượt giới hạn DB")
+        void testCreateProduct_PriceExceedsLimit_FailsValidation() {
+            ArtisanProductFormDTO form = ArtisanProductFormDTO.builder()
+                    .varietyId(1)
+                    .segmentId(1)
+                    .productName("Cây Tùng La Hán")
+                    .age(10)
+                    .height(1.5f)
+                    .trunkDiameter(0.2f)
+                    .style("Dáng Trực")
+                    .price(new BigDecimal("1000000000000"))
+                    .build();
+
+            Set<ConstraintViolation<ArtisanProductFormDTO>> violations = validator.validate(form);
+
+            assertThat(violations)
+                    .extracting(ConstraintViolation::getMessage)
+                    .contains("Giá sản phẩm không được vượt quá 999.999.999.999 VNĐ.");
         }
 
         @Test

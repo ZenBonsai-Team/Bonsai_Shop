@@ -36,7 +36,7 @@
 
     <div id="artisanFlashError" th:if="${error}" th:attr="data-message=${error}" hidden></div>
 
-    <form class="form-card" method="post" th:object="${productForm}"
+    <form id="productForm" class="form-card product-form-card" method="post" th:object="${productForm}" novalidate
           th:action="${product == null} ? @{/artisan/products} : @{/artisan/products/{id}(id=${product.productId})}">
         <label th:if="${product != null}">Mã sản phẩm
             <input readonly th:value="${product.productCode}">
@@ -44,23 +44,25 @@
         <p th:if="${product == null}" class="form-hint">Mã sản phẩm sẽ được hệ thống tự động sinh sau khi lưu.</p>
 
         <label>Tên cây
-            <input th:field="*{productName}" required>
-            <small th:if="${#fields.hasErrors('productName')}" th:errors="*{productName}" class="text-danger"></small>
+            <input th:field="*{productName}" data-product-field="productName" required>
+            <small th:if="${#fields.hasErrors('productName')}" th:errors="*{productName}" class="field-error"></small>
+            <small class="field-error" data-product-error-for="productName"></small>
         </label>
 
         <div class="grid">
             <label>Danh mục (Category)
-                <select id="categorySelect" required>
+                <select id="categorySelect" data-product-field="categoryId" required>
                     <option value="">-- Chọn danh mục --</option>
                     <option th:each="category : ${categories}"
                             th:value="${category.categoryId}"
                             th:selected="${selectedCategoryId != null && selectedCategoryId == category.categoryId}"
                             th:text="${category.categoryName}"></option>
                 </select>
+                <small class="field-error" data-product-error-for="categoryId"></small>
             </label>
 
             <label>Loại cây (Variety)
-                <select id="varietySelect" name="varietyId" required>
+                <select id="varietySelect" name="varietyId" data-product-field="varietyId" required>
                     <option value="">-- Chọn loại cây --</option>
                     <option th:each="variety : ${varieties}"
                             th:value="${variety.varietyId}"
@@ -68,17 +70,19 @@
                             th:selected="${productForm.varietyId != null && productForm.varietyId == variety.varietyId}"
                             th:text="${variety.varietyName}"></option>
                 </select>
-                <small th:if="${#fields.hasErrors('varietyId')}" th:errors="*{varietyId}" class="text-danger"></small>
+                <small th:if="${#fields.hasErrors('varietyId')}" th:errors="*{varietyId}" class="field-error"></small>
+                <small class="field-error" data-product-error-for="varietyId"></small>
             </label>
 
             <label>Phân khúc (Segment)
-                <select th:field="*{segmentId}" required>
+                <select th:field="*{segmentId}" data-product-field="segmentId" required>
                     <option value="">-- Chọn phân khúc --</option>
                     <option th:each="segment : ${segments}"
                             th:value="${segment.segmentId}"
                             th:text="${segment.segmentName}"></option>
                 </select>
-                <small th:if="${#fields.hasErrors('segmentId')}" th:errors="*{segmentId}" class="text-danger"></small>
+                <small th:if="${#fields.hasErrors('segmentId')}" th:errors="*{segmentId}" class="field-error"></small>
+                <small class="field-error" data-product-error-for="segmentId"></small>
             </label>
         </div>
 
@@ -111,44 +115,53 @@
                     <p class="tag-empty-state" data-tag-empty hidden>Không tìm thấy thẻ phù hợp.</p>
                 </div>
                 <p class="form-hint">Chọn tối đa 12 thẻ. Thẻ đã chọn sẽ được đưa lên đầu danh sách.</p>
+                <small class="field-error" data-product-error-for="tagIds"></small>
             </div>
         </fieldset>
 
         <label>Mô tả
-            <textarea th:field="*{description}" rows="5"></textarea>
+            <textarea th:field="*{description}" rows="5" data-product-field="description"></textarea>
+            <small th:if="${#fields.hasErrors('description')}" th:errors="*{description}" class="field-error"></small>
+            <small class="field-error" data-product-error-for="description"></small>
         </label>
 
         <label>Câu chuyện cây
-            <textarea th:field="*{treeStory}" rows="5" placeholder="Nguồn gốc, hành trình chăm sóc, ý nghĩa hoặc câu chuyện riêng của cây..."></textarea>
+            <textarea th:field="*{treeStory}" rows="5" data-product-field="treeStory" placeholder="Nguồn gốc, hành trình chăm sóc, ý nghĩa hoặc câu chuyện riêng của cây..."></textarea>
+            <small th:if="${#fields.hasErrors('treeStory')}" th:errors="*{treeStory}" class="field-error"></small>
+            <small class="field-error" data-product-error-for="treeStory"></small>
         </label>
 
         <div class="grid">
             <label>Tuổi
                 <span class="input-with-unit">
-                    <input type="number" th:field="*{age}" min="1" required>
+                    <input type="text" inputmode="numeric" th:field="*{age}" data-product-field="age" required>
                     <span>năm</span>
                 </span>
-                <small th:if="${#fields.hasErrors('age')}" th:errors="*{age}" class="text-danger"></small>
+                <small th:if="${#fields.hasErrors('age')}" th:errors="*{age}" class="field-error"></small>
+                <small class="field-error" data-product-error-for="age"></small>
             </label>
             <label>Chiều cao
                 <span class="input-with-unit">
-                    <input type="number" step="0.01" th:field="*{height}" min="0.01" required>
+                    <input type="text" inputmode="decimal" th:field="*{height}" data-product-field="height" required>
                     <span>cm</span>
                 </span>
-                <small th:if="${#fields.hasErrors('height')}" th:errors="*{height}" class="text-danger"></small>
+                <small th:if="${#fields.hasErrors('height')}" th:errors="*{height}" class="field-error"></small>
+                <small class="field-error" data-product-error-for="height"></small>
             </label>
             <label>Đường kính thân
                 <span class="input-with-unit">
-                    <input type="number" step="0.01" th:field="*{trunkDiameter}" min="0.01" required>
+                    <input type="text" inputmode="decimal" th:field="*{trunkDiameter}" data-product-field="trunkDiameter" required>
                     <span>cm</span>
                 </span>
-                <small th:if="${#fields.hasErrors('trunkDiameter')}" th:errors="*{trunkDiameter}" class="text-danger"></small>
+                <small th:if="${#fields.hasErrors('trunkDiameter')}" th:errors="*{trunkDiameter}" class="field-error"></small>
+                <small class="field-error" data-product-error-for="trunkDiameter"></small>
             </label>
         </div>
 
         <label>Dáng cây (Style/Dáng)
-            <input th:field="*{style}" pattern="[\p{L}\s]+" title="Style chỉ được nhập chữ." required>
-            <small th:if="${#fields.hasErrors('style')}" th:errors="*{style}" class="text-danger"></small>
+            <input th:field="*{style}" data-product-field="style" required>
+            <small th:if="${#fields.hasErrors('style')}" th:errors="*{style}" class="field-error"></small>
+            <small class="field-error" data-product-error-for="style"></small>
         </label>
 
         <label>Giá
@@ -156,12 +169,14 @@
                 <input id="priceDisplay"
                        type="text"
                        inputmode="numeric"
+                       data-product-field="price"
                        required
                        th:attr="data-price=${productForm.price}">
                 <input id="priceValue" type="hidden" name="price" th:value="${productForm.price}">
                 <span>VNĐ</span>
             </span>
-            <small th:if="${#fields.hasErrors('price')}" th:errors="*{price}" class="text-danger"></small>
+            <small th:if="${#fields.hasErrors('price')}" th:errors="*{price}" class="field-error"></small>
+            <small class="field-error" data-product-error-for="price"></small>
         </label>
         <input th:if="${product != null}" type="hidden" name="productStatus" th:value="${productForm.productStatus}">
         <button type="submit">Lưu & Tiếp tục</button>
@@ -194,6 +209,147 @@
 
     const priceDisplay = document.getElementById('priceDisplay');
     const priceValue = document.getElementById('priceValue');
+    const productForm = document.getElementById('productForm');
+    const productFields = {
+        productName: document.querySelector('[data-product-field="productName"]'),
+        categoryId: document.querySelector('[data-product-field="categoryId"]'),
+        varietyId: document.querySelector('[data-product-field="varietyId"]'),
+        segmentId: document.querySelector('[data-product-field="segmentId"]'),
+        description: document.querySelector('[data-product-field="description"]'),
+        treeStory: document.querySelector('[data-product-field="treeStory"]'),
+        age: document.querySelector('[data-product-field="age"]'),
+        height: document.querySelector('[data-product-field="height"]'),
+        trunkDiameter: document.querySelector('[data-product-field="trunkDiameter"]'),
+        style: document.querySelector('[data-product-field="style"]'),
+        price: priceDisplay
+    };
+    const tagLimitError = document.querySelector('[data-product-error-for="tagIds"]');
+
+    function setProductFieldError(fieldName, message) {
+        const errorElement = productForm.querySelector(`[data-product-error-for="${fieldName}"]`);
+        const fieldElement = productFields[fieldName];
+        const fieldWrapper = fieldElement?.closest('label') || fieldElement?.closest('.tag-multiselect');
+        if (errorElement) {
+            errorElement.textContent = message || '';
+        }
+        fieldWrapper?.classList.toggle('field-invalid', Boolean(message));
+    }
+
+    function hasTooManyDecimals(value, maxDecimals) {
+        return new RegExp(`^[0-9]+[,.][0-9]{${maxDecimals + 1},}$`).test(value);
+    }
+
+    function sanitizeIntegerInput(input) {
+        input.value = input.value.replace(/[^\d]/g, '');
+    }
+
+    function sanitizeDecimalInput(input) {
+        let value = input.value.replace(/[^\d,.]/g, '').replace(/,/g, '.');
+        const firstDotIndex = value.indexOf('.');
+        if (firstDotIndex !== -1) {
+            value = value.slice(0, firstDotIndex + 1) + value.slice(firstDotIndex + 1).replace(/\./g, '');
+        }
+        const parts = value.split('.');
+        if (parts[1]?.length > 2) {
+            value = parts[0] + '.' + parts[1].slice(0, 2);
+        }
+        input.value = value;
+    }
+
+    function sanitizeStyleInput(input) {
+        input.value = input.value.replace(/[^\p{L}\s'\-]/gu, '');
+    }
+
+    function validateProductField(fieldName) {
+        const field = productFields[fieldName];
+        const rawValue = field?.value?.trim() || '';
+        let message = '';
+
+        if (fieldName === 'productName') {
+            if (!rawValue) {
+                message = 'Vui lòng nhập tên cây.';
+            } else if (rawValue.length > 100) {
+                message = 'Tên cây không được vượt quá 100 ký tự.';
+            } else if (!/^[\p{L}\p{N}\s.,'()\-]+$/u.test(rawValue)) {
+                message = "Tên cây chỉ được nhập chữ, số, khoảng trắng và các dấu . , ' - ( ).";
+            }
+        } else if (fieldName === 'categoryId') {
+            if (!rawValue) message = 'Vui lòng chọn danh mục.';
+        } else if (fieldName === 'varietyId') {
+            if (!rawValue) message = 'Vui lòng chọn loại cây.';
+        } else if (fieldName === 'segmentId') {
+            if (!rawValue) message = 'Vui lòng chọn phân khúc.';
+        } else if (fieldName === 'description') {
+            if (rawValue.length > 1000) message = 'Mô tả không được vượt quá 1000 ký tự.';
+        } else if (fieldName === 'treeStory') {
+            if (rawValue.length > 1500) message = 'Câu chuyện cây không được vượt quá 1500 ký tự.';
+        } else if (fieldName === 'age') {
+            const value = Number(rawValue);
+            if (!rawValue) {
+                message = 'Vui lòng nhập tuổi cây.';
+            } else if (!/^\d+$/.test(rawValue)) {
+                message = 'Tuổi cây chỉ được nhập số nguyên.';
+            } else if (value < 1 || value > 1000) {
+                message = 'Tuổi cây phải từ 1 đến 1000 năm.';
+            }
+        } else if (fieldName === 'height') {
+            const value = Number(rawValue.replace(',', '.'));
+            if (!rawValue) {
+                message = 'Vui lòng nhập chiều cao cây.';
+            } else if (Number.isNaN(value) || value <= 0) {
+                message = 'Chiều cao cây phải lớn hơn 0.';
+            } else if (value > 1000) {
+                message = 'Chiều cao cây không được vượt quá 1000 cm.';
+            } else if (hasTooManyDecimals(rawValue, 2)) {
+                message = 'Chiều cao cây chỉ được nhập tối đa 2 số thập phân.';
+            }
+        } else if (fieldName === 'trunkDiameter') {
+            const value = Number(rawValue.replace(',', '.'));
+            if (!rawValue) {
+                message = 'Vui lòng nhập đường kính thân cây.';
+            } else if (Number.isNaN(value) || value <= 0) {
+                message = 'Đường kính thân cây phải lớn hơn 0.';
+            } else if (value > 500) {
+                message = 'Đường kính thân cây không được vượt quá 500 cm.';
+            } else if (hasTooManyDecimals(rawValue, 2)) {
+                message = 'Đường kính thân cây chỉ được nhập tối đa 2 số thập phân.';
+            }
+        } else if (fieldName === 'style') {
+            if (!rawValue) {
+                message = 'Vui lòng nhập dáng cây.';
+            } else if (rawValue.length > 100) {
+                message = 'Dáng cây không được vượt quá 100 ký tự.';
+            } else if (!/^[\p{L}\s'\-]+$/u.test(rawValue)) {
+                message = "Dáng cây chỉ được nhập chữ, khoảng trắng và dấu ' -.";
+            }
+        } else if (fieldName === 'price') {
+            const normalizedPrice = normalizePrice(rawValue);
+            if (!normalizedPrice) {
+                message = 'Vui lòng nhập giá sản phẩm.';
+            } else if (!/^\d+$/.test(normalizedPrice)) {
+                message = 'Giá sản phẩm chỉ được nhập số.';
+            } else if (BigInt(normalizedPrice) <= 0n) {
+                message = 'Giá sản phẩm phải lớn hơn 0.';
+            } else if (BigInt(normalizedPrice) > 999999999999n) {
+                message = 'Giá sản phẩm không được vượt quá 999.999.999.999 VNĐ.';
+            }
+        }
+
+        setProductFieldError(fieldName, message);
+        return !message;
+    }
+
+    function validateProductForm() {
+        syncPriceValue();
+        const fieldNames = Object.keys(productFields);
+        const results = fieldNames.map(validateProductField);
+        const isTagCountValid = !tagMultiselect || tagMultiselect.querySelectorAll('.tag-option input:checked').length <= Number(tagMultiselect.dataset.maxTags || 12);
+        if (!isTagCountValid && tagLimitError) {
+            tagLimitError.textContent = 'Chỉ được chọn tối đa ' + Number(tagMultiselect.dataset.maxTags || 12) + ' thẻ cho một cây.';
+            tagMultiselect.classList.add('field-invalid');
+        }
+        return results.every(Boolean) && isTagCountValid;
+    }
 
     function normalizePrice(value) {
         const trimmedValue = value.trim();
@@ -216,8 +372,36 @@
 
     priceDisplay.value = formatVnd(priceDisplay.dataset.price || priceValue.value);
     priceValue.value = normalizePrice(priceDisplay.dataset.price || priceValue.value);
-    priceDisplay.addEventListener('input', syncPriceValue);
-    priceDisplay.form.addEventListener('submit', syncPriceValue);
+    priceDisplay.addEventListener('input', () => {
+        syncPriceValue();
+        validateProductField('price');
+    });
+    Object.entries(productFields).forEach(([fieldName, field]) => {
+        if (!field || fieldName === 'price') {
+            return;
+        }
+        field.addEventListener('input', () => {
+            if (fieldName === 'age') {
+                sanitizeIntegerInput(field);
+            } else if (fieldName === 'height' || fieldName === 'trunkDiameter') {
+                sanitizeDecimalInput(field);
+            } else if (fieldName === 'style') {
+                sanitizeStyleInput(field);
+            }
+            validateProductField(fieldName);
+        });
+        field.addEventListener('blur', () => validateProductField(fieldName));
+        field.addEventListener('change', () => validateProductField(fieldName));
+    });
+    productForm.addEventListener('submit', (event) => {
+        if (!validateProductForm()) {
+            event.preventDefault();
+            productForm.querySelector('.field-error:not(:empty)')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    });
+    productForm.querySelectorAll('.field-error:not(:empty)').forEach(errorElement => {
+        errorElement.closest('label')?.classList.add('field-invalid');
+    });
 
     const tagMultiselect = document.querySelector('[data-tag-multiselect]');
     if (tagMultiselect) {
@@ -239,11 +423,10 @@
 
         function showTagLimitMessage() {
             const message = 'Chỉ được chọn tối đa ' + maxTags + ' thẻ cho một cây.';
-            if (window.BSMSToast) {
-                BSMSToast.error(message);
-            } else {
-                alert(message);
+            if (tagLimitError) {
+                tagLimitError.textContent = message;
             }
+            tagMultiselect.classList.add('field-invalid');
         }
 
         function renderTags() {
@@ -252,6 +435,10 @@
 
             summary.textContent = selectedOptions.length ? 'Đã chọn ' + selectedOptions.length + ' thẻ' : 'Chọn thẻ nhãn';
             countLabel.textContent = 'Đã chọn ' + selectedOptions.length + ' thẻ';
+            if (selectedOptions.length <= maxTags && tagLimitError) {
+                tagLimitError.textContent = '';
+                tagMultiselect.classList.remove('field-invalid');
+            }
             chipsContainer.innerHTML = '';
 
             selectedOptions.forEach(option => {

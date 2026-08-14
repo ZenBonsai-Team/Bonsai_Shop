@@ -46,7 +46,7 @@ public class ArtisanInPersonOrderService {
     private static final int CUSTOMER_EMAIL_MAX_LENGTH = 100;
     private static final int SHIPPING_ADDRESS_MAX_LENGTH = 255;
     private static final int NOTES_MAX_LENGTH = 500;
-    private static final BigDecimal MAX_FEE_AMOUNT = new BigDecimal("999999999");
+    private static final BigDecimal MAX_FEE_AMOUNT = new BigDecimal("200000000");
     private static final BigDecimal MAX_MONEY_AMOUNT = new BigDecimal("999999999999.99");
 
     private final ArtisanProductService artisanProductService;
@@ -402,7 +402,7 @@ public class ArtisanInPersonOrderService {
             throw new RuntimeException(message);
         }
         if (normalized.compareTo(MAX_FEE_AMOUNT) > 0) {
-            throw new RuntimeException("Phí không được vượt quá 999.999.999 VNĐ.");
+            throw new RuntimeException("Phí không được vượt quá 200.000.000 VNĐ.");
         }
         return normalized;
     }

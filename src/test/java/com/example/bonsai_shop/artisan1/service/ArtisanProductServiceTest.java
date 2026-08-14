@@ -243,6 +243,28 @@ class ArtisanProductServiceTest {
     }
 
     @Test
+    void createProduct_WhenPriceExceedsLimit_ShouldThrowException() {
+        User artisanUser = artisan(10, "artisan@test.com");
+        Variety variety = variety(1);
+        ProductSegment segment = segment(2, "Standard");
+        ArtisanProductFormDTO form = validForm();
+        form.setPrice(new BigDecimal("1000000000000"));
+
+        when(userRepository.findByEmail("artisan@test.com"))
+                .thenReturn(Optional.of(artisanUser));
+        when(varietyRepository.findById(1))
+                .thenReturn(Optional.of(variety));
+        when(productSegmentRepository.findById(2))
+                .thenReturn(Optional.of(segment));
+
+        assertThatThrownBy(() -> artisanProductService.createProduct("artisan@test.com", form))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("Giá sản phẩm không được vượt quá");
+
+        verify(productRepository, never()).save(any(Product.class));
+    }
+
+    @Test
     void createProduct_WhenSegmentIsElite_ShouldNotMakePricePublic() {
         User artisanUser = artisan(10, "artisan@test.com");
         Variety variety = variety(1);
