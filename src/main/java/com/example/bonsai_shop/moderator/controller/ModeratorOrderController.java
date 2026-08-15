@@ -190,6 +190,10 @@ public class ModeratorOrderController {
             Map<String, String> err = new HashMap<>();
             err.put("error", e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(err);
+        } catch (org.springframework.dao.DataAccessException | jakarta.persistence.PersistenceException e) {
+            Map<String, String> err = new HashMap<>();
+            err.put("error", "Lỗi cơ sở dữ liệu: Yêu cầu không hợp lệ hoặc dữ liệu vượt quá giới hạn hệ thống.");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(err);
         } catch (Exception e) {
             Map<String, String> err = new HashMap<>();
             err.put("error", "Lỗi hệ thống: " + e.getMessage());

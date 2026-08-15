@@ -54,6 +54,8 @@ public class OrderService {
     private static final String STATUS_PENDING_PAYMENT = "PENDING_PAYMENT";
     private static final String STATUS_PENDING = "PENDING";
     private static final BigDecimal ZERO = BigDecimal.ZERO;
+    private static final BigDecimal MAX_FEE_AMOUNT = new BigDecimal("200000000");
+    private static final BigDecimal MAX_MONEY_AMOUNT = new BigDecimal("999999999999.99");
 
     private final OrderRepository orderRepository;
     private final ProductRepository productRepository;
@@ -241,6 +243,9 @@ public class OrderService {
         // Tong gia tri thuc te cua toan bo don hang = Tree Price + Crane Fee + Shipping
         // Fee
         BigDecimal newTotal = treePrice.add(normalizedCraneFee).add(normalizedShippingFee);
+        if (newTotal.compareTo(MAX_MONEY_AMOUNT) > 0) {
+            throw new IllegalArgumentException("Tổng tiền đơn hàng không được vượt quá 999.999.999.999 VNĐ.");
+        }
         order.setTotalAmount(newTotal);
 
         List<Payment> existingPayments = paymentRepository.findByOrderOrderIdOrderByPaymentIdAsc(order.getOrderId());
@@ -255,7 +260,7 @@ public class OrderService {
                 throw new IllegalArgumentException("Vui lòng nhập số tiền đặt cọc.");
             }
             validateWholeNumberAmount(depositAmount, "Tiền đặt cọc");
-            if (depositAmount.compareTo(newTotal) > 0) {
+            if (depositAmount.compareTo(treePrice) > 0) {
                 throw new IllegalArgumentException("Số tiền đặt cọc không được vượt quá tổng giá trị cây.");
             }
             order.setDepositAmount(depositAmount);
@@ -337,6 +342,9 @@ public class OrderService {
     public boolean rejectOrder(String orderCode, String reason, User moderator) {
         if (reason == null || reason.isBlank()) {
             throw new IllegalArgumentException("Lý do từ chối là bắt buộc.");
+        }
+        if (reason.trim().length() > 500) {
+            throw new IllegalArgumentException("Nội dung không được vượt quá 500 ký tự.");
         }
         Order order = orderRepository.findByOrderCodeWithDetails(orderCode).orElse(null);
         if (order == null || !"PENDING".equalsIgnoreCase(order.getOrderStatus())) {
@@ -706,6 +714,9 @@ public class OrderService {
 
     @Transactional
     public boolean confirmRemainingPayment(String orderCode, String notes, User moderator) {
+        if (notes != null && notes.trim().length() > 500) {
+            throw new IllegalArgumentException("Ghi chú thanh toán không được vượt quá 500 ký tự.");
+        }
         Order order = orderRepository.findByOrderCode(orderCode).orElse(null);
         if (order == null) {
             throw new IllegalArgumentException("Không tìm thấy đơn hàng: " + orderCode);
@@ -796,6 +807,9 @@ public class OrderService {
         if (normalized.compareTo(ZERO) < 0) {
             throw new IllegalArgumentException(label + " không được âm.");
         }
+        if (normalized.compareTo(MAX_FEE_AMOUNT) > 0) {
+            throw new IllegalArgumentException(label + " không được vượt quá 200.000.000 VNĐ.");
+        }
         validateWholeNumberAmount(normalized, label);
         return normalized;
     }
@@ -847,6 +861,12 @@ public class OrderService {
             String reason, String evidenceNote, String externalReference,
             Boolean customerKeepsTree, String productResolution,
             User moderator) {
+        if (evidenceNote != null && evidenceNote.trim().length() > 1000) {
+            throw new IllegalArgumentException("Minh chứng không được vượt quá 1000 ký tự.");
+        }
+        if (externalReference != null && externalReference.trim().length() > 255) {
+            throw new IllegalArgumentException("Mã tham chiếu không được vượt quá 255 ký tự.");
+        }
         Order order = orderRepository.findByOrderCode(orderCode).orElse(null);
         if (order == null) {
             throw new IllegalArgumentException("Không tìm thấy đơn hàng: " + orderCode);
@@ -959,7 +979,11 @@ public class OrderService {
         if (reason == null || reason.isBlank()) {
             throw new IllegalArgumentException("Lý do là bắt buộc.");
         }
-        return reason.trim();
+        String trimmed = reason.trim();
+        if (trimmed.length() > 500) {
+            throw new IllegalArgumentException("Lý do không được vượt quá 500 ký tự.");
+        }
+        return trimmed;
     }
 
     private FaultParty parseFaultParty(String faultPartyValue) {

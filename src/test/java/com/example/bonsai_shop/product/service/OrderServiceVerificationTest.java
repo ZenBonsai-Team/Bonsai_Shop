@@ -396,7 +396,7 @@ class OrderServiceVerificationTest {
     }
 
     @Test
-    @DisplayName("UT-UUT03-013: Duyệt đơn cọc thất bại do depositAmount vượt quá tổng giá trị đơn (newTotal)")
+    @DisplayName("UT-UUT03-013: Duyệt đơn cọc thất bại do depositAmount vượt quá tổng giá trị cây (treePrice)")
     void verifyOrder_depositExceedsTotal_throwsIllegalArgumentException() {
         User moderator = User.builder().userId(5).build();
         Order order = Order.builder().orderId(100).orderCode("BSMS-123").orderStatus("PENDING").assignedTo(moderator).build();
@@ -406,8 +406,10 @@ class OrderServiceVerificationTest {
         when(orderRepository.findByOrderCodeWithDetails("BSMS-123")).thenReturn(Optional.of(order));
         when(paymentRepository.findByOrderOrderIdOrderByPaymentIdAsc(100)).thenReturn(List.of(depositPayment));
 
+        // treePrice = 1,000,000; craneFee = 500,000; shippingFee = 200,000 -> newTotal = 1,700,000
+        // deposit = 1,200,000 (< newTotal nhưng > treePrice) -> Phải ném ngoại lệ
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                orderService.verifyOrder("BSMS-123", new BigDecimal("100000"), new BigDecimal("50000"), new BigDecimal("1500000"), moderator)
+                orderService.verifyOrder("BSMS-123", new BigDecimal("500000"), new BigDecimal("200000"), new BigDecimal("1200000"), moderator)
         );
 
         assertThat(exception.getMessage()).isEqualTo("Số tiền đặt cọc không được vượt quá tổng giá trị cây.");
@@ -433,6 +435,23 @@ class OrderServiceVerificationTest {
     }
 
     @Test
+    @DisplayName("UT-UUT03-014B: Duyệt đơn thất bại do phí cẩu (craneFee) vượt quá 200.000.000 VNĐ")
+    void verifyOrder_craneFeeExceedsMax_throwsIllegalArgumentException() {
+        User moderator = User.builder().userId(5).build();
+        Order order = Order.builder().orderId(100).orderCode("BSMS-123").orderStatus("PENDING").assignedTo(moderator).build();
+        order.setOrderDetails(List.of(OrderDetail.builder().priceAtPurchase(new BigDecimal("1000000")).quantity(1).build()));
+
+        when(orderRepository.findByOrderCodeWithDetails("BSMS-123")).thenReturn(Optional.of(order));
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+                orderService.verifyOrder("BSMS-123", new BigDecimal("250000000"), BigDecimal.ZERO, new BigDecimal("300000"), moderator)
+        );
+
+        assertThat(exception.getMessage()).isEqualTo("Phí cẩu không được vượt quá 200.000.000 VNĐ.");
+        verify(orderRepository, never()).save(any());
+    }
+
+    @Test
     @DisplayName("UT-UUT03-015: Duyệt đơn thất bại do phí vận chuyển (shippingFee) bị âm (< 0)")
     void verifyOrder_shippingFeeNegative_throwsIllegalArgumentException() {
         User moderator = User.builder().userId(5).build();
@@ -447,6 +466,23 @@ class OrderServiceVerificationTest {
 
         assertThat(exception.getMessage()).isEqualTo("Phí vận chuyển không được âm.");
         verify(paymentRepository, never()).findByOrderOrderIdOrderByPaymentIdAsc(any());
+        verify(orderRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("UT-UUT03-015B: Duyệt đơn thất bại do phí vận chuyển (shippingFee) vượt quá 200.000.000 VNĐ")
+    void verifyOrder_shippingFeeExceedsMax_throwsIllegalArgumentException() {
+        User moderator = User.builder().userId(5).build();
+        Order order = Order.builder().orderId(100).orderCode("BSMS-123").orderStatus("PENDING").assignedTo(moderator).build();
+        order.setOrderDetails(List.of(OrderDetail.builder().priceAtPurchase(new BigDecimal("1000000")).quantity(1).build()));
+
+        when(orderRepository.findByOrderCodeWithDetails("BSMS-123")).thenReturn(Optional.of(order));
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+                orderService.verifyOrder("BSMS-123", BigDecimal.ZERO, new BigDecimal("200000001"), new BigDecimal("300000"), moderator)
+        );
+
+        assertThat(exception.getMessage()).isEqualTo("Phí vận chuyển không được vượt quá 200.000.000 VNĐ.");
         verify(orderRepository, never()).save(any());
     }
 

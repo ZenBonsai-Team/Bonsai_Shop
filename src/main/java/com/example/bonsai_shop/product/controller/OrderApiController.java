@@ -273,6 +273,10 @@ public class OrderApiController {
             response.put("success", false);
             response.put("message", e.getMessage());
             return ResponseEntity.status(409).body(response);
+        } catch (org.springframework.dao.DataAccessException | jakarta.persistence.PersistenceException e) {
+            response.put("success", false);
+            response.put("message", "Lỗi cơ sở dữ liệu: Dữ liệu không hợp lệ hoặc vượt quá giới hạn.");
+            return ResponseEntity.badRequest().body(response);
         } catch (Exception e) {
             response.put("success", false);
             response.put("message", "Lá»—i mÃ¡y chá»§ khi xá»­ lÃ½: " + e.getMessage());
@@ -358,6 +362,10 @@ public class OrderApiController {
             response.put("success", false);
             response.put("message", e.getMessage());
             return ResponseEntity.status(403).body(response);
+        } catch (org.springframework.dao.DataAccessException | jakarta.persistence.PersistenceException e) {
+            response.put("success", false);
+            response.put("message", "Lỗi cơ sở dữ liệu: Dữ liệu không hợp lệ hoặc vượt quá giới hạn.");
+            return ResponseEntity.badRequest().body(response);
         } catch (Exception e) {
             log.error("Lỗi khi duyệt đơn hàng {}", orderCode, e);
             response.put("success", false);
@@ -397,6 +405,10 @@ public class OrderApiController {
             response.put("success", false);
             response.put("message", e.getMessage());
             return ResponseEntity.status(409).body(response);
+        } catch (org.springframework.dao.DataAccessException | jakarta.persistence.PersistenceException e) {
+            response.put("success", false);
+            response.put("message", "Lỗi cơ sở dữ liệu: Dữ liệu không hợp lệ hoặc vượt quá giới hạn.");
+            return ResponseEntity.badRequest().body(response);
         } catch (Exception e) {
             log.error("Lá»—i khi xÃ¡c nháº­n thanh toÃ¡n Ä‘á»§ Ä‘Æ¡n {}", orderCode, e);
             response.put("success", false);
@@ -434,6 +446,10 @@ public class OrderApiController {
             response.put("success", false);
             response.put("message", e.getMessage());
             return ResponseEntity.status(409).body(response);
+        } catch (org.springframework.dao.DataAccessException | jakarta.persistence.PersistenceException e) {
+            response.put("success", false);
+            response.put("message", "Lỗi cơ sở dữ liệu: Dữ liệu không hợp lệ hoặc vượt quá giới hạn.");
+            return ResponseEntity.badRequest().body(response);
         } catch (Exception e) {
             log.error("Lỗi khi hoàn thành đơn {}", orderCode, e);
             response.put("success", false);
@@ -470,6 +486,10 @@ public class OrderApiController {
             response.put("success", false);
             response.put("message", e.getMessage());
             return ResponseEntity.status(409).body(response);
+        } catch (org.springframework.dao.DataAccessException | jakarta.persistence.PersistenceException e) {
+            response.put("success", false);
+            response.put("message", "Lỗi cơ sở dữ liệu: Dữ liệu không hợp lệ hoặc vượt quá giới hạn.");
+            return ResponseEntity.badRequest().body(response);
         } catch (Exception e) {
             log.error("Lỗi khi hủy đơn vì khách không nhận {}", orderCode, e);
             response.put("success", false);
@@ -593,6 +613,10 @@ public class OrderApiController {
         } catch (IllegalArgumentException | IllegalStateException e) {
             response.put("success", false);
             response.put("message", e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        } catch (org.springframework.dao.DataAccessException | jakarta.persistence.PersistenceException e) {
+            response.put("success", false);
+            response.put("message", "Lỗi cơ sở dữ liệu: Dữ liệu không hợp lệ hoặc vượt quá giới hạn.");
             return ResponseEntity.badRequest().body(response);
         } catch (Exception e) {
             response.put("success", false);
