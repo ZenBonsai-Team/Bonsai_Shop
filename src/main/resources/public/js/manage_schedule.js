@@ -801,6 +801,21 @@
         syncPauseHiddenInput(elements.pauseTo, elements.pauseToDate, elements.pauseToTime);
     }
 
+    function applyPauseDateLimits() {
+        const today = getLocalDateString();
+        if (elements.pauseFromDate) elements.pauseFromDate.min = today;
+        if (elements.pauseToDate) elements.pauseToDate.min = today;
+    }
+
+    function showAppointmentSettingError(event, message) {
+        event.preventDefault();
+        if (window.BSMSToast) {
+            BSMSToast.error(message);
+        } else {
+            alert(message);
+        }
+    }
+
     function clearPauseSetting() {
         if (elements.pauseFrom) elements.pauseFrom.value = "";
         if (elements.pauseFromDate) elements.pauseFromDate.value = "";
@@ -831,22 +846,19 @@
                 || (!elements.pauseFromDate?.value && elements.pauseFromTime?.value)
                 || (elements.pauseToDate?.value && !elements.pauseToTime?.value)
                 || (!elements.pauseToDate?.value && elements.pauseToTime?.value)) {
-            event.preventDefault();
-            if (window.BSMSToast) {
-                BSMSToast.error("Vui l\u00f2ng ch\u1ecdn \u0111\u1ee7 ng\u00e0y v\u00e0 gi\u1edd khi t\u1ea1m d\u1eebng nh\u1eadn l\u1ecbch.");
-            } else {
-                alert("Vui l\u00f2ng ch\u1ecdn \u0111\u1ee7 ng\u00e0y v\u00e0 gi\u1edd khi t\u1ea1m d\u1eebng nh\u1eadn l\u1ecbch.");
-            }
+            showAppointmentSettingError(event, "Vui l\u00f2ng ch\u1ecdn \u0111\u1ee7 ng\u00e0y v\u00e0 gi\u1edd khi t\u1ea1m d\u1eebng nh\u1eadn l\u1ecbch.");
+            return;
+        }
+
+        const today = getLocalDateString();
+        if ((elements.pauseFromDate?.value && elements.pauseFromDate.value < today)
+                || (elements.pauseToDate?.value && elements.pauseToDate.value < today)) {
+            showAppointmentSettingError(event, "Kh\u00f4ng th\u1ec3 ch\u1ecdn ng\u00e0y qu\u00e1 kh\u1ee9 khi t\u1ea1m d\u1eebng nh\u1eadn l\u1ecbch.");
             return;
         }
 
         if (pauseFrom && pauseTo && pauseTo <= pauseFrom) {
-            event.preventDefault();
-            if (window.BSMSToast) {
-                BSMSToast.error("Th\u1eddi \u0111i\u1ec3m k\u1ebft th\u00fac ph\u1ea3i sau th\u1eddi \u0111i\u1ec3m b\u1eaft \u0111\u1ea7u.");
-            } else {
-                alert("Th\u1eddi \u0111i\u1ec3m k\u1ebft th\u00fac ph\u1ea3i sau th\u1eddi \u0111i\u1ec3m b\u1eaft \u0111\u1ea7u.");
-            }
+            showAppointmentSettingError(event, "Th\u1eddi \u0111i\u1ec3m k\u1ebft th\u00fac ph\u1ea3i sau th\u1eddi \u0111i\u1ec3m b\u1eaft \u0111\u1ea7u.");
         }
     }
 
@@ -945,6 +957,7 @@
         populatePauseTimeSelect(elements.pauseToTime);
         applyInitialPauseTime(elements.pauseFromTime);
         applyInitialPauseTime(elements.pauseToTime);
+        applyPauseDateLimits();
         syncPauseHiddenInputs();
         bindEvents();
         updateAppointmentSettingUi();

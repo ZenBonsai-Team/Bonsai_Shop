@@ -37,6 +37,10 @@ public class ViewingAppointmentService {
 
         LocalTime appointmentTime = viewingAppointment.getAppointmentDate().toLocalTime();
 
+        if (viewingAppointment.getAppointmentDate().isBefore(LocalDateTime.now())) {
+            throw new RuntimeException("Không thể đặt lịch trong thời gian đã qua.");
+        }
+
         if (appointmentTime.isBefore(LocalTime.of(8, 0))
                 || appointmentTime.isAfter(LocalTime.of(17, 0))) {
             throw new RuntimeException("Chỉ được đặt lịch trong khung giờ từ 08:00 đến 17:00.");
@@ -79,6 +83,10 @@ public class ViewingAppointmentService {
 
         if (!appointment.getStatus().equals("PENDING")) {
             throw new RuntimeException("Không thể chỉnh sửa lịch sau khi đã xác nhận");
+        }
+
+        if (appointmentDate.isBefore(LocalDateTime.now())) {
+            throw new RuntimeException("Không thể đặt lịch trong thời gian đã qua.");
         }
 
         LocalTime time = appointmentDate.toLocalTime();
