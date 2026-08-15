@@ -51,9 +51,12 @@ public class OrderEventListener {
     }
 
     @Async
+    @Transactional(readOnly = true, propagation = Propagation.REQUIRES_NEW)
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handleOrderPaidEvent(OrderPaidEvent event) {
-        log.info("Bắt đầu xử lý gửi email xác nhận thanh toán 100%: {}", event.getOrder().getOrderCode());
-        mailService.sendOrderFinalReceiptEmail(event.getOrder());
+        String orderCode = event.getOrder().getOrderCode();
+        log.info("Bắt đầu xử lý gửi email xác nhận thanh toán 100%: {}", orderCode);
+        Order order = orderRepository.findByOrderCodeWithDetails(orderCode).orElse(event.getOrder());
+        mailService.sendOrderFinalReceiptEmail(order);
     }
 }

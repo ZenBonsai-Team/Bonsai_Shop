@@ -1,6 +1,7 @@
 ﻿document.addEventListener("DOMContentLoaded", () => {
     const state = {
         appointments: [],
+        pendingAppointments: [],
         currentMonth: new Date().getMonth(),
         currentYear: new Date().getFullYear(),
         selectedDate: "",
@@ -201,10 +202,6 @@
         return `${formatDateDisplay(appointment.date)} lúc ${appointment.time}`;
     }
 
-    function getReminderActionLabel(reminderLevel) {
-        return reminderLevel.priority <= 2 ? "Ki\u1ec3m tra" : "Xem chi ti\u1ebft";
-    }
-
     function getReminderNote(reminderLevel) {
         if (getAutoApproveAfterMinutes() === null) {
             return "Tự động duyệt đang tắt. Cần xử lý lịch hẹn thủ công.";
@@ -275,6 +272,21 @@
             state.appointmentsByDate.set(state.selectedDate, state.appointments);
         }
         state.appointments.forEach(appointment => rememberAppointmentDate(appointment.date));
+        syncPendingAppointmentsFromCache();
+    }
+
+    function syncPendingAppointmentsFromCache() {
+        const pendingAppointmentsById = new Map();
+
+        state.appointmentsByDate.forEach(appointments => {
+            appointments.forEach(appointment => {
+                if (appointment.status === "PENDING") {
+                    pendingAppointmentsById.set(String(appointment.id), appointment);
+                }
+            });
+        });
+
+        state.pendingAppointments = Array.from(pendingAppointmentsById.values());
     }
 
     function renderCalendar() {
@@ -317,6 +329,21 @@
         loadAppointmentsForDate(dateString);
     }
 
+    async function fetchAppointmentsForDate(dateString) {
+        const url = new URL("/artisan/appointments/data", window.location.origin);
+        url.searchParams.set("date", dateString);
+
+        const response = await fetch(url.toString(), {
+            headers: { Accept: "application/json" }
+        });
+
+        if (!response.ok) {
+            throw new Error("Kh\u00f4ng t\u1ea3i \u0111\u01b0\u1ee3c l\u1ecbch h\u1eb9n cho ng\u00e0y \u0111\u00e3 ch\u1ecdn.");
+        }
+
+        return (await response.json()).map(mapAppointmentDto);
+    }
+
     async function loadAppointmentsForDate(dateString) {
         if (!dateString || dateString === state.selectedDate) return;
 
@@ -324,6 +351,7 @@
             state.selectedDate = dateString;
             state.appointments = state.appointmentsByDate.get(dateString);
             state.appointments.forEach(appointment => rememberAppointmentDate(appointment.date));
+            syncPendingAppointmentsFromCache();
             updateDateParam(dateString);
             renderAll();
             return;
@@ -337,23 +365,13 @@
         renderDayLoading(dateString);
 
         try {
-            const url = new URL("/artisan/appointments/data", window.location.origin);
-            url.searchParams.set("date", dateString);
-
-            const response = await fetch(url.toString(), {
-                headers: { Accept: "application/json" }
-            });
-
-            if (!response.ok) {
-                throw new Error("Kh\u00f4ng t\u1ea3i \u0111\u01b0\u1ee3c l\u1ecbch h\u1eb9n cho ng\u00e0y \u0111\u00e3 ch\u1ecdn.");
-            }
-
-            const appointments = await response.json();
+            const appointments = await fetchAppointmentsForDate(dateString);
             if (requestToken !== state.requestToken) return;
 
-            state.appointments = appointments.map(mapAppointmentDto);
+            state.appointments = appointments;
             state.appointmentsByDate.set(dateString, state.appointments);
             state.appointments.forEach(appointment => rememberAppointmentDate(appointment.date));
+            syncPendingAppointmentsFromCache();
             renderAll();
         } catch (error) {
             alert(error.message);
@@ -386,22 +404,14 @@
         if (!dateString) return;
 
         try {
-            const url = new URL("/artisan/appointments/data", window.location.origin);
-            url.searchParams.set("date", dateString);
-
-            const response = await fetch(url.toString(), {
-                headers: { Accept: "application/json" }
-            });
-
-            if (!response.ok) return;
-
             const previousAppointments = state.appointments;
-            const nextAppointments = (await response.json()).map(mapAppointmentDto);
+            const nextAppointments = await fetchAppointmentsForDate(dateString);
             const changedAppointments = getChangedAppointments(previousAppointments, nextAppointments);
 
             state.appointments = nextAppointments;
             state.appointmentsByDate.set(dateString, nextAppointments);
             nextAppointments.forEach(appointment => rememberAppointmentDate(appointment.date));
+            syncPendingAppointmentsFromCache();
 
             renderAll();
             notifyAppointmentStatusChanges(changedAppointments);
@@ -410,9 +420,52 @@
         }
     }
 
-    async function loadAppointmentDotsForCurrentMonth() {
+    async function refreshPendingAppointmentDates() {
+        const pendingDates = Array.from(new Set(
+                state.pendingAppointments
+                        .map(appointment => appointment.date)
+                        .filter(Boolean)
+        ));
+
+        if (pendingDates.length === 0) {
+            syncPendingAppointmentsFromCache();
+            renderReminderPanel();
+            return;
+        }
+
+        const changedAppointments = [];
+        let shouldRenderSelectedDay = false;
+
+        await Promise.all(pendingDates.map(async dateString => {
+            try {
+                const previousAppointments = state.appointmentsByDate.get(dateString) || [];
+                const nextAppointments = await fetchAppointmentsForDate(dateString);
+
+                state.appointmentsByDate.set(dateString, nextAppointments);
+                nextAppointments.forEach(appointment => rememberAppointmentDate(appointment.date));
+                changedAppointments.push(...getChangedAppointments(previousAppointments, nextAppointments));
+
+                if (dateString === state.selectedDate) {
+                    state.appointments = nextAppointments;
+                    shouldRenderSelectedDay = true;
+                }
+            } catch (error) {
+                console.warn(`Kh\u00f4ng th\u1ec3 t\u1ef1 t\u1ea3i l\u1ea1i l\u1ecbch ch\u1edd ng\u00e0y ${dateString}.`, error);
+            }
+        }));
+
+        syncPendingAppointmentsFromCache();
+        renderReminderPanel();
+        if (shouldRenderSelectedDay) {
+            renderCalendar();
+            renderDayPanel();
+        }
+        notifyAppointmentStatusChanges(changedAppointments);
+    }
+
+    async function loadAppointmentDotsForCurrentMonth(forceRefresh = false) {
         const monthKey = getMonthKey(state.currentYear, state.currentMonth);
-        if (state.loadedAppointmentDateMonths.has(monthKey) || state.loadingAppointmentDateMonths.has(monthKey)) return;
+        if ((!forceRefresh && state.loadedAppointmentDateMonths.has(monthKey)) || state.loadingAppointmentDateMonths.has(monthKey)) return;
 
         state.loadingAppointmentDateMonths.add(monthKey);
         if (!state.appointmentDatesByMonth.has(monthKey)) {
@@ -423,9 +476,11 @@
         const dateStrings = Array.from({ length: totalDays }, (_, index) =>
                 `${state.currentYear}-${padZero(state.currentMonth + 1)}-${padZero(index + 1)}`
         );
+        const changedAppointments = [];
+        let shouldRenderSelectedDay = false;
 
         await Promise.all(dateStrings.map(async dateString => {
-            if (state.appointmentsByDate.has(dateString)) {
+            if (!forceRefresh && state.appointmentsByDate.has(dateString)) {
                 if (state.appointmentsByDate.get(dateString).length > 0) {
                     rememberAppointmentDate(dateString);
                 }
@@ -433,20 +488,21 @@
             }
 
             try {
-                const url = new URL("/artisan/appointments/data", window.location.origin);
-                url.searchParams.set("date", dateString);
-
-                const response = await fetch(url.toString(), {
-                    headers: { Accept: "application/json" }
-                });
-
-                if (!response.ok) return;
-
-                const appointments = (await response.json()).map(mapAppointmentDto);
+                const previousAppointments = state.appointmentsByDate.get(dateString) || [];
+                const appointments = await fetchAppointmentsForDate(dateString);
                 state.appointmentsByDate.set(dateString, appointments);
 
                 if (appointments.length > 0) {
                     rememberAppointmentDate(dateString);
+                }
+
+                if (forceRefresh) {
+                    changedAppointments.push(...getChangedAppointments(previousAppointments, appointments));
+                }
+
+                if (dateString === state.selectedDate) {
+                    state.appointments = appointments;
+                    shouldRenderSelectedDay = true;
                 }
             } catch (error) {
                 console.warn(`Kh\u00f4ng t\u1ea3i \u0111\u01b0\u1ee3c d\u1ea5u ch\u1ea5m l\u1ecbch h\u1eb9n ng\u00e0y ${dateString}.`, error);
@@ -455,7 +511,15 @@
 
         state.loadingAppointmentDateMonths.delete(monthKey);
         state.loadedAppointmentDateMonths.add(monthKey);
+        syncPendingAppointmentsFromCache();
         renderCalendar();
+        renderReminderPanel();
+        if (shouldRenderSelectedDay) {
+            renderDayPanel();
+        }
+        if (forceRefresh) {
+            notifyAppointmentStatusChanges(changedAppointments);
+        }
     }
 
     function renderDayLoading(dateString) {
@@ -500,7 +564,7 @@
     function renderReminderPanel() {
         if (!elements.pendingReminders || !elements.reminderCount) return;
 
-        const pendingAppointments = state.appointments
+        const pendingAppointments = state.pendingAppointments
                 .filter(appointment => appointment.status === "PENDING")
                 .map(appointment => ({
                     ...appointment,
@@ -526,7 +590,7 @@
         pendingAppointments.slice(0, 4).forEach((appointment, index) => {
             const reminderLevel = getReminderLevel(appointment.minutesUntil);
             const item = createElement("li", `sch-reminder-item ${reminderLevel.className}`);
-            const button = createElement("button", "sch-reminder-btn");
+            const card = createElement("div", "sch-reminder-card");
             const priority = createElement("span", "sch-reminder-priority", `#${index + 1}`);
             const content = createElement("div", "sch-reminder-content");
             const title = createElement("strong", "", appointment.client || "Khách hàng");
@@ -538,13 +602,10 @@
             const meta = createElement("span", "sch-reminder-meta", `${appointment.appointmentType} • Hẹn ${formatAppointmentLabel(appointment)} • ${autoLabel}`);
             const note = createElement("small", "sch-reminder-note", getReminderNote(reminderLevel));
             const badge = createElement("span", `sch-reminder-badge ${reminderLevel.className}`, reminderLevel.label);
-            const action = createElement("span", "sch-reminder-action", getReminderActionLabel(reminderLevel));
 
-            button.type = "button";
-            button.dataset.id = appointment.id;
             content.append(title, due, meta, note);
-            button.append(priority, content, badge, action);
-            item.appendChild(button);
+            card.append(priority, content, badge);
+            item.appendChild(card);
             elements.pendingReminders.appendChild(item);
         });
     }
@@ -823,11 +884,6 @@
             openDetailModal(item.dataset.id);
         });
 
-        elements.pendingReminders?.addEventListener("click", event => {
-            const button = event.target.closest(".sch-reminder-btn");
-            if (button) openDetailModal(button.dataset.id);
-        });
-
         elements.closeModal?.addEventListener("click", closeDetailModal);
         elements.closeModalFooter?.addEventListener("click", closeDetailModal);
         elements.detailModal?.addEventListener("click", event => {
@@ -895,6 +951,8 @@
         renderAll();
         loadAppointmentDotsForCurrentMonth();
         setInterval(refreshSelectedDateAppointments, 5000);
+        setInterval(refreshPendingAppointmentDates, 15000);
+        setInterval(() => loadAppointmentDotsForCurrentMonth(true), 60000);
     }
 
     init();

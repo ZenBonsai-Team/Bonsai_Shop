@@ -66,6 +66,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }, 180);
     };
 
+    //mở model
     const open = (trigger) => {
         if (trigger?.disabled || trigger?.dataset.available === "false") {
             showToast("Hiện chưa mở lịch thăm vườn.", "error");
@@ -94,9 +95,11 @@ document.addEventListener("DOMContentLoaded", () => {
         closeBookingButton?.focus();
     };
 
+    // mở lịch
     $$(".js-booking-trigger, .schedule-btn").forEach((button) => {
         button.addEventListener("click", () => open(button));
     });
+
 
     closeBookingButton?.addEventListener("click", close);
     cancelBookingButton?.addEventListener("click", close);

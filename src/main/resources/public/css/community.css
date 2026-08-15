@@ -2,9 +2,8 @@
 
 /* Page Header */
 .community-header {
-    background: linear-gradient(rgba(247, 246, 242, 0.88), rgba(247, 246, 242, 0.88)), url('https://images.unsplash.com/photo-1502082553048-f009c37129b9?auto=format&fit=crop&q=80&w=1200') no-repeat center center;
     background-size: cover;
-    padding: 80px 0;
+    padding: 100px 0;
     border-bottom: 1px solid var(--border-color);
     text-align: center;
 }
@@ -25,20 +24,22 @@
 
 .community-title {
     font-family: var(--font-serif);
-    font-size: 3rem;
+    font-size: 3.8rem;
     font-weight: 700;
-    color: var(--primary-color);
+    color: #1C3322;
     line-height: 1.2;
-    margin-bottom: 15px;
+    margin-bottom: 24px;
+    letter-spacing: -0.5px;
 }
 
 .community-desc {
     font-family: var(--font-sans);
-    font-size: 0.95rem;
-    line-height: 1.6;
-    color: var(--text-secondary);
-    max-width: 650px;
-    margin: 0 auto 25px auto;
+    font-size: 1.05rem;
+    line-height: 1.8;
+    color: #4A5D4E;
+    max-width: 900px;
+    margin: 0 auto 30px auto;
+    letter-spacing: 0.1px;
 }
 
 /* Search and Write bar */

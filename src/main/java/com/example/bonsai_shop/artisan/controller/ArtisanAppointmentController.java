@@ -2,6 +2,7 @@ package com.example.bonsai_shop.artisan.controller;
 
 import com.example.bonsai_shop.artisan.dto.ArtisanAppointmentDTO;
 import com.example.bonsai_shop.artisan.service.ArtisanAppointmentService;
+import com.example.bonsai_shop.appointmentSetting.service.AppointmentSettingService;
 import com.example.bonsai_shop.customer.service.UserService;
 import com.example.bonsai_shop.entity.User;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +28,7 @@ public class ArtisanAppointmentController {
 
 
      private final ArtisanAppointmentService artisanAppointmentService;
+    private final AppointmentSettingService appointmentSettingService;
     private final UserService userService;
 
     @GetMapping({"", "/"})
@@ -47,6 +49,7 @@ public class ArtisanAppointmentController {
         );
 
         model.addAttribute("selectedDate", date);
+        model.addAttribute("appointmentSetting", appointmentSettingService.getAppointmentSetting());
 
         return "artisan/manage-schedule";
     }
