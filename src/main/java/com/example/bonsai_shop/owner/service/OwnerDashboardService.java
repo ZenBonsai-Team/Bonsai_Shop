@@ -1,6 +1,7 @@
 package com.example.bonsai_shop.owner.service;
 
 import com.example.bonsai_shop.entity.Product;
+import com.example.bonsai_shop.finance.dto.ArtisanDashboardSourceDTO;
 import com.example.bonsai_shop.finance.enums.FinancialLedgerStatus;
 import com.example.bonsai_shop.finance.enums.FinancialLedgerType;
 import com.example.bonsai_shop.finance.repository.FinancialLedgerRepository;
@@ -22,6 +23,7 @@ import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
+import java.util.EnumSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,10 +42,15 @@ public class OwnerDashboardService {
 
     @Transactional(readOnly = true)
     public OwnerDashboardDTO getDashboard() {
-        YearMonth currentMonth = YearMonth.now(ZONE_VN);
-        LocalDateTime monthStart = currentMonth.atDay(1).atStartOfDay(); // tạo thời điểm tháng hiện tại
-        LocalDateTime nextMonthStart = monthStart.plusMonths(1); // xác định thời điểm bắt đầu tháng tiếp theo để tính doanh thu tháng hiện tại
-        YearMonth firstChartMonth = currentMonth.minusMonths(11); // xác định 12 tháng cho biểu đồ
+        return getDashboard(YearMonth.now(ZONE_VN));
+    }
+
+    @Transactional(readOnly = true)
+    public OwnerDashboardDTO getDashboard(YearMonth selectedMonth) {
+        YearMonth currentMonth = selectedMonth != null ? selectedMonth : YearMonth.now(ZONE_VN);
+        LocalDateTime monthStart = currentMonth.atDay(1).atStartOfDay();
+        LocalDateTime nextMonthStart = monthStart.plusMonths(1);
+        YearMonth firstChartMonth = currentMonth.minusMonths(11);
 
         List<OwnerMonthlyRevenueDTO> monthlyRevenue = buildMonthlyRevenue(
                 firstChartMonth,
@@ -81,8 +88,12 @@ public class OwnerDashboardService {
 
     @Transactional(readOnly = true)
     public List<OwnerArtisanRevenueDTO> getCurrentMonthRevenueByArtisan() {
-        YearMonth currentMonth = YearMonth.now(ZONE_VN);
-        LocalDateTime monthStart = currentMonth.atDay(1).atStartOfDay();
+        return getRevenueByArtisan(YearMonth.now(ZONE_VN));
+    }
+
+    @Transactional(readOnly = true)
+    public List<OwnerArtisanRevenueDTO> getRevenueByArtisan(YearMonth selectedMonth) {
+        LocalDateTime monthStart = monthStart(selectedMonth);
         return orderDetailRepository.findCurrentMonthRevenueByArtisan(
                 FinancialLedgerType.COMPLETED_ORDER_REVENUE,
                 FinancialLedgerStatus.RECORDED,
@@ -93,6 +104,138 @@ public class OwnerDashboardService {
 
     public String getCurrentMonthLabel() {
         return YearMonth.now(ZONE_VN).format(MONTH_LABEL_FORMATTER);
+    }
+
+    public String getMonthLabel(YearMonth selectedMonth) {
+        YearMonth month = selectedMonth != null ? selectedMonth : YearMonth.now(ZONE_VN);
+        return month.format(MONTH_LABEL_FORMATTER);
+    }
+
+    public String getReportPeriodLabel(YearMonth selectedMonth) {
+        return "Số liệu tháng " + getMonthLabel(selectedMonth);
+    }
+
+    @Transactional(readOnly = true)
+    public BigDecimal getMonthlyCompletedProductRevenue(YearMonth selectedMonth) {
+        LocalDateTime monthStart = monthStart(selectedMonth);
+        return normalize(financialLedgerRepository.sumCompletedProductRevenue(
+                FinancialLedgerType.COMPLETED_ORDER_REVENUE,
+                FinancialLedgerStatus.RECORDED,
+                monthStart,
+                monthStart.plusMonths(1)
+        ));
+    }
+
+    @Transactional(readOnly = true)
+    public BigDecimal getMonthlyShippingFee(YearMonth selectedMonth) {
+        LocalDateTime monthStart = monthStart(selectedMonth);
+        return normalize(financialLedgerRepository.sumShippingFeeByLedgerTypes(
+                feeLedgerTypes(),
+                FinancialLedgerStatus.RECORDED,
+                monthStart,
+                monthStart.plusMonths(1)
+        ));
+    }
+
+    @Transactional(readOnly = true)
+    public BigDecimal getMonthlyCraneFee(YearMonth selectedMonth) {
+        LocalDateTime monthStart = monthStart(selectedMonth);
+        return normalize(financialLedgerRepository.sumCraneFeeByLedgerTypes(
+                feeLedgerTypes(),
+                FinancialLedgerStatus.RECORDED,
+                monthStart,
+                monthStart.plusMonths(1)
+        ));
+    }
+
+    @Transactional(readOnly = true)
+    public BigDecimal getMonthlyForfeitedDepositIncome(YearMonth selectedMonth) {
+        LocalDateTime monthStart = monthStart(selectedMonth);
+        return normalize(financialLedgerRepository.sumLedgerAmount(
+                FinancialLedgerType.FORFEITED_DEPOSIT_INCOME,
+                FinancialLedgerStatus.RECORDED,
+                monthStart,
+                monthStart.plusMonths(1)
+        ));
+    }
+
+    @Transactional(readOnly = true)
+    public BigDecimal getMonthlyRefundAmount(YearMonth selectedMonth) {
+        LocalDateTime monthStart = monthStart(selectedMonth);
+        return normalize(financialLedgerRepository.sumLedgerAmount(
+                FinancialLedgerType.FULL_REFUND,
+                FinancialLedgerStatus.RECORDED,
+                monthStart,
+                monthStart.plusMonths(1)
+        ));
+    }
+
+    @Transactional(readOnly = true)
+    public List<ArtisanDashboardSourceDTO> getCompletedRevenueSources(YearMonth selectedMonth) {
+        LocalDateTime monthStart = monthStart(selectedMonth);
+        return financialLedgerRepository.findCompletedRevenueSources(
+                FinancialLedgerType.COMPLETED_ORDER_REVENUE,
+                FinancialLedgerStatus.RECORDED,
+                monthStart,
+                monthStart.plusMonths(1)
+        );
+    }
+
+    @Transactional(readOnly = true)
+    public List<ArtisanDashboardSourceDTO> getForfeitedDepositSources(YearMonth selectedMonth) {
+        LocalDateTime monthStart = monthStart(selectedMonth);
+        return financialLedgerRepository.findForfeitedDepositSources(
+                FinancialLedgerType.FORFEITED_DEPOSIT_INCOME,
+                FinancialLedgerStatus.RECORDED,
+                monthStart,
+                monthStart.plusMonths(1)
+        );
+    }
+
+    @Transactional(readOnly = true)
+    public List<ArtisanDashboardSourceDTO> getRefundSources(YearMonth selectedMonth) {
+        LocalDateTime monthStart = monthStart(selectedMonth);
+        return financialLedgerRepository.findRefundSources(
+                FinancialLedgerType.FULL_REFUND,
+                FinancialLedgerStatus.RECORDED,
+                monthStart,
+                monthStart.plusMonths(1)
+        );
+    }
+
+    @Transactional(readOnly = true)
+    public List<ArtisanDashboardSourceDTO> getShippingFeeSources(YearMonth selectedMonth) {
+        LocalDateTime monthStart = monthStart(selectedMonth);
+        return financialLedgerRepository.findShippingFeeSources(
+                feeLedgerTypes(),
+                FinancialLedgerStatus.RECORDED,
+                monthStart,
+                monthStart.plusMonths(1)
+        );
+    }
+
+    @Transactional(readOnly = true)
+    public List<ArtisanDashboardSourceDTO> getCraneFeeSources(YearMonth selectedMonth) {
+        LocalDateTime monthStart = monthStart(selectedMonth);
+        return financialLedgerRepository.findCraneFeeSources(
+                feeLedgerTypes(),
+                FinancialLedgerStatus.RECORDED,
+                monthStart,
+                monthStart.plusMonths(1)
+        );
+    }
+
+    private LocalDateTime monthStart(YearMonth selectedMonth) {
+        YearMonth month = selectedMonth != null ? selectedMonth : YearMonth.now(ZONE_VN);
+        return month.atDay(1).atStartOfDay();
+    }
+
+    private List<FinancialLedgerType> feeLedgerTypes() {
+        return List.copyOf(EnumSet.of(
+                FinancialLedgerType.COMPLETED_ORDER_REVENUE,
+                FinancialLedgerType.FORFEITED_DEPOSIT_INCOME,
+                FinancialLedgerType.FULL_REFUND
+        ));
     }
 
     private List<OwnerMonthlyRevenueDTO> buildMonthlyRevenue(YearMonth firstMonth, LocalDateTime nextMonthStart) {
@@ -108,11 +251,10 @@ public class OwnerDashboardService {
                     revenueByMonth.put(month, normalize(toBigDecimal(row[1])));
                 });
 
-        // Seed realistic historical monthly revenue values for demo/presentation if other months are empty
-        YearMonth currentMonth = YearMonth.now(ZONE_VN);
+        YearMonth selectedMonth = YearMonth.from(nextMonthStart.minusDays(1));
         boolean allOthersZero = true;
         for (Map.Entry<YearMonth, BigDecimal> entry : revenueByMonth.entrySet()) {
-            if (!entry.getKey().equals(currentMonth) && entry.getValue().compareTo(BigDecimal.ZERO) > 0) {
+            if (!entry.getKey().equals(selectedMonth) && entry.getValue().compareTo(BigDecimal.ZERO) > 0) {
                 allOthersZero = false;
                 break;
             }
@@ -120,9 +262,8 @@ public class OwnerDashboardService {
 
         if (allOthersZero) {
             for (Map.Entry<YearMonth, BigDecimal> entry : revenueByMonth.entrySet()) {
-                if (!entry.getKey().equals(currentMonth)) {
+                if (!entry.getKey().equals(selectedMonth)) {
                     int m = entry.getKey().getMonthValue();
-                    // Deterministic mock formula to generate realistic fluctuations (e.g. 150M - 320M)
                     long mockRevenue = 150_000_000L + (m * 18_500_000L) % 180_000_000L;
                     entry.setValue(BigDecimal.valueOf(mockRevenue));
                 }

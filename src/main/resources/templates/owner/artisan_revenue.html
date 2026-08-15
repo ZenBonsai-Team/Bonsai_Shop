@@ -19,10 +19,16 @@
             <h1>Doanh thu theo nghệ nhân</h1>
             <p th:text="|Doanh thu sản phẩm đã hoàn tất trong ${reportMonth}.|">Doanh thu sản phẩm đã hoàn tất trong 08/2026.</p>
         </div>
-        <a class="owner-back-link" th:href="@{/owner}">
+        <div class="revenue-summary-toolbar">
+            <form class="dashboard-month-filter" method="get" th:action="@{/owner/dashboard/artisan-revenue}">
+                <label for="ownerArtisanRevenueMonth">Tháng báo cáo</label>
+                <input id="ownerArtisanRevenueMonth" type="month" name="month" th:value="${selectedMonth}" onchange="this.form.submit()">
+            </form>
+            <a class="owner-back-link" th:href="@{/owner(month=${selectedMonth})}">
             <i class="fa-solid fa-arrow-left"></i>
             Bảng điều khiển
-        </a>
+            </a>
+        </div>
     </header>
 
     <section class="owner-panel owner-report-panel">

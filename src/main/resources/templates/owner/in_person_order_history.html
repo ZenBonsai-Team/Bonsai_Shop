@@ -17,31 +17,23 @@
             <h1>Lịch sử đơn tại vườn</h1>
             <p>Theo dõi các đơn bán trực tiếp tại vườn do tài khoản artisan phụ trách.</p>
         </div>
-        <span class="readonly-badge">
-            <i class="fa-solid fa-eye"></i>
-            Chỉ xem
-        </span>
     </header>
 
     <section class="portal-card" id="walkInOrdersSection">
         <div class="product-toolbar">
             <div class="product-toolbar-top">
-                <div>
-                    <h2>Danh sách đơn tại vườn</h2>
-                    <p>Chỉ bao gồm đơn bán tại vườn và người phụ trách là tài khoản nghệ nhân.</p>
-                </div>
             </div>
 
-            <form class="owner-walkin-search" method="get" th:action="@{/owner/in-person-order-history}">
+            <form id="walkInHistorySearchForm" class="owner-walkin-search" method="get" th:action="@{/owner/in-person-order-history}">
                 <input type="hidden" name="status" th:value="${selectedStatus}">
                 <div class="search-input-wrapper">
                     <input type="text"
+                           id="walkInHistorySearchInput"
                            name="search"
                            th:value="${search}"
                            placeholder="Tìm theo mã đơn, khách hàng, người phụ trách hoặc sản phẩm"
                            autocomplete="off">
                 </div>
-                <button class="btn-mini btn-mini-primary" type="submit">Tìm</button>
                 <a class="btn-mini btn-mini-secondary"
                    th:if="${search != null and !search.isBlank()}"
                    th:href="@{/owner/in-person-order-history(status=${selectedStatus})}">Xóa lọc</a>
@@ -175,6 +167,33 @@
     </section>
 </div>
 
-<th:block th:fragment="scripts"></th:block>
+<th:block th:fragment="scripts">
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const form = document.getElementById('walkInHistorySearchForm');
+            const input = document.getElementById('walkInHistorySearchInput');
+            let timeoutId;
+
+            if (!form || !input) {
+                return;
+            }
+
+            input.addEventListener('input', () => {
+                window.clearTimeout(timeoutId);
+                timeoutId = window.setTimeout(() => {
+                    form.submit();
+                }, 450);
+            });
+
+            input.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    window.clearTimeout(timeoutId);
+                    form.submit();
+                }
+            });
+        });
+    </script>
+</th:block>
 </body>
 </html>

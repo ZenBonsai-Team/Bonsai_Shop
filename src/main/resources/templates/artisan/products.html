@@ -67,9 +67,14 @@
                     th:attr="data-status=${product.productStatus},data-visibility=${product.productStatus == 'DRAFT' || product.isVisible == false ? 'INVISIBLE' : 'VISIBLE'},data-search-text=${product.productCode + ' ' + product.productName}">
                     <td>
                         <a class="product-preview-link" th:href="@{/artisan/products/{id}/preview(id=${product.productId})}">
-                            <img class="product-table-thumb"
-                                 th:src="${product.getFirstImageUrl() != null ? product.getFirstImageUrl() : '/images/default-bonsai.png'}"
-                                 alt="Ảnh sản phẩm">
+                            <span class="product-table-thumb-wrap">
+                                <img class="product-table-thumb"
+                                     th:src="${product.getFirstImageUrl() != null ? product.getFirstImageUrl() : '/images/default-bonsai.png'}"
+                                     alt="Ảnh sản phẩm">
+                                <img class="product-table-thumb-preview"
+                                     th:src="${product.getFirstImageUrl() != null ? product.getFirstImageUrl() : '/images/default-bonsai.png'}"
+                                     alt="">
+                            </span>
                         </a>
                     </td>
                     <td th:text="${product.productCode}"></td>
@@ -149,7 +154,7 @@
                                         Xóa
                                     </button>
                                 </form>
-                                <span th:if="${product.productStatus != 'DRAFT' && product.productStatus != 'AVAILABLE'}" class="action-locked">
+                                <span th:if="${product.productStatus != 'DRAFT' && product.productStatus != 'AVAILABLE' && product.productStatus != 'SOLD'}" class="action-locked">
                                     <i class="fa-solid fa-lock"></i>
                                     Đã khóa
                                 </span>
@@ -161,22 +166,27 @@
             </table>
             </div>
 
-            <div class="pagination-footer" th:if="${productPage != null && productPage.totalPages > 1}">
-                <div class="pagination-info"
-                     th:text="${'Hiển thị trang ' + (productPage.number + 1) + ' / ' + productPage.totalPages}"></div>
-                <div class="pagination-controls">
-                    <a class="page-btn"
+            <div class="catalog-table-footer product-pagination-footer" th:if="${productPage != null}">
+                <span
+                     th:text="${productPage.totalElements == 0
+                        ? 'Không có sản phẩm'
+                        : 'Hiển thị ' + (productPage.number * productPage.size + 1) + '–' + (productPage.number * productPage.size + productPage.numberOfElements) + ' trong ' + productPage.totalElements + ' sản phẩm'}"></span>
+                <div class="catalog-pagination-controls product-pagination-controls">
+                    <select id="productPageSize" class="product-page-size" aria-label="Số sản phẩm mỗi trang">
+                        <option value="10" th:selected="${selectedSize == 10}">10 / trang</option>
+                        <option value="20" th:selected="${selectedSize == 20}">20 / trang</option>
+                        <option value="50" th:selected="${selectedSize == 50}">50 / trang</option>
+                    </select>
+                    <a class="product-page-nav"
                        th:classappend="${!productPage.hasPrevious()} ? 'disabled'"
-                       th:href="@{/artisan/products(page=${productPage.number - 1},status=${selectedStatus})}">Trước</a>
-                    <a class="page-btn"
-                       th:each="pageNumber : ${#numbers.sequence(0, productPage.totalPages - 1)}"
-                       th:if="${pageNumber == 0 || pageNumber == productPage.totalPages - 1 || (pageNumber >= productPage.number - 2 && pageNumber <= productPage.number + 2)}"
-                       th:classappend="${pageNumber == productPage.number} ? 'active'"
-                       th:href="@{/artisan/products(page=${pageNumber},status=${selectedStatus})}"
-                       th:text="${pageNumber + 1}"></a>
-                    <a class="page-btn"
+                       th:href="@{/artisan/products(page=${productPage.hasPrevious() ? productPage.number - 1 : 0},size=${selectedSize},status=${selectedStatus})}"
+                       aria-label="Trang trước">‹</a>
+                    <span
+                          th:text="${'Trang ' + (productPage.number + 1) + ' / ' + productPage.totalPages}">Trang 1 / 1</span>
+                    <a class="product-page-nav"
                        th:classappend="${!productPage.hasNext()} ? 'disabled'"
-                       th:href="@{/artisan/products(page=${productPage.number + 1},status=${selectedStatus})}">Sau</a>
+                       th:href="@{/artisan/products(page=${productPage.hasNext() ? productPage.number + 1 : productPage.number},size=${selectedSize},status=${selectedStatus})}"
+                       aria-label="Trang sau">›</a>
                 </div>
             </div>
         </section>
@@ -281,8 +291,13 @@
 
 <script>
     const productSearch = document.getElementById('productSearch');
-    const productRows = [...document.querySelectorAll('#productTableBody tr')];
+    let productRows = [...document.querySelectorAll('#productTableBody tr')];
     let currentStatus = 'ALL';
+
+    function refreshProductRows() {
+        productRows = [...document.querySelectorAll('#productTableBody tr')];
+        applyProductFilters();
+    }
 
     function applyProductFilters() {
         const keyword = productSearch.value.trim().toLowerCase();
@@ -307,6 +322,57 @@
             applyProductFilters();
         });
     });
+
+    function loadProductsPage(url, pushHistory = true) {
+        const targetUrl = url.toString();
+        document.querySelector('.portal-card')?.classList.add('is-loading');
+        return fetch(targetUrl, {headers: {'X-Requested-With': 'XMLHttpRequest'}})
+            .then(response => {
+                if (!response.ok) throw new Error('Không tải được trang sản phẩm.');
+                return response.text();
+            })
+            .then(html => {
+                const doc = new DOMParser().parseFromString(html, 'text/html');
+                const nextTable = doc.querySelector('.table-container');
+                const nextFooter = doc.querySelector('.product-pagination-footer');
+                const currentTable = document.querySelector('.table-container');
+                const currentFooter = document.querySelector('.product-pagination-footer');
+                if (!nextTable || !currentTable) throw new Error('Không tìm thấy bảng sản phẩm.');
+                currentTable.replaceWith(nextTable);
+                if (currentFooter && nextFooter) {
+                    currentFooter.replaceWith(nextFooter);
+                } else if (currentFooter && !nextFooter) {
+                    currentFooter.remove();
+                } else if (!currentFooter && nextFooter) {
+                    document.querySelector('.portal-card')?.appendChild(nextFooter);
+                }
+                if (pushHistory) {
+                    window.history.pushState({}, '', targetUrl);
+                }
+                refreshProductRows();
+            })
+            .catch(() => {
+                window.location.href = targetUrl;
+            })
+            .finally(() => document.querySelector('.portal-card')?.classList.remove('is-loading'));
+    }
+
+    document.addEventListener('click', (event) => {
+        const pageLink = event.target.closest('.product-pagination-controls .product-page-nav');
+        if (!pageLink || pageLink.classList.contains('disabled')) return;
+        event.preventDefault();
+        loadProductsPage(new URL(pageLink.href));
+    });
+
+    document.addEventListener('change', (event) => {
+        if (event.target.id !== 'productPageSize') return;
+        const url = new URL(window.location.href);
+        url.searchParams.set('size', event.target.value);
+        url.searchParams.set('page', '0');
+        loadProductsPage(url);
+    });
+
+    window.addEventListener('popstate', () => loadProductsPage(new URL(window.location.href), false));
 
     const initialStatus = new URLSearchParams(window.location.search).get('status');
     const initialStatusButton = initialStatus
@@ -442,6 +508,30 @@
     artisanDeleteModal.querySelector('.btn-modal-confirm').addEventListener('click', () => {
         if (pendingDeleteForm) {
             pendingDeleteForm.submit();
+        }
+    });
+
+    document.addEventListener('click', (event) => {
+        const publishButton = event.target.closest('[data-open-publish-modal]');
+        const hideButton = event.target.closest('[data-open-hide-modal]');
+        const showButton = event.target.closest('[data-open-show-modal]');
+        const deleteButton = event.target.closest('[data-open-delete-modal]');
+        if (publishButton) {
+            pendingPublishForm = publishButton.closest('form');
+            artisanPublishProductName.textContent = publishButton.dataset.productName || '-';
+            artisanPublishModal.classList.remove('hidden');
+        } else if (hideButton) {
+            pendingHideForm = hideButton.closest('form');
+            artisanHideProductName.textContent = hideButton.dataset.productName || '-';
+            artisanHideModal.classList.remove('hidden');
+        } else if (showButton) {
+            pendingShowForm = showButton.closest('form');
+            artisanShowProductName.textContent = showButton.dataset.productName || '-';
+            artisanShowModal.classList.remove('hidden');
+        } else if (deleteButton) {
+            pendingDeleteForm = deleteButton.closest('form');
+            artisanDeleteProductName.textContent = deleteButton.dataset.productName || '-';
+            artisanDeleteModal.classList.remove('hidden');
         }
     });
 </script>

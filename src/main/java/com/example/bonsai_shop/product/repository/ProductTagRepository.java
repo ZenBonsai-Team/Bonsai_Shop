@@ -15,4 +15,6 @@ public interface ProductTagRepository extends JpaRepository<ProductTag, ProductT
 
     @Query("select count(productTag) > 0 from ProductTag productTag where productTag.tag.tagId = :tagId")
     boolean existsForTagId(@Param("tagId") Integer tagId);
+
+    long countByTagTagId(Integer tagId);
 }

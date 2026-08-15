@@ -49,6 +49,38 @@
             rgba(45,106,79,.15);
 }
 
+.form-field input.is-invalid,
+.form-field select.is-invalid {
+    border-color: #dc2626;
+    background: #fff7f7;
+}
+
+.form-field input.is-invalid:focus,
+.form-field select.is-invalid:focus {
+    border-color: #dc2626;
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, .14);
+}
+
+.field-error {
+    display: block;
+    min-height: 18px;
+    margin-top: 6px;
+    color: #b91c1c;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.alert-error {
+    max-width: 700px;
+    margin-bottom: 20px;
+    padding: 12px 16px;
+    border: 1px solid #fecaca;
+    border-radius: 10px;
+    background: #fef2f2;
+    color: #991b1b;
+    font-weight: 700;
+}
+
 .form-actions {
     display: flex;
     gap: 12px;
@@ -74,6 +106,15 @@
 
 .btn-create:hover {
     background: #2d6a4f;
+}
+
+.btn-create:disabled {
+    background: #9ca3af;
+    cursor: not-allowed;
+}
+
+.btn-create:disabled:hover {
+    background: #9ca3af;
 }
 
 .btn-cancel {

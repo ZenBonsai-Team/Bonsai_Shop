@@ -13,8 +13,8 @@
     <header class="owner-dashboard-header">
         <div>
             <span class="owner-eyebrow">Bảng điều khiển chủ vườn</span>
-            <h1>Sổ tay quản lý vườn</h1>
-            <p>Xem doanh thu (tiền vào vườn), cây hiện có trong vườn và cây đã giao cho khách.</p>
+            <h1>Sổ tay nhà vườn</h1>
+
         </div>
         <div class="owner-actions-toolbar">
             <button id="btn-copy-stats" class="btn-owner-action btn-copy" title="Sao chép nhanh số liệu tóm tắt">
@@ -29,22 +29,78 @@
         </div>
     </header>
 
-    <section class="owner-metric-grid">
-        <article class="owner-metric-card metric-revenue-total">
-            <span class="owner-metric-icon"><i class="fa-solid fa-sack-dollar"></i></span>
-            <div>
-                <span>Tổng tiền vào vườn</span>
-                <strong th:text="${#numbers.formatDecimal(dashboard.totalRevenue(), 0, 'POINT', 0, 'POINT') + ' đ'}">0 đ</strong>
-                <small class="metric-card-subtitle">Tích lũy từ hệ thống</small>
+    <section class="artisan-dashboard-panel artisan-finance-section">
+        <div class="finance-section-heading">
+            <div class="revenue-summary-toolbar">
+                <span class="report-period-badge" th:text="${reportPeriodLabel}">Số liệu tháng 08/2026</span>
+                <form class="dashboard-month-filter" method="get" th:action="@{/owner}">
+                    <label for="ownerReportMonth">Tháng báo cáo</label>
+                    <input id="ownerReportMonth" type="month" name="month" th:value="${selectedMonth}" onchange="this.form.submit()">
+                </form>
             </div>
-        </article>
+        </div>
 
-        <a class="owner-metric-card metric-revenue-month" th:href="@{/owner/dashboard/artisan-revenue}">
+        <div class="revenue-summary-grid">
+            <div class="revenue-summary-card revenue-summary-primary" data-source-card="owner-completed-revenue-sources" tabindex="0" role="button">
+                <span class="summary-icon"><i class="fa-solid fa-wallet"></i></span>
+                <div>
+                    <small>Doanh thu đơn hoàn thành</small>
+                    <strong class="money-value" th:text="${#numbers.formatDecimal(monthlyRevenue, 0, 'POINT', 0, 'POINT') + ' VNĐ'}">0 VNĐ</strong>
+                    <a class="finance-card-detail" href="#" data-source-target="owner-completed-revenue-sources">
+                        Xem chi tiết <i class="fa-solid fa-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+            <div class="revenue-summary-card" data-source-card="owner-forfeited-deposit-sources" tabindex="0" role="button">
+                <span class="summary-icon"><i class="fa-solid fa-hand-holding-dollar"></i></span>
+                <div>
+                    <small>Cọc khách bỏ</small>
+                    <strong class="money-value" th:text="${#numbers.formatDecimal(monthlyForfeitedDepositIncome, 0, 'POINT', 0, 'POINT') + ' VNĐ'}">0 VNĐ</strong>
+                    <a class="finance-card-detail" href="#" data-source-target="owner-forfeited-deposit-sources">
+                        Xem chi tiết <i class="fa-solid fa-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+            <div class="revenue-summary-card" data-source-card="owner-refund-sources" tabindex="0" role="button">
+                <span class="summary-icon"><i class="fa-solid fa-rotate-left"></i></span>
+                <div>
+                    <small>Hoàn lại khách</small>
+                    <strong class="money-value" th:text="${#numbers.formatDecimal(monthlyRefundAmount, 0, 'POINT', 0, 'POINT') + ' VNĐ'}">0 VNĐ</strong>
+                    <a class="finance-card-detail" href="#" data-source-target="owner-refund-sources">
+                        Xem chi tiết <i class="fa-solid fa-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+            <div class="revenue-summary-card" data-source-card="owner-shipping-fee-sources" tabindex="0" role="button">
+                <span class="summary-icon"><i class="fa-solid fa-truck-fast"></i></span>
+                <div>
+                    <small>Phí ship</small>
+                    <strong class="money-value" th:text="${#numbers.formatDecimal(monthlyShippingFee, 0, 'POINT', 0, 'POINT') + ' VNĐ'}">0 VNĐ</strong>
+                    <a class="finance-card-detail" href="#" data-source-target="owner-shipping-fee-sources">
+                        Xem chi tiết <i class="fa-solid fa-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+            <div class="revenue-summary-card" data-source-card="owner-crane-fee-sources" tabindex="0" role="button">
+                <span class="summary-icon"><i class="fa-solid fa-truck-ramp-box"></i></span>
+                <div>
+                    <small>Phí cẩu</small>
+                    <strong class="money-value" th:text="${#numbers.formatDecimal(monthlyCraneFee, 0, 'POINT', 0, 'POINT') + ' VNĐ'}">0 VNĐ</strong>
+                    <a class="finance-card-detail" href="#" data-source-target="owner-crane-fee-sources">
+                        Xem chi tiết <i class="fa-solid fa-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="owner-metric-grid">
+        <a class="owner-metric-card metric-revenue-month" th:href="@{/owner/dashboard/artisan-revenue(month=${selectedMonth})}">
             <span class="owner-metric-icon"><i class="fa-solid fa-chart-line"></i></span>
             <div>
-                <span>Tiền vào vườn tháng này</span>
+                <span>Doanh thu tháng của các nghệ nhân</span>
                 <strong th:text="${#numbers.formatDecimal(dashboard.revenueThisMonth(), 0, 'POINT', 0, 'POINT') + ' đ'}">0 đ</strong>
-                <small class="metric-card-subtitle">Cập nhật tháng hiện tại</small>
+                <small class="metric-card-subtitle" th:text="${reportPeriodLabel}">Số liệu tháng báo cáo</small>
             </div>
         </a>
 
@@ -68,27 +124,6 @@
     </section>
 
     <section class="owner-dashboard-grid">
-        <article class="owner-panel owner-chart-panel">
-            <div class="owner-panel-heading" style="display: flex; flex-direction: column; gap: 16px; margin-bottom: 24px; align-items: flex-start;">
-                <div style="width: 100%; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
-                    <div>
-                        <span>Số liệu thu chi</span>
-                        <h2>Biểu đồ doanh thu theo thời gian</h2>
-                    </div>
-                    <!-- Clickable quick-filter buttons -->
-                    <div class="owner-chart-filters" style="display: flex; gap: 8px;">
-                        <button type="button" class="btn-chart-filter active" data-filter="month">Tháng này</button>
-                        <button type="button" class="btn-chart-filter" data-filter="week">Tuần này</button>
-                        <button type="button" class="btn-chart-filter" data-filter="today">Hôm nay</button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="owner-revenue-chart-container">
-                <canvas id="ownerRevenueChart"></canvas>
-            </div>
-        </article>
-
         <article class="owner-panel owner-top-viewed-panel">
             <div class="owner-panel-heading" style="margin-bottom: 20px;">
                 <div>
@@ -133,6 +168,128 @@
             </div>
         </article>
     </section>
+    <div id="ownerSourceModal" class="artisan-source-modal hidden" aria-hidden="true">
+        <div class="artisan-source-dialog" role="dialog" aria-modal="true" aria-labelledby="ownerSourceReportTitle">
+            <div class="source-modal-header">
+                <div>
+                    <span>Nguồn cộng</span>
+                    <h3 id="ownerSourceReportTitle">Chi tiết các đơn/giao dịch tạo nên số liệu tháng này</h3>
+                </div>
+                <button type="button" class="source-modal-close" aria-label="Đóng báo cáo">&times;</button>
+            </div>
+            <div class="artisan-source-report">
+                <section id="owner-completed-revenue-sources" class="source-report-block hidden" data-source-panel>
+                    <div class="source-report-summary">Doanh thu đơn hoàn thành <strong th:text="${#numbers.formatDecimal(monthlyRevenue, 0, 'POINT', 0, 'POINT') + ' VNĐ'}">0 VNĐ</strong></div>
+                    <div class="table-responsive">
+                        <table class="table table-sm align-middle source-report-table">
+                            <thead>
+                            <tr><th>Ngày ghi nhận</th><th>Mã đơn</th><th>Khách hàng</th><th>Mã SP</th><th>Trạng thái</th><th class="text-end">Số tiền cộng</th></tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="source : ${completedRevenueSources}">
+                                <td th:text="${source.sourceDate() != null ? #temporals.format(source.sourceDate(), 'dd/MM/yyyy HH:mm') : '-'}">-</td>
+                                <td class="fw-semibold" th:text="${source.orderCode()}">DH001</td>
+                                <td th:text="${source.customerName() ?: '-'}">Khách hàng</td>
+                                <td th:text="${source.productCode() ?: '-'}">SP001</td>
+                                <td th:text="${source.orderStatus()}">COMPLETED</td>
+                                <td class="text-end fw-semibold" th:text="${#numbers.formatDecimal(source.sourceAmount(), 0, 'POINT', 0, 'POINT') + ' VNĐ'}">0 VNĐ</td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(completedRevenueSources)}"><td colspan="6" class="text-center text-muted py-3">Không có nguồn ghi nhận trong tháng này.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section id="owner-forfeited-deposit-sources" class="source-report-block hidden" data-source-panel>
+                    <div class="source-report-summary">Cọc khách bỏ <strong th:text="${#numbers.formatDecimal(monthlyForfeitedDepositIncome, 0, 'POINT', 0, 'POINT') + ' VNĐ'}">0 VNĐ</strong></div>
+                    <div class="table-responsive">
+                        <table class="table table-sm align-middle source-report-table">
+                            <thead>
+                            <tr><th>Ngày ghi nhận</th><th>Mã đơn</th><th>Khách hàng</th><th>Mã SP</th><th>Trạng thái</th><th class="text-end">Cọc giữ lại</th></tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="source : ${forfeitedDepositSources}">
+                                <td th:text="${source.sourceDate() != null ? #temporals.format(source.sourceDate(), 'dd/MM/yyyy HH:mm') : '-'}">-</td>
+                                <td class="fw-semibold" th:text="${source.orderCode()}">DH001</td>
+                                <td th:text="${source.customerName() ?: '-'}">Khách hàng</td>
+                                <td th:text="${source.productCode() ?: '-'}">SP001</td>
+                                <td th:text="${source.orderStatus()}">CANCELLED</td>
+                                <td class="text-end fw-semibold" th:text="${#numbers.formatDecimal(source.sourceAmount(), 0, 'POINT', 0, 'POINT') + ' VNĐ'}">0 VNĐ</td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(forfeitedDepositSources)}"><td colspan="6" class="text-center text-muted py-3">Không có nguồn ghi nhận trong tháng này.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section id="owner-refund-sources" class="source-report-block hidden" data-source-panel>
+                    <div class="source-report-summary">Hoàn lại khách <strong th:text="${#numbers.formatDecimal(monthlyRefundAmount, 0, 'POINT', 0, 'POINT') + ' VNĐ'}">0 VNĐ</strong></div>
+                    <div class="table-responsive">
+                        <table class="table table-sm align-middle source-report-table">
+                            <thead>
+                            <tr><th>Ngày ghi nhận</th><th>Mã đơn</th><th>Khách hàng</th><th>Mã SP</th><th>Trạng thái</th><th class="text-end">Số tiền hoàn</th></tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="source : ${refundSources}">
+                                <td th:text="${source.sourceDate() != null ? #temporals.format(source.sourceDate(), 'dd/MM/yyyy HH:mm') : '-'}">-</td>
+                                <td class="fw-semibold" th:text="${source.orderCode()}">DH001</td>
+                                <td th:text="${source.customerName() ?: '-'}">Khách hàng</td>
+                                <td th:text="${source.productCode() ?: '-'}">SP001</td>
+                                <td th:text="${source.orderStatus()}">CANCELLED</td>
+                                <td class="text-end fw-semibold" th:text="${#numbers.formatDecimal(source.sourceAmount(), 0, 'POINT', 0, 'POINT') + ' VNĐ'}">0 VNĐ</td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(refundSources)}"><td colspan="6" class="text-center text-muted py-3">Không có nguồn ghi nhận trong tháng này.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section id="owner-shipping-fee-sources" class="source-report-block hidden" data-source-panel>
+                    <div class="source-report-summary">Phí ship <strong th:text="${#numbers.formatDecimal(monthlyShippingFee, 0, 'POINT', 0, 'POINT') + ' VNĐ'}">0 VNĐ</strong></div>
+                    <div class="table-responsive">
+                        <table class="table table-sm align-middle source-report-table">
+                            <thead>
+                            <tr><th>Ngày ghi nhận</th><th>Mã đơn</th><th>Khách hàng</th><th>Mã SP</th><th>Trạng thái</th><th class="text-end">Phí ship</th></tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="source : ${shippingFeeSources}">
+                                <td th:text="${source.sourceDate() != null ? #temporals.format(source.sourceDate(), 'dd/MM/yyyy HH:mm') : '-'}">-</td>
+                                <td class="fw-semibold" th:text="${source.orderCode()}">DH001</td>
+                                <td th:text="${source.customerName() ?: '-'}">Khách hàng</td>
+                                <td th:text="${source.productCode() ?: '-'}">SP001</td>
+                                <td th:text="${source.orderStatus()}">COMPLETED</td>
+                                <td class="text-end fw-semibold" th:text="${#numbers.formatDecimal(source.sourceAmount(), 0, 'POINT', 0, 'POINT') + ' VNĐ'}">0 VNĐ</td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(shippingFeeSources)}"><td colspan="6" class="text-center text-muted py-3">Không có nguồn ghi nhận trong tháng này.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section id="owner-crane-fee-sources" class="source-report-block hidden" data-source-panel>
+                    <div class="source-report-summary">Phí cẩu <strong th:text="${#numbers.formatDecimal(monthlyCraneFee, 0, 'POINT', 0, 'POINT') + ' VNĐ'}">0 VNĐ</strong></div>
+                    <div class="table-responsive">
+                        <table class="table table-sm align-middle source-report-table">
+                            <thead>
+                            <tr><th>Ngày ghi nhận</th><th>Mã đơn</th><th>Khách hàng</th><th>Mã SP</th><th>Trạng thái</th><th class="text-end">Phí cẩu</th></tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="source : ${craneFeeSources}">
+                                <td th:text="${source.sourceDate() != null ? #temporals.format(source.sourceDate(), 'dd/MM/yyyy HH:mm') : '-'}">-</td>
+                                <td class="fw-semibold" th:text="${source.orderCode()}">DH001</td>
+                                <td th:text="${source.customerName() ?: '-'}">Khách hàng</td>
+                                <td th:text="${source.productCode() ?: '-'}">SP001</td>
+                                <td th:text="${source.orderStatus()}">COMPLETED</td>
+                                <td class="text-end fw-semibold" th:text="${#numbers.formatDecimal(source.sourceAmount(), 0, 'POINT', 0, 'POINT') + ' VNĐ'}">0 VNĐ</td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(craneFeeSources)}"><td colspan="6" class="text-center text-muted py-3">Không có nguồn ghi nhận trong tháng này.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </div>
 </div>
 
 <th:block th:fragment="scripts">
@@ -144,6 +301,55 @@
             const monthlyRevenueData = /*[[${dashboard.monthlyRevenue()}]]*/ [];
             const topViewedTreesData = /*[[${dashboard.topViewedTrees()}]]*/ [];
             const totalMonthRev = /*[[${dashboard.revenueThisMonth()}]]*/ 0;
+
+            const ownerSourceModal = document.getElementById('ownerSourceModal');
+            if (ownerSourceModal) {
+                const sourcePanels = ownerSourceModal.querySelectorAll('[data-source-panel]');
+                const closeButton = ownerSourceModal.querySelector('.source-modal-close');
+
+                function closeSourceModal() {
+                    ownerSourceModal.classList.add('hidden');
+                    ownerSourceModal.setAttribute('aria-hidden', 'true');
+                }
+
+                function openSourceModal(targetId) {
+                    sourcePanels.forEach(panel => panel.classList.toggle('hidden', panel.id !== targetId));
+                    ownerSourceModal.classList.remove('hidden');
+                    ownerSourceModal.setAttribute('aria-hidden', 'false');
+                }
+
+                document.querySelectorAll('[data-source-target]').forEach(link => {
+                    link.addEventListener('click', function (event) {
+                        event.preventDefault();
+                        openSourceModal(link.dataset.sourceTarget);
+                    });
+                });
+
+                document.querySelectorAll('[data-source-card]').forEach(card => {
+                    card.addEventListener('click', function (event) {
+                        if (event.target.closest('a, button, input, select, textarea')) return;
+                        openSourceModal(card.dataset.sourceCard);
+                    });
+                    card.addEventListener('keydown', function (event) {
+                        if (event.key === 'Enter' || event.key === ' ') {
+                            event.preventDefault();
+                            openSourceModal(card.dataset.sourceCard);
+                        }
+                    });
+                });
+
+                closeButton?.addEventListener('click', closeSourceModal);
+                ownerSourceModal.addEventListener('click', function (event) {
+                    if (event.target === ownerSourceModal) {
+                        closeSourceModal();
+                    }
+                });
+                document.addEventListener('keydown', function (event) {
+                    if (event.key === 'Escape' && !ownerSourceModal.classList.contains('hidden')) {
+                        closeSourceModal();
+                    }
+                });
+            }
             
             // 1. CHART.JS CONFIGURATION AND RENDER
             const dailyAvg = totalMonthRev / 30;

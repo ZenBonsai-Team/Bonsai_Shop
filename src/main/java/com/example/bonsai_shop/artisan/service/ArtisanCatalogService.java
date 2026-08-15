@@ -13,12 +13,17 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class ArtisanCatalogService {
+
+    private static final int MAX_NAME_LENGTH = 255;
+    private static final int MAX_DESCRIPTION_LENGTH = 500;
+    private static final String CATALOG_NAME_PATTERN = "^[\\p{L}\\p{N}\\s.,'\\-()]+$";
 
     private final CategoryRepository categoryRepository;
     private final VarietyRepository varietyRepository;
@@ -60,13 +65,45 @@ public class ArtisanCatalogService {
                 .collect(Collectors.toSet());
     }
 
+    public Map<Integer, Long> getVarietyCountByCategoryId() {
+        return varietyRepository.findAll().stream()
+                .collect(Collectors.groupingBy(
+                        variety -> variety.getCategory().getCategoryId(),
+                        Collectors.counting()
+                ));
+    }
+
+    public Map<Integer, Long> getProductCountByCategoryId() {
+        return categoryRepository.findAll().stream()
+                .collect(Collectors.toMap(
+                        Category::getCategoryId,
+                        category -> productRepository.countByVarietyCategoryCategoryId(category.getCategoryId())
+                ));
+    }
+
+    public Map<Integer, Long> getProductCountByVarietyId() {
+        return varietyRepository.findAll().stream()
+                .collect(Collectors.toMap(
+                        Variety::getVarietyId,
+                        variety -> productRepository.countByVarietyVarietyId(variety.getVarietyId())
+                ));
+    }
+
+    public Map<Integer, Long> getProductCountByTagId() {
+        return tagRepository.findAll().stream()
+                .collect(Collectors.toMap(
+                        Tag::getTagId,
+                        tag -> productTagRepository.countByTagTagId(tag.getTagId())
+                ));
+    }
+
     @Transactional
     public void createCategory(String categoryName, String description) {
         String normalizedCategoryName = requireText(categoryName, "Tên category không được để trống!");
         ensureCategoryNameUnique(normalizedCategoryName, null);
         categoryRepository.save(Category.builder()
                 .categoryName(normalizedCategoryName)
-                .description(blankToNull(description))
+                .description(normalizeDescription(description))
                 .build());
     }
 
@@ -80,7 +117,7 @@ public class ArtisanCatalogService {
         varietyRepository.save(Variety.builder()
                 .category(category)
                 .varietyName(normalizedVarietyName)
-                .description(blankToNull(description))
+                .description(normalizeDescription(description))
                 .build());
     }
 
@@ -101,7 +138,7 @@ public class ArtisanCatalogService {
         ensureCategoryNameUnique(normalizedCategoryName, categoryId);
 
         category.setCategoryName(normalizedCategoryName);
-        category.setDescription(blankToNull(description));
+        category.setDescription(normalizeDescription(description));
         categoryRepository.save(category);
     }
 
@@ -124,7 +161,7 @@ public class ArtisanCatalogService {
 
         variety.setCategory(category);
         variety.setVarietyName(normalizedVarietyName);
-        variety.setDescription(blankToNull(description));
+        variety.setDescription(normalizeDescription(description));
         varietyRepository.save(variety);
     }
 
@@ -159,7 +196,22 @@ public class ArtisanCatalogService {
         if (value == null || value.isBlank()) {
             throw new RuntimeException(message);
         }
-        return value.trim();
+        String normalizedValue = value.trim();
+        if (normalizedValue.length() > MAX_NAME_LENGTH) {
+            throw new RuntimeException("Tên không được vượt quá " + MAX_NAME_LENGTH + " ký tự.");
+        }
+        if (!normalizedValue.matches(CATALOG_NAME_PATTERN)) {
+            throw new RuntimeException("Tên chỉ được chứa chữ, số, khoảng trắng và các ký tự . , ' - ( ).");
+        }
+        return normalizedValue;
+    }
+
+    private String normalizeDescription(String description) {
+        String normalizedDescription = blankToNull(description);
+        if (normalizedDescription != null && normalizedDescription.length() > MAX_DESCRIPTION_LENGTH) {
+            throw new RuntimeException("Mô tả không được vượt quá " + MAX_DESCRIPTION_LENGTH + " ký tự.");
+        }
+        return normalizedDescription;
     }
 
     private void ensureCategoryNameUnique(String categoryName, Integer currentCategoryId) {

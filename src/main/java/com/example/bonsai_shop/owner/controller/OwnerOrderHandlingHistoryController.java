@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import java.util.Locale;
+
 @Controller
 @RequestMapping("/owner/order-handling-history")
 @PreAuthorize("hasRole('OWNER')")
@@ -24,15 +26,19 @@ public class OwnerOrderHandlingHistoryController {
 
     @GetMapping
     public String history(@RequestParam(required = false) String search,
+                          @RequestParam(defaultValue = "ALL") String status,
                           @RequestParam(defaultValue = "0") int page,
                           @RequestParam(required = false) Integer size,
                           Model model) {
         int pageSize = size != null ? size : orderHandlingHistoryService.defaultPageSize();
-        var historyPage = orderHandlingHistoryService.findModeratorHandlingHistory(search, page, pageSize);
+        var historyPage = orderHandlingHistoryService.findModeratorHandlingHistory(search, status, page, pageSize);
 
         model.addAttribute("historyPage", historyPage);
         model.addAttribute("historyItems", historyPage.getContent());
         model.addAttribute("search", search == null ? "" : search.trim());
+        model.addAttribute("selectedStatus", status == null || status.isBlank() ? "ALL" : status.trim().toUpperCase(Locale.ROOT));
+        model.addAttribute("completedStatus", "COMPLETED");
+        model.addAttribute("cancelledStatus", "CANCELLED");
         model.addAttribute("role", "OWNER");
         model.addAttribute("activeMenu", "order-handling-history");
         model.addAttribute("activePage", "order-handling-history");

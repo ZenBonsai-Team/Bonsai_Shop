@@ -77,11 +77,11 @@ h1, h2, h3, h4, h5, h6, .serif-text {
 
 .nav-link-custom {
     font-family: var(--font-sans);
-    font-size: 0.82rem;
-    font-weight: 500;
+    font-size: 0.95rem;
+    font-weight: 600;
     letter-spacing: 0.05em;
     color: var(--text-secondary) !important;
-    padding: 6px 14px !important;
+    padding: 6px 16px !important;
     position: relative;
     transition: var(--transition);
     white-space: nowrap;
@@ -93,8 +93,8 @@ h1, h2, h3, h4, h5, h6, .serif-text {
         width: 96%;
     }
     .nav-link-custom {
-        padding: 6px 11px !important;
-        font-size: 0.8rem;
+        padding: 6px 16px !important;
+        font-size: 0.92rem;
     }
 }
 
@@ -919,6 +919,20 @@ h1, h2, h3, h4, h5, h6, .serif-text {
 /* --- PAGE BACKGROUND --- */
 html {
     background-color: var(--bg-body, #FAFAF8);
+    font-size: 16px;
+}
+
+/* Scaling up for larger desktop viewports dynamically */
+@media (min-width: 1400px) {
+    html {
+        font-size: 17px;
+    }
+}
+
+@media (min-width: 1920px) {
+    html {
+        font-size: 18px;
+    }
 }
 
 /* Custom Language Dropdown styling */

@@ -785,3 +785,19 @@
                 flex-grow: 1;
             }
         }
+
+/* LIGHTBOX AND MAIN IMAGE HOVER EFFECTS */
+.gallery-main-wrap {
+    overflow: hidden;
+    border-radius: 16px;
+    background-color: #f7f6f1;
+    border: 1px solid #e8e4dd;
+}
+
+.gallery-main-wrap img {
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.gallery-main-wrap:hover img {
+    transform: scale(1.03);
+}

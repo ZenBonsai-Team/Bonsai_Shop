@@ -32,6 +32,28 @@
 
         <div id="artisanFlashSuccess" th:if="${success}" th:attr="data-message=${success}" hidden></div>
         <div id="artisanFlashError" th:if="${error}" th:attr="data-message=${error}" hidden></div>
+        <div id="createServerFieldError"
+             th:if="${createErrorField}"
+             th:attr="data-field=${createErrorField},data-message=${error}"
+             hidden></div>
+        <div id="editServerFieldError"
+             th:if="${editErrorField}"
+             th:attr="data-field=${editErrorField},
+                      data-message=${error},
+                      data-order-id=${editOrderId},
+                      data-customer-name=${editCustomerName},
+                      data-customer-phone=${editCustomerPhone},
+                      data-shipping-address=${editShippingAddress},
+                      data-customer-email=${editCustomerEmail},
+                      data-payment-method=${editPaymentMethod},
+                      data-crane-fee=${editCraneFee},
+                      data-shipping-fee=${editShippingFee},
+                      data-notes=${editNotes}"
+             hidden></div>
+        <div th:if="${error != null && createErrorField == null && editErrorField == null}" class="alert error walk-in-static-error" role="alert">
+            <strong>Lỗi nhập liệu</strong>
+            <div th:text="${error}">Có lỗi xảy ra.</div>
+        </div>
 
         <section class="portal-card mb-4">
             <div class="taxonomy-toolbar">
@@ -41,13 +63,14 @@
                 </div>
             </div>
 
-            <form id="walkInCreateForm" method="post" th:action="@{/artisan/in-person-order}" class="artisan-profile-fields walk-in-order-form">
+            <form id="walkInCreateForm" method="post" th:action="@{/artisan/in-person-order}" class="artisan-profile-fields walk-in-order-form" novalidate>
                 <div class="walk-in-product-picker">
                     <label>
                         <span>Sản phẩm</span>
                         <input id="walkInProductSearch" type="text" placeholder="🔍 Tìm theo mã hoặc tên cây..." autocomplete="off">
                     </label>
-                    <input id="walkInProductId" type="hidden" name="productId" required>
+                    <input id="walkInProductId" type="hidden" name="productId" th:value="${createProductId}" required>
+                    <span class="field-error" data-error-for="productId"></span>
 
                     <div class="walk-in-product-results" id="walkInProductResults">
                         <button type="button"
@@ -84,53 +107,60 @@
                 <div class="walk-in-customer-grid">
                     <label>
                         <span>Tên khách</span>
-                        <input name="customerName" required placeholder="Tên khách hàng">
+                        <input name="customerName" required th:value="${createCustomerName}" placeholder="Tên khách hàng">
+                        <span class="field-error" data-error-for="customerName"></span>
                     </label>
 
                     <label>
                         <span>Số điện thoại</span>
-                        <input name="customerPhone" required placeholder="Bắt buộc">
+                        <input name="customerPhone" class="js-phone-only" required inputmode="numeric" pattern="0[0-9]{9,10}" maxlength="11" th:value="${createCustomerPhone}" placeholder="Ví dụ: 0900000000" oninput="this.value=this.value.replace(/\D/g,'').slice(0,11)">
+                        <span class="field-error" data-error-for="customerPhone"></span>
                     </label>
 
                     <label class="walk-in-field-wide">
                         <span>Địa chỉ giao/nhận cây</span>
-                        <input name="shippingAddress" required placeholder="Bắt buộc, ví dụ: nhận tại vườn hoặc địa chỉ giao sau">
+                        <input name="shippingAddress" required th:value="${createShippingAddress}" placeholder="Bắt buộc, ví dụ: nhận tại vườn hoặc địa chỉ giao sau">
+                        <span class="field-error" data-error-for="shippingAddress"></span>
                     </label>
 
                     <label>
                         <span>Email</span>
-                        <input name="customerEmail" type="email" required placeholder="Bắt buộc">
+                        <input name="customerEmail" type="email" required th:value="${createCustomerEmail}" placeholder="Bắt buộc">
+                        <span class="field-error" data-error-for="customerEmail"></span>
                     </label>
 
                     <label>
                         <span>Phương thức thanh toán</span>
                         <select name="paymentMethod" required>
-                            <option value="CASH" selected>Tiền mặt tại vườn</option>
-                            <option value="VNPAY">VNPAY</option>
+                            <option value="CASH" th:selected="${createPaymentMethod == null || createPaymentMethod == 'CASH'}">Tiền mặt tại vườn</option>
+                            <option value="VNPAY" th:selected="${createPaymentMethod == 'VNPAY'}">VNPAY</option>
                         </select>
                     </label>
 
                     <label>
                         <span>Phí cẩu</span>
                         <span class="input-with-unit walk-in-fee-field">
-                            <input id="craneFeeDisplay" type="text" inputmode="numeric" data-price="0">
-                            <input id="craneFeeValue" type="hidden" name="craneFee" value="0">
+                            <input id="craneFeeDisplay" type="text" inputmode="numeric" th:attr="data-price=${createCraneFee != null ? createCraneFee : 0}">
+                            <input id="craneFeeValue" type="hidden" name="craneFee" th:value="${createCraneFee != null ? createCraneFee : 0}">
                             <span>VNĐ</span>
                         </span>
+                        <span class="field-error" data-error-for="craneFee"></span>
                     </label>
 
                     <label>
                         <span>Phí vận chuyển</span>
                         <span class="input-with-unit walk-in-fee-field">
-                            <input id="shippingFeeDisplay" type="text" inputmode="numeric" data-price="0">
-                            <input id="shippingFeeValue" type="hidden" name="shippingFee" value="0">
+                            <input id="shippingFeeDisplay" type="text" inputmode="numeric" th:attr="data-price=${createShippingFee != null ? createShippingFee : 0}">
+                            <input id="shippingFeeValue" type="hidden" name="shippingFee" th:value="${createShippingFee != null ? createShippingFee : 0}">
                             <span>VNĐ</span>
                         </span>
+                        <span class="field-error" data-error-for="shippingFee"></span>
                     </label>
 
                     <label class="walk-in-field-wide">
                         <span>Ghi chú</span>
-                        <textarea name="notes" rows="3" placeholder="Ví dụ: Khách thanh toán tiền mặt tại vườn"></textarea>
+                        <textarea name="notes" rows="3" th:text="${createNotes}" placeholder="Ví dụ: Khách thanh toán tiền mặt tại vườn"></textarea>
+                        <span class="field-error" data-error-for="notes"></span>
                     </label>
 
                     <div class="actions walk-in-form-actions">
@@ -153,20 +183,20 @@
                 <div class="filter-tabs product-filter-chips" style="margin:0;">
                     <a class="tab-btn text-decoration-none"
                        th:classappend="${selectedStatus == 'ALL'} ? ' active'"
-                       th:href="@{/artisan/in-person-order(status='ALL')}">Tất cả</a>
+                       th:href="@{/artisan/in-person-order(status='ALL',size=${selectedSize})}">Tất cả</a>
                     <a class="tab-btn text-decoration-none"
                        th:classappend="${selectedStatus == pendingPaymentStatus} ? ' active'"
-                       th:href="@{/artisan/in-person-order(status=${pendingPaymentStatus})}">Chờ nhận tiền</a>
+                       th:href="@{/artisan/in-person-order(status=${pendingPaymentStatus},size=${selectedSize})}">Chờ nhận tiền</a>
                     <a class="tab-btn text-decoration-none"
                        th:classappend="${selectedStatus == completedStatus} ? ' active'"
-                       th:href="@{/artisan/in-person-order(status=${completedStatus})}">Hoàn thành</a>
+                       th:href="@{/artisan/in-person-order(status=${completedStatus},size=${selectedSize})}">Hoàn thành</a>
                     <a class="tab-btn text-decoration-none"
                        th:classappend="${selectedStatus == cancelledStatus} ? ' active'"
-                       th:href="@{/artisan/in-person-order(status=${cancelledStatus})}">Đã hủy</a>
+                       th:href="@{/artisan/in-person-order(status=${cancelledStatus},size=${selectedSize})}">Đã hủy</a>
                 </div>
             </div>
 
-            <div class="table-container">
+            <div class="table-container" id="walkInOrdersTableContainer">
                 <table class="orders-table">
                     <thead>
                     <tr>
@@ -198,6 +228,7 @@
                         <td>
                             <button type="button"
                                     class="btn-mini btn-mini-confirm js-open-walkin-drawer"
+                                    th:data-order-id="${order.orderId}"
                                     th:data-order-status="${order.orderStatus}"
                                     th:data-order-code="${order.orderCode}"
                                     th:data-customer-name="${order.customerName}"
@@ -233,11 +264,25 @@
                 </table>
             </div>
 
-            <div class="pagination-footer" th:if="${orders.totalPages > 1}">
-                <div class="pagination-info" th:text="${'Hiển thị trang ' + (orders.number + 1) + ' / ' + orders.totalPages}"></div>
-                <div class="pagination-controls">
-                    <a class="page-btn" th:if="${orders.hasPrevious()}" th:href="@{/artisan/in-person-order(status=${selectedStatus},page=${orders.number - 1})}">Trước</a>
-                    <a class="page-btn" th:if="${orders.hasNext()}" th:href="@{/artisan/in-person-order(status=${selectedStatus},page=${orders.number + 1})}">Sau</a>
+            <div class="catalog-table-footer walkin-pagination-footer" id="walkInOrdersPagination" th:if="${orders != null}">
+                <span th:text="${orders.totalElements == 0
+                    ? 'Không có đơn tại vườn'
+                    : 'Hiển thị ' + (orders.number * orders.size + 1) + '–' + (orders.number * orders.size + orders.numberOfElements) + ' trong ' + orders.totalElements + ' đơn'}"></span>
+                <div class="catalog-pagination-controls walkin-pagination-controls">
+                    <select id="walkInPageSize" class="product-page-size" aria-label="Số đơn mỗi trang">
+                        <option value="10" th:selected="${selectedSize == 10}">10 / trang</option>
+                        <option value="20" th:selected="${selectedSize == 20}">20 / trang</option>
+                        <option value="50" th:selected="${selectedSize == 50}">50 / trang</option>
+                    </select>
+                    <a class="product-page-nav"
+                       th:classappend="${!orders.hasPrevious()} ? 'disabled'"
+                       th:href="@{/artisan/in-person-order(status=${selectedStatus},page=${orders.hasPrevious() ? orders.number - 1 : 0},size=${selectedSize})}"
+                       aria-label="Trang trước">‹</a>
+                    <span th:text="${'Trang ' + (orders.number + 1) + ' / ' + orders.totalPages}">Trang 1 / 1</span>
+                    <a class="product-page-nav"
+                       th:classappend="${!orders.hasNext()} ? 'disabled'"
+                       th:href="@{/artisan/in-person-order(status=${selectedStatus},page=${orders.hasNext() ? orders.number + 1 : orders.number},size=${selectedSize})}"
+                       aria-label="Trang sau">›</a>
                 </div>
             </div>
         </section>
@@ -324,25 +369,29 @@
                     </div>
                 </div>
 
-                <form id="walkInEditForm" class="walk-in-edit-form hidden" method="post">
+                <form id="walkInEditForm" class="walk-in-edit-form hidden" method="post" novalidate>
                     <input th:if="${_csrf != null}" type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
                     <h4 class="section-title">Chỉnh sửa thông tin order</h4>
                     <div class="walk-in-edit-grid">
                         <label>
                             <span>Tên khách</span>
                             <input id="editCustomerName" name="customerName" required>
+                            <span class="field-error" data-edit-error-for="customerName"></span>
                         </label>
                         <label>
                             <span>Số điện thoại</span>
-                            <input id="editCustomerPhone" name="customerPhone" required>
+                            <input id="editCustomerPhone" class="js-phone-only" name="customerPhone" required inputmode="numeric" pattern="0[0-9]{9,10}" maxlength="11" oninput="this.value=this.value.replace(/\D/g,'').slice(0,11)">
+                            <span class="field-error" data-edit-error-for="customerPhone"></span>
                         </label>
                         <label class="walk-in-field-wide">
                             <span>Địa chỉ giao/nhận cây</span>
                             <input id="editShippingAddress" name="shippingAddress" required>
+                            <span class="field-error" data-edit-error-for="shippingAddress"></span>
                         </label>
                         <label>
                             <span>Email</span>
                             <input id="editCustomerEmail" name="customerEmail" type="email" required>
+                            <span class="field-error" data-edit-error-for="customerEmail"></span>
                         </label>
                         <label>
                             <span>Phương thức thanh toán</span>
@@ -358,6 +407,7 @@
                                 <input id="editCraneFeeValue" type="hidden" name="craneFee" value="0">
                                 <span>VNĐ</span>
                             </span>
+                            <span class="field-error" data-edit-error-for="craneFee"></span>
                         </label>
                         <label>
                             <span>Phí vận chuyển</span>
@@ -366,10 +416,12 @@
                                 <input id="editShippingFeeValue" type="hidden" name="shippingFee" value="0">
                                 <span>VNĐ</span>
                             </span>
+                            <span class="field-error" data-edit-error-for="shippingFee"></span>
                         </label>
                         <label class="walk-in-field-wide">
                             <span>Ghi chú</span>
                             <textarea id="editNotes" name="notes" rows="3"></textarea>
+                            <span class="field-error" data-edit-error-for="notes"></span>
                         </label>
                     </div>
                     <div class="walk-in-edit-actions">
@@ -517,6 +569,8 @@
         shippingAddress: document.getElementById('editShippingAddress'),
         customerEmail: document.getElementById('editCustomerEmail'),
         paymentMethod: document.getElementById('editPaymentMethod'),
+        craneFee: document.getElementById('editCraneFeeValue'),
+        shippingFee: document.getElementById('editShippingFeeValue'),
         notes: document.getElementById('editNotes')
     };
     const feeInputs = [
@@ -539,6 +593,16 @@
             value: document.getElementById('editShippingFeeValue')
         }
     ];
+    const createFields = {
+        productId: createForm.querySelector('[name="productId"]'),
+        customerName: createForm.querySelector('[name="customerName"]'),
+        customerPhone: createForm.querySelector('[name="customerPhone"]'),
+        shippingAddress: createForm.querySelector('[name="shippingAddress"]'),
+        customerEmail: createForm.querySelector('[name="customerEmail"]'),
+        craneFee: createForm.querySelector('[name="craneFee"]'),
+        shippingFee: createForm.querySelector('[name="shippingFee"]'),
+        notes: createForm.querySelector('[name="notes"]')
+    };
     const fields = {
         code: document.getElementById('drawerOrderCode'),
         status: document.getElementById('drawerStatusBadge'),
@@ -572,7 +636,7 @@
 
     function formatInputVnd(value) {
         const normalizedValue = normalizePrice(value);
-        return normalizedValue ? Number(normalizedValue).toLocaleString('vi-VN') : '';
+        return normalizedValue ? normalizedValue.replace(/\B(?=(\d{3})+(?!\d))/g, '.') : '';
     }
 
     function syncFeeInput(feeInput) {
@@ -589,9 +653,127 @@
     [...feeInputs, ...editFeeInputs].forEach(feeInput => {
         feeInput.display.value = formatInputVnd(feeInput.display.dataset.price || feeInput.value.value);
         feeInput.value.value = normalizePrice(feeInput.display.dataset.price || feeInput.value.value) || '0';
-        feeInput.display.addEventListener('input', () => syncFeeInput(feeInput));
+        feeInput.display.addEventListener('input', () => {
+            syncFeeInput(feeInput);
+            if (createForm.contains(feeInput.value)) {
+                validateCreateField(feeInput.value.name);
+            } else if (editForm.contains(feeInput.value)) {
+                validateEditField(feeInput.value.name);
+            }
+        });
         feeInput.display.form.addEventListener('submit', () => syncFeeInput(feeInput));
     });
+
+    document.querySelectorAll('.js-phone-only').forEach(input => {
+        input.addEventListener('input', () => {
+            input.value = input.value.replace(/\D/g, '').slice(0, 11);
+            if (createForm.contains(input)) {
+                validateCreateField(input.name);
+            } else if (editForm.contains(input)) {
+                validateEditField(input.name);
+            }
+        });
+    });
+
+    function validateOrderFieldValue(fieldName, value) {
+        if (fieldName === 'customerName') {
+            if (!value) return 'Vui lòng nhập tên khách.';
+            if (value.length > 100) return 'Tên khách không được vượt quá 100 ký tự.';
+            if (!/^[\p{L}\p{M}\s.'-]+$/u.test(value)) return 'Tên khách chỉ được chứa chữ cái, khoảng trắng và các dấu . \' -.';
+        } else if (fieldName === 'customerPhone') {
+            if (!value) return 'Vui lòng nhập số điện thoại.';
+            if (!/^0[0-9]{9,10}$/.test(value)) return 'Số điện thoại phải gồm 10-11 chữ số và bắt đầu bằng 0.';
+        } else if (fieldName === 'shippingAddress') {
+            if (!value) return 'Vui lòng nhập địa chỉ giao/nhận cây.';
+            if (value.length > 255) return 'Địa chỉ không được vượt quá 255 ký tự.';
+            if (!/^[\p{L}\p{M}\p{N}\s,./()\-]+$/u.test(value)) return 'Địa chỉ chỉ được chứa chữ, số, khoảng trắng và các dấu , . / - ( ).';
+        } else if (fieldName === 'customerEmail') {
+            if (!value) return 'Vui lòng nhập email.';
+            if (value.length > 100) return 'Email không được vượt quá 100 ký tự.';
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return 'Email không hợp lệ.';
+        } else if (fieldName === 'craneFee' || fieldName === 'shippingFee') {
+            const feeValue = Number(value || 0);
+            if (feeValue < 0) return 'Phí không được âm.';
+            if (feeValue > 200000000) return 'Phí không được vượt quá 200.000.000 VNĐ.';
+        } else if (fieldName === 'notes' && value.length > 500) {
+            return 'Ghi chú không được vượt quá 500 ký tự.';
+        }
+        return '';
+    }
+
+    function setCreateFieldError(fieldName, message) {
+        const errorElement = createForm.querySelector(`[data-error-for="${fieldName}"]`);
+        const fieldElement = createFields[fieldName];
+        const fieldWrapper = fieldElement?.closest('label') || fieldElement?.closest('.walk-in-product-picker');
+        if (errorElement) {
+            errorElement.textContent = message || '';
+        }
+        fieldWrapper?.classList.toggle('field-invalid', Boolean(message));
+    }
+
+    function validateCreateField(fieldName) {
+        const value = createFields[fieldName]?.value?.trim() || '';
+        let message = '';
+
+        if (fieldName === 'productId' && !value) {
+            message = 'Vui lòng chọn sản phẩm.';
+        } else {
+            message = validateOrderFieldValue(fieldName, value);
+        }
+
+        setCreateFieldError(fieldName, message);
+        return !message;
+    }
+
+    function validateCreateFormFields() {
+        feeInputs.forEach(syncFeeInput);
+        const results = Object.keys(createFields).map(validateCreateField);
+        return results.every(Boolean);
+    }
+
+    ['customerName', 'shippingAddress', 'customerEmail', 'notes'].forEach(fieldName => {
+        createFields[fieldName]?.addEventListener('input', () => validateCreateField(fieldName));
+        createFields[fieldName]?.addEventListener('blur', () => validateCreateField(fieldName));
+    });
+
+    function setEditFieldError(fieldName, message) {
+        const errorElement = editForm.querySelector(`[data-edit-error-for="${fieldName}"]`);
+        const fieldElement = editFields[fieldName];
+        const fieldWrapper = fieldElement?.closest('label');
+        if (errorElement) {
+            errorElement.textContent = message || '';
+        }
+        fieldWrapper?.classList.toggle('field-invalid', Boolean(message));
+    }
+
+    function validateEditField(fieldName) {
+        const value = editFields[fieldName]?.value?.trim() || '';
+        const message = validateOrderFieldValue(fieldName, value);
+        setEditFieldError(fieldName, message);
+        return !message;
+    }
+
+    function validateEditFormFields() {
+        editFeeInputs.forEach(syncFeeInput);
+        const fieldNames = ['customerName', 'customerPhone', 'shippingAddress', 'customerEmail', 'craneFee', 'shippingFee', 'notes'];
+        const results = fieldNames.map(validateEditField);
+        return results.every(Boolean);
+    }
+
+    function clearEditFieldErrors() {
+        ['customerName', 'customerPhone', 'shippingAddress', 'customerEmail', 'craneFee', 'shippingFee', 'notes']
+            .forEach(fieldName => setEditFieldError(fieldName, ''));
+    }
+
+    ['customerName', 'shippingAddress', 'customerEmail', 'notes'].forEach(fieldName => {
+        editFields[fieldName]?.addEventListener('input', () => validateEditField(fieldName));
+        editFields[fieldName]?.addEventListener('blur', () => validateEditField(fieldName));
+    });
+
+    const createServerFieldError = document.getElementById('createServerFieldError');
+    if (createServerFieldError?.dataset.field) {
+        setCreateFieldError(createServerFieldError.dataset.field, createServerFieldError.dataset.message || 'Thông tin không hợp lệ.');
+    }
 
     const productSearch = document.getElementById('walkInProductSearch');
     const productIdInput = document.getElementById('walkInProductId');
@@ -608,6 +790,7 @@
     function selectProduct(option) {
         const data = option.dataset;
         productIdInput.value = data.productId;
+        validateCreateField('productId');
         selectedImage.src = data.image || productFallbackImage;
         selectedImage.onerror = function () { selectedImage.src = productFallbackImage; };
         selectedCode.textContent = data.code || '-';
@@ -639,6 +822,7 @@
     productSearch.form.addEventListener('submit', (event) => {
         if (!productIdInput.value) {
             event.preventDefault();
+            validateCreateField('productId');
             productSearch.focus();
         }
     });
@@ -649,7 +833,14 @@
         }
         if (!productIdInput.value) {
             event.preventDefault();
+            validateCreateField('productId');
             productSearch.focus();
+            return;
+        }
+        if (!validateCreateFormFields()) {
+            event.preventDefault();
+            const firstError = createForm.querySelector('.field-error:not(:empty)');
+            firstError?.scrollIntoView({ behavior: 'smooth', block: 'center' });
             return;
         }
         event.preventDefault();
@@ -680,16 +871,25 @@
     changeProductButton.addEventListener('click', () => {
         allowCreateSubmit = false;
         productIdInput.value = '';
+        validateCreateField('productId');
         selectedProduct.classList.add('hidden');
         productSearch.classList.remove('hidden');
         productResults.classList.remove('hidden');
         productSearch.focus();
         filterProducts();
     });
-    filterProducts();
+    const preservedProductOption = productIdInput.value
+        ? productOptions.find(option => option.dataset.productId === productIdInput.value)
+        : null;
+    if (preservedProductOption) {
+        selectProduct(preservedProductOption);
+    } else {
+        filterProducts();
+    }
 
     function openDrawer(button) {
         const data = button.dataset;
+        clearEditFieldErrors();
         fields.code.textContent = data.orderCode || '-';
         fields.status.textContent = data.orderStatus || '-';
         fields.status.className = data.orderStatus === pendingStatus ? 'status-badge pending' : 'status-badge approved';
@@ -716,7 +916,7 @@
         editFields.shippingAddress.value = data.shippingAddress || '';
         editFields.customerEmail.value = data.editCustomerEmail || '';
         editFields.paymentMethod.value = data.paymentMethod || 'CASH';
-        editFields.notes.value = data.editNotes || '';
+        editFields.notes.value = data.editNotes || (data.notes === 'Không có ghi chú thêm.' ? '' : data.notes || '');
         setFeeInput(editFeeInputs[0], data.craneFee);
         setFeeInput(editFeeInputs[1], data.shippingFee);
         editForm.classList.add('hidden');
@@ -737,6 +937,32 @@
         panel.classList.add('show');
     }
 
+    function restoreEditFormFromServerError() {
+        const serverError = document.getElementById('editServerFieldError');
+        if (!serverError?.dataset.orderId) {
+            return;
+        }
+
+        const trigger = document.querySelector(`.js-open-walkin-drawer[data-order-id="${serverError.dataset.orderId}"]`);
+        if (!trigger) {
+            return;
+        }
+
+        openDrawer(trigger);
+        editForm.classList.remove('hidden');
+        cancelForm.style.display = 'none';
+        editFields.customerName.value = serverError.dataset.customerName || '';
+        editFields.customerPhone.value = serverError.dataset.customerPhone || '';
+        editFields.shippingAddress.value = serverError.dataset.shippingAddress || '';
+        editFields.customerEmail.value = serverError.dataset.customerEmail || '';
+        editFields.paymentMethod.value = serverError.dataset.paymentMethod || 'CASH';
+        editFields.notes.value = serverError.dataset.notes || '';
+        setFeeInput(editFeeInputs[0], serverError.dataset.craneFee || 0);
+        setFeeInput(editFeeInputs[1], serverError.dataset.shippingFee || 0);
+        setEditFieldError(serverError.dataset.field, serverError.dataset.message || 'Thông tin không hợp lệ.');
+        editForm.querySelector('.field-error:not(:empty)')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
     function closeDrawer() {
         paymentConfirmModal.classList.add('hidden');
         cancelConfirmModal.classList.add('hidden');
@@ -744,12 +970,69 @@
         panel.classList.remove('show');
     }
 
-    document.querySelectorAll('.js-open-walkin-drawer').forEach(button => {
-        button.addEventListener('click', function (event) {
+    function loadWalkInOrdersPage(url, pushHistory = true) {
+        const targetUrl = url.toString();
+        document.getElementById('walkInOrdersSection')?.classList.add('is-loading');
+        return fetch(targetUrl, {headers: {'X-Requested-With': 'XMLHttpRequest'}})
+            .then(response => {
+                if (!response.ok) throw new Error('Không tải được danh sách đơn.');
+                return response.text();
+            })
+            .then(html => {
+                const doc = new DOMParser().parseFromString(html, 'text/html');
+                const nextTable = doc.getElementById('walkInOrdersTableContainer');
+                const nextPagination = doc.getElementById('walkInOrdersPagination');
+                const currentTable = document.getElementById('walkInOrdersTableContainer');
+                const currentPagination = document.getElementById('walkInOrdersPagination');
+                if (!nextTable || !currentTable) throw new Error('Không tìm thấy bảng đơn tại vườn.');
+                currentTable.replaceWith(nextTable);
+                if (currentPagination && nextPagination) {
+                    currentPagination.replaceWith(nextPagination);
+                } else if (currentPagination && !nextPagination) {
+                    currentPagination.remove();
+                } else if (!currentPagination && nextPagination) {
+                    document.getElementById('walkInOrdersSection')?.appendChild(nextPagination);
+                }
+                if (pushHistory) {
+                    window.history.pushState({}, '', targetUrl);
+                }
+            })
+            .catch(() => {
+                window.location.href = targetUrl;
+            })
+            .finally(() => document.getElementById('walkInOrdersSection')?.classList.remove('is-loading'));
+    }
+
+    document.addEventListener('click', function (event) {
+        const trigger = event.target.closest('.js-open-walkin-drawer');
+        if (trigger) {
             event.stopPropagation();
-            openDrawer(button);
-        });
+            openDrawer(trigger);
+            return;
+        }
+
+        const pageLink = event.target.closest('.walkin-pagination-controls .product-page-nav');
+        if (!pageLink || pageLink.classList.contains('disabled')) return;
+        event.preventDefault();
+        loadWalkInOrdersPage(new URL(pageLink.href));
     });
+
+    document.addEventListener('change', function (event) {
+        if (event.target.id !== 'walkInPageSize') return;
+        const url = new URL(window.location.href);
+        url.searchParams.set('size', event.target.value);
+        url.searchParams.set('page', '0');
+        loadWalkInOrdersPage(url);
+    });
+
+    window.addEventListener('popstate', () => loadWalkInOrdersPage(new URL(window.location.href), false));
+
+    setInterval(() => {
+        if (panel.classList.contains('show')) {
+            return;
+        }
+        loadWalkInOrdersPage(new URL(window.location.href), false);
+    }, 15000);
 
     confirmForm.addEventListener('submit', function (event) {
         if (!allowPaymentSubmit) {
@@ -788,7 +1071,13 @@
         editForm.classList.add('hidden');
     });
 
-    editForm.addEventListener('submit', function () {
+    editForm.addEventListener('submit', function (event) {
+        if (!validateEditFormFields()) {
+            event.preventDefault();
+            const firstError = editForm.querySelector('.field-error:not(:empty)');
+            firstError?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            return;
+        }
         editFeeInputs.forEach(syncFeeInput);
     });
 
@@ -832,19 +1121,15 @@
 
     closeButton.addEventListener('click', closeDrawer);
     backdrop.addEventListener('click', closeDrawer);
+    restoreEditFormFromServerError();
 })();
 </script>
 <script>
     document.addEventListener('DOMContentLoaded', () => {
         const successFlash = document.getElementById('artisanFlashSuccess');
-        const errorFlash = document.getElementById('artisanFlashError');
 
         if (successFlash?.dataset.message && window.BSMSToast) {
             BSMSToast.success(successFlash.dataset.message);
-        }
-
-        if (errorFlash?.dataset.message && window.BSMSToast) {
-            BSMSToast.error(errorFlash.dataset.message);
         }
     });
 </script>

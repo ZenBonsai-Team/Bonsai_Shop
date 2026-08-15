@@ -42,7 +42,9 @@
         </h2>
 
         <form method="post"
-              th:action="@{/owner/users/create}">
+              th:action="@{/owner/users/create}"
+              id="createUserForm"
+              novalidate>
 
             <input type="hidden"
                    th:name="${_csrf.parameterName}"
@@ -52,47 +54,61 @@
                 <label>Họ và tên *</label>
                 <label>
                     <input type="text"
+                           id="fullName"
                            name="fullName"
                            placeholder="Nguyễn Văn A"
+                           minlength="3"
+                           maxlength="50"
+                           th:value="${fullName}"
                            required>
                 </label>
+                <small class="field-error" data-error-for="fullName"></small>
             </div>
 
             <div class="form-field">
                 <label>Email *</label>
                 <label>
                     <input type="email"
+                           id="email"
                            name="email"
                            placeholder="example@email.com"
+                           th:value="${email}"
                            required>
                 </label>
+                <small class="field-error" data-error-for="email"></small>
             </div>
 
             <div class="form-field">
                 <label>Mật khẩu *</label>
                 <label>
                     <input type="password"
+                           id="password"
                            name="password"
                            placeholder="Tối thiểu 6 ký tự"
                            minlength="6"
                            required>
                 </label>
+                <small class="field-error" data-error-for="password"></small>
             </div>
 
             <div class="form-field">
                 <label>Số điện thoại</label>
                 <label>
                     <input type="text"
+                           id="phone"
                            name="phone"
-                           placeholder="0xxxxxxxxx">
+                           placeholder="0xxxxxxxxx"
+                           pattern="0[0-9]{9,10}"
+                           th:value="${phone}">
                 </label>
+                <small class="field-error" data-error-for="phone"></small>
             </div>
 
             <div class="form-field">
                 <label>Phân quyền *</label>
 
                 <label>
-                    <select name="roleId" required>
+                    <select name="roleId" id="roleId" required>
 
                         <option value="">
                             -- Chọn quyền --
@@ -100,16 +116,19 @@
 
                         <option th:each="role : ${roles}"
                                 th:value="${role.roleId}"
+                                th:selected="${roleId != null and role.roleId == roleId}"
                                 th:text="${role.roleName}">
                         </option>
 
                     </select>
                 </label>
+                <small class="field-error" data-error-for="roleId"></small>
             </div>
 
             <div class="form-actions">
 
                 <button type="submit"
+                        id="createUserSubmit"
                         class="btn-create">
                     Tạo tài khoản
                 </button>
@@ -125,6 +144,80 @@
 </div>
 
 <th:block th:fragment="scripts">
+    <script th:inline="javascript">
+        document.addEventListener('DOMContentLoaded', function () {
+            const form = document.getElementById('createUserForm');
+            const submitButton = document.getElementById('createUserSubmit');
+            const fields = {
+                fullName: document.getElementById('fullName'),
+                email: document.getElementById('email'),
+                password: document.getElementById('password'),
+                phone: document.getElementById('phone'),
+                roleId: document.getElementById('roleId')
+            };
+
+            const messages = {
+                fullName: 'Họ và tên phải có từ 3 đến 50 ký tự.',
+                email: 'Email không đúng định dạng.',
+                password: 'Mật khẩu phải có ít nhất 6 ký tự.',
+                phone: 'Số điện thoại phải bắt đầu bằng 0 và có từ 10 đến 11 chữ số.',
+                roleId: 'Vui lòng chọn phân quyền.'
+            };
+
+            const validators = {
+                fullName: value => value.trim().length >= 3 && value.trim().length <= 50,
+                email: value => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim()),
+                password: value => value.length >= 6,
+                phone: value => value.trim() === '' || /^0\d{9,10}$/.test(value.trim()),
+                roleId: value => value !== ''
+            };
+
+            function setFieldState(name, isValid) {
+                const field = fields[name];
+                const error = form.querySelector(`[data-error-for="${name}"]`);
+                field.classList.toggle('is-invalid', !isValid);
+                error.textContent = isValid ? '' : messages[name];
+            }
+
+            function validateForm(showErrors) {
+                let valid = true;
+
+                Object.keys(fields).forEach(name => {
+                    const isValid = validators[name](fields[name].value);
+                    valid = valid && isValid;
+                    if (showErrors || fields[name].dataset.touched === 'true') {
+                        setFieldState(name, isValid);
+                    }
+                });
+
+                submitButton.disabled = !valid;
+                return valid;
+            }
+
+            Object.keys(fields).forEach(name => {
+                fields[name].addEventListener('input', function () {
+                    fields[name].dataset.touched = 'true';
+                    validateForm(false);
+                });
+                fields[name].addEventListener('blur', function () {
+                    fields[name].dataset.touched = 'true';
+                    validateForm(true);
+                });
+                fields[name].addEventListener('change', function () {
+                    fields[name].dataset.touched = 'true';
+                    validateForm(false);
+                });
+            });
+
+            form.addEventListener('submit', function (event) {
+                if (!validateForm(true)) {
+                    event.preventDefault();
+                }
+            });
+
+            validateForm(false);
+        });
+    </script>
 </th:block>
 
 </body>

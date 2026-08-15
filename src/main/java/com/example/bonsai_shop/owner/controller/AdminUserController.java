@@ -36,7 +36,7 @@ public class AdminUserController {
                                 @RequestParam String email,
                                 @RequestParam String password,
                                 @RequestParam(required = false) String phone,
-                                @RequestParam Integer roleId,
+                                @RequestParam(required = false) Integer roleId,
                                 RedirectAttributes redirectAttributes) {
         try {
             accountService.createAccount(fullName, email, password, phone, roleId);
@@ -44,6 +44,10 @@ public class AdminUserController {
                     "Tao tai khoan thanh cong cho " + email + "!");
         } catch (RuntimeException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
+            redirectAttributes.addFlashAttribute("fullName", fullName);
+            redirectAttributes.addFlashAttribute("email", email);
+            redirectAttributes.addFlashAttribute("phone", phone);
+            redirectAttributes.addFlashAttribute("roleId", roleId);
             return "redirect:/owner/users/create";
         }
         return "redirect:/owner/users";

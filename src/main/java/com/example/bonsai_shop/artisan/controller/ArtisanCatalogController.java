@@ -147,6 +147,10 @@ public class ArtisanCatalogController {
         model.addAttribute("categoryIdsInUse", artisanCatalogService.getCategoryIdsInUse());
         model.addAttribute("varietyIdsInUse", artisanCatalogService.getVarietyIdsInUse());
         model.addAttribute("tagIdsInUse", artisanCatalogService.getTagIdsInUse());
+        model.addAttribute("varietyCountByCategoryId", artisanCatalogService.getVarietyCountByCategoryId());
+        model.addAttribute("productCountByCategoryId", artisanCatalogService.getProductCountByCategoryId());
+        model.addAttribute("productCountByVarietyId", artisanCatalogService.getProductCountByVarietyId());
+        model.addAttribute("productCountByTagId", artisanCatalogService.getProductCountByTagId());
     }
 }
 
