@@ -31,12 +31,14 @@ import java.util.List;
 @Controller
 @RequestMapping("/artisan/products")
 @RequiredArgsConstructor
+// Controller quản lý vòng đời sản phẩm bonsai của artisan.
 public class ArtisanProductController {
 
     private final ArtisanProductService artisanProductService;
     private final ProductJournalService productJournalService;
 
     @GetMapping
+    // Hiển thị danh sách sản phẩm của artisan theo bộ lọc trạng thái.
     public String myProducts(@AuthenticationPrincipal UserDetails userDetails,
                              @RequestParam(defaultValue = "ALL") String status,
                              @RequestParam(defaultValue = "0") int page,
@@ -61,12 +63,14 @@ public class ArtisanProductController {
     }
 
     @GetMapping("/new")
+    // Mở form tạo sản phẩm mới.
     public String createForm(Model model) {
         addProductFormData(model, null, new ArtisanProductFormDTO());
         return "artisan/product-form";
     }
 
     @PostMapping
+    // Tạo sản phẩm nháp từ dữ liệu form.
     public String create(@AuthenticationPrincipal UserDetails userDetails,
                          @Valid @ModelAttribute("productForm") ArtisanProductFormDTO form,
                          BindingResult bindingResult,
@@ -90,6 +94,7 @@ public class ArtisanProductController {
     }
 
     @GetMapping("/{productId}/edit")
+    // Mở form chỉnh sửa sản phẩm thuộc artisan hiện tại.
     public String editForm(@AuthenticationPrincipal UserDetails userDetails,
                            @PathVariable Integer productId,
                            Model model,
@@ -104,6 +109,7 @@ public class ArtisanProductController {
     }
 
     @PostMapping("/{productId}")
+    // Cập nhật thông tin sản phẩm nếu còn được phép sửa.
     public String update(@AuthenticationPrincipal UserDetails userDetails,
                          @PathVariable Integer productId,
                          @Valid @ModelAttribute("productForm") ArtisanProductFormDTO form,
@@ -129,6 +135,7 @@ public class ArtisanProductController {
     }
 
     @PostMapping("/{productId}/delete")
+    // Xóa sản phẩm nháp hoặc sản phẩm chưa phát sinh ràng buộc.
     public String delete(@AuthenticationPrincipal UserDetails userDetails,
                          @PathVariable Integer productId,
                          RedirectAttributes redirectAttributes) {
@@ -142,6 +149,7 @@ public class ArtisanProductController {
     }
 
     @GetMapping("/{productId}/media")
+    // Hiển thị trang quản lý ảnh/video của sản phẩm.
     public String mediaForm(@AuthenticationPrincipal UserDetails userDetails,
                             @PathVariable Integer productId,
                             Model model) {
@@ -155,6 +163,7 @@ public class ArtisanProductController {
     }
 
     @PostMapping("/{productId}/media")
+    // Upload nhiều media và chọn thumbnail mặc định nếu có.
     public String addMedia(@AuthenticationPrincipal UserDetails userDetails,
                            @PathVariable Integer productId,
                            @RequestParam(required = false) List<MultipartFile> files,
@@ -182,6 +191,7 @@ public class ArtisanProductController {
     }
 
     @PostMapping("/{productId}/media/{mediaId}/thumbnail")
+    // Đặt một media ảnh làm thumbnail của sản phẩm.
     public String setThumbnail(@AuthenticationPrincipal UserDetails userDetails,
                                @PathVariable Integer productId,
                                @PathVariable Integer mediaId,
@@ -196,6 +206,7 @@ public class ArtisanProductController {
     }
 
     @PostMapping("/{productId}/media/order")
+    // Cập nhật thứ tự, góc chụp và caption của media.
     public String updateMediaOrder(@AuthenticationPrincipal UserDetails userDetails,
                                    @PathVariable Integer productId,
                                    @RequestParam(required = false) List<Integer> mediaIds,
@@ -213,6 +224,7 @@ public class ArtisanProductController {
     }
 
     @PostMapping("/{productId}/media/{mediaId}/delete")
+    // Xóa media khỏi sản phẩm và storage.
     public String deleteMedia(@AuthenticationPrincipal UserDetails userDetails,
                               @PathVariable Integer productId,
                               @PathVariable Integer mediaId,
@@ -227,6 +239,7 @@ public class ArtisanProductController {
     }
 
     @GetMapping("/{productId}/journal")
+    // Hiển thị nhật ký chăm sóc/cập nhật trạng thái cây.
     public String journal(@AuthenticationPrincipal UserDetails userDetails,
                           @PathVariable Integer productId,
                           Model model,
@@ -243,6 +256,7 @@ public class ArtisanProductController {
     }
 
     @PostMapping("/{productId}/journal")
+    // Thêm một sự kiện nhật ký mới cho sản phẩm.
     public String addJournalEvent(@AuthenticationPrincipal UserDetails userDetails,
                                   @PathVariable Integer productId,
                                   @RequestParam(required = false) String eventType,
@@ -261,6 +275,7 @@ public class ArtisanProductController {
     }
 
     @PostMapping("/{productId}/journal/{eventId}/delete")
+    // Xóa sự kiện nhật ký thuộc sản phẩm.
     public String deleteJournalEvent(@AuthenticationPrincipal UserDetails userDetails,
                                      @PathVariable Integer productId,
                                      @PathVariable Integer eventId,
@@ -275,6 +290,7 @@ public class ArtisanProductController {
     }
 
     @PostMapping("/{productId}/journal/{eventId}")
+    // Cập nhật tiêu đề và mô tả của sự kiện nhật ký.
     public String updateJournalEventText(@AuthenticationPrincipal UserDetails userDetails,
                                          @PathVariable Integer productId,
                                          @PathVariable Integer eventId,
@@ -291,6 +307,7 @@ public class ArtisanProductController {
     }
 
     @PostMapping("/{productId}/journal/{eventId}/visibility")
+    // Bật/tắt hiển thị sự kiện nhật ký cho khách hàng.
     public String updateJournalEventVisibility(@AuthenticationPrincipal UserDetails userDetails,
                                                @PathVariable Integer productId,
                                                @PathVariable Integer eventId,
@@ -308,6 +325,7 @@ public class ArtisanProductController {
     }
 
     @PostMapping("/{productId}/journal/{eventId}/media")
+    // Bổ sung ảnh cho một sự kiện nhật ký.
     public String addJournalEventMedia(@AuthenticationPrincipal UserDetails userDetails,
                                        @PathVariable Integer productId,
                                        @PathVariable Integer eventId,
@@ -323,6 +341,7 @@ public class ArtisanProductController {
     }
 
     @PostMapping("/{productId}/journal/{eventId}/media/{mediaId}/cover")
+    // Chọn ảnh đại diện cho sự kiện nhật ký.
     public String setJournalEventCoverMedia(@AuthenticationPrincipal UserDetails userDetails,
                                             @PathVariable Integer productId,
                                             @PathVariable Integer eventId,
@@ -338,6 +357,7 @@ public class ArtisanProductController {
     }
 
     @PostMapping("/{productId}/journal/{eventId}/media/{mediaId}/replace")
+    // Thay file ảnh của một media nhật ký.
     public String replaceJournalEventMedia(@AuthenticationPrincipal UserDetails userDetails,
                                            @PathVariable Integer productId,
                                            @PathVariable Integer eventId,
@@ -354,6 +374,7 @@ public class ArtisanProductController {
     }
 
     @PostMapping("/{productId}/journal/{eventId}/media/{mediaId}/delete")
+    // Xóa ảnh khỏi sự kiện nhật ký.
     public String deleteJournalEventMedia(@AuthenticationPrincipal UserDetails userDetails,
                                           @PathVariable Integer productId,
                                           @PathVariable Integer eventId,
@@ -369,6 +390,7 @@ public class ArtisanProductController {
     }
 
     @GetMapping("/{productId}/preview")
+    // Hiển thị bản preview sản phẩm trước/sau khi publish.
     public String preview(@AuthenticationPrincipal UserDetails userDetails,
                           @PathVariable Integer productId,
                           Model model) {
@@ -393,6 +415,7 @@ public class ArtisanProductController {
     }
 
     @PostMapping("/{productId}/publish")
+    // Publish sản phẩm lên marketplace sau khi đủ điều kiện.
     public String publish(@AuthenticationPrincipal UserDetails userDetails,
                           @PathVariable Integer productId,
                           RedirectAttributes redirectAttributes) {
@@ -407,6 +430,7 @@ public class ArtisanProductController {
     }
 
     @PostMapping("/{productId}/hide")
+    // Ẩn sản phẩm khỏi marketplace khi trạng thái cho phép.
     public String hide(@AuthenticationPrincipal UserDetails userDetails,
                        @PathVariable Integer productId,
                        RedirectAttributes redirectAttributes) {
@@ -420,6 +444,7 @@ public class ArtisanProductController {
     }
 
     @PostMapping("/{productId}/show")
+    // Hiện lại sản phẩm trên marketplace.
     public String show(@AuthenticationPrincipal UserDetails userDetails,
                        @PathVariable Integer productId,
                        RedirectAttributes redirectAttributes) {
@@ -432,6 +457,7 @@ public class ArtisanProductController {
         return "redirect:/artisan/products";
     }
 
+    // Nạp dữ liệu dropdown và lựa chọn hiện tại cho form sản phẩm.
     private void addProductFormData(Model model, Product product, ArtisanProductFormDTO form) {
         List<Variety> varieties = artisanProductService.getVarieties();
 
@@ -445,6 +471,7 @@ public class ArtisanProductController {
         model.addAttribute("selectedTagIds", form.getTagIds() == null ? List.of() : form.getTagIds());
     }
 
+    // Xác định category đang chọn dựa trên variety của form hoặc sản phẩm.
     private Integer resolveSelectedCategoryId(ArtisanProductFormDTO form, Product product, List<Variety> varieties) {
         if (form.getVarietyId() != null) {
             return varieties.stream()
