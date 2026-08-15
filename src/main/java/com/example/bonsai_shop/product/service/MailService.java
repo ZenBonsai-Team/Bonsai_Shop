@@ -17,6 +17,21 @@ import com.example.bonsai_shop.entity.OrderDetail;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * [SERVICE GỬI EMAIL THÔNG BÁO VÒNG ĐỜI ĐƠN HÀNG VÀ THANH TOÁN - MAIL SERVICE]
+ *
+ * Chịu trách nhiệm:
+ * - Soạn thảo và gửi email HTML thương hiệu Minh Kỷ Garden cho khách hàng qua JavaMailSender.
+ * - Cơ chế chống gửi trùng lặp (Suppression Cache) trong vòng 60 giây.
+ * - Cơ chế thử lại tự động khi gửi lỗi (Retry tối đa 3 lần).
+ *
+ * Các loại email gửi đi:
+ * 1. sendOrderCreatedEmail: Xác nhận tiếp nhận đơn hàng sau khi checkout thành công.
+ * 2. sendOrderApprovedEmail: Thông báo đơn hàng đã được duyệt, kèm bảng phí và link thanh toán VNPay (/vnpay/pay-order?orderCode=...).
+ * 3. sendOrderDepositedEmail: Xác nhận khách đã thanh toán tiền đặt cọc thành công qua VNPay.
+ * 4. sendOrderFinalReceiptEmail: Hóa đơn hoàn tất thanh toán 100% (sau khi thanh toán đủ hoặc thu tiền mặt đợt 2).
+ * 5. sendOrderRejectedEmail: Thông báo đơn hàng đã bị hủy kèm lý do (do Moderator từ chối hoặc do quá hạn thanh toán).
+ */
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -33,6 +48,9 @@ public class MailService {
     private static final long SUPPRESSION_TIME_SECONDS = 60;
     private static final int MAX_RETRIES = 3;
 
+    /**
+     * [GỬI EMAIL XÁC NHẬN TẠO ĐƠN HÀNG THÀNH CÔNG]
+     */
     public void sendOrderCreatedEmail(Order order) {
         String orderCode = order.getOrderCode();
         String toEmail = order.getCustomerEmail();
@@ -46,6 +64,9 @@ public class MailService {
         sendHtmlEmailWithRetry(toEmail, "Xác nhận ghi nhận đơn hàng " + orderCode + " - Minh Kỷ Garden", emailContent, orderCode);
     }
 
+    /**
+     * [GỬI EMAIL DUYỆT ĐƠN HÀNG KÈM LINK THANH TOÁN VNPAY]
+     */
     public void sendOrderApprovedEmail(Order order) {
         String orderCode = order.getOrderCode();
         String toEmail = order.getCustomerEmail();
@@ -73,6 +94,9 @@ public class MailService {
         sendHtmlEmailWithRetry(toEmail, "Xác nhận đơn hàng " + orderCode + " - Minh Kỷ Garden", emailContent, orderCode);
     }
 
+    /**
+     * [GỬI EMAIL XÁC NHẬN ĐẶT CỌC THÀNH CÔNG]
+     */
     public void sendOrderDepositedEmail(Order order) {
         String orderCode = order.getOrderCode();
         String toEmail = order.getCustomerEmail();
@@ -85,6 +109,9 @@ public class MailService {
         sendHtmlEmailWithRetry(toEmail, "Xác nhận đặt cọc thành công " + orderCode + " - Minh Kỷ Garden", emailContent, orderCode);
     }
 
+    /**
+     * [GỬI EMAIL HÓA ĐƠN HOÀN TẤT THANH TOÁN 100%]
+     */
     public void sendOrderFinalReceiptEmail(Order order) {
         String orderCode = order.getOrderCode();
         String toEmail = order.getCustomerEmail();
@@ -97,6 +124,9 @@ public class MailService {
         sendHtmlEmailWithRetry(toEmail, "Hóa đơn hoàn tất thanh toán " + orderCode + " - Minh Kỷ Garden", emailContent, orderCode);
     }
 
+    /**
+     * [GỬI EMAIL XÁC NHẬN THANH TOÁN TẠI CỬA HÀNG (IN-PERSON)]
+     */
     public void sendInPersonOrderPaidEmail(Order order) {
         String orderCode = order.getOrderCode();
         String toEmail = order.getCustomerEmail();
@@ -110,6 +140,9 @@ public class MailService {
         sendHtmlEmailWithRetry(toEmail, "Xác nhận thanh toán tại cửa hàng " + orderCode + " - Minh Kỷ Garden", emailContent, orderCode);
     }
 
+    /**
+     * [GỬI EMAIL THÔNG BÁO HỦY ĐƠN HÀNG KÈM LÝ DO]
+     */
     public void sendOrderRejectedEmail(Order order, String reason) {
         String orderCode = order.getOrderCode();
         String toEmail = order.getCustomerEmail();

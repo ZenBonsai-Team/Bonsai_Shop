@@ -16,6 +16,24 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.Map;
 
+/**
+ * [SERVICE ĐIỀU PHỐI HÀNH ĐỘNG XỬ LÝ ĐƠN HÀNG CỦA MODERATOR - ORDER ACTION SERVICE]
+ *
+ * Chịu trách nhiệm:
+ * - Tiếp nhận payload hành động từ giao diện Moderator (/moderator/orders/api/action/{orderCode}) và xác thực quyền hạn.
+ * - Phân luồng điều phối (Switch-case router) đến các handler xử lý chuyên biệt:
+ *   1. claim: Tiếp nhận đơn PENDING từ Orders Pool (handleClaim).
+ *   2. approve: Duyệt đơn, nhập phí vận chuyển/cẩu, số tiền đặt cọc (handleApprove → OrderService.verifyOrder).
+ *   3. reject: Từ chối đơn PENDING kèm lý do (handleReject → OrderService.rejectOrder).
+ *   4. return_inventory / unclaim: Trả đơn PENDING về lại Orders Pool (handleReturnInventory).
+ *   5. complete: Thu đủ tiền đợt 2 cho đơn DEPOSITED hoặc xác nhận giao xong đơn PAID (handleComplete → OrderService.confirmRemainingPayment / completePaidOrder).
+ *   6. customer_no_show: Ghi nhận khách bùng cọc và tịch thu cọc (handleCustomerNoShow → OrderService.markDepositedOrderCustomerNoShow).
+ *   7. record_fault_refund: Ghi nhận hoàn tiền 100% do lỗi nhà vườn/vận chuyển (handleFaultRefund → OrderService.recordFaultRefundAndCancel).
+ * - Đóng/Mở phiên xử lý OrderHandling tương ứng sau mỗi hành động.
+ *
+ * Các thành phần phối hợp chính:
+ * - OrderService, OrderRepository, OrderHandlingRepository.
+ */
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -25,6 +43,19 @@ public class OrderActionService {
     private final OrderHandlingRepository orderHandlingRepository;
     private final OrderService orderService;
 
+    /**
+     * [THỰC THI HÀNH ĐỘNG TRÊN ĐƠN HÀNG TẬP TRUNG]
+     *
+     * Khi nào được gọi:
+     * - Khi Moderator bấm các nút thao tác trên màn hình Chi tiết đơn hàng.
+     *
+     * Được gọi từ:
+     * - ModeratorOrderController.executeOrderAction()
+     *
+     * Input & Output:
+     * - Input: orderCode (String), request (OrderActionRequestDTO), moderator (User)
+     * - Output: Map<String, Object> {"success": true, "orderCode": "...", "action": "...", "newStatus": "..."}
+     */
     @Transactional
     public Map<String, Object> executeAction(String orderCode, OrderActionRequestDTO request, User moderator) {
         if (request == null || request.getAction() == null || request.getAction().isBlank()) {

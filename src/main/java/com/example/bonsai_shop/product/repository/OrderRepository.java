@@ -12,25 +12,58 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+/**
+ * [REPOSITORY TRUY VẤN DỮ LIỆU ĐƠN HÀNG - ORDER REPOSITORY]
+ *
+ * Chịu trách nhiệm:
+ * - Thao tác CRUD và thực hiện các câu truy vấn phức tạp trên bảng ORDER (đặt hàng, phân trang, tìm kiếm, tính KPI).
+ * - Eager fetching (LEFT JOIN FETCH) quan hệ OrderDetail và Product để tránh lỗi LazyInitializationException và N+1 queries.
+ * - Quét các đơn hàng hết hạn (Expired Online/Offline/In-Person Orders).
+ */
 @Repository
 public interface OrderRepository extends JpaRepository<Order, Integer> {
+
+    /**
+     * [TÌM ĐƠN HÀNG THEO MÃ ĐƠN (ORDER CODE)]
+     */
     Optional<Order> findByOrderCode(String orderCode);
 
+    /**
+     * [TÌM ĐƠN HÀNG THEO MÃ ĐƠN KÈM CHI TIẾT SẢN PHẨM VÀ GIÁ]
+     *
+     * Mục đích: Eager load toàn bộ OrderDetail và Product để phục vụ hiển thị chi tiết và tính toán tiền.
+     * Được gọi từ: OrderService.getOrderByCodeWithDetails(), OrderService.verifyOrder(), OrderEventListener.
+     * Câu lệnh: LEFT JOIN FETCH orderDetails od LEFT JOIN FETCH od.product
+     */
     @Query("SELECT DISTINCT o FROM Order o LEFT JOIN FETCH o.orderDetails od LEFT JOIN FETCH od.product WHERE LOWER(o.orderCode) = LOWER(:orderCode)")
     Optional<Order> findByOrderCodeWithDetails(@Param("orderCode") String orderCode);
 
+    /**
+     * [TÌM ĐƠN HÀNG VỚI KHÓA BI QUAN (PESSIMISTIC WRITE LOCK)]
+     */
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT DISTINCT o FROM Order o LEFT JOIN FETCH o.orderDetails od LEFT JOIN FETCH od.product WHERE o.orderId = :orderId")
     Optional<Order> findByIdWithDetailsForUpdate(@Param("orderId") Integer orderId);
 
+    /**
+     * [ĐẾM SỐ ĐƠN HÀNG THEO TRẠNG THÁI]
+     */
     long countByOrderStatus(String orderStatus);
 
-    // Truy vấn lịch sử đơn hàng của người mua (Customer)
+    /**
+     * [LẤY DANH SÁCH ĐƠN HÀNG CỦA KHÁCH HÀNG KÈM CHI TIẾT SẢN PHẨM]
+     */
     @Query("SELECT DISTINCT o FROM Order o LEFT JOIN FETCH o.orderDetails od LEFT JOIN FETCH od.product WHERE o.customer.userId = :customerId ORDER BY o.orderDate DESC")
     List<Order> findByCustomerUserIdWithDetailsOrderByOrderDateDesc(@Param("customerId") Integer customerId);
 
-    // Đếm số đơn thuộc về Moderator cụ thể
+    /**
+     * [ĐẾM SỐ ĐƠN ĐƯỢC GÁN CHO MODERATOR]
+     */
     long countByAssignedToUserId(Integer moderatorId);
+
+    /**
+     * [ĐẾM SỐ ĐƠN ĐƯỢC GÁN CHO MODERATOR THEO TRẠNG THÁI]
+     */
     long countByAssignedToUserIdAndOrderStatus(Integer moderatorId, String orderStatus);
 
     @Query("""
@@ -75,7 +108,9 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
             @Param("search") String search,
             Pageable pageable);
 
-
+    /**
+     * [TÌM KIẾM ĐƠN HÀNG TỔNG HỢP CHO MODERATOR THEO DANH SÁCH TRẠNG THÁI VÀ TỪ KHÓA]
+     */
     @Query("SELECT DISTINCT o FROM Order o " +
             "LEFT JOIN o.orderDetails od " +
             "LEFT JOIN od.product p " +
@@ -89,7 +124,12 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
             @Param("search") String search,
             Pageable pageable);
 
-    // 1. Orders Pool Query (Chưa có ai nhận & đang PENDING)
+    /**
+     * [TRUY VẤN KHO ĐƠN HÀNG CHUNG (ORDERS POOL)]
+     *
+     * Mục đích: Tìm các đơn hàng chưa ai nhận (assignedTo IS NULL) và đang ở trạng thái 'PENDING'.
+     * Được gọi từ: OrderService.getPoolOrders()
+     */
     @Query("SELECT DISTINCT o FROM Order o " +
             "LEFT JOIN o.orderDetails od " +
             "LEFT JOIN od.product p " +
@@ -102,7 +142,12 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
             @Param("search") String search,
             Pageable pageable);
 
-    // 2. My Orders Query (Được gán cho Moderator cụ thể)
+    /**
+     * [TRUY VẤN ĐƠN HÀNG CỦA MODERATOR HIỆN TẠI (MY ORDERS)]
+     *
+     * Mục đích: Tìm các đơn hàng được gán cho moderatorId cụ thể.
+     * Được gọi từ: OrderService.getMyOrders(), MyOrderService.
+     */
     @Query("SELECT DISTINCT o FROM Order o " +
             "LEFT JOIN o.orderDetails od " +
             "LEFT JOIN od.product p " +
@@ -118,17 +163,31 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
             @Param("search") String search,
             Pageable pageable);
 
-    // 3. Expired Orders Queries (Online 15m & Offline 48h)
+    /**
+     * [QUÉT ĐƠN HÀNG ONLINE QUÁ HẠN 15 PHÚT (EXPIRED ONLINE ORDERS)]
+     *
+     * Mục đích: Tìm các đơn ONLINE ở trạng thái PENDING hoặc PENDING_PAYMENT có thời gian tạo hoặc thời gian gán <= cutoffTime (now - 15 phút).
+     * Được gọi từ: OrderExpirationService.cancelExpiredOrders()
+     */
     @Query("SELECT DISTINCT o FROM Order o LEFT JOIN FETCH o.orderDetails od LEFT JOIN FETCH od.product WHERE (o.orderStatus = 'PENDING' OR o.orderStatus = 'PENDING_PAYMENT') AND LOWER(o.orderType) = 'online' AND (o.assignedAt <= :cutoffTime OR (o.assignedAt IS NULL AND o.orderDate <= :cutoffTime))")
     List<Order> findExpiredOnlineOrders(@Param("cutoffTime") java.time.LocalDateTime cutoffTime);
 
+    /**
+     * [QUÉT ĐƠN HÀNG OFFLINE QUÁ HẠN 48 GIỜ (EXPIRED OFFLINE ORDERS)]
+     *
+     * Được gọi từ: OrderExpirationService.cancelExpiredOrders()
+     */
     @Query("SELECT DISTINCT o FROM Order o LEFT JOIN FETCH o.orderDetails od LEFT JOIN FETCH od.product WHERE (o.orderStatus = 'PENDING' OR o.orderStatus = 'PENDING_PAYMENT') AND (o.depositAmount IS NULL OR o.depositAmount = 0) AND (o.orderType IS NULL OR (LOWER(o.orderType) != 'online' AND LOWER(o.orderType) != 'in_person')) AND o.orderDate <= :cutoffTime")
     List<Order> findExpiredOfflineOrders(@Param("cutoffTime") java.time.LocalDateTime cutoffTime);
 
+    /**
+     * [QUÉT ĐƠN HÀNG IN_PERSON QUÁ HẠN (EXPIRED IN-PERSON ORDERS)]
+     *
+     * Được gọi từ: OrderExpirationService.cancelExpiredInPersonOrders()
+     */
     @Query("SELECT DISTINCT o FROM Order o LEFT JOIN FETCH o.orderDetails od LEFT JOIN FETCH od.product WHERE (o.orderStatus = 'PENDING' OR o.orderStatus = 'PENDING_PAYMENT') AND LOWER(o.orderType) = 'in_person' AND o.orderDate <= :cutoffTime")
     List<Order> findExpiredInPersonOrders(@Param("cutoffTime") java.time.LocalDateTime cutoffTime);
 
-    // Review eligibility: check if customer has a COMPLETED order with a specific product
     @Query("SELECT COUNT(o) > 0 FROM Order o JOIN o.orderDetails od WHERE o.customer.userId = :customerId AND o.orderStatus = :orderStatus AND od.product.productId = :productId")
     boolean existsByCustomerUserIdAndOrderStatusAndOrderDetails_Product_ProductId(
             @Param("customerId") Integer customerId,

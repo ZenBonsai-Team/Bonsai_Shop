@@ -1252,7 +1252,7 @@
         }
 
         function openFaultRefundConfirmation() {
-            const refundAmount100 = REFUNDABLE_CASH;
+            const refundAmount100 = REFUNDABLE_CASH > 0 ? REFUNDABLE_CASH : (ORDER_STATUS === 'PAID' ? GRAND_TOTAL : SUCCESSFUL_DEPOSIT_AMOUNT);
 
             openConfirmationModal({
                 title: 'Xác nhận chấm dứt đơn và hoàn tiền',
@@ -1266,6 +1266,7 @@
                 summaryRows: [
                     { label: 'Mã đơn hàng', value: ORDER_CODE },
                     { label: 'Tổng giá trị đơn hàng', value: formatCurrency(GRAND_TOTAL) },
+                    { label: 'Số tiền hoàn lại cho khách', value: formatCurrency(refundAmount100) },
                     { label: 'Trạng thái sau xử lý', value: 'Đã chấm dứt đơn hàng' }
                 ],
                 buildPayload: ({ faultParty, reason }) => {
@@ -1278,6 +1279,7 @@
                     return {
                         action: 'record_fault_refund',
                         faultParty,
+                        refundAmount: refundAmount100,
                         reason: reason.trim()
                     };
                 }

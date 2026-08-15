@@ -33,6 +33,23 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+/**
+ * [SERVICE TỔNG HỢP CHI TIẾT ĐƠN HÀNG CHO MODERATOR - ORDER DETAIL SERVICE]
+ *
+ * Chịu trách nhiệm:
+ * - Tập hợp toàn bộ thông tin về một đơn hàng (OrderDetailDTO) phục vụ màn hình chi tiết:
+ *   + Thông tin khách hàng (CustomerInfoDTO)
+ *   + Danh sách tác phẩm cây bonsai (ProductSummaryDTO)
+ *   + Tóm tắt tài chính thanh toán (PaymentSummaryDTO: Đã thu, Còn thiếu, Tiền cọc, Phí vận chuyển, Phí cẩu)
+ *   + Lịch sử các lần thanh toán (PaymentHistoryDTO)
+ *   + Dòng thời gian tiến trình đơn (TimelineDTO)
+ *   + Lịch sử tiếp nhận & bàn giao của các Moderator (HandlingHistoryDTO)
+ *   + Lịch sử nhật ký thay đổi trạng thái (OrderLog)
+ *   + Phân quyền hiển thị các nút hành động (canApprove, canReject, canClaim, canReturnInventory, canComplete, canCustomerNoShow, canRecordFaultRefund).
+ *
+ * Các thành phần phối hợp chính:
+ * - OrderRepository, PaymentRepository, OrderHandlingRepository, OrderLogRepository, FinancialLedgerService.
+ */
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -45,6 +62,16 @@ public class OrderDetailService {
     private final MyOrderService myOrderService;
     private final FinancialLedgerService financialLedgerService;
 
+    /**
+     * [LẤY ĐẦY ĐỦ CHI TIẾT ĐƠN HÀNG KÈM QUYỀN HÀNH ĐỘNG CỦA MODERATOR]
+     *
+     * Mục đích:
+     * - Cung cấp toàn bộ dữ liệu phức hợp cho giao diện xem chi tiết / Drawer của Moderator.
+     *
+     * Được gọi từ:
+     * - ModeratorOrderController.viewOrderDetail()
+     * - ModeratorOrderController.getOrderDetailJson()
+     */
     @Transactional(readOnly = true)
     public OrderDetailDTO getOrderDetailByCode(String orderCode, User currentModerator) {
         if (orderCode == null || orderCode.isBlank()) {
@@ -270,8 +297,7 @@ public class OrderDetailService {
                 && successfulDepositAmount.compareTo(BigDecimal.ZERO) > 0
                 && !hasForfeitedDeposit;
         boolean canRecordFaultRefund = ("DEPOSITED".equals(currentStatus) || "PAID".equals(currentStatus))
-                && isAssignedToMe
-                && refundableCash.compareTo(BigDecimal.ZERO) > 0;
+                && isAssignedToMe;
 
         String priority = myOrderService.calculatePriority(order);
         LocalDateTime statusTimestamp = order.getAssignedAt() != null ? order.getAssignedAt()

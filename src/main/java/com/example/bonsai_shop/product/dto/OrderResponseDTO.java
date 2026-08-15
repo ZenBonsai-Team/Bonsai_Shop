@@ -11,6 +11,12 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * [DTO PHẢN HỒI THÔNG TIN ĐƠN HÀNG - ORDER RESPONSE DTO]
+ *
+ * Mục đích:
+ * - Đóng gói dữ liệu đơn hàng trả về cho Frontend hiển thị danh sách đơn, chi tiết đơn, và trạng thái thanh toán.
+ */
 @Data
 @Builder
 @NoArgsConstructor
