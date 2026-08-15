@@ -343,13 +343,12 @@
     min-width: 0;
 }
 
-.sch-reminder-btn {
+.sch-reminder-card {
     align-items: flex-start;
     background: #faf8f5;
     border: 1px solid #e8e4dd;
     border-left: 4px solid #b8926a;
     border-radius: 16px;
-    cursor: pointer;
     display: flex;
     flex-direction: column;
     font-family: inherit;
@@ -360,13 +359,6 @@
     text-align: left;
     transition: all 0.18s ease;
     width: 100%;
-}
-
-.sch-reminder-btn:hover {
-    background: #fff;
-    border-color: #b8926a;
-    box-shadow: 0 16px 36px rgba(28, 51, 34, 0.11);
-    transform: translateY(-2px);
 }
 
 .sch-reminder-priority {
@@ -435,17 +427,6 @@
     padding: 4px 9px;
 }
 
-.sch-reminder-action {
-    align-self: stretch;
-    background: rgba(28, 51, 34, 0.08);
-    border-radius: 10px;
-    color: #1c3322;
-    font-size: 0.82rem;
-    font-weight: 700;
-    padding: 8px 10px;
-    text-align: center;
-}
-
 .sch-reminder-badge.urgent {
     background: #fee2e2;
     color: #991b1b;
@@ -471,27 +452,27 @@
     color: #1c5f3a;
 }
 
-.sch-reminder-item.urgent .sch-reminder-btn {
+.sch-reminder-item.urgent .sch-reminder-card {
     background: linear-gradient(145deg, #fff7f7 0%, #fff 100%);
     border-left-color: #dc2626;
 }
 
-.sch-reminder-item.soon .sch-reminder-btn {
+.sch-reminder-item.soon .sch-reminder-card {
     background: linear-gradient(145deg, #fff7ed 0%, #fff 100%);
     border-left-color: #ea580c;
 }
 
-.sch-reminder-item.high .sch-reminder-btn {
+.sch-reminder-item.high .sch-reminder-card {
     background: linear-gradient(145deg, #fff7ed 0%, #fff 100%);
     border-left-color: #ea580c;
 }
 
-.sch-reminder-item.today .sch-reminder-btn {
+.sch-reminder-item.today .sch-reminder-card {
     background: linear-gradient(145deg, #fffbeb 0%, #fff 100%);
     border-left-color: #d97706;
 }
 
-.sch-reminder-item.neutral .sch-reminder-btn {
+.sch-reminder-item.neutral .sch-reminder-card {
     background: linear-gradient(145deg, #f7fbf8 0%, #fff 100%);
     border-left-color: #1c5f3a;
 }

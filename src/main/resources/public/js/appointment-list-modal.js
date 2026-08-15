@@ -30,7 +30,7 @@ document.addEventListener("DOMContentLoaded", () => {
         APPROVED: "Đã duyệt",
         REJECTED: "Đã từ chối",
         COMPLETED: "Hoàn thành",
-        ABSENT: "Không đến",
+        ABSENT: "Khách Vắng",
         CANCELLED: "Đã hủy"
     };
 
@@ -118,7 +118,7 @@ document.addEventListener("DOMContentLoaded", () => {
         listEmpty.hidden = state !== "empty";
         listContent.hidden = state !== "content";
     };
-
+   // gắn list html
     const renderAppointmentCard = (appointment) => {
         const dateTime = formatDateTime(appointment.appointmentDate);
         const item = createElement("article", "apt-list-item");
@@ -241,6 +241,7 @@ document.addEventListener("DOMContentLoaded", () => {
         detailActions.hidden = false;
     });
 
+    // submit update
     updateForm?.addEventListener("submit", async (event) => {
         event.preventDefault();
         const tomorrowValue = getTomorrowValue();
@@ -258,6 +259,7 @@ document.addEventListener("DOMContentLoaded", () => {
         updateForm.submit();
     });
 
+    // submit cancel
     cancelAppointmentButton?.addEventListener("click", async () => {
         if (!activeAppointment || activeAppointment.status !== "PENDING") {
             showToast("Lịch đã qua trạng thái chờ duyệt nên không thể hủy.", "error");

@@ -196,6 +196,7 @@
             return false;
         }
 
+        // Detect video o client de tat goc chup va khong cho chon lam thumbnail.
         const fileName = file.name ? file.name.toLowerCase() : '';
         return file.type.startsWith('video/') || fileName.endsWith('.mp4') || fileName.endsWith('.webm');
     }
@@ -211,6 +212,7 @@
         const file = fileInput.files[0];
         const isVideo = isVideoUpload(file);
 
+        // Dong bo hidden mediaTypes voi server, va tat slotType/thumbnail cho video.
         mediaTypeInput.value = isVideo ? 'VIDEO' : 'IMAGE';
         shotTypeSelect.required = !isVideo;
         shotTypeSelect.disabled = isVideo;
@@ -354,6 +356,7 @@
             const maxSize = isVideo ? maxVideoSizeBytes : maxImageSizeBytes;
             const allowedImage = file.type.startsWith('image/');
             const allowedVideo = file.type === 'video/mp4' || file.type === 'video/webm' || isVideo;
+            // Validate nhanh tren UI; server van validate lai truoc khi upload Cloudinary.
             if (!allowedImage && !allowedVideo) {
                 setMediaFieldError(fileInput, 'Chỉ được tải ảnh hoặc video MP4/WebM.');
                 isValid = false;
@@ -377,6 +380,7 @@
     mediaUploadForm?.addEventListener('submit', event => {
         const items = mediaUploadList.querySelectorAll('.media-upload-item');
         let isValid = true;
+        // Chan submit neu batch vuot gioi han, tranh gui request multipart lon khong can thiet.
         if (items.length > maxMediaPerUpload) {
             event.preventDefault();
             const firstItem = items[0];

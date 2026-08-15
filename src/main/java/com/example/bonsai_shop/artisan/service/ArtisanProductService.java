@@ -33,6 +33,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+// Service quản lý sản phẩm, media và trạng thái publish của artisan.
 public class ArtisanProductService {
 
     private static final SecureRandom RANDOM = new SecureRandom();
@@ -55,31 +56,37 @@ public class ArtisanProductService {
     private final UserRepository userRepository;
     private final ArtisanMediaStorageService mediaStorageService;
 
+    // Lấy user artisan theo email đăng nhập.
     public User getArtisanUser(String email) {
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy artisan!"));
     }
 
+    // Lấy toàn bộ sản phẩm thuộc artisan hiện tại.
     public List<Product> getMyProducts(String artisanEmail) {
         Integer artisanUserId = getArtisanUserId(artisanEmail);
         return productRepository.findByCreatedByUserIdOrderByCreatedAtDesc(artisanUserId);
     }
 
+    // Lấy toàn bộ sản phẩm trong hệ thống cho luồng quản trị.
     public List<Product> getAllProducts() {
         return productRepository.findAll();
     }
 
+    // Lấy một sản phẩm và kiểm tra quyền sở hữu của artisan.
     public Product getMyProduct(String artisanEmail, Integer productId) {
         Integer artisanUserId = getArtisanUserId(artisanEmail);
         return productRepository.findByProductIdAndCreatedByUserId(productId, artisanUserId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm thuộc artisan này!"));
     }
 
+    // Lấy userId của artisan từ email đăng nhập.
     private Integer getArtisanUserId(String artisanEmail) {
         return getArtisanUser(artisanEmail).getUserId();
     }
 
     @Transactional
+    // Tạo sản phẩm nháp với mã tạm và dữ liệu form đã validate.
     public Product createProduct(String artisanEmail, ArtisanProductFormDTO form) {
         User artisanUser = getArtisanUser(artisanEmail);
         Variety variety = varietyRepository.findById(form.getVarietyId())
@@ -118,6 +125,7 @@ public class ArtisanProductService {
     }
 
     @Transactional
+    // Cập nhật thông tin sản phẩm nếu trạng thái còn cho phép sửa.
     public void updateProduct(String artisanEmail, Integer productId, ArtisanProductFormDTO form) {
         Product product = getMyProduct(artisanEmail, productId);
         ensureEditable(product);
@@ -146,6 +154,7 @@ public class ArtisanProductService {
         syncProductTags(savedProduct, form.getTagIds());
     }
 
+    // Chuyển entity Product sang DTO để đổ lại form chỉnh sửa.
     public ArtisanProductFormDTO toFormDTO(Product product) {
         if (product == null) {
             return new ArtisanProductFormDTO();
@@ -168,6 +177,7 @@ public class ArtisanProductService {
     }
 
     @Transactional
+    // Xóa sản phẩm khi chưa bán và không còn media liên quan.
     public void deleteProduct(String artisanEmail, Integer productId) {
         Product product = getMyProduct(artisanEmail, productId);
         ensureDraft(product);
@@ -176,6 +186,7 @@ public class ArtisanProductService {
         productRepository.delete(product);
     }
 
+    // Lấy media của sản phẩm theo thứ tự hiển thị.
     public List<ProductMedia> getMedia(Product product) {
         List<ProductMedia> mediaList = productMediaRepository.findByProductOrderByDisplayOrderAscMediaIdAsc(product);
         ensureImageThumbnail(mediaList);
@@ -183,6 +194,7 @@ public class ArtisanProductService {
     }
 
     @Transactional
+    // Thêm một media đơn lẻ cho sản phẩm.
     public void addMedia(String artisanEmail,
                          Integer productId,
                          MultipartFile file,
@@ -223,6 +235,7 @@ public class ArtisanProductService {
     }
 
     @Transactional
+    // Upload nhiều media, validate từng file và xử lý thumbnail.
     public int addMediaBatch(String artisanEmail,
                              Integer productId,
                              List<MultipartFile> files,
@@ -236,10 +249,12 @@ public class ArtisanProductService {
         if (files == null || files.isEmpty()) {
             throw new RuntimeException("Vui lòng chọn ít nhất một file media!");
         }
+        // Chan batch qua lon truoc khi upload tung file len Cloudinary.
         if (files.size() > MAX_MEDIA_PER_UPLOAD) {
             throw new RuntimeException("Mỗi lần chỉ được tải lên tối đa " + MAX_MEDIA_PER_UPLOAD + " media!");
         }
 
+        // Validate du lieu form song song voi List<MultipartFile> de moi file co metadata tuong ung.
         if (files.stream().anyMatch(file -> file == null || file.isEmpty())) {
             throw new RuntimeException("Vui lòng chọn file cho tất cả mục media!");
         }
@@ -255,6 +270,7 @@ public class ArtisanProductService {
         int selectedThumbnailIndex = thumbnailIndex == null ? findDefaultThumbnailIndex(files, mediaTypes, existingMedia.isEmpty()) : thumbnailIndex;
 
         if (selectedThumbnailIndex >= 0) {
+            // Chi mot image duoc lam thumbnail, nen reset thumbnail cu truoc khi luu batch moi.
             existingMedia.forEach(media -> {
                 media.setIsThumbnail(false);
                 productMediaRepository.save(media);
@@ -264,6 +280,7 @@ public class ArtisanProductService {
         for (int index = 0; index < files.size(); index++) {
             MultipartFile file = files.get(index);
             String mediaType = resolveMediaType(file, getListValue(mediaTypes, index));
+            // Validate dung luong theo loai media truoc khi goi storage service upload len Cloudinary.
             validateMediaFile(file, mediaType);
             if (index == selectedThumbnailIndex && "VIDEO".equals(mediaType)) {
                 throw new RuntimeException("Video không thể đặt làm media đại diện!");
@@ -289,6 +306,7 @@ public class ArtisanProductService {
     }
 
     @Transactional
+    // Chọn một ảnh làm thumbnail duy nhất của sản phẩm.
     public void setThumbnail(String artisanEmail, Integer productId, Integer mediaId) {
         Product product = getMyProduct(artisanEmail, productId);
         ensureEditable(product);
@@ -306,6 +324,7 @@ public class ArtisanProductService {
     }
 
     @Transactional
+    // Cập nhật thứ tự, slot type và caption cho danh sách media.
     public void updateMediaOrder(String artisanEmail,
                                  Integer productId,
                                  List<Integer> mediaIds,
@@ -336,6 +355,7 @@ public class ArtisanProductService {
     }
 
     @Transactional
+    // Xóa media khỏi DB/storage và đảm bảo còn thumbnail ảnh nếu cần.
     public void deleteMedia(String artisanEmail, Integer productId, Integer mediaId) {
         Product product = getMyProduct(artisanEmail, productId);
         ensureEditable(product);
@@ -357,6 +377,7 @@ public class ArtisanProductService {
     }
 
     @Transactional
+    // Publish sản phẩm sau khi đủ thông tin, ảnh và điều kiện giá.
     public void publish(String artisanEmail, Integer productId) {
         Product product = getMyProduct(artisanEmail, productId);
         ensureDraft(product);
@@ -368,6 +389,7 @@ public class ArtisanProductService {
     }
 
     @Transactional
+    // Ẩn sản phẩm khỏi marketplace nếu có thể ẩn.
     public void hideProduct(String artisanEmail, Integer productId) {
         Product product = getMyProduct(artisanEmail, productId);
         ensureHideable(product);
@@ -376,6 +398,7 @@ public class ArtisanProductService {
     }
 
     @Transactional
+    // Hiện sản phẩm trở lại marketplace nếu hợp lệ.
     public void showProduct(String artisanEmail, Integer productId) {
         Product product = getMyProduct(artisanEmail, productId);
         ensureShowable(product);
@@ -385,34 +408,41 @@ public class ArtisanProductService {
         productRepository.save(product);
     }
 
+    // Lấy danh sách variety cho form sản phẩm.
     public List<Variety> getVarieties() {
         return varietyRepository.findAll();
     }
 
+    // Lấy danh sách category cho form sản phẩm.
     public List<Category> getCategories() {
         return categoryRepository.findAll();
     }
 
+    // Lấy danh sách phân khúc sản phẩm.
     public List<ProductSegment> getSegments() {
         return productSegmentRepository.findAll();
     }
 
+    // Lấy danh sách tag có thể gắn cho sản phẩm.
     public List<Tag> getTags() {
         return tagRepository.findAll();
     }
 
+    // Lấy danh sách id tag đang gắn với sản phẩm.
     public List<Integer> getSelectedTagIds(Product product) {
         return productTagRepository.findByProduct(product).stream()
                 .map(productTag -> productTag.getTag().getTagId())
                 .toList();
     }
 
+    // Lấy entity tag đang gắn với sản phẩm.
     public List<Tag> getProductTags(Product product) {
         return productTagRepository.findByProduct(product).stream()
                 .map(ProductTag::getTag)
                 .toList();
     }
 
+    // Đồng bộ tag sản phẩm theo danh sách id từ form.
     private void syncProductTags(Product product, List<Integer> tagIds) {
         productTagRepository.deleteByProduct(product);
 
@@ -437,6 +467,7 @@ public class ArtisanProductService {
                 .forEach(productTagRepository::save);
     }
 
+    // Kiểm tra tất cả điều kiện bắt buộc trước khi publish.
     private void ensurePublishReady(Product product) {
         if (product.getProductName() == null || product.getProductName().isBlank()) {
             throw new RuntimeException("Vui lòng nhập tên sản phẩm trước khi publish.");
@@ -462,6 +493,7 @@ public class ArtisanProductService {
         ensureImageThumbnail(productMediaRepository.findByProductOrderByDisplayOrderAscMediaIdAsc(product));
     }
 
+    // Validate các thông số kỹ thuật bắt buộc của cây.
     private void validateRequiredSpecifications(Integer age, Float height, Float trunkDiameter, String style) {
         if (age == null) {
             throw new RuntimeException("Vui lòng nhập tuổi cây.");
@@ -501,6 +533,7 @@ public class ArtisanProductService {
         }
     }
 
+    // Validate giá bán không âm và không vượt giới hạn.
     private void validateProductPrice(BigDecimal price) {
         if (price == null) {
             throw new RuntimeException("Vui lòng nhập giá sản phẩm.");
@@ -516,16 +549,19 @@ public class ArtisanProductService {
         }
     }
 
+    // Xác định có công khai giá dựa trên phân khúc sản phẩm.
     private boolean isPublicPriceForSegment(ProductSegment segment) {
         return segment == null
                 || segment.getSegmentName() == null
                 || !"elite".equals(segment.getSegmentName().trim().toLowerCase(Locale.ROOT));
     }
 
+    // Kiểm tra sản phẩm đã bán hay chưa.
     public boolean isSold(Product product) {
         return product != null && "SOLD".equalsIgnoreCase(product.getProductStatus());
     }
 
+    // Kiểm tra sản phẩm còn được sửa nội dung/media hay không.
     public boolean isEditable(Product product) {
         if (product == null) {
             return false;
@@ -540,6 +576,7 @@ public class ArtisanProductService {
                 || Boolean.FALSE.equals(product.getIsVisible());
     }
 
+    // Kiểm tra sản phẩm có thể ẩn khỏi marketplace hay không.
     public boolean isHideable(Product product) {
         return product != null
                 && Boolean.TRUE.equals(product.getIsVisible())
@@ -547,34 +584,40 @@ public class ArtisanProductService {
                 || "SOLD".equalsIgnoreCase(product.getProductStatus()));
     }
 
+    // Kiểm tra sản phẩm đang hiển thị công khai hay không.
     public boolean isVisible(Product product) {
         return product == null || product.getIsVisible() == null || Boolean.TRUE.equals(product.getIsVisible());
     }
 
+    // Chặn thao tác thay đổi khi sản phẩm đã bán.
     private void ensureNotSold(Product product) {
         if (isSold(product)) {
             throw new RuntimeException("Sản phẩm đã bán không thể chỉnh sửa.");
         }
     }
 
+    // Chặn chỉnh sửa nếu trạng thái sản phẩm không cho phép.
     private void ensureEditable(Product product) {
         if (!isEditable(product)) {
             throw new RuntimeException("Chỉ có thể sửa sản phẩm nháp hoặc đã ẩn.");
         }
     }
 
+    // Chặn thao tác chỉ dành cho sản phẩm nháp.
     private void ensureDraft(Product product) {
         if (product == null || !"DRAFT".equalsIgnoreCase(product.getProductStatus())) {
             throw new RuntimeException("Chỉ có thể xóa sản phẩm nháp.");
         }
     }
 
+    // Chặn ẩn sản phẩm khi trạng thái không phù hợp.
     private void ensureHideable(Product product) {
         if (!isHideable(product)) {
             throw new RuntimeException("Chỉ có thể ẩn sản phẩm đang được bán.");
         }
     }
 
+    // Chặn hiện sản phẩm khi chưa đủ điều kiện hiển thị.
     private void ensureShowable(Product product) {
         if (product == null || "DRAFT".equalsIgnoreCase(product.getProductStatus())) {
             throw new RuntimeException("Sản phẩm nháp cần đăng bán, không thể chỉ bật hiển thị.");
@@ -584,30 +627,37 @@ public class ArtisanProductService {
         }
     }
 
+    // Tạo mã tạm cho sản phẩm nháp trước khi publish.
     private String createTemporaryProductCode() {
         return "TMP-" + UUID.randomUUID();
     }
 
+    // Chuẩn hóa chuỗi rỗng thành null.
     private String blankToNull(String value) {
         return value == null || value.isBlank() ? null : value.trim();
     }
 
+    // Lấy phần tử danh sách an toàn theo index.
     private String getListValue(List<String> values, int index) {
         return values == null || index >= values.size() ? null : values.get(index);
     }
 
+    // Tự nhận diện loại media từ file upload.
     private String resolveMediaType(MultipartFile file) {
         return resolveMediaType(file, null);
     }
 
+    // Chuẩn hóa media type theo input hoặc nội dung file.
     private String resolveMediaType(MultipartFile file, String requestedMediaType) {
         if (requestedMediaType != null && !requestedMediaType.isBlank()) {
             String normalizedMediaType = requestedMediaType.trim().toUpperCase(Locale.ROOT);
             if ("VIDEO".equals(normalizedMediaType) || "IMAGE".equals(normalizedMediaType)) {
+                // Uu tien loai media UI gui len, nhung chi chap nhan IMAGE/VIDEO.
                 return normalizedMediaType;
             }
         }
 
+        // Fallback theo Content-Type/extension de nhan dien video khi trinh duyet gui MIME khong day du.
         String contentType = file.getContentType();
         if (contentType != null && contentType.startsWith("video/")) {
             return "VIDEO";
@@ -624,8 +674,10 @@ public class ArtisanProductService {
         return "IMAGE";
     }
 
+    // Validate dung lượng và định dạng file media.
     private void validateMediaFile(MultipartFile file, String mediaType) {
         long maxSize = "VIDEO".equals(mediaType) ? MAX_VIDEO_SIZE_BYTES : MAX_IMAGE_SIZE_BYTES;
+        // Service validate lai dung luong de khong phu thuoc hoan toan vao JavaScript phia client.
         if (file.getSize() > maxSize) {
             throw new RuntimeException(("VIDEO".equals(mediaType) ? "Video" : "Ảnh")
                     + " vượt quá dung lượng tối đa "
@@ -634,6 +686,7 @@ public class ArtisanProductService {
         }
     }
 
+    // Chuẩn hóa caption media và kiểm tra độ dài.
     private String normalizeMediaCaption(String caption) {
         String normalizedCaption = blankToNull(caption);
         if (normalizedCaption != null && normalizedCaption.length() > MAX_MEDIA_CAPTION_LENGTH) {
@@ -642,6 +695,7 @@ public class ArtisanProductService {
         return normalizedCaption;
     }
 
+    // Chọn ảnh phù hợp đầu tiên làm thumbnail mặc định.
     private int findDefaultThumbnailIndex(List<MultipartFile> files, List<String> mediaTypes, boolean shouldSelectDefault) {
         if (!shouldSelectDefault) {
             return -1;
@@ -656,6 +710,7 @@ public class ArtisanProductService {
         return -1;
     }
 
+    // Đảm bảo luôn có đúng một thumbnail dạng ảnh khi có ảnh.
     private void ensureImageThumbnail(List<ProductMedia> mediaList) {
         boolean hasVideoThumbnail = mediaList.stream()
                 .anyMatch(media -> Boolean.TRUE.equals(media.getIsThumbnail()) && "VIDEO".equals(media.getMediaType()));
@@ -687,10 +742,12 @@ public class ArtisanProductService {
         });
     }
 
+    // Đổi byte sang MB để hiển thị lỗi dễ hiểu.
     private long formatMegabytes(long bytes) {
         return bytes / 1024 / 1024;
     }
 
+    // Tính thứ tự hiển thị tiếp theo cho media mới.
     private Integer getNextDisplayOrder(List<ProductMedia> existingMedia) {
         return existingMedia.stream()
                 .map(ProductMedia::getDisplayOrder)
@@ -700,6 +757,7 @@ public class ArtisanProductService {
                 .orElse(1);
     }
 
+    // Chuẩn hóa góc chụp/slot type theo loại media.
     private String normalizeShotType(String shotType, String mediaType) {
         if ("VIDEO".equals(mediaType)) {
             return null;
@@ -717,6 +775,7 @@ public class ArtisanProductService {
         return normalizedShotType;
     }
 
+    // Sinh mã sản phẩm chính thức dựa trên variety và hậu tố ngẫu nhiên.
     private String generateProductCode(Variety variety) {
         String categoryPart = abbreviate(variety.getCategory().getCategoryName());
         String varietyPart = abbreviate(variety.getVarietyName());
@@ -729,6 +788,7 @@ public class ArtisanProductService {
         return productCode;
     }
 
+    // Rút gọn tên variety thành tiền tố mã sản phẩm.
     private String abbreviate(String value) {
         String normalized = Normalizer.normalize(value, Normalizer.Form.NFD)
                 .replaceAll("\\p{M}", "")
@@ -756,6 +816,7 @@ public class ArtisanProductService {
         return normalized.length() <= 4 ? normalized : normalized.substring(0, 4);
     }
 
+    // Sinh hậu tố mã sản phẩm từ alphabet an toàn.
     private String randomCodeSuffix() {
         StringBuilder suffix = new StringBuilder();
         for (int i = 0; i < 6; i++) {

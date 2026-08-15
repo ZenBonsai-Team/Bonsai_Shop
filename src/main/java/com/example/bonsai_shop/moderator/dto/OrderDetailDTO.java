@@ -9,6 +9,12 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * [DTO TỔNG HỢP CHI TIẾT ĐƠN HÀNG TOÀN DIỆN CHO MODERATOR - ORDER DETAIL DTO]
+ *
+ * Mục đích:
+ * - Tập hợp toàn bộ thông tin về đơn hàng: Thông tin khách hàng, danh sách cây bonsai, tóm tắt tài chính, lịch sử thanh toán, dòng thời gian timeline, lịch sử xử lý của moderator, và các cờ phân quyền hành động (canApprove, canReject, canClaim, canReturnInventory, canComplete, canCustomerNoShow, canRecordFaultRefund).
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

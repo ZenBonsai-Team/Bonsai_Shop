@@ -458,7 +458,8 @@
         <span class="live-status-dot" id="liveStatusDot"></span>
     </a>
 
-    <button class="floating-booking-bubble js-booking-trigger"
+    <button sec:authorize="isAnonymous() or hasRole('CUSTOMER')"
+            class="floating-booking-bubble js-booking-trigger"
             id="floatingBookingBubble"
             type="button"
             title="Đặt lịch thăm vườn"
@@ -467,7 +468,8 @@
         <span>Đặt lịch</span>
     </button>
 
-    <button class="floating-appointment-bubble js-appointment-list-trigger"
+    <button sec:authorize="hasRole('CUSTOMER')"
+            class="floating-appointment-bubble js-appointment-list-trigger"
             id="floatingAppointmentBubble"
             type="button"
             title="Lịch hẹn của tôi"
@@ -476,8 +478,10 @@
         <span>Lịch hẹn</span>
     </button>
 
-    <div th:replace="~{fragments/booking_model :: bookingModal}"></div>
-    <div th:replace="~{fragments/appointment_list_modal :: appointmentListModal}"></div>
+    <div sec:authorize="isAnonymous() or hasRole('CUSTOMER')"
+         th:replace="~{fragments/booking_model :: bookingModal}"></div>
+    <div sec:authorize="hasRole('CUSTOMER')"
+         th:replace="~{fragments/appointment_list_modal :: appointmentListModal}"></div>
 
     <style>
         .floating-live-bubble {

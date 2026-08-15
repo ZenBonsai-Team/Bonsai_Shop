@@ -29,6 +29,7 @@ import java.util.concurrent.ThreadLocalRandom;
 @Service
 @RequiredArgsConstructor
 @Slf4j
+// Service xử lý nghiệp vụ bán hàng trực tiếp tại vườn.
 public class ArtisanInPersonOrderService {
 
     public static final String STATUS_PENDING_PAYMENT = "PENDING_PAYMENT";
@@ -57,6 +58,7 @@ public class ArtisanInPersonOrderService {
     private final MailService mailService;
     private final FinancialLedgerService financialLedgerService;
 
+    // Lấy sản phẩm của artisan còn khả dụng để lập đơn tại vườn.
     public List<Product> getAvailableProducts(String artisanEmail) {
         Integer artisanUserId = artisanProductService.getArtisanUser(artisanEmail).getUserId();
         return productRepository.findByCreatedByUserIdAndProductStatusOrderByCreatedAtDesc(
@@ -65,6 +67,7 @@ public class ArtisanInPersonOrderService {
         );
     }
 
+    // Lấy danh sách đơn tại vườn theo trạng thái và phân trang.
     public Page<Order> getInPersonOrders(String artisanEmail, String status, int page, int size) {
         Integer artisanUserId = artisanProductService.getArtisanUser(artisanEmail).getUserId();
         Pageable pageable = PageRequest.of(Math.max(page, 0), Math.max(size, 1));
@@ -77,6 +80,7 @@ public class ArtisanInPersonOrderService {
     }
 
     @Transactional
+    // Tạo đơn tại vườn, giữ chỗ sản phẩm và tạo payment tương ứng.
     public Order createInPersonOrder(String artisanEmail,
                                      Integer productId,
                                      String customerName,
@@ -146,6 +150,7 @@ public class ArtisanInPersonOrderService {
     }
 
     @Transactional
+    // Hủy đơn tại vườn, trả sản phẩm về AVAILABLE nếu còn giữ chỗ.
     public Order cancelInPersonOrder(String artisanEmail, Integer orderId, String reason) {
         User artisanUser = artisanProductService.getArtisanUser(artisanEmail);
         Order order = orderRepository.findByIdWithDetailsForUpdate(orderId)
@@ -179,6 +184,7 @@ public class ArtisanInPersonOrderService {
     }
 
     @Transactional
+    // Cập nhật thông tin đơn khi đơn còn chờ thanh toán.
     public Order updateInPersonOrder(String artisanEmail,
                                      Integer orderId,
                                      String customerName,
@@ -237,6 +243,7 @@ public class ArtisanInPersonOrderService {
     }
 
     @Transactional
+    // Ghi nhận thanh toán, chuyển đơn hoàn tất và ghi ledger doanh thu.
     public Order confirmPayment(String artisanEmail, Integer orderId) {
         User artisanUser = artisanProductService.getArtisanUser(artisanEmail);
         Order order = orderRepository.findByIdWithDetailsForUpdate(orderId)
@@ -283,6 +290,7 @@ public class ArtisanInPersonOrderService {
         return savedOrder;
     }
 
+    // Lấy sản phẩm duy nhất từ order detail của đơn tại vườn.
     private Product getSingleProduct(Order order) {
         if (order.getOrderDetails() == null || order.getOrderDetails().isEmpty()) {
             throw new RuntimeException("Order chưa có sản phẩm.");
@@ -290,12 +298,14 @@ public class ArtisanInPersonOrderService {
         return order.getOrderDetails().get(0).getProduct();
     }
 
+    // Đảm bảo sản phẩm thuộc artisan đang thao tác.
     private void ensureOwnedByArtisan(Product product, User artisanUser) {
         if (product.getCreatedBy() == null || !artisanUser.getUserId().equals(product.getCreatedBy().getUserId())) {
             throw new RuntimeException("Order không thuộc artisan này.");
         }
     }
 
+    // Xác định giá gốc của sản phẩm trong đơn.
     private BigDecimal getBasePrice(Order order, Product product) {
         OrderDetail detail = order.getOrderDetails().get(0);
         if (detail.getPriceAtPurchase() != null) {
@@ -304,6 +314,7 @@ public class ArtisanInPersonOrderService {
         return product.getPrice() == null ? BigDecimal.ZERO : product.getPrice();
     }
 
+    // Ghi log thay đổi trạng thái đơn.
     private void log(Order order, User actionBy, String actionType, String fromStatus, String toStatus) {
         orderLogRepository.save(OrderLog.builder()
                 .order(order)
@@ -315,6 +326,7 @@ public class ArtisanInPersonOrderService {
                 .build());
     }
 
+    // Sinh mã đơn tại vườn không trùng.
     private String generateOrderCode() {
         String orderCode;
         do {
@@ -323,10 +335,12 @@ public class ArtisanInPersonOrderService {
         return orderCode;
     }
 
+    // Sinh hậu tố số ngẫu nhiên cho mã đơn.
     private String randomSixDigits() {
         return String.valueOf(ThreadLocalRandom.current().nextInt(100000, 1000000));
     }
 
+    // Validate text bắt buộc với thông báo lỗi đơn giản.
     private String requireText(String value, String message) {
         if (value == null || value.isBlank()) {
             throw new RuntimeException(message);
@@ -334,6 +348,7 @@ public class ArtisanInPersonOrderService {
         return value.trim();
     }
 
+    // Validate text bắt buộc kèm giới hạn độ dài.
     private String requireText(String value, String requiredMessage, int maxLength, String lengthMessage) {
         String normalized = requireText(value, requiredMessage);
         if (normalized.length() > maxLength) {
@@ -342,6 +357,7 @@ public class ArtisanInPersonOrderService {
         return normalized;
     }
 
+    // Chuẩn hóa text tùy chọn và kiểm tra độ dài.
     private String optionalText(String value, int maxLength, String lengthMessage) {
         String normalized = blankToNull(value);
         if (normalized != null && normalized.length() > maxLength) {
@@ -350,10 +366,12 @@ public class ArtisanInPersonOrderService {
         return normalized;
     }
 
+    // Đổi chuỗi rỗng thành null.
     private String blankToNull(String value) {
         return value == null || value.isBlank() ? null : value.trim();
     }
 
+    // Validate email khách hàng.
     private String requireEmail(String value) {
         String email = requireText(value, "Vui lòng nhập email khách in-person.", CUSTOMER_EMAIL_MAX_LENGTH, "Email khách không được vượt quá 100 ký tự.");
         if (!email.matches("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$")) {
@@ -362,6 +380,7 @@ public class ArtisanInPersonOrderService {
         return email;
     }
 
+    // Validate tên khách hàng.
     private String requireCustomerName(String value) {
         String name = requireText(value, "Vui lòng nhập tên khách in-person.", CUSTOMER_NAME_MAX_LENGTH, "Tên khách không được vượt quá 100 ký tự.");
         if (!name.matches("^[\\p{L}\\p{M}\\s.'-]+$")) {
@@ -370,6 +389,7 @@ public class ArtisanInPersonOrderService {
         return name;
     }
 
+    // Validate số điện thoại khách hàng.
     private String requirePhone(String value) {
         String phone = requireText(value, "Vui lòng nhập số điện thoại khách in-person.");
         if (!phone.matches("^0[0-9]{9,10}$")) {
@@ -378,6 +398,7 @@ public class ArtisanInPersonOrderService {
         return phone;
     }
 
+    // Validate địa chỉ giao/nhận cây.
     private String requireShippingAddress(String value) {
         String address = requireText(value, "Vui lòng nhập địa chỉ giao/nhận cây.", SHIPPING_ADDRESS_MAX_LENGTH, "Địa chỉ giao/nhận cây không được vượt quá 255 ký tự.");
         if (!address.matches("^[\\p{L}\\p{M}\\p{N}\\s,./()\\-]+$")) {
@@ -386,6 +407,7 @@ public class ArtisanInPersonOrderService {
         return address;
     }
 
+    // Gắn lý do hủy vào ghi chú đơn.
     private String appendCancelReason(String currentNotes, String reason) {
         String normalizedReason = blankToNull(reason);
         if (normalizedReason == null) {
@@ -396,6 +418,7 @@ public class ArtisanInPersonOrderService {
         return normalizedCurrentNotes == null ? cancelNote : normalizedCurrentNotes + "\n" + cancelNote;
     }
 
+    // Chuẩn hóa số tiền null thành 0 và chặn giá trị âm.
     private BigDecimal nonNegative(BigDecimal value, String message) {
         BigDecimal normalized = value == null ? BigDecimal.ZERO : value;
         if (normalized.compareTo(BigDecimal.ZERO) < 0) {
@@ -407,12 +430,14 @@ public class ArtisanInPersonOrderService {
         return normalized;
     }
 
+    // Kiểm tra số tiền không vượt ngưỡng hệ thống.
     private void validateMoney(BigDecimal value, String message) {
         if (value != null && value.compareTo(MAX_MONEY_AMOUNT) > 0) {
             throw new RuntimeException(message);
         }
     }
 
+    // Chuẩn hóa phương thức thanh toán về CASH hoặc VNPAY.
     private String normalizePaymentMethod(String paymentMethod) {
         String normalized = paymentMethod == null || paymentMethod.isBlank()
                 ? PAYMENT_METHOD_CASH
@@ -423,6 +448,7 @@ public class ArtisanInPersonOrderService {
         return normalized;
     }
 
+    // Lấy payment đầu tiên gắn với đơn.
     private Payment getFirstPayment(Order order) {
         if (order.getPayments() != null && !order.getPayments().isEmpty()) {
             return order.getPayments().get(0);

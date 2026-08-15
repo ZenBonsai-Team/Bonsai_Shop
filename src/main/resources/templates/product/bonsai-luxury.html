@@ -34,7 +34,6 @@
         </div>
 
         <div class="container hero-fullbleed-content">
-            <span class="hero-pill-badge luxury-hero-pill" th:text="#{luxury.hero.badge}">Showroom riêng • Hồ sơ sưu tầm</span>
             <h1 class="hero-main-title serif-text luxury-hero-title" th:text="${sysConfig.getValue('luxury_banner_title', 'Hàng Tuyển Tác Phẩm Độc Bản')}">Hàng Tuyển Tác Phẩm Độc Bản</h1>
             <p class="hero-subtitle-desc luxury-hero-desc" th:text="${sysConfig.getValue('luxury_banner_subtitle', 'Bộ sưu tập siêu phẩm Bonsai quý hiếm, đỉnh cao nghệ thuật dành cho các nhà sưu tầm thượng lưu.')}">
                 Bộ sưu tập siêu phẩm Bonsai quý hiếm, đỉnh cao nghệ thuật dành cho các nhà sưu tầm thượng lưu.
@@ -137,7 +136,8 @@
                                             class="card-btn-wishlist"
                                             type="button"
                                             th:data-product-id="${item.productId}"
-                                            title="Yêu thích">
+                                            title="Yêu thích"
+                                            aria-label="Thêm vào danh sách yêu thích">
                                         <i class="fa-regular fa-heart"></i>
                                     </button>
                                     <a th:href="@{'/bonsai-luxury-detail/' + ${item.productId}}" class="btn-detail-luxury">
@@ -177,10 +177,6 @@
         </div>
     </section>
 
-    <!-- ============================================================
-         SECTION 4: DỊCH VỤ SỞ HỮU (giữ nguyên nội dung/hiệu ứng,
-         chỉ thêm đường kẻ nối ngang qua CSS)
-         ============================================================ -->
     <section id="services" class="services services-luxury container" aria-label="Dịch vụ sở hữu Bonsai Luxury">
         <div class="section-heading services-heading-luxury">
             <p class="section-kicker">Dịch vụ sở hữu</p>
@@ -208,73 +204,6 @@
             </article>
         </div>
     </section>
-
-    <!-- ============================================================
-         SECTION 5: XƯỞNG NGHỆ THUẬT (giữ nguyên, chỉ chỉnh tỷ lệ
-         cột qua CSS cho cân đối hơn theo mẫu)
-         ============================================================ -->
-    <section id="about" class="about about-luxury container" aria-label="Xưởng Nghệ Thuật Bonsai Luxury">
-        <div class="about-inner showcase atelier-showcase">
-            <div class="showcase-left">
-                <div class="studio-slider" id="studioSlider" aria-live="polite">
-                    <div class="studio-slide active" data-name="Xưởng Nghệ Thuật Bonsai Luxury" data-year="25">
-                        <img src="https://lh3.googleusercontent.com/aida/AP1WRLvKUms-13kTMJcEdB7wLrPp2oIsn-Dj1uWP4cALszEgz-owSPvrRxS-PVJKKKob3r9cvIfikaIy8MVsZAVRBdfKPlcq9Jk4pSVy7RyFElJ_BaJFB2QxMAzxY5FMyqW7RRKdL9oTqqtNbW8F_feHoHCYlXzZs61XCNVD2gv0a9Vcl9BfsKswj79qs41VvpD1XEmWWva-4GZeEhC4_iMU8L_O5uDpcO7sM4rX_lqd8RB15ZkTuLkaAA2uMg" alt="Xưởng nghệ thuật Bonsai Luxury" loading="lazy">
-                        <div class="studio-caption">
-                            <h3 class="studio-name">Bonsai Luxury</h3>
-                            <p class="studio-role">Bảo tồn và sáng tạo — 25 năm kinh nghiệm</p>
-                        </div>
-                    </div>
-                    <div class="studio-slide" data-name="Bộ sưu tập Di sản" data-year="15">
-                        <img src="https://lh3.googleusercontent.com/aida/AP1WRLvD4DW4De5l6WK5em7ZQd3XMfilMNENkJUaqUPsXOgJy3RV835QSUBcPuglqyIchFEzSgCgrbHYEUcewcDFuYYegG0EUo0ZEdF7ZQfZVqaZyZLO-ye0eRvJFRcK6DM8da2G4ltGcIL617iCQl-iACYqHg0kdPolIk2Ut4USuAHN-G2IfYHgOMy6fH1VSzlyFwMa025Go6iOmFzbQ6n2Mp6tYAWgIAM9gM03_4LCc-HP1emrbd2PgPF5NA" alt="Bộ sưu tập bonsai di sản" loading="lazy">
-                        <div class="studio-caption">
-                            <h3 class="studio-name">Bộ sưu tập Di sản</h3>
-                            <p class="studio-role">Tác phẩm độc bản tuyển chọn</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="studio-controls">
-                    <button class="icon-btn prev-studio" aria-label="Studio trước">‹</button>
-                    <button class="icon-btn next-studio" aria-label="Studio tiếp">›</button>
-                </div>
-            </div>
-
-            <div class="showcase-right">
-                <p class="section-kicker">Xưởng nghệ thuật</p>
-                <h2 class="section-title">Nơi mỗi cây được hoàn thiện như một tác phẩm trưng bày</h2>
-                <p class="lead">
-                    Bonsai Luxury theo đuổi sự tiết chế: dáng cây rõ, thân già có chiều sâu, chậu và vị trí trưng bày được chọn để tôn lên khí chất của từng tác phẩm.
-                </p>
-
-                <ul class="studio-stats">
-                    <li><strong>120+</strong><span>Tác phẩm độc bản</span></li>
-                    <li><strong>40</strong><span>Nghệ nhân đối tác</span></li>
-                    <li><strong>25</strong><span>Năm kinh nghiệm</span></li>
-                </ul>
-
-                <div class="showcase-actions">
-                    <a href="#collection" class="btn primary">Xem bộ sưu tập</a>
-                </div>
-
-                <div class="timeline" aria-label="Lịch sử phát triển">
-                    <div class="timeline-item">
-                        <time datetime="1998">01</time>
-                        <p>Tuyển chọn cây theo dáng, tuổi và chất thân.</p>
-                    </div>
-                    <div class="timeline-item">
-                        <time datetime="2010">02</time>
-                        <p>Hoàn thiện bố cục, chậu và hồ sơ sưu tầm.</p>
-                    </div>
-                    <div class="timeline-item">
-                        <time datetime="2022">03</time>
-                        <p>Bàn giao và chăm sóc theo điều kiện không gian.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <div id="studioModalRoot" aria-hidden="true"></div>
 </main>
 
 <div id="contact" class="footer-anchor"></div>

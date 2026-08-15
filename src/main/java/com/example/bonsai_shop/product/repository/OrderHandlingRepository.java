@@ -11,8 +11,17 @@ import org.springframework.stereotype.Repository;
 
 import com.example.bonsai_shop.entity.OrderHandling;
 
+/**
+ * [REPOSITORY TRUY VẤN LỊCH SỬ TIẾP NHẬN & BÀN GIAO ĐƠN HÀNG - ORDER HANDLING REPOSITORY]
+ *
+ * Chịu trách nhiệm:
+ * - Lưu vết các phiên làm việc của Moderator đối với từng đơn hàng (Tiếp nhận claim, bàn giao unclaim, thời gian bắt đầu handledAt, thời gian kết thúc releasedAt, trạng thái active).
+ */
 @Repository
 public interface OrderHandlingRepository extends JpaRepository<OrderHandling, Integer> {
+    /**
+     * [LẤY LỊCH SỬ XỬ LÝ CỦA MỘT ĐƠN HÀNG SẮP XẾP THEO THỜI GIAN GIẢM DẦN]
+     */
     List<OrderHandling> findByOrderOrderIdOrderByHandledAtDesc(Integer orderId);
 
     @Query(value = """

@@ -92,7 +92,7 @@
                     <dd th:text="${product.variety.varietyName}"></dd>
 
                     <dt>Phân khúc</dt>
-                    <dd th:text="${product.segment.segmentName}"></dd>
+                    <dd th:text="${#strings.equalsIgnoreCase(product.segment.segmentName, 'Budget') || #strings.equalsIgnoreCase(product.segment.segmentName, 'Bugget') ? 'Phổ thông' : (#strings.equalsIgnoreCase(product.segment.segmentName, 'Mid') ? 'Tầm trung' : (#strings.equalsIgnoreCase(product.segment.segmentName, 'Elite') ? 'Cao cấp' : product.segment.segmentName))}"></dd>
 
                     <dt>Tags</dt>
                     <dd>

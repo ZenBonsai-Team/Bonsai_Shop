@@ -456,10 +456,6 @@
                             <span class="od-field-value" th:text="${order.customerInfo.address ?: '---'}">---</span>
                         </div>
                     </div>
-                    <div th:if="${order.customerInfo.customerNote != null and !#strings.isEmpty(order.customerInfo.customerNote)}" style="margin-top:12px;">
-                        <div class="od-field-label" style="margin-bottom:4px;">Ghi chú thêm</div>
-                        <div class="od-note-box" th:text="${order.customerInfo.customerNote}">---</div>
-                    </div>
                 </div>
             </div>
 
@@ -894,7 +890,10 @@
 
         function validateApprovalInput() {
             let isValid = true;
-            const validateMoneyField = (id, label, required) => {
+            const MAX_FEE = 200000000;
+            const MAX_TOTAL = 999999999999;
+
+            const validateMoneyField = (id, label, required, maxLimit) => {
                 const el = document.getElementById(id);
                 if (!el || el.disabled) {
                     clearFieldError(id);
@@ -912,6 +911,8 @@
                     message = 'Số tiền phải là số nguyên.';
                 } else if (raw !== '' && !/^\d+$/.test(raw)) {
                     message = 'Số tiền chỉ được nhập số nguyên không âm.';
+                } else if (maxLimit && Number(raw) > maxLimit) {
+                    message = `${label.charAt(0).toUpperCase() + label.slice(1)} không được vượt quá ${formatCurrency(maxLimit)}.`;
                 }
 
                 setFieldError(id, message);
@@ -919,16 +920,24 @@
                 return raw === '' ? 0 : Number(raw);
             };
 
-            const crane = validateMoneyField('approvalCraneFee', 'phí xe cẩu', false);
-            const shipping = validateMoneyField('approvalShippingFee', 'phí vận chuyển', false);
+            const crane = validateMoneyField('approvalCraneFee', 'phí xe cẩu', false, MAX_FEE);
+            const shipping = validateMoneyField('approvalShippingFee', 'phí vận chuyển', false, MAX_FEE);
             const deposit = validateMoneyField('approvalDepositAmount', 'tiền đặt cọc', IS_COD);
 
             if (IS_COD) {
-                const orderTotal = BASE_TREE_PRICE + crane + shipping;
-                if (deposit > orderTotal) {
-                    setFieldError('approvalDepositAmount', `Tiền đặt cọc không được vượt quá ${formatCurrency(orderTotal)}.`);
+                if (deposit <= 0) {
+                    setFieldError('approvalDepositAmount', 'Vui lòng nhập số tiền đặt cọc lớn hơn 0.');
+                    isValid = false;
+                } else if (deposit > BASE_TREE_PRICE) {
+                    setFieldError('approvalDepositAmount', `Tiền đặt cọc không được vượt quá tiền cây (${formatCurrency(BASE_TREE_PRICE)}).`);
                     isValid = false;
                 }
+            }
+
+            const orderTotal = BASE_TREE_PRICE + crane + shipping;
+            if (orderTotal > MAX_TOTAL && crane <= MAX_FEE && shipping <= MAX_FEE) {
+                setFieldError('approvalCraneFee', 'Tổng tiền đơn hàng không được vượt quá 999.999.999.999 đ.');
+                isValid = false;
             }
 
             if (!isValid) {
@@ -1243,7 +1252,7 @@
         }
 
         function openFaultRefundConfirmation() {
-            const refundAmount100 = REFUNDABLE_CASH;
+            const refundAmount100 = REFUNDABLE_CASH > 0 ? REFUNDABLE_CASH : (ORDER_STATUS === 'PAID' ? GRAND_TOTAL : SUCCESSFUL_DEPOSIT_AMOUNT);
 
             openConfirmationModal({
                 title: 'Xác nhận chấm dứt đơn và hoàn tiền',
@@ -1257,6 +1266,7 @@
                 summaryRows: [
                     { label: 'Mã đơn hàng', value: ORDER_CODE },
                     { label: 'Tổng giá trị đơn hàng', value: formatCurrency(GRAND_TOTAL) },
+                    { label: 'Số tiền hoàn lại cho khách', value: formatCurrency(refundAmount100) },
                     { label: 'Trạng thái sau xử lý', value: 'Đã chấm dứt đơn hàng' }
                 ],
                 buildPayload: ({ faultParty, reason }) => {
@@ -1269,6 +1279,7 @@
                     return {
                         action: 'record_fault_refund',
                         faultParty,
+                        refundAmount: refundAmount100,
                         reason: reason.trim()
                     };
                 }

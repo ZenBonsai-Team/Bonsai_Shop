@@ -46,6 +46,26 @@ import com.example.bonsai_shop.entity.ModerationNotification;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * [SERVICE TRỌNG TÂM QUẢN LÝ VÀ XỬ LÝ ĐƠN HÀNG - ORDER SERVICE]
+ *
+ * Chịu trách nhiệm:
+ * - Tiếp nhận và tạo đơn hàng Checkout (Guest & Authenticated), đặt chỗ giữ cây nguyên tử (Atomic Reservation).
+ * - Quản lý Orders Pool: Tra cứu, phân trang, lọc theo tiêu chí Moderator.
+ * - Điều phối quy trình xử lý của Moderator: Tiếp nhận (claim), trả lại (unclaim), phê duyệt & tính phí (verify), từ chối (reject).
+ * - Quản lý thanh toán VNPay 1-N (Đặt cọc DEPOSIT / Thanh toán đủ FULL_PAYMENT):
+ *   + Chuẩn bị bản ghi thanh toán PENDING (preparePendingVnPayPayment).
+ *   + Xử lý kết quả thành công (processPaymentSuccess) chuyển trạng thái sang DEPOSITED hoặc PAID.
+ *   + Xử lý thất bại (processPaymentFailure).
+ *   + Xác nhận thu nốt đợt 2 (confirmRemainingPayment) và hoàn tất đơn (COMPLETED, chuyển Product sang SOLD).
+ * - Xử lý các ngoại lệ nghiệp vụ: Khách bùng cọc (markDepositedOrderCustomerNoShow), hoàn tiền do lỗi nhà vườn/vận chuyển (recordFaultRefundAndCancel).
+ * - Tương tác hệ thống: Ghi log (OrderLog), lưu vết xử lý (OrderHandling), bắn sự kiện (OrderCreatedEvent, OrderVerifiedEvent, OrderPaidEvent, OrderRejectedEvent), gửi email thông báo (MailService), ghi nhận sổ cái tài chính (FinancialLedgerService).
+ *
+ * Các thành phần phối hợp chính:
+ * - Repositories: OrderRepository, ProductRepository, PaymentRepository, OrderLogRepository, OrderHandlingRepository.
+ * - Services: CartService, MailService, FinancialLedgerService.
+ * - Events: ApplicationEventPublisher.
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -54,6 +74,8 @@ public class OrderService {
     private static final String STATUS_PENDING_PAYMENT = "PENDING_PAYMENT";
     private static final String STATUS_PENDING = "PENDING";
     private static final BigDecimal ZERO = BigDecimal.ZERO;
+    private static final BigDecimal MAX_FEE_AMOUNT = new BigDecimal("200000000");
+    private static final BigDecimal MAX_MONEY_AMOUNT = new BigDecimal("999999999999.99");
 
     private final OrderRepository orderRepository;
     private final ProductRepository productRepository;
@@ -66,6 +88,22 @@ public class OrderService {
     private final FinancialLedgerService financialLedgerService;
     private final ModerationNotificationRepository notificationRepository;
 
+    /**
+     * [LẤY DANH SÁCH TỔNG HỢP ĐƠN HÀNG CÓ PHÂN TRANG VÀ LỌC TRẠNG THÁI]
+     *
+     * Mục đích:
+     * - Phục vụ màn hình tra cứu chung cho Moderator / Admin.
+     *
+     * Được gọi từ:
+     * - OrderApiController.getOrders()
+     *
+     * Input & Output:
+     * - Input: search (String), status (String), sort (String), page (int), limit (int)
+     * - Output: Page<Order>
+     *
+     * Tác động DB:
+     * - Bảng đọc: ORDER, USER, PRODUCT
+     */
     @Transactional(readOnly = true)
     public Page<Order> getFilteredOrders(String search, String status, String sort, int page, int limit) {
         Sort springSort = resolveSort(sort);
@@ -73,6 +111,22 @@ public class OrderService {
         return orderRepository.searchOrdersForModerator(resolveStatusFilter(status), search, pageable);
     }
 
+    /**
+     * [LẤY DANH SÁCH ĐƠN HÀNG TRONG KHO CHUNG (ORDERS POOL)]
+     *
+     * Mục đích:
+     * - Lấy các đơn hàng có assignedTo IS NULL và orderStatus = 'PENDING' để Moderator nhận xử lý.
+     *
+     * Được gọi từ:
+     * - OrderApiController.getPoolOrders()
+     *
+     * Input & Output:
+     * - Input: search (String), sort (String), page (int), limit (int)
+     * - Output: Page<Order>
+     *
+     * Tác động DB:
+     * - Bảng đọc: ORDER
+     */
     @Transactional(readOnly = true)
     public Page<Order> getPoolOrders(String search, String sort, int page, int limit) {
         Sort springSort = resolveSort(sort);
@@ -80,13 +134,33 @@ public class OrderService {
         return orderRepository.searchOrdersPool(search, pageable);
     }
 
+    /**
+     * [LẤY DANH SÁCH ĐƠN HÀNG DO MODERATOR CỤ THỂ PHỤ TRÁCH]
+     *
+     * Mục đích:
+     * - Phục vụ màn hình "Đơn hàng của tôi" (My Orders) theo moderatorId.
+     *
+     * Được gọi từ:
+     * - OrderApiController.getMyOrders()
+     *
+     * Input & Output:
+     * - Input: moderatorId (Integer), search (String), status (String), sort (String), page (int), limit (int)
+     * - Output: Page<Order>
+     */
     @Transactional(readOnly = true)
-    public Page<Order> getMyOrders(Integer moderatorId, String search, String status, String sort, int page, int limit) {
+    public Page<Order> getMyOrders(Integer moderatorId, String search, String status, String sort, int page,
+            int limit) {
         Sort springSort = resolveSort(sort);
         Pageable pageable = PageRequest.of(page - 1, limit, springSort);
         return orderRepository.searchMyOrders(moderatorId, resolveStatusFilter(status), search, pageable);
     }
 
+    /**
+     * [LẤY LỊCH SỬ ĐƠN HÀNG CỦA KHÁCH HÀNG]
+     *
+     * Được gọi từ:
+     * - Profile / Lịch sử mua hàng của Khách hàng
+     */
     @Transactional(readOnly = true)
     public List<Order> getOrdersByCustomerId(Integer customerId) {
         return orderRepository.findByCustomerUserIdWithDetailsOrderByOrderDateDesc(customerId);
@@ -141,7 +215,8 @@ public class OrderService {
         Map<String, Long> kpis = new HashMap<>();
         kpis.put("total", orderRepository.countByAssignedToUserId(moderatorId));
         kpis.put("pending", orderRepository.countByAssignedToUserIdAndOrderStatus(moderatorId, "PENDING"));
-        kpis.put("approved", orderRepository.countByAssignedToUserIdAndOrderStatus(moderatorId, STATUS_PENDING_PAYMENT));
+        kpis.put("approved",
+                orderRepository.countByAssignedToUserIdAndOrderStatus(moderatorId, STATUS_PENDING_PAYMENT));
         kpis.put("paid", orderRepository.countByAssignedToUserIdAndOrderStatus(moderatorId, "PAID"));
         kpis.put("rejected", orderRepository.countByAssignedToUserIdAndOrderStatus(moderatorId, "CANCELLED"));
         return kpis;
@@ -152,6 +227,26 @@ public class OrderService {
         return orderHandlingRepository.findByOrderOrderIdOrderByHandledAtDesc(orderId);
     }
 
+    /**
+     * [TIẾP NHẬN ĐƠN HÀNG TỪ KHO CHUNG (CLAIM ORDER)]
+     *
+     * Mục đích:
+     * - Gán quyền xử lý đơn hàng PENDING cho Moderator đang đăng nhập.
+     *
+     * Được gọi từ:
+     * - OrderApiController.claimOrder()
+     * - OrderActionService.handleClaim()
+     *
+     * Các bước thực hiện:
+     * 1. Tìm đơn theo orderCode trong DB.
+     * 2. Kiểm tra điều kiện: assignedTo phải null, orderStatus phải là "PENDING".
+     * 3. Gán assignedTo = moderator, assignedAt = now trên Order.
+     * 4. Tạo bản ghi OrderHandling mới (isActive = true) để theo dõi phiên xử lý.
+     *
+     * Tác động DB:
+     * - ORDER: assigned_to, assigned_at
+     * - ORDER_HANDLING: thêm bản ghi mới
+     */
     @Transactional
     public boolean claimOrder(String orderCode, User moderator) {
         Order order = orderRepository.findByOrderCode(orderCode)
@@ -179,6 +274,25 @@ public class OrderService {
         return true;
     }
 
+    /**
+     * [TRẢ LẠI ĐƠN HÀNG VỀ KHO CHUNG (UNCLAIM ORDER)]
+     *
+     * Mục đích:
+     * - Hủy gán người phụ trách khi Moderator không thể xử lý đơn PENDING.
+     *
+     * Được gọi từ:
+     * - OrderApiController.unclaimOrder()
+     * - OrderActionService.handleReturnInventory()
+     *
+     * Các bước thực hiện:
+     * 1. Kiểm tra đơn thuộc quyền moderator và có trạng thái "PENDING".
+     * 2. Set assignedTo = null, assignedAt = null trên Order.
+     * 3. Tìm các bản ghi OrderHandling đang active của moderator trên đơn này và set isActive = false, releasedAt = now.
+     *
+     * Tác động DB:
+     * - ORDER: assigned_to = null, assigned_at = null
+     * - ORDER_HANDLING: isActive = false, releasedAt = now
+     */
     @Transactional
     public boolean unclaimOrder(String orderCode, User moderator) {
         Order order = orderRepository.findByOrderCode(orderCode)
@@ -196,9 +310,9 @@ public class OrderService {
         orderRepository.save(order);
 
         orderHandlingRepository.findAll().stream()
-                .filter(h -> h.getOrder() != null && h.getOrder().getOrderId().equals(order.getOrderId()) 
-                          && h.getModerator() != null && h.getModerator().getUserId().equals(moderator.getUserId())
-                          && Boolean.TRUE.equals(h.getIsActive()))
+                .filter(h -> h.getOrder() != null && h.getOrder().getOrderId().equals(order.getOrderId())
+                        && h.getModerator() != null && h.getModerator().getUserId().equals(moderator.getUserId())
+                        && Boolean.TRUE.equals(h.getIsActive()))
                 .forEach(h -> {
                     h.setIsActive(false);
                     h.setReleasedAt(LocalDateTime.now());
@@ -213,8 +327,41 @@ public class OrderService {
         return verifyOrder(orderCode, craneFee, shippingFee, null, moderator);
     }
 
+    /**
+     * [PHÊ DUYỆT ĐƠN HÀNG, ÁP PHÍ VẬN CHUYỂN/CẨU VÀ TÍNH TIỀN THANH TOÁN ĐỢT 1]
+     *
+     * Mục đích:
+     * - Moderator xác nhận đơn hàng sau khi liên hệ thỏa thuận với khách.
+     * - Tính toán lại tổng tiền: treePrice + craneFee + shippingFee.
+     * - Khởi tạo/cập nhật số tiền cần thanh toán cho Payment record PENDING.
+     * - Chuyển trạng thái sang PENDING_PAYMENT và phát sự kiện gửi link thanh toán cho khách.
+     *
+     * Được gọi từ:
+     * - OrderApiController.verifyOrder()
+     * - OrderActionService.handleApprove()
+     *
+     * Các bước thực hiện:
+     * 1. Tìm Order và kiểm tra đúng Moderator phụ trách + trạng thái đơn là "PENDING".
+     * 2. Tính giá cây gốc treePrice từ OrderDetail.
+     * 3. Chuẩn hóa craneFee, shippingFee (>= 0, <= 200tr, là số nguyên).
+     * 4. Tính newTotal = treePrice + craneFee + shippingFee.
+     * 5. Kiểm tra flow Đặt cọc (DEPOSIT) hay Thanh toán đủ (FULL_PAYMENT):
+     *    - Nếu DEPOSIT: Kiểm tra depositAmount (0 < depositAmount <= treePrice), tạo/cập nhật Payment record với paymentType = DEPOSIT, amount = depositAmount, status = PENDING.
+     *    - Nếu FULL_PAYMENT: Set depositAmount = 0, tạo/cập nhật Payment record với paymentType = FULL_PAYMENT, amount = newTotal, status = PENDING.
+     * 6. Cập nhật Order: orderStatus = "PENDING_PAYMENT".
+     * 7. Ghi bản ghi OrderLog (actionType = "VERIFY", fromStatus = "PENDING", toStatus = "PENDING_PAYMENT").
+     * 8. Đóng OrderHandling active (isActive = false, releasedAt = now).
+     * 9. Phát sự kiện OrderVerifiedEvent → gửi email link thanh toán VNPay cho khách.
+     *
+     * Tác động DB:
+     * - ORDER: craneFee, shippingFee, totalAmount, depositAmount, orderStatus = PENDING_PAYMENT
+     * - PAYMENT: amount, paymentType, paymentStatus = PENDING
+     * - ORDER_LOG: log "VERIFY"
+     * - ORDER_HANDLING: isActive = false
+     */
     @Transactional
-    public boolean verifyOrder(String orderCode, BigDecimal craneFee, BigDecimal shippingFee, BigDecimal depositAmount, User moderator) {
+    public boolean verifyOrder(String orderCode, BigDecimal craneFee, BigDecimal shippingFee, BigDecimal depositAmount,
+            User moderator) {
         Order order = orderRepository.findByOrderCodeWithDetails(orderCode).orElse(null);
         if (order == null || !STATUS_PENDING.equalsIgnoreCase(order.getOrderStatus())) {
             return false;
@@ -226,7 +373,7 @@ public class OrderService {
         }
 
         String oldStatus = order.getOrderStatus();
-        
+
         // Tính chính xác giá gốc các cây trong đơn hàng (không bao gồm phụ phí)
         BigDecimal treePrice = resolveTreePrice(order);
         BigDecimal normalizedCraneFee = normalizeNonNegativeAmount(craneFee, "Phí cẩu");
@@ -235,24 +382,27 @@ public class OrderService {
         order.setCraneFee(normalizedCraneFee);
         order.setShippingFee(normalizedShippingFee);
 
-        // Tong gia tri thuc te cua toan bo don hang = Tree Price + Crane Fee + Shipping Fee
+        // Tong gia tri thuc te cua toan bo don hang = Tree Price + Crane Fee + Shipping
+        // Fee
         BigDecimal newTotal = treePrice.add(normalizedCraneFee).add(normalizedShippingFee);
+        if (newTotal.compareTo(MAX_MONEY_AMOUNT) > 0) {
+            throw new IllegalArgumentException("Tổng tiền đơn hàng không được vượt quá 999.999.999.999 VNĐ.");
+        }
         order.setTotalAmount(newTotal);
 
         List<Payment> existingPayments = paymentRepository.findByOrderOrderIdOrderByPaymentIdAsc(order.getOrderId());
-        
-        boolean isDepositFlow = existingPayments.stream().anyMatch(p -> 
-                PaymentType.DEPOSIT.name().equalsIgnoreCase(p.getPaymentType()) ||
-                "DEPOSIT".equalsIgnoreCase(p.getPaymentMethod()) ||
-                "COD".equalsIgnoreCase(p.getPaymentMethod())
-        );
+
+        boolean isDepositFlow = existingPayments.stream()
+                .anyMatch(p -> PaymentType.DEPOSIT.name().equalsIgnoreCase(p.getPaymentType()) ||
+                        "DEPOSIT".equalsIgnoreCase(p.getPaymentMethod()) ||
+                        "COD".equalsIgnoreCase(p.getPaymentMethod()));
 
         if (isDepositFlow) {
             if (depositAmount == null || depositAmount.compareTo(ZERO) <= 0) {
                 throw new IllegalArgumentException("Vui lòng nhập số tiền đặt cọc.");
             }
             validateWholeNumberAmount(depositAmount, "Tiền đặt cọc");
-            if (depositAmount.compareTo(newTotal) > 0) {
+            if (depositAmount.compareTo(treePrice) > 0) {
                 throw new IllegalArgumentException("Số tiền đặt cọc không được vượt quá tổng giá trị cây.");
             }
             order.setDepositAmount(depositAmount);
@@ -316,9 +466,9 @@ public class OrderService {
         orderLogRepository.save(log);
 
         orderHandlingRepository.findAll().stream()
-                .filter(h -> h.getOrder() != null && h.getOrder().getOrderId().equals(order.getOrderId()) 
-                          && h.getModerator() != null && h.getModerator().getUserId().equals(moderator.getUserId())
-                          && Boolean.TRUE.equals(h.getIsActive()))
+                .filter(h -> h.getOrder() != null && h.getOrder().getOrderId().equals(order.getOrderId())
+                        && h.getModerator() != null && h.getModerator().getUserId().equals(moderator.getUserId())
+                        && Boolean.TRUE.equals(h.getIsActive()))
                 .forEach(h -> {
                     h.setIsActive(false);
                     h.setReleasedAt(LocalDateTime.now());
@@ -330,10 +480,37 @@ public class OrderService {
         return true;
     }
 
+    /**
+     * [TỪ CHỐI / HỦY ĐƠN HÀNG PENDING KÈM LÝ DO]
+     *
+     * Mục đích:
+     * - Moderator hủy đơn hàng chưa duyệt và giải phóng toàn bộ cây về trạng thái AVAILABLE.
+     *
+     * Được gọi từ:
+     * - OrderApiController.rejectOrder()
+     * - OrderActionService.handleReject()
+     *
+     * Các bước thực hiện:
+     * 1. Kiểm tra đơn thuộc quyền moderator và ở trạng thái "PENDING".
+     * 2. Đổi orderStatus = "CANCELLED", nối lý do vào notes.
+     * 3. Giải phóng toàn bộ Product trong đơn: productStatus: RESERVED → AVAILABLE.
+     * 4. Ghi OrderLog (actionType = "REJECT", toStatus = "CANCELLED").
+     * 5. Đóng OrderHandling active.
+     * 6. Phát sự kiện OrderRejectedEvent → gửi email thông báo hủy cho khách.
+     *
+     * Tác động DB:
+     * - ORDER: orderStatus = CANCELLED, notes
+     * - PRODUCT: productStatus = AVAILABLE
+     * - ORDER_LOG: log "REJECT"
+     * - ORDER_HANDLING: isActive = false
+     */
     @Transactional
     public boolean rejectOrder(String orderCode, String reason, User moderator) {
         if (reason == null || reason.isBlank()) {
             throw new IllegalArgumentException("Lý do từ chối là bắt buộc.");
+        }
+        if (reason.trim().length() > 500) {
+            throw new IllegalArgumentException("Nội dung không được vượt quá 500 ký tự.");
         }
         Order order = orderRepository.findByOrderCodeWithDetails(orderCode).orElse(null);
         if (order == null || !"PENDING".equalsIgnoreCase(order.getOrderStatus())) {
@@ -347,7 +524,7 @@ public class OrderService {
 
         String oldStatus = order.getOrderStatus();
         order.setOrderStatus("CANCELLED");
-        order.setNotes("Hủy đơn với lý do: " + reason);
+        appendOrderNote(order, "Hủy đơn với lý do: " + reason);
         orderRepository.save(order);
 
         if (order.getOrderDetails() != null) {
@@ -371,9 +548,9 @@ public class OrderService {
         orderLogRepository.save(log);
 
         orderHandlingRepository.findAll().stream()
-                .filter(h -> h.getOrder() != null && h.getOrder().getOrderId().equals(order.getOrderId()) 
-                          && h.getModerator() != null && h.getModerator().getUserId().equals(moderator.getUserId())
-                          && Boolean.TRUE.equals(h.getIsActive()))
+                .filter(h -> h.getOrder() != null && h.getOrder().getOrderId().equals(order.getOrderId())
+                        && h.getModerator() != null && h.getModerator().getUserId().equals(moderator.getUserId())
+                        && Boolean.TRUE.equals(h.getIsActive()))
                 .forEach(h -> {
                     h.setIsActive(false);
                     h.setReleasedAt(LocalDateTime.now());
@@ -395,10 +572,14 @@ public class OrderService {
         }
     }
 
+    /**
+     * [GHI NHẬN ĐẶT CỌC THỦ CÔNG (DIRECT DEPOSIT)]
+     */
     @Transactional
     public boolean recordDepositPayment(String orderCode, BigDecimal depositAmount, User moderator) {
         Order order = orderRepository.findByOrderCode(orderCode).orElse(null);
-        if (order == null || (!"PENDING".equalsIgnoreCase(order.getOrderStatus()) && !STATUS_PENDING_PAYMENT.equalsIgnoreCase(order.getOrderStatus()))) {
+        if (order == null || (!"PENDING".equalsIgnoreCase(order.getOrderStatus())
+                && !STATUS_PENDING_PAYMENT.equalsIgnoreCase(order.getOrderStatus()))) {
             return false;
         }
 
@@ -468,8 +649,51 @@ public class OrderService {
     // ORDER CREATION
     // =========================================================================
 
+    /**
+     * [TẠO ĐƠN HÀNG MỚI VÀ GIỮ CHỖ CÂY NGUYÊN TỬ (CREATE ORDER & ATOMIC RESERVE)]
+     *
+     * Mục đích:
+     * - Tiếp nhận thông tin checkout của khách (đăng nhập hoặc vãng lai).
+     * - Thực hiện giữ chỗ nguyên tử (Atomic Reserve) trên từng cây qua DB query UPDATE PRODUCT SET productStatus='RESERVED' WHERE productId=? AND productStatus='AVAILABLE'.
+     * - Sinh mã đơn hàng chuẩn định dạng "BSMS-XXXXXX".
+     * - Lưu Order (PENDING), OrderDetail (snapshot priceAtPurchase), và khởi tạo Payment record đầu tiên (PENDING).
+     * - Xóa giỏ hàng nếu là user đăng nhập.
+     * - Bắn sự kiện OrderCreatedEvent để gửi email xác nhận.
+     *
+     * Được gọi từ:
+     * - OrderApiController.checkout()
+     *
+     * Input & Output:
+     * - Input: dto (PurchaseOrderRequestDTO), customer (User - nullable nếu là Guest)
+     * - Output: Order entity đã được persist
+     *
+     * Tác động DB:
+     * - Bảng đọc: PRODUCT, CART_ITEM
+     * - Bảng ghi:
+     *   + ORDER: tạo mới (orderStatus = PENDING, orderType = ONLINE)
+     *   + ORDER_DETAIL: tạo mới chi tiết đơn hàng
+     *   + PRODUCT: productStatus: AVAILABLE → RESERVED
+     *   + PAYMENT: tạo 1 bản ghi ban đầu (paymentStatus = PENDING)
+     *   + CART_ITEM: xóa nếu là logged-in customer
+     *
+     * Sự kiện phát sinh:
+     * - OrderCreatedEvent (gửi email thông báo đơn đã tạo)
+     */
     @Transactional
     public Order createOrder(PurchaseOrderRequestDTO dto, User customer) {
+        if (dto.getCustomerName() != null && dto.getCustomerName().length() > 255) {
+            throw new IllegalArgumentException("Tên khách hàng không được vượt quá 255 ký tự.");
+        }
+        if (dto.getCustomerEmail() != null && dto.getCustomerEmail().length() > 255) {
+            throw new IllegalArgumentException("Email không được vượt quá 255 ký tự.");
+        }
+        if (dto.getShippingAddress() != null && dto.getShippingAddress().length() > 500) {
+            throw new IllegalArgumentException("Địa chỉ nhận hàng không được vượt quá 500 ký tự.");
+        }
+        if (dto.getNotes() != null && dto.getNotes().length() > 500) {
+            throw new IllegalArgumentException("Ghi chú không được vượt quá 500 ký tự.");
+        }
+
         List<Product> productsToBuy = resolveProductsToBuy(dto, customer);
 
         if (productsToBuy.isEmpty()) {
@@ -499,6 +723,7 @@ public class OrderService {
                 .depositAmount(BigDecimal.ZERO)
                 .orderStatus("PENDING")
                 .orderType("ONLINE")
+                .notes(dto.getNotes())
                 .build();
 
         List<OrderDetail> details = productsToBuy.stream().map(prod -> {
@@ -519,8 +744,8 @@ public class OrderService {
 
         // Khởi tạo bản ghi Payment PENDING ban đầu duy nhất theo 1-N Model
         String rawMethod = dto.getPaymentMethod() != null ? dto.getPaymentMethod() : PaymentMethod.DEPOSIT.name();
-        String pType = (PaymentMethod.DEPOSIT.name().equalsIgnoreCase(rawMethod) || "COD".equalsIgnoreCase(rawMethod)) 
-                ? PaymentType.DEPOSIT.name() 
+        String pType = (PaymentMethod.DEPOSIT.name().equalsIgnoreCase(rawMethod) || "COD".equalsIgnoreCase(rawMethod))
+                ? PaymentType.DEPOSIT.name()
                 : PaymentType.FULL_PAYMENT.name();
 
         Payment initialPayment = Payment.builder()
@@ -545,6 +770,23 @@ public class OrderService {
     // PAYMENT PROCESSING REFACTOR (1-N Model)
     // =========================================================================
 
+    /**
+     * [XỬ LÝ THANH TOÁN VNPAY THÀNH CÔNG (PAYMENT SUCCESS CALLBACK / IPN)]
+     *
+     * Mục đích:
+     * - Tiếp nhận tín hiệu thanh toán thành công từ PaymentController (Return URL) hoặc IPNController (Webhook IPN).
+     * - Cập nhật Payment record PENDING thành SUCCESS và ghi nhận paymentDate.
+     * - Nếu paymentType = DEPOSIT: Chuyển Order sang DEPOSITED, gửi email xác nhận đặt cọc thành công.
+     * - Nếu paymentType = FULL_PAYMENT: Chuyển Order sang PAID, phát sự kiện OrderPaidEvent.
+     *
+     * Được gọi từ:
+     * - PaymentController.paymentCallback()
+     * - IPNController.receiveIPN()
+     *
+     * Tác động DB:
+     * - PAYMENT: paymentStatus = "SUCCESS", paymentDate = now
+     * - ORDER: orderStatus = "DEPOSITED" (nếu cọc) hoặc "PAID" (nếu thanh toán đủ 100%)
+     */
     @Transactional
     public boolean processPaymentSuccess(String orderCode) {
         Order order = orderRepository.findByOrderCode(orderCode).orElse(null);
@@ -587,8 +829,22 @@ public class OrderService {
         return true;
     }
 
+    /**
+     * [XỬ LÝ THANH TOÁN VNPAY THẤT BẠI HOẶC BỊ HỦY]
+     *
+     * Mục đích:
+     * - Ghi nhận lý do thất bại vào Payment record để hỗ trợ đối soát.
+     *
+     * Được gọi từ:
+     * - PaymentController.paymentCallback()
+     * - IPNController.receiveIPN()
+     *
+     * Tác động DB:
+     * - PAYMENT: paymentStatus = "FAILED", notes
+     */
     @Transactional
-    public boolean processPaymentFailure(String orderCode, String responseCode, String transactionStatus, String source) {
+    public boolean processPaymentFailure(String orderCode, String responseCode, String transactionStatus,
+            String source) {
         Order order = orderRepository.findByOrderCode(orderCode).orElse(null);
         if (order == null) {
             return false;
@@ -615,6 +871,16 @@ public class OrderService {
         return true;
     }
 
+    /**
+     * [CHUẨN BỊ BẢN GHI THANH TOÁN PENDING CHO VNPAY (HỖ TRỢ RETRY)]
+     *
+     * Mục đích:
+     * - Đảm bảo luôn có 1 bản ghi Payment PENDING với số tiền chính xác khi khách bấm vào link thanh toán VNPay.
+     * - Nếu khách từng thanh toán lỗi/hết hạn trước đó, hàm sẽ tự tạo lại bản ghi PENDING retry mới.
+     *
+     * Được gọi từ:
+     * - PaymentController.payOrder()
+     */
     @Transactional
     public Payment preparePendingVnPayPayment(String orderCode) {
         Order order = orderRepository.findByOrderCode(orderCode)
@@ -644,14 +910,14 @@ public class OrderService {
         String paymentType = latestFailedVnPayPayment != null && latestFailedVnPayPayment.getPaymentType() != null
                 ? latestFailedVnPayPayment.getPaymentType()
                 : (order.getDepositAmount() != null && order.getDepositAmount().compareTo(ZERO) > 0
-                ? PaymentType.DEPOSIT.name()
-                : PaymentType.FULL_PAYMENT.name());
+                        ? PaymentType.DEPOSIT.name()
+                        : PaymentType.FULL_PAYMENT.name());
 
         BigDecimal amount = latestFailedVnPayPayment != null && latestFailedVnPayPayment.getAmount() != null
                 ? latestFailedVnPayPayment.getAmount()
                 : (PaymentType.DEPOSIT.name().equalsIgnoreCase(paymentType)
-                ? order.getDepositAmount()
-                : order.getTotalAmount());
+                        ? order.getDepositAmount()
+                        : order.getTotalAmount());
 
         if (amount == null || amount.compareTo(ZERO) <= 0) {
             throw new IllegalStateException("Số tiền thanh toán không hợp lệ.");
@@ -685,15 +951,41 @@ public class OrderService {
         return value == null || value.isBlank() ? "N/A" : value.trim();
     }
 
+    /**
+     * [XÁC NHẬN THU ĐỦ TIỀN ĐỢT 2 VÀ HOÀN TẤT ĐƠN ĐẶT CỌC (CONFIRM REMAINING PAYMENT)]
+     *
+     * Mục đích:
+     * - Dành cho đơn hàng đã cọc (DEPOSITED). Khi Moderator giao cây và thu nốt số tiền còn lại (CASH/Chuyển khoản).
+     * - Tạo Payment record #2 với paymentType = REMAINING_PAYMENT, amount = totalAmount - depositPaid, status = SUCCESS.
+     * - Chuyển Order sang COMPLETED.
+     * - Chuyển Product sang SOLD.
+     * - Ghi nhận doanh thu vào Sổ cái tài chính FinancialLedger.
+     * - Bắn sự kiện OrderPaidEvent.
+     *
+     * Được gọi từ:
+     * - OrderApiController.confirmRemainingPayment()
+     * - OrderActionService.handleComplete() (khi đơn là DEPOSITED)
+     *
+     * Tác động DB:
+     * - PAYMENT: thêm bản ghi REMAINING_PAYMENT (SUCCESS)
+     * - ORDER: orderStatus: DEPOSITED → COMPLETED, completedAt = now
+     * - PRODUCT: productStatus: RESERVED → SOLD
+     * - FINANCIAL_LEDGER: ghi nhận doanh thu
+     * - ORDER_LOG: log REMAINING_PAYMENT_CONFIRMED
+     */
     @Transactional
     public boolean confirmRemainingPayment(String orderCode, String notes, User moderator) {
+        if (notes != null && notes.trim().length() > 500) {
+            throw new IllegalArgumentException("Ghi chú thanh toán không được vượt quá 500 ký tự.");
+        }
         Order order = orderRepository.findByOrderCode(orderCode).orElse(null);
         if (order == null) {
             throw new IllegalArgumentException("Không tìm thấy đơn hàng: " + orderCode);
         }
 
         if (!"DEPOSITED".equalsIgnoreCase(order.getOrderStatus())) {
-            throw new IllegalStateException("Đơn hàng phải ở trạng thái ĐÃ ĐẶT CỌC (DEPOSITED) mới được xác nhận thanh toán phần còn lại!");
+            throw new IllegalStateException(
+                "Đơn hàng phải ở trạng thái ĐÃ ĐẶT CỌC (DEPOSITED) mới được xác nhận thanh toán phần còn lại!");
         }
 
         validateAssignedModerator(order, moderator);
@@ -701,7 +993,8 @@ public class OrderService {
         // Tính tổng tiền deposit đã thanh toán thành công
         BigDecimal treePrice = resolveTreePrice(order);
 
-        List<Payment> depositPayments = paymentRepository.findByOrderOrderIdAndPaymentType(order.getOrderId(), PaymentType.DEPOSIT.name());
+        List<Payment> depositPayments = paymentRepository.findByOrderOrderIdAndPaymentType(order.getOrderId(),
+                PaymentType.DEPOSIT.name());
         BigDecimal depositPaid = depositPayments.stream()
                 .filter(p -> "SUCCESS".equalsIgnoreCase(p.getPaymentStatus()))
                 .map(Payment::getAmount)
@@ -775,6 +1068,9 @@ public class OrderService {
         if (normalized.compareTo(ZERO) < 0) {
             throw new IllegalArgumentException(label + " không được âm.");
         }
+        if (normalized.compareTo(MAX_FEE_AMOUNT) > 0) {
+            throw new IllegalArgumentException(label + " không được vượt quá 200.000.000 VNĐ.");
+        }
         validateWholeNumberAmount(normalized, label);
         return normalized;
     }
@@ -785,6 +1081,25 @@ public class OrderService {
         }
     }
 
+    /**
+     * [GHI NHẬN KHÁCH HÀNG BÙNG CỌC VÀ TỊCH THU TIỀN CỌC (CUSTOMER NO-SHOW)]
+     *
+     * Mục đích:
+     * - Khi đơn hàng ở trạng thái DEPOSITED nhưng khách hàng từ chối nhận cây khi giao đến.
+     * - Ghi nhận giữ lại toàn bộ số tiền cọc (Forfeited Deposit Income) vào Sổ cái tài chính FinancialLedger.
+     * - Cập nhật Order sang CANCELLED.
+     * - Giải phóng cây về AVAILABLE để mở bán lại trên sàn.
+     *
+     * Được gọi từ:
+     * - OrderApiController.markCustomerNoShow()
+     * - OrderActionService.handleCustomerNoShow()
+     *
+     * Tác động DB:
+     * - FINANCIAL_LEDGER: ghi nhận khoản thu tịch thu cọc
+     * - ORDER: orderStatus: DEPOSITED → CANCELLED, notes
+     * - PRODUCT: productStatus: RESERVED → AVAILABLE
+     * - ORDER_LOG: log "FORFEITED_DEPOSIT_INCOME_RECORDED"
+     */
     @Transactional
     public boolean markDepositedOrderCustomerNoShow(String orderCode, String notes, User moderator) {
         Order order = orderRepository.findByOrderCode(orderCode).orElse(null);
@@ -793,7 +1108,8 @@ public class OrderService {
         }
         validateAssignedModerator(order, moderator);
         if (!"DEPOSITED".equalsIgnoreCase(order.getOrderStatus())) {
-            throw new IllegalStateException("Chỉ có thể ghi nhận khách không nhận hàng sau khi khách đã thanh toán tiền đặt cọc.");
+            throw new IllegalStateException(
+                    "Chỉ có thể ghi nhận khách không nhận hàng sau khi khách đã thanh toán tiền đặt cọc.");
         }
 
         String oldStatus = order.getOrderStatus();
@@ -820,11 +1136,28 @@ public class OrderService {
         return true;
     }
 
+    /**
+     * [GHI NHẬN HOÀN TIỀN DO LỖI NHÀ VƯỜN / VẬN CHUYỂN VÀ HỦY ĐƠN]
+     *
+     * Mục đích:
+     * - Xử lý trường hợp cây bị gãy, hư hỏng trong quá trình vận chuyển hoặc do lỗi nhà vườn sau khi khách đã cọc hoặc thanh toán.
+     * - Ghi nhận bút toán hoàn tiền 100% thủ công vào Sổ cái tài chính (FinancialLedger).
+     * - Đổi Order sang CANCELLED và giải phóng cây về AVAILABLE.
+     *
+     * Được gọi từ:
+     * - OrderActionService.handleFaultRefund()
+     */
     @Transactional
     public boolean recordFaultRefundAndCancel(String orderCode, String faultPartyValue, BigDecimal refundAmount,
-                                              String reason, String evidenceNote, String externalReference,
-                                              Boolean customerKeepsTree, String productResolution,
-                                              User moderator) {
+            String reason, String evidenceNote, String externalReference,
+            Boolean customerKeepsTree, String productResolution,
+            User moderator) {
+        if (evidenceNote != null && evidenceNote.trim().length() > 1000) {
+            throw new IllegalArgumentException("Minh chứng không được vượt quá 1000 ký tự.");
+        }
+        if (externalReference != null && externalReference.trim().length() > 255) {
+            throw new IllegalArgumentException("Mã tham chiếu không được vượt quá 255 ký tự.");
+        }
         Order order = orderRepository.findByOrderCode(orderCode).orElse(null);
         if (order == null) {
             throw new IllegalArgumentException("Không tìm thấy đơn hàng: " + orderCode);
@@ -844,10 +1177,12 @@ public class OrderService {
             throw new IllegalArgumentException("Bên chịu trách nhiệm phải là nhà vườn hoặc quá trình vận chuyển.");
         }
 
-        // Tự động xác định số tiền hoàn 100% dựa trên tổng số tiền thực tế khách đã thanh toán
+        // Tự động xác định số tiền hoàn 100% dựa trên tổng số tiền thực tế khách đã
+        // thanh toán
         BigDecimal refundableCash = financialLedgerService.calculateRefundableCash(order);
         if (refundableCash == null || refundableCash.compareTo(ZERO) <= 0) {
-            throw new IllegalStateException("Đơn hàng này không có khoản thanh toán thành công nào còn có thể hoàn tiền.");
+            throw new IllegalStateException(
+                    "Đơn hàng này không có khoản thanh toán thành công nào còn có thể hoàn tiền.");
         }
 
         BigDecimal calculatedRefundAmount = refundableCash;
@@ -860,12 +1195,13 @@ public class OrderService {
                 normalizedReason,
                 evidenceNote,
                 externalReference,
-                moderator
-        );
+                moderator);
 
-        appendOrderNote(order, normalizedReason + " Hoàn tiền 100% chỉ được ghi nhận thủ công, không tự động chuyển khoản.");
+        appendOrderNote(order,
+                normalizedReason + " Hoàn tiền 100% chỉ được ghi nhận thủ công, không tự động chuyển khoản.");
 
-        // Nghiệp vụ cố định: Đơn chuyển CANCELLED, khách không giữ cây, toàn bộ cây trong đơn trả về AVAILABLE
+        // Nghiệp vụ cố định: Đơn chuyển CANCELLED, khách không giữ cây, toàn bộ cây
+        // trong đơn trả về AVAILABLE
         order.setOrderStatus("CANCELLED");
         orderRepository.save(order);
         releaseProducts(order);
@@ -884,6 +1220,24 @@ public class OrderService {
         return true;
     }
 
+    /**
+     * [HOÀN TẤT ĐƠN HÀNG ĐÃ THANH TOÁN 100% VNPAY (COMPLETE PAID ORDER)]
+     *
+     * Mục đích:
+     * - Dành cho đơn hàng đã thanh toán 100% qua VNPay (orderStatus = "PAID").
+     * - Moderator xác nhận sau khi cây đã được giao thành công tới tay khách.
+     * - Cập nhật Order sang COMPLETED, chuyển Product sang SOLD, ghi nhận doanh thu vào Sổ cái.
+     *
+     * Được gọi từ:
+     * - OrderApiController.completePaidOrder()
+     * - OrderActionService.handleComplete() (khi đơn là PAID)
+     *
+     * Tác động DB:
+     * - ORDER: orderStatus: PAID → COMPLETED, completedAt = now
+     * - PRODUCT: productStatus: RESERVED → SOLD
+     * - FINANCIAL_LEDGER: ghi nhận doanh thu hoàn tất
+     * - ORDER_LOG: log "ORDER_COMPLETED"
+     */
     @Transactional
     public boolean completePaidOrder(String orderCode, User moderator) {
         Order order = orderRepository.findByOrderCode(orderCode).orElse(null);
@@ -934,7 +1288,11 @@ public class OrderService {
         if (reason == null || reason.isBlank()) {
             throw new IllegalArgumentException("Lý do là bắt buộc.");
         }
-        return reason.trim();
+        String trimmed = reason.trim();
+        if (trimmed.length() > 500) {
+            throw new IllegalArgumentException("Lý do không được vượt quá 500 ký tự.");
+        }
+        return trimmed;
     }
 
     private FaultParty parseFaultParty(String faultPartyValue) {
@@ -995,6 +1353,9 @@ public class OrderService {
         orderLogRepository.save(ledgerLog);
     }
 
+    /**
+     * [GHI NHẬN THANH TOÁN HOÀN TẤT THỦ CÔNG (DIRECT FINAL PAYMENT)]
+     */
     @Transactional
     public boolean recordFinalPayment(String orderCode, User moderator) {
         Order order = orderRepository.findByOrderCode(orderCode).orElse(null);
@@ -1061,7 +1422,8 @@ public class OrderService {
             try {
                 ModerationNotification notification = ModerationNotification.builder()
                         .targetUsername(order.getCustomer().getEmail())
-                        .message("🎉 Đơn hàng " + order.getOrderCode() + " đã được thanh toán đầy đủ / hoàn thành! Hãy đánh giá và cho sao (Review & Rating) cho cây bonsai bạn đã mua nhé!")
+                        .message("🎉 Đơn hàng " + order.getOrderCode()
+                                + " đã được thanh toán đầy đủ / hoàn thành! Hãy đánh giá và cho sao (Review & Rating) cho cây bonsai bạn đã mua nhé!")
                         .isRead(false)
                         .createdAt(LocalDateTime.now())
                         .build();
@@ -1072,5 +1434,3 @@ public class OrderService {
         }
     }
 }
-
-

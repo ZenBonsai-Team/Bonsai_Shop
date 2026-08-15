@@ -121,6 +121,12 @@ public class FinancialLedgerService {
         if (faultParty != FaultParty.NURSERY && faultParty != FaultParty.DELIVERY) {
             throw new IllegalArgumentException("Bên chịu trách nhiệm khi hoàn tiền phải là nhà vườn hoặc quá trình vận chuyển.");
         }
+        if (evidenceNote != null && evidenceNote.trim().length() > 1000) {
+            throw new IllegalArgumentException("Minh chứng không được vượt quá 1000 ký tự.");
+        }
+        if (externalReference != null && externalReference.trim().length() > 255) {
+            throw new IllegalArgumentException("Mã tham chiếu không được vượt quá 255 ký tự.");
+        }
         requireActor(actor);
 
         BigDecimal normalizedAmount = requirePositiveAmount(amount, "Số tiền hoàn");
@@ -199,6 +205,15 @@ public class FinancialLedgerService {
                 .map(Payment::getAmount)
                 .map(this::money)
                 .reduce(ZERO, BigDecimal::add);
+
+        // Fallback: nếu đơn hàng ở trạng thái PAID hoặc DEPOSITED nhưng bản ghi payment chưa kịp cập nhật hoặc do dữ liệu khởi tạo
+        if (successfulCash.compareTo(ZERO) <= 0) {
+            if ("PAID".equalsIgnoreCase(order.getOrderStatus()) && order.getTotalAmount() != null) {
+                successfulCash = money(order.getTotalAmount());
+            } else if ("DEPOSITED".equalsIgnoreCase(order.getOrderStatus()) && order.getDepositAmount() != null && order.getDepositAmount().compareTo(ZERO) > 0) {
+                successfulCash = money(order.getDepositAmount());
+            }
+        }
 
         BigDecimal refunds = sumRecordedRefunds(order);
         BigDecimal refundable = successfulCash.subtract(refunds);
@@ -280,7 +295,11 @@ public class FinancialLedgerService {
     }
 
     private boolean isSuccessfulPayment(Payment payment) {
-        return payment != null && "SUCCESS".equalsIgnoreCase(payment.getPaymentStatus());
+        if (payment == null || payment.getPaymentStatus() == null) {
+            return false;
+        }
+        String status = payment.getPaymentStatus().trim().toUpperCase();
+        return "SUCCESS".equals(status) || "PAID".equals(status) || "COMPLETED".equals(status);
     }
 
     private BigDecimal requirePositiveAmount(BigDecimal amount, String label) {
@@ -295,7 +314,11 @@ public class FinancialLedgerService {
         if (reason == null || reason.isBlank()) {
             throw new IllegalArgumentException("Vui lòng nhập lý do trước khi xác nhận.");
         }
-        return reason.trim();
+        String trimmed = reason.trim();
+        if (trimmed.length() > 500) {
+            throw new IllegalArgumentException("Lý do không được vượt quá 500 ký tự.");
+        }
+        return trimmed;
     }
 
     private void requireOrder(Order order) {
