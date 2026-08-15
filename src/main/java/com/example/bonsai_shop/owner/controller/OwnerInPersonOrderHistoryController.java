@@ -22,15 +22,19 @@ public class OwnerInPersonOrderHistoryController {
     private final InPersonOrderHistoryService inPersonOrderHistoryService;
     private final OrderDetailService orderDetailService;
 
+    // Hien thi lich su don tai vuon cua cac artisan cho Owner theo doi.
     @GetMapping
     public String history(@RequestParam(required = false) String search,
                           @RequestParam(defaultValue = "ALL") String status,
                           @RequestParam(defaultValue = "0") int page,
                           @RequestParam(required = false) Integer size,
                           Model model) {
+        // Neu request khong truyen size thi dung page size mac dinh cua service.
         int pageSize = size != null ? size : inPersonOrderHistoryService.defaultPageSize();
+        // Tim don tai vuon theo search/status va phan trang da validate o service.
         var ordersPage = inPersonOrderHistoryService.findOwnerInPersonOrders(search, status, page, pageSize);
 
+        // Dua du lieu, filter va cac status tab ve view.
         model.addAttribute("orders", ordersPage);
         model.addAttribute("search", search == null ? "" : search.trim());
         model.addAttribute("selectedStatus", status == null || status.isBlank() ? "ALL" : status.trim().toUpperCase());
@@ -43,9 +47,11 @@ public class OwnerInPersonOrderHistoryController {
         return "owner/in_person_order_history";
     }
 
+    // Xem chi tiet don tai vuon o che do chi doc danh cho Owner.
     @GetMapping("/orders/{orderCode}")
     public String orderDetail(@PathVariable String orderCode, Model model) {
         try {
+            // Validate don phai la don tai vuon cua artisan moi duoc hien thi trong luong Owner nay.
             if (!inPersonOrderHistoryService.isOwnerVisibleInPersonOrder(orderCode)) {
                 model.addAttribute("errorMessage", "Không tìm thấy đơn tại vườn thuộc tài khoản artisan: " + orderCode);
                 model.addAttribute("orderCode", orderCode);
@@ -53,6 +59,7 @@ public class OwnerInPersonOrderHistoryController {
             }
 
             OrderDetailDTO detail = orderDetailService.getOrderDetailByCode(orderCode, null);
+            // Tat tat ca action de Owner chi xem lich su, khong thao tac xu ly don.
             makeReadOnly(detail);
             model.addAttribute("order", detail);
             model.addAttribute("role", "OWNER");
@@ -73,6 +80,7 @@ public class OwnerInPersonOrderHistoryController {
         }
     }
 
+    // Tat cac co quyen hanh dong tren DTO chi tiet don de template render che do read-only.
     private void makeReadOnly(OrderDetailDTO detail) {
         detail.setCanApprove(false);
         detail.setCanReject(false);

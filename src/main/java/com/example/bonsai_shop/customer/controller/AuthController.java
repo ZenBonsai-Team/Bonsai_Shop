@@ -20,12 +20,14 @@ import java.util.Objects;
 @Controller
 @RequiredArgsConstructor
 
+// Controller xu ly cac man hinh xac thuc: login, register, verify OTP va resend OTP.
 public class AuthController {
 
     private final UserService userService;
     private final CustomUserDetailsService customUserDetailsService;
 
     // ===== TRANG LOGIN =====
+    // Hien thi trang dang nhap va chuyen loi dang nhap/logout thanh message cho view.
     @GetMapping("/login")
     public String loginPage(
             @RequestParam(required = false) String error,
@@ -33,15 +35,18 @@ public class AuthController {
             HttpServletRequest request,
             Model model) {
 
+        // Neu Spring Security redirect ve /login?error thi doc exception cuoi cung trong session.
         if (error != null) {
             Object exception = request.getSession().getAttribute("SPRING_SECURITY_LAST_EXCEPTION");
             String errorMsg = "Sai tài khoản, mật khẩu hoặc tài khoản chưa kích hoạt";
             if (exception instanceof Exception ex) {
                 String rawMsg = ex.getMessage();
                 if (rawMsg != null) {
+                    // Loi OAuth authorization_request_not_found thuong do request Google het han/khong hop le.
                     if (rawMsg.contains("authorization_request_not_found")) {
                         errorMsg = "Yêu cầu đăng nhập đã hết hạn hoặc không hợp lệ. Vui lòng thử lại.";
                     } else {
+                        // Lam sach message loi cua Spring Security truoc khi hien thi.
                         errorMsg = rawMsg.replace("[", "").replace("]", "");
                     }
                 }
@@ -49,6 +54,7 @@ public class AuthController {
             model.addAttribute("errorMsg", errorMsg);
         }
 
+        // Neu logout thanh cong thi hien thi thong bao tren trang login.
         if (logout != null) {
             model.addAttribute("success", "Đăng xuất thành công!");
         }
@@ -57,11 +63,13 @@ public class AuthController {
     }
 
     // ===== TRANG REGISTER =====
+    // Hien thi form dang ky tai khoan customer.
     @GetMapping("/register")
     public String registerPage() {
         return "customer/register";
     }
 
+    // Xu ly dang ky customer bang email/password va gui OTP xac thuc email.
     @PostMapping("/register")
     public String register(@RequestParam String fullName,
                            @RequestParam String username,
@@ -73,27 +81,33 @@ public class AuthController {
             // Validate dữ liệu trước khi gọi service
             StringBuilder errors = new StringBuilder();
             
+            // Validate ho ten bat buoc.
             if (fullName == null || fullName.trim().isEmpty()) {
                 errors.append("Họ tên không được để trống. ");
             }
+            // Validate username bat buoc.
             if (username == null || username.trim().isEmpty()) {
                 errors.append("Tên người dùng không được để trống. ");
             }
+            // Validate email bat buoc va dung format co ban.
             if (email == null || email.trim().isEmpty()) {
                 errors.append("Email không được để trống. ");
             } else if (!email.matches("^[A-Za-z0-9+_.-]+@(.+)$")) {
                 errors.append("Email không hợp lệ. ");
             }
+            // Validate password bat buoc va toi thieu 6 ky tu.
             if (password == null || password.isEmpty()) {
                 errors.append("Mật khẩu không được để trống. ");
             } else if (password.length() < 6) {
                 errors.append("Mật khẩu phải có ít nhất 6 ký tự. ");
             }
+            // Validate so dien thoai bat buoc va gom 10-11 chu so.
             if (phone == null || phone.trim().isEmpty()) {
                 errors.append("Số điện thoại không được để trống. ");
             } else if (!phone.matches("^\\d{10,11}$")) {
                 errors.append("Số điện thoại không hợp lệ. ");
             }
+            // Neu co loi validate thi tra ve form va giu lai cac truong da nhap.
             if (!errors.isEmpty()) {
                 model.addAttribute("error", errors.toString());
                 model.addAttribute("formData", new java.util.HashMap<String, String>() {{
@@ -105,6 +119,7 @@ public class AuthController {
                 return "customer/register";
             }
             
+            // Tao user PENDING va gui ma OTP qua email.
             userService.register(fullName, username, email, password, phone);
             model.addAttribute("email", email);
             model.addAttribute("success", "Mã OTP đã được gửi đến " + email);
@@ -113,6 +128,7 @@ public class AuthController {
             String errorMsg = e.getMessage();
             
             // Giữ lại dữ liệu đã nhập đúng
+            // Loi service nhu trung email/username se duoc hien thi lai tren form dang ky.
             model.addAttribute("error", errorMsg);
             model.addAttribute("formData", new java.util.HashMap<String, String>() {{
                 put("fullName", fullName);
@@ -124,6 +140,7 @@ public class AuthController {
         }
     }
 
+    // Xac thuc OTP dang ky, kich hoat user va tu dong dang nhap vao session hien tai.
     @PostMapping("/verify-otp")
     public String verifyOtp(@RequestParam String email,
                             @RequestParam String otpCode,
@@ -131,8 +148,10 @@ public class AuthController {
                             Model model,
                             RedirectAttributes redirectAttributes) {
         try {
+            // Validate OTP dung, chua dung va chua het han.
             userService.verifyOtp(email, otpCode);
             userService.activateUser(email); // ← kích hoạt tài khoản
+            // Load lai UserDetails de lay role/action moi nhat sau khi kich hoat.
             UserDetails userDetails = customUserDetailsService.loadUserByUsername(email);
             // Tạo Authentication token
             UsernamePasswordAuthenticationToken authToken =
@@ -143,9 +162,11 @@ public class AuthController {
                     );
 
             // Gán vào SecurityContext
+            // Gan Authentication vao SecurityContext de coi nhu user vua dang nhap thanh cong.
             SecurityContextHolder.getContext().setAuthentication(authToken);
 
             // Lưu SecurityContext vào session để Spring Security nhớ
+            // Luu SecurityContext vao HttpSession de request sau van giu trang thai dang nhap.
             HttpSessionSecurityContextRepository securityContextRepository =
                     new HttpSessionSecurityContextRepository();
             securityContextRepository.saveContext(
@@ -160,15 +181,18 @@ public class AuthController {
 
             return "redirect:/home"; // nhảy thẳng về trang chủ
         } catch (RuntimeException e) {
+            // OTP sai/het han/da dung thi quay lai form verify va giu email.
             model.addAttribute("email", email);
             model.addAttribute("error", e.getMessage());
             return "customer/verify-otp";
         }
     }
 
+    // Gui lai OTP dang ky cho email dang cho xac thuc.
     @PostMapping("/resend-otp")
     public String resendOtp(@RequestParam String email, Model model) {
         try {
+            // Xoa OTP cu, tao OTP moi va gui email.
             userService.sendOtp(email);
             model.addAttribute("email", email);
             model.addAttribute("success", "Mã OTP mới đã được gửi đến " + email);

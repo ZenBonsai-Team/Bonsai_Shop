@@ -23,12 +23,14 @@ public class OwnerSystemConfigController {
     private final SystemConfigService systemConfigService;
     private final CloudinaryStorageService cloudinaryStorageService;
 
+    // Mo man hinh cau hinh he thong cho Owner.
     @GetMapping
     public String showConfig(Model model) {
         model.addAttribute("activeMenu", "system-config");
         return "owner/system_config";
     }
 
+    // Luu cac cau hinh text va upload anh banner neu co file moi.
     @PostMapping
     public String saveConfig(
             @RequestParam Map<String, String> params,
@@ -39,14 +41,17 @@ public class OwnerSystemConfigController {
             Model model) {
 
         try {
+            // Duyet tat ca input text, bo qua file field va csrf token.
             for (Map.Entry<String, String> entry : params.entrySet()) {
                 String key = entry.getKey();
                 if (key.endsWith("_file") || key.equals("_csrf")) {
                     continue;
                 }
+                // Cap nhat tung cau hinh theo key tren form.
                 systemConfigService.updateConfig(key, entry.getValue());
             }
 
+            // Upload tung banner neu Owner chon file moi, sau do luu URL vao system config.
             uploadAndSaveImage(homeFile, "home_banner_image");
             uploadAndSaveImage(marketFile, "marketplace_banner_image");
             uploadAndSaveImage(communityFile, "community_banner_image");
@@ -62,6 +67,7 @@ public class OwnerSystemConfigController {
         return "owner/system_config";
     }
 
+    // Upload anh len Cloudinary va luu URL vao cau hinh tuong ung.
     private void uploadAndSaveImage(MultipartFile file, String configKey) {
         if (file != null && !file.isEmpty()) {
             var uploadResponse = cloudinaryStorageService.uploadImage(file, CloudinaryFolder.BANNER);
