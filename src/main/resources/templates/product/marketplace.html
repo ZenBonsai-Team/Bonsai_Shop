@@ -39,10 +39,6 @@
         <p class="hero-subtitle-desc" th:text="${sysConfig.getValue('marketplace_banner_subtitle', 'Nơi lưu giữ hồn xưa đất Việt qua từng thế cây, dáng đá. Mỗi tác phẩm đều đi kèm hồ sơ nghệ nhân, phả hệ minh bạch và chứng nhận thẩm định từ nhà vườn.')}">
             Nơi lưu giữ hồn xưa đất Việt qua từng thế cây, dáng đá. Mỗi tác phẩm đều đi kèm hồ sơ nghệ nhân, phả hệ minh bạch và chứng nhận thẩm định từ nhà vườn.
         </p>
-        <div class="d-flex justify-content-center align-items-center">
-            <a href="#marketplace-anchor" class="btn btn-hero-solid text-decoration-none" th:text="#{hero.explore}">Khám phá bộ sưu tập</a>
-            <a href="#" class="btn btn-hero-outline text-decoration-none" th:text="#{hero.category}">Xem theo phân loại</a>
-        </div>
     </div>
     <!-- TODO:
     Temporary hardcoded hero image.
@@ -131,10 +127,6 @@
                             <label class="filter-pill-btn">
                                 <input type="radio" name="segment" value="Mid" th:checked="${segment == 'Mid'}" class="visually-hidden">
                                 <span>Tầm trung</span>
-                            </label>
-                            <label class="filter-pill-btn">
-                                <input type="radio" name="segment" value="Elite" th:checked="${segment == 'Elite'}" class="visually-hidden">
-                                <span>Cao cấp</span>
                             </label>
                         </div>
                     </div>
