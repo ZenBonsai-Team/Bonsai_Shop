@@ -23,12 +23,14 @@ import java.util.List;
 @Controller
 @RequestMapping("/artisan/in-person-order")
 @RequiredArgsConstructor
+// Controller xử lý đơn bán trực tiếp tại vườn của artisan.
 public class ArtisanInPersonOrderController {
 
     private final ArtisanInPersonOrderService inPersonOrderService;
     private final OrderExpirationService orderExpirationService;
 
     @GetMapping({"", "/"})
+    // Hiển thị danh sách đơn tại vườn và sản phẩm còn có thể bán.
     public String index(@AuthenticationPrincipal UserDetails userDetails,
                         @RequestParam(defaultValue = "ALL") String status,
                         @RequestParam(defaultValue = "0") int page,
@@ -51,6 +53,7 @@ public class ArtisanInPersonOrderController {
     }
 
     @PostMapping
+    // Tạo đơn tại vườn từ dữ liệu khách hàng và phí phát sinh.
     public String create(@AuthenticationPrincipal UserDetails userDetails,
                          @RequestParam Integer productId,
                          @RequestParam String customerName,
@@ -87,6 +90,7 @@ public class ArtisanInPersonOrderController {
     }
 
     @PostMapping("/{orderId}/confirm-payment")
+    // Xác nhận thanh toán và hoàn tất đơn tại vườn.
     public String confirmPayment(@AuthenticationPrincipal UserDetails userDetails,
                                  @PathVariable Integer orderId,
                                  RedirectAttributes redirectAttributes) {
@@ -100,6 +104,7 @@ public class ArtisanInPersonOrderController {
     }
 
     @PostMapping("/{orderId}/cancel")
+    // Hủy đơn tại vườn kèm lý do từ artisan.
     public String cancel(@AuthenticationPrincipal UserDetails userDetails,
                          @PathVariable Integer orderId,
                          @RequestParam(required = false) String reason,
@@ -114,6 +119,7 @@ public class ArtisanInPersonOrderController {
     }
 
     @PostMapping("/{orderId}/update")
+    // Cập nhật thông tin khách hàng, phí và phương thức thanh toán của đơn.
     public String update(@AuthenticationPrincipal UserDetails userDetails,
                          @PathVariable Integer orderId,
                          @RequestParam String customerName,
@@ -148,6 +154,7 @@ public class ArtisanInPersonOrderController {
         return "redirect:/artisan/in-person-order#walkInOrdersSection";
     }
 
+    // Giữ lại dữ liệu form tạo đơn khi redirect sau lỗi validation.
     private void keepCreateForm(RedirectAttributes redirectAttributes,
                                 Integer productId,
                                 String customerName,
@@ -169,6 +176,7 @@ public class ArtisanInPersonOrderController {
         redirectAttributes.addFlashAttribute("createNotes", notes);
     }
 
+    // Giữ lại dữ liệu form sửa đơn khi redirect sau lỗi validation.
     private void keepEditForm(RedirectAttributes redirectAttributes,
                               Integer orderId,
                               String customerName,
@@ -190,6 +198,7 @@ public class ArtisanInPersonOrderController {
         redirectAttributes.addFlashAttribute("editNotes", notes);
     }
 
+    // Suy ra field lỗi để giao diện focus đúng input.
     private String resolveOrderFormErrorField(String message) {
         if (message == null) {
             return null;
