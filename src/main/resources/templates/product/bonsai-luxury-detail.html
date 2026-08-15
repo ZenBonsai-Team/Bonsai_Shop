@@ -334,22 +334,6 @@
                         </p>
                     </div>
                 </div>
-                <div class="artisan-profile-right">
-                    <button class="btn-view-profile-outline schedule-btn"
-                            type="button"
-                            sec:authorize="isAuthenticated() and !hasAnyRole('OWNER', 'ARTISAN', 'MODERATOR', 'CONTENT_MODERATOR')"
-                            data-available="true">
-                        Đặt lịch thăm quan vườn
-                    </button>
-                    <a class="btn-view-profile-outline"
-                       sec:authorize="!isAuthenticated()"
-                       th:href="@{/login}">Đăng nhập để đặt lịch
-                    </a>
-                    <span class="btn-view-profile-outline is-disabled"
-                          sec:authorize="hasAnyRole('OWNER', 'ARTISAN', 'MODERATOR', 'CONTENT_MODERATOR')">
-                            Chỉ xem hồ sơ
-                    </span>
-                </div>
             </div>
         </div>
     </section>
