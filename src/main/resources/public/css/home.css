@@ -38,7 +38,7 @@ a {
 .nav-links {
     display: flex;
     gap: 38px;
-    font-size: 13px;
+    font-size: 0.95rem;
 }
 
 .nav-links a,
@@ -57,7 +57,7 @@ a {
     display: flex;
     align-items: center;
     gap: 18px;
-    font-size: 13px;
+    font-size: 0.95rem;
 }
 
 /* USER + CART */

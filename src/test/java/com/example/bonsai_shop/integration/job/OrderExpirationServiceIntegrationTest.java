@@ -115,16 +115,16 @@ public class OrderExpirationServiceIntegrationTest extends AbstractDatabaseSafeI
         assertNotNull(updatedHandling.getReleasedAt());
     }
 
-    @DisplayName("TC-IT-JOB-02: Exceeds 48h Offline Order Expiration & Inventory Release")
+    @DisplayName("TC-IT-JOB-02: In-person order expiration uses configured timeout")
     @Test
-    void testCancelExpiredOfflineOrders() {
+    void testCancelExpiredInPersonOrders() {
         Product product = createTestProduct("TREE-JOB-02", "Cây Offline Quá Hạn", new BigDecimal("2000000"));
 
         Order order = new Order();
         order.setOrderCode("ORD-JOB-02");
         order.setOrderStatus("PENDING_PAYMENT");
         order.setOrderType("IN_PERSON");
-        order.setOrderDate(LocalDateTime.now().minusHours(50)); // Exceeds 48 hours
+        order.setOrderDate(LocalDateTime.now().minusDays(2)); // Exceeds configured in-person timeout
         Order savedOrder = orderRepository.save(order);
 
         OrderDetail detail = OrderDetail.builder()
@@ -136,13 +136,14 @@ public class OrderExpirationServiceIntegrationTest extends AbstractDatabaseSafeI
         orderDetailRepository.save(detail);
         savedOrder.setOrderDetails(List.of(detail));
 
-        orderExpirationService.cancelExpiredOrders();
+        orderExpirationService.cancelExpiredInPersonOrders();
 
         Order updatedOrder = orderRepository.findByOrderCode("ORD-JOB-02").orElseThrow();
         assertEquals("CANCELLED", updatedOrder.getOrderStatus());
 
         Product updatedProduct = productRepository.findById(product.getProductId()).orElseThrow();
         assertEquals("AVAILABLE", updatedProduct.getProductStatus());
+        assertTrue(updatedOrder.getNotes().contains("In-person order"));
     }
 
     @DisplayName("TC-IT-JOB-03: Under Threshold / No Eligible Orders - Job completes silently")

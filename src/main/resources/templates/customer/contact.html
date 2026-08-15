@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="vi">
 <head>
     <meta charset="UTF-8">
@@ -405,22 +405,22 @@
                         <!-- Contact Form -->
                         <div class="col-md-7">
                             <h5 class="fw-bold mb-3 text-dark" th:text="#{contact.form.heading}">Gửi tin nhắn phản hồi</h5>
-                            <form action="#" method="post" onsubmit="event.preventDefault(); BSMSToast.success('Cảm ơn bạn đã phản hồi! Chúng tôi sẽ liên hệ lại sớm nhất.'); this.reset();">
+                            <form id="contactForm" action="#" method="post" onsubmit="validateContactForm(event)" novalidate>
                                 <div class="mb-3">
                                     <label for="contactName" class="form-label small fw-bold text-secondary" th:text="#{contact.form.name}">Họ và tên</label>
-                                    <input type="text" class="form-control form-control-info" id="contactName" th:placeholder="#{contact.form.name_placeholder}" required>
+                                    <input type="text" class="form-control form-control-info" id="contactName" th:placeholder="#{contact.form.name_placeholder}" maxlength="50" required>
                                 </div>
                                 <div class="mb-3">
                                     <label for="contactEmail" class="form-label small fw-bold text-secondary" th:text="#{contact.form.email}">Địa chỉ Email</label>
-                                    <input type="email" class="form-control form-control-info" id="contactEmail" placeholder="name@example.com" required>
+                                    <input type="email" class="form-control form-control-info" id="contactEmail" placeholder="name@example.com" maxlength="100" required>
                                 </div>
                                 <div class="mb-3">
                                     <label for="contactSubject" class="form-label small fw-bold text-secondary" th:text="#{contact.form.subject}">Tiêu đề</label>
-                                    <input type="text" class="form-control form-control-info" id="contactSubject" th:placeholder="#{contact.form.subject_placeholder}" required>
+                                    <input type="text" class="form-control form-control-info" id="contactSubject" th:placeholder="#{contact.form.subject_placeholder}" maxlength="150" required>
                                 </div>
                                 <div class="mb-3">
                                     <label for="contactMessage" class="form-label small fw-bold text-secondary" th:text="#{contact.form.message}">Nội dung liên hệ</label>
-                                    <textarea class="form-control form-control-info" id="contactMessage" rows="5" th:placeholder="#{contact.form.message_placeholder}" required></textarea>
+                                    <textarea class="form-control form-control-info" id="contactMessage" rows="5" th:placeholder="#{contact.form.message_placeholder}" maxlength="500" required></textarea>
                                 </div>
                                 <button type="submit" class="btn btn-success rounded-pill px-4 py-2 fw-semibold w-100" style="font-size: 0.88rem; background-color: var(--accent-color); border: none;">
                                     <span th:text="#{contact.form.submit}">Gửi liên hệ</span> <i class="fa-solid fa-paper-plane ms-1"></i>
@@ -605,11 +605,90 @@
 <!-- Bootstrap Bundle JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
-<script th:inline="javascript">
+<script>
+    function validateContactForm(event) {
+        event.preventDefault();
+        
+        const nameEl = document.getElementById('contactName');
+        const emailEl = document.getElementById('contactEmail');
+        const subjectEl = document.getElementById('contactSubject');
+        const messageEl = document.getElementById('contactMessage');
+        
+        // Reset validation classes
+        nameEl.classList.remove('is-invalid');
+        emailEl.classList.remove('is-invalid');
+        subjectEl.classList.remove('is-invalid');
+        messageEl.classList.remove('is-invalid');
+        
+        const name = nameEl.value.trim();
+        const email = emailEl.value.trim();
+        const subject = subjectEl.value.trim();
+        const message = messageEl.value.trim();
+        
+        let isValid = true;
+        let errorMessages = [];
+        
+        function markInvalid(element, errorMsg) {
+            element.classList.add('is-invalid');
+            element.value = ''; // clear only the failed input
+            errorMessages.push(errorMsg);
+            isValid = false;
+        }
+        
+        // 1. Validate Name
+        if (name.length < 2 || name.length > 50) {
+            markInvalid(nameEl, 'Họ và tên phải từ 2 đến 50 ký tự.');
+        } else if (/\d/.test(name) || /[#$@<>!%^*()_+={}|~`"]/.test(name) || name.includes('[') || name.includes(']') || name.includes('/') || name.includes('\\')) {
+            markInvalid(nameEl, 'Họ và tên không được chứa số hoặc ký tự đặc biệt.');
+        }
+        
+        // 2. Validate Email
+        const emailParts = email.split('@');
+        if (email.length > 100) {
+            markInvalid(emailEl, 'Địa chỉ email không được vượt quá 100 ký tự.');
+        } else if (emailParts.length !== 2 || emailParts[0].length === 0 || emailParts[1].indexOf('.') <= 0) {
+            markInvalid(emailEl, 'Địa chỉ email không đúng định dạng (ví dụ: name@example.com).');
+        }
+        
+        // 3. Validate Subject
+        if (subject.length < 5 || subject.length > 150) {
+            markInvalid(subjectEl, 'Tiêu đề liên hệ phải từ 5 đến 150 ký tự.');
+        }
+        
+        // 4. Validate Message
+        if (message.length < 15 || message.length > 500) {
+            markInvalid(messageEl, 'Nội dung liên hệ phải từ 15 đến 500 ký tự.');
+        }
+        
+        // If not valid, show errors and focus first invalid element
+        if (!isValid) {
+            if (window.BSMSToast) {
+                errorMessages.forEach(msg => BSMSToast.error(msg));
+            } else {
+                alert(errorMessages.join('\n'));
+            }
+            
+            const firstInvalid = document.querySelector('.is-invalid');
+            if (firstInvalid) {
+                firstInvalid.focus();
+            }
+            return false;
+        }
+        
+        // Success submission mock
+        if (window.BSMSToast) {
+            BSMSToast.success('Cảm ơn bạn đã phản hồi! Chúng tôi sẽ liên hệ lại sớm nhất.');
+        } else {
+            alert('Cảm ơn bạn đã phản hồi! Chúng tôi sẽ liên hệ lại sớm nhất.');
+        }
+        
+        document.getElementById('contactForm').reset();
+        return true;
+    }
+
     document.addEventListener("DOMContentLoaded", function() {
-        // Read activeTab passed from Thymeleaf controller
-        /*[[${activeTab}]]*/
-        let activeTab = /*[[${activeTab}]]*/ 'contact';
+        const urlParams = new URLSearchParams(window.location.search);
+        let activeTab = urlParams.get('tab') || 'contact';
         
         // Normalize values
         if (!activeTab || activeTab.trim() === '') {

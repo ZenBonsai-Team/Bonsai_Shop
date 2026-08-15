@@ -29,6 +29,19 @@
 
 html {
     scroll-behavior: smooth;
+    font-size: 16px;
+}
+
+@media (min-width: 1400px) {
+    html {
+        font-size: 17px;
+    }
+}
+
+@media (min-width: 1920px) {
+    html {
+        font-size: 18px;
+    }
 }
 
 body.luxury-shell {
@@ -545,15 +558,23 @@ section {
     margin-right: auto;
 }
 
-.hero-fullbleed-content .luxury-hero-title,
-.hero-fullbleed-content .luxury-hero-desc {
+.hero-fullbleed-content .luxury-hero-title {
     color: var(--lux-cream);
+    font-size: 3.8rem;
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: -0.5px;
+    margin-bottom: 24px;
 }
 
 .hero-fullbleed-content .luxury-hero-desc {
     margin-left: auto;
     margin-right: auto;
-    color: rgba(255, 250, 241, 0.86);
+    color: rgba(255, 250, 241, 0.9);
+    font-size: 1.05rem;
+    line-height: 1.8;
+    max-width: 900px;
+    letter-spacing: 0.1px;
 }
 
 .hero-luxury-fullbleed .hero-marketplace-actions {

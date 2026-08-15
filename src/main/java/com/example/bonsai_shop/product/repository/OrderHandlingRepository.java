@@ -23,6 +23,7 @@ public interface OrderHandlingRepository extends JpaRepository<OrderHandling, In
             JOIN m.role r
             WHERE UPPER(r.roleName) IN ('MODERATOR', 'ROLE_MODERATOR')
               AND UPPER(o.orderStatus) IN ('COMPLETED', 'CANCELLED')
+              AND (:status IS NULL OR :status = '' OR :status = 'ALL' OR UPPER(o.orderStatus) = :status)
               AND h.orderHandlingId = (
                   SELECT MAX(h2.orderHandlingId)
                   FROM OrderHandling h2
@@ -46,6 +47,7 @@ public interface OrderHandlingRepository extends JpaRepository<OrderHandling, In
             JOIN m.role r
             WHERE UPPER(r.roleName) IN ('MODERATOR', 'ROLE_MODERATOR')
               AND UPPER(o.orderStatus) IN ('COMPLETED', 'CANCELLED')
+              AND (:status IS NULL OR :status = '' OR :status = 'ALL' OR UPPER(o.orderStatus) = :status)
               AND h.orderHandlingId = (
                   SELECT MAX(h2.orderHandlingId)
                   FROM OrderHandling h2
@@ -60,5 +62,7 @@ public interface OrderHandlingRepository extends JpaRepository<OrderHandling, In
                    OR LOWER(m.fullName) LIKE LOWER(CONCAT('%', :search, '%'))
                    OR LOWER(m.email) LIKE LOWER(CONCAT('%', :search, '%')))
             """)
-    Page<OrderHandling> findModeratorHandlingHistory(@Param("search") String search, Pageable pageable);
+    Page<OrderHandling> findModeratorHandlingHistory(@Param("search") String search,
+                                                     @Param("status") String status,
+                                                     Pageable pageable);
 }

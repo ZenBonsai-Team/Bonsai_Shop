@@ -52,9 +52,10 @@ public class PremiumBonsaiController {
             Model model) {
         ProductCardDTO product =
                 productService.getPremiumProductsById(productId);
-        if (product != null) {
-            productService.incrementViewCountForCustomer(productId, authentication);
+        if (product == null) {
+            return "redirect:/bonsai-luxury";
         }
+        productService.incrementViewCountForCustomer(productId, authentication);
         List<ProductMediaDTO> mediaList = productService.getPremiumProductMedia(productId);
         model.addAttribute("product", product);
         model.addAttribute("slotTypeLabels", SLOT_TYPE_LABELS);

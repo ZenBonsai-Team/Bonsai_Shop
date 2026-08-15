@@ -15,13 +15,24 @@ public class OrderExpirationScheduler {
     @Autowired
     private OrderExpirationService orderExpirationService;
 
-    // Chạy tự động kiểm tra định kỳ mỗi 1 phút (60,000 milliseconds)
     @Scheduled(fixedRate = 60000)
     public void scheduleOrderCleanup() {
         try {
             orderExpirationService.cancelExpiredOrders();
         } catch (Exception e) {
-            log.error("Lỗi khi chạy tác vụ tự động hủy đơn hàng quá hạn: ", e);
+            log.error("Failed to auto-cancel expired orders.", e);
+        }
+    }
+
+    @Scheduled(
+            fixedDelayString = "${order.expiration.in-person-scan-ms:10000}",
+            initialDelayString = "${order.expiration.in-person-scan-initial-delay-ms:10000}"
+    )
+    public void scheduleInPersonOrderCleanup() {
+        try {
+            orderExpirationService.cancelExpiredInPersonOrders();
+        } catch (Exception e) {
+            log.error("Failed to auto-cancel expired in-person orders.", e);
         }
     }
 }

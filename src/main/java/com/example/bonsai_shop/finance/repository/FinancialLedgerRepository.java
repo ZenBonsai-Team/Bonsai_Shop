@@ -86,6 +86,7 @@ public interface FinancialLedgerRepository extends JpaRepository<FinancialLedger
             SELECT COALESCE(SUM(od.priceAtPurchase * od.quantity), 0)
             FROM OrderDetail od
             WHERE od.product.createdBy.userId = :artisanUserId
+              AND od.order.orderStatus = 'COMPLETED'
               AND EXISTS (
                   SELECT 1
                   FROM FinancialLedger fl
@@ -101,6 +102,25 @@ public interface FinancialLedgerRepository extends JpaRepository<FinancialLedger
                                                    @Param("ledgerStatus") FinancialLedgerStatus ledgerStatus,
                                                    @Param("startDate") LocalDateTime startDate,
                                                    @Param("endDate") LocalDateTime endDate);
+
+    @Query("""
+            SELECT COALESCE(SUM(od.priceAtPurchase * od.quantity), 0)
+            FROM OrderDetail od
+            WHERE od.order.orderStatus = 'COMPLETED'
+              AND EXISTS (
+                  SELECT 1
+                  FROM FinancialLedger fl
+                  WHERE fl.order = od.order
+                    AND fl.ledgerType = :ledgerType
+                    AND fl.ledgerStatus = :ledgerStatus
+                    AND fl.recognizedAt >= :startDate
+                    AND fl.recognizedAt < :endDate
+              )
+            """)
+    BigDecimal sumCompletedProductRevenue(@Param("ledgerType") FinancialLedgerType ledgerType,
+                                           @Param("ledgerStatus") FinancialLedgerStatus ledgerStatus,
+                                           @Param("startDate") LocalDateTime startDate,
+                                           @Param("endDate") LocalDateTime endDate);
 
     @Query("""
             SELECT COALESCE(SUM(o.shippingFee), 0)
@@ -153,6 +173,42 @@ public interface FinancialLedgerRepository extends JpaRepository<FinancialLedger
                                                   @Param("endDate") LocalDateTime endDate);
 
     @Query("""
+            SELECT COALESCE(SUM(o.shippingFee), 0)
+            FROM Order o
+            WHERE EXISTS (
+                  SELECT 1
+                  FROM FinancialLedger fl
+                  WHERE fl.order = o
+                    AND fl.ledgerType IN :ledgerTypes
+                    AND fl.ledgerStatus = :ledgerStatus
+                    AND fl.recognizedAt >= :startDate
+                    AND fl.recognizedAt < :endDate
+              )
+            """)
+    BigDecimal sumShippingFeeByLedgerTypes(@Param("ledgerTypes") List<FinancialLedgerType> ledgerTypes,
+                                           @Param("ledgerStatus") FinancialLedgerStatus ledgerStatus,
+                                           @Param("startDate") LocalDateTime startDate,
+                                           @Param("endDate") LocalDateTime endDate);
+
+    @Query("""
+            SELECT COALESCE(SUM(o.craneFee), 0)
+            FROM Order o
+            WHERE EXISTS (
+                  SELECT 1
+                  FROM FinancialLedger fl
+                  WHERE fl.order = o
+                    AND fl.ledgerType IN :ledgerTypes
+                    AND fl.ledgerStatus = :ledgerStatus
+                    AND fl.recognizedAt >= :startDate
+                    AND fl.recognizedAt < :endDate
+              )
+            """)
+    BigDecimal sumCraneFeeByLedgerTypes(@Param("ledgerTypes") List<FinancialLedgerType> ledgerTypes,
+                                        @Param("ledgerStatus") FinancialLedgerStatus ledgerStatus,
+                                        @Param("startDate") LocalDateTime startDate,
+                                        @Param("endDate") LocalDateTime endDate);
+
+    @Query("""
             SELECT COALESCE(SUM(fl.amount), 0)
             FROM FinancialLedger fl
             WHERE fl.ledgerType = :ledgerType
@@ -173,9 +229,23 @@ public interface FinancialLedgerRepository extends JpaRepository<FinancialLedger
                                         @Param("endDate") LocalDateTime endDate);
 
     @Query("""
+            SELECT COALESCE(SUM(fl.amount), 0)
+            FROM FinancialLedger fl
+            WHERE fl.ledgerType = :ledgerType
+              AND fl.ledgerStatus = :ledgerStatus
+              AND fl.recognizedAt >= :startDate
+              AND fl.recognizedAt < :endDate
+            """)
+    BigDecimal sumLedgerAmount(@Param("ledgerType") FinancialLedgerType ledgerType,
+                               @Param("ledgerStatus") FinancialLedgerStatus ledgerStatus,
+                               @Param("startDate") LocalDateTime startDate,
+                               @Param("endDate") LocalDateTime endDate);
+
+    @Query("""
             SELECT COUNT(od)
             FROM OrderDetail od
             WHERE od.product.createdBy.userId = :artisanUserId
+              AND od.order.orderStatus = 'COMPLETED'
               AND EXISTS (
                   SELECT 1
                   FROM FinancialLedger fl
@@ -210,6 +280,7 @@ public interface FinancialLedgerRepository extends JpaRepository<FinancialLedger
             FROM OrderDetail od
             JOIN FinancialLedger fl ON fl.order = od.order
             WHERE od.product.createdBy.userId = :artisanUserId
+              AND od.order.orderStatus = 'COMPLETED'
               AND fl.ledgerType = :ledgerType
               AND fl.ledgerStatus = :ledgerStatus
               AND fl.recognizedAt >= :startDate
@@ -218,6 +289,36 @@ public interface FinancialLedgerRepository extends JpaRepository<FinancialLedger
             """)
     List<ArtisanDashboardSourceDTO> findCompletedRevenueSourcesByArtisan(
             @Param("artisanUserId") Integer artisanUserId,
+            @Param("ledgerType") FinancialLedgerType ledgerType,
+            @Param("ledgerStatus") FinancialLedgerStatus ledgerStatus,
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate);
+
+    @Query("""
+            SELECT new com.example.bonsai_shop.finance.dto.ArtisanDashboardSourceDTO(
+                od.order.orderCode,
+                od.order.customerName,
+                fl.recognizedAt,
+                od.order.orderStatus,
+                od.product.productCode,
+                od.product.productName,
+                od.priceAtPurchase * od.quantity,
+                od.order.depositAmount,
+                null,
+                od.order.shippingFee,
+                od.order.craneFee,
+                od.priceAtPurchase * od.quantity
+            )
+            FROM OrderDetail od
+            JOIN FinancialLedger fl ON fl.order = od.order
+            WHERE od.order.orderStatus = 'COMPLETED'
+              AND fl.ledgerType = :ledgerType
+              AND fl.ledgerStatus = :ledgerStatus
+              AND fl.recognizedAt >= :startDate
+              AND fl.recognizedAt < :endDate
+            ORDER BY fl.recognizedAt DESC, od.order.orderId DESC, od.orderDetailId DESC
+            """)
+    List<ArtisanDashboardSourceDTO> findCompletedRevenueSources(
             @Param("ledgerType") FinancialLedgerType ledgerType,
             @Param("ledgerStatus") FinancialLedgerStatus ledgerStatus,
             @Param("startDate") LocalDateTime startDate,
@@ -273,6 +374,38 @@ public interface FinancialLedgerRepository extends JpaRepository<FinancialLedger
                     SELECT MIN(od.product.productCode)
                     FROM OrderDetail od
                     WHERE od.order = fl.order
+                ),
+                null,
+                null,
+                fl.amount,
+                null,
+                fl.order.shippingFee,
+                fl.order.craneFee,
+                fl.amount
+            )
+            FROM FinancialLedger fl
+            WHERE fl.ledgerType = :ledgerType
+              AND fl.ledgerStatus = :ledgerStatus
+              AND fl.recognizedAt >= :startDate
+              AND fl.recognizedAt < :endDate
+            ORDER BY fl.recognizedAt DESC, fl.order.orderId DESC, fl.financialLedgerId DESC
+            """)
+    List<ArtisanDashboardSourceDTO> findForfeitedDepositSources(
+            @Param("ledgerType") FinancialLedgerType ledgerType,
+            @Param("ledgerStatus") FinancialLedgerStatus ledgerStatus,
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate);
+
+    @Query("""
+            SELECT new com.example.bonsai_shop.finance.dto.ArtisanDashboardSourceDTO(
+                fl.order.orderCode,
+                fl.order.customerName,
+                fl.recognizedAt,
+                fl.order.orderStatus,
+                (
+                    SELECT MIN(od.product.productCode)
+                    FROM OrderDetail od
+                    WHERE od.order = fl.order
                       AND od.product.createdBy.userId = :artisanUserId
                 ),
                 null,
@@ -298,6 +431,38 @@ public interface FinancialLedgerRepository extends JpaRepository<FinancialLedger
             """)
     List<ArtisanDashboardSourceDTO> findRefundSourcesByArtisan(
             @Param("artisanUserId") Integer artisanUserId,
+            @Param("ledgerType") FinancialLedgerType ledgerType,
+            @Param("ledgerStatus") FinancialLedgerStatus ledgerStatus,
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate);
+
+    @Query("""
+            SELECT new com.example.bonsai_shop.finance.dto.ArtisanDashboardSourceDTO(
+                fl.order.orderCode,
+                fl.order.customerName,
+                fl.recognizedAt,
+                fl.order.orderStatus,
+                (
+                    SELECT MIN(od.product.productCode)
+                    FROM OrderDetail od
+                    WHERE od.order = fl.order
+                ),
+                null,
+                null,
+                fl.order.depositAmount,
+                fl.amount,
+                fl.order.shippingFee,
+                fl.order.craneFee,
+                fl.amount
+            )
+            FROM FinancialLedger fl
+            WHERE fl.ledgerType = :ledgerType
+              AND fl.ledgerStatus = :ledgerStatus
+              AND fl.recognizedAt >= :startDate
+              AND fl.recognizedAt < :endDate
+            ORDER BY fl.recognizedAt DESC, fl.order.orderId DESC, fl.financialLedgerId DESC
+            """)
+    List<ArtisanDashboardSourceDTO> findRefundSources(
             @Param("ledgerType") FinancialLedgerType ledgerType,
             @Param("ledgerStatus") FinancialLedgerStatus ledgerStatus,
             @Param("startDate") LocalDateTime startDate,
@@ -357,6 +522,42 @@ public interface FinancialLedgerRepository extends JpaRepository<FinancialLedger
                     SELECT MIN(od.product.productCode)
                     FROM OrderDetail od
                     WHERE od.order = o
+                ),
+                null,
+                null,
+                o.depositAmount,
+                null,
+                o.shippingFee,
+                o.craneFee,
+                o.shippingFee
+            )
+            FROM Order o
+            JOIN FinancialLedger fl ON fl.order = o
+            WHERE fl.ledgerType IN :ledgerTypes
+              AND fl.ledgerStatus = :ledgerStatus
+              AND fl.recognizedAt >= :startDate
+              AND fl.recognizedAt < :endDate
+              AND o.shippingFee IS NOT NULL
+              AND o.shippingFee > 0
+            GROUP BY o.orderId, o.orderCode, o.customerName, o.orderStatus, o.depositAmount, o.shippingFee, o.craneFee
+            ORDER BY MAX(fl.recognizedAt) DESC, o.orderId DESC
+            """)
+    List<ArtisanDashboardSourceDTO> findShippingFeeSources(
+            @Param("ledgerTypes") List<FinancialLedgerType> ledgerTypes,
+            @Param("ledgerStatus") FinancialLedgerStatus ledgerStatus,
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate);
+
+    @Query("""
+            SELECT new com.example.bonsai_shop.finance.dto.ArtisanDashboardSourceDTO(
+                o.orderCode,
+                o.customerName,
+                MAX(fl.recognizedAt),
+                o.orderStatus,
+                (
+                    SELECT MIN(od.product.productCode)
+                    FROM OrderDetail od
+                    WHERE od.order = o
                       AND od.product.createdBy.userId = :artisanUserId
                 ),
                 null,
@@ -386,6 +587,42 @@ public interface FinancialLedgerRepository extends JpaRepository<FinancialLedger
             """)
     List<ArtisanDashboardSourceDTO> findCraneFeeSourcesByArtisan(
             @Param("artisanUserId") Integer artisanUserId,
+            @Param("ledgerTypes") List<FinancialLedgerType> ledgerTypes,
+            @Param("ledgerStatus") FinancialLedgerStatus ledgerStatus,
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate);
+
+    @Query("""
+            SELECT new com.example.bonsai_shop.finance.dto.ArtisanDashboardSourceDTO(
+                o.orderCode,
+                o.customerName,
+                MAX(fl.recognizedAt),
+                o.orderStatus,
+                (
+                    SELECT MIN(od.product.productCode)
+                    FROM OrderDetail od
+                    WHERE od.order = o
+                ),
+                null,
+                null,
+                o.depositAmount,
+                null,
+                o.shippingFee,
+                o.craneFee,
+                o.craneFee
+            )
+            FROM Order o
+            JOIN FinancialLedger fl ON fl.order = o
+            WHERE fl.ledgerType IN :ledgerTypes
+              AND fl.ledgerStatus = :ledgerStatus
+              AND fl.recognizedAt >= :startDate
+              AND fl.recognizedAt < :endDate
+              AND o.craneFee IS NOT NULL
+              AND o.craneFee > 0
+            GROUP BY o.orderId, o.orderCode, o.customerName, o.orderStatus, o.depositAmount, o.shippingFee, o.craneFee
+            ORDER BY MAX(fl.recognizedAt) DESC, o.orderId DESC
+            """)
+    List<ArtisanDashboardSourceDTO> findCraneFeeSources(
             @Param("ledgerTypes") List<FinancialLedgerType> ledgerTypes,
             @Param("ledgerStatus") FinancialLedgerStatus ledgerStatus,
             @Param("startDate") LocalDateTime startDate,

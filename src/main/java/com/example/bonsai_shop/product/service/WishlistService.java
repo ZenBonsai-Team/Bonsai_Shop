@@ -74,8 +74,8 @@ public class WishlistService {
 
     private WishlistItemResponseDTO toDto(Wishlist wishlist) {
         Product product = wishlist.getProduct();
-        boolean canAddToCart = "AVAILABLE".equalsIgnoreCase(product.getProductStatus())
-                && !Boolean.FALSE.equals(product.getIsVisible())
+        boolean canAddToCart = isCustomerVisible(product)
+                && "AVAILABLE".equalsIgnoreCase(product.getProductStatus())
                 && (product.getSegment() == null
                     || product.getSegment().getSegmentId() == null
                     || !LUXURY_SEGMENT_ID.equals(product.getSegment().getSegmentId()));
@@ -98,11 +98,18 @@ public class WishlistService {
     }
 
     private String detailUrl(Product product) {
-        if (!Boolean.FALSE.equals(product.getIsVisible())
-                && product.getSegment() != null
+        if (!isCustomerVisible(product)) {
+            return null;
+        }
+        if (product.getSegment() != null
                 && LUXURY_SEGMENT_ID.equals(product.getSegment().getSegmentId())) {
             return "/bonsai-luxury-detail/" + product.getProductId();
         }
         return "/product/" + product.getProductId();
+    }
+
+    private boolean isCustomerVisible(Product product) {
+        return !Boolean.FALSE.equals(product.getIsVisible())
+                && !"DRAFT".equalsIgnoreCase(product.getProductStatus());
     }
 }

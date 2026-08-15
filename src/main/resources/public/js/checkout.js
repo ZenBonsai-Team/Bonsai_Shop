@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     // Đăng ký xóa trạng thái lỗi khi người dùng nhập liệu lại
-    const inputs = ['custName', 'custPhone', 'custEmail', 'custAddress'];
+    const inputs = ['custName', 'custPhone', 'custEmail', 'custAddress', 'orderNotes'];
     inputs.forEach(id => {
         const inputEl = document.getElementById(id);
         if (inputEl) {
@@ -144,6 +144,12 @@ async function placeOrder() {
     
     if (!custName) {
         custNameEl.classList.add('is-invalid');
+        document.getElementById('nameFeedback').textContent = "Vui lòng nhập họ tên người nhận.";
+        hasError = true;
+        if (!firstErrorField) firstErrorField = custNameEl;
+    } else if (custName.length > 255) {
+        custNameEl.classList.add('is-invalid');
+        document.getElementById('nameFeedback').textContent = "Họ tên người nhận không được vượt quá 255 ký tự.";
         hasError = true;
         if (!firstErrorField) firstErrorField = custNameEl;
     } else {
@@ -176,16 +182,39 @@ async function placeOrder() {
         document.getElementById('emailFeedback').textContent = "Địa chỉ email không hợp lệ (ví dụ: name@domain.com).";
         hasError = true;
         if (!firstErrorField) firstErrorField = custEmailEl;
+    } else if (custEmail.length > 255) {
+        custEmailEl.classList.add('is-invalid');
+        document.getElementById('emailFeedback').textContent = "Địa chỉ email không được vượt quá 255 ký tự.";
+        hasError = true;
+        if (!firstErrorField) firstErrorField = custEmailEl;
     } else {
         custEmailEl.classList.remove('is-invalid');
     }
     
     if (!custAddress) {
         custAddressEl.classList.add('is-invalid');
+        document.getElementById('addressFeedback').textContent = "Vui lòng nhập địa chỉ nhận cây.";
+        hasError = true;
+        if (!firstErrorField) firstErrorField = custAddressEl;
+    } else if (custAddress.length > 500) {
+        custAddressEl.classList.add('is-invalid');
+        document.getElementById('addressFeedback').textContent = "Địa chỉ nhận cây không được vượt quá 500 ký tự.";
         hasError = true;
         if (!firstErrorField) firstErrorField = custAddressEl;
     } else {
         custAddressEl.classList.remove('is-invalid');
+    }
+
+    const notesEl = document.getElementById('orderNotes');
+    if (notes && notes.length > 500) {
+        if (notesEl) {
+            notesEl.classList.add('is-invalid');
+            document.getElementById('notesFeedback').textContent = "Ghi chú không được vượt quá 500 ký tự.";
+            hasError = true;
+            if (!firstErrorField) firstErrorField = notesEl;
+        }
+    } else {
+        if (notesEl) notesEl.classList.remove('is-invalid');
     }
     
     if (hasError) {

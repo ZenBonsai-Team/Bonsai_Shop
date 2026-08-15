@@ -5,6 +5,7 @@ import com.example.bonsai_shop.artisan.service.ArtisanInPersonOrderService;
 import com.example.bonsai_shop.entity.Order;
 import com.example.bonsai_shop.entity.Product;
 import com.example.bonsai_shop.entity.User;
+import com.example.bonsai_shop.product.service.OrderExpirationService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -39,12 +40,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class ArtisanInPersonOrderControllerIntegrationTest {
 
     private ArtisanInPersonOrderService inPersonOrderService;
+    private OrderExpirationService orderExpirationService;
     private MockMvc mockMvc;
 
     @BeforeEach
     void setUp() {
         inPersonOrderService = mock(ArtisanInPersonOrderService.class);
-        ArtisanInPersonOrderController controller = new ArtisanInPersonOrderController(inPersonOrderService);
+        orderExpirationService = mock(OrderExpirationService.class);
+        ArtisanInPersonOrderController controller = new ArtisanInPersonOrderController(inPersonOrderService, orderExpirationService);
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
                 .setCustomArgumentResolvers(new AuthenticationPrincipalArgumentResolver())
                 .build();
@@ -86,6 +89,7 @@ class ArtisanInPersonOrderControllerIntegrationTest {
 
         verify(inPersonOrderService).getAvailableProducts("artisan@test.com");
         verify(inPersonOrderService).getInPersonOrders("artisan@test.com", "ALL", 0, 10);
+        verify(orderExpirationService).cancelExpiredInPersonOrders();
     }
 
     @Test
@@ -155,7 +159,7 @@ class ArtisanInPersonOrderControllerIntegrationTest {
 
         mockMvc.perform(validCreatePost())
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/artisan/in-person-order#walkInOrdersSection"))
+                .andExpect(redirectedUrl("/artisan/in-person-order/"))
                 .andExpect(flash().attribute("error", "Product is unavailable"));
     }
 
@@ -165,7 +169,7 @@ class ArtisanInPersonOrderControllerIntegrationTest {
 
         mockMvc.perform(validCreatePost())
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/artisan/in-person-order#walkInOrdersSection"))
+                .andExpect(redirectedUrl("/artisan/in-person-order/"))
                 .andExpect(flash().attribute("error", "Product does not belong to current artisan"));
     }
 
@@ -194,7 +198,7 @@ class ArtisanInPersonOrderControllerIntegrationTest {
                         .param("shippingFee", "0")
                         .param("customerEmail", ""))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/artisan/in-person-order#walkInOrdersSection"))
+                .andExpect(redirectedUrl("/artisan/in-person-order/"))
                 .andExpect(flash().attribute("error", "Customer information is required"));
     }
 
@@ -223,7 +227,7 @@ class ArtisanInPersonOrderControllerIntegrationTest {
                         .param("shippingFee", "0")
                         .param("customerEmail", "customer@test.com"))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/artisan/in-person-order#walkInOrdersSection"))
+                .andExpect(redirectedUrl("/artisan/in-person-order/"))
                 .andExpect(flash().attribute("error", "Fee must not be negative"));
     }
 
@@ -252,7 +256,7 @@ class ArtisanInPersonOrderControllerIntegrationTest {
                         .param("shippingFee", "0")
                         .param("customerEmail", "customer@test.com"))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/artisan/in-person-order#walkInOrdersSection"))
+                .andExpect(redirectedUrl("/artisan/in-person-order/"))
                 .andExpect(flash().attribute("error", "Unsupported payment method"));
     }
 

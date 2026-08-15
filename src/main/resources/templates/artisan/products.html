@@ -154,7 +154,7 @@
                                         Xóa
                                     </button>
                                 </form>
-                                <span th:if="${product.productStatus != 'DRAFT' && product.productStatus != 'AVAILABLE'}" class="action-locked">
+                                <span th:if="${product.productStatus != 'DRAFT' && product.productStatus != 'AVAILABLE' && product.productStatus != 'SOLD'}" class="action-locked">
                                     <i class="fa-solid fa-lock"></i>
                                     Đã khóa
                                 </span>

@@ -2,144 +2,137 @@
 <html lang="vi" xmlns:th="http://www.thymeleaf.org"
       th:replace="~{fragments/dashboard-layout :: layout(~{::title}, ~{::#order-handling-history-content}, ~{::styles}, ~{::scripts})}">
 <head>
-    <title>Lịch sử xử lý đơn - Minh Kỷ Garden</title>
+    <title>Lịch sử xử lí đơn - Minh Kỷ Garden</title>
     <th:block th:fragment="styles">
+        <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+        <link rel="stylesheet" th:href="@{/css/moderator-orders.css}">
+        <link rel="stylesheet" th:href="@{/css/owner_in_person_order_history.css}">
         <link rel="stylesheet" th:href="@{/css/order_handling_history.css}">
     </th:block>
 </head>
 <body>
 
 <div id="order-handling-history-content" th:with="paramActivePage='order-handling-history'">
-    <div class="page-header">
+    <header class="page-header owner-walkin-header">
         <div>
-            <h1 class="serif-text mb-0">Lịch sử xử lý đơn</h1>
-            <p class="text-secondary mb-0">Theo dõi các đơn đã hoàn thành hoặc đã hủy theo từng tài khoản điều phối đơn.</p>
+            <h1>Lịch sử xử lí đơn</h1>
+            <p>Theo dõi các đơn đã hoàn thành hoặc đã hủy theo từng tài khoản điều phối đơn.</p>
         </div>
-        <span class="readonly-badge">
-            <i class="fa-solid fa-eye"></i>
-            Chỉ xem
-        </span>
-    </div>
+    </header>
 
-    <section class="history-panel">
-        <form id="historySearchForm"
-              class="history-toolbar"
-              method="get"
-              th:action="@{/owner/order-handling-history}">
+    <section class="portal-card" id="orderHandlingHistorySection">
+        <div class="product-toolbar">
+            <div class="product-toolbar-top"></div>
 
-            <div class="history-search">
+            <form id="handlingHistorySearchForm"
+                  class="owner-walkin-search auto-filter-form"
+                  method="get"
+                  th:action="@{/owner/order-handling-history}">
+                <input type="hidden" name="status" th:value="${selectedStatus}">
+                <div class="search-input-wrapper">
+                    <input type="text"
+                           id="handlingHistorySearchInput"
+                           name="search"
+                           th:value="${search}"
+                           placeholder="Tìm theo mã đơn, khách hàng, trạng thái hoặc người xử lí"
+                           autocomplete="off"
+                           data-auto-filter-input>
+                </div>
+                <a class="btn-mini btn-mini-secondary"
+                   th:if="${search != null and !search.isBlank()}"
+                   th:href="@{/owner/order-handling-history(status=${selectedStatus})}">Xóa lọc</a>
+            </form>
 
-
-                <label for="historySearchInput">Tìm kiếm:</label>
-                <input type="text"
-                       id="historySearchInput"
-                       name="search"
-                       th:value="${search}"
-                       placeholder="Tìm theo mã đơn, khách hàng, trạng thái hoặc người xử lý"
-                       autocomplete="off">
+            <div class="filter-tabs product-filter-chips">
+                <a class="tab-btn text-decoration-none"
+                   th:classappend="${selectedStatus == 'ALL'} ? ' active'"
+                   th:href="@{/owner/order-handling-history(status='ALL', search=${search})}">Tất cả</a>
+                <a class="tab-btn text-decoration-none"
+                   th:classappend="${selectedStatus == completedStatus} ? ' active'"
+                   th:href="@{/owner/order-handling-history(status=${completedStatus}, search=${search})}">Hoàn thành</a>
+                <a class="tab-btn text-decoration-none"
+                   th:classappend="${selectedStatus == cancelledStatus} ? ' active'"
+                   th:href="@{/owner/order-handling-history(status=${cancelledStatus}, search=${search})}">Đã hủy</a>
             </div>
+        </div>
 
-            <button type="submit" class="btn-search">
-                Tìm kiếm
-            </button>
-
-            <a th:if="${search != null and !search.isBlank()}"
-               th:href="@{/owner/order-handling-history}"
-               class="btn-reset">
-                Xóa lọc
-            </a>
-        </form>
-
-        <div class="table-responsive">
-            <table class="history-table">
+        <div class="table-container owner-walkin-table-container handling-history-table-container">
+            <table class="orders-table owner-walkin-table handling-history-table">
                 <colgroup>
-                    <col class="col-order-code">
-                    <col class="col-customer">
-                    <col class="col-moderator">
-                    <col class="col-order-status">
-                    <col class="col-order-date">
-                    <col class="col-total">
-                    <col class="col-actions">
+                    <col class="col-order-code-width">
+                    <col class="col-customer-width">
+                    <col class="col-handler-width">
+                    <col class="col-status-width">
+                    <col class="col-date-width">
+                    <col class="col-total-width">
+                    <col class="col-action-width">
                 </colgroup>
 
                 <thead>
                 <tr>
                     <th>Mã đơn</th>
                     <th>Khách hàng</th>
-                    <th>Người xử lý</th>
+                    <th>Người xử lí</th>
                     <th>Trạng thái</th>
                     <th>Ngày đặt</th>
-                    <th class="text-right">Tổng tiền</th>
-                    <th class="text-center">Thao tác</th>
+                    <th class="col-price">Tổng tiền</th>
+                    <th class="col-action">Thao tác</th>
                 </tr>
                 </thead>
 
                 <tbody>
                 <tr th:each="item : ${historyItems}">
-                    <td data-label="Mã đơn">
-                <span class="order-code"
-                      th:text="${item.orderCode}">
-                    BSMS-001
-                </span>
-                    </td>
+                    <td class="col-code" data-label="Mã đơn" th:text="${item.orderCode}">BSMS-001</td>
 
                     <td data-label="Khách hàng">
-                <span th:text="${item.customerName}">
-                    Nguyễn Văn A
-                </span>
-                        <small th:text="${item.customerEmail}">
-                            customer@example.com
-                        </small>
+                        <strong th:text="${item.customerName}">Nguyễn Văn A</strong>
+                        <small class="d-block text-muted" th:text="${item.customerEmail}">customer@example.com</small>
                     </td>
 
-                    <td data-label="Người xử lý">
-                <span th:text="${item.moderatorName}">
-                    Moderator
-                </span>
-                        <small th:text="${item.moderatorEmail}">
-                            moderator@example.com
-                        </small>
+                    <td data-label="Người xử lí">
+                        <strong th:text="${item.moderatorName}">Moderator</strong>
+                        <small class="d-block text-muted" th:text="${item.moderatorEmail}">moderator@example.com</small>
                     </td>
 
-                    <td data-label="Trạng thái">
-                <span class="order-status"
-                      th:classappend="${item.orderStatus == 'COMPLETED'
-                            ? ' completed'
-                            : (item.orderStatus == 'CANCELLED'
-                            ? ' cancelled' : '')}"
-                      th:text="${item.orderStatus}">
-                    COMPLETED
-                </span>
+                    <td data-label="Trạng thái" class="status-cell">
+                        <span th:if="${item.orderStatus == completedStatus}"
+                              class="status-badge approved">
+                            Hoàn thành
+                        </span>
+                        <span th:if="${item.orderStatus == cancelledStatus}"
+                              class="status-badge cancelled">
+                            Đã hủy
+                        </span>
+                        <span th:if="${item.orderStatus != completedStatus && item.orderStatus != cancelledStatus}"
+                              class="status-badge cancelled"
+                              th:text="${item.orderStatus}">
+                            CANCELLED
+                        </span>
                     </td>
 
                     <td data-label="Ngày đặt" class="date-cell">
-                <span th:if="${item.orderDate != null}"
-                      th:text="${#temporals.format(item.orderDate, 'dd/MM/yyyy')}">
-                    01/08/2026
-                </span>
-
+                        <span th:if="${item.orderDate != null}"
+                              th:text="${#temporals.format(item.orderDate, 'dd/MM/yyyy')}">
+                            01/08/2026
+                        </span>
                         <small th:if="${item.orderDate != null}"
                                th:text="${#temporals.format(item.orderDate, 'HH:mm')}">
                             09:00
                         </small>
-
                         <span th:if="${item.orderDate == null}">-</span>
                     </td>
 
                     <td data-label="Tổng tiền"
-                        class="money-cell"
+                        class="col-price money-cell"
                         th:text="${item.totalAmount != null
-                    ? #numbers.formatDecimal(
-                        item.totalAmount, 0, 'COMMA', 0, 'POINT'
-                      ) + ' đ'
-                    : '-'}">
+                        ? #numbers.formatDecimal(item.totalAmount, 0, 'COMMA', 0, 'POINT') + ' đ'
+                        : '0 đ'}">
                         0 đ
                     </td>
 
-                    <td data-label="Thao tác" class="action-cell">
-                        <a class="details-button"
-                           th:href="@{/owner/order-handling-history/orders/{orderCode}
-                   (orderCode=${item.orderCode})}">
+                    <td data-label="Thao tác" class="col-action">
+                        <a class="btn-mini btn-mini-confirm"
+                           th:href="@{/owner/order-handling-history/orders/{orderCode}(orderCode=${item.orderCode})}">
                             Chi tiết
                         </a>
                     </td>
@@ -147,23 +140,28 @@
 
                 <tr th:if="${historyItems == null or historyItems.isEmpty()}">
                     <td colspan="7" class="empty-state">
-                        Không có đơn hoàn thành hoặc đã hủy phù hợp.
+                        <div class="empty-state-icon"><i class="fa-solid fa-clipboard-check"></i></div>
+                        <div class="empty-state-title">Chưa có đơn xử lí phù hợp.</div>
+                        <div class="empty-state-desc">Các đơn đã hoàn thành hoặc đã hủy sẽ hiển thị tại đây.</div>
                     </td>
                 </tr>
                 </tbody>
             </table>
         </div>
 
-        <div class="history-pagination" th:if="${historyPage.totalPages > 0}">
-            <a th:classappend="${historyPage.first ? ' disabled' : ''}"
-               th:href="@{/owner/order-handling-history(page=${historyPage.number - 1}, search=${search})}">
-                Trước
-            </a>
-            <span th:text="${'Trang ' + (historyPage.number + 1) + ' / ' + (historyPage.totalPages == 0 ? 1 : historyPage.totalPages)}">Trang 1 / 1</span>
-            <a th:classappend="${historyPage.last ? ' disabled' : ''}"
-               th:href="@{/owner/order-handling-history(page=${historyPage.number + 1}, search=${search})}">
-                Sau
-            </a>
+        <div class="pagination-footer" th:if="${historyPage.totalPages > 0}">
+            <div class="pagination-info"
+                 th:text="${'Hiển thị trang ' + (historyPage.number + 1) + ' / ' + (historyPage.totalPages == 0 ? 1 : historyPage.totalPages)}">
+                Hiển thị trang 1 / 1
+            </div>
+            <div class="pagination-controls">
+                <a class="page-btn"
+                   th:classappend="${historyPage.first ? ' disabled' : ''}"
+                   th:href="@{/owner/order-handling-history(status=${selectedStatus}, search=${search}, page=${historyPage.number - 1})}">Trước</a>
+                <a class="page-btn"
+                   th:classappend="${historyPage.last ? ' disabled' : ''}"
+                   th:href="@{/owner/order-handling-history(status=${selectedStatus}, search=${search}, page=${historyPage.number + 1})}">Sau</a>
+            </div>
         </div>
     </section>
 </div>
@@ -171,16 +169,25 @@
 <th:block th:fragment="scripts">
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const form = document.getElementById('historySearchForm');
-            const input = document.getElementById('historySearchInput');
+            const form = document.getElementById('handlingHistorySearchForm');
+            const input = document.getElementById('handlingHistorySearchInput');
+            let timeoutId;
 
             if (!form || !input) {
                 return;
             }
 
+            input.addEventListener('input', () => {
+                window.clearTimeout(timeoutId);
+                timeoutId = window.setTimeout(() => {
+                    form.submit();
+                }, 450);
+            });
+
             input.addEventListener('keydown', (event) => {
                 if (event.key === 'Enter') {
                     event.preventDefault();
+                    window.clearTimeout(timeoutId);
                     form.submit();
                 }
             });

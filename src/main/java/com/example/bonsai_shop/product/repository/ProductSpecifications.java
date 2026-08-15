@@ -36,6 +36,8 @@ public class ProductSpecifications {
             // Customer marketplace must not expose artisan-only product states.
             predicates.add(cb.notEqual(root.get("productStatus"), "DRAFT"));
             predicates.add(cb.isTrue(cb.coalesce(root.get("isVisible"), true)));
+
+            // Exclude Elite segment products (segmentId = 3) from the marketplace
             predicates.add(cb.notEqual(root.get("segment").get("segmentId"), 3));
 
             // keyword (matches product name or code)

@@ -39,7 +39,7 @@
     <div id="artisanFlashError" th:if="${error}" th:attr="data-message=${error}" hidden></div>
     <div th:if="${!isEditable}" class="alert warning">Chỉ có thể sửa media của sản phẩm nháp hoặc đã ẩn.</div>
 
-    <form th:if="${isEditable}" id="mediaUploadForm" class="form-card" method="post" enctype="multipart/form-data"
+    <form th:if="${isEditable}" id="mediaUploadForm" class="form-card" method="post" enctype="multipart/form-data" novalidate
           th:action="@{/artisan/products/{id}/media(id=${product.productId})}">
         <div class="media-upload-list" id="mediaUploadList"
              th:attr="data-has-existing-media=${!#lists.isEmpty(mediaList)}"></div>
@@ -67,7 +67,8 @@
                 <label>Góc chụp
                     <input th:if="${media.mediaType == 'VIDEO'}" type="hidden" name="slotTypes" value="" form="mediaOrderForm">
                     <select name="slotTypes" th:disabled="${!isEditable || media.mediaType == 'VIDEO'}" form="mediaOrderForm">
-                        <option value="" th:selected="${media.slotType == null}">-- Không áp dụng --</option>
+                        <option th:if="${media.mediaType == 'VIDEO'}" value="" th:selected="${media.slotType == null}">-- Không áp dụng --</option>
+                        <option th:if="${media.mediaType == 'IMAGE'}" value="" th:selected="${media.slotType == null}">-- Chọn góc chụp --</option>
                         <option value="FRONT" th:selected="${media.slotType == 'FRONT'}">FRONT - Chính diện</option>
                         <option value="BACK" th:selected="${media.slotType == 'BACK'}">BACK - Mặt sau</option>
                         <option value="LEFT" th:selected="${media.slotType == 'LEFT'}">LEFT - Bên trái</option>
@@ -78,9 +79,11 @@
                         <option value="POT" th:selected="${media.slotType == 'POT'}">POT - Mặt bệ</option>
                         <option value="OVERVIEW" th:selected="${media.slotType == 'OVERVIEW'}">OVERVIEW - Tổng quan</option>
                     </select>
+                    <span class="field-error" data-media-order-slot-error></span>
                 </label>
                 <label>Caption
                     <input type="text" name="captions" th:value="${media.caption}" th:disabled="${!isEditable}" form="mediaOrderForm" placeholder="Nhập chú thích ảnh/video">
+                    <span class="field-error" data-media-order-caption-error></span>
                 </label>
                 <label class="media-position-label">⠿ Kéo để sắp xếp
                     <input type="hidden" name="mediaIds" th:value="${media.mediaId}" form="mediaOrderForm">
@@ -126,6 +129,7 @@
     const maxMediaPerUpload = 10;
     const maxImageSizeBytes = 7 * 1024 * 1024;
     const maxVideoSizeBytes = 100 * 1024 * 1024;
+    const maxCaptionLength = 255;
     const shotTypeOptions = `
         <option value="">-- Chọn góc chụp --</option>
         <option value="FRONT">FRONT - Chính diện</option>
@@ -153,6 +157,37 @@
         uploadAllBtn.textContent = `Tải lên tất cả ${items.length} media`;
         if (addMediaItemBtn) {
             addMediaItemBtn.disabled = items.length >= maxMediaPerUpload;
+        }
+    }
+
+    function setMediaFieldError(field, message) {
+        const wrapper = field?.closest('label') || field?.closest('.media-upload-row') || field?.closest('.media-upload-item');
+        if (!wrapper) {
+            return;
+        }
+        wrapper.classList.toggle('field-invalid', Boolean(message));
+        const error = wrapper.querySelector('.field-error');
+        if (error) {
+            error.textContent = message || '';
+        }
+    }
+
+    function clearUploadItemErrors(item) {
+        item.querySelectorAll('.field-error').forEach(error => error.textContent = '');
+        item.querySelectorAll('.field-invalid').forEach(field => field.classList.remove('field-invalid'));
+    }
+
+    function scrollToFirstMediaError(scope) {
+        const firstError = scope.querySelector('.field-error:not(:empty)');
+        const errorWrapper = firstError?.closest('.field-invalid') || firstError?.closest('label') || firstError?.closest('.media-upload-item');
+        if (!errorWrapper) {
+            return;
+        }
+
+        errorWrapper.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        const field = errorWrapper.querySelector('input:not([type="hidden"]):not([disabled]), select:not([disabled]), textarea:not([disabled])');
+        if (field) {
+            setTimeout(() => field.focus({ preventScroll: true }), 250);
         }
     }
 
@@ -190,6 +225,8 @@
         if (isVideo) {
             shotTypeSelect.value = '';
         }
+        setMediaFieldError(fileInput, '');
+        setMediaFieldError(shotTypeSelect, '');
         if (!mediaUploadList.querySelector('[name="thumbnailIndex"]:checked')) {
             const firstImageThumbnail = Array.from(mediaUploadList.querySelectorAll('.media-upload-item'))
                     .map(uploadItem => uploadItem.querySelector('[name="thumbnailIndex"]'))
@@ -236,15 +273,18 @@
                 </div>
                 <label>Chọn file
                     <input type="file" name="files" accept="image/*,video/mp4,video/webm" required>
+                    <span class="field-error" data-file-error></span>
                 </label>
             </div>
             <input type="hidden" name="mediaTypes" value="IMAGE" data-media-type-input>
             <label>Góc chụp
                 <input type="hidden" name="slotTypes" value="" disabled data-slot-type-hidden>
                 <select name="slotTypes" required>${shotTypeOptions}</select>
+                <span class="field-error" data-slot-type-error></span>
             </label>
             <label>Chú thích
                 <input name="captions" placeholder="Nhập chú thích ảnh/video">
+                <span class="field-error" data-caption-error></span>
             </label>
             <label class="checkbox" data-thumbnail-label>
                 <input type="radio" name="thumbnailIndex" value="0">
@@ -253,6 +293,8 @@
         `;
 
         item.querySelector('[name="files"]').addEventListener('change', () => syncUploadItemFileState(item));
+        item.querySelector('select[name="slotTypes"]').addEventListener('change', event => setMediaFieldError(event.target, ''));
+        item.querySelector('[name="captions"]').addEventListener('input', event => validateCaptionInput(event.target));
         item.querySelector('[data-remove-media]').addEventListener('click', () => {
             const wasThumbnail = item.querySelector('[name="thumbnailIndex"]').checked;
             item.remove();
@@ -277,31 +319,111 @@
     addMediaItemBtn?.addEventListener('click', createMediaUploadItem);
     createMediaUploadItem();
 
+    function validateCaptionInput(input) {
+        const valueLength = input.value.trim().length;
+        if (valueLength > maxCaptionLength) {
+            setMediaFieldError(input, `Chú thích media không được vượt quá ${maxCaptionLength} ký tự.`);
+            return false;
+        }
+        setMediaFieldError(input, '');
+        return true;
+    }
+
+    function validateExistingMediaSlot(select) {
+        if (select.disabled || select.value) {
+            setMediaFieldError(select, '');
+            return true;
+        }
+        setMediaFieldError(select, 'Chỉ video mới được để Không áp dụng. Vui lòng chọn góc chụp cho ảnh.');
+        return false;
+    }
+
+    function validateUploadItem(item) {
+        clearUploadItemErrors(item);
+        let isValid = true;
+        const fileInput = item.querySelector('[name="files"]');
+        const slotTypeSelect = item.querySelector('select[name="slotTypes"]');
+        const captionInput = item.querySelector('[name="captions"]');
+        const file = fileInput.files[0];
+
+        if (!file) {
+            setMediaFieldError(fileInput, 'Vui lòng chọn file media.');
+            isValid = false;
+        } else {
+            const isVideo = isVideoUpload(file);
+            const maxSize = isVideo ? maxVideoSizeBytes : maxImageSizeBytes;
+            const allowedImage = file.type.startsWith('image/');
+            const allowedVideo = file.type === 'video/mp4' || file.type === 'video/webm' || isVideo;
+            if (!allowedImage && !allowedVideo) {
+                setMediaFieldError(fileInput, 'Chỉ được tải ảnh hoặc video MP4/WebM.');
+                isValid = false;
+            } else if (file.size > maxSize) {
+                setMediaFieldError(fileInput, `${isVideo ? 'Video' : 'Ảnh'} không được vượt quá ${maxSize / 1024 / 1024}MB.`);
+                isValid = false;
+            }
+
+            if (!isVideo && !slotTypeSelect.value) {
+                setMediaFieldError(slotTypeSelect, 'Vui lòng chọn góc chụp.');
+                isValid = false;
+            }
+        }
+
+        if (!validateCaptionInput(captionInput)) {
+            isValid = false;
+        }
+        return isValid;
+    }
+
     mediaUploadForm?.addEventListener('submit', event => {
         const items = mediaUploadList.querySelectorAll('.media-upload-item');
+        let isValid = true;
         if (items.length > maxMediaPerUpload) {
             event.preventDefault();
-            if (window.BSMSToast) {
-                BSMSToast.error(`Mỗi lần chỉ được tải lên tối đa ${maxMediaPerUpload} media.`);
-            }
+            const firstItem = items[0];
+            setMediaFieldError(firstItem, `Mỗi lần chỉ được tải lên tối đa ${maxMediaPerUpload} media.`);
+            scrollToFirstMediaError(mediaUploadForm);
             return;
         }
 
         for (const item of items) {
-            const file = item.querySelector('[name="files"]').files[0];
-            if (!file) {
-                continue;
-            }
-            const isVideo = isVideoUpload(file);
-            const maxSize = isVideo ? maxVideoSizeBytes : maxImageSizeBytes;
-            if (file.size > maxSize) {
-                event.preventDefault();
-                if (window.BSMSToast) {
-                    BSMSToast.error(`${isVideo ? 'Video' : 'Ảnh'} vượt quá dung lượng tối đa ${maxSize / 1024 / 1024}MB.`);
-                }
-                return;
+            if (!validateUploadItem(item)) {
+                isValid = false;
             }
         }
+        if (!isValid) {
+            event.preventDefault();
+            scrollToFirstMediaError(mediaUploadForm);
+        }
+    });
+
+    document.getElementById('mediaOrderForm')?.addEventListener('submit', event => {
+        let isValid = true;
+        document.querySelectorAll('[data-media-order-slot-error]').forEach(error => {
+            const select = error.closest('label')?.querySelector('select[name="slotTypes"]');
+            if (select && !validateExistingMediaSlot(select)) {
+                isValid = false;
+            }
+        });
+        document.querySelectorAll('[data-media-order-caption-error]').forEach(error => {
+            const input = error.closest('label')?.querySelector('[name="captions"]');
+            if (input && !validateCaptionInput(input)) {
+                isValid = false;
+            }
+        });
+        if (!isValid) {
+            event.preventDefault();
+            scrollToFirstMediaError(document);
+        }
+    });
+
+    document.querySelectorAll('[data-media-order-caption-error]').forEach(error => {
+        const input = error.closest('label')?.querySelector('[name="captions"]');
+        input?.addEventListener('input', () => validateCaptionInput(input));
+    });
+
+    document.querySelectorAll('[data-media-order-slot-error]').forEach(error => {
+        const select = error.closest('label')?.querySelector('select[name="slotTypes"]');
+        select?.addEventListener('change', () => validateExistingMediaSlot(select));
     });
 
     const existingMediaGrid = document.getElementById('existingMediaGrid');
