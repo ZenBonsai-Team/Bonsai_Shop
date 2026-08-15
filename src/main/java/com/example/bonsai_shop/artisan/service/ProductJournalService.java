@@ -17,6 +17,7 @@ import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
+// Service quản lý nhật ký chăm sóc/cập nhật trạng thái cây.
 public class ProductJournalService {
 
     private static final int MAX_MEDIA_PER_UPLOAD = 10;
@@ -42,12 +43,14 @@ public class ProductJournalService {
     private final ArtisanMediaStorageService mediaStorageService;
     private final ProductJournalEventRepository journalEventRepository;
 
+    // Lấy nhật ký sản phẩm thuộc artisan hiện tại.
     public List<ProductJournalEvent> getMyProductEvents(String artisanEmail, Integer productId) {
         Product product = artisanProductService.getMyProduct(artisanEmail, productId);
         ensureNotSold(product);
         return journalEventRepository.findByProductOrderByEventDateDescEventIdDesc(product);
     }
 
+    // Lấy các sự kiện nhật ký công khai cho khách xem.
     public List<ProductJournalEvent> getPublicEvents(Product product) {
         if (artisanProductService.isSold(product)) {
             return List.of();
@@ -56,6 +59,7 @@ public class ProductJournalService {
     }
 
     @Transactional
+    // Thêm sự kiện nhật ký mới kèm ảnh bắt buộc ban đầu.
     public void addEvent(String artisanEmail,
                          Integer productId,
                          LocalDate eventDate,
@@ -100,6 +104,7 @@ public class ProductJournalService {
     }
 
     @Transactional
+    // Xóa sự kiện nhật ký nếu artisan còn được phép sửa sản phẩm.
     public void deleteEvent(String artisanEmail, Integer productId, Integer eventId) {
         Product product = artisanProductService.getMyProduct(artisanEmail, productId);
         ensureNotSold(product);
@@ -113,6 +118,7 @@ public class ProductJournalService {
     }
 
     @Transactional
+    // Cập nhật tiêu đề và mô tả sự kiện.
     public void updateEventText(String artisanEmail,
                                 Integer productId,
                                 Integer eventId,
@@ -137,6 +143,7 @@ public class ProductJournalService {
     }
 
     @Transactional
+    // Bật/tắt công khai sự kiện nhật ký.
     public void updateEventVisibility(String artisanEmail, Integer productId, Integer eventId, Boolean isPublic) {
         Product product = artisanProductService.getMyProduct(artisanEmail, productId);
         ensureNotSold(product);
@@ -149,6 +156,7 @@ public class ProductJournalService {
     }
 
     @Transactional
+    // Thêm ảnh vào sự kiện nhật ký hiện có.
     public void addMediaToEvent(String artisanEmail, Integer productId, Integer eventId, List<MultipartFile> files) {
         ProductJournalEvent event = getEditableEvent(artisanEmail, productId, eventId);
 
@@ -164,6 +172,7 @@ public class ProductJournalService {
     }
 
     @Transactional
+    // Đặt ảnh đại diện cho sự kiện nhật ký.
     public void setCoverMedia(String artisanEmail, Integer productId, Integer eventId, Integer mediaId) {
         ProductJournalEvent event = getEditableEvent(artisanEmail, productId, eventId);
         ProductJournalMedia coverMedia = findEventMedia(event, mediaId);
@@ -181,6 +190,7 @@ public class ProductJournalService {
     }
 
     @Transactional
+    // Thay thế file ảnh của media nhật ký.
     public void replaceMedia(String artisanEmail,
                              Integer productId,
                              Integer eventId,
@@ -204,6 +214,7 @@ public class ProductJournalService {
     }
 
     @Transactional
+    // Xóa ảnh khỏi sự kiện và chuẩn hóa lại thứ tự.
     public void deleteMedia(String artisanEmail, Integer productId, Integer eventId, Integer mediaId) {
         ProductJournalEvent event = getEditableEvent(artisanEmail, productId, eventId);
         ProductJournalMedia media = findEventMedia(event, mediaId);
@@ -215,6 +226,7 @@ public class ProductJournalService {
         journalEventRepository.save(event);
     }
 
+    // Upload và gắn danh sách ảnh vào sự kiện.
     private void addUploadedMedia(ProductJournalEvent event, List<MultipartFile> files) {
         if (files == null || files.isEmpty()) {
             return;
@@ -236,6 +248,7 @@ public class ProductJournalService {
         }
     }
 
+    // Lấy sự kiện thuộc sản phẩm của artisan và đảm bảo còn sửa được.
     private ProductJournalEvent getEditableEvent(String artisanEmail, Integer productId, Integer eventId) {
         Product product = artisanProductService.getMyProduct(artisanEmail, productId);
         ensureNotSold(product);
@@ -243,6 +256,7 @@ public class ProductJournalService {
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy cập nhật cây."));
     }
 
+    // Tìm media trong đúng sự kiện nhật ký.
     private ProductJournalMedia findEventMedia(ProductJournalEvent event, Integer mediaId) {
         if (mediaId == null || event.getMediaList() == null) {
             throw new RuntimeException("Không tìm thấy ảnh nhật ký.");
@@ -253,6 +267,7 @@ public class ProductJournalService {
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy ảnh nhật ký."));
     }
 
+    // Đánh lại displayOrder liên tục sau khi thay đổi media.
     private void normalizeMediaOrder(ProductJournalEvent event) {
         if (event.getMediaList() == null) {
             return;
@@ -262,6 +277,7 @@ public class ProductJournalService {
         }
     }
 
+    // Lọc bỏ file null hoặc rỗng từ request upload.
     private List<MultipartFile> getValidFiles(List<MultipartFile> files) {
         if (files == null || files.isEmpty()) {
             return List.of();
@@ -271,6 +287,7 @@ public class ProductJournalService {
                 .toList();
     }
 
+    // Kiểm tra số lượng file trong một lần upload.
     private void validateUploadBatch(List<MultipartFile> files) {
         if (files.size() > MAX_MEDIA_PER_UPLOAD) {
             throw new RuntimeException("Mỗi lần chỉ được tải lên tối đa 10 ảnh nhật ký.");
@@ -278,6 +295,7 @@ public class ProductJournalService {
         files.forEach(this::validateImageFile);
     }
 
+    // Validate file ảnh theo định dạng và dung lượng.
     private void validateImageFile(MultipartFile file) {
         if (!isImageFile(file)) {
             throw new RuntimeException("Nhật ký cây chỉ hỗ trợ tải ảnh. Vui lòng không tải video.");
@@ -287,6 +305,7 @@ public class ProductJournalService {
         }
     }
 
+    // Nhận diện ảnh qua content-type hoặc phần mở rộng.
     private boolean isImageFile(MultipartFile file) {
         String contentType = file.getContentType();
         if (contentType != null) {
@@ -304,6 +323,7 @@ public class ProductJournalService {
                 || normalizedFilename.endsWith(".gif");
     }
 
+    // Chuẩn hóa và validate tiêu đề nhật ký.
     private String normalizeTitle(String title) {
         if (title == null || title.isBlank()) {
             throw new RuntimeException("Vui lòng nhập tiêu đề cập nhật.");
@@ -315,6 +335,7 @@ public class ProductJournalService {
         return normalizedTitle;
     }
 
+    // Chuẩn hóa và validate mô tả nhật ký.
     private String normalizeDescription(String description) {
         if (description == null || description.isBlank()) {
             return null;
@@ -326,12 +347,14 @@ public class ProductJournalService {
         return normalizedDescription;
     }
 
+    // Chặn sửa nhật ký khi sản phẩm đã bán.
     private void ensureNotSold(Product product) {
         if (artisanProductService.isSold(product)) {
             throw new RuntimeException("Sản phẩm đã bán nên không thể thao tác nhật ký cây.");
         }
     }
 
+    // Chuẩn hóa loại sự kiện về tập giá trị cho phép.
     private String normalizeEventType(String eventType) {
         if (eventType == null || eventType.isBlank()) {
             return "PHOTO_UPDATE";

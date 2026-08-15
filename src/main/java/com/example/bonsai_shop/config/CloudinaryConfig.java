@@ -21,6 +21,7 @@ public class CloudinaryConfig {
 
     @Bean
     public Cloudinary cloudinary() {
+        // Tao Cloudinary client dung chung cho cac service upload image/video.
         return new Cloudinary(Map.of(
                 "cloud_name", cloudName,
                 "api_key", apiKey,
