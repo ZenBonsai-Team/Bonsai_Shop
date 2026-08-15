@@ -41,52 +41,52 @@
         </div>
 
         <div class="revenue-summary-grid">
-            <div class="revenue-summary-card revenue-summary-primary" data-source-card="owner-completed-revenue-sources" tabindex="0" role="button">
-                <span class="summary-icon"><i class="fa-solid fa-wallet"></i></span>
+            <div class="revenue-summary-card revenue-summary-primary owner-artisan-revenue-card">
+                <span class="summary-icon"><i class="fa-solid fa-user-tie"></i></span>
                 <div>
-                    <small>Doanh thu đơn hoàn thành</small>
-                    <strong class="money-value" th:text="${#numbers.formatDecimal(monthlyRevenue, 0, 'POINT', 0, 'POINT') + ' VNĐ'}">0 VNĐ</strong>
-                    <a class="finance-card-detail" href="#" data-source-target="owner-completed-revenue-sources">
+                    <small>Doanh thu tháng của nghệ nhân</small>
+                    <strong class="money-value owner-artisan-revenue-total" th:text="${#numbers.formatDecimal(monthlyRevenue, 0, 'POINT', 0, 'POINT') + ' VNĐ'}">0 VNĐ</strong>
+                    <a class="finance-card-detail" th:href="@{/owner/dashboard/artisan-revenue(month=${selectedMonth})}">
                         Xem chi tiết <i class="fa-solid fa-arrow-right"></i>
                     </a>
                 </div>
             </div>
-            <div class="revenue-summary-card" data-source-card="owner-forfeited-deposit-sources" tabindex="0" role="button">
+            <div class="revenue-summary-card">
                 <span class="summary-icon"><i class="fa-solid fa-hand-holding-dollar"></i></span>
                 <div>
                     <small>Cọc khách bỏ</small>
                     <strong class="money-value" th:text="${#numbers.formatDecimal(monthlyForfeitedDepositIncome, 0, 'POINT', 0, 'POINT') + ' VNĐ'}">0 VNĐ</strong>
-                    <a class="finance-card-detail" href="#" data-source-target="owner-forfeited-deposit-sources">
+                    <a class="finance-card-detail" th:href="@{/owner/dashboard/forfeited-deposits(month=${selectedMonth})}">
                         Xem chi tiết <i class="fa-solid fa-arrow-right"></i>
                     </a>
                 </div>
             </div>
-            <div class="revenue-summary-card" data-source-card="owner-refund-sources" tabindex="0" role="button">
+            <div class="revenue-summary-card">
                 <span class="summary-icon"><i class="fa-solid fa-rotate-left"></i></span>
                 <div>
                     <small>Hoàn lại khách</small>
                     <strong class="money-value" th:text="${#numbers.formatDecimal(monthlyRefundAmount, 0, 'POINT', 0, 'POINT') + ' VNĐ'}">0 VNĐ</strong>
-                    <a class="finance-card-detail" href="#" data-source-target="owner-refund-sources">
+                    <a class="finance-card-detail" th:href="@{/owner/dashboard/customer-refunds(month=${selectedMonth})}">
                         Xem chi tiết <i class="fa-solid fa-arrow-right"></i>
                     </a>
                 </div>
             </div>
-            <div class="revenue-summary-card" data-source-card="owner-shipping-fee-sources" tabindex="0" role="button">
+            <div class="revenue-summary-card">
                 <span class="summary-icon"><i class="fa-solid fa-truck-fast"></i></span>
                 <div>
                     <small>Phí ship</small>
                     <strong class="money-value" th:text="${#numbers.formatDecimal(monthlyShippingFee, 0, 'POINT', 0, 'POINT') + ' VNĐ'}">0 VNĐ</strong>
-                    <a class="finance-card-detail" href="#" data-source-target="owner-shipping-fee-sources">
+                    <a class="finance-card-detail" th:href="@{/owner/dashboard/shipping-fees(month=${selectedMonth})}">
                         Xem chi tiết <i class="fa-solid fa-arrow-right"></i>
                     </a>
                 </div>
             </div>
-            <div class="revenue-summary-card" data-source-card="owner-crane-fee-sources" tabindex="0" role="button">
+            <div class="revenue-summary-card">
                 <span class="summary-icon"><i class="fa-solid fa-truck-ramp-box"></i></span>
                 <div>
                     <small>Phí cẩu</small>
                     <strong class="money-value" th:text="${#numbers.formatDecimal(monthlyCraneFee, 0, 'POINT', 0, 'POINT') + ' VNĐ'}">0 VNĐ</strong>
-                    <a class="finance-card-detail" href="#" data-source-target="owner-crane-fee-sources">
+                    <a class="finance-card-detail" th:href="@{/owner/dashboard/crane-fees(month=${selectedMonth})}">
                         Xem chi tiết <i class="fa-solid fa-arrow-right"></i>
                     </a>
                 </div>
@@ -95,15 +95,6 @@
     </section>
 
     <section class="owner-metric-grid">
-        <a class="owner-metric-card metric-revenue-month" th:href="@{/owner/dashboard/artisan-revenue(month=${selectedMonth})}">
-            <span class="owner-metric-icon"><i class="fa-solid fa-chart-line"></i></span>
-            <div>
-                <span>Doanh thu tháng của các nghệ nhân</span>
-                <strong th:text="${#numbers.formatDecimal(dashboard.revenueThisMonth(), 0, 'POINT', 0, 'POINT') + ' đ'}">0 đ</strong>
-                <small class="metric-card-subtitle" th:text="${reportPeriodLabel}">Số liệu tháng báo cáo</small>
-            </div>
-        </a>
-
         <a class="owner-metric-card metric-garden" th:href="@{/owner/dashboard/garden-trees}">
             <span class="owner-metric-icon"><i class="fa-solid fa-seedling"></i></span>
             <div>
@@ -178,28 +169,6 @@
                 <button type="button" class="source-modal-close" aria-label="Đóng báo cáo">&times;</button>
             </div>
             <div class="artisan-source-report">
-                <section id="owner-completed-revenue-sources" class="source-report-block hidden" data-source-panel>
-                    <div class="source-report-summary">Doanh thu đơn hoàn thành <strong th:text="${#numbers.formatDecimal(monthlyRevenue, 0, 'POINT', 0, 'POINT') + ' VNĐ'}">0 VNĐ</strong></div>
-                    <div class="table-responsive">
-                        <table class="table table-sm align-middle source-report-table">
-                            <thead>
-                            <tr><th>Ngày ghi nhận</th><th>Mã đơn</th><th>Khách hàng</th><th>Mã SP</th><th>Trạng thái</th><th class="text-end">Số tiền cộng</th></tr>
-                            </thead>
-                            <tbody>
-                            <tr th:each="source : ${completedRevenueSources}">
-                                <td th:text="${source.sourceDate() != null ? #temporals.format(source.sourceDate(), 'dd/MM/yyyy HH:mm') : '-'}">-</td>
-                                <td class="fw-semibold" th:text="${source.orderCode()}">DH001</td>
-                                <td th:text="${source.customerName() ?: '-'}">Khách hàng</td>
-                                <td th:text="${source.productCode() ?: '-'}">SP001</td>
-                                <td th:text="${source.orderStatus()}">COMPLETED</td>
-                                <td class="text-end fw-semibold" th:text="${#numbers.formatDecimal(source.sourceAmount(), 0, 'POINT', 0, 'POINT') + ' VNĐ'}">0 VNĐ</td>
-                            </tr>
-                            <tr th:if="${#lists.isEmpty(completedRevenueSources)}"><td colspan="6" class="text-center text-muted py-3">Không có nguồn ghi nhận trong tháng này.</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </section>
-
                 <section id="owner-forfeited-deposit-sources" class="source-report-block hidden" data-source-panel>
                     <div class="source-report-summary">Cọc khách bỏ <strong th:text="${#numbers.formatDecimal(monthlyForfeitedDepositIncome, 0, 'POINT', 0, 'POINT') + ' VNĐ'}">0 VNĐ</strong></div>
                     <div class="table-responsive">
@@ -505,8 +474,7 @@
             const btnCopy = document.getElementById('btn-copy-stats');
             if (btnCopy) {
                 btnCopy.addEventListener('click', () => {
-                    const totalRevenue = document.querySelector('.metric-revenue-total strong').innerText.trim();
-                    const monthlyRevenue = document.querySelector('.metric-revenue-month strong').innerText.trim();
+                    const monthlyRevenue = document.querySelector('.owner-artisan-revenue-total')?.innerText.trim() || '0 VNĐ';
                     const gardenTrees = document.querySelector('.metric-garden strong').innerText.trim();
                     const soldTrees = document.querySelector('.metric-sold strong').innerText.trim();
 
@@ -514,8 +482,7 @@
                         `=== BÁO CÁO NHANH SỔ TAY QUẢN LÝ VƯỜN ===\n` +
                         `Thời gian xuất: ${new Date().toLocaleString('vi-VN')}\n` +
                         `-----------------------------------------\n` +
-                        `• Tổng tiền vào vườn: ${totalRevenue}\n` +
-                        `• Tiền vào vườn tháng này: ${monthlyRevenue}\n` +
+                        `• Doanh thu tháng theo nghệ nhân: ${monthlyRevenue}\n` +
                         `• Cây hiện có trong vườn: ${gardenTrees} cây\n` +
                         `• Cây đã giao cho khách: ${soldTrees} cây\n` +
                         `-----------------------------------------\n` +
@@ -538,8 +505,7 @@
             const btnExport = document.getElementById('btn-export-excel');
             if (btnExport) {
                 btnExport.addEventListener('click', () => {
-                    const totalRevenue = document.querySelector('.metric-revenue-total strong').innerText.trim();
-                    const monthlyRevenue = document.querySelector('.metric-revenue-month strong').innerText.trim();
+                    const monthlyRevenue = document.querySelector('.owner-artisan-revenue-total')?.innerText.trim() || '0 VNĐ';
                     const gardenTrees = document.querySelector('.metric-garden strong').innerText.trim();
                     const soldTrees = document.querySelector('.metric-sold strong').innerText.trim();
 
@@ -549,8 +515,7 @@
 
                     csv += 'I. CHỈ SỐ HOẠT ĐỘNG\n';
                     csv += 'Tên chỉ số,Giá trị\n';
-                    csv += `Tổng tiền vào vườn,"${totalRevenue}"\n`;
-                    csv += `Tiền vào vườn tháng này,"${monthlyRevenue}"\n`;
+                    csv += `Doanh thu tháng theo nghệ nhân,"${monthlyRevenue}"\n`;
                     csv += `Cây hiện có trong vườn,"${gardenTrees} cây"\n`;
                     csv += `Cây đã giao cho khách,"${soldTrees} cây"\n\n`;
 

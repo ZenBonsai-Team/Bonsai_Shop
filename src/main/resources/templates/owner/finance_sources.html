@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/dashboard-layout :: layout(~{::title}, ~{::#owner-finance-sources-content}, ~{::styles}, ~{::scripts})}">
+<head>
+    <title th:text="${reportTitle + ' - Minh Kỷ Garden'}">Báo cáo tài chính - Minh Kỷ Garden</title>
+    <th:block th:fragment="styles">
+        <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+    </th:block>
+    <th:block th:fragment="scripts">
+        <script th:src="@{/js/owner-report-pagination.js}"></script>
+    </th:block>
+</head>
+<body>
+
+<div id="owner-finance-sources-content" class="owner-report-page" th:with="paramActivePage='dashboard'">
+    <header class="owner-report-header">
+        <div>
+            <span class="owner-eyebrow">Bảng điều khiển chủ vườn</span>
+            <h1 th:text="${reportTitle}">Báo cáo tài chính</h1>
+            <p th:text="${reportDescription}">Các đơn tạo nên số liệu trong tháng báo cáo.</p>
+        </div>
+        <div class="revenue-summary-toolbar">
+            <form class="dashboard-month-filter" method="get">
+                <label for="ownerFinanceSourceMonth">Tháng báo cáo</label>
+                <input id="ownerFinanceSourceMonth" type="month" name="month" th:value="${selectedMonth}" onchange="this.form.submit()">
+            </form>
+            <a class="owner-back-link" th:href="@{/owner(month=${selectedMonth})}">
+                <i class="fa-solid fa-arrow-left"></i>
+                Bảng điều khiển
+            </a>
+        </div>
+    </header>
+
+    <section class="owner-panel owner-report-panel">
+        <div class="owner-report-summary">
+            <span>Tổng cộng</span>
+            <strong th:text="${#numbers.formatDecimal(totalAmount, 0, 'POINT', 0, 'POINT') + ' VND'}">0 VND</strong>
+        </div>
+
+        <div class="owner-report-table-wrap">
+            <table class="owner-report-table">
+                <thead>
+                <tr>
+                    <th>Ngày ghi nhận</th>
+                    <th>Mã đơn</th>
+                    <th>Khách hàng</th>
+                    <th>Mã SP</th>
+                    <th>Trạng thái</th>
+                    <th class="text-end" th:text="${amountColumnLabel}">Số tiền</th>
+                    <th class="text-end">Chi tiết</th>
+                </tr>
+                </thead>
+                <tbody data-owner-paginated-list data-page-size="10" data-report-label="dòng chi tiết tài chính">
+                <tr th:each="source : ${sources}" data-page-entry>
+                    <td th:text="${source.sourceDate() != null ? #temporals.format(source.sourceDate(), 'dd/MM/yyyy HH:mm') : '-'}">-</td>
+                    <td class="fw-semibold" th:text="${source.orderCode()}">DH001</td>
+                    <td th:text="${source.customerName() ?: '-'}">Khách hàng</td>
+                    <td th:text="${source.productCode() ?: '-'}">SP001</td>
+                    <td th:text="${source.orderStatus() ?: '-'}">COMPLETED</td>
+                    <td class="text-end owner-money-cell" th:text="${#numbers.formatDecimal(source.sourceAmount(), 0, 'POINT', 0, 'POINT') + ' VND'}">0 VND</td>
+                    <td class="text-end">
+                        <a class="owner-table-action-link"
+                           th:href="@{/owner/order-handling-history/orders/{orderCode}(orderCode=${source.orderCode()})}">
+                            Xem đơn
+                        </a>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(sources)}">
+                    <td colspan="8" class="owner-empty-state">Không có đơn/giao dịch nào trong tháng này.</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="pagination-footer owner-report-pagination" data-owner-pagination hidden>
+            <div class="pagination-info" data-owner-pagination-info></div>
+            <div class="pagination-controls" data-owner-pagination-controls></div>
+        </div>
+    </section>
+</div>
+
+</body>
+</html>
