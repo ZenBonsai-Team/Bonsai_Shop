@@ -1716,6 +1716,38 @@ a.artisan-metric-card:hover {
     font-size: clamp(1.08rem, 1.45vw, 1.34rem);
 }
 
+.owner-artisan-revenue-card {
+    cursor: default;
+}
+
+.owner-artisan-revenue-card:hover {
+    background: #F3FBF5;
+    border-color: #CFE5D5;
+}
+
+.owner-table-action-link {
+    color: #2f855a;
+    font-size: 0.82rem;
+    font-weight: 900;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.owner-table-action-link:hover,
+.owner-table-action-link:focus {
+    color: #155d32;
+    text-decoration: underline;
+}
+
+.owner-clickable-row {
+    cursor: pointer;
+}
+
+.owner-clickable-row:focus-visible {
+    outline: 3px solid rgba(47, 133, 90, 0.22);
+    outline-offset: -3px;
+}
+
 .status-breakdown {
     display: grid;
     gap: 0;

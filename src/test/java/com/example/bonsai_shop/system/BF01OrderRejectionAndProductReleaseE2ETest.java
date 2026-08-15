@@ -41,6 +41,10 @@ import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestPropertySource;
+import com.example.bonsai_shop.integration.support.TestDatabaseSafetyInitializer;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.math.BigDecimal;
@@ -69,6 +73,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * </ol>
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@ActiveProfiles("test")
+@TestPropertySource(locations = "classpath:application-test.properties")
+@ContextConfiguration(initializers = TestDatabaseSafetyInitializer.class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class BF01OrderRejectionAndProductReleaseE2ETest {
 

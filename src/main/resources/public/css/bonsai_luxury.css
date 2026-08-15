@@ -12,6 +12,7 @@
     --lux-gold: #b9914b;
     --lux-gold-soft: #eadbc0;
     --lux-cream: #fffaf1;
+    --lux-red: #9d3d33;
     --lux-line: rgba(18, 24, 19, 0.1);
     --lux-line-gold: rgba(185, 145, 75, 0.32);
     --lux-shadow: 0 26px 70px rgba(16, 47, 33, 0.12);
@@ -557,15 +558,23 @@ section {
     margin-right: auto;
 }
 
-.hero-fullbleed-content .luxury-hero-title,
-.hero-fullbleed-content .luxury-hero-desc {
+.hero-fullbleed-content .luxury-hero-title {
     color: var(--lux-cream);
+    font-size: 3.8rem;
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: -0.5px;
+    margin-bottom: 24px;
 }
 
 .hero-fullbleed-content .luxury-hero-desc {
     margin-left: auto;
     margin-right: auto;
-    color: rgba(255, 250, 241, 0.86);
+    color: rgba(255, 250, 241, 0.9);
+    font-size: 1.05rem;
+    line-height: 1.8;
+    max-width: 900px;
+    letter-spacing: 0.1px;
 }
 
 .hero-luxury-fullbleed .hero-marketplace-actions {
@@ -1432,8 +1441,75 @@ section {
 }
 
 .card-actions {
+    display: inline-flex;
+    align-items: center;
     flex: 0 0 auto;
+    gap: 8px;
     justify-self: end;
+}
+
+.luxury-shell .luxury-product-card .card-btn-wishlist {
+    position: static;
+    inset: auto;
+    flex: 0 0 38px;
+    width: 38px;
+    height: 38px;
+    border: 1px solid rgba(185, 145, 75, 0.34);
+    border-radius: 50%;
+    background:
+        radial-gradient(circle at 35% 25%, rgba(255, 255, 255, 0.92), transparent 34%),
+        linear-gradient(135deg, rgba(255, 250, 241, 0.92), rgba(234, 219, 192, 0.72));
+    color: var(--lux-red);
+    box-shadow:
+        0 10px 22px rgba(16, 47, 33, 0.1),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.5);
+    font-size: 0.95rem;
+    transform: none;
+    transition: transform var(--lux-ease), border-color var(--lux-ease), background var(--lux-ease), color var(--lux-ease), box-shadow var(--lux-ease);
+}
+
+.luxury-shell .luxury-product-card .card-btn-wishlist:hover,
+.luxury-shell .luxury-product-card .card-btn-wishlist:focus-visible {
+    border-color: rgba(157, 61, 51, 0.34);
+    background:
+        radial-gradient(circle at 35% 25%, rgba(255, 255, 255, 0.96), transparent 34%),
+        linear-gradient(135deg, rgba(255, 245, 245, 0.98), rgba(234, 219, 192, 0.82));
+    color: var(--lux-red);
+    box-shadow: 0 14px 28px rgba(157, 61, 51, 0.16);
+    transform: translateY(-2px) scale(1.04);
+}
+
+.luxury-shell .luxury-product-card .card-btn-wishlist:focus-visible {
+    outline: 3px solid rgba(185, 145, 75, 0.28);
+    outline-offset: 3px;
+}
+
+.luxury-shell .luxury-product-card .card-btn-wishlist.active {
+    border-color: var(--lux-red) !important;
+    background: var(--lux-red) !important;
+    background-color: var(--lux-red) !important;
+    color: #fffaf1 !important;
+    box-shadow:
+        0 14px 28px rgba(157, 61, 51, 0.24),
+        inset 0 0 0 1px rgba(255, 250, 241, 0.22);
+}
+
+.luxury-shell .luxury-product-card .card-btn-wishlist.active i {
+    color: #fffaf1 !important;
+    font-weight: 900;
+}
+
+.luxury-shell .luxury-product-card .card-btn-wishlist.active:hover,
+.luxury-shell .luxury-product-card .card-btn-wishlist.active:focus-visible {
+    border-color: var(--lux-red) !important;
+    background: var(--lux-red) !important;
+    background-color: var(--lux-red) !important;
+    color: #fffaf1 !important;
+}
+
+.luxury-shell .luxury-product-card .card-btn-wishlist.active:hover i,
+.luxury-shell .luxury-product-card .card-btn-wishlist.active:focus-visible i {
+    color: #fffaf1 !important;
 }
 
 .btn-detail-luxury {

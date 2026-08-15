@@ -84,22 +84,27 @@ public class OrderDetailService {
 
         try {
             if (order.getCustomer() != null) {
-                if (custName == null || custName.isBlank()) custName = order.getCustomer().getFullName();
-                if (custPhone == null || custPhone.isBlank()) custPhone = order.getCustomer().getPhone();
-                if (custEmail == null || custEmail.isBlank()) custEmail = order.getCustomer().getEmail();
-                if (custAddress == null || custAddress.isBlank()) custAddress = order.getCustomer().getAddress();
+                if (custName == null || custName.isBlank())
+                    custName = order.getCustomer().getFullName();
+                if (custPhone == null || custPhone.isBlank())
+                    custPhone = order.getCustomer().getPhone();
+                if (custEmail == null || custEmail.isBlank())
+                    custEmail = order.getCustomer().getEmail();
+                if (custAddress == null || custAddress.isBlank())
+                    custAddress = order.getCustomer().getAddress();
             }
         } catch (Exception ignored) {
         }
 
-        if (custName == null || custName.isBlank()) custName = "Khách hàng";
+        if (custName == null || custName.isBlank())
+            custName = "Khách hàng";
 
         CustomerInfoDTO customerInfo = CustomerInfoDTO.builder()
                 .fullName(custName)
                 .phone(custPhone != null ? custPhone : "-")
                 .email(custEmail != null ? custEmail : "-")
                 .address(custAddress != null ? custAddress : "-")
-                .customerNote(order.getNotes())
+                .customerNote(null)
                 .build();
 
         List<ProductSummaryDTO> productList = new ArrayList<>();
@@ -115,7 +120,8 @@ public class OrderDetailService {
                         : "Bonsai";
                 String imgUrl = null;
                 try {
-                    if (p != null) imgUrl = p.getFirstImageUrl();
+                    if (p != null)
+                        imgUrl = p.getFirstImageUrl();
                 } catch (Exception ignored) {
                 }
 
@@ -163,7 +169,8 @@ public class OrderDetailService {
             for (Payment p : paymentEntities) {
                 BigDecimal amt = p.getAmount() != null ? p.getAmount() : BigDecimal.ZERO;
                 String pStatus = p.getPaymentStatus() != null ? p.getPaymentStatus() : "PENDING";
-                if ("SUCCESS".equalsIgnoreCase(pStatus) || "PAID".equalsIgnoreCase(pStatus) || "COMPLETED".equalsIgnoreCase(pStatus)) {
+                if ("SUCCESS".equalsIgnoreCase(pStatus) || "PAID".equalsIgnoreCase(pStatus)
+                        || "COMPLETED".equalsIgnoreCase(pStatus)) {
                     paidAmount = paidAmount.add(amt);
                     if ("DEPOSIT".equalsIgnoreCase(p.getPaymentType())) {
                         successfulDepositAmount = successfulDepositAmount.add(amt);
@@ -178,9 +185,11 @@ public class OrderDetailService {
                         .paymentId(p.getPaymentId())
                         .paymentNumber(payIndex++)
                         .method(p.getPaymentMethod() != null ? p.getPaymentMethod() : "VNPay")
-                        .methodLabel(ModeratorDisplayLabelMapper.paymentMethodLabel(p.getPaymentMethod() != null ? p.getPaymentMethod() : "VNPAY"))
+                        .methodLabel(ModeratorDisplayLabelMapper
+                                .paymentMethodLabel(p.getPaymentMethod() != null ? p.getPaymentMethod() : "VNPAY"))
                         .paymentType(p.getPaymentType() != null ? p.getPaymentType() : "DEPOSIT")
-                        .paymentTypeLabel(ModeratorDisplayLabelMapper.paymentTypeLabel(p.getPaymentType() != null ? p.getPaymentType() : "DEPOSIT"))
+                        .paymentTypeLabel(ModeratorDisplayLabelMapper
+                                .paymentTypeLabel(p.getPaymentType() != null ? p.getPaymentType() : "DEPOSIT"))
                         .amount(amt)
                         .status(pStatus)
                         .statusLabel(ModeratorDisplayLabelMapper.paymentStatusLabel(pStatus))
@@ -200,11 +209,9 @@ public class OrderDetailService {
         BigDecimal recognizedCompletedRevenue = financialLedgerService.sumRecognizedCompletedRevenue(order);
         BigDecimal forfeitedDepositIncome = financialLedgerService.sumForfeitedDepositIncome(order);
         BigDecimal fullRefundAmount = financialLedgerService.sumFullRefunds(order);
-        BigDecimal totalRefundAmount = fullRefundAmount;
         BigDecimal netRecognizedAmount = financialLedgerService.sumNetRecognizedAmount(order);
         BigDecimal refundableCash = financialLedgerService.calculateRefundableCash(order);
-        List<FinancialLedgerDTO> ledgerHistory =
-                financialLedgerService.getLedgerHistory(order.getOrderId());
+        List<FinancialLedgerDTO> ledgerHistory = financialLedgerService.getLedgerHistory(order.getOrderId());
 
         PaymentSummaryDTO paymentSummary = PaymentSummaryDTO.builder()
                 .treePrice(computedTreePrice)
@@ -229,7 +236,8 @@ public class OrderDetailService {
         String currentStatus = order.getOrderStatus() != null ? order.getOrderStatus().toUpperCase() : "PENDING";
         List<TimelineDTO> timeline = buildOrderTimeline(order, currentStatus, paymentEntities);
 
-        List<OrderHandling> handlings = orderHandlingRepository.findByOrderOrderIdOrderByHandledAtDesc(order.getOrderId());
+        List<OrderHandling> handlings = orderHandlingRepository
+                .findByOrderOrderIdOrderByHandledAtDesc(order.getOrderId());
         List<HandlingHistoryDTO> handlingHistoryList = new ArrayList<>();
         if (handlings != null) {
             for (OrderHandling h : handlings) {
@@ -308,11 +316,10 @@ public class OrderDetailService {
     }
 
     private String resolvePaymentMethod(List<Payment> paymentEntities, Order order) {
-        boolean isDeposit = paymentEntities != null && paymentEntities.stream().anyMatch(p ->
-                "DEPOSIT".equalsIgnoreCase(p.getPaymentType()) ||
-                "DEPOSIT".equalsIgnoreCase(p.getPaymentMethod()) ||
-                "COD".equalsIgnoreCase(p.getPaymentMethod())
-        );
+        boolean isDeposit = paymentEntities != null && paymentEntities.stream()
+                .anyMatch(p -> "DEPOSIT".equalsIgnoreCase(p.getPaymentType()) ||
+                        "DEPOSIT".equalsIgnoreCase(p.getPaymentMethod()) ||
+                        "COD".equalsIgnoreCase(p.getPaymentMethod()));
 
         if (!isDeposit && order != null && order.getDepositAmount() != null) {
             isDeposit = order.getDepositAmount().compareTo(BigDecimal.ZERO) > 0;
@@ -320,8 +327,6 @@ public class OrderDetailService {
 
         return isDeposit ? "DEPOSIT" : "VNPAY";
     }
-
-
 
     private List<TimelineDTO> buildOrderTimeline(Order order, String status, List<Payment> paymentEntities) {
         List<TimelineDTO> list = new ArrayList<>();
@@ -350,7 +355,8 @@ public class OrderDetailService {
                 .filter(Objects::nonNull)
                 .findFirst()
                 .orElseGet(() -> logs.stream()
-                        .filter(l -> "DEPOSITED".equalsIgnoreCase(l.getToStatus()) || "PAID".equalsIgnoreCase(l.getToStatus()))
+                        .filter(l -> "DEPOSITED".equalsIgnoreCase(l.getToStatus())
+                                || "PAID".equalsIgnoreCase(l.getToStatus()))
                         .map(OrderLog::getActionAt)
                         .filter(Objects::nonNull)
                         .findFirst()
@@ -358,7 +364,8 @@ public class OrderDetailService {
                 : null;
 
         LocalDateTime completedAt = logs.stream()
-                .filter(l -> "COMPLETED".equalsIgnoreCase(l.getToStatus()) || "ORDER_COMPLETED".equalsIgnoreCase(l.getActionType()))
+                .filter(l -> "COMPLETED".equalsIgnoreCase(l.getToStatus())
+                        || "ORDER_COMPLETED".equalsIgnoreCase(l.getActionType()))
                 .map(OrderLog::getActionAt)
                 .filter(Objects::nonNull)
                 .findFirst()
@@ -371,15 +378,25 @@ public class OrderDetailService {
                 .findFirst()
                 .orElse(null);
 
-        list.add(TimelineDTO.builder().stage("CREATED").label("Khởi tạo đơn hàng").timestamp(createdDate).completed(true).current("PENDING".equals(status) && assignedDate == null).build());
-        list.add(TimelineDTO.builder().stage("CLAIMED").label("Tiếp nhận đơn").timestamp(assignedDate).completed(assignedDate != null).current("PENDING".equals(status) && assignedDate != null).build());
-        list.add(TimelineDTO.builder().stage("APPROVED").label("Đã phê duyệt").timestamp(approvedAt).completed("PENDING_PAYMENT".equals(status) || "DEPOSITED".equals(status) || "PAID".equals(status) || "COMPLETED".equals(status)).current("PENDING_PAYMENT".equals(status)).build());
-        list.add(TimelineDTO.builder().stage("DEPOSITED").label("Đã đặt cọc/Thanh toán").timestamp(depositedOrPaidAt).completed("DEPOSITED".equals(status) || "PAID".equals(status) || "COMPLETED".equals(status)).current("DEPOSITED".equals(status) || "PAID".equals(status)).build());
+        list.add(TimelineDTO.builder().stage("CREATED").label("Khởi tạo đơn hàng").timestamp(createdDate)
+                .completed(true).current("PENDING".equals(status) && assignedDate == null).build());
+        list.add(TimelineDTO.builder().stage("CLAIMED").label("Tiếp nhận đơn").timestamp(assignedDate)
+                .completed(assignedDate != null).current("PENDING".equals(status) && assignedDate != null).build());
+        list.add(
+                TimelineDTO.builder().stage("APPROVED").label("Đã phê duyệt").timestamp(approvedAt)
+                        .completed("PENDING_PAYMENT".equals(status) || "DEPOSITED".equals(status)
+                                || "PAID".equals(status) || "COMPLETED".equals(status))
+                        .current("PENDING_PAYMENT".equals(status)).build());
+        list.add(TimelineDTO.builder().stage("DEPOSITED").label("Đã đặt cọc/Thanh toán").timestamp(depositedOrPaidAt)
+                .completed("DEPOSITED".equals(status) || "PAID".equals(status) || "COMPLETED".equals(status))
+                .current("DEPOSITED".equals(status) || "PAID".equals(status)).build());
 
         if (isCancelled) {
-            list.add(TimelineDTO.builder().stage("CANCELLED").label("Đã huỷ đơn").timestamp(cancelledAt).completed(true).current(true).build());
+            list.add(TimelineDTO.builder().stage("CANCELLED").label("Đã huỷ đơn").timestamp(cancelledAt).completed(true)
+                    .current(true).build());
         } else {
-            list.add(TimelineDTO.builder().stage("COMPLETED").label("Hoàn thành").timestamp(completedAt).completed("COMPLETED".equals(status)).current("COMPLETED".equals(status)).build());
+            list.add(TimelineDTO.builder().stage("COMPLETED").label("Hoàn thành").timestamp(completedAt)
+                    .completed("COMPLETED".equals(status)).current("COMPLETED".equals(status)).build());
         }
 
         return list;
