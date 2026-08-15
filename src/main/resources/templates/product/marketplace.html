@@ -81,7 +81,7 @@
         <!-- FILTER -->
         <!-- ===================================================== -->
         <aside class="col-lg-3 filter-sidebar-col" id="filterSidebar">
-            <form method="get" action="/marketplace" id="filterForm">
+            <form method="get" action="/marketplace#marketplace-anchor" id="filterForm">
                 <div class="filter-panel p-3 rounded-4 shadow-sm bg-white border border-light">
                     <div class="filter-panel-header mb-4 pb-2 border-bottom d-flex justify-content-between align-items-center">
                         <h5 class="filter-panel-title fw-bold text-dark m-0" style="font-family: 'Plus Jakarta Sans', sans-serif;"><i class="fa-solid fa-sliders text-success me-2"></i>Bộ lọc</h5>
@@ -233,8 +233,8 @@
                         </div>
                     </div>
      
-                    <!-- Filter Actions -->
-                    <button type="submit" class="btn btn-success w-100 py-3 rounded-pill fw-bold text-uppercase mt-2 shadow-sm" 
+                    <!-- Filter Actions (Hidden because filters auto-apply on selection) -->
+                    <button type="submit" class="btn btn-success w-100 py-3 rounded-pill fw-bold text-uppercase mt-2 shadow-sm d-none" 
                             style="background-color: #1C3322; border: none; font-size: 1rem; letter-spacing: 0.5px; transition: all 0.2s;">
                         <i class="fa-solid fa-check me-2"></i>Áp dụng lọc
                     </button>
@@ -719,6 +719,15 @@
 
     if (closeBtn) closeBtn.addEventListener('click', hideFilterDrawer);
     if (filterOverlay) filterOverlay.addEventListener('click', hideFilterDrawer);
+
+    // Auto-submit filter on change
+    if (filterForm) {
+        filterForm.querySelectorAll('input[type="radio"], input[type="checkbox"], select').forEach(input => {
+            input.addEventListener('change', () => {
+                filterForm.submit();
+            });
+        });
+    }
 
     // Accordion filter toggle logic
     document.querySelectorAll('.filter-block-title').forEach(title => {
