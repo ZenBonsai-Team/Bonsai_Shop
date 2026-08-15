@@ -8,6 +8,58 @@
     </th:block>
     <th:block th:fragment="scripts">
         <script th:src="@{/js/owner-report-pagination.js}"></script>
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const modal = document.getElementById('ownerArtisanRevenueSourceModal');
+                if (!modal) return;
+
+                const panels = modal.querySelectorAll('[data-source-panel]');
+                const closeButton = modal.querySelector('.source-modal-close');
+
+                function closeModal() {
+                    modal.classList.add('hidden');
+                    modal.setAttribute('aria-hidden', 'true');
+                }
+
+                function openModal(targetId) {
+                    panels.forEach(panel => panel.classList.toggle('hidden', panel.id !== targetId));
+                    modal.classList.remove('hidden');
+                    modal.setAttribute('aria-hidden', 'false');
+                }
+
+                document.querySelectorAll('[data-source-target]').forEach(link => {
+                    link.addEventListener('click', function (event) {
+                        event.preventDefault();
+                        openModal(link.dataset.sourceTarget);
+                    });
+                });
+
+                document.querySelectorAll('[data-source-card]').forEach(row => {
+                    row.addEventListener('click', function (event) {
+                        if (event.target.closest('a, button, input, select, textarea')) return;
+                        openModal(row.dataset.sourceCard);
+                    });
+                    row.addEventListener('keydown', function (event) {
+                        if (event.key === 'Enter' || event.key === ' ') {
+                            event.preventDefault();
+                            openModal(row.dataset.sourceCard);
+                        }
+                    });
+                });
+
+                closeButton?.addEventListener('click', closeModal);
+                modal.addEventListener('click', function (event) {
+                    if (event.target === modal) {
+                        closeModal();
+                    }
+                });
+                document.addEventListener('keydown', function (event) {
+                    if (event.key === 'Escape' && !modal.classList.contains('hidden')) {
+                        closeModal();
+                    }
+                });
+            });
+        </script>
     </th:block>
 </head>
 <body>
@@ -34,7 +86,7 @@
     <section class="owner-panel owner-report-panel">
         <div class="owner-report-summary">
             <span>Nghệ nhân có doanh thu</span>
-            <strong th:text="${#lists.size(artisanRevenue)}">0</strong>
+            <strong th:text="${#lists.size(artisanRevenueDetails)}">0</strong>
         </div>
 
         <div class="owner-report-table-wrap">
@@ -48,13 +100,21 @@
                 </tr>
                 </thead>
                 <tbody data-owner-paginated-list data-page-size="10" data-report-label="dòng doanh thu nghệ nhân">
-                <tr th:each="item : ${artisanRevenue}" data-page-entry>
-                    <td class="fw-semibold" th:text="${item.artisanName() ?: '-'}">Nghệ nhân</td>
-                    <td th:text="${item.artisanEmail() ?: '-'}">artisan@example.com</td>
-                    <td class="text-end" th:text="${item.treesSold()}">0</td>
-                    <td class="text-end owner-money-cell" th:text="${#numbers.formatDecimal(item.revenue(), 0, 'POINT', 0, 'POINT') + ' VND'}">0 VND</td>
+                <tr class="owner-clickable-row"
+                    th:each="item : ${artisanRevenueDetails}"
+                    th:attr="data-source-card=${item.sourcePanelId()}"
+                    tabindex="0"
+                    data-page-entry>
+                    <td class="fw-semibold">
+                        <a class="owner-table-action-link" href="#"
+                           th:attr="data-source-target=${item.sourcePanelId()}"
+                           th:text="${item.summary().artisanName() ?: '-'}">Nghệ nhân</a>
+                    </td>
+                    <td th:text="${item.summary().artisanEmail() ?: '-'}">artisan@example.com</td>
+                    <td class="text-end" th:text="${item.summary().treesSold()}">0</td>
+                    <td class="text-end owner-money-cell" th:text="${#numbers.formatDecimal(item.summary().revenue(), 0, 'POINT', 0, 'POINT') + ' VND'}">0 VND</td>
                 </tr>
-                <tr th:if="${#lists.isEmpty(artisanRevenue)}">
+                <tr th:if="${#lists.isEmpty(artisanRevenueDetails)}">
                     <td colspan="4" class="owner-empty-state">Chưa có doanh thu nghệ nhân nào trong tháng này.</td>
                 </tr>
                 </tbody>
@@ -65,6 +125,50 @@
             <div class="pagination-controls" data-owner-pagination-controls></div>
         </div>
     </section>
+
+    <div id="ownerArtisanRevenueSourceModal" class="artisan-source-modal hidden" aria-hidden="true">
+        <div class="artisan-source-dialog" role="dialog" aria-modal="true" aria-labelledby="ownerArtisanRevenueSourceTitle">
+            <div class="source-modal-header">
+                <div>
+                    <span>Nguồn cộng</span>
+                    <h3 id="ownerArtisanRevenueSourceTitle">Chi tiết các đơn/giao dịch tạo nên số liệu tháng này</h3>
+                </div>
+                <button type="button" class="source-modal-close" aria-label="Đóng báo cáo">&times;</button>
+            </div>
+            <div class="artisan-source-report">
+                <section class="source-report-block hidden"
+                         th:each="item : ${artisanRevenueDetails}"
+                         th:id="${item.sourcePanelId()}"
+                         data-source-panel>
+                    <div class="source-report-summary">
+                        Doanh thu đơn hoàn thành của
+                        <strong th:text="${item.summary().artisanName() ?: '-'}">Nghệ nhân</strong>
+                        <strong th:text="${#numbers.formatDecimal(item.summary().revenue(), 0, 'POINT', 0, 'POINT') + ' VNĐ'}">0 VNĐ</strong>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-sm align-middle source-report-table">
+                            <thead>
+                            <tr><th>Ngày ghi nhận</th><th>Mã đơn</th><th>Khách hàng</th><th>Mã SP</th><th>Trạng thái</th><th class="text-end">Số tiền cộng</th></tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="source : ${item.completedRevenueSources()}">
+                                <td th:text="${source.sourceDate() != null ? #temporals.format(source.sourceDate(), 'dd/MM/yyyy HH:mm') : '-'}">-</td>
+                                <td class="fw-semibold" th:text="${source.orderCode()}">DH001</td>
+                                <td th:text="${source.customerName() ?: '-'}">Khách hàng</td>
+                                <td th:text="${source.productCode() ?: '-'}">SP001</td>
+                                <td th:text="${source.orderStatus()}">COMPLETED</td>
+                                <td class="text-end fw-semibold" th:text="${#numbers.formatDecimal(source.sourceAmount(), 0, 'POINT', 0, 'POINT') + ' VNĐ'}">0 VNĐ</td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(item.completedRevenueSources())}">
+                                <td colspan="6" class="text-center text-muted py-3">Không có nguồn ghi nhận trong tháng này.</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </div>
 </div>
 
 </body>

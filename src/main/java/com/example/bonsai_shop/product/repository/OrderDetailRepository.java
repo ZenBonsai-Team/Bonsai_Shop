@@ -9,7 +9,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -38,13 +37,13 @@ public interface OrderDetailRepository extends JpaRepository<OrderDetail, Intege
     @Query("""
             SELECT new com.example.bonsai_shop.owner.dto.OwnerArtisanRevenueDTO(
                 artisan.userId,
-                artisan.fullName,
-                artisan.email,
+                COALESCE(artisan.fullName, 'Chưa gán nghệ nhân'),
+                COALESCE(artisan.email, '-'),
                 COALESCE(SUM(od.quantity), 0),
                 COALESCE(SUM(od.priceAtPurchase * od.quantity), 0)
             )
             FROM OrderDetail od
-            JOIN od.product.createdBy artisan
+            LEFT JOIN od.product.createdBy artisan
             WHERE EXISTS (
                 SELECT 1
                 FROM FinancialLedger fl
@@ -61,48 +60,4 @@ public interface OrderDetailRepository extends JpaRepository<OrderDetail, Intege
                                                                   @Param("ledgerStatus") FinancialLedgerStatus ledgerStatus,
                                                                   @Param("startDate") LocalDateTime startDate,
                                                                   @Param("endDate") LocalDateTime endDate);
-
-    @Query("""
-            SELECT COALESCE(SUM(od.priceAtPurchase), 0)
-            FROM OrderDetail od
-            WHERE od.product.createdBy.userId = :artisanUserId
-              AND od.order.orderDate >= :startDate
-              AND od.order.orderDate < :endDate
-              AND UPPER(COALESCE(od.order.orderStatus, '')) = 'COMPLETED'
-            """)
-    BigDecimal sumMonthlyRevenueByArtisan(@Param("artisanUserId") Integer artisanUserId,
-                                          @Param("startDate") LocalDateTime startDate,
-                                          @Param("endDate") LocalDateTime endDate);
-
-    @Query("""
-            SELECT COUNT(od)
-            FROM OrderDetail od
-            WHERE od.product.createdBy.userId = :artisanUserId
-              AND od.order.orderDate >= :startDate
-              AND od.order.orderDate < :endDate
-              AND UPPER(COALESCE(od.order.orderStatus, '')) = 'COMPLETED'
-            """)
-    long countMonthlySoldItemsByArtisan(@Param("artisanUserId") Integer artisanUserId,
-                                        @Param("startDate") LocalDateTime startDate,
-                                        @Param("endDate") LocalDateTime endDate);
-
-    @Query("""
-            SELECT COALESCE(SUM(od.priceAtPurchase), 0)
-            FROM OrderDetail od
-            WHERE od.order.orderDate >= :startDate
-              AND od.order.orderDate < :endDate
-              AND UPPER(COALESCE(od.order.orderStatus, '')) = 'COMPLETED'
-            """)
-    BigDecimal sumMonthlyRevenue(@Param("startDate") LocalDateTime startDate,
-                                 @Param("endDate") LocalDateTime endDate);
-
-    @Query("""
-            SELECT COUNT(od)
-            FROM OrderDetail od
-            WHERE od.order.orderDate >= :startDate
-              AND od.order.orderDate < :endDate
-              AND UPPER(COALESCE(od.order.orderStatus, '')) = 'COMPLETED'
-            """)
-    long countMonthlySoldItems(@Param("startDate") LocalDateTime startDate,
-                               @Param("endDate") LocalDateTime endDate);
 }
