@@ -4,14 +4,12 @@ function toggleUserMenu() {
 }
 
 document.addEventListener("click", function (event) {
-
     const dropdown = document.querySelector(".user-dropdown");
     const menu = document.getElementById("userDropdownMenu");
 
-    if (!dropdown.contains(event.target)) {
+    if (dropdown && menu && !dropdown.contains(event.target)) {
         menu.classList.remove("show");
     }
-
 });
 
 const heroImages = [
@@ -200,18 +198,15 @@ const btn = document.getElementById("toggleNavbarBtn");
 
 let isHidden = false;
 
-btn.addEventListener("click", function () {
-
-    if (isHidden) {
-
-        navbar.style.transform = "translateY(0)";
-        btn.innerHTML = "⬆";
-
-    } else {
-
-        navbar.style.transform = "translateY(-100%)";
-        btn.innerHTML = "⬇";
-    }
-
-    isHidden = !isHidden;
-});
+if (btn) {
+    btn.addEventListener("click", function () {
+        if (isHidden) {
+            if (navbar) navbar.style.transform = "translateY(0)";
+            btn.innerHTML = "⬆";
+        } else {
+            if (navbar) navbar.style.transform = "translateY(-100%)";
+            btn.innerHTML = "⬇";
+        }
+        isHidden = !isHidden;
+    });
+}

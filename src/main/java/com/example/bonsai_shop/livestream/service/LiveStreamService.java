@@ -23,6 +23,11 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * Lớp dịch vụ quản lý toàn bộ nghiệp vụ Live Stream của hệ thống.
+ * Bao gồm: Quản lý phiên Live, đồng bộ tin nhắn từ YouTube Live API,
+ * phát tin nhắn thời gian thực qua WebSocket, tự động quét đơn chốt (Leads) bằng Regex.
+ */
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -40,15 +45,25 @@ public class LiveStreamService {
     private String youtubeApiKey;
 
     private final RestTemplate restTemplate = new RestTemplate();
+    
+    // Lưu cache để ánh xạ từ YouTube Video ID sang Live Chat ID
     private final Map<String, String> videoIdToChatIdCache = new HashMap<>();
+    
+    // Lưu token trang tiếp theo phục vụ việc phân trang kéo bình luận từ YouTube API
     private final Map<String, String> videoIdToNextPageToken = new HashMap<>();
 
-    // Patterns
+    // Biểu thức chính quy phát hiện số điện thoại di động Việt Nam (10 số, bắt đầu bằng các đầu số phổ biến)
     private static final Pattern PHONE_PATTERN = Pattern.compile("(03|05|07|08|09)\\d{8}");
+    
+    // Biểu thức chính quy phát hiện mã sản phẩm (Ví dụ: BON-001, BON-1234)
     private static final Pattern PRODUCT_CODE_PATTERN = Pattern.compile("\\b(BON-\\d{3,5})\\b", Pattern.CASE_INSENSITIVE);
 
+    /**
+     * Bắt đầu một phiên Live Stream mới.
+     * Hệ thống sẽ tự động chuyển các phiên Live đang chạy trước đó sang trạng thái kết thúc (ENDED).
+     */
     public LiveSession startSession(String title, String streamUrl) {
-        // End any active sessions first
+        // Đóng các phiên Live đang diễn ra (nếu có) trước khi mở phiên mới
         liveSessionRepository.findFirstByStatusOrderByStartTimeDesc("ONGOING")
                 .ifPresent(session -> {
                     session.setStatus("ENDED");
@@ -64,7 +79,7 @@ public class LiveStreamService {
                 .build();
         LiveSession saved = liveSessionRepository.save(session);
 
-        // Notify all users that Live Stream has started
+        // Gửi thông báo hệ thống (Notification) tới toàn bộ thành viên trong hệ thống
         try {
             List<com.example.bonsai_shop.entity.User> allUsers = userRepository.findAll();
             List<ModerationNotification> notifications = new ArrayList<>();
@@ -88,6 +103,10 @@ public class LiveStreamService {
         return saved;
     }
 
+    /**
+     * Kết thúc phiên Live Stream theo Session ID.
+     * Giải phóng dữ liệu tin nhắn tạm thời trong DB để giảm tải lưu trữ.
+     */
     public LiveSession endSession(Integer sessionId) {
         LiveSession session = liveSessionRepository.findById(sessionId)
                 .orElseThrow(() -> new IllegalArgumentException("Session not found with ID: " + sessionId));
@@ -95,27 +114,38 @@ public class LiveStreamService {
         session.setEndTime(LocalDateTime.now());
         LiveSession saved = liveSessionRepository.save(session);
 
-        // Clean up chat messages for this session.
-        // The raw chat is only needed while the session is ONGOING (for refresh-safe history).
-        // Leads (phone numbers, product codes) are already persisted in live_lead table.
+        // Xóa sạch tin nhắn chat thô trong database vì không cần thiết sau khi live kết thúc.
+        // Chỉ giữ lại các bản ghi Leads chốt đơn (live_lead) được lưu trữ vĩnh viễn để gọi chốt đơn.
         liveChatMessageRepository.deleteByLiveSessionSessionId(sessionId);
         log.info("Cleaned up chat messages for ended session #{}", sessionId);
 
         return saved;
     }
 
+    /**
+     * Lấy phiên Live Stream đang phát trực tiếp hiện tại.
+     */
     public Optional<LiveSession> getActiveSession() {
         return liveSessionRepository.findFirstByStatusOrderByStartTimeDesc("ONGOING");
     }
 
+    /**
+     * Lấy tất cả lịch sử các phiên Live Stream.
+     */
     public List<LiveSession> getAllSessions() {
         return liveSessionRepository.findAll();
     }
 
+    /**
+     * Lấy danh sách chốt đơn (Leads) phát sinh theo Session ID.
+     */
     public List<LiveLead> getLeadsBySession(Integer sessionId) {
         return liveLeadRepository.findByLiveSessionSessionIdOrderByCreatedAtDesc(sessionId);
     }
 
+    /**
+     * Cập nhật trạng thái xử lý của Lead và gửi tín hiệu đồng bộ lên giao diện qua WebSocket.
+     */
     public LiveLead updateLeadStatus(Integer leadId, String status, String notes) {
         LiveLead lead = liveLeadRepository.findById(leadId)
                 .orElseThrow(() -> new IllegalArgumentException("Lead not found with ID: " + leadId));
@@ -123,23 +153,26 @@ public class LiveStreamService {
         lead.setNotes(notes);
         LiveLead saved = liveLeadRepository.save(lead);
 
-        // Notify UI of status update
+        // Phát tín hiệu cập nhật trạng thái Lead cho toàn bộ giao diện quản trị đang lắng nghe
         messagingTemplate.convertAndSend("/topic/live-leads-update", saved);
         return saved;
     }
 
     /**
-     * Parse comment and capture leads.
+     * Thuật toán phân tích nội dung bình luận để phát hiện số điện thoại (SĐT) & mã sản phẩm.
+     * Nếu phát hiện bất kỳ một trong hai thông tin này, bình luận sẽ được lưu thành một bản ghi "Khách hàng tiềm năng" (LiveLead).
      */
     public Optional<LiveLead> processComment(String viewerName, String commentContent, LiveSession session) {
         Matcher phoneMatcher = PHONE_PATTERN.matcher(commentContent);
         Matcher productMatcher = PRODUCT_CODE_PATTERN.matcher(commentContent);
 
+        // 1. Quét tìm số điện thoại trong bình luận
         String phoneNumber = null;
         if (phoneMatcher.find()) {
             phoneNumber = phoneMatcher.group();
         }
 
+        // 2. Quét tìm mã sản phẩm (BON-xxx) trong bình luận
         String productCode = null;
         Product product = null;
         if (productMatcher.find()) {
@@ -150,11 +183,12 @@ public class LiveStreamService {
             }
         }
 
-        // We only save a lead if phone number is present or product code is matched
+        // Nếu bình luận không chứa SĐT và cũng không chứa mã cây, bỏ qua (không tạo Lead)
         if (phoneNumber == null && productCode == null) {
             return Optional.empty();
         }
 
+        // 3. Phân loại mục đích bình luận (Chốt đơn, Cần tư vấn, hay Gọi lại sau)
         String intentType = classifyIntent(commentContent);
 
         LiveLead lead = LiveLead.builder()
@@ -169,29 +203,35 @@ public class LiveStreamService {
 
         LiveLead saved = liveLeadRepository.save(lead);
 
-        // Send real-time lead notification via WebSocket
+        // 4. Phát tín hiệu đẩy tin thông báo Lead mới nhảy lên màn hình Admin qua WebSocket
         messagingTemplate.convertAndSend("/topic/live-leads/" + session.getSessionId(), saved);
         messagingTemplate.convertAndSend("/topic/live-leads", saved);
 
         return Optional.of(saved);
     }
 
+    /**
+     * Phân loại mục đích của bình luận dựa trên từ khoá tiếng Việt/tiếng Anh phổ thông.
+     */
     private String classifyIntent(String text) {
         String lower = text.toLowerCase();
+        // Nhóm từ khóa chốt mua hàng
         if (lower.contains("chốt") || lower.contains("chot") || lower.contains("mua") || lower.contains("lấy") 
                 || lower.contains("lay") || lower.contains("order") || lower.contains("đặt") || lower.contains("dat")) {
             return "CHOT_DON";
+        // Nhóm từ khóa hỏi han giá cả, cần tư vấn thêm
         } else if (lower.contains("tư vấn") || lower.contains("tu van") || lower.contains("hỏi") || lower.contains("hoi") 
                 || lower.contains("xin giá") || lower.contains("xin gia") || lower.contains("bao gia") || lower.contains("giá bao nhiêu")) {
             return "TU_VAN";
+        // Mặc định là cần gọi lại tư vấn chung
         } else {
             return "GOI_LAI";
         }
     }
 
     /**
-     * Poll comments from YouTube Live and broadcast them to the live chat WebSocket topic.
-     * Requires youtube.api.key to be set in application.properties.
+     * Phương thức đồng bộ tin nhắn thời gian thực từ YouTube Live Chat API về hệ thống.
+     * Yêu cầu biến cấu hình 'youtube.api.key' phải được thiết lập hợp lệ trong application.properties.
      */
     public void syncYouTubeComments(String youtubeVideoId, LiveSession session) {
         if (youtubeApiKey == null || youtubeApiKey.isEmpty()) {
@@ -200,6 +240,7 @@ public class LiveStreamService {
         }
 
         try {
+            // Lấy ID khung chat trực tiếp của luồng stream
             String liveChatId = videoIdToChatIdCache.computeIfAbsent(youtubeVideoId, this::fetchLiveChatId);
             if (liveChatId == null) {
                 return;
@@ -212,6 +253,7 @@ public class LiveStreamService {
                 url += "&pageToken=" + nextPageToken;
             }
 
+            // Gọi API của Google để kéo bình luận
             Map<String, Object> response = restTemplate.getForObject(url, Map.class);
             if (response != null) {
                 videoIdToNextPageToken.put(youtubeVideoId, (String) response.get("nextPageToken"));
@@ -228,7 +270,7 @@ public class LiveStreamService {
                             if (textMessageDetails != null) {
                                 String messageText = (String) textMessageDetails.get("messageText");
 
-                                // 1. Save message to DB
+                                // A. Lưu tin nhắn vào lịch sử chat database
                                 LiveChatMessage chatMsg = LiveChatMessage.builder()
                                         .liveSession(session)
                                         .author(displayName)
@@ -238,7 +280,7 @@ public class LiveStreamService {
                                         .build();
                                 liveChatMessageRepository.save(chatMsg);
 
-                                // 2. Broadcast to all subscribers (moderator + viewer)
+                                // B. Phát tin nhắn tức thì qua WebSocket để hiển thị lên UI của khách hàng & quản trị viên
                                 messagingTemplate.convertAndSend("/topic/live-chat/" + session.getSessionId(),
                                         (Object) Map.of(
                                                 "author", displayName,
@@ -247,7 +289,7 @@ public class LiveStreamService {
                                                 "source", "YOUTUBE"
                                         ));
 
-                                // 3. Lead detection
+                                // C. Chạy bộ quét lead để phát hiện khách hàng muốn mua hàng
                                 processComment(displayName, messageText, session);
                             }
                         }
@@ -259,6 +301,9 @@ public class LiveStreamService {
         }
     }
 
+    /**
+     * Truy vấn thông tin của video stream trên YouTube để tìm khóa 'activeLiveChatId' của phiên live.
+     */
     private String fetchLiveChatId(String videoId) {
         try {
             String url = "https://www.googleapis.com/youtube/v3/videos?id=" + videoId 

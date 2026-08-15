@@ -178,6 +178,59 @@
         </div>
     </div>
 
+    <!-- Lịch sử các phiên Live đã phát -->
+    <div th:if="${activeSession == null}" class="card border-0 rounded-4 shadow-sm mb-4">
+        <div class="card-header bg-white border-0 pt-4 px-4 pb-2">
+            <h5 class="fw-bold text-dark mb-0">
+                <i class="fa-solid fa-clock-rotate-left text-success me-2"></i>Lịch sử các phiên Live đã phát
+            </h5>
+            <p class="text-muted small mb-0 mt-1">Xem danh sách các phiên live cũ và quản lý thông tin khách hàng tiềm năng đã thu thập.</p>
+        </div>
+        <div class="card-body px-4 pb-4">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead>
+                        <tr class="table-light">
+                            <th class="py-3 px-3">Mã phiên</th>
+                            <th class="py-3">Tiêu đề</th>
+                            <th class="py-3">Đường dẫn luồng</th>
+                            <th class="py-3">Bắt đầu lúc</th>
+                            <th class="py-3">Kết thúc lúc</th>
+                            <th class="py-3 text-end px-3">Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <th:block th:each="item : ${recentSessions}">
+                            <tr th:if="${item.status == 'ENDED'}">
+                                <td class="px-3 fw-semibold text-secondary" th:text="${'#SESSION-' + item.sessionId}">#SESSION-1</td>
+                                <td class="fw-bold text-dark" th:text="${item.title}">Tiêu đề</td>
+                                <td>
+                                    <a th:if="${item.streamUrl != null && !#strings.isEmpty(item.streamUrl)}" 
+                                       th:href="${item.streamUrl}" target="_blank" class="text-decoration-none text-primary small text-truncate d-inline-block" style="max-width: 250px;">
+                                        <i class="fa-brands fa-youtube text-danger me-1"></i>Xem trên YouTube
+                                    </a>
+                                    <span th:unless="${item.streamUrl != null && !#strings.isEmpty(item.streamUrl)}" class="text-muted small">Không có URL</span>
+                                </td>
+                                <td class="small text-secondary" th:text="${item.startTime != null ? #temporals.format(item.startTime, 'dd/MM/yyyy HH:mm') : '-'}">Bắt đầu</td>
+                                <td class="small text-secondary" th:text="${item.endTime != null ? #temporals.format(item.endTime, 'dd/MM/yyyy HH:mm') : '-'}">Kết thúc</td>
+                                <td class="text-end px-3">
+                                    <button class="btn btn-sm btn-outline-success rounded-pill px-3 py-1 fw-semibold btn-past-leads"
+                                            th:data-id="${item.sessionId}"
+                                            th:data-title="${item.title}">
+                                        <i class="fa-solid fa-users me-1"></i>Danh sách khách hàng tiềm năng
+                                    </button>
+                                </td>
+                            </tr>
+                        </th:block>
+                        <tr th:if="${#lists.isEmpty(recentSessions)}">
+                            <td colspan="6" class="text-center py-4 text-muted small">Không tìm thấy lịch sử phiên live nào.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
     <!-- Live Workspace Split Row -->
     <div class="live-container" th:if="${activeSession != null}">
         <!-- Left panel: Video and Simulation -->
@@ -317,6 +370,74 @@
             </div>
         </div>
     </div>
+
+    <!-- PAST LEADS MODAL -->
+    <div class="modal fade" id="pastLeadsModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
+            <div class="modal-content rounded-4 border-0 shadow">
+                <div class="modal-header bg-success text-white py-3" style="background-color: #2E7D32 !important;">
+                    <h5 class="modal-title fw-bold" id="pastLeadsModalTitle">
+                        <i class="fa-solid fa-users me-2"></i>Danh sách khách hàng tiềm năng
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <!-- Statistics summary inside Modal -->
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-4">
+                            <div class="p-3 bg-light rounded-3 text-center border">
+                                <h6 class="text-secondary small fw-bold text-uppercase mb-1" style="font-size: 0.75rem;">Tổng khách hàng</h6>
+                                <h3 class="fw-bold text-dark mb-0" id="pastTotalLeads">0</h3>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="p-3 bg-success-subtle rounded-3 text-center border border-success-subtle">
+                                <h6 class="text-success-emphasis small fw-bold text-uppercase mb-1" style="font-size: 0.75rem;">Đã chốt (DONE)</h6>
+                                <h3 class="fw-bold text-success mb-0" id="pastDoneLeads">0</h3>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="p-3 bg-warning-subtle rounded-3 text-center border border-warning-subtle">
+                                <h6 class="text-warning-emphasis small fw-bold text-uppercase mb-1" style="font-size: 0.75rem;">Chờ liên hệ (PENDING)</h6>
+                                <h3 class="fw-bold text-warning mb-0" id="pastPendingLeads">0</h3>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive" style="max-height: 400px;">
+                        <table class="table table-hover align-middle leads-table">
+                            <thead>
+                                <tr>
+                                    <th>Khách hàng</th>
+                                    <th>Số điện thoại</th>
+                                    <th>Sản phẩm</th>
+                                    <th>Nội dung bình luận</th>
+                                    <th>Ý định</th>
+                                    <th>Ghi chú cuộc gọi</th>
+                                    <th>Trạng thái</th>
+                                    <th>Lưu</th>
+                                </tr>
+                            </thead>
+                            <tbody id="pastLeadsTableBody">
+                                <!-- Loaded dynamically via fetch -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 p-3 bg-light d-flex justify-content-between">
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-sm btn-outline-primary rounded-pill px-3" onclick="copyPastLeads()">
+                            <i class="fa-regular fa-copy me-1"></i> Sao chép
+                        </button>
+                        <button class="btn btn-sm btn-outline-success rounded-pill px-3" onclick="exportPastLeadsCSV()">
+                            <i class="fa-solid fa-file-excel me-1"></i> Xuất Excel
+                        </button>
+                    </div>
+                    <button type="button" class="btn btn-secondary rounded-pill px-4 btn-sm fw-semibold" data-bs-dismiss="modal">Đóng</button>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <th:block id="page-scripts">
@@ -325,10 +446,13 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
     <script th:inline="javascript">
         /*<![CDATA[*/
-        let stompClient = null;
         let activeSessionId = /*[[${activeSession != null ? activeSession.sessionId : null}]]*/ null;
         let activeSessionUrl = /*[[${activeSession != null ? activeSession.streamUrl : null}]]*/ null;
         let activeSessionStart = /*[[${activeSession != null ? #temporals.format(activeSession.startTime, 'yyyy-MM-dd''T''HH:mm:ss') : null}]]*/ null;
+        /*]]>*/
+    </script>
+    <script th:inline="none">
+        let stompClient = null;
         let youtubeSyncInterval = null;
 
         function extractYouTubeId(url) {
@@ -836,6 +960,209 @@
                 printWindow.close();
             }, 500);
         }
+
+        // --- HÀM XỬ LÝ XEM LẠI LỊCH SỬ KHÁCH HÀNG TIỀM NĂNG CHO PHIÊN LIVE CŨ ---
+        let currentPastLeads = [];
+        let currentPastSessionTitle = '';
+
+        function showPastLeadsModal(sessionId, title) {
+            currentPastSessionTitle = title;
+            document.getElementById('pastLeadsModalTitle').innerHTML = `<i class="fa-solid fa-users me-2"></i>Danh sách khách hàng tiềm năng: <strong>${title}</strong>`;
+            
+            const tbody = document.getElementById('pastLeadsTableBody');
+            tbody.innerHTML = '<tr><td colspan="8" class="text-center py-4 text-muted"><span class="spinner-border spinner-border-sm me-2" role="status"></span>Đang tải dữ liệu...</td></tr>';
+            
+            // Khởi tạo và hiển thị Bootstrap Modal
+            const modalEl = document.getElementById('pastLeadsModal');
+            let modal = bootstrap.Modal.getInstance(modalEl);
+            if (!modal) {
+                modal = new bootstrap.Modal(modalEl);
+            }
+            modal.show();
+
+            // Fetch leads từ API của phiên live cũ
+            fetch('/api/live/' + sessionId + '/leads')
+                .then(r => r.json())
+                .then(leads => {
+                    currentPastLeads = leads;
+                    renderPastLeadsTable(leads);
+                    updatePastLeadsStats(leads);
+                })
+                .catch(err => {
+                    tbody.innerHTML = '<tr><td colspan="8" class="text-center py-4 text-danger"><i class="fa-solid fa-triangle-exclamation me-1"></i>Không thể tải danh sách khách hàng.</td></tr>';
+                });
+        }
+
+        function renderPastLeadsTable(leads) {
+            const tbody = document.getElementById('pastLeadsTableBody');
+            tbody.innerHTML = '';
+            if (leads.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" class="text-center py-4 text-muted">Không tìm thấy khách hàng tiềm năng nào trong buổi live này.</td></tr>';
+                return;
+            }
+
+            leads.forEach(lead => {
+                const tr = document.createElement('tr');
+                tr.id = 'past-lead-row-' + lead.leadId;
+                
+                // Tên khách
+                const nameCell = `<td><strong>${escapeHtml(lead.viewerName)}</strong></td>`;
+                
+                // Số điện thoại
+                const phoneCell = `<td><span class="font-monospace fw-semibold text-success">${lead.phoneNumber || 'Không có'}</span></td>`;
+                
+                // Sản phẩm chốt
+                let productCell = '<td><span class="text-muted small">-</span></td>';
+                if (lead.product) {
+                    productCell = `<td>
+                        <a href="/marketplace/product/${lead.product.productId}" target="_blank" class="product-tag text-decoration-none small" style="font-size: 11px; padding: 2px 6px;">
+                            <i class="fa-solid fa-leaf me-1"></i>${lead.product.productCode}
+                        </a>
+                    </td>`;
+                }
+                
+                // Bình luận gốc
+                const commentCell = `<td class="small text-secondary" style="max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${escapeHtml(lead.rawComment)}">${escapeHtml(lead.rawComment)}</td>`;
+                
+                // Phân loại ý định
+                let intentClass = 'intent-goilai';
+                let intentText = 'GỌI LẠI';
+                if (lead.intentType === 'CHOT_DON') {
+                    intentClass = 'intent-chot';
+                    intentText = 'CHỐT ĐƠN';
+                } else if (lead.intentType === 'TU_VAN') {
+                    intentClass = 'intent-tuvan';
+                    intentText = 'TƯ VẤN';
+                }
+                const intentCell = `<td><span class="intent-badge ${intentClass}">${intentText}</span></td>`;
+                
+                // Ghi chú cuộc gọi (Ô input)
+                const notesCell = `<td>
+                    <input type="text" class="form-control form-control-sm rounded-pill px-3" 
+                           id="past-notes-${lead.leadId}" value="${lead.notes || ''}" 
+                           placeholder="Ghi chú cuộc gọi..." style="font-size: 12px; max-width: 180px;">
+                </td>`;
+                
+                // Trạng thái (Dropdown select)
+                const statusCell = `<td>
+                    <select class="form-select form-select-sm rounded-pill" id="past-status-${lead.leadId}" style="font-size: 12px; font-weight: 600; width: 120px;">
+                        <option value="PENDING" ${lead.leadStatus === 'PENDING' ? 'selected' : ''}>Chờ xử lý</option>
+                        <option value="CONTACTED" ${lead.leadStatus === 'CONTACTED' ? 'selected' : ''}>Đang liên hệ</option>
+                        <option value="DONE" ${lead.leadStatus === 'DONE' ? 'selected' : ''}>Hoàn thành</option>
+                    </select>
+                </td>`;
+                
+                // Hành động lưu lại
+                const actionCell = `<td>
+                    <button class="btn btn-sm btn-success rounded-circle" style="width: 28px; height: 28px; padding:0;" onclick="savePastLead(${lead.leadId})">
+                        <i class="fa-solid fa-floppy-disk" style="font-size: 12px;"></i>
+                    </button>
+                </td>`;
+                
+                tr.innerHTML = nameCell + phoneCell + productCell + commentCell + intentCell + notesCell + statusCell + actionCell;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function updatePastLeadsStats(leads) {
+            document.getElementById('pastTotalLeads').textContent = leads.length;
+            document.getElementById('pastDoneLeads').textContent = leads.filter(l => l.leadStatus === 'DONE').length;
+            document.getElementById('pastPendingLeads').textContent = leads.filter(l => l.leadStatus === 'PENDING').length;
+        }
+
+        function savePastLead(leadId) {
+            const status = document.getElementById('past-status-' + leadId).value;
+            const notes = document.getElementById('past-notes-' + leadId).value.trim();
+            const csrfToken = document.querySelector('meta[name="_csrf"]')?.content || '';
+            const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.content || 'X-CSRF-TOKEN';
+
+            fetch('/api/live/leads/' + leadId + '/status', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    [csrfHeader]: csrfToken
+                },
+                body: JSON.stringify({ status: status, notes: notes })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    const lead = currentPastLeads.find(l => l.leadId === leadId);
+                    if (lead) {
+                        lead.leadStatus = status;
+                        lead.notes = notes;
+                    }
+                    updatePastLeadsStats(currentPastLeads);
+                    
+                    const btn = document.querySelector(`#past-lead-row-${leadId} button`);
+                    if (btn) {
+                        const origHtml = btn.innerHTML;
+                        btn.className = "btn btn-sm btn-light text-success rounded-circle border border-success";
+                        btn.innerHTML = '<i class="fa-solid fa-check"></i>';
+                        setTimeout(() => {
+                            btn.className = "btn btn-sm btn-success rounded-circle";
+                            btn.innerHTML = origHtml;
+                        }, 1500);
+                    }
+                } else {
+                    alert('Lỗi: ' + data.error);
+                }
+            })
+            .catch(() => alert('Không thể kết nối đến máy chủ.'));
+        }
+
+        function copyPastLeads() {
+            if (currentPastLeads.length === 0) return;
+            let text = `DANH SÁCH KHÁCH HÀNG TIỀM NĂNG - PHIÊN LIVE: ${currentPastSessionTitle}\n`;
+            text += `========================================================\n`;
+            currentPastLeads.forEach((l, idx) => {
+                const code = l.product ? l.product.productCode : '-';
+                text += `${idx + 1}. Khách: ${l.viewerName} | SĐT: ${l.phoneNumber || 'Không có'} | Cây: ${code} | Ý định: ${l.intentType} | Comment: "${l.rawComment}"\n`;
+            });
+            navigator.clipboard.writeText(text)
+                .then(() => alert('Đã sao chép danh sách vào clipboard.'))
+                .catch(() => alert('Không thể sao chép.'));
+        }
+
+        function exportPastLeadsCSV() {
+            if (currentPastLeads.length === 0) return;
+            let csv = '\ufeff'; // BOM hỗ trợ hiển thị tiếng Việt trong Excel
+            csv += 'STT,Họ và tên,Số điện thoại,Mã cây,Nội dung bình luận,Ý định,Ghi chú,Trạng thái\n';
+            currentPastLeads.forEach((l, idx) => {
+                const name = `"${(l.viewerName || '').replaceAll('"', '""')}"`;
+                const phone = `"${(l.phoneNumber || '')}"`;
+                const code = `"${(l.product ? l.product.productCode : '')}"`;
+                const comment = `"${(l.rawComment || '').replaceAll('"', '""')}"`;
+                const intent = `"${l.intentType}"`;
+                const note = `"${(l.notes || '').replaceAll('"', '""')}"`;
+                const status = `"${l.leadStatus}"`;
+                csv += `${idx + 1},${name},${phone},${code},${comment},${intent},${note},${status}\n`;
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const filename = `danh_sach_khach_hang_live_${new Date().toISOString().slice(0,10)}.csv`;
+            link.href = URL.createObjectURL(blob);
+            link.setAttribute('download', filename);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function escapeHtml(t) {
+            if (!t) return '';
+            return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.btn-past-leads').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const id = btn.getAttribute('data-id');
+                    const title = btn.getAttribute('data-title');
+                    showPastLeadsModal(id, title);
+                });
+            });
+        });
         /*]]>*/
     </script>
 </th:block>

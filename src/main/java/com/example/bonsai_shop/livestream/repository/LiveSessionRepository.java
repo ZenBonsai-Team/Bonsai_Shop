@@ -9,5 +9,6 @@ import java.util.Optional;
 @Repository
 public interface LiveSessionRepository extends JpaRepository<LiveSession, Integer> {
     Optional<LiveSession> findFirstByStatusOrderByStartTimeDesc(String status);
+    List<LiveSession> findByStatusOrderByStartTimeDesc(String status);
     List<LiveSession> findAllByOrderByStartTimeDesc();
 }
