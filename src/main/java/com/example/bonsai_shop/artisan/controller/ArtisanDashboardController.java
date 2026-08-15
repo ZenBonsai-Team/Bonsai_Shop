@@ -27,12 +27,14 @@ import java.util.List;
 @Controller
 @RequestMapping("/artisan")
 @RequiredArgsConstructor
+// Controller tổng hợp số liệu dashboard của artisan.
 public class ArtisanDashboardController {
 
     private final ArtisanProductService artisanProductService;
     private final FinancialLedgerRepository financialLedgerRepository;
 
     @GetMapping
+    // Tính các chỉ số sản phẩm và doanh thu theo tháng được chọn.
     public String dashboard(@AuthenticationPrincipal UserDetails userDetails,
                             @RequestParam(value = "month", required = false) String month,
                             Model model) {
@@ -177,6 +179,7 @@ public class ArtisanDashboardController {
         return "artisan/dashboard";
     }
 
+    // Parse tham số tháng, fallback về tháng hiện tại khi dữ liệu không hợp lệ.
     private YearMonth parseSelectedMonth(String month) {
         if (month == null || month.isBlank()) {
             return YearMonth.now();

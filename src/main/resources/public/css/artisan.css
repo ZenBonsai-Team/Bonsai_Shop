@@ -1829,6 +1829,7 @@ textarea {
 .product-table th:last-child,
 .product-table td:last-child {
     min-width: 300px;
+    text-align: right;
     width: 300px;
 }
 
@@ -1969,12 +1970,9 @@ textarea {
 }
 
 .table-actions {
-    align-items: center;
-    display: flex;
-    flex-wrap: nowrap;
-    gap: 8px;
     min-width: 280px;
     position: relative;
+    white-space: nowrap;
 }
 
 .table-actions form {
@@ -2024,6 +2022,8 @@ textarea {
     font-weight: 700;
     border-color: #0d6efd;
     color: #0d6efd;
+    margin-right: 8px;
+    vertical-align: middle;
 }
 
 .table-actions .action-primary:hover {
@@ -2034,7 +2034,9 @@ textarea {
 
 .action-menu {
     flex: 0 0 auto;
+    display: inline-flex;
     position: relative;
+    vertical-align: middle;
 }
 
 .action-menu summary {

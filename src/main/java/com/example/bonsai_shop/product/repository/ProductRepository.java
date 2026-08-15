@@ -72,6 +72,24 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
     int incrementViewCount(@Param("productId") Integer productId);
 
 
+    /**
+     * [GIỮ CHỖ NGUYÊN TỬ CHO CÂY BONSAI - ATOMIC RESERVATION GUARD]
+     *
+     * Mục đích:
+     * - Khóa và chuyển trạng thái của cây từ 'AVAILABLE' sang 'RESERVED' một cách nguyên tử (Atomic Update) ở tầng CSDL.
+     * - Chống Race Condition tuyệt đối khi nhiều khách hàng cùng bấm đặt mua cùng 1 cây bonsai độc bản (Bonsai Unique Piece) tại cùng 1 thời điểm (millisecond).
+     *
+     * Được gọi từ:
+     * - OrderService.createOrder() (Online Checkout)
+     * - ArtisanInPersonOrderService (Bán tại vườn)
+     *
+     * Câu lệnh SQL:
+     * - UPDATE Product p SET p.productStatus = 'RESERVED' WHERE p.productId = :productId AND p.productStatus = 'AVAILABLE' AND COALESCE(p.isVisible, true) = true
+     *
+     * Giá trị trả về:
+     * - 1: Giữ chỗ thành công (Cây còn AVAILABLE và cập nhật thành công sang RESERVED).
+     * - 0: Giữ chỗ thất bại (Cây đã bị người khác mua trước hoặc không tồn tại/bị ẩn).
+     */
     @Modifying
     @Query("""
         UPDATE Product p

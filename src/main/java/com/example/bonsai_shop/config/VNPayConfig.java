@@ -10,6 +10,20 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 
+/**
+ * [CẤU HÌNH CỔNG THANH TOÁN VNPAY & THUẬT TOÁN MÃ HÓA BẢO MẬT]
+ *
+ * Chịu trách nhiệm:
+ * - Nạp các tham số cấu hình môi trường VNPay Sandbox/Production từ application.properties:
+ *   + vnp_PayUrl: Đường dẫn cổng thanh toán VNPay
+ *   + vnp_TmnCode: Terminal ID (Mã định danh website của merchant)
+ *   + vnp_HashSecret: Khóa bí mật (Secret Key) dùng để sinh và kiểm tra chữ ký số HMAC-SHA512
+ *   + vnp_ReturnUrl: Địa chỉ URL chuyển hướng trình duyệt của khách về sau khi thanh toán (/vnpay/payment-callback)
+ * - Cung cấp các tiện ích mã hóa:
+ *   + hmacSHA512(): Thuật toán sinh chữ ký số toàn vẹn dữ liệu
+ *   + getIpAddress(): Trích xuất địa chỉ IP của client (hỗ trợ đọc qua header proxy X-FORWARDED-FOR)
+ *   + getRandomNumber(): Sinh chuỗi số ngẫu nhiên cho mã tham chiếu giao dịch.
+ */
 @Configuration
 public class VNPayConfig {
     public static String vnp_PayUrl;
@@ -37,6 +51,13 @@ public class VNPayConfig {
         vnp_ReturnUrl = returnUrl;
     }
 
+    /**
+     * [THUẬT TOÁN BĂM CHỮ KÝ SỐ BẢO MẬT HMAC-SHA512]
+     *
+     * @param key Khóa bí mật (Hash Secret)
+     * @param data Chuỗi dữ liệu các tham số đã sắp xếp theo thứ tự alphabet
+     * @return Chuỗi Hex mã băm SecureHash 128 ký tự
+     */
     public static String hmacSHA512(final String key, final String data) {
         try {
             if (key == null || data == null) {

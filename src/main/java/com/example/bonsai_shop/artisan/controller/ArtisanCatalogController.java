@@ -14,17 +14,20 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 @Controller
 @RequestMapping("/artisan/catalog")
 @RequiredArgsConstructor
+// Controller quản lý danh mục cây, giống cây và tag cho khu vực artisan.
 public class ArtisanCatalogController {
 
     private final ArtisanCatalogService artisanCatalogService;
 
     @GetMapping
+    // Hiển thị trang quản lý catalog kèm dữ liệu thống kê sử dụng.
     public String catalog(Model model) {
         addCatalogData(model);
         return "artisan/catalog";
     }
 
     @PostMapping("/categories")
+    // Tạo mới category sau khi validate ở service.
     public String createCategory(@RequestParam String categoryName,
                                  @RequestParam(required = false) String description,
                                  RedirectAttributes redirectAttributes) {
@@ -38,6 +41,7 @@ public class ArtisanCatalogController {
     }
 
     @PostMapping("/categories/{categoryId}")
+    // Cập nhật thông tin category theo id.
     public String updateCategory(@PathVariable Integer categoryId,
                                  @RequestParam String categoryName,
                                  @RequestParam(required = false) String description,
@@ -52,6 +56,7 @@ public class ArtisanCatalogController {
     }
 
     @PostMapping("/categories/{categoryId}/delete")
+    // Xóa category nếu chưa bị sản phẩm hoặc variety tham chiếu.
     public String deleteCategory(@PathVariable Integer categoryId,
                                  RedirectAttributes redirectAttributes) {
         try {
@@ -64,6 +69,7 @@ public class ArtisanCatalogController {
     }
 
     @PostMapping("/varieties")
+    // Tạo mới variety thuộc một category.
     public String createVariety(@RequestParam Integer categoryId,
                                 @RequestParam String varietyName,
                                 @RequestParam(required = false) String description,
@@ -78,6 +84,7 @@ public class ArtisanCatalogController {
     }
 
     @PostMapping("/varieties/{varietyId}")
+    // Cập nhật variety và category cha tương ứng.
     public String updateVariety(@PathVariable Integer varietyId,
                                 @RequestParam Integer categoryId,
                                 @RequestParam String varietyName,
@@ -93,6 +100,7 @@ public class ArtisanCatalogController {
     }
 
     @PostMapping("/varieties/{varietyId}/delete")
+    // Xóa variety nếu chưa có sản phẩm sử dụng.
     public String deleteVariety(@PathVariable Integer varietyId,
                                 RedirectAttributes redirectAttributes) {
         try {
@@ -104,6 +112,7 @@ public class ArtisanCatalogController {
         return "redirect:/artisan/catalog";
     }
     @PostMapping("/tags")
+    // Tạo mới tag để gắn cho sản phẩm.
     public String createTag(@RequestParam String tagName,
                             RedirectAttributes redirectAttributes) {
         try {
@@ -116,6 +125,7 @@ public class ArtisanCatalogController {
     }
 
     @PostMapping("/tags/{tagId}")
+    // Cập nhật tên tag theo id.
     public String updateTag(@PathVariable Integer tagId,
                             @RequestParam String tagName,
                             RedirectAttributes redirectAttributes) {
@@ -129,6 +139,7 @@ public class ArtisanCatalogController {
     }
 
     @PostMapping("/tags/{tagId}/delete")
+    // Xóa tag nếu chưa được sản phẩm sử dụng.
     public String deleteTag(@PathVariable Integer tagId,
                             RedirectAttributes redirectAttributes) {
         try {
@@ -140,6 +151,7 @@ public class ArtisanCatalogController {
         return "redirect:/artisan/catalog";
     }
 
+    // Gom toàn bộ dữ liệu catalog cần render lên giao diện.
     private void addCatalogData(Model model) {
         model.addAttribute("categories", artisanCatalogService.getCategories());
         model.addAttribute("varieties", artisanCatalogService.getVarieties());

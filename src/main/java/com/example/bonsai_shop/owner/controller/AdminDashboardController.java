@@ -23,9 +23,11 @@ public class AdminDashboardController {
 
     private final OwnerDashboardService ownerDashboardService;
 
+    // Hien thi dashboard tong quan cho Owner theo thang duoc chon.
     @GetMapping({"", "/", "/dashboard"})
     public String dashboard(@RequestParam(value = "month", required = false) String month,
                             Model model) {
+        // Chuyen query param month thanh YearMonth, neu sai thi mac dinh thang hien tai.
         YearMonth selectedMonth = parseSelectedMonth(month);
         model.addAttribute("role", "OWNER");
         model.addAttribute("activePage", "dashboard");
@@ -40,6 +42,7 @@ public class AdminDashboardController {
         return "owner/dashboard";
     }
 
+    // Hien thi danh sach cay da ban de Owner drill-down tu chi so tren dashboard.
     @GetMapping("/dashboard/sold-trees")
     public String soldTrees(Model model) {
         model.addAttribute("role", "OWNER");
@@ -48,6 +51,7 @@ public class AdminDashboardController {
         return "owner/sold_trees";
     }
 
+    // Hien thi danh sach cay con trong vuon.
     @GetMapping("/dashboard/garden-trees")
     public String gardenTrees(Model model) {
         model.addAttribute("role", "OWNER");
@@ -56,6 +60,7 @@ public class AdminDashboardController {
         return "owner/garden_trees";
     }
 
+    // Hien thi doanh thu theo tung artisan trong thang bao cao.
     @GetMapping("/dashboard/artisan-revenue")
     public String artisanRevenue(@RequestParam(value = "month", required = false) String month,
                                  Model model) {
@@ -68,6 +73,7 @@ public class AdminDashboardController {
         return "owner/artisan_revenue";
     }
 
+    // Bao cao nguon tien coc bi giu lai trong thang.
     @GetMapping("/dashboard/forfeited-deposits")
     public String forfeitedDeposits(@RequestParam(value = "month", required = false) String month,
                                     Model model) {
@@ -83,6 +89,7 @@ public class AdminDashboardController {
         );
     }
 
+    // Bao cao cac khoan hoan tien cho khach trong thang.
     @GetMapping("/dashboard/customer-refunds")
     public String customerRefunds(@RequestParam(value = "month", required = false) String month,
                                   Model model) {
@@ -98,6 +105,7 @@ public class AdminDashboardController {
         );
     }
 
+    // Bao cao cac phi van chuyen duoc ghi nhan trong thang.
     @GetMapping("/dashboard/shipping-fees")
     public String shippingFees(@RequestParam(value = "month", required = false) String month,
                                Model model) {
@@ -113,6 +121,7 @@ public class AdminDashboardController {
         );
     }
 
+    // Bao cao cac phi cau/chuyen cay duoc ghi nhan trong thang.
     @GetMapping("/dashboard/crane-fees")
     public String craneFees(@RequestParam(value = "month", required = false) String month,
                             Model model) {
@@ -128,6 +137,7 @@ public class AdminDashboardController {
         );
     }
 
+    // Gom du lieu dung chung cho cac man hinh bao cao nguon tien.
     private String financeSourceReport(Model model,
                                        YearMonth selectedMonth,
                                        String title,
@@ -135,6 +145,7 @@ public class AdminDashboardController {
                                        String amountColumnLabel,
                                        BigDecimal totalAmount,
                                        List<ArtisanDashboardSourceDTO> sources) {
+        // Gan cac attribute chung de template finance_sources render dung tieu de, tong tien va danh sach nguon.
         model.addAttribute("role", "OWNER");
         model.addAttribute("activePage", "dashboard");
         model.addAttribute("reportTitle", title);
@@ -146,6 +157,7 @@ public class AdminDashboardController {
         return "owner/finance_sources";
     }
 
+    // Parse thang bao cao tu query param yyyy-MM, fallback ve thang hien tai neu bo trong hoac sai dinh dang.
     private YearMonth parseSelectedMonth(String month) {
         if (month == null || month.isBlank()) {
             return YearMonth.now();
