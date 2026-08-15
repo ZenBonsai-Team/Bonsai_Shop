@@ -7,6 +7,10 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
+import java.time.YearMonth;
+import java.time.format.DateTimeParseException;
 
 @Controller
 @RequestMapping("/owner")
@@ -17,10 +21,24 @@ public class AdminDashboardController {
     private final OwnerDashboardService ownerDashboardService;
 
     @GetMapping({"", "/", "/dashboard"})
-    public String dashboard(Model model) {
+    public String dashboard(@RequestParam(value = "month", required = false) String month,
+                            Model model) {
+        YearMonth selectedMonth = parseSelectedMonth(month);
         model.addAttribute("role", "OWNER");
         model.addAttribute("activePage", "dashboard");
-        model.addAttribute("dashboard", ownerDashboardService.getDashboard());
+        model.addAttribute("dashboard", ownerDashboardService.getDashboard(selectedMonth));
+        model.addAttribute("reportPeriodLabel", ownerDashboardService.getReportPeriodLabel(selectedMonth));
+        model.addAttribute("selectedMonth", selectedMonth.toString());
+        model.addAttribute("monthlyRevenue", ownerDashboardService.getMonthlyCompletedProductRevenue(selectedMonth));
+        model.addAttribute("monthlyShippingFee", ownerDashboardService.getMonthlyShippingFee(selectedMonth));
+        model.addAttribute("monthlyCraneFee", ownerDashboardService.getMonthlyCraneFee(selectedMonth));
+        model.addAttribute("monthlyForfeitedDepositIncome", ownerDashboardService.getMonthlyForfeitedDepositIncome(selectedMonth));
+        model.addAttribute("monthlyRefundAmount", ownerDashboardService.getMonthlyRefundAmount(selectedMonth));
+        model.addAttribute("completedRevenueSources", ownerDashboardService.getCompletedRevenueSources(selectedMonth));
+        model.addAttribute("forfeitedDepositSources", ownerDashboardService.getForfeitedDepositSources(selectedMonth));
+        model.addAttribute("refundSources", ownerDashboardService.getRefundSources(selectedMonth));
+        model.addAttribute("shippingFeeSources", ownerDashboardService.getShippingFeeSources(selectedMonth));
+        model.addAttribute("craneFeeSources", ownerDashboardService.getCraneFeeSources(selectedMonth));
         return "owner/dashboard";
     }
 
@@ -41,11 +59,25 @@ public class AdminDashboardController {
     }
 
     @GetMapping("/dashboard/artisan-revenue")
-    public String artisanRevenue(Model model) {
+    public String artisanRevenue(@RequestParam(value = "month", required = false) String month,
+                                 Model model) {
+        YearMonth selectedMonth = parseSelectedMonth(month);
         model.addAttribute("role", "OWNER");
         model.addAttribute("activePage", "dashboard");
-        model.addAttribute("reportMonth", ownerDashboardService.getCurrentMonthLabel());
-        model.addAttribute("artisanRevenue", ownerDashboardService.getCurrentMonthRevenueByArtisan());
+        model.addAttribute("reportMonth", ownerDashboardService.getMonthLabel(selectedMonth));
+        model.addAttribute("selectedMonth", selectedMonth.toString());
+        model.addAttribute("artisanRevenue", ownerDashboardService.getRevenueByArtisan(selectedMonth));
         return "owner/artisan_revenue";
+    }
+
+    private YearMonth parseSelectedMonth(String month) {
+        if (month == null || month.isBlank()) {
+            return YearMonth.now();
+        }
+        try {
+            return YearMonth.parse(month);
+        } catch (DateTimeParseException ignored) {
+            return YearMonth.now();
+        }
     }
 }

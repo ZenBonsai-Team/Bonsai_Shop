@@ -12,6 +12,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Locale;
+
 @Service
 @RequiredArgsConstructor
 public class OrderHandlingHistoryService {
@@ -22,12 +24,12 @@ public class OrderHandlingHistoryService {
     private final OrderHandlingRepository orderHandlingRepository;
 
     @Transactional(readOnly = true)
-    public Page<OrderHandlingHistoryDTO> findModeratorHandlingHistory(String search, int page, int size) {
+    public Page<OrderHandlingHistoryDTO> findModeratorHandlingHistory(String search, String status, int page, int size) {
         int safePage = Math.max(page, 0);
         int safeSize = Math.min(Math.max(size, 1), MAX_PAGE_SIZE);
         Pageable pageable = PageRequest.of(safePage, safeSize);
 
-        return orderHandlingRepository.findModeratorHandlingHistory(normalizeSearch(search), pageable)
+        return orderHandlingRepository.findModeratorHandlingHistory(normalizeSearch(search), normalizeStatus(status), pageable)
                 .map(this::toDTO);
     }
 
@@ -37,6 +39,10 @@ public class OrderHandlingHistoryService {
 
     private String normalizeSearch(String search) {
         return search == null ? null : search.trim();
+    }
+
+    private String normalizeStatus(String status) {
+        return status == null || status.isBlank() ? "ALL" : status.trim().toUpperCase(Locale.ROOT);
     }
 
     private OrderHandlingHistoryDTO toDTO(OrderHandling handling) {
