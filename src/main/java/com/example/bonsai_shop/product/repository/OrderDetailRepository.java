@@ -12,6 +12,12 @@ import org.springframework.data.repository.query.Param;
 import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * [REPOSITORY TRUY VẤN CHI TIẾT SẢN PHẨM TRONG ĐƠN HÀNG - ORDER DETAIL REPOSITORY]
+ *
+ * Chịu trách nhiệm:
+ * - Lưu trữ quan hệ N-N giữa Order và Product kèm snapshot giá mua (priceAtPurchase) và số lượng (quantity).
+ */
 public interface OrderDetailRepository extends JpaRepository<OrderDetail, Integer> {
 
     @Query("""

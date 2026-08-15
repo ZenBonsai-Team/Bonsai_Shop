@@ -206,6 +206,15 @@ public class FinancialLedgerService {
                 .map(this::money)
                 .reduce(ZERO, BigDecimal::add);
 
+        // Fallback: nếu đơn hàng ở trạng thái PAID hoặc DEPOSITED nhưng bản ghi payment chưa kịp cập nhật hoặc do dữ liệu khởi tạo
+        if (successfulCash.compareTo(ZERO) <= 0) {
+            if ("PAID".equalsIgnoreCase(order.getOrderStatus()) && order.getTotalAmount() != null) {
+                successfulCash = money(order.getTotalAmount());
+            } else if ("DEPOSITED".equalsIgnoreCase(order.getOrderStatus()) && order.getDepositAmount() != null && order.getDepositAmount().compareTo(ZERO) > 0) {
+                successfulCash = money(order.getDepositAmount());
+            }
+        }
+
         BigDecimal refunds = sumRecordedRefunds(order);
         BigDecimal refundable = successfulCash.subtract(refunds);
         return refundable.compareTo(ZERO) < 0 ? ZERO : refundable;
@@ -286,7 +295,11 @@ public class FinancialLedgerService {
     }
 
     private boolean isSuccessfulPayment(Payment payment) {
-        return payment != null && "SUCCESS".equalsIgnoreCase(payment.getPaymentStatus());
+        if (payment == null || payment.getPaymentStatus() == null) {
+            return false;
+        }
+        String status = payment.getPaymentStatus().trim().toUpperCase();
+        return "SUCCESS".equals(status) || "PAID".equals(status) || "COMPLETED".equals(status);
     }
 
     private BigDecimal requirePositiveAmount(BigDecimal amount, String label) {

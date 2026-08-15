@@ -24,6 +24,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * [SERVICE QUẢN LÝ DANH SÁCH ĐƠN HÀNG CỦA TÔI (MY ORDERS) CHO MODERATOR]
+ *
+ * Chịu trách nhiệm:
+ * - Tính toán các chỉ số KPI cá nhân theo tab bộ lọc (MyOrderKPIsDTO): CRITICAL (sắp hết hạn), Chờ duyệt (WAITING_APPROVAL), Chờ khách trả tiền (WAITING_CUSTOMER_PAYMENT), Chờ giao & thu nốt tiền (WAITING_DELIVERY_PAYMENT), Hoàn thành (COMPLETED), Đã hủy (CANCELLED).
+ * - Lọc và phân trang danh sách MyOrderDTO cho giao diện Moderator.
+ * - Tính toán mức độ ưu tiên theo thời gian tồn đọng (Priority: CRITICAL, HIGH, MEDIUM, LOW) và thời gian xử lý SLA (Handling Time).
+ *
+ * Các thành phần phối hợp chính:
+ * - OrderRepository, ModeratorDisplayLabelMapper.
+ */
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -31,6 +42,16 @@ public class MyOrderService {
 
     private final OrderRepository orderRepository;
 
+    /**
+     * [TÍNH TOÁN KPI CÁ NHÂN CỦA MODERATOR]
+     *
+     * Mục đích:
+     * - Cung cấp số liệu đếm số lượng đơn hàng theo từng nhóm trạng thái để hiển thị lên các thẻ KPI trên giao diện My Orders.
+     *
+     * Được gọi từ:
+     * - ModeratorOrderController.viewMyOrders()
+     * - ModeratorOrderController.getMyOrdersData()
+     */
     @Transactional(readOnly = true)
     public MyOrderKPIsDTO getMyOrderKPIs(Integer moderatorId) {
         if (moderatorId == null) {

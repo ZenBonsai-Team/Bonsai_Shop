@@ -8,6 +8,12 @@ import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+/**
+ * [DTO HIỂN THỊ ĐƠN HÀNG TRÊN DANH SÁCH MY ORDERS - MODERATOR]
+ *
+ * Mục đích:
+ * - Đóng gói dữ liệu tóm tắt đơn hàng của riêng Moderator đang đăng nhập, kèm chỉ số ưu tiên (Priority), nhãn trạng thái thân thiện (orderStatusLabel), và thời gian tồn đọng (ageFormatted).
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
