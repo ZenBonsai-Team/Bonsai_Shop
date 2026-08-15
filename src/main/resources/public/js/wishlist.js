@@ -222,7 +222,7 @@
             segmentId: product.segmentId,
             segmentName: product.segmentName,
             canAddToCart: product.productStatus === 'AVAILABLE' && isVisible && !isLuxury,
-            detailUrl: isLuxury && isVisible ? `/bonsai-luxury-detail/${product.productId}` : `/product/${product.productId}`
+            detailUrl: isVisible ? (isLuxury ? `/bonsai-luxury-detail/${product.productId}` : `/product/${product.productId}`) : null
         };
     }
 
@@ -252,11 +252,19 @@
         const isHiddenByVisibility = item.isVisible === false;
         const statusClass = isHiddenByVisibility ? 'not-visible' : status.toLowerCase();
         const statusLabel = isHiddenByVisibility ? 'Không hiển thị' : status;
-        const detailUrl = item.detailUrl || `/product/${item.productId}`;
+        const canViewDetails = item.isVisible !== false && Boolean(item.detailUrl);
+        const detailUrl = canViewDetails ? item.detailUrl : '';
+        const canAddToCart = canViewDetails && item.canAddToCart === true && status === 'AVAILABLE';
         const segmentLabel = item.segmentName ? `<span>${escapeHtml(item.segmentName)}</span>` : '';
         const visibilityLabel = isHiddenByVisibility ? '<span>Không hiển thị</span>' : '';
         const priceLabel = item.isPublicPrice === false ? 'Li\u00ean h\u1ec7' : formatVND(item.price || 0);
-        const addToCartButton = item.canAddToCart
+        const nameHtml = canViewDetails
+            ? `<a class="wishlist-name" href="${escapeHtml(detailUrl)}" data-wishlist-detail="${item.productId}">${escapeHtml(item.productName || 'Sản phẩm')}</a>`
+            : `<span class="wishlist-name wishlist-name-disabled" title="Sản phẩm đang tạm ẩn, không thể xem chi tiết">${escapeHtml(item.productName || 'Sản phẩm')}</span>`;
+        const detailButton = canViewDetails
+            ? `<a class="btn btn-outline-dark btn-sm" href="${escapeHtml(detailUrl)}" data-wishlist-detail="${item.productId}">Chi tiết</a>`
+            : `<button class="btn btn-outline-secondary btn-sm" type="button" disabled title="Sản phẩm đang tạm ẩn, không thể xem chi tiết">Chi tiết</button>`;
+        const addToCartButton = canAddToCart
             ? `<button class="btn btn-success btn-sm" type="button" data-wishlist-add-cart="${item.productId}" title="Thêm vào giỏ hàng" aria-label="Thêm vào giỏ hàng"><i class="fa-solid fa-cart-shopping"></i></button>`
             : `<button class="btn btn-outline-secondary btn-sm" type="button" disabled title="Không thể thêm giỏ" aria-label="Không thể thêm giỏ"><i class="fa-solid fa-cart-shopping"></i></button>`;
 
@@ -266,11 +274,11 @@
                 <span class="wishlist-status ${statusClass}">${escapeHtml(statusLabel)}</span>
             </div>
             <div class="wishlist-body">
-                <a class="wishlist-name" href="${escapeHtml(detailUrl)}">${escapeHtml(item.productName || 'Sản phẩm')}</a>
+                ${nameHtml}
                 <div class="wishlist-meta">${[escapeHtml(item.productCode || `Bonsai-${item.productId}`), segmentLabel, visibilityLabel].filter(Boolean).join(' • ')}</div>
                 <div class="wishlist-price">${priceLabel}</div>
                 <div class="wishlist-actions">
-                    <a class="btn btn-outline-dark btn-sm" href="${escapeHtml(detailUrl)}">Chi tiết</a>
+                    ${detailButton}
                     ${addToCartButton}
                     <button class="btn btn-outline-danger btn-sm" type="button" data-remove-wishlist="${item.productId}">
                         <i class="fa-regular fa-trash-can"></i>
@@ -280,7 +288,22 @@
         `;
         card.querySelector('[data-remove-wishlist]')?.addEventListener('click', () => removeWishlistItem(item.productId));
         card.querySelector('[data-wishlist-add-cart]')?.addEventListener('click', () => addWishlistItemToCart(item.productId));
+        card.querySelectorAll('[data-wishlist-detail]').forEach(link => {
+            link.addEventListener('click', event => verifyWishlistDetailNavigation(event, item.productId, detailUrl));
+        });
         return card;
+    }
+
+    async function verifyWishlistDetailNavigation(event, productId, detailUrl) {
+        event.preventDefault();
+        const mode = await detectWishlistMode();
+        const product = await fetchCurrentProduct(productId);
+        if (!canViewCurrentProductDetail(product)) {
+            showToast('Sản phẩm đang tạm ẩn, không thể xem chi tiết.', 'error');
+            loadWishlistPage(mode);
+            return;
+        }
+        window.location.href = detailUrl;
     }
 
     async function addWishlistItemToCart(productId) {
@@ -349,6 +372,14 @@
         const isLuxury = product.segmentId === 3;
         return product.productStatus === 'AVAILABLE' && isVisible && !isLuxury;
     }
+
+    function canViewCurrentProductDetail(product) {
+        if (!product) {
+            return false;
+        }
+        return product.isVisible !== false && product.productStatus !== 'DRAFT';
+    }
+
     function addGuestCartItem(productId) {
         let guestCart = [];
         try {

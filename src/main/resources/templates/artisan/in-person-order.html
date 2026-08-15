@@ -628,10 +628,13 @@
 
     function normalizePrice(value) {
         const trimmedValue = String(value || '').trim();
+        let digitsOnly;
         if (/^\d+[,.]\d{1,2}$/.test(trimmedValue)) {
-            return trimmedValue.replace(/[,.]\d{1,2}$/, '');
+            digitsOnly = trimmedValue.replace(/[,.]\d{1,2}$/, '');
+        } else {
+            digitsOnly = trimmedValue.replace(/[^\d]/g, '');
         }
-        return trimmedValue.replace(/[^\d]/g, '');
+        return digitsOnly.replace(/^0+(?=\d)/, '');
     }
 
     function formatInputVnd(value) {

@@ -89,6 +89,12 @@
     color: var(--accent-color);
 }
 
+.wishlist-name-disabled,
+.wishlist-name-disabled:hover {
+    color: var(--text-secondary);
+    cursor: not-allowed;
+}
+
 .wishlist-meta {
     color: var(--text-secondary);
     font-size: 0.86rem;
