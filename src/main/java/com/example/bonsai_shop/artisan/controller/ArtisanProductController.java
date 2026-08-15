@@ -80,6 +80,7 @@ public class ArtisanProductController {
         try {
             Product product = artisanProductService.createProduct(userDetails.getUsername(), form);
             redirectAttributes.addFlashAttribute("success", "Đã lưu thông tin cây. Tiếp tục upload media.");
+            // Sau khi tao product thanh cong, dieu huong sang buoc upload image/video cho product vua tao.
             return "redirect:/artisan/products/" + product.getProductId() + "/media";
         } catch (RuntimeException e) {
             model.addAttribute("error", e.getMessage());
@@ -148,6 +149,7 @@ public class ArtisanProductController {
         model.addAttribute("product", product);
         model.addAttribute("mediaList", artisanProductService.getMedia(product));
         model.addAttribute("isSold", artisanProductService.isSold(product));
+        // View dung isEditable de an form upload khi product khong con duoc phep sua media.
         model.addAttribute("isEditable", artisanProductService.isEditable(product));
         return "artisan/product-media";
     }
@@ -175,6 +177,7 @@ public class ArtisanProductController {
         } catch (RuntimeException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
+        // PRG pattern: redirect ve trang media de tranh submit lai file khi refresh.
         return "redirect:/artisan/products/" + productId + "/media";
     }
 

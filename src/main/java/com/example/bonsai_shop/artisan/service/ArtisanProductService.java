@@ -236,10 +236,12 @@ public class ArtisanProductService {
         if (files == null || files.isEmpty()) {
             throw new RuntimeException("Vui lòng chọn ít nhất một file media!");
         }
+        // Chan batch qua lon truoc khi upload tung file len Cloudinary.
         if (files.size() > MAX_MEDIA_PER_UPLOAD) {
             throw new RuntimeException("Mỗi lần chỉ được tải lên tối đa " + MAX_MEDIA_PER_UPLOAD + " media!");
         }
 
+        // Validate du lieu form song song voi List<MultipartFile> de moi file co metadata tuong ung.
         if (files.stream().anyMatch(file -> file == null || file.isEmpty())) {
             throw new RuntimeException("Vui lòng chọn file cho tất cả mục media!");
         }
@@ -255,6 +257,7 @@ public class ArtisanProductService {
         int selectedThumbnailIndex = thumbnailIndex == null ? findDefaultThumbnailIndex(files, mediaTypes, existingMedia.isEmpty()) : thumbnailIndex;
 
         if (selectedThumbnailIndex >= 0) {
+            // Chi mot image duoc lam thumbnail, nen reset thumbnail cu truoc khi luu batch moi.
             existingMedia.forEach(media -> {
                 media.setIsThumbnail(false);
                 productMediaRepository.save(media);
@@ -264,6 +267,7 @@ public class ArtisanProductService {
         for (int index = 0; index < files.size(); index++) {
             MultipartFile file = files.get(index);
             String mediaType = resolveMediaType(file, getListValue(mediaTypes, index));
+            // Validate dung luong theo loai media truoc khi goi storage service upload len Cloudinary.
             validateMediaFile(file, mediaType);
             if (index == selectedThumbnailIndex && "VIDEO".equals(mediaType)) {
                 throw new RuntimeException("Video không thể đặt làm media đại diện!");
@@ -604,10 +608,12 @@ public class ArtisanProductService {
         if (requestedMediaType != null && !requestedMediaType.isBlank()) {
             String normalizedMediaType = requestedMediaType.trim().toUpperCase(Locale.ROOT);
             if ("VIDEO".equals(normalizedMediaType) || "IMAGE".equals(normalizedMediaType)) {
+                // Uu tien loai media UI gui len, nhung chi chap nhan IMAGE/VIDEO.
                 return normalizedMediaType;
             }
         }
 
+        // Fallback theo Content-Type/extension de nhan dien video khi trinh duyet gui MIME khong day du.
         String contentType = file.getContentType();
         if (contentType != null && contentType.startsWith("video/")) {
             return "VIDEO";
@@ -626,6 +632,7 @@ public class ArtisanProductService {
 
     private void validateMediaFile(MultipartFile file, String mediaType) {
         long maxSize = "VIDEO".equals(mediaType) ? MAX_VIDEO_SIZE_BYTES : MAX_IMAGE_SIZE_BYTES;
+        // Service validate lai dung luong de khong phu thuoc hoan toan vao JavaScript phia client.
         if (file.getSize() > maxSize) {
             throw new RuntimeException(("VIDEO".equals(mediaType) ? "Video" : "Ảnh")
                     + " vượt quá dung lượng tối đa "

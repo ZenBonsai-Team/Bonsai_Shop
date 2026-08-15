@@ -17,6 +17,7 @@ public class ArtisanMediaStorageService {
         String contentType = file.getContentType();
         boolean isVideo = contentType != null && contentType.startsWith("video/");
 
+        // Chon folder va API upload theo Content-Type de Cloudinary tao dung resource image/video.
         CloudinaryUploadResponse response = isVideo
                 ? cloudinaryStorageService.uploadVideo(file, CloudinaryFolder.PRODUCT_VIDEO)
                 : cloudinaryStorageService.uploadImage(file, CloudinaryFolder.PRODUCT_IMAGE);
@@ -38,6 +39,7 @@ public class ArtisanMediaStorageService {
             return null;
         }
 
+        // Can resourceType khi xoa vi Cloudinary tach namespace image va video.
         String resourceType = mediaUrl.contains("/video/upload/") ? "video" : "image";
         String uploadMarker = "/upload/";
         int uploadIndex = mediaUrl.indexOf(uploadMarker);

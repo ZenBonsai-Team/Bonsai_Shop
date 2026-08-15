@@ -17,11 +17,13 @@ public class CloudinaryStorageService {
     private final Cloudinary cloudinary;
 
     public CloudinaryUploadResponse uploadImage(MultipartFile file, CloudinaryFolder folder) {
+        // Validate MIME va dung luong truoc khi goi Cloudinary de tranh upload file sai loai.
         validateFile(file, "image");
         return upload(file, folder.getPath(), "image");
     }
 
     public CloudinaryUploadResponse uploadVideo(MultipartFile file, CloudinaryFolder folder) {
+        // Video dung resource_type=video, neu gui sai resource type Cloudinary se xu ly URL/delete khong dung.
         validateFile(file, "video");
         return upload(file, folder.getPath(), "video");
     }
@@ -43,6 +45,7 @@ public class CloudinaryStorageService {
 
     private CloudinaryUploadResponse upload(MultipartFile file, String folder, String resourceType) {
         try {
+            // folder quyet dinh noi luu tren Cloudinary, resource_type quyet dinh pipeline image/video.
             Map uploadResult = cloudinary.uploader().upload(
                     file.getBytes(),
                     Map.of(
@@ -70,11 +73,13 @@ public class CloudinaryStorageService {
             throw new RuntimeException("File không được để trống!");
         }
 
+        // Content-Type la lop chan cuoi cung sau validate UI/controller de phan biet image va video.
         String contentType = file.getContentType();
         if (contentType == null || !contentType.startsWith(expectedType + "/")) {
             throw new RuntimeException("File không đúng định dạng " + expectedType + "!");
         }
 
+        // Dong bo voi spring.servlet.multipart.max-file-size trong application.properties.
         long maxSize = expectedType.equals("video")
                 ? 100L * 1024 * 1024
                 : 7L * 1024 * 1024;
