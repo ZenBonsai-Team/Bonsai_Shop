@@ -141,6 +141,10 @@ public class MarketplaceController {
             return "redirect:/marketplace";
         }
 
+        if (!isCustomerVisible(product)) {
+            return "redirect:/marketplace";
+        }
+
         boolean viewCountIncremented = productService.incrementViewCountForCustomer(product.getProductId(), authentication);
         if (viewCountIncremented) {
             product.setViewCount((product.getViewCount() == null ? 0 : product.getViewCount()) + 1);
@@ -164,6 +168,11 @@ public class MarketplaceController {
         model.addAttribute("averageRating", reviewService.getAverageRating(product.getProductId()));
         model.addAttribute("activePage", "marketplace");
         return "product/product-detail";
+    }
+
+    private boolean isCustomerVisible(Product product) {
+        return !Boolean.FALSE.equals(product.getIsVisible())
+                && !"DRAFT".equalsIgnoreCase(product.getProductStatus());
     }
 
     private List<ProductMedia> getMediaByType(Product product, String mediaType) {

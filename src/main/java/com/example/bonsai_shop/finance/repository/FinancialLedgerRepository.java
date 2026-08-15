@@ -86,6 +86,7 @@ public interface FinancialLedgerRepository extends JpaRepository<FinancialLedger
             SELECT COALESCE(SUM(od.priceAtPurchase * od.quantity), 0)
             FROM OrderDetail od
             WHERE od.product.createdBy.userId = :artisanUserId
+              AND od.order.orderStatus = 'COMPLETED'
               AND EXISTS (
                   SELECT 1
                   FROM FinancialLedger fl
@@ -105,7 +106,8 @@ public interface FinancialLedgerRepository extends JpaRepository<FinancialLedger
     @Query("""
             SELECT COALESCE(SUM(od.priceAtPurchase * od.quantity), 0)
             FROM OrderDetail od
-            WHERE EXISTS (
+            WHERE od.order.orderStatus = 'COMPLETED'
+              AND EXISTS (
                   SELECT 1
                   FROM FinancialLedger fl
                   WHERE fl.order = od.order
@@ -243,6 +245,7 @@ public interface FinancialLedgerRepository extends JpaRepository<FinancialLedger
             SELECT COUNT(od)
             FROM OrderDetail od
             WHERE od.product.createdBy.userId = :artisanUserId
+              AND od.order.orderStatus = 'COMPLETED'
               AND EXISTS (
                   SELECT 1
                   FROM FinancialLedger fl
@@ -277,6 +280,7 @@ public interface FinancialLedgerRepository extends JpaRepository<FinancialLedger
             FROM OrderDetail od
             JOIN FinancialLedger fl ON fl.order = od.order
             WHERE od.product.createdBy.userId = :artisanUserId
+              AND od.order.orderStatus = 'COMPLETED'
               AND fl.ledgerType = :ledgerType
               AND fl.ledgerStatus = :ledgerStatus
               AND fl.recognizedAt >= :startDate
@@ -307,7 +311,8 @@ public interface FinancialLedgerRepository extends JpaRepository<FinancialLedger
             )
             FROM OrderDetail od
             JOIN FinancialLedger fl ON fl.order = od.order
-            WHERE fl.ledgerType = :ledgerType
+            WHERE od.order.orderStatus = 'COMPLETED'
+              AND fl.ledgerType = :ledgerType
               AND fl.ledgerStatus = :ledgerStatus
               AND fl.recognizedAt >= :startDate
               AND fl.recognizedAt < :endDate

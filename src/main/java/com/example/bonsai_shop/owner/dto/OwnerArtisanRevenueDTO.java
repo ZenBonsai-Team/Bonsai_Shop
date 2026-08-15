@@ -6,7 +6,13 @@ public record OwnerArtisanRevenueDTO(
         Integer artisanId,
         String artisanName,
         String artisanEmail,
-        long treesSold,
+        Long treesSold,
         BigDecimal revenue
 ) {
+    public OwnerArtisanRevenueDTO {
+        artisanName = artisanName == null || artisanName.isBlank() ? "Chưa gán nghệ nhân" : artisanName;
+        artisanEmail = artisanEmail == null || artisanEmail.isBlank() ? "-" : artisanEmail;
+        treesSold = treesSold != null ? treesSold : 0L;
+        revenue = revenue != null ? revenue : BigDecimal.ZERO;
+    }
 }

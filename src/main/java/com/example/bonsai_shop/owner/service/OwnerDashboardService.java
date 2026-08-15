@@ -6,6 +6,7 @@ import com.example.bonsai_shop.finance.enums.FinancialLedgerStatus;
 import com.example.bonsai_shop.finance.enums.FinancialLedgerType;
 import com.example.bonsai_shop.finance.repository.FinancialLedgerRepository;
 import com.example.bonsai_shop.owner.dto.OwnerArtisanRevenueDTO;
+import com.example.bonsai_shop.owner.dto.OwnerArtisanRevenueDetailDTO;
 import com.example.bonsai_shop.owner.dto.OwnerDashboardDTO;
 import com.example.bonsai_shop.owner.dto.OwnerGardenTreeDTO;
 import com.example.bonsai_shop.owner.dto.OwnerMonthlyRevenueDTO;
@@ -100,6 +101,33 @@ public class OwnerDashboardService {
                 monthStart,
                 monthStart.plusMonths(1)
         );
+    }
+
+    @Transactional(readOnly = true)
+    public List<OwnerArtisanRevenueDetailDTO> getRevenueDetailsByArtisan(YearMonth selectedMonth) {
+        LocalDateTime monthStart = monthStart(selectedMonth);
+        LocalDateTime nextMonthStart = monthStart.plusMonths(1);
+        return getRevenueByArtisan(selectedMonth).stream()
+                .filter(item -> item.artisanId() != null)
+                .map(item -> new OwnerArtisanRevenueDetailDTO(
+                        item,
+                        financialLedgerRepository.findCompletedRevenueSourcesByArtisan(
+                                item.artisanId(),
+                                FinancialLedgerType.COMPLETED_ORDER_REVENUE,
+                                FinancialLedgerStatus.RECORDED,
+                                monthStart,
+                                nextMonthStart
+                        )
+                ))
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public BigDecimal getMonthlyRevenueByArtisanTotal(YearMonth selectedMonth) {
+        return getRevenueByArtisan(selectedMonth).stream()
+                .map(OwnerArtisanRevenueDTO::revenue)
+                .map(this::normalize)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
     public String getCurrentMonthLabel() {
