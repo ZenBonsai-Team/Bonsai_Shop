@@ -34,6 +34,7 @@ public class AdminCommunityController {
     private final ModerationNotificationRepository notificationRepository;
     private final UserRepository userRepository;
 
+    // Hien thi man hinh kiem duyet bai viet/binh luan cong dong cho Content Moderator.
     @GetMapping
     public String index(Model model,
                         @RequestParam(value = "tab", defaultValue = "posts") String activeTab,
@@ -42,32 +43,43 @@ public class AdminCommunityController {
                         @RequestParam(value = "postPage", defaultValue = "0") int postPage,
                         @RequestParam(value = "commentPage", defaultValue = "0") int commentPage) {
         
+        // Tao pageable rieng cho danh sach bai viet.
         Pageable postPageable = PageRequest.of(postPage, 10);
         Page<CommunityPost> postsPage;
         
+        // Xac dinh request co search/status filter hay khong de chon query phu hop.
         boolean hasSearch = search != null && !search.trim().isEmpty();
         boolean hasStatus = status != null && !status.trim().isEmpty() && !"ALL".equalsIgnoreCase(status);
 
+        // Loc bai viet theo ca search va status.
         if (hasSearch && hasStatus) {
             postsPage = postRepository.findByStatusAndTitleContainingIgnoreCaseOrAuthorNameContainingIgnoreCaseOrderByCreatedAtDesc(status, search.trim(), search.trim(), postPageable);
         } else if (hasSearch) {
+            // Chi loc bai viet theo tu khoa trong title hoac author.
             postsPage = postRepository.findByTitleContainingIgnoreCaseOrAuthorNameContainingIgnoreCaseOrderByCreatedAtDesc(search.trim(), search.trim(), postPageable);
         } else if (hasStatus) {
+            // Chi loc bai viet theo trang thai kiem duyet.
             postsPage = postRepository.findByStatusOrderByCreatedAtDesc(status, postPageable);
         } else {
+            // Khong co filter thi lay bai moi nhat.
             postsPage = postRepository.findAllByOrderByCreatedAtDesc(postPageable);
         }
         
+        // Tao pageable rieng cho danh sach binh luan.
         Pageable commentPageable = PageRequest.of(commentPage, 10);
         Page<CommunityComment> commentsPage;
 
+        // Loc binh luan theo ca search va status.
         if (hasSearch && hasStatus) {
             commentsPage = commentRepository.findByStatusAndContentContainingIgnoreCaseOrAuthorNameContainingIgnoreCaseOrderByCreatedAtDesc(status, search.trim(), search.trim(), commentPageable);
         } else if (hasSearch) {
+            // Chi loc binh luan theo tu khoa trong noi dung hoac author.
             commentsPage = commentRepository.findByContentContainingIgnoreCaseOrAuthorNameContainingIgnoreCaseOrderByCreatedAtDesc(search.trim(), search.trim(), commentPageable);
         } else if (hasStatus) {
+            // Chi loc binh luan theo trang thai kiem duyet.
             commentsPage = commentRepository.findByStatusOrderByCreatedAtDesc(status, commentPageable);
         } else {
+            // Khong co filter thi lay binh luan moi nhat.
             commentsPage = commentRepository.findAllByOrderByCreatedAtDesc(commentPageable);
         }
 
@@ -96,10 +108,12 @@ public class AdminCommunityController {
 
     }
 
+    // Phe duyet mot binh luan va gui thong bao cho tac gia.
     @PostMapping("/comments/{id}/approve")
     public String approveComment(@PathVariable("id") Integer id,
                                 RedirectAttributes redirectAttributes) {
         try {
+            // Validate binh luan phai ton tai truoc khi cap nhat trang thai.
             CommunityComment comment = commentRepository.findById(id)
                     .orElseThrow(() -> new RuntimeException("Không tìm thấy bình luận"));
             comment.setStatus("APPROVED");
@@ -122,10 +136,12 @@ public class AdminCommunityController {
         return "redirect:/moderator/community?tab=comments";
     }
 
+    // Phe duyet mot bai viet va gui thong bao cho tac gia.
     @PostMapping("/posts/{id}/approve")
     public String approvePost(@PathVariable("id") Integer id,
                               RedirectAttributes redirectAttributes) {
         try {
+            // Validate bai viet phai ton tai truoc khi cap nhat trang thai.
             CommunityPost post = postRepository.findById(id)
                     .orElseThrow(() -> new RuntimeException("Không tìm thấy bài viết"));
             post.setStatus("APPROVED");
@@ -148,17 +164,20 @@ public class AdminCommunityController {
         return "redirect:/moderator/community?tab=posts";
     }
 
+    // An hoac hien lai bai viet tuy theo trang thai hien tai.
     @PostMapping("/posts/{id}/toggle-status")
     public String togglePostStatus(@PathVariable("id") Integer id,
                                    @RequestParam(value = "reason", required = false) String reason,
                                    RedirectAttributes redirectAttributes) {
         try {
+            // Validate bai viet ton tai truoc khi doi trang thai.
             CommunityPost post = postRepository.findById(id)
                     .orElseThrow(() -> new RuntimeException("Không tìm thấy bài viết"));
             
             User user = userRepository.findById(post.getAuthorId()).orElse(null);
             String email = user != null ? user.getEmail() : post.getAuthorName();
 
+            // Neu bai dang APPROVED thi chuyen sang HIDDEN, nguoc lai thi hien thi lai.
             if ("APPROVED".equals(post.getStatus())) {
                 post.setStatus("HIDDEN");
                 String reasonStr = (reason != null && !reason.trim().isEmpty()) ? reason : "Vi phạm quy chuẩn nội dung";
@@ -187,11 +206,13 @@ public class AdminCommunityController {
         return "redirect:/moderator/community?tab=posts";
     }
 
+    // Xoa vinh vien bai viet va gui thong bao ly do cho tac gia.
     @PostMapping("/posts/{id}/delete")
     public String deletePost(@PathVariable("id") Integer id,
                              @RequestParam(value = "reason", required = false) String reason,
                              RedirectAttributes redirectAttributes) {
         try {
+            // Validate bai viet ton tai truoc khi xoa.
             CommunityPost post = postRepository.findById(id)
                     .orElseThrow(() -> new RuntimeException("Không tìm thấy bài viết"));
             
@@ -214,11 +235,13 @@ public class AdminCommunityController {
         return "redirect:/moderator/community?tab=posts";
     }
 
+    // Xoa binh luan, cap nhat commentsCount cua bai viet va thong bao cho tac gia.
     @PostMapping("/comments/{id}/delete")
     public String deleteComment(@PathVariable("id") Integer id,
                                 @RequestParam(value = "reason", required = false) String reason,
                                 RedirectAttributes redirectAttributes) {
         try {
+            // Validate binh luan ton tai truoc khi xoa.
             CommunityComment comment = commentRepository.findById(id)
                     .orElseThrow(() -> new RuntimeException("Không tìm thấy bình luận"));
             
