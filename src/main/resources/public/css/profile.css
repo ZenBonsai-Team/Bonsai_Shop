@@ -19,22 +19,80 @@ a {
     display: grid;
     grid-template-columns: 250px 1fr;
     min-height: 100vh;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.profile-layout.collapsed {
+    grid-template-columns: 80px 1fr;
 }
 
 /* SIDEBAR */
 .sidebar {
     background: #ffffff;
-    border-right: 1px solid #e8e5dc;
-    padding: 32px 22px;
+    border-right: 1px solid #e8e4dd;
+    padding: 32px 20px;
     display: flex;
     flex-direction: column;
+    position: relative;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.sidebar-toggle-btn {
+    position: absolute;
+    top: 32px;
+    right: -13px;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: #ffffff;
+    border: 1px solid #e8e4dd;
+    color: #1C3322;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(28, 51, 34, 0.08);
+    z-index: 100;
+    transition: all 0.25s ease;
+    outline: none;
+}
+
+.sidebar-toggle-btn:hover {
+    background: #1C3322;
+    color: #ffffff;
+    border-color: #1C3322;
+}
+
+/* When collapsed */
+.profile-layout.collapsed .sidebar {
+    padding: 32px 12px;
+    align-items: center;
+}
+
+.profile-layout.collapsed .sidebar-logo .logo-text,
+.profile-layout.collapsed .sidebar-menu a span,
+.profile-layout.collapsed .logout-form button span {
+    display: none !important;
+}
+
+.profile-layout.collapsed .sidebar-menu a,
+.profile-layout.collapsed .logout-form button {
+    justify-content: center;
+    padding: 12px 0;
+    width: 100%;
+}
+
+.profile-layout.collapsed .sidebar-menu a i,
+.profile-layout.collapsed .logout-form button i {
+    font-size: 1.15rem;
+    margin: 0;
 }
 
 .sidebar-logo {
     font-size: 28px;
     font-weight: bold;
     margin-bottom: 35px;
-    color: #06210f;
+    color: #1C3322;
 }
 
 .sidebar-menu {
@@ -44,19 +102,25 @@ a {
 }
 
 .sidebar-menu a {
-    padding: 14px 16px;
+    padding: 12px 16px;
     display: flex;
     align-items: center;
     gap: 13px;
     font-size: 15px;
-    color: #333;
-    transition: 0.25s;
+    color: #536257;
+    font-weight: 500;
+    border-radius: 8px;
+    transition: all 0.2s ease;
 }
 
-.sidebar-menu a:hover,
+.sidebar-menu a:hover {
+    background: rgba(28, 51, 34, 0.05);
+    color: #1C3322;
+}
+
 .sidebar-menu a.active {
-    background: #06210f;
-    color: white;
+    background: #1C3322;
+    color: white !important;
 }
 
 .logout-form {
@@ -67,34 +131,54 @@ a {
     width: 100%;
     border: none;
     background: transparent;
-    padding: 14px 16px;
+    padding: 12px 16px;
     display: flex;
     align-items: center;
     gap: 13px;
     cursor: pointer;
     font-family: inherit;
     font-size: 15px;
-    color: #333;
+    color: #536257;
+    font-weight: 500;
+    border-radius: 8px;
+    transition: all 0.2s ease;
 }
 
 .logout-form button:hover {
-    background: #f3f3ee;
+    background: rgba(28, 51, 34, 0.05);
+    color: #1C3322;
 }
 
 /* MAIN */
 .profile-main {
-    padding: 42px 70px;
+    padding: 30px 40px;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@media (max-width: 1400px) {
+    .profile-main {
+        padding: 30px 24px;
+    }
+}
+
+@media (max-width: 900px) {
+    .profile-main {
+        padding: 24px 16px;
+    }
 }
 
 /* TOP */
 .profile-top {
     background: #ffffff;
-    padding: 35px;
+    padding: 24px;
     display: grid;
     grid-template-columns: 110px 1fr 160px;
-    gap: 35px;
+    gap: 24px;
     align-items: start;
     margin-bottom: 28px;
+    border-radius: 16px;
+    border: 1px solid #e8e4dd;
+    box-shadow: 0 10px 30px rgba(28, 51, 34, 0.03);
 }
 
 .avatar-box {
@@ -148,7 +232,7 @@ a {
 }
 
 .edit-btn {
-    border: 1px solid #06210f;
+    border: 1px solid #1C3322;
     padding: 12px 18px;
     text-align: center;
     font-size: 14px;
@@ -156,7 +240,7 @@ a {
 }
 
 .edit-btn:hover {
-    background: #06210f;
+    background: #1C3322;
     color: white;
 }
 
@@ -182,7 +266,11 @@ a {
 /* ORDER */
 .order-section {
     background: #ffffff;
-    padding: 35px;
+    padding: 24px;
+    border-radius: 16px;
+    border: 1px solid #e8e4dd;
+    box-shadow: 0 10px 30px rgba(28, 51, 34, 0.03);
+    margin-top: 24px;
 }
 
 .section-title {
@@ -208,7 +296,7 @@ a {
 
 .section-title a {
     font-size: 13px;
-    border-bottom: 1px solid #06210f;
+    border-bottom: 1px solid #1C3322;
     padding-bottom: 4px;
 }
 
@@ -255,7 +343,7 @@ a {
 }
 
 .detail-link {
-    color: #06210f;
+    color: #1C3322;
     font-weight: bold;
 }
 
@@ -371,7 +459,7 @@ a {
     display: inline-block;
     width: 100%;
     padding: 14px 24px;
-    background: #06210f;
+    background: #1C3322;
     color: #ffffff;
     border: none;
     border-radius: 8px;
@@ -383,7 +471,7 @@ a {
 }
 
 .btn-submit:hover {
-    background: #11381d;
+    background: #132417;
     transform: translateY(-1px);
 }
 
@@ -399,7 +487,7 @@ a {
     height: 110px;
     border-radius: 50%;
     overflow: hidden;
-    background: #06210f;
+    background: #1C3322;
     color: white;
     display: flex;
     align-items: center;
@@ -421,7 +509,7 @@ a {
     width: 32px;
     height: 32px;
     border-radius: 50%;
-    background: #06210f;
+    background: #1C3322;
     color: white;
     display: flex;
     align-items: center;
@@ -458,23 +546,62 @@ a {
 }
 
 .profile-btn-primary {
-    background: #06210f;
+    background: #1C3322;
     color: #ffffff !important;
-    border: 1px solid #06210f;
+    border: 1px solid #1C3322;
 }
 
 .profile-btn-primary:hover {
-    background: #11381d;
-    border-color: #11381d;
+    background: #132417;
+    border-color: #132417;
 }
 
 .profile-btn-secondary {
     background: transparent;
-    color: #06210f !important;
-    border: 1px solid #06210f;
+    color: #1C3322 !important;
+    border: 1px solid #1C3322;
 }
 
 .profile-btn-secondary:hover {
-    background: #06210f;
+    background: #1C3322;
     color: #ffffff !important;
 }
+
+/* Product thumbnails gallery in orders history table */
+.order-product-thumb {
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    cursor: pointer;
+}
+
+.order-product-thumb:hover {
+    transform: translateY(-4px) scale(1.15);
+    z-index: 1000 !important;
+}
+
+/* Clickable Order Row styling */
+.order-row-clickable {
+    transition: background-color 0.2s ease;
+}
+
+.order-row-clickable:hover {
+    background-color: rgba(28, 51, 34, 0.03) !important;
+}
+
+/* Modal Product Card styling */
+.product-hover-zoom {
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.product-hover-zoom:hover {
+    transform: scale(1.08);
+}
+
+.hover-text-success {
+    transition: color 0.2s ease;
+}
+
+.hover-text-success:hover {
+    color: #1C3322 !important;
+    text-decoration: underline !important;
+}
+
