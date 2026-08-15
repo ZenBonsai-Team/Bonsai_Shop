@@ -79,7 +79,7 @@
                     <option value="">-- Chọn phân khúc --</option>
                     <option th:each="segment : ${segments}"
                             th:value="${segment.segmentId}"
-                            th:text="${segment.segmentName}"></option>
+                            th:text="${#strings.equalsIgnoreCase(segment.segmentName, 'Budget') || #strings.equalsIgnoreCase(segment.segmentName, 'Bugget') ? 'Phổ thông' : (#strings.equalsIgnoreCase(segment.segmentName, 'Mid') ? 'Tầm trung' : (#strings.equalsIgnoreCase(segment.segmentName, 'Elite') ? 'Cao cấp' : segment.segmentName))}"></option>
                 </select>
                 <small th:if="${#fields.hasErrors('segmentId')}" th:errors="*{segmentId}" class="field-error"></small>
                 <small class="field-error" data-product-error-for="segmentId"></small>
