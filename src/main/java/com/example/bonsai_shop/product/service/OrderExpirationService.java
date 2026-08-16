@@ -22,18 +22,24 @@ import java.util.List;
  * [SERVICE TỰ ĐỘNG XỬ LÝ HẾT HẠN ĐƠN HÀNG - ORDER EXPIRATION SERVICE]
  *
  * Chịu trách nhiệm:
- * - Quét và tự động hủy các đơn hàng trực tuyến (ONLINE) quá hạn thanh toán theo cấu hình (PENDING / PENDING_PAYMENT).
- * - Quét và tự động hủy các đơn hàng mua tại vườn (IN_PERSON) quá thời gian cấu hình (mặc định 1440 phút / 24h).
+ * - Quét và tự động hủy các đơn hàng trực tuyến (ONLINE) quá hạn thanh toán
+ * theo cấu hình (PENDING / PENDING_PAYMENT).
+ * - Quét và tự động hủy các đơn hàng mua tại vườn (IN_PERSON) quá thời gian cấu
+ * hình (mặc định 1440 phút / 24h).
  * - Thực hiện chuỗi dọn dẹp tài nguyên khi đơn hết hạn (cancelSingleOrder):
- *   1. Chuyển trạng thái Order sang CANCELLED, ghi lý do vào notes.
- *   2. Đánh dấu các bản ghi Payment PENDING thành EXPIRED.
- *   3. Giải phóng các phiên xử lý OrderHandling đang active (isActive = false, releasedAt = now).
- *   4. Giải phóng toàn bộ cây trong đơn từ RESERVED về AVAILABLE trong PRODUCT table.
- *   5. Gửi email thông báo hủy do quá hạn thanh toán cho khách hàng qua MailService.
+ * 1. Chuyển trạng thái Order sang CANCELLED, ghi lý do vào notes.
+ * 2. Đánh dấu các bản ghi Payment PENDING thành EXPIRED.
+ * 3. Giải phóng các phiên xử lý OrderHandling đang active (isActive = false,
+ * releasedAt = now).
+ * 4. Giải phóng toàn bộ cây trong đơn từ RESERVED về AVAILABLE trong PRODUCT
+ * table.
+ * 5. Gửi email thông báo hủy do quá hạn thanh toán cho khách hàng qua
+ * MailService.
  *
  * Các thành phần phối hợp chính:
  * - Scheduler: OrderExpirationScheduler (chạy ngầm mỗi 60 giây).
- * - Repositories: OrderRepository, ProductRepository, PaymentRepository, OrderHandlingRepository.
+ * - Repositories: OrderRepository, ProductRepository, PaymentRepository,
+ * OrderHandlingRepository.
  * - Services: MailService.
  */
 @Service
@@ -57,7 +63,8 @@ public class OrderExpirationService {
      * [QUÉT VÀ HỦY ĐƠN HÀNG ONLINE QUÁ HẠN THANH TOÁN]
      *
      * Mục đích:
-     * - Tìm kiếm các đơn hàng ONLINE ở trạng thái PENDING hoặc PENDING_PAYMENT tạo từ hơn onlineExpirationMinutes trước.
+     * - Tìm kiếm các đơn hàng ONLINE ở trạng thái PENDING hoặc PENDING_PAYMENT tạo
+     * từ hơn onlineExpirationMinutes trước.
      * - Hủy đơn và trả lại cây cho khách khác mua.
      *
      * Được gọi từ:
@@ -76,7 +83,8 @@ public class OrderExpirationService {
         LocalDateTime onlineCutoff = now.minusMinutes(onlineExpirationMinutes);
         List<Order> expiredOnlineOrders = orderRepository.findExpiredOnlineOrders(onlineCutoff);
         for (Order order : expiredOnlineOrders) {
-            cancelSingleOrder(order, "Tự động hủy: Đơn hàng online quá hạn " + onlineExpirationMinutes + " phút chưa thanh toán qua VNPay", "CANCELLED");
+            cancelSingleOrder(order, "Tự động hủy: Đơn hàng online quá hạn " + onlineExpirationMinutes
+                    + " phút chưa thanh toán qua VNPay", "CANCELLED");
         }
     }
 
@@ -84,7 +92,8 @@ public class OrderExpirationService {
      * [QUÉT VÀ HỦY ĐƠN HÀNG TẠI VƯỜN (IN_PERSON) QUÁ HẠN]
      *
      * Mục đích:
-     * - Hủy các đơn hàng IN_PERSON chưa hoàn tất sau khoảng thời gian inPersonExpirationMinutes (mặc định 24h).
+     * - Hủy các đơn hàng IN_PERSON chưa hoàn tất sau khoảng thời gian
+     * inPersonExpirationMinutes (mặc định 24h).
      */
     @Transactional
     public void cancelExpiredInPersonOrders() {
@@ -93,7 +102,8 @@ public class OrderExpirationService {
         log.info("In-person expiration scan: timeout={} minutes, cutoff={}, matchedOrders={}",
                 inPersonExpirationMinutes, inPersonCutoff, expiredInPersonOrders.size());
         for (Order order : expiredInPersonOrders) {
-            cancelSingleOrder(order, "Tự động hủy: In-person order quá hạn " + inPersonExpirationMinutes + " phút chưa xác nhận thanh toán", "CANCELLED");
+            cancelSingleOrder(order, "Tự động hủy: In-person order quá hạn " + inPersonExpirationMinutes
+                    + " phút chưa xác nhận thanh toán", "CANCELLED");
         }
     }
 
@@ -134,7 +144,8 @@ public class OrderExpirationService {
         if (order.getOrderId() == null) {
             return;
         }
-        List<OrderHandling> handlings = orderHandlingRepository.findByOrderOrderIdOrderByHandledAtDesc(order.getOrderId());
+        List<OrderHandling> handlings = orderHandlingRepository
+                .findByOrderOrderIdOrderByHandledAtDesc(order.getOrderId());
         if (handlings == null) {
             return;
         }
@@ -158,7 +169,8 @@ public class OrderExpirationService {
             if (product != null && !"AVAILABLE".equalsIgnoreCase(product.getProductStatus())) {
                 product.setProductStatus("AVAILABLE");
                 productRepository.save(product);
-                log.info("Giải phóng sản phẩm [ID: {} - {}] về trạng thái AVAILABLE", product.getProductId(), product.getProductName());
+                log.info("Giải phóng sản phẩm [ID: {} - {}] về trạng thái AVAILABLE", product.getProductId(),
+                        product.getProductName());
             }
         }
     }
@@ -166,7 +178,8 @@ public class OrderExpirationService {
     private void sendExpirationEmail(Order order, String reason) {
         try {
             mailService.sendOrderRejectedEmail(order, reason);
-            log.info("Đã gửi email thông báo hết hạn/hủy đơn hàng [{}] tới email [{}]", order.getOrderCode(), order.getCustomerEmail());
+            log.info("Đã gửi email thông báo hết hạn/hủy đơn hàng [{}] tới email [{}]", order.getOrderCode(),
+                    order.getCustomerEmail());
         } catch (Exception e) {
             log.warn("Không thể gửi email thông báo hủy cho đơn hàng {}: {}", order.getOrderCode(), e.getMessage());
         }
