@@ -1,7 +1,7 @@
 package com.example.bonsai_shop.customer.service;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+// import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -23,26 +23,29 @@ public class EmailService {
     private static final int MAX_RETRIES = 3;
 
     public void sendOtpEmail(String toEmail, String otpCode) {
-        String emailContent = buildOtpTemplate("Mã OTP Đăng Nhập", 
-            "Mã OTP của bạn là: " + otpCode, otpCode);
-        sendHtmlEmailWithRetry(toEmail, "🌿 Minh Kỷ Garden - Mã OTP dùng để đăng nhập", emailContent, "SIGNUP_OTP_" + toEmail);
+        String emailContent = buildOtpTemplate("Mã OTP Đăng Nhập",
+                "Mã OTP của bạn là: " + otpCode, otpCode);
+        sendHtmlEmailWithRetry(toEmail, "🌿 Minh Kỷ Garden - Mã OTP dùng để đăng nhập", emailContent,
+                "SIGNUP_OTP_" + toEmail);
     }
 
     public void sendOtpResetPassword(String toEmail, String otpCode) {
-        String emailContent = buildOtpTemplate("Mã OTP Đặt Lại Mật Khẩu", 
-            "Mã OTP để đặt lại mật khẩu của bạn là: " + otpCode, otpCode);
-        sendHtmlEmailWithRetry(toEmail, "🌿 Minh Kỷ Garden - Mã OTP dùng để đổi lại mật khẩu", emailContent, "RESET_OTP_" + toEmail);
+        String emailContent = buildOtpTemplate("Mã OTP Đặt Lại Mật Khẩu",
+                "Mã OTP để đặt lại mật khẩu của bạn là: " + otpCode, otpCode);
+        sendHtmlEmailWithRetry(toEmail, "🌿 Minh Kỷ Garden - Mã OTP dùng để đổi lại mật khẩu", emailContent,
+                "RESET_OTP_" + toEmail);
     }
 
     public void sendGuestOrderOtp(String toEmail, String otpCode) {
-        String emailContent = buildOtpTemplate("Mã OTP Xác Nhận Đặt Hàng", 
-            "Mã OTP để xác nhận đặt hàng của bạn là: " + otpCode, otpCode);
-        sendHtmlEmailWithRetry(toEmail, "🌿 Minh Kỷ Garden - Mã OTP xác nhận đặt hàng", emailContent, "GUEST_OTP_" + toEmail);
+        String emailContent = buildOtpTemplate("Mã OTP Xác Nhận Đặt Hàng",
+                "Mã OTP để xác nhận đặt hàng của bạn là: " + otpCode, otpCode);
+        sendHtmlEmailWithRetry(toEmail, "🌿 Minh Kỷ Garden - Mã OTP xác nhận đặt hàng", emailContent,
+                "GUEST_OTP_" + toEmail);
     }
 
     public void sendGuestOrderOtpOrThrow(String toEmail, String otpCode) throws Exception {
-        String emailContent = buildOtpTemplate("Mã OTP Xác Nhận Đặt Hàng", 
-            "Mã OTP để xác nhận đặt hàng của bạn là: " + otpCode, otpCode);
+        String emailContent = buildOtpTemplate("Mã OTP Xác Nhận Đặt Hàng",
+                "Mã OTP để xác nhận đặt hàng của bạn là: " + otpCode, otpCode);
         sendHtmlEmailOrThrow(toEmail, "🌿 Minh Kỷ Garden - Mã OTP xác nhận đặt hàng", emailContent);
     }
 
@@ -57,7 +60,8 @@ public class EmailService {
                 + "    <p style=\"font-size: 15px; margin-bottom: 25px;\">" + message + "</p>"
                 + "    <div style=\"background-color: #f0f4ff; border: 2px solid #2e7d32; padding: 25px; border-radius: 8px; margin: 30px 0;\">"
                 + "      <p style=\"font-size: 13px; color: #666; margin: 0 0 10px 0; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;\">Mã OTP của bạn:</p>"
-                + "      <p style=\"font-size: 32px; font-weight: 700; letter-spacing: 3px; margin: 0; color: #2e7d32; font-family: 'Courier New', monospace;\">" + otpCode + "</p>"
+                + "      <p style=\"font-size: 32px; font-weight: 700; letter-spacing: 3px; margin: 0; color: #2e7d32; font-family: 'Courier New', monospace;\">"
+                + otpCode + "</p>"
                 + "    </div>"
                 + "    <p style=\"font-size: 14px; color: #666; margin: 25px 0 0 0;\"><strong>Mã này có hiệu lực trong 5 phút.</strong></p>"
                 + "    <p style=\"font-size: 13px; color: #999; margin: 15px 0 0 0;\">Nếu bạn không yêu cầu mã này, vui lòng bỏ qua email này.</p>"
@@ -78,7 +82,8 @@ public class EmailService {
                 log.info("Bắt đầu gửi email (Lần {}/{}) tới: {}, Tiêu đề: {}", attempt, MAX_RETRIES, toEmail, subject);
                 MimeMessage message = mailSender.createMimeMessage();
                 MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-                if (fromEmail != null) helper.setFrom(fromEmail);
+                if (fromEmail != null)
+                    helper.setFrom(fromEmail);
                 helper.setTo(toEmail);
                 helper.setSubject(subject);
                 helper.setText(emailContent, true);
@@ -105,7 +110,8 @@ public class EmailService {
             log.info("Gửi email tới: {}, Tiêu đề: {}", toEmail, subject);
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-            if (fromEmail != null) helper.setFrom(fromEmail);
+            if (fromEmail != null)
+                helper.setFrom(fromEmail);
             helper.setTo(toEmail);
             helper.setSubject(subject);
             helper.setText(emailContent, true);

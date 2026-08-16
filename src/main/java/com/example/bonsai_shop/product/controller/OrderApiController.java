@@ -17,6 +17,7 @@ import com.example.bonsai_shop.entity.CartItem;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -101,6 +102,9 @@ public class OrderApiController {
 
     @Autowired
     private EmailService emailService;
+
+    @Value("${order.expiration.online-minutes:15}")
+    private int onlineExpirationMinutes;
 
     /**
      * [GỬI MÃ OTP XÁC THỰC CHO KHÁCH VÃNG LAI (GUEST CHECKOUT)]
@@ -1128,7 +1132,7 @@ public class OrderApiController {
         SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss");
         vnp_Params.put("vnp_CreateDate", formatter.format(cld.getTime()));
 
-        cld.add(Calendar.MINUTE, 15);
+        cld.add(Calendar.MINUTE, onlineExpirationMinutes);
         vnp_Params.put("vnp_ExpireDate", formatter.format(cld.getTime()));
 
         List<String> fieldNames = new ArrayList<>(vnp_Params.keySet());

@@ -22,8 +22,7 @@ import java.util.List;
  * [SERVICE TỰ ĐỘNG XỬ LÝ HẾT HẠN ĐƠN HÀNG - ORDER EXPIRATION SERVICE]
  *
  * Chịu trách nhiệm:
- * - Quét và tự động hủy các đơn hàng trực tuyến (ONLINE) quá hạn thanh toán 15 phút (PENDING / PENDING_PAYMENT).
- * - Quét và tự động hủy các đơn hàng quá hạn 48 giờ (offline / fallback).
+ * - Quét và tự động hủy các đơn hàng trực tuyến (ONLINE) quá hạn thanh toán theo cấu hình (PENDING / PENDING_PAYMENT).
  * - Quét và tự động hủy các đơn hàng mua tại vườn (IN_PERSON) quá thời gian cấu hình (mặc định 1440 phút / 24h).
  * - Thực hiện chuỗi dọn dẹp tài nguyên khi đơn hết hạn (cancelSingleOrder):
  *   1. Chuyển trạng thái Order sang CANCELLED, ghi lý do vào notes.
@@ -51,16 +50,18 @@ public class OrderExpirationService {
     @Value("${order.expiration.in-person-minutes:1440}")
     private long inPersonExpirationMinutes;
 
+    @Value("${order.expiration.online-minutes:15}")
+    private long onlineExpirationMinutes;
+
     /**
-     * [QUÉT VÀ HỦY ĐƠN HÀNG ONLINE / OFFLINE QUÁ HẠN THANH TOÁN]
+     * [QUÉT VÀ HỦY ĐƠN HÀNG ONLINE QUÁ HẠN THANH TOÁN]
      *
      * Mục đích:
-     * - Tìm kiếm các đơn hàng ONLINE ở trạng thái PENDING hoặc PENDING_PAYMENT tạo từ hơn 15 phút trước.
-     * - Tìm kiếm các đơn hàng OFFLINE tạo từ hơn 48 giờ trước chưa hoàn tất.
+     * - Tìm kiếm các đơn hàng ONLINE ở trạng thái PENDING hoặc PENDING_PAYMENT tạo từ hơn onlineExpirationMinutes trước.
      * - Hủy đơn và trả lại cây cho khách khác mua.
      *
      * Được gọi từ:
-     * - OrderExpirationScheduler.scanExpiredOrders() (Định kỳ mỗi 60s)
+     * - OrderExpirationScheduler.scheduleOrderCleanup() (Định kỳ mỗi 60s)
      *
      * Tác động DB:
      * - ORDER: orderStatus: PENDING/PENDING_PAYMENT → CANCELLED, notes
@@ -72,18 +73,11 @@ public class OrderExpirationService {
     public void cancelExpiredOrders() {
         LocalDateTime now = LocalDateTime.now();
 
-        LocalDateTime onlineCutoff = now.minusMinutes(15);
+        LocalDateTime onlineCutoff = now.minusMinutes(onlineExpirationMinutes);
         List<Order> expiredOnlineOrders = orderRepository.findExpiredOnlineOrders(onlineCutoff);
         for (Order order : expiredOnlineOrders) {
-            cancelSingleOrder(order, "Tự động hủy: Đơn hàng online quá hạn 15 phút chưa thanh toán qua VNPay", "CANCELLED");
+            cancelSingleOrder(order, "Tự động hủy: Đơn hàng online quá hạn " + onlineExpirationMinutes + " phút chưa thanh toán qua VNPay", "CANCELLED");
         }
-
-        LocalDateTime offlineCutoff = now.minusHours(48);
-        List<Order> expiredOfflineOrders = orderRepository.findExpiredOfflineOrders(offlineCutoff);
-        for (Order order : expiredOfflineOrders) {
-            cancelSingleOrder(order, "Tự động hủy: Đơn hàng quá hạn 48 giờ chưa chuẩn bị/thanh toán tiền", "CANCELLED");
-        }
-
     }
 
     /**

@@ -13,15 +13,11 @@ import com.example.bonsai_shop.product.repository.ProductRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
 import org.springframework.dao.DataAccessException;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -61,6 +57,7 @@ class OrderExpirationServiceTest {
                 mailService
         );
         ReflectionTestUtils.setField(orderExpirationService, "inPersonExpirationMinutes", 1440L);
+        ReflectionTestUtils.setField(orderExpirationService, "onlineExpirationMinutes", 15L);
     }
 
     // =========================================================================
@@ -71,7 +68,6 @@ class OrderExpirationServiceTest {
     @DisplayName("UT-UUT10-001: cancelExpiredOrders - Không có đơn hàng nào hết hạn")
     void cancelExpiredOrders_noExpiredOrders_doesNothing() {
         when(orderRepository.findExpiredOnlineOrders(any())).thenReturn(List.of());
-        when(orderRepository.findExpiredOfflineOrders(any())).thenReturn(List.of());
         when(orderRepository.findExpiredInPersonOrders(any())).thenReturn(List.of());
 
         orderExpirationService.cancelExpiredOrders();
@@ -99,7 +95,6 @@ class OrderExpirationServiceTest {
                 .build();
 
         when(orderRepository.findExpiredOnlineOrders(any())).thenReturn(List.of(onlineOrder));
-        when(orderRepository.findExpiredOfflineOrders(any())).thenReturn(List.of());
         when(orderRepository.findExpiredInPersonOrders(any())).thenReturn(List.of());
         when(paymentRepository.findByOrderOrderIdOrderByPaymentIdAsc(101)).thenReturn(List.of());
         when(orderHandlingRepository.findByOrderOrderIdOrderByHandledAtDesc(101)).thenReturn(List.of());
@@ -125,7 +120,6 @@ class OrderExpirationServiceTest {
                 .build();
 
         when(orderRepository.findExpiredOnlineOrders(any())).thenReturn(List.of(onlineOrder));
-        when(orderRepository.findExpiredOfflineOrders(any())).thenReturn(List.of());
         when(orderRepository.findExpiredInPersonOrders(any())).thenReturn(List.of());
 
         orderExpirationService.cancelExpiredOrders();
@@ -150,7 +144,6 @@ class OrderExpirationServiceTest {
                 .build();
 
         when(orderRepository.findExpiredOnlineOrders(any())).thenReturn(List.of(onlineOrder));
-        when(orderRepository.findExpiredOfflineOrders(any())).thenReturn(List.of());
         when(orderRepository.findExpiredInPersonOrders(any())).thenReturn(List.of());
         when(paymentRepository.findByOrderOrderIdOrderByPaymentIdAsc(103)).thenReturn(List.of(pendingPayment));
 
@@ -177,7 +170,6 @@ class OrderExpirationServiceTest {
                 .build();
 
         when(orderRepository.findExpiredOnlineOrders(any())).thenReturn(List.of(onlineOrder));
-        when(orderRepository.findExpiredOfflineOrders(any())).thenReturn(List.of());
         when(orderRepository.findExpiredInPersonOrders(any())).thenReturn(List.of());
         when(paymentRepository.findByOrderOrderIdOrderByPaymentIdAsc(104)).thenReturn(List.of(failedPayment));
 
@@ -205,7 +197,6 @@ class OrderExpirationServiceTest {
                 .build();
 
         when(orderRepository.findExpiredOnlineOrders(any())).thenReturn(List.of(onlineOrder));
-        when(orderRepository.findExpiredOfflineOrders(any())).thenReturn(List.of());
         when(orderRepository.findExpiredInPersonOrders(any())).thenReturn(List.of());
         when(orderHandlingRepository.findByOrderOrderIdOrderByHandledAtDesc(105)).thenReturn(List.of(activeHandling));
 
@@ -239,7 +230,6 @@ class OrderExpirationServiceTest {
                 .build();
 
         when(orderRepository.findExpiredOnlineOrders(any())).thenReturn(List.of(onlineOrder));
-        when(orderRepository.findExpiredOfflineOrders(any())).thenReturn(List.of());
         when(orderRepository.findExpiredInPersonOrders(any())).thenReturn(List.of());
 
         orderExpirationService.cancelExpiredOrders();
@@ -271,7 +261,6 @@ class OrderExpirationServiceTest {
                 .build();
 
         when(orderRepository.findExpiredOnlineOrders(any())).thenReturn(List.of(onlineOrder));
-        when(orderRepository.findExpiredOfflineOrders(any())).thenReturn(List.of());
         when(orderRepository.findExpiredInPersonOrders(any())).thenReturn(List.of());
 
         orderExpirationService.cancelExpiredOrders();
@@ -281,38 +270,11 @@ class OrderExpirationServiceTest {
     }
 
     // =========================================================================
-    // Group 3: Expired Offline Orders Cancellation
+    // Group 3: Expired In-Person Orders Cancellation
     // =========================================================================
 
     @Test
-    @DisplayName("UT-UUT10-009: cancelExpiredOrders - Hủy đơn Offline quá hạn 48 giờ")
-    void cancelExpiredOrders_expiredOfflineOrder_cancelsAndSendsEmail() {
-        Order offlineOrder = Order.builder()
-                .orderId(108)
-                .orderCode("BSMS-OFFLINE-108")
-                .orderStatus("PENDING")
-                .orderType("OFFLINE")
-                .customerEmail("offline@example.com")
-                .build();
-
-        when(orderRepository.findExpiredOnlineOrders(any())).thenReturn(List.of());
-        when(orderRepository.findExpiredOfflineOrders(any())).thenReturn(List.of(offlineOrder));
-        when(orderRepository.findExpiredInPersonOrders(any())).thenReturn(List.of());
-
-        orderExpirationService.cancelExpiredOrders();
-
-        assertEquals("CANCELLED", offlineOrder.getOrderStatus());
-        assertTrue(offlineOrder.getNotes().contains("Tự động hủy: Đơn hàng quá hạn 48 giờ"));
-        verify(orderRepository).save(offlineOrder);
-        verify(mailService).sendOrderRejectedEmail(eq(offlineOrder), contains("48 giờ"));
-    }
-
-    // =========================================================================
-    // Group 4: Expired In-Person Orders Cancellation
-    // =========================================================================
-
-    @Test
-    @DisplayName("UT-UUT10-010: cancelExpiredOrders - Hủy đơn In-Person quá hạn KHÔNG gửi email")
+    @DisplayName("UT-UUT10-009: cancelExpiredOrders - Hủy đơn In-Person quá hạn KHÔNG gửi email")
     void cancelExpiredOrders_expiredInPersonOrder_cancelsWithoutEmail() {
         Order inPersonOrder = Order.builder()
                 .orderId(109)
@@ -323,7 +285,6 @@ class OrderExpirationServiceTest {
                 .build();
 
         when(orderRepository.findExpiredOnlineOrders(any())).thenReturn(List.of());
-        when(orderRepository.findExpiredOfflineOrders(any())).thenReturn(List.of());
         when(orderRepository.findExpiredInPersonOrders(any())).thenReturn(List.of(inPersonOrder));
 
         orderExpirationService.cancelExpiredInPersonOrders();
@@ -335,11 +296,11 @@ class OrderExpirationServiceTest {
     }
 
     // =========================================================================
-    // Group 5: Exception Handling & Edge Cases
+    // Group 4: Exception Handling & Edge Cases
     // =========================================================================
 
     @Test
-    @DisplayName("UT-UUT10-011: cancelExpiredOrders - Gửi email thông báo hủy bị ném Exception")
+    @DisplayName("UT-UUT10-010: cancelExpiredOrders - Gửi email thông báo hủy bị ném Exception")
     void cancelExpiredOrders_emailServiceThrowsException_swallowsErrorAndContinues() {
         Order onlineOrder = Order.builder()
                 .orderId(110)
@@ -350,7 +311,6 @@ class OrderExpirationServiceTest {
                 .build();
 
         when(orderRepository.findExpiredOnlineOrders(any())).thenReturn(List.of(onlineOrder));
-        when(orderRepository.findExpiredOfflineOrders(any())).thenReturn(List.of());
         when(orderRepository.findExpiredInPersonOrders(any())).thenReturn(List.of());
         doThrow(new RuntimeException("SMTP connection error")).when(mailService).sendOrderRejectedEmail(any(), any());
 
@@ -361,7 +321,7 @@ class OrderExpirationServiceTest {
     }
 
     @Test
-    @DisplayName("UT-UUT10-012: cancelExpiredOrders - Đơn hàng có orderDetails = null hoặc orderId = null")
+    @DisplayName("UT-UUT10-011: cancelExpiredOrders - Đơn hàng có orderDetails = null hoặc orderId = null")
     void cancelExpiredOrders_nullDetailsOrOrderId_handlesSafely() {
         Order nullOrder = Order.builder()
                 .orderId(null)
@@ -372,7 +332,6 @@ class OrderExpirationServiceTest {
                 .build();
 
         when(orderRepository.findExpiredOnlineOrders(any())).thenReturn(List.of(nullOrder));
-        when(orderRepository.findExpiredOfflineOrders(any())).thenReturn(List.of());
         when(orderRepository.findExpiredInPersonOrders(any())).thenReturn(List.of());
 
         orderExpirationService.cancelExpiredOrders();
@@ -384,7 +343,7 @@ class OrderExpirationServiceTest {
     }
 
     @Test
-    @DisplayName("UT-UUT10-013: cancelExpiredOrders - orderRepository.save ném DataAccessException")
+    @DisplayName("UT-UUT10-012: cancelExpiredOrders - orderRepository.save ném DataAccessException")
     void cancelExpiredOrders_repositorySaveThrowsException_propagatesError() {
         Order onlineOrder = Order.builder()
                 .orderId(111)
