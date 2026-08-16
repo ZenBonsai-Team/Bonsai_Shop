@@ -10,6 +10,7 @@ import com.example.bonsai_shop.product.repository.ProductRepository;
 import jakarta.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -53,6 +54,9 @@ public class PaymentController {
     private com.example.bonsai_shop.product.service.OrderService orderService;
     @Autowired
     private com.example.bonsai_shop.product.repository.PaymentRepository paymentRepository;
+
+    @Value("${order.expiration.online-minutes:15}")
+    private int onlineExpirationMinutes;
 
     /**
      * [TẠO LINK THANH TOÁN VNPAY TRỰC TIẾP CHO SẢN PHẨM (LEGACY / TEST)]
@@ -124,7 +128,7 @@ public class PaymentController {
         String vnp_CreateDate = formatter.format(cld.getTime());
         vnp_Params.put("vnp_CreateDate", vnp_CreateDate);
 
-        cld.add(Calendar.MINUTE, 15); // Thời gian hết hạn thanh toán
+        cld.add(Calendar.MINUTE, onlineExpirationMinutes); // Thời gian hết hạn thanh toán
         String vnp_ExpireDate = formatter.format(cld.getTime());
         vnp_Params.put("vnp_ExpireDate", vnp_ExpireDate);
 
@@ -350,7 +354,7 @@ public class PaymentController {
         String vnp_CreateDate = formatter.format(cld.getTime());
         vnp_Params.put("vnp_CreateDate", vnp_CreateDate);
 
-        cld.add(Calendar.MINUTE, 15);
+        cld.add(Calendar.MINUTE, onlineExpirationMinutes);
         String vnp_ExpireDate = formatter.format(cld.getTime());
         vnp_Params.put("vnp_ExpireDate", vnp_ExpireDate);
 

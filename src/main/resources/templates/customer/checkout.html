@@ -153,7 +153,7 @@
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-600">Số điện thoại liên lạc</label>
-                            <input type="tel" id="custPhone" class="form-control" th:value="${user != null ? user.phone : ''}" placeholder="0987654321" required>
+                            <input type="tel" id="custPhone" class="form-control" th:value="${user != null ? user.phone : ''}" placeholder="0987654321" inputmode="numeric" pattern="0[0-9]{9}" maxlength="10" oninput="this.value=this.value.replace(/\D/g,'').slice(0,10)" required>
                             <div class="invalid-feedback" id="phoneFeedback">Vui lòng nhập số điện thoại liên lạc hợp lệ (10 số).</div>
                         </div>
                         <div class="col-md-6 mb-3">
@@ -260,7 +260,7 @@
                 <h6 class="fw-bold text-success mb-3" id="targetOtpEmail">name@example.com</h6>
                 
                 <div class="mb-3" style="max-width: 240px; margin: 0 auto;">
-                    <input type="text" id="guestOtpInput" class="form-control form-control-lg text-center fw-bold letter-spacing-2" placeholder="000000" maxlength="6" autocomplete="off">
+                    <input type="text" id="guestOtpInput" class="form-control form-control-lg text-center fw-bold letter-spacing-2" placeholder="000000" maxlength="6" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/\D/g,'').slice(0,6)" autocomplete="off">
                     <div class="invalid-feedback text-start" id="guestOtpFeedback">Mã OTP không hợp lệ.</div>
                 </div>
 

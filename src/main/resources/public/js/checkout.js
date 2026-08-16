@@ -19,12 +19,31 @@ document.addEventListener('DOMContentLoaded', () => {
     const otpInput = document.getElementById('guestOtpInput');
     if (otpInput) {
         otpInput.addEventListener('input', () => {
+            otpInput.value = otpInput.value.replace(/\D/g, '').slice(0, 6);
             otpInput.classList.remove('is-invalid');
+        });
+        otpInput.addEventListener('keypress', (e) => {
+            if (!/[0-9]/.test(e.key)) {
+                e.preventDefault();
+            }
+        });
+    }
+
+    const phoneInput = document.getElementById('custPhone');
+    if (phoneInput) {
+        phoneInput.addEventListener('input', () => {
+            phoneInput.value = phoneInput.value.replace(/\D/g, '').slice(0, 10);
+            phoneInput.classList.remove('is-invalid');
+        });
+        phoneInput.addEventListener('keypress', (e) => {
+            if (!/[0-9]/.test(e.key)) {
+                e.preventDefault();
+            }
         });
     }
     
     // Đăng ký xóa trạng thái lỗi khi người dùng nhập liệu lại
-    const inputs = ['custName', 'custPhone', 'custEmail', 'custAddress', 'orderNotes'];
+    const inputs = ['custName', 'custEmail', 'custAddress', 'orderNotes'];
     inputs.forEach(id => {
         const inputEl = document.getElementById(id);
         if (inputEl) {
@@ -156,7 +175,7 @@ async function placeOrder() {
         custNameEl.classList.remove('is-invalid');
     }
     
-    const phoneRegex = /^(0|\+84)(\d{9})$/;
+    const phoneRegex = /^0\d{9}$/;
     if (!custPhone) {
         custPhoneEl.classList.add('is-invalid');
         document.getElementById('phoneFeedback').textContent = "Vui lòng nhập số điện thoại liên lạc.";
@@ -164,7 +183,7 @@ async function placeOrder() {
         if (!firstErrorField) firstErrorField = custPhoneEl;
     } else if (!phoneRegex.test(custPhone)) {
         custPhoneEl.classList.add('is-invalid');
-        document.getElementById('phoneFeedback').textContent = "Số điện thoại không hợp lệ (Cần 10 chữ số bắt đầu bằng 0 hoặc +84).";
+        document.getElementById('phoneFeedback').textContent = "Số điện thoại không hợp lệ (Cần 10 chữ số bắt đầu bằng số 0).";
         hasError = true;
         if (!firstErrorField) firstErrorField = custPhoneEl;
     } else {

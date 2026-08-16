@@ -2,6 +2,18 @@
 
 document.addEventListener('DOMContentLoaded', () => {
     initRealtimeValidation();
+
+    const phoneInput = document.getElementById('customerPhone');
+    if (phoneInput) {
+        phoneInput.addEventListener('input', () => {
+            phoneInput.value = phoneInput.value.replace(/\D/g, '').slice(0, 10);
+        });
+        phoneInput.addEventListener('keypress', (e) => {
+            if (!/[0-9]/.test(e.key)) {
+                e.preventDefault();
+            }
+        });
+    }
 });
 
 // Đối tượng lưu trạng thái focus hiện tại phục vụ cho Focus Trapping
@@ -91,7 +103,7 @@ function selectPaymentMethod(method) {
 function initRealtimeValidation() {
     const rules = {
         customerName: (val) => val.trim().length >= 2,
-        customerPhone: (val) => /^(0|\+84)(\d{9})$/.test(val.trim()),
+        customerPhone: (val) => /^0\d{9}$/.test(val.trim()),
         customerEmail: (val) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val.trim()),
         shippingAddress: (val) => val.trim().length >= 10
     };
