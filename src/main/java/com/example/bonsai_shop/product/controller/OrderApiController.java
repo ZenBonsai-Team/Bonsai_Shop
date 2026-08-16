@@ -146,11 +146,11 @@ public class OrderApiController {
         String email = payload.get("email") != null ? payload.get("email").toString() : null;
         if (email == null || !email.matches("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$")) {
             response.put("success", false);
-            response.put("message", "Äá»‹a chá»‰ Email khÃ´ng há»£p lá»‡!");
+            response.put("message", "Địa chỉ Email không hợp lệ!");
             return ResponseEntity.badRequest().body(response);
         }
 
-        // [2] Parse productIds an toÃ n â€” khÃ´ng tin dá»¯ liá»‡u tá»« client
+        // [2] Parse productIds an toàn — không tin dữ liệu từ client
         List<Integer> productIds = new ArrayList<>();
         if (payload.containsKey("productIds") && payload.get("productIds") instanceof List<?>) {
             try {
@@ -159,20 +159,20 @@ public class OrderApiController {
                         .map(item -> Integer.valueOf(item.toString()))
                         .collect(Collectors.toList());
             } catch (NumberFormatException | ClassCastException e) {
-                log.warn("[sendGuestOtp] productIds format khÃ´ng há»£p lá»‡ tá»« client: {}", e.getMessage());
+                log.warn("[sendGuestOtp] productIds format không hợp lệ từ client: {}", e.getMessage());
                 response.put("success", false);
-                response.put("message", "Äá»‹nh dáº¡ng danh sÃ¡ch sáº£n pháº©m khÃ´ng há»£p lá»‡.");
+                response.put("message", "Định dạng danh sách sản phẩm không hợp lệ.");
                 return ResponseEntity.badRequest().body(response);
             }
         }
 
-        // [3] Pre-validate: load products tá»« DB + kiá»ƒm tra limit + kiá»ƒm tra availability
-        // Má»¥c Ä‘Ã­ch: Fail Fast â€” khÃ´ng gá»­i OTP khi biáº¿t cháº¯c sáº£n pháº©m khÃ´ng cÃ²n kháº£ dá»¥ng
+        // [3] Pre-validate: load products từ DB + kiểm tra limit + kiểm tra availability
+        // Mục đích: Fail Fast — không gửi OTP khi biết chắc sản phẩm không còn khả dụng
         if (!productIds.isEmpty()) {
             List<Product> products = orderService.getProductsByIds(productIds);
 
-            // UX Validation Layer â€” kiá»ƒm tra tráº¡ng thÃ¡i sáº£n pháº©m
-            // LÆ¯U Ã: Ä‘Ã¢y KHÃ”NG pháº£i data guard. reserveIfAvailable() trong createOrder() má»›i lÃ  lá»›p báº£o vá»‡ cuá»‘i cÃ¹ng.
+            // UX Validation Layer — kiểm tra trạng thái sản phẩm
+            // LƯU Ý: đây KHÔNG phải data guard. reserveIfAvailable() trong createOrder() mới là lớp bảo vệ cuối cùng.
             List<Product> unavailableProducts = orderService.validateProductAvailability(products);
             if (!unavailableProducts.isEmpty()) {
                 List<String> unavailableNames = unavailableProducts.stream()
@@ -189,14 +189,14 @@ public class OrderApiController {
                         .collect(Collectors.toList());
                 response.put("success", false);
                 response.put("errorType", "PRODUCTS_UNAVAILABLE");
-                response.put("message", "Má»™t sá»‘ tÃ¡c pháº©m khÃ´ng cÃ²n kháº£ dá»¥ng: " + String.join(", ", unavailableNames)
-                        + ". Vui lÃ²ng lÃ m má»›i giá» hÃ ng vÃ  thá»­ láº¡i.");
+                response.put("message", "Một số tác phẩm không còn khả dụng: " + String.join(", ", unavailableNames)
+                        + ". Vui lòng làm mới giỏ hàng và thử lại.");
                 response.put("unavailableProducts", unavailableDetails);
                 return ResponseEntity.badRequest().body(response);
             }
         }
 
-        // [4] Rate limit â€” cooldown 60 giÃ¢y (khÃ´ng cáº§n Redis á»Ÿ quy mÃ´ hiá»‡n táº¡i)
+        // [4] Rate limit — cooldown 60 giây (không cần Redis ở quy mô hiện tại)
         PasswordResetOtp latestOtp = registerOtpRepository
                 .findTopByEmailOrderByCreatedAtDesc(email).orElse(null);
         if (latestOtp != null && latestOtp.getCreatedAt().isAfter(LocalDateTime.now().minusSeconds(60))) {
