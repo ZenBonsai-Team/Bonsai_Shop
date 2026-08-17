@@ -1,10 +1,8 @@
 package com.example.bonsai_shop.product.controller;
 
 import com.example.bonsai_shop.config.VNPayConfig;
-import com.example.bonsai_shop.entity.Order;
 import com.example.bonsai_shop.entity.Payment;
 import com.example.bonsai_shop.entity.Product;
-import com.example.bonsai_shop.product.repository.OrderRepository;
 import com.example.bonsai_shop.product.repository.ProductRepository;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -55,14 +53,7 @@ public class PaymentController {
     @Autowired
     private ProductRepository productRepository;
     @Autowired
-    private OrderRepository orderRepository;
-    // @Autowired
-    // private com.example.bonsai_shop.product.service.MailService mailService;
-    @Autowired
     private com.example.bonsai_shop.product.service.OrderService orderService;
-    // @Autowired
-    // private com.example.bonsai_shop.product.repository.PaymentRepository
-    // paymentRepository;
 
     @Value("${order.expiration.online-minutes:15}")
     private int onlineExpirationMinutes;
@@ -348,10 +339,6 @@ public class PaymentController {
     @GetMapping("/vnpay/pay-order")
     public String payOrder(HttpServletRequest req, @RequestParam("orderCode") String orderCode)
             throws UnsupportedEncodingException {
-
-        // 1. Tìm đơn hàng trong CSDL theo orderCode
-        Order order = orderRepository.findByOrderCode(orderCode)
-                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy đơn hàng: " + orderCode));
 
         // 2. Lấy số tiền từ Payment record PENDING gần nhất (nếu có, ví dụ: Đặt cọc =
         // Deposit + Crane + Ship)

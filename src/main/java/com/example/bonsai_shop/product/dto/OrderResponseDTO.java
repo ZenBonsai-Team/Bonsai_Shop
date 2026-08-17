@@ -3,9 +3,6 @@ package com.example.bonsai_shop.product.dto;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
-
-import com.example.bonsai_shop.product.dto.PaymentDTO;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -15,7 +12,8 @@ import lombok.NoArgsConstructor;
  * [DTO PHẢN HỒI THÔNG TIN ĐƠN HÀNG - ORDER RESPONSE DTO]
  *
  * Mục đích:
- * - Đóng gói dữ liệu đơn hàng trả về cho Frontend hiển thị danh sách đơn, chi tiết đơn, và trạng thái thanh toán.
+ * - Đóng gói dữ liệu đơn hàng trả về cho Frontend hiển thị danh sách đơn, chi
+ * tiết đơn, và trạng thái thanh toán.
  */
 @Data
 @Builder
@@ -50,15 +48,15 @@ public class OrderResponseDTO {
 
     /**
      * Số tiền khách cần thanh toán ngay qua VNPay (Nấc 1):
-     *  - Đặt cọc: depositAmount + craneFee + shippingFee
-     *  - Thanh toán 100%: totalAmount (treePrice + craneFee + shippingFee)
+     * - Đặt cọc: depositAmount + craneFee + shippingFee
+     * - Thanh toán 100%: totalAmount (treePrice + craneFee + shippingFee)
      */
     private BigDecimal immediatePaymentAmount;
 
     /**
      * Số tiền khách sẽ thanh toán khi nhận cây (Nấc 2):
-     *  - Đặt cọc: treePrice - depositAmount
-     *  - Thanh toán 100%: 0 VND
+     * - Đặt cọc: treePrice - depositAmount
+     * - Thanh toán 100%: 0 VND
      */
     private BigDecimal remainingPaymentAmount;
 

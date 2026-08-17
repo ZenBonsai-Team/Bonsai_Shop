@@ -50,19 +50,30 @@ import lombok.extern.slf4j.Slf4j;
  * [SERVICE TRỌNG TÂM QUẢN LÝ VÀ XỬ LÝ ĐƠN HÀNG - ORDER SERVICE]
  *
  * Chịu trách nhiệm:
- * - Tiếp nhận và tạo đơn hàng Checkout (Guest & Authenticated), đặt chỗ giữ cây nguyên tử (Atomic Reservation).
+ * - Tiếp nhận và tạo đơn hàng Checkout (Guest & Authenticated), đặt chỗ giữ cây
+ * nguyên tử (Atomic Reservation).
  * - Quản lý Orders Pool: Tra cứu, phân trang, lọc theo tiêu chí Moderator.
- * - Điều phối quy trình xử lý của Moderator: Tiếp nhận (claim), trả lại (unclaim), phê duyệt & tính phí (verify), từ chối (reject).
- * - Quản lý thanh toán VNPay 1-N (Đặt cọc DEPOSIT / Thanh toán đủ FULL_PAYMENT):
- *   + Chuẩn bị bản ghi thanh toán PENDING (preparePendingVnPayPayment).
- *   + Xử lý kết quả thành công (processPaymentSuccess) chuyển trạng thái sang DEPOSITED hoặc PAID.
- *   + Xử lý thất bại (processPaymentFailure).
- *   + Xác nhận thu nốt đợt 2 (confirmRemainingPayment) và hoàn tất đơn (COMPLETED, chuyển Product sang SOLD).
- * - Xử lý các ngoại lệ nghiệp vụ: Khách bùng cọc (markDepositedOrderCustomerNoShow), hoàn tiền do lỗi nhà vườn/vận chuyển (recordFaultRefundAndCancel).
- * - Tương tác hệ thống: Ghi log (OrderLog), lưu vết xử lý (OrderHandling), bắn sự kiện (OrderCreatedEvent, OrderVerifiedEvent, OrderPaidEvent, OrderRejectedEvent), gửi email thông báo (MailService), ghi nhận sổ cái tài chính (FinancialLedgerService).
+ * - Điều phối quy trình xử lý của Moderator: Tiếp nhận (claim), trả lại
+ * (unclaim), phê duyệt & tính phí (verify), từ chối (reject).
+ * - Quản lý thanh toán VNPay 1-N (Đặt cọc DEPOSIT / Thanh toán đủ
+ * FULL_PAYMENT):
+ * + Chuẩn bị bản ghi thanh toán PENDING (preparePendingVnPayPayment).
+ * + Xử lý kết quả thành công (processPaymentSuccess) chuyển trạng thái sang
+ * DEPOSITED hoặc PAID.
+ * + Xử lý thất bại (processPaymentFailure).
+ * + Xác nhận thu nốt đợt 2 (confirmRemainingPayment) và hoàn tất đơn
+ * (COMPLETED, chuyển Product sang SOLD).
+ * - Xử lý các ngoại lệ nghiệp vụ: Khách bùng cọc
+ * (markDepositedOrderCustomerNoShow), hoàn tiền do lỗi nhà vườn/vận chuyển
+ * (recordFaultRefundAndCancel).
+ * - Tương tác hệ thống: Ghi log (OrderLog), lưu vết xử lý (OrderHandling), bắn
+ * sự kiện (OrderCreatedEvent, OrderVerifiedEvent, OrderPaidEvent,
+ * OrderRejectedEvent), gửi email thông báo (MailService), ghi nhận sổ cái tài
+ * chính (FinancialLedgerService).
  *
  * Các thành phần phối hợp chính:
- * - Repositories: OrderRepository, ProductRepository, PaymentRepository, OrderLogRepository, OrderHandlingRepository.
+ * - Repositories: OrderRepository, ProductRepository, PaymentRepository,
+ * OrderLogRepository, OrderHandlingRepository.
  * - Services: CartService, MailService, FinancialLedgerService.
  * - Events: ApplicationEventPublisher.
  */
@@ -98,7 +109,8 @@ public class OrderService {
      * - OrderApiController.getOrders()
      *
      * Input & Output:
-     * - Input: search (String), status (String), sort (String), page (int), limit (int)
+     * - Input: search (String), status (String), sort (String), page (int), limit
+     * (int)
      * - Output: Page<Order>
      *
      * Tác động DB:
@@ -115,7 +127,8 @@ public class OrderService {
      * [LẤY DANH SÁCH ĐƠN HÀNG TRONG KHO CHUNG (ORDERS POOL)]
      *
      * Mục đích:
-     * - Lấy các đơn hàng có assignedTo IS NULL và orderStatus = 'PENDING' để Moderator nhận xử lý.
+     * - Lấy các đơn hàng có assignedTo IS NULL và orderStatus = 'PENDING' để
+     * Moderator nhận xử lý.
      *
      * Được gọi từ:
      * - OrderApiController.getPoolOrders()
@@ -144,7 +157,8 @@ public class OrderService {
      * - OrderApiController.getMyOrders()
      *
      * Input & Output:
-     * - Input: moderatorId (Integer), search (String), status (String), sort (String), page (int), limit (int)
+     * - Input: moderatorId (Integer), search (String), status (String), sort
+     * (String), page (int), limit (int)
      * - Output: Page<Order>
      */
     @Transactional(readOnly = true)
@@ -287,7 +301,8 @@ public class OrderService {
      * Các bước thực hiện:
      * 1. Kiểm tra đơn thuộc quyền moderator và có trạng thái "PENDING".
      * 2. Set assignedTo = null, assignedAt = null trên Order.
-     * 3. Tìm các bản ghi OrderHandling đang active của moderator trên đơn này và set isActive = false, releasedAt = now.
+     * 3. Tìm các bản ghi OrderHandling đang active của moderator trên đơn này và
+     * set isActive = false, releasedAt = now.
      *
      * Tác động DB:
      * - ORDER: assigned_to = null, assigned_at = null
@@ -334,27 +349,35 @@ public class OrderService {
      * - Moderator xác nhận đơn hàng sau khi liên hệ thỏa thuận với khách.
      * - Tính toán lại tổng tiền: treePrice + craneFee + shippingFee.
      * - Khởi tạo/cập nhật số tiền cần thanh toán cho Payment record PENDING.
-     * - Chuyển trạng thái sang PENDING_PAYMENT và phát sự kiện gửi link thanh toán cho khách.
+     * - Chuyển trạng thái sang PENDING_PAYMENT và phát sự kiện gửi link thanh toán
+     * cho khách.
      *
      * Được gọi từ:
      * - OrderApiController.verifyOrder()
      * - OrderActionService.handleApprove()
      *
      * Các bước thực hiện:
-     * 1. Tìm Order và kiểm tra đúng Moderator phụ trách + trạng thái đơn là "PENDING".
+     * 1. Tìm Order và kiểm tra đúng Moderator phụ trách + trạng thái đơn là
+     * "PENDING".
      * 2. Tính giá cây gốc treePrice từ OrderDetail.
      * 3. Chuẩn hóa craneFee, shippingFee (>= 0, <= 200tr, là số nguyên).
      * 4. Tính newTotal = treePrice + craneFee + shippingFee.
      * 5. Kiểm tra flow Đặt cọc (DEPOSIT) hay Thanh toán đủ (FULL_PAYMENT):
-     *    - Nếu DEPOSIT: Kiểm tra depositAmount (0 < depositAmount <= treePrice), tạo/cập nhật Payment record với paymentType = DEPOSIT, amount = depositAmount, status = PENDING.
-     *    - Nếu FULL_PAYMENT: Set depositAmount = 0, tạo/cập nhật Payment record với paymentType = FULL_PAYMENT, amount = newTotal, status = PENDING.
+     * - Nếu DEPOSIT: Kiểm tra depositAmount (0 < depositAmount <= treePrice),
+     * tạo/cập nhật Payment record với paymentType = DEPOSIT, amount =
+     * depositAmount, status = PENDING.
+     * - Nếu FULL_PAYMENT: Set depositAmount = 0, tạo/cập nhật Payment record với
+     * paymentType = FULL_PAYMENT, amount = newTotal, status = PENDING.
      * 6. Cập nhật Order: orderStatus = "PENDING_PAYMENT".
-     * 7. Ghi bản ghi OrderLog (actionType = "VERIFY", fromStatus = "PENDING", toStatus = "PENDING_PAYMENT").
+     * 7. Ghi bản ghi OrderLog (actionType = "VERIFY", fromStatus = "PENDING",
+     * toStatus = "PENDING_PAYMENT").
      * 8. Đóng OrderHandling active (isActive = false, releasedAt = now).
-     * 9. Phát sự kiện OrderVerifiedEvent → gửi email link thanh toán VNPay cho khách.
+     * 9. Phát sự kiện OrderVerifiedEvent → gửi email link thanh toán VNPay cho
+     * khách.
      *
      * Tác động DB:
-     * - ORDER: craneFee, shippingFee, totalAmount, depositAmount, orderStatus = PENDING_PAYMENT
+     * - ORDER: craneFee, shippingFee, totalAmount, depositAmount, orderStatus =
+     * PENDING_PAYMENT
      * - PAYMENT: amount, paymentType, paymentStatus = PENDING
      * - ORDER_LOG: log "VERIFY"
      * - ORDER_HANDLING: isActive = false
@@ -484,7 +507,8 @@ public class OrderService {
      * [TỪ CHỐI / HỦY ĐƠN HÀNG PENDING KÈM LÝ DO]
      *
      * Mục đích:
-     * - Moderator hủy đơn hàng chưa duyệt và giải phóng toàn bộ cây về trạng thái AVAILABLE.
+     * - Moderator hủy đơn hàng chưa duyệt và giải phóng toàn bộ cây về trạng thái
+     * AVAILABLE.
      *
      * Được gọi từ:
      * - OrderApiController.rejectOrder()
@@ -654,9 +678,12 @@ public class OrderService {
      *
      * Mục đích:
      * - Tiếp nhận thông tin checkout của khách (đăng nhập hoặc vãng lai).
-     * - Thực hiện giữ chỗ nguyên tử (Atomic Reserve) trên từng cây qua DB query UPDATE PRODUCT SET productStatus='RESERVED' WHERE productId=? AND productStatus='AVAILABLE'.
+     * - Thực hiện giữ chỗ nguyên tử (Atomic Reserve) trên từng cây qua DB query
+     * UPDATE PRODUCT SET productStatus='RESERVED' WHERE productId=? AND
+     * productStatus='AVAILABLE'.
      * - Sinh mã đơn hàng chuẩn định dạng "BSMS-XXXXXX".
-     * - Lưu Order (PENDING), OrderDetail (snapshot priceAtPurchase), và khởi tạo Payment record đầu tiên (PENDING).
+     * - Lưu Order (PENDING), OrderDetail (snapshot priceAtPurchase), và khởi tạo
+     * Payment record đầu tiên (PENDING).
      * - Xóa giỏ hàng nếu là user đăng nhập.
      * - Bắn sự kiện OrderCreatedEvent để gửi email xác nhận.
      *
@@ -664,17 +691,18 @@ public class OrderService {
      * - OrderApiController.checkout()
      *
      * Input & Output:
-     * - Input: dto (PurchaseOrderRequestDTO), customer (User - nullable nếu là Guest)
+     * - Input: dto (PurchaseOrderRequestDTO), customer (User - nullable nếu là
+     * Guest)
      * - Output: Order entity đã được persist
      *
      * Tác động DB:
      * - Bảng đọc: PRODUCT, CART_ITEM
      * - Bảng ghi:
-     *   + ORDER: tạo mới (orderStatus = PENDING, orderType = ONLINE)
-     *   + ORDER_DETAIL: tạo mới chi tiết đơn hàng
-     *   + PRODUCT: productStatus: AVAILABLE → RESERVED
-     *   + PAYMENT: tạo 1 bản ghi ban đầu (paymentStatus = PENDING)
-     *   + CART_ITEM: xóa nếu là logged-in customer
+     * + ORDER: tạo mới (orderStatus = PENDING, orderType = ONLINE)
+     * + ORDER_DETAIL: tạo mới chi tiết đơn hàng
+     * + PRODUCT: productStatus: AVAILABLE → RESERVED
+     * + PAYMENT: tạo 1 bản ghi ban đầu (paymentStatus = PENDING)
+     * + CART_ITEM: xóa nếu là logged-in customer
      *
      * Sự kiện phát sinh:
      * - OrderCreatedEvent (gửi email thông báo đơn đã tạo)
@@ -774,10 +802,13 @@ public class OrderService {
      * [XỬ LÝ THANH TOÁN VNPAY THÀNH CÔNG (PAYMENT SUCCESS CALLBACK / IPN)]
      *
      * Mục đích:
-     * - Tiếp nhận tín hiệu thanh toán thành công từ PaymentController (Return URL) hoặc IPNController (Webhook IPN).
+     * - Tiếp nhận tín hiệu thanh toán thành công từ PaymentController (Return URL)
+     * hoặc IPNController (Webhook IPN).
      * - Cập nhật Payment record PENDING thành SUCCESS và ghi nhận paymentDate.
-     * - Nếu paymentType = DEPOSIT: Chuyển Order sang DEPOSITED, gửi email xác nhận đặt cọc thành công.
-     * - Nếu paymentType = FULL_PAYMENT: Chuyển Order sang PAID, phát sự kiện OrderPaidEvent.
+     * - Nếu paymentType = DEPOSIT: Chuyển Order sang DEPOSITED, gửi email xác nhận
+     * đặt cọc thành công.
+     * - Nếu paymentType = FULL_PAYMENT: Chuyển Order sang PAID, phát sự kiện
+     * OrderPaidEvent.
      *
      * Được gọi từ:
      * - PaymentController.paymentCallback()
@@ -785,7 +816,8 @@ public class OrderService {
      *
      * Tác động DB:
      * - PAYMENT: paymentStatus = "SUCCESS", paymentDate = now
-     * - ORDER: orderStatus = "DEPOSITED" (nếu cọc) hoặc "PAID" (nếu thanh toán đủ 100%)
+     * - ORDER: orderStatus = "DEPOSITED" (nếu cọc) hoặc "PAID" (nếu thanh toán đủ
+     * 100%)
      */
     @Transactional
     public boolean processPaymentSuccess(String orderCode) {
@@ -875,8 +907,10 @@ public class OrderService {
      * [CHUẨN BỊ BẢN GHI THANH TOÁN PENDING CHO VNPAY (HỖ TRỢ RETRY)]
      *
      * Mục đích:
-     * - Đảm bảo luôn có 1 bản ghi Payment PENDING với số tiền chính xác khi khách bấm vào link thanh toán VNPay.
-     * - Nếu khách từng thanh toán lỗi/hết hạn trước đó, hàm sẽ tự tạo lại bản ghi PENDING retry mới.
+     * - Đảm bảo luôn có 1 bản ghi Payment PENDING với số tiền chính xác khi khách
+     * bấm vào link thanh toán VNPay.
+     * - Nếu khách từng thanh toán lỗi/hết hạn trước đó, hàm sẽ tự tạo lại bản ghi
+     * PENDING retry mới.
      *
      * Được gọi từ:
      * - PaymentController.payOrder()
@@ -952,11 +986,14 @@ public class OrderService {
     }
 
     /**
-     * [XÁC NHẬN THU ĐỦ TIỀN ĐỢT 2 VÀ HOÀN TẤT ĐƠN ĐẶT CỌC (CONFIRM REMAINING PAYMENT)]
+     * [XÁC NHẬN THU ĐỦ TIỀN ĐỢT 2 VÀ HOÀN TẤT ĐƠN ĐẶT CỌC (CONFIRM REMAINING
+     * PAYMENT)]
      *
      * Mục đích:
-     * - Dành cho đơn hàng đã cọc (DEPOSITED). Khi Moderator giao cây và thu nốt số tiền còn lại (CASH/Chuyển khoản).
-     * - Tạo Payment record #2 với paymentType = REMAINING_PAYMENT, amount = totalAmount - depositPaid, status = SUCCESS.
+     * - Dành cho đơn hàng đã cọc (DEPOSITED). Khi Moderator giao cây và thu nốt số
+     * tiền còn lại (CASH/Chuyển khoản).
+     * - Tạo Payment record #2 với paymentType = REMAINING_PAYMENT, amount =
+     * totalAmount - depositPaid, status = SUCCESS.
      * - Chuyển Order sang COMPLETED.
      * - Chuyển Product sang SOLD.
      * - Ghi nhận doanh thu vào Sổ cái tài chính FinancialLedger.
@@ -985,7 +1022,7 @@ public class OrderService {
 
         if (!"DEPOSITED".equalsIgnoreCase(order.getOrderStatus())) {
             throw new IllegalStateException(
-                "Đơn hàng phải ở trạng thái ĐÃ ĐẶT CỌC (DEPOSITED) mới được xác nhận thanh toán phần còn lại!");
+                    "Đơn hàng phải ở trạng thái ĐÃ ĐẶT CỌC (DEPOSITED) mới được xác nhận thanh toán phần còn lại!");
         }
 
         validateAssignedModerator(order, moderator);
@@ -1085,8 +1122,10 @@ public class OrderService {
      * [GHI NHẬN KHÁCH HÀNG BÙNG CỌC VÀ TỊCH THU TIỀN CỌC (CUSTOMER NO-SHOW)]
      *
      * Mục đích:
-     * - Khi đơn hàng ở trạng thái DEPOSITED nhưng khách hàng từ chối nhận cây khi giao đến.
-     * - Ghi nhận giữ lại toàn bộ số tiền cọc (Forfeited Deposit Income) vào Sổ cái tài chính FinancialLedger.
+     * - Khi đơn hàng ở trạng thái DEPOSITED nhưng khách hàng từ chối nhận cây khi
+     * giao đến.
+     * - Ghi nhận giữ lại toàn bộ số tiền cọc (Forfeited Deposit Income) vào Sổ cái
+     * tài chính FinancialLedger.
      * - Cập nhật Order sang CANCELLED.
      * - Giải phóng cây về AVAILABLE để mở bán lại trên sàn.
      *
@@ -1140,8 +1179,10 @@ public class OrderService {
      * [GHI NHẬN HOÀN TIỀN DO LỖI NHÀ VƯỜN / VẬN CHUYỂN VÀ HỦY ĐƠN]
      *
      * Mục đích:
-     * - Xử lý trường hợp cây bị gãy, hư hỏng trong quá trình vận chuyển hoặc do lỗi nhà vườn sau khi khách đã cọc hoặc thanh toán.
-     * - Ghi nhận bút toán hoàn tiền 100% thủ công vào Sổ cái tài chính (FinancialLedger).
+     * - Xử lý trường hợp cây bị gãy, hư hỏng trong quá trình vận chuyển hoặc do lỗi
+     * nhà vườn sau khi khách đã cọc hoặc thanh toán.
+     * - Ghi nhận bút toán hoàn tiền 100% thủ công vào Sổ cái tài chính
+     * (FinancialLedger).
      * - Đổi Order sang CANCELLED và giải phóng cây về AVAILABLE.
      *
      * Được gọi từ:
@@ -1226,7 +1267,8 @@ public class OrderService {
      * Mục đích:
      * - Dành cho đơn hàng đã thanh toán 100% qua VNPay (orderStatus = "PAID").
      * - Moderator xác nhận sau khi cây đã được giao thành công tới tay khách.
-     * - Cập nhật Order sang COMPLETED, chuyển Product sang SOLD, ghi nhận doanh thu vào Sổ cái.
+     * - Cập nhật Order sang COMPLETED, chuyển Product sang SOLD, ghi nhận doanh thu
+     * vào Sổ cái.
      *
      * Được gọi từ:
      * - OrderApiController.completePaidOrder()
@@ -1316,26 +1358,6 @@ public class OrderService {
         order.setNotes(merged.length() > 500 ? merged.substring(0, 500) : merged);
     }
 
-    private String requireProductResolution(String productResolution) {
-        if (productResolution == null || productResolution.isBlank()) {
-            throw new IllegalArgumentException("Vui lòng chọn cách xử lý cây trước khi xác nhận hoàn tiền.");
-        }
-        String normalized = productResolution.trim().toUpperCase();
-        return switch (normalized) {
-            case "RETURNED_AND_RESELLABLE", "RETURNED_AND_DAMAGED", "NOT_RETURNED", "UNDER_INSPECTION" -> normalized;
-            default -> throw new IllegalArgumentException("Cách xử lý cây không hợp lệ: " + productResolution);
-        };
-    }
-
-    private void applyProductResolution(Order order, String productResolution) {
-        switch (productResolution) {
-            case "RETURNED_AND_RESELLABLE" -> releaseProducts(order);
-            case "UNDER_INSPECTION" -> markProductsAsReserved(order);
-            case "RETURNED_AND_DAMAGED", "NOT_RETURNED" -> markProductsAsSold(order);
-            default -> throw new IllegalArgumentException("Cách xử lý cây không hợp lệ: " + productResolution);
-        }
-    }
-
     private void recordCompletedRevenueLedger(Order order, User actor, LocalDateTime completedAt) {
         FinancialLedger ledger = financialLedgerService.recordCompletedOrderRevenueIfAbsent(order, actor, completedAt);
         if (ledger == null) {
@@ -1387,18 +1409,6 @@ public class OrderService {
                 Product prod = detail.getProduct();
                 if (prod != null) {
                     prod.setProductStatus("SOLD");
-                    productRepository.save(prod);
-                }
-            }
-        }
-    }
-
-    private void markProductsAsReserved(Order order) {
-        if (order.getOrderDetails() != null) {
-            for (OrderDetail detail : order.getOrderDetails()) {
-                Product prod = detail.getProduct();
-                if (prod != null) {
-                    prod.setProductStatus("RESERVED");
                     productRepository.save(prod);
                 }
             }

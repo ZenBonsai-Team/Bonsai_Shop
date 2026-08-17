@@ -16,7 +16,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -27,7 +26,6 @@ public class UserService {
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
-    private final FileStorageService fileStorageService;
     private final RegisterOtpRepository otpRepository;
     private final CloudinaryStorageService cloudinaryStorageService;
 
@@ -88,7 +86,6 @@ public class UserService {
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy user!"));
     }
 
-
     // Lay profile user hien tai theo email trong SecurityContext.
     public User getCurrentUserProfile(String email) {
         return userRepository.findByEmail(email)
@@ -98,28 +95,30 @@ public class UserService {
     // Cap nhat thong tin profile va upload avatar moi neu co.
     @Transactional
     public void updateUserProfile(String email, String fullName, String username, String phone,
-                                  String address, MultipartFile avatarFile) {
+            String address, MultipartFile avatarFile) {
         // Validate user phai ton tai truoc khi cap nhat profile.
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy user!"));
 
         // Chi cap nhat truong nao duoc gui len, cac truong null giu nguyen.
-        if (fullName != null) user.setFullName(fullName);
-        if (username != null) user.setUsername(username);
-        if (phone != null) user.setPhone(phone);
-        if (address != null) user.setAddress(address);
+        if (fullName != null)
+            user.setFullName(fullName);
+        if (username != null)
+            user.setUsername(username);
+        if (phone != null)
+            user.setPhone(phone);
+        if (address != null)
+            user.setAddress(address);
 
-        // Luu publicId avatar cu de xoa tren Cloudinary sau khi upload avatar moi thanh cong.
+        // Luu publicId avatar cu de xoa tren Cloudinary sau khi upload avatar moi thanh
+        // cong.
         String oldAvatarPublicID = user.getAvatarPublicId();
 
         // Neu co file avatar moi thi upload len Cloudinary.
         if (avatarFile != null && !avatarFile.isEmpty()) {
-            CloudinaryUploadResponse result =
-                    cloudinaryStorageService.uploadImage(
-                            avatarFile,
-                            CloudinaryFolder.AVATAR
-                    );
-
+            CloudinaryUploadResponse result = cloudinaryStorageService.uploadImage(
+                    avatarFile,
+                    CloudinaryFolder.AVATAR);
 
             // Cap nhat URL/publicId moi vao user.
             user.setAvatar(result.getUrl());
@@ -157,7 +156,8 @@ public class UserService {
         emailService.sendOtpEmail(email, otpCode);
     }
 
-    // Kiem tra OTP dang ky co ton tai, chua dung, chua het han va dung ma nguoi dung nhap.
+    // Kiem tra OTP dang ky co ton tai, chua dung, chua het han va dung ma nguoi
+    // dung nhap.
     public void verifyOtp(String email, String otpCode) {
         // Lay OTP moi nhat cua email.
         PasswordResetOtp otp = otpRepository.findTopByEmailOrderByCreatedAtDesc(email)
@@ -181,7 +181,7 @@ public class UserService {
         otpRepository.save(otp);
     }
 
-    //    GỬI OTP để đặt lại mật khẩu
+    // GỬI OTP để đặt lại mật khẩu
     // Tao OTP cho luong quen mat khau sau khi xac nhan email ton tai.
     @Transactional
     public void sendOtpResetPassword(String email) {
@@ -210,7 +210,6 @@ public class UserService {
         emailService.sendOtpResetPassword(email, otpCode);
     }
 
-
     // Doi mat khau moi sau luong quen mat khau va xoa OTP lien quan.
     @Transactional
     public void resetPassword(String email, String newPassword) {
@@ -218,8 +217,8 @@ public class UserService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Email không tồn tại!"));
         // Validate mat khau moi toi thieu 6 ky tu.
-        if(newPassword.length() < 6){
-            throw  new RuntimeException("Mật khẩu phải có ít nhất 6 ký tự!");
+        if (newPassword.length() < 6) {
+            throw new RuntimeException("Mật khẩu phải có ít nhất 6 ký tự!");
         }
         // Ma hoa mat khau moi truoc khi luu.
         user.setPassword(passwordEncoder.encode(newPassword));
@@ -227,7 +226,8 @@ public class UserService {
         otpRepository.deleteByEmail(email);
     }
 
-    // Doi mat khau khi user dang dang nhap, yeu cau mat khau cu dung va xac nhan khop.
+    // Doi mat khau khi user dang dang nhap, yeu cau mat khau cu dung va xac nhan
+    // khop.
     @Transactional
     public void changePassword(String email, String oldPassword, String newPassword, String confirmPassword) {
         // Validate email phai ton tai.
@@ -254,14 +254,15 @@ public class UserService {
         userRepository.save(user);
     }
 
-    // Validate profile co phone/email truoc khi cho thuc hien cac chuc nang can thong tin lien he.
+    // Validate profile co phone/email truoc khi cho thuc hien cac chuc nang can
+    // thong tin lien he.
     public void checkProfileEmailAndPhone(User user) {
         // So dien thoai bat buoc khi dat lich.
-        if(user.getPhone() == null || user.getPhone().isBlank()) {
+        if (user.getPhone() == null || user.getPhone().isBlank()) {
             throw new RuntimeException("Vui lòng cập nhật số điện thoại trước khi đặt lịch");
         }
         // Email bat buoc khi dat lich.
-        if(user.getEmail() == null || user.getEmail().isBlank()) {
+        if (user.getEmail() == null || user.getEmail().isBlank()) {
             throw new RuntimeException("Vui lòng cập nhật email trước khi đặt lịch");
         }
     }

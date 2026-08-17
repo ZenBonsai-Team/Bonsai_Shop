@@ -16,8 +16,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.client.RestTemplate;
-
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -28,14 +26,22 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 public class LiveStreamServiceTest {
 
-    @Mock private LiveSessionRepository liveSessionRepository;
-    @Mock private LiveLeadRepository liveLeadRepository;
-    @Mock private LiveChatMessageRepository liveChatMessageRepository;
-    @Mock private ProductRepository productRepository;
-    @Mock private SimpMessagingTemplate messagingTemplate;
-    @Mock private UserRepository userRepository;
-    @Mock private ModerationNotificationRepository notificationRepository;
-    @Mock private RestTemplate mockRestTemplate;
+    @Mock
+    private LiveSessionRepository liveSessionRepository;
+    @Mock
+    private LiveLeadRepository liveLeadRepository;
+    @Mock
+    private LiveChatMessageRepository liveChatMessageRepository;
+    @Mock
+    private ProductRepository productRepository;
+    @Mock
+    private SimpMessagingTemplate messagingTemplate;
+    @Mock
+    private UserRepository userRepository;
+    @Mock
+    private ModerationNotificationRepository notificationRepository;
+    @Mock
+    private RestTemplate mockRestTemplate;
 
     @InjectMocks
     private LiveStreamService liveStreamService;
@@ -113,7 +119,8 @@ public class LiveStreamServiceTest {
         when(productRepository.findByProductCode("BON-102")).thenReturn(Optional.of(product));
         when(liveLeadRepository.save(any(LiveLead.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        Optional<LiveLead> leadOpt = liveStreamService.processComment("C", "Tư vấn BON-102 0912345678 nhé", activeSession);
+        Optional<LiveLead> leadOpt = liveStreamService.processComment("C", "Tư vấn BON-102 0912345678 nhé",
+                activeSession);
 
         assertTrue(leadOpt.isPresent());
         assertEquals("TU_VAN", leadOpt.get().getIntentType());
@@ -124,7 +131,8 @@ public class LiveStreamServiceTest {
         // TC-UNIT-LiveService-006
         when(liveLeadRepository.save(any(LiveLead.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        Optional<LiveLead> leadOpt = liveStreamService.processComment("D", "Gọi lại số 0976543210 cho tôi", activeSession);
+        Optional<LiveLead> leadOpt = liveStreamService.processComment("D", "Gọi lại số 0976543210 cho tôi",
+                activeSession);
 
         assertTrue(leadOpt.isPresent());
         assertEquals("GOI_LAI", leadOpt.get().getIntentType());
@@ -197,16 +205,16 @@ public class LiveStreamServiceTest {
         // 2. Mock liveChat/messages response
         Map<String, Object> chatResponse = new HashMap<>();
         chatResponse.put("nextPageToken", "token123");
-        
+
         Map<String, Object> messageItem = new HashMap<>();
         Map<String, Object> snippet = new HashMap<>();
         Map<String, Object> textMessageDetails = new HashMap<>();
         textMessageDetails.put("messageText", "chốt BON-101 0987654321");
         snippet.put("textMessageDetails", textMessageDetails);
-        
+
         Map<String, Object> authorDetails = new HashMap<>();
         authorDetails.put("displayName", "User YT");
-        
+
         messageItem.put("snippet", snippet);
         messageItem.put("authorDetails", authorDetails);
         chatResponse.put("items", List.of(messageItem));

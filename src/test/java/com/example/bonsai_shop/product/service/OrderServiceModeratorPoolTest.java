@@ -20,7 +20,6 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -64,8 +63,7 @@ class OrderServiceModeratorPoolTest {
                 mailService,
                 cartService,
                 financialLedgerService,
-                notificationRepository
-        );
+                notificationRepository);
     }
 
     @Test
@@ -117,13 +115,15 @@ class OrderServiceModeratorPoolTest {
         Page<Order> mockPage = new PageImpl<>(List.of(order));
         ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
 
-        when(orderRepository.searchMyOrders(eq(5), eq(List.of("PENDING_PAYMENT")), eq(""), any(Pageable.class))).thenReturn(mockPage);
+        when(orderRepository.searchMyOrders(eq(5), eq(List.of("PENDING_PAYMENT")), eq(""), any(Pageable.class)))
+                .thenReturn(mockPage);
 
         Page<Order> result = orderService.getMyOrders(5, "", "PENDING_PAYMENT", "date_desc", 1, 10);
 
         assertThat(result).isNotNull();
         assertThat(result.getContent()).hasSize(1);
-        verify(orderRepository, times(1)).searchMyOrders(eq(5), eq(List.of("PENDING_PAYMENT")), eq(""), pageableCaptor.capture());
+        verify(orderRepository, times(1)).searchMyOrders(eq(5), eq(List.of("PENDING_PAYMENT")), eq(""),
+                pageableCaptor.capture());
         Pageable pageable = pageableCaptor.getValue();
         assertThat(pageable.getPageNumber()).isEqualTo(0);
         assertThat(pageable.getPageSize()).isEqualTo(10);
@@ -138,13 +138,15 @@ class OrderServiceModeratorPoolTest {
         Page<Order> mockPage = new PageImpl<>(List.of(order));
         ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
 
-        when(orderRepository.searchOrdersForModerator(eq(List.of("PENDING")), eq("BSMS"), any(Pageable.class))).thenReturn(mockPage);
+        when(orderRepository.searchOrdersForModerator(eq(List.of("PENDING")), eq("BSMS"), any(Pageable.class)))
+                .thenReturn(mockPage);
 
         Page<Order> result = orderService.getFilteredOrders("BSMS", "PENDING", "price_asc", 1, 10);
 
         assertThat(result).isNotNull();
         assertThat(result.getContent()).hasSize(1);
-        verify(orderRepository, times(1)).searchOrdersForModerator(eq(List.of("PENDING")), eq("BSMS"), pageableCaptor.capture());
+        verify(orderRepository, times(1)).searchOrdersForModerator(eq(List.of("PENDING")), eq("BSMS"),
+                pageableCaptor.capture());
         Pageable pageable = pageableCaptor.getValue();
         assertThat(pageable.getPageNumber()).isEqualTo(0);
         assertThat(pageable.getPageSize()).isEqualTo(10);
@@ -221,7 +223,8 @@ class OrderServiceModeratorPoolTest {
     @DisplayName("UT-UUT02-008: Moderator nhận tiếp quản đơn thành công (claimOrder)")
     void claimOrder_success() {
         User moderator = User.builder().userId(5).fullName("Moderator 5").build();
-        Order order = Order.builder().orderId(100).orderCode("BSMS-123").orderStatus("PENDING").assignedTo(null).build();
+        Order order = Order.builder().orderId(100).orderCode("BSMS-123").orderStatus("PENDING").assignedTo(null)
+                .build();
 
         when(orderRepository.findByOrderCode("BSMS-123")).thenReturn(Optional.of(order));
 
@@ -251,9 +254,8 @@ class OrderServiceModeratorPoolTest {
 
         when(orderRepository.findByOrderCode("BSMS-999")).thenReturn(Optional.empty());
 
-        RuntimeException exception = assertThrows(RuntimeException.class, () ->
-                orderService.claimOrder("BSMS-999", moderator)
-        );
+        RuntimeException exception = assertThrows(RuntimeException.class,
+                () -> orderService.claimOrder("BSMS-999", moderator));
 
         assertThat(exception.getMessage()).isEqualTo("Đơn hàng không tồn tại!");
         verify(orderRepository, never()).save(any());
@@ -265,13 +267,13 @@ class OrderServiceModeratorPoolTest {
     void claimOrder_alreadyClaimedByOther() {
         User moderator5 = User.builder().userId(5).build();
         User moderator99 = User.builder().userId(99).build();
-        Order order = Order.builder().orderId(100).orderCode("BSMS-123").orderStatus("PENDING").assignedTo(moderator99).build();
+        Order order = Order.builder().orderId(100).orderCode("BSMS-123").orderStatus("PENDING").assignedTo(moderator99)
+                .build();
 
         when(orderRepository.findByOrderCode("BSMS-123")).thenReturn(Optional.of(order));
 
-        IllegalStateException exception = assertThrows(IllegalStateException.class, () ->
-                orderService.claimOrder("BSMS-123", moderator5)
-        );
+        IllegalStateException exception = assertThrows(IllegalStateException.class,
+                () -> orderService.claimOrder("BSMS-123", moderator5));
 
         assertThat(exception.getMessage()).isEqualTo("Đơn hàng đã được nhận bởi người khác!");
         verify(orderRepository, never()).save(any());
@@ -282,13 +284,13 @@ class OrderServiceModeratorPoolTest {
     @DisplayName("UT-UUT02-011: Claim đơn thất bại khi Đơn đã được CHÍNH Moderator hiện tại tiếp quản trước đó (claimOrder)")
     void claimOrder_alreadyClaimedBySameModerator() {
         User moderator5 = User.builder().userId(5).build();
-        Order order = Order.builder().orderId(100).orderCode("BSMS-123").orderStatus("PENDING").assignedTo(moderator5).build();
+        Order order = Order.builder().orderId(100).orderCode("BSMS-123").orderStatus("PENDING").assignedTo(moderator5)
+                .build();
 
         when(orderRepository.findByOrderCode("BSMS-123")).thenReturn(Optional.of(order));
 
-        IllegalStateException exception = assertThrows(IllegalStateException.class, () ->
-                orderService.claimOrder("BSMS-123", moderator5)
-        );
+        IllegalStateException exception = assertThrows(IllegalStateException.class,
+                () -> orderService.claimOrder("BSMS-123", moderator5));
 
         assertThat(exception.getMessage()).isEqualTo("Đơn hàng đã được nhận bởi người khác!");
         verify(orderRepository, never()).save(any());
@@ -299,13 +301,13 @@ class OrderServiceModeratorPoolTest {
     @DisplayName("UT-UUT02-012: Claim đơn thất bại do Đơn không ở trạng thái PENDING (claimOrder)")
     void claimOrder_notPendingStatus() {
         User moderator = User.builder().userId(5).build();
-        Order order = Order.builder().orderId(100).orderCode("BSMS-123").orderStatus("DEPOSITED").assignedTo(null).build();
+        Order order = Order.builder().orderId(100).orderCode("BSMS-123").orderStatus("DEPOSITED").assignedTo(null)
+                .build();
 
         when(orderRepository.findByOrderCode("BSMS-123")).thenReturn(Optional.of(order));
 
-        IllegalStateException exception = assertThrows(IllegalStateException.class, () ->
-                orderService.claimOrder("BSMS-123", moderator)
-        );
+        IllegalStateException exception = assertThrows(IllegalStateException.class,
+                () -> orderService.claimOrder("BSMS-123", moderator));
 
         assertThat(exception.getMessage()).isEqualTo("Chỉ được phép nhận đơn hàng đang chờ duyệt!");
         verify(orderRepository, never()).save(any());
@@ -317,13 +319,19 @@ class OrderServiceModeratorPoolTest {
     void unclaimOrder_successWithActiveHandling() {
         User moderator5 = User.builder().userId(5).build();
         User moderator99 = User.builder().userId(99).build();
-        Order targetOrder = Order.builder().orderId(100).orderCode("BSMS-123").orderStatus("PENDING").assignedTo(moderator5).build();
-        Order otherOrder = Order.builder().orderId(200).orderCode("BSMS-456").orderStatus("PENDING").assignedTo(moderator5).build();
+        Order targetOrder = Order.builder().orderId(100).orderCode("BSMS-123").orderStatus("PENDING")
+                .assignedTo(moderator5).build();
+        Order otherOrder = Order.builder().orderId(200).orderCode("BSMS-456").orderStatus("PENDING")
+                .assignedTo(moderator5).build();
 
-        OrderHandling h1 = OrderHandling.builder().orderHandlingId(1).order(targetOrder).moderator(moderator5).isActive(true).build();
-        OrderHandling h2 = OrderHandling.builder().orderHandlingId(2).order(otherOrder).moderator(moderator5).isActive(true).build();
-        OrderHandling h3 = OrderHandling.builder().orderHandlingId(3).order(targetOrder).moderator(moderator99).isActive(true).build();
-        OrderHandling h4 = OrderHandling.builder().orderHandlingId(4).order(targetOrder).moderator(moderator5).isActive(false).build();
+        OrderHandling h1 = OrderHandling.builder().orderHandlingId(1).order(targetOrder).moderator(moderator5)
+                .isActive(true).build();
+        OrderHandling h2 = OrderHandling.builder().orderHandlingId(2).order(otherOrder).moderator(moderator5)
+                .isActive(true).build();
+        OrderHandling h3 = OrderHandling.builder().orderHandlingId(3).order(targetOrder).moderator(moderator99)
+                .isActive(true).build();
+        OrderHandling h4 = OrderHandling.builder().orderHandlingId(4).order(targetOrder).moderator(moderator5)
+                .isActive(false).build();
 
         when(orderRepository.findByOrderCode("BSMS-123")).thenReturn(Optional.of(targetOrder));
         when(orderHandlingRepository.findAll()).thenReturn(List.of(h1, h2, h3, h4));
@@ -356,9 +364,8 @@ class OrderServiceModeratorPoolTest {
 
         when(orderRepository.findByOrderCode("BSMS-999")).thenReturn(Optional.empty());
 
-        RuntimeException exception = assertThrows(RuntimeException.class, () ->
-                orderService.unclaimOrder("BSMS-999", moderator)
-        );
+        RuntimeException exception = assertThrows(RuntimeException.class,
+                () -> orderService.unclaimOrder("BSMS-999", moderator));
 
         assertThat(exception.getMessage()).isEqualTo("Đơn hàng không tồn tại!");
         verify(orderRepository, never()).save(any());
@@ -369,13 +376,13 @@ class OrderServiceModeratorPoolTest {
     @DisplayName("UT-UUT02-015: Unclaim đơn thất bại do Đơn chưa được ai tiếp quản (unclaimOrder)")
     void unclaimOrder_unassigned() {
         User moderator = User.builder().userId(5).build();
-        Order order = Order.builder().orderId(100).orderCode("BSMS-123").orderStatus("PENDING").assignedTo(null).build();
+        Order order = Order.builder().orderId(100).orderCode("BSMS-123").orderStatus("PENDING").assignedTo(null)
+                .build();
 
         when(orderRepository.findByOrderCode("BSMS-123")).thenReturn(Optional.of(order));
 
-        IllegalStateException exception = assertThrows(IllegalStateException.class, () ->
-                orderService.unclaimOrder("BSMS-123", moderator)
-        );
+        IllegalStateException exception = assertThrows(IllegalStateException.class,
+                () -> orderService.unclaimOrder("BSMS-123", moderator));
 
         assertThat(exception.getMessage()).isEqualTo("Bạn không sở hữu quyền xử lý đơn hàng này!");
         verify(orderRepository, never()).save(any());
@@ -387,13 +394,13 @@ class OrderServiceModeratorPoolTest {
     void unclaimOrder_assignedToOther() {
         User moderator5 = User.builder().userId(5).build();
         User moderator99 = User.builder().userId(99).build();
-        Order order = Order.builder().orderId(100).orderCode("BSMS-123").orderStatus("PENDING").assignedTo(moderator99).build();
+        Order order = Order.builder().orderId(100).orderCode("BSMS-123").orderStatus("PENDING").assignedTo(moderator99)
+                .build();
 
         when(orderRepository.findByOrderCode("BSMS-123")).thenReturn(Optional.of(order));
 
-        IllegalStateException exception = assertThrows(IllegalStateException.class, () ->
-                orderService.unclaimOrder("BSMS-123", moderator5)
-        );
+        IllegalStateException exception = assertThrows(IllegalStateException.class,
+                () -> orderService.unclaimOrder("BSMS-123", moderator5));
 
         assertThat(exception.getMessage()).isEqualTo("Bạn không sở hữu quyền xử lý đơn hàng này!");
         verify(orderRepository, never()).save(any());
@@ -404,7 +411,8 @@ class OrderServiceModeratorPoolTest {
     @DisplayName("UT-UUT02-017: Moderator trả đơn về pool thành công khi KHÔNG CÓ bản ghi OrderHandling active (unclaimOrder)")
     void unclaimOrder_successWithoutActiveHandling() {
         User moderator = User.builder().userId(5).build();
-        Order order = Order.builder().orderId(100).orderCode("BSMS-123").orderStatus("PENDING").assignedTo(moderator).build();
+        Order order = Order.builder().orderId(100).orderCode("BSMS-123").orderStatus("PENDING").assignedTo(moderator)
+                .build();
 
         when(orderRepository.findByOrderCode("BSMS-123")).thenReturn(Optional.of(order));
         when(orderHandlingRepository.findAll()).thenReturn(List.of());
@@ -423,13 +431,13 @@ class OrderServiceModeratorPoolTest {
     @DisplayName("UT-UUT02-018: Unclaim thất bại do Đơn không ở trạng thái PENDING (unclaimOrder)")
     void unclaimOrder_notPendingStatus() {
         User moderator = User.builder().userId(5).build();
-        Order order = Order.builder().orderId(100).orderCode("BSMS-123").orderStatus("DEPOSITED").assignedTo(moderator).build();
+        Order order = Order.builder().orderId(100).orderCode("BSMS-123").orderStatus("DEPOSITED").assignedTo(moderator)
+                .build();
 
         when(orderRepository.findByOrderCode("BSMS-123")).thenReturn(Optional.of(order));
 
-        IllegalStateException exception = assertThrows(IllegalStateException.class, () ->
-                orderService.unclaimOrder("BSMS-123", moderator)
-        );
+        IllegalStateException exception = assertThrows(IllegalStateException.class,
+                () -> orderService.unclaimOrder("BSMS-123", moderator));
 
         assertThat(exception.getMessage()).isEqualTo("Chỉ được phép trả lại đơn hàng chưa duyệt!");
         verify(orderRepository, never()).save(any());

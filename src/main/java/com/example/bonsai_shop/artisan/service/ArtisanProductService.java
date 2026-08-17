@@ -38,7 +38,8 @@ public class ArtisanProductService {
 
     private static final SecureRandom RANDOM = new SecureRandom();
     private static final String CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-    private static final Set<String> VALID_SHOT_TYPES = Set.of("FRONT", "BACK", "LEFT", "RIGHT", "DETAIL", "TRUNK", "BRANCH", "POT", "OVERVIEW");
+    private static final Set<String> VALID_SHOT_TYPES = Set.of("FRONT", "BACK", "LEFT", "RIGHT", "DETAIL", "TRUNK",
+            "BRANCH", "POT", "OVERVIEW");
     private static final int MAX_MEDIA_PER_UPLOAD = 10;
     private static final int MAX_TAGS_PER_PRODUCT = 12;
     private static final long MAX_IMAGE_SIZE_BYTES = 7L * 1024 * 1024;
@@ -196,11 +197,11 @@ public class ArtisanProductService {
     @Transactional
     // Thêm một media đơn lẻ cho sản phẩm.
     public void addMedia(String artisanEmail,
-                         Integer productId,
-                         MultipartFile file,
-                         String slotType,
-                         String caption,
-                         Boolean isThumbnail) {
+            Integer productId,
+            MultipartFile file,
+            String slotType,
+            String caption,
+            Boolean isThumbnail) {
         Product product = getMyProduct(artisanEmail, productId);
         ensureEditable(product);
         String mediaType = resolveMediaType(file);
@@ -211,8 +212,10 @@ public class ArtisanProductService {
         String normalizedShotType = normalizeShotType(slotType, mediaType);
         String normalizedCaption = normalizeMediaCaption(caption);
         String mediaUrl = mediaStorageService.storeProductMedia(file);
-        List<ProductMedia> existingMedia = productMediaRepository.findByProductOrderByDisplayOrderAscMediaIdAsc(product);
-        boolean shouldSetThumbnail = "IMAGE".equals(mediaType) && (Boolean.TRUE.equals(isThumbnail) || existingMedia.isEmpty());
+        List<ProductMedia> existingMedia = productMediaRepository
+                .findByProductOrderByDisplayOrderAscMediaIdAsc(product);
+        boolean shouldSetThumbnail = "IMAGE".equals(mediaType)
+                && (Boolean.TRUE.equals(isThumbnail) || existingMedia.isEmpty());
 
         if (shouldSetThumbnail) {
             existingMedia.forEach(media -> {
@@ -237,12 +240,12 @@ public class ArtisanProductService {
     @Transactional
     // Upload nhiều media, validate từng file và xử lý thumbnail.
     public int addMediaBatch(String artisanEmail,
-                             Integer productId,
-                             List<MultipartFile> files,
-                             List<String> mediaTypes,
-                             List<String> slotTypes,
-                             List<String> captions,
-                             Integer thumbnailIndex) {
+            Integer productId,
+            List<MultipartFile> files,
+            List<String> mediaTypes,
+            List<String> slotTypes,
+            List<String> captions,
+            Integer thumbnailIndex) {
         Product product = getMyProduct(artisanEmail, productId);
         ensureEditable(product);
 
@@ -254,7 +257,8 @@ public class ArtisanProductService {
             throw new RuntimeException("Mỗi lần chỉ được tải lên tối đa " + MAX_MEDIA_PER_UPLOAD + " media!");
         }
 
-        // Validate du lieu form song song voi List<MultipartFile> de moi file co metadata tuong ung.
+        // Validate du lieu form song song voi List<MultipartFile> de moi file co
+        // metadata tuong ung.
         if (files.stream().anyMatch(file -> file == null || file.isEmpty())) {
             throw new RuntimeException("Vui lòng chọn file cho tất cả mục media!");
         }
@@ -265,12 +269,16 @@ public class ArtisanProductService {
             throw new RuntimeException("Dữ liệu ảnh đại diện không hợp lệ!");
         }
 
-        List<ProductMedia> existingMedia = productMediaRepository.findByProductOrderByDisplayOrderAscMediaIdAsc(product);
+        List<ProductMedia> existingMedia = productMediaRepository
+                .findByProductOrderByDisplayOrderAscMediaIdAsc(product);
         int nextDisplayOrder = getNextDisplayOrder(existingMedia);
-        int selectedThumbnailIndex = thumbnailIndex == null ? findDefaultThumbnailIndex(files, mediaTypes, existingMedia.isEmpty()) : thumbnailIndex;
+        int selectedThumbnailIndex = thumbnailIndex == null
+                ? findDefaultThumbnailIndex(files, mediaTypes, existingMedia.isEmpty())
+                : thumbnailIndex;
 
         if (selectedThumbnailIndex >= 0) {
-            // Chi mot image duoc lam thumbnail, nen reset thumbnail cu truoc khi luu batch moi.
+            // Chi mot image duoc lam thumbnail, nen reset thumbnail cu truoc khi luu batch
+            // moi.
             existingMedia.forEach(media -> {
                 media.setIsThumbnail(false);
                 productMediaRepository.save(media);
@@ -280,7 +288,8 @@ public class ArtisanProductService {
         for (int index = 0; index < files.size(); index++) {
             MultipartFile file = files.get(index);
             String mediaType = resolveMediaType(file, getListValue(mediaTypes, index));
-            // Validate dung luong theo loai media truoc khi goi storage service upload len Cloudinary.
+            // Validate dung luong theo loai media truoc khi goi storage service upload len
+            // Cloudinary.
             validateMediaFile(file, mediaType);
             if (index == selectedThumbnailIndex && "VIDEO".equals(mediaType)) {
                 throw new RuntimeException("Video không thể đặt làm media đại diện!");
@@ -326,11 +335,11 @@ public class ArtisanProductService {
     @Transactional
     // Cập nhật thứ tự, slot type và caption cho danh sách media.
     public void updateMediaOrder(String artisanEmail,
-                                 Integer productId,
-                                 List<Integer> mediaIds,
-                                 List<Integer> displayOrders,
-                                 List<String> slotTypes,
-                                 List<String> captions) {
+            Integer productId,
+            List<Integer> mediaIds,
+            List<Integer> displayOrders,
+            List<String> slotTypes,
+            List<String> captions) {
         Product product = getMyProduct(artisanEmail, productId);
         ensureEditable(product);
         if (mediaIds == null || displayOrders == null || mediaIds.size() != displayOrders.size()) {
@@ -463,7 +472,7 @@ public class ArtisanProductService {
                 .map(tag -> ProductTag.builder()
                         .product(product)
                         .tag(tag)
-                .build())
+                        .build())
                 .forEach(productTagRepository::save);
     }
 
@@ -482,8 +491,7 @@ public class ArtisanProductService {
                 product.getAge(),
                 product.getHeight(),
                 product.getTrunkDiameter(),
-                product.getStyle()
-        );
+                product.getStyle());
         if (product.getPrice() == null || product.getPrice().compareTo(BigDecimal.ZERO) <= 0) {
             throw new RuntimeException("Vui lòng nhập giá sản phẩm hợp lệ trước khi publish.");
         }
@@ -581,19 +589,12 @@ public class ArtisanProductService {
         return product != null
                 && Boolean.TRUE.equals(product.getIsVisible())
                 && ("AVAILABLE".equalsIgnoreCase(product.getProductStatus())
-                || "SOLD".equalsIgnoreCase(product.getProductStatus()));
+                        || "SOLD".equalsIgnoreCase(product.getProductStatus()));
     }
 
     // Kiểm tra sản phẩm đang hiển thị công khai hay không.
     public boolean isVisible(Product product) {
         return product == null || product.getIsVisible() == null || Boolean.TRUE.equals(product.getIsVisible());
-    }
-
-    // Chặn thao tác thay đổi khi sản phẩm đã bán.
-    private void ensureNotSold(Product product) {
-        if (isSold(product)) {
-            throw new RuntimeException("Sản phẩm đã bán không thể chỉnh sửa.");
-        }
     }
 
     // Chặn chỉnh sửa nếu trạng thái sản phẩm không cho phép.
@@ -657,7 +658,8 @@ public class ArtisanProductService {
             }
         }
 
-        // Fallback theo Content-Type/extension de nhan dien video khi trinh duyet gui MIME khong day du.
+        // Fallback theo Content-Type/extension de nhan dien video khi trinh duyet gui
+        // MIME khong day du.
         String contentType = file.getContentType();
         if (contentType != null && contentType.startsWith("video/")) {
             return "VIDEO";
@@ -677,7 +679,8 @@ public class ArtisanProductService {
     // Validate dung lượng và định dạng file media.
     private void validateMediaFile(MultipartFile file, String mediaType) {
         long maxSize = "VIDEO".equals(mediaType) ? MAX_VIDEO_SIZE_BYTES : MAX_IMAGE_SIZE_BYTES;
-        // Service validate lai dung luong de khong phu thuoc hoan toan vao JavaScript phia client.
+        // Service validate lai dung luong de khong phu thuoc hoan toan vao JavaScript
+        // phia client.
         if (file.getSize() > maxSize) {
             throw new RuntimeException(("VIDEO".equals(mediaType) ? "Video" : "Ảnh")
                     + " vượt quá dung lượng tối đa "
@@ -696,7 +699,8 @@ public class ArtisanProductService {
     }
 
     // Chọn ảnh phù hợp đầu tiên làm thumbnail mặc định.
-    private int findDefaultThumbnailIndex(List<MultipartFile> files, List<String> mediaTypes, boolean shouldSelectDefault) {
+    private int findDefaultThumbnailIndex(List<MultipartFile> files, List<String> mediaTypes,
+            boolean shouldSelectDefault) {
         if (!shouldSelectDefault) {
             return -1;
         }
@@ -825,5 +829,3 @@ public class ArtisanProductService {
         return suffix.toString();
     }
 }
-
-

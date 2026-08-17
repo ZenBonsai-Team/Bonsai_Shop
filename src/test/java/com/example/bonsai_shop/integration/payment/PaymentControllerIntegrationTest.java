@@ -16,8 +16,6 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.*;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 public class PaymentControllerIntegrationTest extends BaseControllerIntegrationTest {
 
     @Autowired
@@ -42,9 +40,11 @@ public class PaymentControllerIntegrationTest extends BaseControllerIntegrationT
         Category category = categoryRepository.findAll().stream().findFirst()
                 .orElseGet(() -> categoryRepository.save(Category.builder().categoryName("General Category").build()));
         Variety variety = varietyRepository.findAll().stream().findFirst()
-                .orElseGet(() -> varietyRepository.save(Variety.builder().category(category).varietyName("General Variety").build()));
+                .orElseGet(() -> varietyRepository
+                        .save(Variety.builder().category(category).varietyName("General Variety").build()));
         ProductSegment segment = productSegmentRepository.findAll().stream().findFirst()
-                .orElseGet(() -> productSegmentRepository.save(ProductSegment.builder().segmentName("General Segment").build()));
+                .orElseGet(() -> productSegmentRepository
+                        .save(ProductSegment.builder().segmentName("General Segment").build()));
 
         Product product = new Product();
         product.setProductCode(code);
@@ -62,7 +62,7 @@ public class PaymentControllerIntegrationTest extends BaseControllerIntegrationT
         Product product = createTestProduct("TREE-PAY-01", "Cây Lẻ Legacy", new BigDecimal("500000"));
 
         mockMvc.perform(MockMvcRequestBuilders.get("/vnpay/create-payment")
-                        .param("productId", product.getProductId().toString()))
+                .param("productId", product.getProductId().toString()))
                 .andExpect(MockMvcResultMatchers.status().is3xxRedirection());
     }
 
@@ -85,7 +85,7 @@ public class PaymentControllerIntegrationTest extends BaseControllerIntegrationT
         paymentRepository.save(payment);
 
         mockMvc.perform(MockMvcRequestBuilders.get("/vnpay/pay-order")
-                        .param("orderCode", "ORD-VNPAY-02"))
+                .param("orderCode", "ORD-VNPAY-02"))
                 .andExpect(MockMvcResultMatchers.status().is3xxRedirection());
     }
 
@@ -131,17 +131,17 @@ public class PaymentControllerIntegrationTest extends BaseControllerIntegrationT
         String secureHash = VNPayConfig.hmacSHA512(VNPayConfig.vnp_HashSecret, sb.toString());
 
         mockMvc.perform(MockMvcRequestBuilders.get("/vnpay/payment-callback")
-                        .param("vnp_Amount", "100000000")
-                        .param("vnp_BankCode", "NCB")
-                        .param("vnp_CardType", "ATM")
-                        .param("vnp_OrderInfo", "Thanh toan don hang ORD-VNPAY-03")
-                        .param("vnp_PayDate", "20260808160000")
-                        .param("vnp_ResponseCode", "00")
-                        .param("vnp_TmnCode", "TEST_TMN_CODE")
-                        .param("vnp_TransactionNo", "14000000")
-                        .param("vnp_TransactionStatus", "00")
-                        .param("vnp_TxnRef", "ORD-VNPAY-03")
-                        .param("vnp_SecureHash", secureHash))
+                .param("vnp_Amount", "100000000")
+                .param("vnp_BankCode", "NCB")
+                .param("vnp_CardType", "ATM")
+                .param("vnp_OrderInfo", "Thanh toan don hang ORD-VNPAY-03")
+                .param("vnp_PayDate", "20260808160000")
+                .param("vnp_ResponseCode", "00")
+                .param("vnp_TmnCode", "TEST_TMN_CODE")
+                .param("vnp_TransactionNo", "14000000")
+                .param("vnp_TransactionStatus", "00")
+                .param("vnp_TxnRef", "ORD-VNPAY-03")
+                .param("vnp_SecureHash", secureHash))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.view().name("payment-result"))
                 .andExpect(MockMvcResultMatchers.model().attribute("status", "SUCCESS"));
@@ -176,11 +176,11 @@ public class PaymentControllerIntegrationTest extends BaseControllerIntegrationT
         String secureHash = VNPayConfig.hmacSHA512(VNPayConfig.vnp_HashSecret, sb.toString());
 
         mockMvc.perform(MockMvcRequestBuilders.get("/vnpay/payment-callback")
-                        .param("vnp_Amount", "100000000")
-                        .param("vnp_ResponseCode", "24")
-                        .param("vnp_TransactionStatus", "02")
-                        .param("vnp_TxnRef", "ORD-VNPAY-04")
-                        .param("vnp_SecureHash", secureHash))
+                .param("vnp_Amount", "100000000")
+                .param("vnp_ResponseCode", "24")
+                .param("vnp_TransactionStatus", "02")
+                .param("vnp_TxnRef", "ORD-VNPAY-04")
+                .param("vnp_SecureHash", secureHash))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.view().name("payment-result"))
                 .andExpect(MockMvcResultMatchers.model().attribute("status", "FAILED"));
@@ -190,10 +190,10 @@ public class PaymentControllerIntegrationTest extends BaseControllerIntegrationT
     @Test
     void testPaymentCallbackInvalidSignature() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.get("/vnpay/payment-callback")
-                        .param("vnp_Amount", "100000000")
-                        .param("vnp_ResponseCode", "00")
-                        .param("vnp_TxnRef", "ORD-FAKE")
-                        .param("vnp_SecureHash", "WRONG_INVALID_HASH_VALUE"))
+                .param("vnp_Amount", "100000000")
+                .param("vnp_ResponseCode", "00")
+                .param("vnp_TxnRef", "ORD-FAKE")
+                .param("vnp_SecureHash", "WRONG_INVALID_HASH_VALUE"))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.view().name("payment-result"))
                 .andExpect(MockMvcResultMatchers.model().attribute("status", "INVALID_SIGNATURE"));

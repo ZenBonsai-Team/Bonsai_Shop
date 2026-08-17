@@ -1,6 +1,5 @@
 package com.example.bonsai_shop.product.service;
 
-import com.example.bonsai_shop.entity.Order;
 import com.example.bonsai_shop.entity.Product;
 import com.example.bonsai_shop.entity.Review;
 import com.example.bonsai_shop.entity.User;
@@ -13,7 +12,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -115,7 +113,8 @@ public class ReviewService {
      */
     public double getAverageRating(Integer productId) {
         List<Review> approved = reviewRepository.findByProductProductIdAndReviewStatus(productId, "APPROVED");
-        if (approved.isEmpty()) return 0.0;
+        if (approved.isEmpty())
+            return 0.0;
         return approved.stream()
                 .mapToInt(Review::getRating)
                 .average()

@@ -13,7 +13,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,15 +21,18 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * [SERVICE QUẢN LÝ DANH SÁCH ĐƠN HÀNG CỦA TÔI (MY ORDERS) CHO MODERATOR]
  *
  * Chịu trách nhiệm:
- * - Tính toán các chỉ số KPI cá nhân theo tab bộ lọc (MyOrderKPIsDTO): CRITICAL (sắp hết hạn), Chờ duyệt (WAITING_APPROVAL), Chờ khách trả tiền (WAITING_CUSTOMER_PAYMENT), Chờ giao & thu nốt tiền (WAITING_DELIVERY_PAYMENT), Hoàn thành (COMPLETED), Đã hủy (CANCELLED).
+ * - Tính toán các chỉ số KPI cá nhân theo tab bộ lọc (MyOrderKPIsDTO): CRITICAL
+ * (sắp hết hạn), Chờ duyệt (WAITING_APPROVAL), Chờ khách trả tiền
+ * (WAITING_CUSTOMER_PAYMENT), Chờ giao & thu nốt tiền
+ * (WAITING_DELIVERY_PAYMENT), Hoàn thành (COMPLETED), Đã hủy (CANCELLED).
  * - Lọc và phân trang danh sách MyOrderDTO cho giao diện Moderator.
- * - Tính toán mức độ ưu tiên theo thời gian tồn đọng (Priority: CRITICAL, HIGH, MEDIUM, LOW) và thời gian xử lý SLA (Handling Time).
+ * - Tính toán mức độ ưu tiên theo thời gian tồn đọng (Priority: CRITICAL, HIGH,
+ * MEDIUM, LOW) và thời gian xử lý SLA (Handling Time).
  *
  * Các thành phần phối hợp chính:
  * - OrderRepository, ModeratorDisplayLabelMapper.
@@ -46,7 +48,8 @@ public class MyOrderService {
      * [TÍNH TOÁN KPI CÁ NHÂN CỦA MODERATOR]
      *
      * Mục đích:
-     * - Cung cấp số liệu đếm số lượng đơn hàng theo từng nhóm trạng thái để hiển thị lên các thẻ KPI trên giao diện My Orders.
+     * - Cung cấp số liệu đếm số lượng đơn hàng theo từng nhóm trạng thái để hiển
+     * thị lên các thẻ KPI trên giao diện My Orders.
      *
      * Được gọi từ:
      * - ModeratorOrderController.viewMyOrders()
@@ -58,7 +61,8 @@ public class MyOrderService {
             return MyOrderKPIsDTO.builder().build();
         }
 
-        List<Order> allMyOrders = orderRepository.searchMyOrders(moderatorId, null, null, Pageable.unpaged()).getContent();
+        List<Order> allMyOrders = orderRepository.searchMyOrders(moderatorId, null, null, Pageable.unpaged())
+                .getContent();
 
         long criticalCount = 0;
         long waitingApprovalCount = 0;
@@ -79,7 +83,8 @@ public class MyOrderService {
                 waitingApprovalCount++;
             } else if ("PENDING_PAYMENT".equals(status) || "WAITING_CUSTOMER_PAYMENT".equals(status)) {
                 waitingPaymentCount++;
-            } else if ("DEPOSITED".equals(status) || "PAID".equals(status) || "WAITING_DELIVERY_PAYMENT".equals(status)) {
+            } else if ("DEPOSITED".equals(status) || "PAID".equals(status)
+                    || "WAITING_DELIVERY_PAYMENT".equals(status)) {
                 waitingDeliveryCount++;
             } else if ("COMPLETED".equals(status)) {
                 completedCount++;
@@ -113,40 +118,56 @@ public class MyOrderService {
             return new PageImpl<>(List.of(), PageRequest.of(0, limit), 0);
         }
 
-        // Fetch all candidate orders for the moderator to perform in-memory filter matching
-        List<Order> allOrders = orderRepository.searchMyOrders(moderatorId, null, search, Pageable.unpaged()).getContent();
+        // Fetch all candidate orders for the moderator to perform in-memory filter
+        // matching
+        List<Order> allOrders = orderRepository.searchMyOrders(moderatorId, null, search, Pageable.unpaged())
+                .getContent();
 
         // Apply filters
         List<MyOrderDTO> dtoList = new ArrayList<>();
         for (Order order : allOrders) {
             MyOrderDTO dto = convertToMyOrderDTO(order);
-            if (dto == null) continue;
+            if (dto == null)
+                continue;
 
             // 1. Filter by Card Filter
             if (cardFilter != null && !cardFilter.isBlank() && !"ALL".equalsIgnoreCase(cardFilter)) {
                 if ("CRITICAL".equalsIgnoreCase(cardFilter)) {
-                    if (!"CRITICAL".equalsIgnoreCase(dto.getPriority())) continue;
+                    if (!"CRITICAL".equalsIgnoreCase(dto.getPriority()))
+                        continue;
                 } else if ("WAITING_APPROVAL".equalsIgnoreCase(cardFilter) || "PENDING".equalsIgnoreCase(cardFilter)) {
-                    if (!"PENDING".equalsIgnoreCase(dto.getOrderStatus()) && !"WAITING_APPROVAL".equalsIgnoreCase(dto.getOrderStatus())) continue;
-                } else if ("WAITING_CUSTOMER_PAYMENT".equalsIgnoreCase(cardFilter) || "PENDING_PAYMENT".equalsIgnoreCase(cardFilter)) {
-                    if (!"PENDING_PAYMENT".equalsIgnoreCase(dto.getOrderStatus()) && !"WAITING_CUSTOMER_PAYMENT".equalsIgnoreCase(dto.getOrderStatus())) continue;
+                    if (!"PENDING".equalsIgnoreCase(dto.getOrderStatus())
+                            && !"WAITING_APPROVAL".equalsIgnoreCase(dto.getOrderStatus()))
+                        continue;
+                } else if ("WAITING_CUSTOMER_PAYMENT".equalsIgnoreCase(cardFilter)
+                        || "PENDING_PAYMENT".equalsIgnoreCase(cardFilter)) {
+                    if (!"PENDING_PAYMENT".equalsIgnoreCase(dto.getOrderStatus())
+                            && !"WAITING_CUSTOMER_PAYMENT".equalsIgnoreCase(dto.getOrderStatus()))
+                        continue;
                 } else if ("WAITING_DELIVERY_PAYMENT".equalsIgnoreCase(cardFilter)) {
-                    if (!"DEPOSITED".equalsIgnoreCase(dto.getOrderStatus()) && !"PAID".equalsIgnoreCase(dto.getOrderStatus()) && !"WAITING_DELIVERY_PAYMENT".equalsIgnoreCase(dto.getOrderStatus())) continue;
+                    if (!"DEPOSITED".equalsIgnoreCase(dto.getOrderStatus())
+                            && !"PAID".equalsIgnoreCase(dto.getOrderStatus())
+                            && !"WAITING_DELIVERY_PAYMENT".equalsIgnoreCase(dto.getOrderStatus()))
+                        continue;
                 } else if ("COMPLETED".equalsIgnoreCase(cardFilter)) {
-                    if (!"COMPLETED".equalsIgnoreCase(dto.getOrderStatus())) continue;
+                    if (!"COMPLETED".equalsIgnoreCase(dto.getOrderStatus()))
+                        continue;
                 } else if ("CANCELLED".equalsIgnoreCase(cardFilter)) {
-                    if (!"CANCELLED".equalsIgnoreCase(dto.getOrderStatus())) continue;
+                    if (!"CANCELLED".equalsIgnoreCase(dto.getOrderStatus()))
+                        continue;
                 }
             }
 
             // 2. Filter by Dropdown Priority Filter
             if (priorityFilter != null && !priorityFilter.isBlank() && !"ALL".equalsIgnoreCase(priorityFilter)) {
-                if (!priorityFilter.equalsIgnoreCase(dto.getPriority())) continue;
+                if (!priorityFilter.equalsIgnoreCase(dto.getPriority()))
+                    continue;
             }
 
             // 3. Filter by Dropdown Status Filter
             if (statusFilter != null && !statusFilter.isBlank() && !"ALL".equalsIgnoreCase(statusFilter)) {
-                if (!statusFilter.equalsIgnoreCase(dto.getOrderStatus())) continue;
+                if (!statusFilter.equalsIgnoreCase(dto.getOrderStatus()))
+                    continue;
             }
 
             // 4. Search Filter by OrderCode, CustomerName, Phone
@@ -155,7 +176,8 @@ public class MyOrderService {
                 boolean matchCode = dto.getOrderCode() != null && dto.getOrderCode().toLowerCase().contains(q);
                 boolean matchName = dto.getCustomerName() != null && dto.getCustomerName().toLowerCase().contains(q);
                 boolean matchPhone = dto.getCustomerPhone() != null && dto.getCustomerPhone().toLowerCase().contains(q);
-                if (!matchCode && !matchName && !matchPhone) continue;
+                if (!matchCode && !matchName && !matchPhone)
+                    continue;
             }
 
             dtoList.add(dto);
@@ -165,7 +187,8 @@ public class MyOrderService {
         dtoList.sort((a, b) -> {
             if ("date_asc".equalsIgnoreCase(sort)) {
                 return a.getStatusTimestamp() != null && b.getStatusTimestamp() != null
-                        ? a.getStatusTimestamp().compareTo(b.getStatusTimestamp()) : 0;
+                        ? a.getStatusTimestamp().compareTo(b.getStatusTimestamp())
+                        : 0;
             } else if ("price_desc".equalsIgnoreCase(sort)) {
                 return (b.getTotalAmount() != null ? b.getTotalAmount() : BigDecimal.ZERO)
                         .compareTo(a.getTotalAmount() != null ? a.getTotalAmount() : BigDecimal.ZERO);
@@ -174,7 +197,8 @@ public class MyOrderService {
                         .compareTo(b.getTotalAmount() != null ? b.getTotalAmount() : BigDecimal.ZERO);
             } else { // default: date_desc
                 return b.getStatusTimestamp() != null && a.getStatusTimestamp() != null
-                        ? b.getStatusTimestamp().compareTo(a.getStatusTimestamp()) : 0;
+                        ? b.getStatusTimestamp().compareTo(a.getStatusTimestamp())
+                        : 0;
             }
         });
 
@@ -188,7 +212,8 @@ public class MyOrderService {
     }
 
     public MyOrderDTO convertToMyOrderDTO(Order order) {
-        if (order == null) return null;
+        if (order == null)
+            return null;
 
         try {
             BigDecimal craneFee = order.getCraneFee() != null ? order.getCraneFee() : BigDecimal.ZERO;
@@ -204,13 +229,15 @@ public class MyOrderService {
                         .reduce(BigDecimal.ZERO, BigDecimal::add);
             } else {
                 treePrice = totalAmount.subtract(craneFee).subtract(shippingFee);
-                if (treePrice.compareTo(BigDecimal.ZERO) < 0) treePrice = BigDecimal.ZERO;
+                if (treePrice.compareTo(BigDecimal.ZERO) < 0)
+                    treePrice = BigDecimal.ZERO;
             }
 
             BigDecimal remainingPaymentAmount = BigDecimal.ZERO;
             if (depositAmount.compareTo(BigDecimal.ZERO) > 0) {
                 remainingPaymentAmount = treePrice.subtract(depositAmount);
-                if (remainingPaymentAmount.compareTo(BigDecimal.ZERO) < 0) remainingPaymentAmount = BigDecimal.ZERO;
+                if (remainingPaymentAmount.compareTo(BigDecimal.ZERO) < 0)
+                    remainingPaymentAmount = BigDecimal.ZERO;
             }
 
             String custName = order.getCustomerName();
@@ -220,14 +247,20 @@ public class MyOrderService {
 
             try {
                 if (order.getCustomer() != null) {
-                    if (custName == null || custName.isBlank()) custName = order.getCustomer().getFullName();
-                    if (custEmail == null || custEmail.isBlank()) custEmail = order.getCustomer().getEmail();
-                    if (custPhone == null || custPhone.isBlank()) custPhone = order.getCustomer().getPhone();
-                    if (custAddress == null || custAddress.isBlank()) custAddress = order.getCustomer().getAddress();
+                    if (custName == null || custName.isBlank())
+                        custName = order.getCustomer().getFullName();
+                    if (custEmail == null || custEmail.isBlank())
+                        custEmail = order.getCustomer().getEmail();
+                    if (custPhone == null || custPhone.isBlank())
+                        custPhone = order.getCustomer().getPhone();
+                    if (custAddress == null || custAddress.isBlank())
+                        custAddress = order.getCustomer().getAddress();
                 }
-            } catch (Exception ignored) {}
+            } catch (Exception ignored) {
+            }
 
-            if (custName == null || custName.isBlank()) custName = "Khách hàng";
+            if (custName == null || custName.isBlank())
+                custName = "Khách hàng";
 
             LocalDateTime statusTimestamp = order.getAssignedAt() != null ? order.getAssignedAt()
                     : (order.getOrderDate() != null ? order.getOrderDate() : LocalDateTime.now());
@@ -245,7 +278,10 @@ public class MyOrderService {
                 if (detail0 != null && detail0.getProduct() != null) {
                     Product p = detail0.getProduct();
                     firstProductName = p.getProductName();
-                    try { firstProductImage = p.getFirstImageUrl(); } catch (Exception ignored) {}
+                    try {
+                        firstProductImage = p.getFirstImageUrl();
+                    } catch (Exception ignored) {
+                    }
                 }
             }
 
@@ -279,7 +315,8 @@ public class MyOrderService {
     }
 
     public String calculatePriority(Order order) {
-        if (order == null) return "NORMAL";
+        if (order == null)
+            return "NORMAL";
         String status = order.getOrderStatus() != null ? order.getOrderStatus().toUpperCase() : "PENDING";
         BigDecimal total = order.getTotalAmount() != null ? order.getTotalAmount() : BigDecimal.ZERO;
         LocalDateTime refTime = order.getAssignedAt() != null ? order.getAssignedAt()
@@ -290,7 +327,8 @@ public class MyOrderService {
 
         if ("COMPLETED".equals(status) || "CANCELLED".equals(status)) {
             return "LOW";
-        } else if (("PENDING".equals(status) && hoursElapsed >= 24) || (isHighValue && hoursElapsed >= 12 && "PENDING".equals(status))) {
+        } else if (("PENDING".equals(status) && hoursElapsed >= 24)
+                || (isHighValue && hoursElapsed >= 12 && "PENDING".equals(status))) {
             return "CRITICAL";
         } else if (isHighValue || ("PENDING".equals(status) && hoursElapsed >= 6)) {
             return "HIGH";
@@ -300,12 +338,16 @@ public class MyOrderService {
     }
 
     public String formatAge(LocalDateTime timestamp) {
-        if (timestamp == null) return "-";
+        if (timestamp == null)
+            return "-";
         long minutes = Duration.between(timestamp, LocalDateTime.now()).toMinutes();
-        if (minutes < 1) return "Vừa xong";
-        if (minutes < 60) return minutes + " phút";
+        if (minutes < 1)
+            return "Vừa xong";
+        if (minutes < 60)
+            return minutes + " phút";
         long hours = minutes / 60;
-        if (hours < 24) return hours + " giờ";
+        if (hours < 24)
+            return hours + " giờ";
         long days = hours / 24;
         return days + " ngày";
     }

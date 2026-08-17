@@ -12,7 +12,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -314,7 +313,8 @@ class MyOrderServiceTest {
     @Test
     @DisplayName("UT-UUT07-020: getMyOrderKPIs - Tính toán chính xác các chỉ số KPI")
     void getMyOrderKPIs_validModeratorId_returnsAccurateKPIs() {
-        Order o1 = Order.builder().orderId(1).orderStatus("PENDING").orderDate(LocalDateTime.now().minusHours(25)).build(); // Critical & Waiting Approval
+        Order o1 = Order.builder().orderId(1).orderStatus("PENDING").orderDate(LocalDateTime.now().minusHours(25))
+                .build(); // Critical & Waiting Approval
         Order o2 = Order.builder().orderId(2).orderStatus("PENDING_PAYMENT").build(); // Waiting Payment
         Order o3 = Order.builder().orderId(3).orderStatus("DEPOSITED").build(); // Waiting Delivery
         Order o4 = Order.builder().orderId(4).orderStatus("COMPLETED").build(); // Completed
@@ -352,8 +352,10 @@ class MyOrderServiceTest {
     @Test
     @DisplayName("UT-UUT07-022: getMyOrdersFiltered - Lọc theo cardFilter (CRITICAL, PENDING, DEPOSITED, COMPLETED)")
     void getMyOrdersFiltered_cardFilterMatching() {
-        Order oCritical = Order.builder().orderId(1).orderCode("BSMS-01").orderStatus("PENDING").orderDate(LocalDateTime.now().minusHours(25)).build();
-        Order oPending = Order.builder().orderId(2).orderCode("BSMS-02").orderStatus("PENDING").orderDate(LocalDateTime.now().minusHours(1)).build();
+        Order oCritical = Order.builder().orderId(1).orderCode("BSMS-01").orderStatus("PENDING")
+                .orderDate(LocalDateTime.now().minusHours(25)).build();
+        Order oPending = Order.builder().orderId(2).orderCode("BSMS-02").orderStatus("PENDING")
+                .orderDate(LocalDateTime.now().minusHours(1)).build();
         Order oDeposited = Order.builder().orderId(3).orderCode("BSMS-03").orderStatus("DEPOSITED").build();
 
         List<Order> orderList = List.of(oCritical, oPending, oDeposited);
@@ -365,7 +367,8 @@ class MyOrderServiceTest {
         assertEquals("BSMS-01", resCritical.getContent().get(0).getOrderCode());
 
         // Lọc WAITING_DELIVERY_PAYMENT (DEPOSITED)
-        Page<MyOrderDTO> resDelivery = myOrderService.getMyOrdersFiltered(5, "WAITING_DELIVERY_PAYMENT", null, null, null, null, 1, 10);
+        Page<MyOrderDTO> resDelivery = myOrderService.getMyOrdersFiltered(5, "WAITING_DELIVERY_PAYMENT", null, null,
+                null, null, 1, 10);
         assertThat(resDelivery.getContent()).hasSize(1);
         assertEquals("BSMS-03", resDelivery.getContent().get(0).getOrderCode());
     }
@@ -373,12 +376,13 @@ class MyOrderServiceTest {
     @Test
     @DisplayName("UT-UUT07-023: getMyOrdersFiltered - Lọc theo priorityFilter, statusFilter và search")
     void getMyOrdersFiltered_priorityStatusAndSearchFilters() {
-        Order o1 = Order.builder().orderId(1).orderCode("BSMS-100").customerName("Nguyễn Văn A").customerPhone("0988111222").orderStatus("DEPOSITED").totalAmount(new BigDecimal("60000000")).build();
-        Order o2 = Order.builder().orderId(2).orderCode("BSMS-200").customerName("Trần Văn B").customerPhone("0977333444").orderStatus("PENDING").build();
+        Order o1 = Order.builder().orderId(1).orderCode("BSMS-100").customerName("Nguyễn Văn A")
+                .customerPhone("0988111222").orderStatus("DEPOSITED").totalAmount(new BigDecimal("60000000")).build();
 
         when(orderRepository.searchMyOrders(eq(5), any(), eq("100"), any())).thenReturn(new PageImpl<>(List.of(o1)));
 
-        Page<MyOrderDTO> result = myOrderService.getMyOrdersFiltered(5, "ALL", "100", "HIGH", "DEPOSITED", "date_desc", 1, 10);
+        Page<MyOrderDTO> result = myOrderService.getMyOrdersFiltered(5, "ALL", "100", "HIGH", "DEPOSITED", "date_desc",
+                1, 10);
 
         assertThat(result.getContent()).hasSize(1);
         assertEquals("BSMS-100", result.getContent().get(0).getOrderCode());
@@ -387,17 +391,21 @@ class MyOrderServiceTest {
     @Test
     @DisplayName("UT-UUT07-024: getMyOrdersFiltered - Sắp xếp theo price_desc, price_asc, date_asc")
     void getMyOrdersFiltered_sortingOption() {
-        Order o1 = Order.builder().orderId(1).orderCode("BSMS-01").orderStatus("PENDING").totalAmount(new BigDecimal("1000000")).orderDate(LocalDateTime.now().minusDays(2)).build();
-        Order o2 = Order.builder().orderId(2).orderCode("BSMS-02").orderStatus("PENDING").totalAmount(new BigDecimal("5000000")).orderDate(LocalDateTime.now().minusDays(1)).build();
+        Order o1 = Order.builder().orderId(1).orderCode("BSMS-01").orderStatus("PENDING")
+                .totalAmount(new BigDecimal("1000000")).orderDate(LocalDateTime.now().minusDays(2)).build();
+        Order o2 = Order.builder().orderId(2).orderCode("BSMS-02").orderStatus("PENDING")
+                .totalAmount(new BigDecimal("5000000")).orderDate(LocalDateTime.now().minusDays(1)).build();
 
         when(orderRepository.searchMyOrders(eq(5), any(), any(), any())).thenReturn(new PageImpl<>(List.of(o1, o2)));
 
         // Sắp xếp price_desc
-        Page<MyOrderDTO> resPriceDesc = myOrderService.getMyOrdersFiltered(5, null, null, null, null, "price_desc", 1, 10);
+        Page<MyOrderDTO> resPriceDesc = myOrderService.getMyOrdersFiltered(5, null, null, null, null, "price_desc", 1,
+                10);
         assertEquals("BSMS-02", resPriceDesc.getContent().get(0).getOrderCode());
 
         // Sắp xếp price_asc
-        Page<MyOrderDTO> resPriceAsc = myOrderService.getMyOrdersFiltered(5, null, null, null, null, "price_asc", 1, 10);
+        Page<MyOrderDTO> resPriceAsc = myOrderService.getMyOrdersFiltered(5, null, null, null, null, "price_asc", 1,
+                10);
         assertEquals("BSMS-01", resPriceAsc.getContent().get(0).getOrderCode());
 
         // Sắp xếp date_asc
@@ -422,7 +430,8 @@ class MyOrderServiceTest {
         when(orderRepository.searchMyOrders(eq(5), any(), any(), any())).thenReturn(new PageImpl<>(list));
 
         // Sort date_asc: BSMS-01, BSMS-02, ..., BSMS-15
-        // Trang 2, limit 10 (lấy từ vị trí 10 đến 14 -> 5 phần tử: BSMS-11, BSMS-12, BSMS-13, BSMS-14, BSMS-15)
+        // Trang 2, limit 10 (lấy từ vị trí 10 đến 14 -> 5 phần tử: BSMS-11, BSMS-12,
+        // BSMS-13, BSMS-14, BSMS-15)
         Page<MyOrderDTO> page2 = myOrderService.getMyOrdersFiltered(5, null, null, null, null, "date_asc", 2, 10);
 
         assertEquals(15, page2.getTotalElements());

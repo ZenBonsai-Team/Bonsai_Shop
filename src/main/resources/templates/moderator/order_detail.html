@@ -134,14 +134,16 @@
             .od-table tbody td { border: 1px solid var(--od-border); padding: 10px 12px; color: var(--od-text-primary); vertical-align: middle; }
             .od-table tbody tr:hover td { background: #f9fafb; }
             .od-table .td-num { text-align: right; font-variant-numeric: tabular-nums; }
+            .od-table .td-center { text-align: center; }
             .od-table .td-bold { font-weight: 600; }
-            .od-product-img { width: 88px; height: 88px; object-fit: cover; border-radius: 8px; border: 1px solid var(--od-border); background: #f8fafc; display: inline-block; box-shadow: 0 1px 3px rgba(0,0,0,0.06); transition: transform 0.15s ease, box-shadow 0.15s ease; }
+            .od-table-centered th, .od-table-centered td { text-align: center !important; vertical-align: middle !important; }
+            .od-product-img { width: 100px; height: 100px; object-fit: cover; border-radius: 8px; border: 1px solid var(--od-border); background: #f8fafc; display: inline-block; box-shadow: 0 1px 3px rgba(0,0,0,0.06); transition: transform 0.15s ease, box-shadow 0.15s ease; }
             .od-product-img-link { display: inline-block; text-decoration: none; border-radius: 8px; }
             .od-product-img-link:hover .od-product-img { transform: scale(1.03); box-shadow: 0 4px 10px rgba(0,0,0,0.12); border-color: var(--od-accent); }
             .od-product-link { color: var(--od-text-primary); text-decoration: none; font-weight: 600; transition: color 0.15s ease; }
             .od-product-link:hover { color: var(--od-accent); text-decoration: underline; }
             .od-product-img-placeholder {
-                width: 88px; height: 88px; border-radius: 8px;
+                width: 100px; height: 100px; border-radius: 8px;
                 border: 1px solid var(--od-border); background: #edf2f7;
                 display: inline-flex; align-items: center; justify-content: center;
                 color: var(--od-text-muted); font-size: 11px;
@@ -500,20 +502,19 @@
                           th:text="${#lists.size(order.products)} + ' sản phẩm'">0 sản phẩm</span>
                 </div>
                 <div class="od-card-body" style="padding:0;">
-                    <table class="od-table">
+                    <table class="od-table od-table-centered">
                         <thead>
                             <tr>
-                                <th style="width:110px; text-align:center;">Hình ảnh</th>
-                                <th>Sản phẩm</th>
-                                <th>Mã SP</th>
-                                <th>Danh mục</th>
-                                <th class="td-num">Đơn giá</th>
-                                <th class="td-num">Tiền cây</th>
+                                <th style="width:130px; text-align:center;">Hình ảnh</th>
+                                <th style="text-align:center;">Sản phẩm</th>
+                                <th style="width:230px; text-align:center;">Mã SP</th>
+                                <th style="width:150px; text-align:center;">Danh mục</th>
+                                <th style="width:150px; text-align:center;">Tiền cây</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr th:each="p : ${order.products}">
-                                <td style="text-align:center; padding:10px;">
+                                <td style="text-align:center; padding:12px 10px;">
                                     <a th:if="${p.productId != null}" th:href="@{'/product/' + ${p.productId}}" target="_blank" class="od-product-img-link" title="Xem chi tiết cây">
                                         <img th:if="${p.imageUrl != null and !#strings.isEmpty(p.imageUrl)}"
                                              th:src="${p.imageUrl}" class="od-product-img" alt="ảnh sản phẩm" />
@@ -527,19 +528,18 @@
                                              th:src="@{/images/default-bonsai.png}" class="od-product-img" alt="Bonsai mặc định" />
                                     </th:block>
                                 </td>
-                                <td class="td-bold">
+                                <td class="td-bold" style="text-align:center;">
                                     <a th:if="${p.productId != null}" th:href="@{'/product/' + ${p.productId}}" target="_blank" class="od-product-link" th:text="${p.productName ?: '---'}" title="Mở trang chi tiết cây">---</a>
                                     <span th:if="${p.productId == null}" th:text="${p.productName ?: '---'}">---</span>
                                 </td>
-                                <td th:text="${p.productCode ?: '---'}">---</td>
-                                <td th:text="${p.categoryName ?: '---'}">---</td>
-                                <td class="td-num money" th:text="${#numbers.formatDecimal(p.price, 0, 'COMMA', 0, 'POINT')} + ' đ'">---</td>
-                                <td class="td-num money td-bold" th:text="${#numbers.formatDecimal(p.subtotal, 0, 'COMMA', 0, 'POINT')} + ' đ'">---</td>
+                                <td style="text-align:center; font-family: monospace; font-size: 12px; color: var(--od-text-secondary);" th:text="${p.productCode ?: '---'}">---</td>
+                                <td style="text-align:center;" th:text="${p.categoryName ?: '---'}">---</td>
+                                <td class="money td-bold" style="text-align:center;" th:text="${#numbers.formatDecimal(p.subtotal, 0, 'COMMA', 0, 'POINT')} + ' đ'">---</td>
                             </tr>
                         </tbody>
                     </table>
                     <div style="padding: 8px 14px; font-size: 11px; color: var(--od-text-muted); background: #fafafa; border-top: 1px solid var(--od-border);">
-                        * Đơn giá và tiền cây là giá trị cây nguyên bản, chưa bao gồm phí vận chuyển và phí cẩu xe (chi tiết tại Tổng quan thanh toán bên dưới).
+                        * Tiền cây là giá trị cây nguyên bản, chưa bao gồm phí vận chuyển và phí cẩu xe (chi tiết tại Tổng quan thanh toán bên dưới).
                     </div>
                 </div>
             </div>
@@ -563,25 +563,17 @@
                             <td>Phí cẩu</td>
                             <td class="money" th:text="${#numbers.formatDecimal(order.paymentSummary.craneFee, 0, 'COMMA', 0, 'POINT')} + ' đ'">---</td>
                         </tr>
-                        <tr class="divider grand-total">
+                        <tr class="grand-total">
                             <td>Tổng giá trị đơn hàng</td>
                             <td class="money" th:text="${#numbers.formatDecimal(order.paymentSummary.grandTotal, 0, 'COMMA', 0, 'POINT')} + ' đ'">---</td>
                         </tr>
-                        <tr th:if="${order.paymentSummary.depositAmount != null and order.paymentSummary.depositAmount > 0}">
-                            <td>Tiền đặt cọc quy định</td>
-                            <td class="money" th:text="${#numbers.formatDecimal(order.paymentSummary.depositAmount, 0, 'COMMA', 0, 'POINT')} + ' đ'">---</td>
-                        </tr>
-                        <tr class="paid-row">
+                        <tr class="divider paid-row">
                             <td th:text="${order.orderStatus == 'DEPOSITED' ? 'Tiền cọc đã thanh toán (Đợt 1)' : 'Tổng số tiền đã thanh toán'}">Tổng số tiền đã thu</td>
                             <td class="money" th:text="${#numbers.formatDecimal(order.paymentSummary.paidAmount, 0, 'COMMA', 0, 'POINT')} + ' đ'">---</td>
                         </tr>
                         <tr class="remain-row">
                             <td th:text="${order.orderStatus == 'DEPOSITED' ? 'Số tiền còn lại cần thu khi giao cây (Đợt 2)' : 'Số tiền còn lại'}">Số tiền còn lại</td>
                             <td class="money" th:text="${#numbers.formatDecimal(order.paymentSummary.remainingPaymentAmount, 0, 'COMMA', 0, 'POINT')} + ' đ'">---</td>
-                        </tr>
-                        <tr th:if="${order.paymentSummary.recognizedCompletedRevenue != null and order.paymentSummary.recognizedCompletedRevenue > 0}">
-                            <td>Doanh thu đơn hoàn thành đã ghi nhận</td>
-                            <td class="money" th:text="${#numbers.formatDecimal(order.paymentSummary.recognizedCompletedRevenue, 0, 'COMMA', 0, 'POINT')} + ' đ'">---</td>
                         </tr>
                         <tr th:if="${order.paymentSummary.forfeitedDepositIncome != null and order.paymentSummary.forfeitedDepositIncome > 0}">
                             <td>Tiền cọc được ghi nhận</td>
@@ -733,11 +725,11 @@
                         <button th:if="${order.canReturnInventory}" class="od-action-btn unclaim" type="button" onclick="openReturnToPoolConfirmation()">Trả lại kho</button>
 
                         <!-- Luồng hoàn tất đơn (Ưu tiên Happy Path lên đầu) -->
-                        <button th:if="${order.canComplete}" class="od-action-btn approve" type="button" onclick="openCompleteConfirmation()" th:text="${order.orderStatus == 'DEPOSITED' ? 'Xác nhận đã thu đủ tiền còn lại (Giao cây)' : 'Xác nhận khách đã nhận cây'}">Xác nhận khách đã nhận cây</button>
+                        <button th:if="${order.canComplete}" class="od-action-btn approve" type="button" onclick="openCompleteConfirmation()" th:text="${order.orderStatus == 'DEPOSITED' ? 'Xác nhận đã thu đủ tiền còn lại' : 'Xác nhận khách đã nhận cây'}">Xác nhận khách đã nhận cây</button>
 
                         <!-- Xử lý ngoại lệ / Sự cố cho đơn đã cọc hoặc đã thanh toán -->
                         <div th:if="${order.canCustomerNoShow or order.canRecordFaultRefund}" class="od-action-divider">Xử lý ngoại lệ / Sự cố</div>
-                        <button th:if="${order.canCustomerNoShow}" class="od-action-btn outline-warning" type="button" onclick="openCustomerNoShowConfirmation()">Khách từ chối nhận hàng (Tịch thu cọc)</button>
+                        <button th:if="${order.canCustomerNoShow}" class="od-action-btn outline-warning" type="button" onclick="openCustomerNoShowConfirmation()">Khách từ chối nhận hàng</button>
                         <button th:if="${order.canRecordFaultRefund}" class="od-action-btn outline-danger" type="button" onclick="openFaultRefundConfirmation()">Hủy đơn và ghi nhận hoàn tiền</button>
                     </div>
                 </div>
@@ -1249,8 +1241,7 @@
                 },
                 summaryRows: [
                     { label: 'Mã đơn hàng', value: ORDER_CODE },
-                    { label: 'Trạng thái hiện tại', value: ORDER_STATUS_LABEL },
-                    { label: 'Trạng thái sau xử lý', value: 'Đã chấm dứt đơn hàng' }
+                    { label: 'Trạng thái hiện tại', value: ORDER_STATUS_LABEL }
                 ],
                 buildPayload: (reason) => {
                     if (!reason || !reason.trim()) throw new Error('Vui lòng nhập lý do từ chối.');
@@ -1275,9 +1266,9 @@
 
         function openCustomerNoShowConfirmation() {
             openConfirmationModal({
-                title: 'Xác nhận khách từ chối nhận hàng (Tịch thu cọc)',
+                title: 'Xác nhận khách từ chối nhận hàng',
                 description: 'Khách hàng từ chối nhận cây khi giao đến nơi. Hệ thống sẽ hủy đơn hàng, ghi nhận tiền cọc đã thanh toán vào mục thu nhập giữ lại (Sổ cái tài chính) và giải phóng cây về kho để mở bán lại.',
-                confirmLabel: 'Xác nhận tịch thu cọc & Hủy đơn',
+                confirmLabel: 'Xác nhận Hủy đơn',
                 danger: true,
                 input: {
                     label: 'Lý do khách không nhận hàng',
@@ -1285,9 +1276,7 @@
                 },
                 summaryRows: [
                     { label: 'Mã đơn hàng', value: ORDER_CODE },
-                    { label: 'Tiền đặt cọc bị tịch thu', value: formatCurrency(SUCCESSFUL_DEPOSIT_AMOUNT) },
-                    { label: 'Hướng xử lý cây', value: 'Mở bán lại trên sàn' },
-                    { label: 'Trạng thái sau xử lý', value: 'Đã chấm dứt đơn hàng' }
+                    { label: 'Tiền đặt cọc bị thu', value: formatCurrency(SUCCESSFUL_DEPOSIT_AMOUNT) }
                 ],
                 buildPayload: (reason) => {
                     if (!reason || !reason.trim()) {
@@ -1316,8 +1305,7 @@
                 summaryRows: [
                     { label: 'Mã đơn hàng', value: ORDER_CODE },
                     { label: 'Tổng giá trị đơn hàng', value: formatCurrency(GRAND_TOTAL) },
-                    { label: 'Số tiền hoàn lại cho khách', value: formatCurrency(refundAmount100) },
-                    { label: 'Trạng thái sau xử lý', value: 'Đã chấm dứt đơn hàng' }
+                    { label: 'Số tiền hoàn lại cho khách', value: formatCurrency(refundAmount100) }
                 ],
                 buildPayload: ({ faultParty, reason }) => {
                     if (!faultParty) {
@@ -1348,14 +1336,11 @@
                     { label: 'Mã đơn hàng', value: ORDER_CODE },
                     { label: 'Tiền cọc đã thu (Đợt 1)', value: formatCurrency(SUCCESSFUL_DEPOSIT_AMOUNT) },
                     { label: 'Số tiền còn lại thu đợt 2', value: formatCurrency(REMAINING_PAYMENT_AMOUNT) },
-                    { label: 'Phương thức thu đợt 2', value: 'Thanh toán tiền mặt / nhân viên xác nhận thủ công' },
-                    { label: 'Tổng giá trị đơn hàng', value: formatCurrency(GRAND_TOTAL) },
-                    { label: 'Trạng thái sau xử lý', value: 'Đã hoàn thành' }
+                    { label: 'Tổng giá trị đơn hàng', value: formatCurrency(GRAND_TOTAL) }
                 ] : [
                     { label: 'Mã đơn hàng', value: ORDER_CODE },
                     { label: 'Trạng thái hiện tại', value: 'Đã thanh toán' },
-                    { label: 'Tổng số tiền khách đã thanh toán', value: formatCurrency(TOTAL_CASH_RECEIVED) },
-                    { label: 'Trạng thái sau xử lý', value: 'Đã hoàn thành' }
+                    { label: 'Tổng số tiền khách đã thanh toán', value: formatCurrency(TOTAL_CASH_RECEIVED) }
                 ],
                 buildPayload: () => ({
                     action: 'complete',

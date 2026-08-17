@@ -9,7 +9,6 @@ import com.example.bonsai_shop.entity.Product;
 import com.example.bonsai_shop.entity.User;
 import com.example.bonsai_shop.product.event.OrderCreatedEvent;
 import com.example.bonsai_shop.finance.service.FinancialLedgerService;
-import com.example.bonsai_shop.product.enums.PaymentMethod;
 import com.example.bonsai_shop.product.enums.PaymentType;
 import com.example.bonsai_shop.product.repository.OrderHandlingRepository;
 import com.example.bonsai_shop.product.repository.OrderLogRepository;
@@ -70,15 +69,15 @@ class OrderServiceCheckoutTest {
                 mailService,
                 cartService,
                 financialLedgerService,
-                notificationRepository
-        );
+                notificationRepository);
     }
 
     @Test
     @DisplayName("UT-UUT01-001: Tạo đơn đặt cọc (DEPOSIT) thành công")
     void createOrder_deposit_success() {
         User customer = User.builder().userId(10).fullName("Nguyễn Văn A").build();
-        Product product = Product.builder().productId(10).price(new BigDecimal("1000000")).productStatus("AVAILABLE").build();
+        Product product = Product.builder().productId(10).price(new BigDecimal("1000000")).productStatus("AVAILABLE")
+                .build();
 
         PurchaseOrderRequestDTO dto = new PurchaseOrderRequestDTO();
         dto.setProductIds(List.of(10));
@@ -124,7 +123,8 @@ class OrderServiceCheckoutTest {
     @DisplayName("UT-UUT01-002: Tạo đơn thanh toán 100% (FULL_PAYMENT) thành công")
     void createOrder_fullPayment_success() {
         User customer = User.builder().userId(10).build();
-        Product product = Product.builder().productId(10).price(new BigDecimal("1000000")).productStatus("AVAILABLE").build();
+        Product product = Product.builder().productId(10).price(new BigDecimal("1000000")).productStatus("AVAILABLE")
+                .build();
 
         PurchaseOrderRequestDTO dto = new PurchaseOrderRequestDTO();
         dto.setProductIds(List.of(10));
@@ -155,9 +155,8 @@ class OrderServiceCheckoutTest {
         User customer = User.builder().userId(10).build();
         PurchaseOrderRequestDTO dto = new PurchaseOrderRequestDTO();
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                orderService.createOrder(dto, customer)
-        );
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> orderService.createOrder(dto, customer));
 
         assertThat(exception.getMessage()).isEqualTo("Giỏ hàng của bạn đang trống! Vui lòng chọn sản phẩm trước.");
         verify(orderRepository, never()).save(any());
@@ -169,7 +168,8 @@ class OrderServiceCheckoutTest {
     @Test
     @DisplayName("UT-UUT01-004: Tạo đơn khách vãng lai thành công (Customer = null)")
     void createOrder_guestCheckout_success() {
-        Product product = Product.builder().productId(10).price(new BigDecimal("1000000")).productStatus("AVAILABLE").build();
+        Product product = Product.builder().productId(10).price(new BigDecimal("1000000")).productStatus("AVAILABLE")
+                .build();
 
         PurchaseOrderRequestDTO dto = new PurchaseOrderRequestDTO();
         dto.setProductIds(List.of(10));
@@ -338,9 +338,8 @@ class OrderServiceCheckoutTest {
 
         when(productRepository.findAllById(List.of(10))).thenReturn(List.of(product));
 
-        IllegalStateException exception = assertThrows(IllegalStateException.class, () ->
-                orderService.createOrder(dto, customer)
-        );
+        IllegalStateException exception = assertThrows(IllegalStateException.class,
+                () -> orderService.createOrder(dto, customer));
 
         assertThat(exception.getMessage()).isEqualTo("Tác phẩm 'Mai Vàng' đã được bán hoặc giữ chỗ!");
         verify(orderRepository, never()).save(any());
@@ -351,7 +350,8 @@ class OrderServiceCheckoutTest {
     @DisplayName("UT-UUT01-017: Tạo đơn thất bại do reserveIfAvailable trả về 0 trong quá trình tranh chấp giữ chỗ (createOrder)")
     void createOrder_reserveCountZero_throwsIllegalStateException() {
         User customer = User.builder().userId(10).build();
-        Product product = Product.builder().productId(10).productName("Tùng La Hán").price(new BigDecimal("1000000")).productStatus("AVAILABLE").build();
+        Product product = Product.builder().productId(10).productName("Tùng La Hán").price(new BigDecimal("1000000"))
+                .productStatus("AVAILABLE").build();
 
         PurchaseOrderRequestDTO dto = new PurchaseOrderRequestDTO();
         dto.setProductIds(List.of(10));
@@ -359,9 +359,8 @@ class OrderServiceCheckoutTest {
         when(productRepository.findAllById(List.of(10))).thenReturn(List.of(product));
         when(productRepository.reserveIfAvailable(10)).thenReturn(0);
 
-        IllegalStateException exception = assertThrows(IllegalStateException.class, () ->
-                orderService.createOrder(dto, customer)
-        );
+        IllegalStateException exception = assertThrows(IllegalStateException.class,
+                () -> orderService.createOrder(dto, customer));
 
         assertThat(exception.getMessage()).isEqualTo("Tác phẩm 'Tùng La Hán' đã được bán hoặc giữ chỗ!");
         verify(orderRepository, never()).save(any());
@@ -372,7 +371,8 @@ class OrderServiceCheckoutTest {
     @DisplayName("UT-UUT01-018: Tạo đơn thành công từ giỏ hàng (Cart Checkout)")
     void createOrder_fromCart_success() {
         User customer = User.builder().userId(10).build();
-        Product product = Product.builder().productId(10).price(new BigDecimal("500000")).productStatus("AVAILABLE").build();
+        Product product = Product.builder().productId(10).price(new BigDecimal("500000")).productStatus("AVAILABLE")
+                .build();
         CartItem item = CartItem.builder().product(product).build();
 
         PurchaseOrderRequestDTO dto = new PurchaseOrderRequestDTO(); // productIds & productId null
@@ -392,18 +392,19 @@ class OrderServiceCheckoutTest {
     @DisplayName("UT-UUT01-019: Dependency Failure: orderRepository.save ném DataAccessException trong createOrder")
     void createOrder_orderRepositorySaveThrowsDataAccessException_propagatesException() {
         User customer = User.builder().userId(10).build();
-        Product product = Product.builder().productId(10).price(new BigDecimal("1000000")).productStatus("AVAILABLE").build();
+        Product product = Product.builder().productId(10).price(new BigDecimal("1000000")).productStatus("AVAILABLE")
+                .build();
 
         PurchaseOrderRequestDTO dto = new PurchaseOrderRequestDTO();
         dto.setProductIds(List.of(10));
 
         when(productRepository.findAllById(List.of(10))).thenReturn(List.of(product));
         when(productRepository.reserveIfAvailable(10)).thenReturn(1);
-        when(orderRepository.save(any(Order.class))).thenThrow(new DataAccessException("DB Save Timeout") {});
+        when(orderRepository.save(any(Order.class))).thenThrow(new DataAccessException("DB Save Timeout") {
+        });
 
-        DataAccessException exception = assertThrows(DataAccessException.class, () ->
-                orderService.createOrder(dto, customer)
-        );
+        DataAccessException exception = assertThrows(DataAccessException.class,
+                () -> orderService.createOrder(dto, customer));
 
         assertThat(exception.getMessage()).isEqualTo("DB Save Timeout");
         assertThat(product.getProductStatus()).isEqualTo("RESERVED");
