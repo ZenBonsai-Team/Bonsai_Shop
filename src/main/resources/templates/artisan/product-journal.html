@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
@@ -262,8 +262,8 @@
 
                 <article class="journal-event" th:each="event : ${journalEvents}" th:classappend="${!event.isPublic} ? ' is-unpublished' : ''">
                     <button type="button" class="journal-cover-link" th:if="${event.firstMedia != null}" th:attr="data-open-journal-modal=${event.eventId}">
-                        <img class="journal-cover" th:if="${event.firstMedia.mediaType == 'IMAGE'}" th:src="${event.firstMedia.mediaUrl}" alt="">
-                        <video class="journal-cover" th:if="${event.firstMedia.mediaType == 'VIDEO'}" th:src="${event.firstMedia.mediaUrl}" muted></video>
+                        <img class="journal-cover" th:if="${event.firstMedia.mediaType == 'IMAGE'}" th:src="${event.firstMedia.mediaUrl}" alt="" loading="lazy">
+                        <video class="journal-cover" th:if="${event.firstMedia.mediaType == 'VIDEO'}" th:src="${event.firstMedia.mediaUrl}" muted preload="none"></video>
                     </button>
                     <div class="journal-cover-link journal-placeholder" th:if="${event.firstMedia == null}"><i class="fa-solid fa-leaf"></i></div>
                     <div class="journal-card-body">
@@ -278,8 +278,8 @@
                         </span>
                         <div class="journal-gallery" th:if="${event.mediaList != null && !#lists.isEmpty(event.mediaList)}">
                             <th:block th:each="media : ${event.mediaList}">
-                                <img th:if="${media.mediaType == 'IMAGE'}" th:src="${media.mediaUrl}" alt="">
-                                <video th:if="${media.mediaType == 'VIDEO'}" th:src="${media.mediaUrl}" controls></video>
+                                <img th:if="${media.mediaType == 'IMAGE'}" th:src="${media.mediaUrl}" alt="" loading="lazy">
+                                <video th:if="${media.mediaType == 'VIDEO'}" th:src="${media.mediaUrl}" controls preload="none"></video>
                             </th:block>
                         </div>
                     </div>
@@ -386,7 +386,7 @@
                                         <th:block th:if="${event.mediaList != null && !#lists.isEmpty(event.mediaList)}" th:each="media, mediaStat : ${event.mediaList}">
                                             <div class="journal-customer-slide" th:classappend="${mediaStat.index == 0 ? ' active' : (mediaStat.index == 1 ? ' is-next' : '')}" th:attr="data-customer-preview-slide=${event.eventId},data-customer-preview-slide-index=${mediaStat.index}">
                                                 <img th:if="${media.mediaType == 'IMAGE'}" th:src="${media.mediaUrl}" th:alt="${event.title}">
-                                                <video th:if="${media.mediaType == 'VIDEO'}" th:src="${media.mediaUrl}" controls></video>
+                                                <video th:if="${media.mediaType == 'VIDEO'}" th:src="${media.mediaUrl}" controls preload="none"></video>
                                             </div>
                                         </th:block>
                                         <div class="journal-customer-empty" th:if="${event.mediaList == null || #lists.isEmpty(event.mediaList)}">
@@ -456,7 +456,7 @@
                                     <div class="journal-media-list" th:if="${event.mediaList != null && !#lists.isEmpty(event.mediaList)}">
                                         <div class="journal-media-item" th:each="media, mediaStat : ${event.mediaList}">
                                             <img th:if="${media.mediaType == 'IMAGE'}" th:src="${media.mediaUrl}" alt="">
-                                            <video th:if="${media.mediaType == 'VIDEO'}" th:src="${media.mediaUrl}" muted></video>
+                                            <video th:if="${media.mediaType == 'VIDEO'}" th:src="${media.mediaUrl}" muted preload="none"></video>
                                             <div class="journal-media-fields">
                                                 <div class="journal-media-inline-actions">
                                                     <form method="post" th:if="${mediaStat.index > 0}"
@@ -498,7 +498,7 @@
                                      th:each="media, mediaStat : ${event.mediaList}"
                                      th:classappend="${mediaStat.index == 0} ? ' active' : ''">
                                     <img th:if="${media.mediaType == 'IMAGE'}" th:src="${media.mediaUrl}" alt="">
-                                    <video th:if="${media.mediaType == 'VIDEO'}" th:src="${media.mediaUrl}" controls></video>
+                                    <video th:if="${media.mediaType == 'VIDEO'}" th:src="${media.mediaUrl}" controls preload="none"></video>
                                 </div>
                                 <div class="journal-gallery-control" th:if="${event.mediaList != null && #lists.size(event.mediaList) > 1}">
                                     <button type="button" th:attr="data-gallery-prev=${event.eventId}" aria-label="Previous image">‹</button>
@@ -514,7 +514,7 @@
                                                 th:classappend="${mediaStat.index == 0} ? ' active' : ''"
                                                 th:attr="data-gallery-thumb=${event.eventId},data-gallery-thumb-index=${mediaStat.index}">
                                             <img th:if="${media.mediaType == 'IMAGE'}" th:src="${media.mediaUrl}" alt="">
-                                            <video th:if="${media.mediaType == 'VIDEO'}" th:src="${media.mediaUrl}" muted></video>
+                                            <video th:if="${media.mediaType == 'VIDEO'}" th:src="${media.mediaUrl}" muted preload="none"></video>
                                         </button>
                                     </th:block>
                                 </div>
