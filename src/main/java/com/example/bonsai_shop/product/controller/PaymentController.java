@@ -27,18 +27,26 @@ import java.util.*;
  *
  * Chịu trách nhiệm:
  * - Điều hướng người dùng sang cổng thanh toán trực tuyến VNPay Gateway.
- * - Tạo URL thanh toán VNPay chuẩn mã hóa HMAC-SHA512 kèm thời hạn hết hạn 15 phút.
- * - Tiếp nhận Return URL (Payment Callback) từ trình duyệt khách hàng sau khi thanh toán trên VNPay.
- * - Xác thực chữ ký số bảo mật (Checksum), cập nhật trạng thái đơn hàng và hiển thị giao diện kết quả giao dịch (payment-result.html).
+ * - Tạo URL thanh toán VNPay chuẩn mã hóa HMAC-SHA512 kèm thời hạn hết hạn 15
+ * phút.
+ * - Tiếp nhận Return URL (Payment Callback) từ trình duyệt khách hàng sau khi
+ * thanh toán trên VNPay.
+ * - Xác thực chữ ký số bảo mật (Checksum), cập nhật trạng thái đơn hàng và hiển
+ * thị giao diện kết quả giao dịch (payment-result.html).
  *
  * Các thao tác trên web đi qua class này:
- * - [Khách bấm Link thanh toán trong Email duyệt đơn] → GET /vnpay/pay-order?orderCode=... → payOrder()
- * - [VNPay chuyển hướng khách về sau khi thanh toán] → GET /vnpay/payment-callback → paymentCallback()
- * - [Thanh toán trực tiếp theo mã sản phẩm (Test/Legacy)] → GET /vnpay/create-payment?productId=... → createPayment()
+ * - [Khách bấm Link thanh toán trong Email duyệt đơn] → GET
+ * /vnpay/pay-order?orderCode=... → payOrder()
+ * - [VNPay chuyển hướng khách về sau khi thanh toán] → GET
+ * /vnpay/payment-callback → paymentCallback()
+ * - [Thanh toán trực tiếp theo mã sản phẩm (Test/Legacy)] → GET
+ * /vnpay/create-payment?productId=... → createPayment()
  *
  * Các thành phần phối hợp chính:
- * - VNPayConfig: Cung cấp tham số cấu hình TmnCode, HashSecret, PayUrl, ReturnUrl, thuật toán mã hóa hmacSHA512.
- * - OrderService: preparePendingVnPayPayment(), processPaymentSuccess(), processPaymentFailure().
+ * - VNPayConfig: Cung cấp tham số cấu hình TmnCode, HashSecret, PayUrl,
+ * ReturnUrl, thuật toán mã hóa hmacSHA512.
+ * - OrderService: preparePendingVnPayPayment(), processPaymentSuccess(),
+ * processPaymentFailure().
  * - OrderRepository, PaymentRepository, ProductRepository, MailService.
  */
 @Controller
@@ -48,12 +56,13 @@ public class PaymentController {
     private ProductRepository productRepository;
     @Autowired
     private OrderRepository orderRepository;
-    @Autowired
-    private com.example.bonsai_shop.product.service.MailService mailService;
+    // @Autowired
+    // private com.example.bonsai_shop.product.service.MailService mailService;
     @Autowired
     private com.example.bonsai_shop.product.service.OrderService orderService;
-    @Autowired
-    private com.example.bonsai_shop.product.repository.PaymentRepository paymentRepository;
+    // @Autowired
+    // private com.example.bonsai_shop.product.repository.PaymentRepository
+    // paymentRepository;
 
     @Value("${order.expiration.online-minutes:15}")
     private int onlineExpirationMinutes;
@@ -61,10 +70,13 @@ public class PaymentController {
     /**
      * [TẠO LINK THANH TOÁN VNPAY TRỰC TIẾP CHO SẢN PHẨM (LEGACY / TEST)]
      *
-     * // TODO-AUDIT: Endpoint này tạo URL thanh toán trực tiếp từ productId mà không gắn với Order entity cụ thể trong database, chủ yếu dùng cho kịch bản test mua nhanh đơn lẻ hoặc luồng legacy.
+     * // TODO-AUDIT: Endpoint này tạo URL thanh toán trực tiếp từ productId mà
+     * không gắn với Order entity cụ thể trong database, chủ yếu dùng cho kịch bản
+     * test mua nhanh đơn lẻ hoặc luồng legacy.
      *
      * Khi nào được gọi trên web:
-     * - Người dùng thực hiện: Bấm thanh toán ngay một cây bonsai cụ thể từ trang chi tiết sản phẩm.
+     * - Người dùng thực hiện: Bấm thanh toán ngay một cây bonsai cụ thể từ trang
+     * chi tiết sản phẩm.
      * - Màn hình/chức năng: Nút Mua ngay (Buy Now) thử nghiệm.
      *
      * API:
@@ -79,13 +91,15 @@ public class PaymentController {
      * 1. Tìm Product qua ProductRepository.findById(productId).
      * 2. Lấy giá sản phẩm, nhân 100 theo chuẩn VNPay.
      * 3. Tạo mã giao dịch ngẫu nhiên vnp_TxnRef (8 chữ số).
-     * 4. Thiết lập thời gian hết hạn thanh toán 15 phút (vnp_ExpireDate = now + 15m).
+     * 4. Thiết lập thời gian hết hạn thanh toán 15 phút (vnp_ExpireDate = now +
+     * 15m).
      * 5. Sắp xếp tham số alphabet và băm chữ ký HMAC-SHA512 với HashSecret.
      * 6. Chuyển hướng trình duyệt (Redirect 302) sang cổng thanh toán VNPay.
      *
      * Dữ liệu trả về:
      * - HTTP status: 302 Found (Redirect)
-     * - Redirect URL: URL cổng thanh toán VNPay kèm chuỗi truy vấn và mã băm bảo mật vnp_SecureHash.
+     * - Redirect URL: URL cổng thanh toán VNPay kèm chuỗi truy vấn và mã băm bảo
+     * mật vnp_SecureHash.
      */
     @GetMapping("/vnpay/create-payment")
     public String createPayment(HttpServletRequest req, @RequestParam("productId") Integer productId)
@@ -175,8 +189,11 @@ public class PaymentController {
      * [TIẾP NHẬN KẾT QUẢ THANH TOÁN TỪ TRÌNH DUYỆT KHÁCH HÀNG (RETURN URL)]
      *
      * Khi nào được gọi trên web:
-     * - Người dùng thực hiện: Sau khi khách hoàn tất hoặc hủy thao tác thanh toán trên giao diện cổng VNPay, VNPay tự động chuyển hướng trình duyệt của khách về Return URL hệ thống.
-     * - Màn hình/chức năng: Trang thông báo kết quả thanh toán (payment-result.html).
+     * - Người dùng thực hiện: Sau khi khách hoàn tất hoặc hủy thao tác thanh toán
+     * trên giao diện cổng VNPay, VNPay tự động chuyển hướng trình duyệt của khách
+     * về Return URL hệ thống.
+     * - Màn hình/chức năng: Trang thông báo kết quả thanh toán
+     * (payment-result.html).
      *
      * API:
      * - HTTP: GET
@@ -185,34 +202,41 @@ public class PaymentController {
      *
      * Dữ liệu nhận vào:
      * - Request params:
-     *   + vnp_TxnRef (String): Mã đơn hàng (orderCode).
-     *   + vnp_Amount (String): Số tiền đã thanh toán (*100).
-     *   + vnp_ResponseCode (String): Mã kết quả ("00" là thành công).
-     *   + vnp_TransactionStatus (String): Trạng thái giao dịch ("00" là thành công).
-     *   + vnp_SecureHash (String): Chữ ký checksum từ VNPay.
+     * + vnp_TxnRef (String): Mã đơn hàng (orderCode).
+     * + vnp_Amount (String): Số tiền đã thanh toán (*100).
+     * + vnp_ResponseCode (String): Mã kết quả ("00" là thành công).
+     * + vnp_TransactionStatus (String): Trạng thái giao dịch ("00" là thành công).
+     * + vnp_SecureHash (String): Chữ ký checksum từ VNPay.
      *
      * Điều phối xử lý:
-     * 1. Thu thập tất cả tham số từ HttpServletRequest, loại bỏ SecureHash để chuẩn bị kiểm tra chữ ký.
-     * 2. Băm chuỗi dữ liệu nhận được bằng thuật toán HMAC-SHA512 với VNPayConfig.vnp_HashSecret.
+     * 1. Thu thập tất cả tham số từ HttpServletRequest, loại bỏ SecureHash để chuẩn
+     * bị kiểm tra chữ ký.
+     * 2. Băm chuỗi dữ liệu nhận được bằng thuật toán HMAC-SHA512 với
+     * VNPayConfig.vnp_HashSecret.
      * 3. So sánh chữ ký băm với vnp_SecureHash:
-     *    - Nếu chữ ký hợp lệ và vnp_ResponseCode == "00" && vnp_TransactionStatus == "00":
-     *      + Gọi OrderService.processPaymentSuccess(orderCode) để cập nhật Payment (SUCCESS) và Order (DEPOSITED hoặc PAID).
-     *      + Đặt model attribute: status = "SUCCESS".
-     *    - Nếu thanh toán thất bại/hủy:
-     *      + Gọi OrderService.processPaymentFailure(orderCode, responseCode, transactionStatus, "RETURN_URL").
-     *      + Đặt model attribute: status = "FAILED".
-     *    - Nếu sai chữ ký:
-     *      + Đặt model attribute: status = "INVALID_SIGNATURE".
+     * - Nếu chữ ký hợp lệ và vnp_ResponseCode == "00" && vnp_TransactionStatus ==
+     * "00":
+     * + Gọi OrderService.processPaymentSuccess(orderCode) để cập nhật Payment
+     * (SUCCESS) và Order (DEPOSITED hoặc PAID).
+     * + Đặt model attribute: status = "SUCCESS".
+     * - Nếu thanh toán thất bại/hủy:
+     * + Gọi OrderService.processPaymentFailure(orderCode, responseCode,
+     * transactionStatus, "RETURN_URL").
+     * + Đặt model attribute: status = "FAILED".
+     * - Nếu sai chữ ký:
+     * + Đặt model attribute: status = "INVALID_SIGNATURE".
      * 4. Trả về view "payment-result" hiển thị cho người dùng.
      *
      * Dữ liệu trả về:
-     * - HTML View: payment-result (Thymeleaf template hiển thị trạng thái SUCCESS, FAILED hoặc INVALID_SIGNATURE kèm số tiền, mã đơn).
+     * - HTML View: payment-result (Thymeleaf template hiển thị trạng thái SUCCESS,
+     * FAILED hoặc INVALID_SIGNATURE kèm số tiền, mã đơn).
      *
      * Tác động dữ liệu:
      * - Bảng/Entity bị đọc: ORDER, PAYMENT
      * - Bảng/Entity bị ghi/cập nhật:
-     *   + PAYMENT: paymentStatus = "SUCCESS" hoặc "FAILED", paymentDate
-     *   + ORDER: orderStatus: PENDING_PAYMENT → DEPOSITED (nếu cọc) hoặc PAID (nếu thanh toán đủ)
+     * + PAYMENT: paymentStatus = "SUCCESS" hoặc "FAILED", paymentDate
+     * + ORDER: orderStatus: PENDING_PAYMENT → DEPOSITED (nếu cọc) hoặc PAID (nếu
+     * thanh toán đủ)
      */
     @GetMapping("/vnpay/payment-callback")
     public String paymentCallback(HttpServletRequest request, Model model) {
@@ -282,7 +306,9 @@ public class PaymentController {
      * [MỞ CỔNG THANH TOÁN VNPAY CHO ĐƠN HÀNG ĐÃ ĐƯỢC DUYỆT (PAY ORDER)]
      *
      * Khi nào được gọi trên web:
-     * - Người dùng thực hiện: Khách hàng mở email duyệt đơn hàng ("Xác nhận đơn hàng BSMS-XXXXXX") và bấm nút "Thanh toán ngay qua VNPay" (hoặc link thanh toán từ giao diện tra cứu đơn).
+     * - Người dùng thực hiện: Khách hàng mở email duyệt đơn hàng ("Xác nhận đơn
+     * hàng BSMS-XXXXXX") và bấm nút "Thanh toán ngay qua VNPay" (hoặc link thanh
+     * toán từ giao diện tra cứu đơn).
      * - Màn hình/chức năng: Link thanh toán VNPay từ email / Web.
      *
      * API:
@@ -295,12 +321,16 @@ public class PaymentController {
      *
      * Điều phối xử lý:
      * 1. Tìm Order trong CSDL theo orderCode.
-     * 2. Gọi OrderService.preparePendingVnPayPayment(orderCode) để lấy/tạo bản ghi Payment PENDING với số tiền chính xác cần thanh toán (nếu là cọc = depositAmount; nếu thanh toán đủ = totalAmount).
+     * 2. Gọi OrderService.preparePendingVnPayPayment(orderCode) để lấy/tạo bản ghi
+     * Payment PENDING với số tiền chính xác cần thanh toán (nếu là cọc =
+     * depositAmount; nếu thanh toán đủ = totalAmount).
      * 3. Thiết lập các tham số giao dịch gửi sang VNPay:
-     *    - vnp_Amount = amount * 100
-     *    - vnp_TxnRef = orderCode (Dùng chính mã đơn hàng để mapping khi nhận callback/IPN)
-     *    - vnp_ExpireDate = now + 15 phút (giới hạn thời gian thanh toán trên cổng VNPay)
-     *    - vnp_ReturnUrl = VNPayConfig.vnp_ReturnUrl
+     * - vnp_Amount = amount * 100
+     * - vnp_TxnRef = orderCode (Dùng chính mã đơn hàng để mapping khi nhận
+     * callback/IPN)
+     * - vnp_ExpireDate = now + 15 phút (giới hạn thời gian thanh toán trên cổng
+     * VNPay)
+     * - vnp_ReturnUrl = VNPayConfig.vnp_ReturnUrl
      * 4. Băm chữ ký bảo mật HMAC-SHA512 và tạo paymentUrl hoàn chỉnh.
      * 5. Redirect 302 đưa khách sang màn hình thanh toán của VNPay.
      *
@@ -310,8 +340,10 @@ public class PaymentController {
      *
      * Tác động dữ liệu:
      * - Bảng/Entity bị đọc: ORDER, PAYMENT
-     * - Bảng/Entity bị ghi/cập nhật: PAYMENT (nếu cần retry tạo lại bản ghi PENDING mới)
-     * - Thay đổi trạng thái: Giữ nguyên PENDING_PAYMENT, chờ khách thực hiện thanh toán trên VNPay.
+     * - Bảng/Entity bị ghi/cập nhật: PAYMENT (nếu cần retry tạo lại bản ghi PENDING
+     * mới)
+     * - Thay đổi trạng thái: Giữ nguyên PENDING_PAYMENT, chờ khách thực hiện thanh
+     * toán trên VNPay.
      */
     @GetMapping("/vnpay/pay-order")
     public String payOrder(HttpServletRequest req, @RequestParam("orderCode") String orderCode)
@@ -321,7 +353,8 @@ public class PaymentController {
         Order order = orderRepository.findByOrderCode(orderCode)
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy đơn hàng: " + orderCode));
 
-        // 2. Lấy số tiền từ Payment record PENDING gần nhất (nếu có, ví dụ: Đặt cọc = Deposit + Crane + Ship)
+        // 2. Lấy số tiền từ Payment record PENDING gần nhất (nếu có, ví dụ: Đặt cọc =
+        // Deposit + Crane + Ship)
         Payment pendingPayment = orderService.preparePendingVnPayPayment(orderCode);
 
         long amount = pendingPayment.getAmount().longValue();
@@ -391,7 +424,7 @@ public class PaymentController {
         queryUrl += "&vnp_SecureHash=" + vnp_SecureHash;
 
         String paymentUrl = VNPayConfig.vnp_PayUrl + "?" + queryUrl;
-        
+
         System.out.println("==================================================");
         System.out.println("=== VNPAY PAY-ORDER DIAGNOSTIC LOG ===");
         System.out.println("vnp_TmnCode: " + vnp_TmnCode);
