@@ -3,36 +3,32 @@ name: CI/CD Deploy to Multi-Server (Pi 5 + GCP VM)
 on:
   push:
     branches:
-      - AnhPQ # Tự động deploy khi push lên nhánh AnhPQ
+      - AnhPQ
 
 jobs:
   # ------------------------------------------------------------
-  # JOB 1: DEPLOY LÊN RASPBERRY PI 5 (GIỮ NGUYÊN TOÀN BỘ CỦA BẠN)
+  # JOB 1: BUILD TRÊN CLOUD RUNNER (CỰC NHANH + ĐƯỜNG TRUYỀN GBPS)
   # ------------------------------------------------------------
-  deploy-pi5:
-    runs-on: self-hosted # Chạy trên self-hosted runner của Pi 5
-
+  build:
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: maven
+
       - name: Grant execute permission for mvnw
         run: chmod +x mvnw
 
-      - name: Restore local config (not tracked by git)
-        run: cp /home/quanganh/Desktop/bonsai/Bonsai_Shop/src/main/resources/application-local.properties src/main/resources/application-local.properties
-
-      - name: Build Project with Maven
+      - name: Build with Maven
         run: ./mvnw clean package -DskipTests
 
-      - name: Copy built JAR to Desktop folder
-        run: cp target/Bonsai_Shop-0.0.1-SNAPSHOT.jar /home/quanganh/Desktop/bonsai/Bonsai_Shop/target/
-
-      - name: Restart Web Service
-        run: sudo systemctl restart bonsai-shop.service
-
-      # Lưu lại file JAR đã build trên Pi 5 để chuyển tiếp sang Job GCP (tiết kiệm thời gian build lại)
-      - name: Upload Artifact for GCP
+      - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: bonsai-jar
@@ -40,12 +36,11 @@ jobs:
           retention-days: 1
 
   # ------------------------------------------------------------
-  # JOB 2: DEPLOY LÊN GOOGLE CLOUD VM (SSH DEPLOY)
+  # JOB 2: DEPLOY LÊN GCP VM (CHẠY SONG SONG)
   # ------------------------------------------------------------
   deploy-gcp:
-    needs: deploy-pi5 # Chờ Pi 5 build xong file JAR
-    runs-on: ubuntu-latest # Chạy trên Cloud Runner của GitHub
-
+    needs: build
+    runs-on: ubuntu-latest
     steps:
       - name: Download Build Artifact
         uses: actions/download-artifact@v4
@@ -72,3 +67,21 @@ jobs:
           script: |
             mv /home/vualen121324/app/Bonsai_Shop-0.0.1-SNAPSHOT.jar /home/vualen121324/app/app.jar
             sudo systemctl restart bonsai-backend.service
+
+  # ------------------------------------------------------------
+  # JOB 3: DEPLOY LÊN PI 5 (CHẠY SONG SONG)
+  # ------------------------------------------------------------
+  deploy-pi5:
+    needs: build
+    runs-on: self-hosted
+    steps:
+      - name: Download Build Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: bonsai-jar
+          path: ./dist
+
+      - name: Deploy on Pi 5
+        run: |
+          cp dist/Bonsai_Shop-0.0.1-SNAPSHOT.jar /home/quanganh/Desktop/bonsai/Bonsai_Shop/target/
+          sudo systemctl restart bonsai-shop.service
