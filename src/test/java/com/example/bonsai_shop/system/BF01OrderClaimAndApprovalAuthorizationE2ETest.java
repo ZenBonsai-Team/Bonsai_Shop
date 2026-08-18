@@ -12,8 +12,6 @@ import com.example.bonsai_shop.entity.User;
 import com.example.bonsai_shop.entity.Variety;
 import com.example.bonsai_shop.product.repository.CategoryRepository;
 import com.example.bonsai_shop.product.repository.OrderDetailRepository;
-import com.example.bonsai_shop.product.repository.OrderHandlingRepository;
-import com.example.bonsai_shop.product.repository.OrderLogRepository;
 import com.example.bonsai_shop.product.repository.OrderRepository;
 import com.example.bonsai_shop.product.repository.ProductRepository;
 import com.example.bonsai_shop.product.repository.ProductSegmentRepository;
@@ -98,12 +96,6 @@ public class BF01OrderClaimAndApprovalAuthorizationE2ETest {
 
     @Autowired
     private OrderDetailRepository orderDetailRepository;
-
-    @Autowired
-    private OrderHandlingRepository orderHandlingRepository;
-
-    @Autowired
-    private OrderLogRepository orderLogRepository;
 
     @Autowired
     private OrderService orderService;
@@ -269,27 +261,38 @@ public class BF01OrderClaimAndApprovalAuthorizationE2ETest {
     /**
      * TC-L3-BF01-002: Order Claim and Approval Authorization.
      *
-     * <p><strong>Preconditions:</strong>
+     * <p>
+     * <strong>Preconditions:</strong>
      * <ul>
-     *   <li>Moderator A account exists with email "moderator.a.claim.e2e@test.com" and status ACTIVE.</li>
-     *   <li>A dedicated unassigned PENDING order (orderCode: BSMS-TC-BF01-002-...) exists in database with assignedTo = null.</li>
+     * <li>Moderator A account exists with email "moderator.a.claim.e2e@test.com"
+     * and status ACTIVE.</li>
+     * <li>A dedicated unassigned PENDING order (orderCode: BSMS-TC-BF01-002-...)
+     * exists in database with assignedTo = null.</li>
      * </ul>
      *
-     * <p><strong>Steps:</strong>
+     * <p>
+     * <strong>Steps:</strong>
      * <ol>
-     *   <li>Start Playwright browser and log in as Moderator A.</li>
-     *   <li>Navigate to Orders Pool page (/moderator/orders/pool).</li>
-     *   <li>Assert order is displayed in Orders Pool and database state is PENDING with assignedTo = null.</li>
-     *   <li>Click "Tiếp nhận đơn hàng" (Claim) button for the order.</li>
-     *   <li>Wait for AJAX claim request and UI refresh to finish.</li>
-     *   <li>Assert database order is assigned to Moderator A (assignedTo = Moderator A's ID) and state remains PENDING.</li>
-     *   <li>Assert order is no longer displayed in Orders Pool list.</li>
-     *   <li>Navigate to My Orders page (/moderator/orders/my) and verify order code is visible there.</li>
-     *   <li>Verify exclusivity by asserting that claiming an already-assigned order again throws IllegalStateException.</li>
+     * <li>Start Playwright browser and log in as Moderator A.</li>
+     * <li>Navigate to Orders Pool page (/moderator/orders/pool).</li>
+     * <li>Assert order is displayed in Orders Pool and database state is PENDING
+     * with assignedTo = null.</li>
+     * <li>Click "Tiếp nhận đơn hàng" (Claim) button for the order.</li>
+     * <li>Wait for AJAX claim request and UI refresh to finish.</li>
+     * <li>Assert database order is assigned to Moderator A (assignedTo = Moderator
+     * A's ID) and state remains PENDING.</li>
+     * <li>Assert order is no longer displayed in Orders Pool list.</li>
+     * <li>Navigate to My Orders page (/moderator/orders/my) and verify order code
+     * is visible there.</li>
+     * <li>Verify exclusivity by asserting that claiming an already-assigned order
+     * again throws IllegalStateException.</li>
      * </ol>
      *
-     * <p><strong>Expected Result:</strong>
-     * The order is assigned exclusively to Moderator A, updated in database with assignedTo = Moderator A, disappears from Orders Pool, and appears in My Orders.
+     * <p>
+     * <strong>Expected Result:</strong>
+     * The order is assigned exclusively to Moderator A, updated in database with
+     * assignedTo = Moderator A, disappears from Orders Pool, and appears in My
+     * Orders.
      */
     @Test
     @DisplayName("TC-L3-BF01-002: Order Claim and Approval Authorization")
@@ -328,7 +331,8 @@ public class BF01OrderClaimAndApprovalAuthorizationE2ETest {
 
             // Assert database state AFTER claim
             Order dbOrderAfter = orderRepository.findByOrderCode(testOrderCode)
-                    .orElseThrow(() -> new AssertionError("Không tìm thấy đơn hàng " + testOrderCode + " sau khi claim!"));
+                    .orElseThrow(
+                            () -> new AssertionError("Không tìm thấy đơn hàng " + testOrderCode + " sau khi claim!"));
 
             assertNotNull(dbOrderAfter.getAssignedTo(), "Đơn hàng phải được gán cho Moderator sau khi claim!");
             assertEquals(moderatorAEntity.getUserId(), dbOrderAfter.getAssignedTo().getUserId(),
@@ -354,7 +358,8 @@ public class BF01OrderClaimAndApprovalAuthorizationE2ETest {
 
             evidencePause(page, "4. My Orders Page Loaded with Claimed Order");
 
-            // 6. Verify Exclusivity: Attempting to claim the already claimed order again throws IllegalStateException
+            // 6. Verify Exclusivity: Attempting to claim the already claimed order again
+            // throws IllegalStateException
             assertThrows(IllegalStateException.class, () -> {
                 orderService.claimOrder(testOrderCode, moderatorAEntity);
             }, "Không thể claim đơn hàng đã được gán cho nhân viên khác/đã được nhận trước đó!");

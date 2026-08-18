@@ -63,7 +63,7 @@
                                     <label for="customerPhone" class="form-label required-label">Số điện thoại</label>
                                     <div class="input-group">
                                         <span class="input-group-text"><i class="fa-solid fa-phone"></i></span>
-                                        <input type="tel" class="form-control" id="customerPhone" name="customerPhone" required placeholder="0987654321">
+                                        <input type="tel" class="form-control" id="customerPhone" name="customerPhone" required placeholder="0987654321" inputmode="numeric" pattern="0[0-9]{9}" maxlength="10" oninput="this.value=this.value.replace(/\D/g,'').slice(0,10)">
                                         <div class="invalid-feedback" id="customerPhoneFeedback">SĐT không hợp lệ (10 chữ số).</div>
                                     </div>
                                 </div>

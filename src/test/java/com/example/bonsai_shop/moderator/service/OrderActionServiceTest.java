@@ -11,7 +11,6 @@ import com.example.bonsai_shop.product.service.OrderService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
 import org.springframework.dao.DataAccessException;
 
 import java.math.BigDecimal;
@@ -20,7 +19,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -196,7 +194,8 @@ class OrderActionServiceTest {
         User mod10 = User.builder().userId(10).build();
         User mod11 = User.builder().userId(11).build();
 
-        Order order = Order.builder().orderId(100).orderCode("BSMS-100").orderStatus("PENDING").assignedTo(mod10).build();
+        Order order = Order.builder().orderId(100).orderCode("BSMS-100").orderStatus("PENDING").assignedTo(mod10)
+                .build();
         when(orderRepository.findByOrderCode("BSMS-100")).thenReturn(Optional.of(order));
 
         OrderActionRequestDTO req = new OrderActionRequestDTO();
@@ -211,7 +210,8 @@ class OrderActionServiceTest {
     @DisplayName("UT-UUT08-009: executeAction - approve khi status != PENDING")
     void executeAction_approveNonPending_throwsIllegalStateException() {
         User mod10 = User.builder().userId(10).build();
-        Order order = Order.builder().orderId(100).orderCode("BSMS-100").orderStatus("DEPOSITED").assignedTo(mod10).build();
+        Order order = Order.builder().orderId(100).orderCode("BSMS-100").orderStatus("DEPOSITED").assignedTo(mod10)
+                .build();
         when(orderRepository.findByOrderCode("BSMS-100")).thenReturn(Optional.of(order));
 
         OrderActionRequestDTO req = new OrderActionRequestDTO();
@@ -226,7 +226,8 @@ class OrderActionServiceTest {
     @DisplayName("UT-UUT08-010: executeAction - approve thất bại khi verifyOrder trả về false")
     void executeAction_approveVerifyOrderFailed_throwsIllegalStateException() {
         User mod10 = User.builder().userId(10).build();
-        Order order = Order.builder().orderId(100).orderCode("BSMS-100").orderStatus("PENDING").assignedTo(mod10).build();
+        Order order = Order.builder().orderId(100).orderCode("BSMS-100").orderStatus("PENDING").assignedTo(mod10)
+                .build();
         when(orderRepository.findByOrderCode("BSMS-100")).thenReturn(Optional.of(order));
         when(orderService.verifyOrder(eq("BSMS-100"), any(), any(), any(), eq(mod10))).thenReturn(false);
 
@@ -242,7 +243,8 @@ class OrderActionServiceTest {
     @DisplayName("UT-UUT08-011: executeAction - approve thành công")
     void executeAction_approveSuccess() {
         User mod10 = User.builder().userId(10).build();
-        Order order = Order.builder().orderId(100).orderCode("BSMS-100").orderStatus("PENDING").assignedTo(mod10).build();
+        Order order = Order.builder().orderId(100).orderCode("BSMS-100").orderStatus("PENDING").assignedTo(mod10)
+                .build();
         when(orderRepository.findByOrderCode("BSMS-100")).thenReturn(Optional.of(order));
         when(orderService.verifyOrder(eq("BSMS-100"), any(), any(), any(), eq(mod10))).thenReturn(true);
 
@@ -268,7 +270,8 @@ class OrderActionServiceTest {
         User mod10 = User.builder().userId(10).build();
         User mod11 = User.builder().userId(11).build();
 
-        Order order = Order.builder().orderId(100).orderCode("BSMS-100").orderStatus("PENDING").assignedTo(mod10).build();
+        Order order = Order.builder().orderId(100).orderCode("BSMS-100").orderStatus("PENDING").assignedTo(mod10)
+                .build();
         when(orderRepository.findByOrderCode("BSMS-100")).thenReturn(Optional.of(order));
 
         OrderActionRequestDTO req = new OrderActionRequestDTO();
@@ -283,7 +286,8 @@ class OrderActionServiceTest {
     @DisplayName("UT-UUT08-013: executeAction - reject thiếu lý do")
     void executeAction_rejectMissingReason_throwsIllegalArgumentException() {
         User mod10 = User.builder().userId(10).build();
-        Order order = Order.builder().orderId(100).orderCode("BSMS-100").orderStatus("PENDING").assignedTo(mod10).build();
+        Order order = Order.builder().orderId(100).orderCode("BSMS-100").orderStatus("PENDING").assignedTo(mod10)
+                .build();
         when(orderRepository.findByOrderCode("BSMS-100")).thenReturn(Optional.of(order));
 
         OrderActionRequestDTO req = new OrderActionRequestDTO();
@@ -299,7 +303,8 @@ class OrderActionServiceTest {
     @DisplayName("UT-UUT08-014: executeAction - reject thất bại khi rejectOrder trả về false")
     void executeAction_rejectFailed_throwsIllegalStateException() {
         User mod10 = User.builder().userId(10).build();
-        Order order = Order.builder().orderId(100).orderCode("BSMS-100").orderStatus("PENDING").assignedTo(mod10).build();
+        Order order = Order.builder().orderId(100).orderCode("BSMS-100").orderStatus("PENDING").assignedTo(mod10)
+                .build();
         when(orderRepository.findByOrderCode("BSMS-100")).thenReturn(Optional.of(order));
         when(orderService.rejectOrder("BSMS-100", "Hết hàng", mod10)).thenReturn(false);
 
@@ -316,7 +321,8 @@ class OrderActionServiceTest {
     @DisplayName("UT-UUT08-015: executeAction - reject thành công")
     void executeAction_rejectSuccess() {
         User mod10 = User.builder().userId(10).build();
-        Order order = Order.builder().orderId(100).orderCode("BSMS-100").orderStatus("PENDING").assignedTo(mod10).build();
+        Order order = Order.builder().orderId(100).orderCode("BSMS-100").orderStatus("PENDING").assignedTo(mod10)
+                .build();
         when(orderRepository.findByOrderCode("BSMS-100")).thenReturn(Optional.of(order));
         when(orderService.rejectOrder("BSMS-100", "Hết hàng", mod10)).thenReturn(true);
 
@@ -340,7 +346,8 @@ class OrderActionServiceTest {
     @DisplayName("UT-UUT08-016: executeAction - return_inventory khi status != PENDING")
     void executeAction_returnInventoryNonPending_throwsIllegalStateException() {
         User mod10 = User.builder().userId(10).build();
-        Order order = Order.builder().orderId(100).orderCode("BSMS-100").orderStatus("DEPOSITED").assignedTo(mod10).build();
+        Order order = Order.builder().orderId(100).orderCode("BSMS-100").orderStatus("DEPOSITED").assignedTo(mod10)
+                .build();
         when(orderRepository.findByOrderCode("BSMS-100")).thenReturn(Optional.of(order));
 
         OrderActionRequestDTO req = new OrderActionRequestDTO();
@@ -355,8 +362,10 @@ class OrderActionServiceTest {
     @DisplayName("UT-UUT08-017: executeAction - return_inventory / unclaim thành công")
     void executeAction_returnInventorySuccess() {
         User mod10 = User.builder().userId(10).build();
-        Order order = Order.builder().orderId(100).orderCode("BSMS-100").orderStatus("PENDING").assignedTo(mod10).assignedAt(LocalDateTime.now()).build();
-        OrderHandling activeHandling = OrderHandling.builder().orderHandlingId(1).order(order).moderator(mod10).isActive(true).build();
+        Order order = Order.builder().orderId(100).orderCode("BSMS-100").orderStatus("PENDING").assignedTo(mod10)
+                .assignedAt(LocalDateTime.now()).build();
+        OrderHandling activeHandling = OrderHandling.builder().orderHandlingId(1).order(order).moderator(mod10)
+                .isActive(true).build();
 
         when(orderRepository.findByOrderCode("BSMS-100")).thenReturn(Optional.of(order));
         when(orderHandlingRepository.findByOrderOrderIdOrderByHandledAtDesc(100)).thenReturn(List.of(activeHandling));
@@ -386,7 +395,8 @@ class OrderActionServiceTest {
     @DisplayName("UT-UUT08-018: executeAction - complete khi status không phải PAID hoặc DEPOSITED")
     void executeAction_completeInvalidStatus_throwsIllegalStateException() {
         User mod10 = User.builder().userId(10).build();
-        Order order = Order.builder().orderId(100).orderCode("BSMS-100").orderStatus("PENDING").assignedTo(mod10).build();
+        Order order = Order.builder().orderId(100).orderCode("BSMS-100").orderStatus("PENDING").assignedTo(mod10)
+                .build();
         when(orderRepository.findByOrderCode("BSMS-100")).thenReturn(Optional.of(order));
 
         OrderActionRequestDTO req = new OrderActionRequestDTO();
@@ -401,7 +411,8 @@ class OrderActionServiceTest {
     @DisplayName("UT-UUT08-019: executeAction - complete cho đơn DEPOSITED (confirmRemainingPayment)")
     void executeAction_completeDepositedOrder() {
         User mod10 = User.builder().userId(10).build();
-        Order order = Order.builder().orderId(100).orderCode("BSMS-100").orderStatus("DEPOSITED").assignedTo(mod10).build();
+        Order order = Order.builder().orderId(100).orderCode("BSMS-100").orderStatus("DEPOSITED").assignedTo(mod10)
+                .build();
         when(orderRepository.findByOrderCode("BSMS-100")).thenReturn(Optional.of(order));
 
         OrderActionRequestDTO req = new OrderActionRequestDTO();
@@ -455,14 +466,16 @@ class OrderActionServiceTest {
 
         IllegalStateException ex = assertThrows(IllegalStateException.class,
                 () -> orderActionService.executeAction("BSMS-100", req, mod10));
-        assertEquals("Chỉ có thể ghi nhận khách không nhận hàng sau khi khách đã thanh toán tiền đặt cọc.", ex.getMessage());
+        assertEquals("Chỉ có thể ghi nhận khách không nhận hàng sau khi khách đã thanh toán tiền đặt cọc.",
+                ex.getMessage());
     }
 
     @Test
     @DisplayName("UT-UUT08-022: executeAction - customer_no_show thiếu lý do")
     void executeAction_customerNoShowMissingReason_throwsIllegalArgumentException() {
         User mod10 = User.builder().userId(10).build();
-        Order order = Order.builder().orderId(100).orderCode("BSMS-100").orderStatus("DEPOSITED").assignedTo(mod10).build();
+        Order order = Order.builder().orderId(100).orderCode("BSMS-100").orderStatus("DEPOSITED").assignedTo(mod10)
+                .build();
         when(orderRepository.findByOrderCode("BSMS-100")).thenReturn(Optional.of(order));
 
         OrderActionRequestDTO req = new OrderActionRequestDTO();
@@ -477,7 +490,8 @@ class OrderActionServiceTest {
     @DisplayName("UT-UUT08-023: executeAction - customer_no_show thành công")
     void executeAction_customerNoShowSuccess() {
         User mod10 = User.builder().userId(10).build();
-        Order order = Order.builder().orderId(100).orderCode("BSMS-100").orderStatus("DEPOSITED").assignedTo(mod10).build();
+        Order order = Order.builder().orderId(100).orderCode("BSMS-100").orderStatus("DEPOSITED").assignedTo(mod10)
+                .build();
         when(orderRepository.findByOrderCode("BSMS-100")).thenReturn(Optional.of(order));
 
         OrderActionRequestDTO req = new OrderActionRequestDTO();
@@ -501,7 +515,8 @@ class OrderActionServiceTest {
     @DisplayName("UT-UUT08-024: executeAction - record_fault_refund khi status không hợp lệ")
     void executeAction_faultRefundInvalidStatus_throwsIllegalStateException() {
         User mod10 = User.builder().userId(10).build();
-        Order order = Order.builder().orderId(100).orderCode("BSMS-100").orderStatus("PENDING").assignedTo(mod10).build();
+        Order order = Order.builder().orderId(100).orderCode("BSMS-100").orderStatus("PENDING").assignedTo(mod10)
+                .build();
         when(orderRepository.findByOrderCode("BSMS-100")).thenReturn(Optional.of(order));
 
         OrderActionRequestDTO req = new OrderActionRequestDTO();
@@ -539,8 +554,7 @@ class OrderActionServiceTest {
                 any(),
                 any(),
                 any(),
-                eq(mod10)
-        );
+                eq(mod10));
     }
 
     // =========================================================================
@@ -551,14 +565,59 @@ class OrderActionServiceTest {
     @DisplayName("UT-UUT08-026: Dependency Failure - orderRepository.save ném DataAccessException")
     void executeAction_dependencyFailure_throwsException() {
         User mod10 = User.builder().userId(10).build();
-        Order order = Order.builder().orderId(100).orderCode("BSMS-100").orderStatus("PENDING").assignedTo(null).build();
+        Order order = Order.builder().orderId(100).orderCode("BSMS-100").orderStatus("PENDING").assignedTo(null)
+                .build();
         when(orderRepository.findByOrderCode("BSMS-100")).thenReturn(Optional.of(order));
-        when(orderRepository.save(any())).thenThrow(new DataAccessException("DB Save Error") {});
+        when(orderRepository.save(any())).thenThrow(new DataAccessException("DB Save Error") {
+        });
 
         OrderActionRequestDTO req = new OrderActionRequestDTO();
         req.setAction("claim");
 
         assertThrows(DataAccessException.class,
                 () -> orderActionService.executeAction("BSMS-100", req, mod10));
+    }
+
+    // =========================================================================
+    // Group 10: product_refund_only Action
+    // =========================================================================
+
+    @Test
+    @DisplayName("UT-UUT08-027: executeAction - product_refund_only thành công")
+    void executeAction_productRefundOnly_success() {
+        User mod10 = User.builder().userId(10).build();
+        Order order = Order.builder().orderId(100).orderCode("BSMS-100").orderStatus("PAID").assignedTo(mod10)
+                .build();
+        when(orderRepository.findByOrderCode("BSMS-100")).thenReturn(Optional.of(order));
+
+        OrderActionRequestDTO req = new OrderActionRequestDTO();
+        req.setAction("product_refund_only");
+        req.setReason("Khách không nhận cây");
+
+        Map<String, Object> res = orderActionService.executeAction("BSMS-100", req, mod10);
+
+        assertTrue((Boolean) res.get("success"));
+        assertEquals("BSMS-100", res.get("orderCode"));
+        assertEquals("product_refund_only", res.get("action"));
+        assertEquals("CANCELLED", res.get("newStatus"));
+
+        verify(orderService).recordProductRefundOnlyAndCancel("BSMS-100", "Khách không nhận cây", mod10);
+    }
+
+    @Test
+    @DisplayName("UT-UUT08-028: executeAction - product_refund_only thất bại do không phải PAID")
+    void executeAction_productRefundOnly_notPaid_throwsIllegalStateException() {
+        User mod10 = User.builder().userId(10).build();
+        Order order = Order.builder().orderId(100).orderCode("BSMS-100").orderStatus("DEPOSITED").assignedTo(mod10)
+                .build();
+        when(orderRepository.findByOrderCode("BSMS-100")).thenReturn(Optional.of(order));
+
+        OrderActionRequestDTO req = new OrderActionRequestDTO();
+        req.setAction("product_refund_only");
+        req.setReason("Khách không nhận cây");
+
+        IllegalStateException ex = assertThrows(IllegalStateException.class,
+                () -> orderActionService.executeAction("BSMS-100", req, mod10));
+        assertEquals("Chỉ áp dụng hoàn tiền giá cây cho đơn đã thanh toán toàn bộ.", ex.getMessage());
     }
 }

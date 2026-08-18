@@ -155,6 +155,51 @@ public class FinancialLedgerService {
                 .build());
     }
 
+    @Transactional
+    public FinancialLedger recordProductRefundOnly(Order order, String reason, User actor) {
+        requireOrder(order);
+        requireActor(actor);
+
+        if (hasRecordedAnyRefund(order)) {
+            throw new IllegalStateException("Đơn hàng này đã được ghi nhận hoàn tiền trước đó.");
+        }
+
+        BigDecimal treePrice = calculateTreeAmount(order);
+        BigDecimal normalizedAmount = requirePositiveAmount(treePrice, "Tiền cây hoàn lại");
+
+        Payment relatedPayment = resolveRelatedRefundPayment(order);
+
+        return financialLedgerRepository.save(FinancialLedger.builder()
+                .order(order)
+                .relatedPayment(relatedPayment)
+                .recordedBy(actor)
+                .ledgerType(FinancialLedgerType.PRODUCT_REFUND_ONLY)
+                .direction(FinancialLedgerDirection.OUTFLOW)
+                .amount(normalizedAmount)
+                .faultParty(FaultParty.CUSTOMER)
+                .reason(requireReason(reason))
+                .ledgerStatus(FinancialLedgerStatus.RECORDED)
+                .recognizedAt(LocalDateTime.now())
+                .createdAt(LocalDateTime.now())
+                .build());
+    }
+
+    @Transactional(readOnly = true)
+    public boolean hasRecordedAnyRefund(Order order) {
+        if (order == null || order.getOrderId() == null) {
+            return false;
+        }
+        return financialLedgerRepository.existsByOrderOrderIdAndLedgerTypeAndLedgerStatus(
+                order.getOrderId(),
+                FinancialLedgerType.FULL_REFUND,
+                FinancialLedgerStatus.RECORDED
+        ) || financialLedgerRepository.existsByOrderOrderIdAndLedgerTypeAndLedgerStatus(
+                order.getOrderId(),
+                FinancialLedgerType.PRODUCT_REFUND_ONLY,
+                FinancialLedgerStatus.RECORDED
+        );
+    }
+
     @Transactional(readOnly = true)
     public boolean hasRecordedDepositForfeiture(Payment depositPayment) {
         return depositPayment != null
@@ -182,8 +227,13 @@ public class FinancialLedgerService {
     }
 
     @Transactional(readOnly = true)
+    public BigDecimal sumRecordedProductRefunds(Order order) {
+        return sumByType(order, FinancialLedgerType.PRODUCT_REFUND_ONLY);
+    }
+
+    @Transactional(readOnly = true)
     public BigDecimal sumRecordedRefunds(Order order) {
-        return sumFullRefunds(order);
+        return sumFullRefunds(order).add(sumRecordedProductRefunds(order));
     }
 
     @Transactional(readOnly = true)

@@ -1,7 +1,6 @@
 package com.example.bonsai_shop.product.dto;
 
 import jakarta.validation.constraints.DecimalMin;
-import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
 import java.math.BigDecimal;
@@ -14,10 +13,10 @@ import java.math.BigDecimal;
  * Nếu paymentMethod = "FULL": depositAmount bỏ trống (sẽ bị ignore ở service).
  *
  * Sau khi nhận request này, OrderService.verifyOrder() sẽ:
- *   1. Tính totalAmount mới = treePrice + craneFee + shippingFee
- *   2. Tạo Payment record (DEPOSIT hoặc FULL_PAYMENT)
- *   3. Cập nhật Order.status = PENDING_PAYMENT
- *   4. Ghi OrderLog
+ * 1. Tính totalAmount mới = treePrice + craneFee + shippingFee
+ * 2. Tạo Payment record (DEPOSIT hoặc FULL_PAYMENT)
+ * 3. Cập nhật Order.status = PENDING_PAYMENT
+ * 4. Ghi OrderLog
  */
 @Data
 public class ApproveOrderRequestDTO {

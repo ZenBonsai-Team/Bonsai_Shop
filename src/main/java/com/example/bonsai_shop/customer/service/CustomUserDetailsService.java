@@ -16,16 +16,19 @@ import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
-// Service duoc Spring Security goi khi dang nhap bang email/password de load user va quyen.
+// Service duoc Spring Security goi khi dang nhap bang email/password de load
+// user va quyen.
 public class CustomUserDetailsService implements UserDetailsService {
 
     private final UserRepository userRepository;
     private final RoleActionRepository roleActionRepository;
 
     @Override
-    // Load user theo email dang nhap, dong thoi build danh sach role/action authority cho SecurityContext.
+    // Load user theo email dang nhap, dong thoi build danh sach role/action
+    // authority cho SecurityContext.
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        // Tim user theo email; neu khong co thi Spring Security coi la dang nhap that bai.
+        // Tim user theo email; neu khong co thi Spring Security coi la dang nhap that
+        // bai.
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("Không tìm thấy email: " + email));
 
@@ -34,15 +37,10 @@ public class CustomUserDetailsService implements UserDetailsService {
             throw new UsernameNotFoundException("Tài khoản chưa được gán role!");
         }
 
-        // Chuan hoa status de xac dinh enabled/nonLocked cho principal.
-        String status = user.getStatus() == null ? "" : user.getStatus().trim().toUpperCase(Locale.ROOT);
-        boolean enabled = "ACTIVE".equals(status);
-        boolean accountNonLocked = !"LOCKED".equals(status);
-
-        // Chuan hoa role ve dang ROLE_xxx de dung voi hasRole/hasAuthority cua Spring Security.
+        // Chuan hoa role ve dang ROLE_xxx de dung voi hasRole/hasAuthority cua Spring
+        // Security.
         String normRole = normalizeRoleName(user.getRole().getRoleName());
-        SimpleGrantedAuthority roleAuthority =
-                new SimpleGrantedAuthority(normRole);
+        SimpleGrantedAuthority roleAuthority = new SimpleGrantedAuthority(normRole);
 
         // Lay cac action dang bat cua role va chuyen thanh authority ACTION_xxx.
         List<SimpleGrantedAuthority> actionAuthorities = roleActionRepository
@@ -57,7 +55,8 @@ public class CustomUserDetailsService implements UserDetailsService {
         // Gom role chinh va cac role mapping bo sung neu can.
         List<SimpleGrantedAuthority> mappedAuthorities = new java.util.ArrayList<>();
         mappedAuthorities.add(roleAuthority);
-        // Gan them ROLE_ADMIN cho Owner de tuong thich cac man hinh/logic cu neu co check ADMIN.
+        // Gan them ROLE_ADMIN cho Owner de tuong thich cac man hinh/logic cu neu co
+        // check ADMIN.
         if ("ROLE_OWNER".equals(normRole)) {
             mappedAuthorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
         }
@@ -67,7 +66,8 @@ public class CustomUserDetailsService implements UserDetailsService {
                 .concat(mappedAuthorities.stream(), actionAuthorities.stream())
                 .toList();
 
-        // Tra principal rieng cua he thong de Spring Security dung khi tao Authentication.
+        // Tra principal rieng cua he thong de Spring Security dung khi tao
+        // Authentication.
         return new CustomUserDetails(user, allAuthorities);
     }
 

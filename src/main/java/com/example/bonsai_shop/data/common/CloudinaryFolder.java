@@ -1,8 +1,5 @@
 package com.example.bonsai_shop.data.common;
 
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-
 public enum CloudinaryFolder {
 
     AVATAR("bonsai_shop/avatars"),

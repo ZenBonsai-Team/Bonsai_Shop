@@ -1,15 +1,13 @@
 package com.example.bonsai_shop.data.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-
 public class CloudinaryUploadResponse {
 
     private String url;
     private String publicId;
     private String resourceType;
 
-    public CloudinaryUploadResponse() {}
+    public CloudinaryUploadResponse() {
+    }
 
     public CloudinaryUploadResponse(String url, String publicId, String resourceType) {
         this.url = url;

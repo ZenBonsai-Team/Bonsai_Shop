@@ -8,6 +8,7 @@ import com.example.bonsai_shop.entity.Product;
 import com.example.bonsai_shop.entity.User;
 import com.example.bonsai_shop.exception.OrderNotFoundException;
 import com.example.bonsai_shop.finance.dto.FinancialLedgerDTO;
+import com.example.bonsai_shop.finance.enums.FinancialLedgerDirection;
 import com.example.bonsai_shop.finance.service.FinancialLedgerService;
 import com.example.bonsai_shop.moderator.dto.CustomerInfoDTO;
 import com.example.bonsai_shop.moderator.dto.HandlingHistoryDTO;
@@ -233,12 +234,41 @@ public class OrderDetailService {
         if (remainingPaymentAmount.compareTo(BigDecimal.ZERO) < 0) {
             remainingPaymentAmount = BigDecimal.ZERO;
         }
-        BigDecimal recognizedCompletedRevenue = financialLedgerService.sumRecognizedCompletedRevenue(order);
-        BigDecimal forfeitedDepositIncome = financialLedgerService.sumForfeitedDepositIncome(order);
-        BigDecimal fullRefundAmount = financialLedgerService.sumFullRefunds(order);
-        BigDecimal netRecognizedAmount = financialLedgerService.sumNetRecognizedAmount(order);
-        BigDecimal refundableCash = financialLedgerService.calculateRefundableCash(order);
+        BigDecimal recognizedCompletedRevenue = defaultZero(financialLedgerService.sumRecognizedCompletedRevenue(order));
+        BigDecimal forfeitedDepositIncome = defaultZero(financialLedgerService.sumForfeitedDepositIncome(order));
+        BigDecimal fullRefundAmount = defaultZero(financialLedgerService.sumFullRefunds(order));
+        BigDecimal productRefundAmount = defaultZero(financialLedgerService.sumRecordedProductRefunds(order));
+        BigDecimal totalRefundAmount = fullRefundAmount.add(productRefundAmount);
+        BigDecimal netRecognizedAmount = defaultZero(financialLedgerService.sumNetRecognizedAmount(order));
+        BigDecimal refundableCash = defaultZero(financialLedgerService.calculateRefundableCash(order));
+        BigDecimal retainedLogisticsAmount = shippingFee.add(craneFee);
+        BigDecimal actualPaidAfterRefund = totalCashReceived.subtract(totalRefundAmount);
+        if (actualPaidAfterRefund.compareTo(BigDecimal.ZERO) < 0) {
+            actualPaidAfterRefund = BigDecimal.ZERO;
+        }
         List<FinancialLedgerDTO> ledgerHistory = financialLedgerService.getLedgerHistory(order.getOrderId());
+
+        if (ledgerHistory != null && !ledgerHistory.isEmpty()) {
+            for (FinancialLedgerDTO led : ledgerHistory) {
+                if (led.getDirection() == FinancialLedgerDirection.OUTFLOW) {
+                    paymentHistoryList.add(PaymentHistoryDTO.builder()
+                            .paymentId(null)
+                            .paymentNumber(payIndex++)
+                            .method("MANUAL_REFUND")
+                            .methodLabel("Hoàn tiền thủ công")
+                            .paymentType(led.getLedgerType() != null ? led.getLedgerType().name() : "REFUND")
+                            .paymentTypeLabel(led.getLedgerTypeLabel())
+                            .amount(led.getAmount() != null ? led.getAmount().negate() : BigDecimal.ZERO)
+                            .status(led.getLedgerStatus() != null ? led.getLedgerStatus().name() : "RECORDED")
+                            .statusLabel("Đã ghi nhận hoàn tiền")
+                            .createdTime(led.getRecognizedAt())
+                            .transactionCode("LEDGER-" + led.getFinancialLedgerId())
+                            .vnpayRef(led.getExternalReference() != null ? led.getExternalReference() : "-")
+                            .notes(led.getReason())
+                            .build());
+                }
+            }
+        }
 
         PaymentSummaryDTO paymentSummary = PaymentSummaryDTO.builder()
                 .treePrice(computedTreePrice)
@@ -256,6 +286,10 @@ public class OrderDetailService {
                 .recognizedCompletedRevenue(recognizedCompletedRevenue)
                 .forfeitedDepositIncome(forfeitedDepositIncome)
                 .fullRefundAmount(fullRefundAmount)
+                .productRefundAmount(productRefundAmount)
+                .totalRefundAmount(totalRefundAmount)
+                .actualPaidAfterRefund(actualPaidAfterRefund)
+                .retainedLogisticsAmount(retainedLogisticsAmount)
                 .netRecognizedAmount(netRecognizedAmount)
                 .refundableCash(refundableCash)
                 .build();
@@ -284,6 +318,11 @@ public class OrderDetailService {
         Integer assignedUserId = order.getAssignedTo() != null ? order.getAssignedTo().getUserId() : null;
         boolean isAssignedToMe = currentUserId != null && currentUserId.equals(assignedUserId);
 
+        boolean hasForfeitedDeposit = forfeitedDepositIncome.compareTo(BigDecimal.ZERO) > 0;
+        boolean hasProductRefund = productRefundAmount.compareTo(BigDecimal.ZERO) > 0;
+        boolean hasFullRefund = fullRefundAmount.compareTo(BigDecimal.ZERO) > 0;
+        boolean hasAnyRefund = hasProductRefund || hasFullRefund;
+
         boolean canReject = "PENDING".equals(currentStatus) && isAssignedToMe;
         boolean canApprove = "PENDING".equals(currentStatus) && isAssignedToMe;
         boolean canClaim = assignedUserId == null && "PENDING".equals(currentStatus);
@@ -291,13 +330,16 @@ public class OrderDetailService {
         boolean canUnclaim = canReturnInventory;
         boolean canComplete = ("PAID".equals(currentStatus) || "DEPOSITED".equals(currentStatus)) && isAssignedToMe;
         boolean canCancel = false;
-        boolean hasForfeitedDeposit = forfeitedDepositIncome.compareTo(BigDecimal.ZERO) > 0;
         boolean canCustomerNoShow = "DEPOSITED".equals(currentStatus)
                 && isAssignedToMe
                 && successfulDepositAmount.compareTo(BigDecimal.ZERO) > 0
                 && !hasForfeitedDeposit;
         boolean canRecordFaultRefund = ("DEPOSITED".equals(currentStatus) || "PAID".equals(currentStatus))
-                && isAssignedToMe;
+                && isAssignedToMe
+                && !hasAnyRefund;
+        boolean canProductRefundOnly = "PAID".equals(currentStatus)
+                && isAssignedToMe
+                && !hasAnyRefund;
 
         String priority = myOrderService.calculatePriority(order);
         LocalDateTime statusTimestamp = order.getAssignedAt() != null ? order.getAssignedAt()
@@ -305,11 +347,15 @@ public class OrderDetailService {
         String ageFormatted = myOrderService.formatAge(statusTimestamp);
         String assignedName = order.getAssignedTo() != null ? order.getAssignedTo().getFullName() : "Chưa phân bổ";
 
+        String statusLabel = "CANCELLED".equals(currentStatus)
+                ? ModeratorDisplayLabelMapper.resolveCancelledStatusLabel(hasProductRefund, hasFullRefund, hasForfeitedDeposit)
+                : ModeratorDisplayLabelMapper.orderStatusLabel(currentStatus);
+
         return OrderDetailDTO.builder()
                 .orderId(order.getOrderId())
                 .orderCode(order.getOrderCode())
                 .orderStatus(currentStatus)
-                .orderStatusLabel(ModeratorDisplayLabelMapper.orderStatusLabel(currentStatus))
+                .orderStatusLabel(statusLabel)
                 .paymentMethod(paymentMethod)
                 .paymentMethodLabel(ModeratorDisplayLabelMapper.paymentMethodLabel(paymentMethod))
                 .priority(priority)
@@ -331,6 +377,7 @@ public class OrderDetailService {
                 .canCancel(canCancel)
                 .canCustomerNoShow(canCustomerNoShow)
                 .canRecordFaultRefund(canRecordFaultRefund)
+                .canProductRefundOnly(canProductRefundOnly)
                 .customerInfo(customerInfo)
                 .products(productList)
                 .paymentSummary(paymentSummary)
@@ -426,5 +473,9 @@ public class OrderDetailService {
         }
 
         return list;
+    }
+
+    private BigDecimal defaultZero(BigDecimal value) {
+        return value != null ? value : BigDecimal.ZERO;
     }
 }

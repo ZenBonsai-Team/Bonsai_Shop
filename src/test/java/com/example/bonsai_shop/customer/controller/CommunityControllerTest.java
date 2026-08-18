@@ -11,9 +11,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.GrantedAuthority;
@@ -23,7 +20,6 @@ import org.springframework.ui.ConcurrentModel;
 import org.springframework.ui.Model;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.time.LocalDateTime;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -33,15 +29,24 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 public class CommunityControllerTest {
 
-    @Mock private CommunityPostRepository postRepository;
-    @Mock private UserRepository userRepository;
-    @Mock private CommunityCommentRepository commentRepository;
-    @Mock private CommunityPostLikeRepository likeRepository;
-    @Mock private ModerationNotificationRepository notificationRepository;
-    @Mock private CloudinaryStorageService cloudinaryStorageService;
-    @Mock private FileStorageService fileStorageService;
-    @Mock private CommunityPostBookmarkRepository bookmarkRepository;
-    @Mock private ProfanityFilterService profanityFilterService;
+    @Mock
+    private CommunityPostRepository postRepository;
+    @Mock
+    private UserRepository userRepository;
+    @Mock
+    private CommunityCommentRepository commentRepository;
+    @Mock
+    private CommunityPostLikeRepository likeRepository;
+    @Mock
+    private ModerationNotificationRepository notificationRepository;
+    @Mock
+    private CloudinaryStorageService cloudinaryStorageService;
+    @Mock
+    private FileStorageService fileStorageService;
+    @Mock
+    private CommunityPostBookmarkRepository bookmarkRepository;
+    @Mock
+    private ProfanityFilterService profanityFilterService;
 
     @InjectMocks
     private CommunityController communityController;
@@ -160,7 +165,8 @@ public class CommunityControllerTest {
         // TC-UNIT-Community-006
         Model model = new ConcurrentModel();
         when(userRepository.findAll()).thenReturn(List.of(testUser));
-        when(postRepository.findByAuthorNameAndStatusOrderByCreatedAtDesc("Test User", "APPROVED")).thenReturn(List.of(samplePost));
+        when(postRepository.findByAuthorNameAndStatusOrderByCreatedAtDesc("Test User", "APPROVED"))
+                .thenReturn(List.of(samplePost));
 
         String view = communityController.viewAuthorProfile("Test User", model, mockUserDetails);
 
@@ -390,7 +396,8 @@ public class CommunityControllerTest {
     @Test
     public void testAddComment_NotLoggedIn() {
         // TC-UNIT-Community-021
-        ResponseEntity<Map<String, Object>> response = communityController.addComment(1, new HashMap<>(), "anonymousUser");
+        ResponseEntity<Map<String, Object>> response = communityController.addComment(1, new HashMap<>(),
+                "anonymousUser");
         assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
     }
 
