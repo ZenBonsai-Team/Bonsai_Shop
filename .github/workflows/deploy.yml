@@ -1,13 +1,16 @@
-name: CI/CD Deploy to Raspberry Pi 5
+name: CI/CD Deploy to Multi-Server (Pi 5 + GCP VM)
 
 on:
   push:
     branches:
-      - AnhPQ # Tự động deploy khi push lên nhánh AnhPQ (hoặc đổi thành master nếu muốn)
+      - AnhPQ # Tự động deploy khi push lên nhánh AnhPQ
 
 jobs:
-  deploy:
-    runs-on: self-hosted # Chạy trên self-hosted runner đã đăng ký trên Pi 5
+  # ------------------------------------------------------------
+  # JOB 1: DEPLOY LÊN RASPBERRY PI 5 (GIỮ NGUYÊN TOÀN BỘ CỦA BẠN)
+  # ------------------------------------------------------------
+  deploy-pi5:
+    runs-on: self-hosted # Chạy trên self-hosted runner của Pi 5
 
     steps:
       - name: Checkout Code
@@ -27,3 +30,45 @@ jobs:
 
       - name: Restart Web Service
         run: sudo systemctl restart bonsai-shop.service
+
+      # Lưu lại file JAR đã build trên Pi 5 để chuyển tiếp sang Job GCP (tiết kiệm thời gian build lại)
+      - name: Upload Artifact for GCP
+        uses: actions/upload-artifact@v4
+        with:
+          name: bonsai-jar
+          path: target/Bonsai_Shop-0.0.1-SNAPSHOT.jar
+          retention-days: 1
+
+  # ------------------------------------------------------------
+  # JOB 2: DEPLOY LÊN GOOGLE CLOUD VM (SSH DEPLOY)
+  # ------------------------------------------------------------
+  deploy-gcp:
+    needs: deploy-pi5 # Chờ Pi 5 build xong file JAR
+    runs-on: ubuntu-latest # Chạy trên Cloud Runner của GitHub
+
+    steps:
+      - name: Download Build Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: bonsai-jar
+          path: ./dist
+
+      - name: Copy JAR to GCP VM
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.GCP_HOST }}
+          username: ${{ secrets.GCP_USERNAME }}
+          key: ${{ secrets.GCP_SSH_KEY }}
+          source: "dist/Bonsai_Shop-0.0.1-SNAPSHOT.jar"
+          target: "/home/vualen121324/app/"
+          strip_components: 1
+
+      - name: Restart Service on GCP VM
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.GCP_HOST }}
+          username: ${{ secrets.GCP_USERNAME }}
+          key: ${{ secrets.GCP_SSH_KEY }}
+          script: |
+            mv /home/vualen121324/app/Bonsai_Shop-0.0.1-SNAPSHOT.jar /home/vualen121324/app/app.jar
+            sudo systemctl restart bonsai-backend.service
