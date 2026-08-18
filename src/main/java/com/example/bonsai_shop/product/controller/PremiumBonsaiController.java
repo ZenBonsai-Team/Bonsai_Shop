@@ -62,12 +62,17 @@ public class PremiumBonsaiController {
             return "redirect:/bonsai-luxury";
         }
         Product productEntity = productService.getProductById(productId);
+
         productService.incrementViewCountForCustomer(productId, authentication);
+
         List<ProductMediaDTO> mediaList = productService.getPremiumProductMedia(productId);
         List<ProductJournalEvent> journalEvents = productJournalService.getPublicEvents(productEntity);
         List<ProductJournalEvent> journalEventsAscending = new ArrayList<>(journalEvents);
         Collections.reverse(journalEventsAscending);
+
         model.addAttribute("product", product);
+        model.addAttribute("treeStory", productEntity.getTreeStory());
+        model.addAttribute("productDescription", productEntity.getDescription());
         model.addAttribute("slotTypeLabels", SLOT_TYPE_LABELS);
         model.addAttribute("imageMediaList", mediaList.stream()
                 .filter(media -> !"VIDEO".equalsIgnoreCase(media.getMediaType()))
@@ -77,6 +82,7 @@ public class PremiumBonsaiController {
                 .toList());
         model.addAttribute("journalEvents", journalEvents);
         model.addAttribute("journalEventsAscending", journalEventsAscending);
+
         return "product/bonsai-luxury-detail";
     }
 }

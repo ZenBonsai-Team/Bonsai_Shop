@@ -200,10 +200,12 @@
                     </div>
                 </dl>
 
-                <div class="service-strip">
-                    <span><i class="fa-solid fa-certificate" aria-hidden="true"></i> Hồ sơ thẩm định</span>
-                    <span><i class="fa-solid fa-truck-fast" aria-hidden="true"></i> Bàn giao cao cấp</span>
-                    <span><i class="fa-solid fa-user-tie" aria-hidden="true"></i> Tư vấn nghệ nhân</span>
+                <div class="summary-description-box">
+                    <span class="summary-description-label">
+                        <i class="fa-solid fa-align-left" aria-hidden="true"></i>
+                        Mô tả sản phẩm
+                    </span>
+                    <p th:text="${productDescription != null && !productDescription.isBlank() ? productDescription : 'Đang cập nhật mô tả chi tiết cho tác phẩm.'}"></p>
                 </div>
 
                 <div class="action-row">
@@ -276,9 +278,9 @@
                     <div class="journal-story-panel">
                         <div class="journal-kicker">
                             <span class="journal-kicker-left">
-                                <span th:text="${'Kỳ ' + episodeNumber}">Kỳ 01</span>
+                                <span th:text="${'Kỳ ' + episodeNumber}"></span>
                                 <span>·</span>
-                                <span th:text="${#temporals.format(event.eventDate, 'dd.MM.yyyy')}">06.08.2026</span>
+                                <span th:text="${#temporals.format(event.eventDate, 'dd.MM.yyyy')}"></span>
                             </span>
                             <span class="journal-status-pill">
                                 <span th:if="${#strings.toString(event.eventType) == 'PHOTO_UPDATE'}">Cập nhật ảnh</span>
@@ -293,9 +295,16 @@
                                 <span th:if="${#strings.toString(event.eventType) == 'ACQUISITION'}">Nhập cây</span>
                             </span>
                         </div>
-                        <h3 class="journal-feature-title" th:text="${event.title}">Hoàn thiện dáng cây</h3>
-                        <p class="journal-author" th:text="${event.createdBy != null ? 'Nghệ nhân ' + event.createdBy.fullName : 'Nghệ nhân BSMS'}">Nghệ nhân BSMS</p>
-                        <p class="journal-description" th:text="${event.description != null && !event.description.isBlank() ? event.description : 'Nghệ nhân chưa bổ sung câu chuyện cho kỳ này.'}">Câu chuyện chăm sóc cây.</p>
+                        <h3 class="journal-feature-title"
+                            th:text="${event.title != null && !event.title.isBlank() ? event.title : 'Cập nhật chăm sóc cây'}">
+                        </h3>
+                        <p class="journal-author">
+                            <i class="fa-solid fa-user-pen" aria-hidden="true"></i>
+                            <span th:text="${event.createdBy != null ? 'Nghệ nhân ' + event.createdBy.fullName : 'Nghệ nhân BSMS'}"></span>
+                        </p>
+                        <p class="journal-description"
+                           th:text="${event.description != null && !event.description.isBlank() ? event.description : 'Nghệ nhân chưa bổ sung câu chuyện cho kỳ này.'}">
+                        </p>
                         <div class="journal-work-block">
                             <p class="journal-work-title">Công việc trong giai đoạn này</p>
                             <div class="journal-work-list">
@@ -344,9 +353,12 @@
                 <p class="section-kicker">Provenance</p>
                 <h2>Câu chuyện tác phẩm</h2>
             </div>
-            <div class="section-copy">
-                <p>Mỗi tác phẩm Bonsai Luxury được chọn lọc theo tuổi cây, chất thân, độ ổn định của bộ rễ và bố cục tán. Hồ sơ bàn giao tập trung vào giá trị trưng bày, phương án chăm sóc và điều kiện ánh sáng của không gian sở hữu.</p>
-                <blockquote>Được thẩm định theo dáng, chất thân, sức khỏe rễ và khả năng xuất hiện trong không gian cao cấp.</blockquote>
+            <div class="section-copy story-copy-card">
+                <span class="story-copy-label">Tree Story</span>
+                <p class="story-copy-text"
+                   th:text="${treeStory != null && !treeStory.isBlank() ? treeStory : 'Tác phẩm hiện chưa có câu chuyện cây.'}">
+                    Tác phẩm hiện chưa có câu chuyện cây.
+                </p>
             </div>
         </div>
     </section>
