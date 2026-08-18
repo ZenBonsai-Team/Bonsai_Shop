@@ -1120,7 +1120,17 @@ section {
 }
 
 .collection .section-title {
-    font-size: clamp(2.35rem, 4vw, 3.5rem);
+    max-width: 760px;
+    margin: 0 auto;
+    background: linear-gradient(135deg, var(--lux-ink), #173f2b 58%, var(--lux-gold));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    font-size: clamp(2.6rem, 5vw, 4.35rem);
+    font-weight: 600;
+    line-height: 1.04;
+    letter-spacing: -0.045em;
+    text-wrap: balance;
 }
 
 .marketplace-luxury-layout {

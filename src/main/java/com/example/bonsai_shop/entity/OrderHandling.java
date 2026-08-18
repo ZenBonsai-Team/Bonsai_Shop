@@ -5,13 +5,16 @@ import lombok.*;
 import java.time.LocalDateTime;
 
 /**
- * [ENTITY ĐẠI DIỆN BẢNG ORDER_HANDLING TRONG CSDL - PHIÊN XỬ LÝ ĐƠN CỦA MODERATOR]
+ * [ENTITY ĐẠI DIỆN BẢNG ORDER_HANDLING TRONG CSDL - PHIÊN XỬ LÝ ĐƠN CỦA
+ * MODERATOR]
  *
  * Bảng CSDL tương ứng: `ORDER_HANDLING`
  *
  * Mô tả:
- * - Lưu vết các phiên làm việc của từng Order Moderator khi claim đơn từ Orders Pool.
- * - Quản lý trạng thái đang giữ đơn (isActive = true), thời gian bắt đầu nhận (handledAt) và thời gian giải phóng/bàn giao (releasedAt).
+ * - Lưu vết các phiên làm việc của từng Order Moderator khi claim đơn từ Orders
+ * Pool.
+ * - Quản lý trạng thái đang giữ đơn (isActive = true), thời gian bắt đầu nhận
+ * (handledAt) và thời gian giải phóng/bàn giao (releasedAt).
  */
 @Entity
 @Table(name = "ORDER_HANDLING")
@@ -39,6 +42,7 @@ public class OrderHandling {
     private User moderator;
 
     /** Thời điểm bắt đầu nhận đơn (Claim). */
+    @Builder.Default
     @Column(name = "HandledAt")
     private LocalDateTime handledAt = LocalDateTime.now();
 
@@ -47,6 +51,7 @@ public class OrderHandling {
     private LocalDateTime releasedAt;
 
     /** Đánh dấu phiên xử lý có đang hoạt động hay không. */
+    @Builder.Default
     @Column(name = "IsActive")
     private Boolean isActive = true;
 }

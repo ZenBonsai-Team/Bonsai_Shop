@@ -9,7 +9,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -31,7 +30,8 @@ class ModeratorDisplayLabelMapperTest {
         assertEquals("Đã thanh toán toàn bộ", ModeratorDisplayLabelMapper.orderStatusLabel("PAID"));
         assertEquals("Đã hoàn thành", ModeratorDisplayLabelMapper.orderStatusLabel("COMPLETED"));
         assertEquals("Đã chấm dứt đơn hàng", ModeratorDisplayLabelMapper.orderStatusLabel("CANCELLED"));
-        assertEquals("Chờ thanh toán số tiền còn lại", ModeratorDisplayLabelMapper.orderStatusLabel("WAITING_DELIVERY_PAYMENT"));
+        assertEquals("Chờ thanh toán số tiền còn lại",
+                ModeratorDisplayLabelMapper.orderStatusLabel("WAITING_DELIVERY_PAYMENT"));
     }
 
     @Test
@@ -79,8 +79,10 @@ class ModeratorDisplayLabelMapperTest {
     void paymentMethodLabel_validValues_returnsCorrectLabels() {
         assertEquals("Thanh toán trực tuyến qua VNPay", ModeratorDisplayLabelMapper.paymentMethodLabel("VNPAY"));
         assertEquals("Thanh toán tiền mặt", ModeratorDisplayLabelMapper.paymentMethodLabel("CASH"));
-        assertEquals("Đặt cọc trước, thanh toán phần còn lại khi nhận cây", ModeratorDisplayLabelMapper.paymentMethodLabel("DEPOSIT"));
-        assertEquals("Đặt cọc trước, thanh toán phần còn lại khi nhận cây", ModeratorDisplayLabelMapper.paymentMethodLabel("COD"));
+        assertEquals("Đặt cọc trước, thanh toán phần còn lại khi nhận cây",
+                ModeratorDisplayLabelMapper.paymentMethodLabel("DEPOSIT"));
+        assertEquals("Đặt cọc trước, thanh toán phần còn lại khi nhận cây",
+                ModeratorDisplayLabelMapper.paymentMethodLabel("COD"));
         assertEquals("Chuyển khoản ngân hàng", ModeratorDisplayLabelMapper.paymentMethodLabel("BANK_TRANSFER"));
     }
 
@@ -123,9 +125,12 @@ class ModeratorDisplayLabelMapperTest {
     @Test
     @DisplayName("UT-UUT13-010: financialLedgerTypeLabel - Map đúng tất cả Enum values của FinancialLedgerType")
     void financialLedgerTypeLabel_validEnums_returnsCorrectLabels() {
-        assertEquals("Doanh thu từ đơn hàng đã hoàn thành", ModeratorDisplayLabelMapper.financialLedgerTypeLabel(FinancialLedgerType.COMPLETED_ORDER_REVENUE));
-        assertEquals("Thu nhập từ tiền đặt cọc do khách bỏ đơn", ModeratorDisplayLabelMapper.financialLedgerTypeLabel(FinancialLedgerType.FORFEITED_DEPOSIT_INCOME));
-        assertEquals("Hoàn lại toàn bộ tiền cho khách", ModeratorDisplayLabelMapper.financialLedgerTypeLabel(FinancialLedgerType.FULL_REFUND));
+        assertEquals("Doanh thu từ đơn hàng đã hoàn thành",
+                ModeratorDisplayLabelMapper.financialLedgerTypeLabel(FinancialLedgerType.COMPLETED_ORDER_REVENUE));
+        assertEquals("Thu nhập từ tiền đặt cọc do khách bỏ đơn",
+                ModeratorDisplayLabelMapper.financialLedgerTypeLabel(FinancialLedgerType.FORFEITED_DEPOSIT_INCOME));
+        assertEquals("Hoàn lại toàn bộ tiền cho khách",
+                ModeratorDisplayLabelMapper.financialLedgerTypeLabel(FinancialLedgerType.FULL_REFUND));
     }
 
     @Test
@@ -141,8 +146,10 @@ class ModeratorDisplayLabelMapperTest {
     @Test
     @DisplayName("UT-UUT13-012: financialLedgerDirectionLabel - Map đúng tất cả Enum values của FinancialLedgerDirection")
     void financialLedgerDirectionLabel_validEnums_returnsCorrectLabels() {
-        assertEquals("Khoản thu", ModeratorDisplayLabelMapper.financialLedgerDirectionLabel(FinancialLedgerDirection.INCOME));
-        assertEquals("Khoản hoàn/chi ra", ModeratorDisplayLabelMapper.financialLedgerDirectionLabel(FinancialLedgerDirection.OUTFLOW));
+        assertEquals("Khoản thu",
+                ModeratorDisplayLabelMapper.financialLedgerDirectionLabel(FinancialLedgerDirection.INCOME));
+        assertEquals("Khoản hoàn/chi ra",
+                ModeratorDisplayLabelMapper.financialLedgerDirectionLabel(FinancialLedgerDirection.OUTFLOW));
     }
 
     @Test
@@ -158,8 +165,10 @@ class ModeratorDisplayLabelMapperTest {
     @Test
     @DisplayName("UT-UUT13-014: financialLedgerStatusLabel - Map đúng tất cả Enum values của FinancialLedgerStatus")
     void financialLedgerStatusLabel_validEnums_returnsCorrectLabels() {
-        assertEquals("Đã ghi nhận", ModeratorDisplayLabelMapper.financialLedgerStatusLabel(FinancialLedgerStatus.RECORDED));
-        assertEquals("Đã hủy bản ghi", ModeratorDisplayLabelMapper.financialLedgerStatusLabel(FinancialLedgerStatus.VOIDED));
+        assertEquals("Đã ghi nhận",
+                ModeratorDisplayLabelMapper.financialLedgerStatusLabel(FinancialLedgerStatus.RECORDED));
+        assertEquals("Đã hủy bản ghi",
+                ModeratorDisplayLabelMapper.financialLedgerStatusLabel(FinancialLedgerStatus.VOIDED));
     }
 
     @Test
@@ -177,7 +186,8 @@ class ModeratorDisplayLabelMapperTest {
     void faultPartyLabel_validEnums_returnsCorrectLabels() {
         assertEquals("Lỗi từ phía khách hàng", ModeratorDisplayLabelMapper.faultPartyLabel(FaultParty.CUSTOMER));
         assertEquals("Lỗi từ phía nhà vườn", ModeratorDisplayLabelMapper.faultPartyLabel(FaultParty.NURSERY));
-        assertEquals("Lỗi trong quá trình vận chuyển", ModeratorDisplayLabelMapper.faultPartyLabel(FaultParty.DELIVERY));
+        assertEquals("Lỗi trong quá trình vận chuyển",
+                ModeratorDisplayLabelMapper.faultPartyLabel(FaultParty.DELIVERY));
         assertEquals("Nguyên nhân khác", ModeratorDisplayLabelMapper.faultPartyLabel(FaultParty.OTHER));
     }
 
@@ -216,7 +226,8 @@ class ModeratorDisplayLabelMapperTest {
     @Test
     @DisplayName("UT-UUT13-020: Private Constructor Coverage - Gọi constructor ẩn bằng Reflection")
     void privateConstructor_invokedViaReflection_createsInstance() throws Exception {
-        Constructor<ModeratorDisplayLabelMapper> constructor = ModeratorDisplayLabelMapper.class.getDeclaredConstructor();
+        Constructor<ModeratorDisplayLabelMapper> constructor = ModeratorDisplayLabelMapper.class
+                .getDeclaredConstructor();
         assertTrue(java.lang.reflect.Modifier.isPrivate(constructor.getModifiers()));
         constructor.setAccessible(true);
         ModeratorDisplayLabelMapper instance = constructor.newInstance();

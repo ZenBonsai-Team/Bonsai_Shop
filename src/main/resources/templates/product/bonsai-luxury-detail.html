@@ -200,10 +200,12 @@
                     </div>
                 </dl>
 
-                <div class="service-strip">
-                    <span><i class="fa-solid fa-certificate" aria-hidden="true"></i> Hồ sơ thẩm định</span>
-                    <span><i class="fa-solid fa-truck-fast" aria-hidden="true"></i> Bàn giao cao cấp</span>
-                    <span><i class="fa-solid fa-user-tie" aria-hidden="true"></i> Tư vấn nghệ nhân</span>
+                <div class="summary-description-box">
+                    <span class="summary-description-label">
+                        <i class="fa-solid fa-align-left" aria-hidden="true"></i>
+                        Mô tả sản phẩm
+                    </span>
+                    <p th:text="${productDescription != null && !productDescription.isBlank() ? productDescription : 'Đang cập nhật mô tả chi tiết cho tác phẩm.'}"></p>
                 </div>
 
                 <div class="action-row">
@@ -233,15 +235,130 @@
         </div>
     </section>
 
+    <section class="lux-section luxury-journey-section" th:if="${journalEvents != null and !#lists.isEmpty(journalEvents)}">
+        <div class="lux-container">
+            <div class="luxury-journey-heading">
+                <p class="section-kicker">Bonsai Journal</p>
+                <h2>Hành trình của cây</h2>
+                <p>Những dấu mốc công khai trong quá trình chăm sóc, tạo tác và theo dõi sức cây.</p>
+            </div>
+
+            <div class="journey-chapters-shell">
+                <div class="journey-chapters-head">
+                    <h3>Các kỳ chăm sóc</h3>
+                    <div class="journey-carousel-actions" th:if="${#lists.size(journalEvents) > 1}">
+                        <button type="button" data-journey-scroll="prev" aria-label="Kỳ trước">
+                            <i class="fa-solid fa-chevron-left"></i>
+                        </button>
+                        <button type="button" data-journey-scroll="next" aria-label="Kỳ tiếp theo">
+                            <i class="fa-solid fa-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="journey-chapter-strip" id="journeyCarousel" aria-label="Các kỳ trong hành trình của cây">
+                    <button type="button"
+                            class="journey-chapter"
+                            th:each="event, eventStat : ${journalEventsAscending}"
+                            th:with="episodeNumber=${eventStat.index + 1}"
+                            th:classappend="${eventStat.last} ? ' active' : ''"
+                            th:attr="data-event-id=${event.eventId}">
+                        <span class="journey-chapter-episode" th:text="${'Kỳ ' + episodeNumber}">Kỳ 01</span>
+                        <span class="journey-chapter-marker"></span>
+                        <span class="journey-chapter-title" th:text="${event.title}" th:title="${event.title}">Một mùa mới</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="journal-spreads">
+                <article class="journal-spread"
+                         th:classappend="${eventStat.last} ? ' active' : ''"
+                         th:each="event, eventStat : ${journalEventsAscending}"
+                         th:with="episodeNumber=${eventStat.index + 1}"
+                         th:attr="data-journal-event=${event.eventId}">
+                    <div class="journal-story-panel">
+                        <div class="journal-kicker">
+                            <span class="journal-kicker-left">
+                                <span th:text="${'Kỳ ' + episodeNumber}"></span>
+                                <span>·</span>
+                                <span th:text="${#temporals.format(event.eventDate, 'dd.MM.yyyy')}"></span>
+                            </span>
+                            <span class="journal-status-pill">
+                                <span th:if="${#strings.toString(event.eventType) == 'PHOTO_UPDATE'}">Cập nhật ảnh</span>
+                                <span th:if="${#strings.toString(event.eventType) == 'GROWTH'}">Phát triển tốt</span>
+                                <span th:if="${#strings.toString(event.eventType) == 'PRUNING'}">Cắt tỉa</span>
+                                <span th:if="${#strings.toString(event.eventType) == 'WIRING'}">Uốn/kẽm</span>
+                                <span th:if="${#strings.toString(event.eventType) == 'REPOTTING'}">Thay chậu</span>
+                                <span th:if="${#strings.toString(event.eventType) == 'FERTILIZING'}">Bón phân</span>
+                                <span th:if="${#strings.toString(event.eventType) == 'WATERING'}">Tưới nước</span>
+                                <span th:if="${#strings.toString(event.eventType) == 'PEST_TREATMENT'}">Xử lý sâu bệnh</span>
+                                <span th:if="${#strings.toString(event.eventType) == 'HEALTH_CHECK'}">Kiểm tra sức khỏe</span>
+                                <span th:if="${#strings.toString(event.eventType) == 'ACQUISITION'}">Nhập cây</span>
+                            </span>
+                        </div>
+                        <h3 class="journal-feature-title"
+                            th:text="${event.title != null && !event.title.isBlank() ? event.title : 'Cập nhật chăm sóc cây'}">
+                        </h3>
+                        <p class="journal-author">
+                            <i class="fa-solid fa-user-pen" aria-hidden="true"></i>
+                            <span th:text="${event.createdBy != null ? 'Nghệ nhân ' + event.createdBy.fullName : 'Nghệ nhân BSMS'}"></span>
+                        </p>
+                        <p class="journal-description"
+                           th:text="${event.description != null && !event.description.isBlank() ? event.description : 'Nghệ nhân chưa bổ sung câu chuyện cho kỳ này.'}">
+                        </p>
+                        <div class="journal-work-block">
+                            <p class="journal-work-title">Công việc trong giai đoạn này</p>
+                            <div class="journal-work-list">
+                                <span th:if="${#strings.toString(event.eventType) == 'PHOTO_UPDATE'}">Ghi nhận hình ảnh</span>
+                                <span th:if="${#strings.toString(event.eventType) == 'GROWTH'}">Theo dõi sinh trưởng · Chăm tán · Ghi nhận lộc mới</span>
+                                <span th:if="${#strings.toString(event.eventType) == 'PRUNING'}">Cắt tỉa · Định hình tán · Kiểm tra nhánh</span>
+                                <span th:if="${#strings.toString(event.eventType) == 'WIRING'}">Uốn cành · Cố định dáng · Theo dõi lực kéo</span>
+                                <span th:if="${#strings.toString(event.eventType) == 'REPOTTING'}">Thay chậu · Kiểm tra rễ · Bổ sung giá thể</span>
+                                <span th:if="${#strings.toString(event.eventType) == 'FERTILIZING'}">Bón phân · Cân bằng dinh dưỡng · Theo dõi cây</span>
+                                <span th:if="${#strings.toString(event.eventType) == 'WATERING'}">Tưới nước · Kiểm tra độ ẩm · Theo dõi lá</span>
+                                <span th:if="${#strings.toString(event.eventType) == 'PEST_TREATMENT'}">Xử lý sâu bệnh · Vệ sinh cây · Theo dõi phục hồi</span>
+                                <span th:if="${#strings.toString(event.eventType) == 'HEALTH_CHECK'}">Kiểm tra sức khỏe · Đánh giá rễ, thân, tán</span>
+                                <span th:if="${#strings.toString(event.eventType) == 'ACQUISITION'}">Ghi nhận nguồn gốc · Đưa cây về vườn · Đánh giá ban đầu</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="journal-gallery-panel" th:attr="data-journal-gallery=${event.eventId}">
+                        <div class="journal-gallery-stage">
+                            <button type="button" class="journal-gallery-arrow prev" th:if="${event.mediaList != null && #lists.size(event.mediaList) > 1}" th:attr="data-journal-media-prev=${event.eventId}" aria-label="Ảnh trước">‹</button>
+                            <button type="button" class="journal-gallery-arrow next" th:if="${event.mediaList != null && #lists.size(event.mediaList) > 1}" th:attr="data-journal-media-next=${event.eventId}" aria-label="Ảnh tiếp theo">›</button>
+                            <th:block th:if="${event.mediaList != null && !#lists.isEmpty(event.mediaList)}" th:each="media, mediaStat : ${event.mediaList}">
+                                <div class="journal-slide" th:classappend="${mediaStat.index == 0 ? ' active' : (mediaStat.index == 1 ? ' is-next' : '')}" th:attr="data-journal-slide=${event.eventId},data-journal-slide-index=${mediaStat.index}">
+                                    <img th:if="${media.mediaType == 'IMAGE'}" th:src="${media.mediaUrl}" th:alt="${event.title}">
+                                    <video th:if="${media.mediaType == 'VIDEO'}" th:src="${media.mediaUrl}" controls></video>
+                                </div>
+                            </th:block>
+                            <div class="journal-gallery-empty" th:if="${event.mediaList == null || #lists.isEmpty(event.mediaList)}">
+                                <i class="fa-solid fa-leaf"></i>
+                            </div>
+                        </div>
+                        <div class="journal-gallery-meta" th:if="${event.mediaList != null && !#lists.isEmpty(event.mediaList)}">
+                            <div class="journal-gallery-dots">
+                                <span class="journal-gallery-dot" th:each="media, mediaStat : ${event.mediaList}" th:classappend="${mediaStat.index == 0} ? ' active' : ''" th:attr="data-journal-dot=${event.eventId},data-journal-dot-index=${mediaStat.index}"></span>
+                            </div>
+                            <span><span th:attr="data-journal-media-current=${event.eventId}">1</span> / <span th:text="${#lists.size(event.mediaList)}">4</span></span>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        </div>
+    </section>
+
     <section class="lux-section">
         <div class="lux-container section-grid">
             <div>
                 <p class="section-kicker">Provenance</p>
                 <h2>Câu chuyện tác phẩm</h2>
             </div>
-            <div class="section-copy">
-                <p>Mỗi tác phẩm Bonsai Luxury được chọn lọc theo tuổi cây, chất thân, độ ổn định của bộ rễ và bố cục tán. Hồ sơ bàn giao tập trung vào giá trị trưng bày, phương án chăm sóc và điều kiện ánh sáng của không gian sở hữu.</p>
-                <blockquote>Được thẩm định theo dáng, chất thân, sức khỏe rễ và khả năng xuất hiện trong không gian cao cấp.</blockquote>
+            <div class="section-copy story-copy-card">
+                <span class="story-copy-label">Tree Story</span>
+                <p class="story-copy-text"
+                   th:text="${treeStory != null && !treeStory.isBlank() ? treeStory : 'Tác phẩm hiện chưa có câu chuyện cây.'}">
+                    Tác phẩm hiện chưa có câu chuyện cây.
+                </p>
             </div>
         </div>
     </section>

@@ -37,7 +37,7 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     const initReveal = () => {
-        const items = $$(".summary-card, .main-image-wrap, .detail-trust-strip, .lux-section, .specs-table-card, .profile-grid article, .artisan-profile-banner, .ownership-panel, .ownership-step");
+        const items = $$(".summary-card, .main-image-wrap, .detail-trust-strip, .lux-section, .specs-table-card, .profile-grid article, .artisan-profile-banner, .ownership-panel, .ownership-step, .luxury-journey-section");
         if (!items.length || prefersReducedMotion) {
             items.forEach((item) => item.classList.add("visible"));
             return;
@@ -257,6 +257,130 @@ document.addEventListener("DOMContentLoaded", () => {
         return { close };
     };
 
+    const getJourneyCards = () => $$(".journey-chapter");
+
+    const updateJourneyArrowState = () => {
+        const cards = getJourneyCards();
+        const activeIndex = cards.findIndex((card) => card.classList.contains("active"));
+        const previousButton = $('[data-journey-scroll="prev"]');
+        const nextButton = $('[data-journey-scroll="next"]');
+
+        if (previousButton) {
+            previousButton.disabled = activeIndex <= 0;
+        }
+        if (nextButton) {
+            nextButton.disabled = activeIndex < 0 || activeIndex >= cards.length - 1;
+        }
+    };
+
+    const setJournalMedia = (eventId, nextIndex) => {
+        const slides = $$('[data-journal-slide="' + eventId + '"]');
+        if (!slides.length) return;
+
+        const normalizedIndex = (nextIndex + slides.length) % slides.length;
+        slides.forEach((slide, index) => {
+            slide.classList.toggle("active", index === normalizedIndex);
+            slide.classList.toggle("is-prev", slides.length > 1 && index === (normalizedIndex - 1 + slides.length) % slides.length);
+            slide.classList.toggle("is-next", slides.length > 1 && index === (normalizedIndex + 1) % slides.length);
+            if (index !== normalizedIndex) {
+                $$("video", slide).forEach((video) => video.pause());
+            }
+        });
+
+        $$('[data-journal-dot="' + eventId + '"]').forEach((dot, index) => {
+            dot.classList.toggle("active", index === normalizedIndex);
+        });
+
+        const counter = $('[data-journal-media-current="' + eventId + '"]');
+        if (counter) {
+            counter.textContent = String(normalizedIndex + 1);
+        }
+    };
+
+    const showJourneySpread = (cardButton) => {
+        if (!cardButton) return;
+
+        const eventId = cardButton.dataset.eventId;
+        const targetSpread = $('[data-journal-event="' + eventId + '"]');
+        if (!targetSpread) return;
+
+        $$(".journal-spread").forEach((spread) => {
+            const isActive = spread === targetSpread;
+            spread.classList.toggle("active", isActive);
+            if (!isActive) {
+                $$("video", spread).forEach((video) => video.pause());
+            }
+        });
+
+        getJourneyCards().forEach((item) => {
+            item.classList.toggle("active", item === cardButton);
+        });
+
+        setJournalMedia(eventId, 0);
+        cardButton.scrollIntoView({
+            behavior: prefersReducedMotion ? "auto" : "smooth",
+            block: "nearest",
+            inline: "center"
+        });
+        updateJourneyArrowState();
+    };
+
+    const selectJourneySibling = (direction) => {
+        const cards = getJourneyCards();
+        if (!cards.length) return;
+
+        const activeIndex = Math.max(0, cards.findIndex((card) => card.classList.contains("active")));
+        const targetIndex = direction === "prev"
+                ? Math.max(0, activeIndex - 1)
+                : Math.min(cards.length - 1, activeIndex + 1);
+
+        if (targetIndex === activeIndex) {
+            cards[targetIndex].scrollIntoView({
+                behavior: prefersReducedMotion ? "auto" : "smooth",
+                block: "nearest",
+                inline: "center"
+            });
+            return;
+        }
+
+        showJourneySpread(cards[targetIndex]);
+    };
+
+    const initJournalJourney = () => {
+        if (!getJourneyCards().length) return;
+
+        document.addEventListener("click", (event) => {
+            const journeyCard = event.target.closest(".journey-chapter");
+            const scrollButton = event.target.closest("[data-journey-scroll]");
+            const mediaPreviousButton = event.target.closest("[data-journal-media-prev]");
+            const mediaNextButton = event.target.closest("[data-journal-media-next]");
+
+            if (journeyCard) {
+                showJourneySpread(journeyCard);
+                return;
+            }
+
+            if (scrollButton) {
+                selectJourneySibling(scrollButton.dataset.journeyScroll);
+                return;
+            }
+
+            if (!mediaPreviousButton && !mediaNextButton) return;
+
+            const eventId = mediaPreviousButton ? mediaPreviousButton.dataset.journalMediaPrev : mediaNextButton.dataset.journalMediaNext;
+            const slides = $$('[data-journal-slide="' + eventId + '"]');
+            if (slides.length <= 1) return;
+
+            const currentIndex = Math.max(0, slides.findIndex((slide) => slide.classList.contains("active")));
+            setJournalMedia(eventId, mediaPreviousButton ? currentIndex - 1 : currentIndex + 1);
+        });
+
+        const cards = getJourneyCards();
+        const activeCard = $(".journey-chapter.active") || cards[cards.length - 1];
+        showJourneySpread(activeCard);
+        updateJourneyArrowState();
+    };
+
     const updateYear = () => {
         const year = $("#year");
         if (year) year.textContent = String(new Date().getFullYear());
@@ -271,5 +395,6 @@ document.addEventListener("DOMContentLoaded", () => {
     initReveal();
     initPointerGlow();
     initGallery();
+    initJournalJourney();
     updateYear();
 });

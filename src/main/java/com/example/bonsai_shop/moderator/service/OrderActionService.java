@@ -77,6 +77,7 @@ public class OrderActionService {
             case "complete" -> handleComplete(order, status, moderator, isAssignedToMe, request.getReason());
             case "customer_no_show" -> handleCustomerNoShow(order, status, moderator, isAssignedToMe, request.getReason());
             case "record_fault_refund", "fault_refund" -> handleFaultRefund(order, status, moderator, isAssignedToMe, request);
+            case "product_refund_only", "product_refund" -> handleProductRefundOnly(order, status, moderator, isAssignedToMe, request.getReason());
             case "cancel" -> throw new IllegalStateException("Hành động huỷ không còn hợp lệ trên trang chi tiết đơn hàng.");
             default -> throw new IllegalArgumentException("Hành động không hợp lệ: " + request.getAction());
         };
@@ -226,6 +227,28 @@ public class OrderActionService {
         closeHandling(order);
         log.info("[ACTION] record_fault_refund - order={}", order.getOrderCode());
         return success(order.getOrderCode(), "record_fault_refund", "CANCELLED");
+    }
+
+    private Map<String, Object> handleProductRefundOnly(Order order, String status, User moderator,
+                                                        boolean isAssignedToMe, String reason) {
+        if (!isAssignedToMe) {
+            throw new IllegalStateException("Bạn không phụ trách đơn này.");
+        }
+        if (!"PAID".equals(status)) {
+            throw new IllegalStateException("Chỉ áp dụng hoàn tiền giá cây cho đơn đã thanh toán toàn bộ.");
+        }
+        if (reason == null || reason.isBlank()) {
+            throw new IllegalArgumentException("Lý do trả cây và hoàn tiền là bắt buộc.");
+        }
+
+        orderService.recordProductRefundOnlyAndCancel(
+                order.getOrderCode(),
+                normalizeReason(reason),
+                moderator
+        );
+        closeHandling(order);
+        log.info("[ACTION] product_refund_only - order={}", order.getOrderCode());
+        return success(order.getOrderCode(), "product_refund_only", "CANCELLED");
     }
 
     private Map<String, Object> success(String orderCode, String action, String newStatus) {

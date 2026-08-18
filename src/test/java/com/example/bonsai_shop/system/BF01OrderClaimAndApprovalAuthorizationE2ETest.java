@@ -2,22 +2,30 @@ package com.example.bonsai_shop.system;
 
 import com.example.bonsai_shop.customer.repository.RoleRepository;
 import com.example.bonsai_shop.customer.repository.UserRepository;
+import com.example.bonsai_shop.customer.service.EmailService;
 import com.example.bonsai_shop.entity.Category;
 import com.example.bonsai_shop.entity.Order;
 import com.example.bonsai_shop.entity.OrderDetail;
+import com.example.bonsai_shop.entity.OrderHandling;
+import com.example.bonsai_shop.entity.OrderLog;
+import com.example.bonsai_shop.entity.Payment;
 import com.example.bonsai_shop.entity.Product;
 import com.example.bonsai_shop.entity.ProductSegment;
 import com.example.bonsai_shop.entity.Role;
 import com.example.bonsai_shop.entity.User;
 import com.example.bonsai_shop.entity.Variety;
+import com.example.bonsai_shop.finance.repository.FinancialLedgerRepository;
+import com.example.bonsai_shop.integration.support.TestDatabaseSafetyInitializer;
 import com.example.bonsai_shop.product.repository.CategoryRepository;
 import com.example.bonsai_shop.product.repository.OrderDetailRepository;
 import com.example.bonsai_shop.product.repository.OrderHandlingRepository;
 import com.example.bonsai_shop.product.repository.OrderLogRepository;
 import com.example.bonsai_shop.product.repository.OrderRepository;
+import com.example.bonsai_shop.product.repository.PaymentRepository;
 import com.example.bonsai_shop.product.repository.ProductRepository;
 import com.example.bonsai_shop.product.repository.ProductSegmentRepository;
 import com.example.bonsai_shop.product.repository.VarietyRepository;
+import com.example.bonsai_shop.product.service.MailService;
 import com.example.bonsai_shop.product.service.OrderService;
 
 import com.microsoft.playwright.Browser;
@@ -36,11 +44,11 @@ import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
-import com.example.bonsai_shop.integration.support.TestDatabaseSafetyInitializer;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -51,6 +59,7 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -59,8 +68,15 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * L3 SYSTEM TEST (E2E Automated Browser Test - TC-L3-BF01-002)
  * Business Flow: BF-01 Order Claim and Approval Authorization
- * Actor: Order Moderator A
- * Target: Open Orders Pool and claim an unassigned PENDING order.
+ * Actors: Order Moderator A, Order Moderator B
+ *
+ * <p><strong>Test Coverage:</strong>
+ * <ol>
+ *   <li>Moderator A claims an unassigned PENDING order from Orders Pool.</li>
+ *   <li>Verify exclusivity: Order disappears from Orders Pool, appears in Moderator A's My Orders, and Moderator B cannot claim or process it.</li>
+ *   <li>Moderator A opens Order Detail, enters custom fees (Deposit, Shipping Fee, Crane Fee), and approves via UI.</li>
+ *   <li>Assert fees are stored accurately (no automatic 30% deposit applied), order transitions to PENDING_PAYMENT, pending Payment record is created, and OrderLog/OrderHandling history is recorded.</li>
+ * </ol>
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
@@ -71,6 +87,12 @@ public class BF01OrderClaimAndApprovalAuthorizationE2ETest {
 
     @LocalServerPort
     private int port;
+
+    @MockitoBean
+    private EmailService emailService;
+
+    @MockitoBean
+    private MailService mailService;
 
     @Autowired
     private UserRepository userRepository;
@@ -106,12 +128,19 @@ public class BF01OrderClaimAndApprovalAuthorizationE2ETest {
     private OrderLogRepository orderLogRepository;
 
     @Autowired
+    private PaymentRepository paymentRepository;
+
+    @Autowired
+    private FinancialLedgerRepository financialLedgerRepository;
+
+    @Autowired
     private OrderService orderService;
 
     private Playwright playwright;
     private Browser browser;
 
     private User moderatorAEntity;
+    private User moderatorBEntity;
     private Product testProduct;
     private Order testOrder;
     private String testOrderCode;
@@ -151,23 +180,42 @@ public class BF01OrderClaimAndApprovalAuthorizationE2ETest {
         Role moderatorRole = roleRepository.findByRoleName("MODERATOR")
                 .orElseGet(() -> roleRepository.save(Role.builder().roleName("MODERATOR").build()));
 
-        // Create or sync Moderator A account for TC-L3-BF01-002
-        String modEmail = "moderator.a.claim.e2e@test.com";
-        userRepository.findByEmail(modEmail).ifPresent(u -> {
+        // Create or sync Moderator A account
+        String modAEmail = "moderator.a.claim.e2e@test.com";
+        userRepository.findByEmail(modAEmail).ifPresent(u -> {
             u.setPassword(passwordEncoder.encode("password123"));
             u.setStatus("ACTIVE");
             u.setRole(moderatorRole);
             userRepository.save(u);
         });
-        moderatorAEntity = userRepository.findByEmail(modEmail)
+        moderatorAEntity = userRepository.findByEmail(modAEmail)
                 .orElseGet(() -> userRepository.save(User.builder()
                         .fullName("Order Moderator A (TC-002)")
-                        .email(modEmail)
+                        .email(modAEmail)
                         .username("moderator_a_claim_e2e")
                         .password(passwordEncoder.encode("password123"))
                         .role(moderatorRole)
                         .status("ACTIVE")
                         .phone("0901234567")
+                        .build()));
+
+        // Create or sync Moderator B account
+        String modBEmail = "moderator.b.claim.e2e@test.com";
+        userRepository.findByEmail(modBEmail).ifPresent(u -> {
+            u.setPassword(passwordEncoder.encode("password123"));
+            u.setStatus("ACTIVE");
+            u.setRole(moderatorRole);
+            userRepository.save(u);
+        });
+        moderatorBEntity = userRepository.findByEmail(modBEmail)
+                .orElseGet(() -> userRepository.save(User.builder()
+                        .fullName("Order Moderator B (TC-002)")
+                        .email(modBEmail)
+                        .username("moderator_b_claim_e2e")
+                        .password(passwordEncoder.encode("password123"))
+                        .role(moderatorRole)
+                        .status("ACTIVE")
+                        .phone("0909998888")
                         .build()));
 
         // Create Category, Variety, Segment for test product
@@ -192,8 +240,8 @@ public class BF01OrderClaimAndApprovalAuthorizationE2ETest {
         testProduct = Product.builder()
                 .productCode("TC002-TREE-" + System.currentTimeMillis())
                 .productName("Cây Bonsai Sanh Nam Điền TC-L3-BF01-002")
-                .price(new BigDecimal("4500000"))
-                .productStatus("AVAILABLE")
+                .price(new BigDecimal("4500000")) // Base tree price: 4,500,000 VNĐ
+                .productStatus("RESERVED")
                 .isVisible(true)
                 .isPublicPrice(true)
                 .variety(variety)
@@ -202,7 +250,7 @@ public class BF01OrderClaimAndApprovalAuthorizationE2ETest {
                 .height(80.0f)
                 .trunkDiameter(12.0f)
                 .style("Trực quân tử")
-                .description("Cây Bonsai Sanh thử nghiệm claim đơn TC-L3-BF01-002")
+                .description("Cây Bonsai Sanh thử nghiệm claim & duyệt đơn TC-L3-BF01-002")
                 .createdBy(moderatorAEntity)
                 .createdAt(LocalDateTime.now())
                 .build();
@@ -223,7 +271,7 @@ public class BF01OrderClaimAndApprovalAuthorizationE2ETest {
                 .orderType("ONLINE")
                 .craneFee(BigDecimal.ZERO)
                 .shippingFee(BigDecimal.ZERO)
-                .notes("Đơn hàng test tiếp nhận (Claim) cho TC-L3-BF01-002")
+                .notes("Đơn hàng test claim và approval cho TC-L3-BF01-002")
                 .assignedTo(null)
                 .assignedAt(null)
                 .build();
@@ -240,6 +288,15 @@ public class BF01OrderClaimAndApprovalAuthorizationE2ETest {
         details.add(detail);
         testOrder.setOrderDetails(details);
         orderDetailRepository.save(detail);
+
+        Payment initialPayment = Payment.builder()
+                .order(testOrder)
+                .paymentType("DEPOSIT")
+                .paymentMethod("DEPOSIT")
+                .paymentStatus("PENDING")
+                .amount(new BigDecimal("4500000"))
+                .build();
+        paymentRepository.save(initialPayment);
     }
 
     @AfterAll
@@ -248,6 +305,7 @@ public class BF01OrderClaimAndApprovalAuthorizationE2ETest {
             // Clean up isolated test data created by this test
             if (testOrderCode != null) {
                 orderRepository.findByOrderCode(testOrderCode).ifPresent(o -> {
+                    financialLedgerRepository.deleteAll(financialLedgerRepository.findByOrderOrderIdOrderByRecognizedAtAscFinancialLedgerIdAsc(o.getOrderId()));
                     orderRepository.delete(o);
                 });
             }
@@ -268,98 +326,192 @@ public class BF01OrderClaimAndApprovalAuthorizationE2ETest {
 
     /**
      * TC-L3-BF01-002: Order Claim and Approval Authorization.
-     *
-     * <p><strong>Preconditions:</strong>
-     * <ul>
-     *   <li>Moderator A account exists with email "moderator.a.claim.e2e@test.com" and status ACTIVE.</li>
-     *   <li>A dedicated unassigned PENDING order (orderCode: BSMS-TC-BF01-002-...) exists in database with assignedTo = null.</li>
-     * </ul>
-     *
-     * <p><strong>Steps:</strong>
-     * <ol>
-     *   <li>Start Playwright browser and log in as Moderator A.</li>
-     *   <li>Navigate to Orders Pool page (/moderator/orders/pool).</li>
-     *   <li>Assert order is displayed in Orders Pool and database state is PENDING with assignedTo = null.</li>
-     *   <li>Click "Tiếp nhận đơn hàng" (Claim) button for the order.</li>
-     *   <li>Wait for AJAX claim request and UI refresh to finish.</li>
-     *   <li>Assert database order is assigned to Moderator A (assignedTo = Moderator A's ID) and state remains PENDING.</li>
-     *   <li>Assert order is no longer displayed in Orders Pool list.</li>
-     *   <li>Navigate to My Orders page (/moderator/orders/my) and verify order code is visible there.</li>
-     *   <li>Verify exclusivity by asserting that claiming an already-assigned order again throws IllegalStateException.</li>
-     * </ol>
-     *
-     * <p><strong>Expected Result:</strong>
-     * The order is assigned exclusively to Moderator A, updated in database with assignedTo = Moderator A, disappears from Orders Pool, and appears in My Orders.
      */
     @Test
     @DisplayName("TC-L3-BF01-002: Order Claim and Approval Authorization")
     void tcL3Bf01002_orderClaimAndApprovalAuthorization() {
-        try (BrowserContext context = browser.newContext()) {
-            Page page = context.newPage();
+        try (BrowserContext contextA = browser.newContext()) {
+            Page pageA = contextA.newPage();
 
-            // 1. Log in as Moderator A
-            login(page, moderatorAEntity.getEmail(), "password123");
-            evidencePause(page, "1. Moderator A Logged In Successfully");
+            // =========================================================================
+            // 1. Moderator A logs in and navigates to Orders Pool
+            // =========================================================================
+            login(pageA, moderatorAEntity.getEmail(), "password123");
+            evidencePause(pageA, "1. Moderator A Logged In Successfully");
 
-            // 2. Open Orders Pool page
-            page.navigate(getBaseUrl() + "/moderator/orders/pool");
-            page.waitForLoadState(LoadState.DOMCONTENTLOADED);
+            pageA.navigate(getBaseUrl() + "/moderator/orders/pool");
+            pageA.waitForLoadState(LoadState.DOMCONTENTLOADED);
 
-            // Wait for orders table to load and contain test order
-            page.waitForSelector("#ordersTableBody tr:has-text('" + testOrderCode + "')",
+            pageA.waitForSelector("#ordersTableBody tr:has-text('" + testOrderCode + "')",
                     new Page.WaitForSelectorOptions().setTimeout(10000));
 
-            Locator orderRow = page.locator("#ordersTableBody tr:has-text('" + testOrderCode + "')").first();
+            Locator orderRow = pageA.locator("#ordersTableBody tr:has-text('" + testOrderCode + "')").first();
             assertTrue(orderRow.isVisible(), "Đơn hàng test TC-002 phải hiển thị trong Kho đơn chung (Orders Pool)!");
 
-            // Assert database state BEFORE claim
+            // DB assertion before claim
             Order dbOrderBefore = orderRepository.findByOrderCode(testOrderCode)
                     .orElseThrow(() -> new AssertionError("Không tìm thấy đơn hàng " + testOrderCode + " trong DB!"));
             assertEquals("PENDING", dbOrderBefore.getOrderStatus(), "Trạng thái đơn trước khi claim phải là PENDING!");
             assertNull(dbOrderBefore.getAssignedTo(), "Đơn mới tạo chưa có Moderator phụ trách (assignedTo = null)!");
 
-            evidencePause(page, "2. Orders Pool Loaded with Unassigned PENDING Order");
+            evidencePause(pageA, "2. Orders Pool Loaded with Unassigned PENDING Order");
 
-            // 3. Click Claim / "Tiếp nhận đơn hàng" action button
+            // =========================================================================
+            // 2. Moderator A claims the order
+            // =========================================================================
             orderRow.locator("button.btn-claim-action").click();
+            pageA.waitForTimeout(2000);
 
-            // Wait for AJAX claim completion & table re-render
-            page.waitForTimeout(2000);
-
-            // Assert database state AFTER claim
-            Order dbOrderAfter = orderRepository.findByOrderCode(testOrderCode)
+            // DB assertions after claim
+            Order dbOrderAfterClaim = orderRepository.findByOrderCode(testOrderCode)
                     .orElseThrow(() -> new AssertionError("Không tìm thấy đơn hàng " + testOrderCode + " sau khi claim!"));
 
-            assertNotNull(dbOrderAfter.getAssignedTo(), "Đơn hàng phải được gán cho Moderator sau khi claim!");
-            assertEquals(moderatorAEntity.getUserId(), dbOrderAfter.getAssignedTo().getUserId(),
+            assertNotNull(dbOrderAfterClaim.getAssignedTo(), "Đơn hàng phải được gán cho Moderator sau khi claim!");
+            assertEquals(moderatorAEntity.getUserId(), dbOrderAfterClaim.getAssignedTo().getUserId(),
                     "UserId của Moderator phụ trách phải khớp với Moderator A!");
-            assertEquals("PENDING", dbOrderAfter.getOrderStatus(),
+            assertEquals("PENDING", dbOrderAfterClaim.getOrderStatus(),
                     "Trạng thái đơn hàng sau claim giữ nguyên PENDING!");
 
-            evidencePause(page, "3. Claim Action Completed & Orders Pool Refreshed");
+            evidencePause(pageA, "3. Claim Action Completed by Moderator A");
 
-            // 4. Assert UI: order is no longer in Orders Pool list
-            page.navigate(getBaseUrl() + "/moderator/orders/pool");
-            page.waitForLoadState(LoadState.DOMCONTENTLOADED);
-            page.waitForTimeout(1000);
-            assertFalse(page.content().contains(testOrderCode),
-                    "Đơn hàng sau khi đã được claim không được còn hiển thị trong Kho đơn chung!");
+            // Assert UI: order is no longer in Orders Pool
+            pageA.navigate(getBaseUrl() + "/moderator/orders/pool");
+            pageA.waitForLoadState(LoadState.DOMCONTENTLOADED);
+            pageA.waitForTimeout(1000);
+            assertFalse(pageA.content().contains(testOrderCode),
+                    "Đơn hàng sau khi claim không còn hiển thị trong Kho đơn chung!");
 
-            // 5. Navigate to My Orders page and assert order code is visible there
-            page.navigate(getBaseUrl() + "/moderator/orders/my");
-            page.waitForLoadState(LoadState.DOMCONTENTLOADED);
-            page.waitForSelector("body", new Page.WaitForSelectorOptions().setTimeout(10000));
-            assertTrue(page.content().contains(testOrderCode),
-                    "Đơn hàng vừa claim phải xuất hiện trong danh sách 'Đơn hàng của tôi' (My Orders)!");
+            // Assert UI: order appears in Moderator A's My Orders
+            pageA.navigate(getBaseUrl() + "/moderator/orders/my");
+            pageA.waitForLoadState(LoadState.DOMCONTENTLOADED);
+            pageA.waitForSelector("body", new Page.WaitForSelectorOptions().setTimeout(10000));
+            assertTrue(pageA.content().contains(testOrderCode),
+                    "Đơn hàng vừa claim phải xuất hiện trong 'Đơn hàng của tôi' của Moderator A!");
 
-            evidencePause(page, "4. My Orders Page Loaded with Claimed Order");
+            evidencePause(pageA, "4. Order Appears in Moderator A's My Orders");
 
-            // 6. Verify Exclusivity: Attempting to claim the already claimed order again throws IllegalStateException
+            // =========================================================================
+            // 3. Verify Exclusivity & RBAC: Moderator B cannot claim or process Moderator A's order
+            // =========================================================================
+            try (BrowserContext contextB = browser.newContext()) {
+                Page pageB = contextB.newPage();
+                login(pageB, moderatorBEntity.getEmail(), "password123");
+
+                // Moderator B checks Orders Pool -> Order not present
+                pageB.navigate(getBaseUrl() + "/moderator/orders/pool");
+                pageB.waitForLoadState(LoadState.DOMCONTENTLOADED);
+                assertFalse(pageB.content().contains(testOrderCode),
+                        "Moderator B không được thấy đơn của Moderator A trong Kho đơn chung!");
+
+                // Moderator B checks My Orders -> Order not present
+                pageB.navigate(getBaseUrl() + "/moderator/orders/my");
+                pageB.waitForLoadState(LoadState.DOMCONTENTLOADED);
+                assertFalse(pageB.content().contains(testOrderCode),
+                        "Moderator B không được thấy đơn của Moderator A trong Đơn hàng của tôi!");
+
+                evidencePause(pageB, "5. Exclusivity Verified: Moderator B Cannot View/Access Claimed Order");
+            }
+
+            // Exclusivity at Service layer
             assertThrows(IllegalStateException.class, () -> {
-                orderService.claimOrder(testOrderCode, moderatorAEntity);
-            }, "Không thể claim đơn hàng đã được gán cho nhân viên khác/đã được nhận trước đó!");
+                orderService.claimOrder(testOrderCode, moderatorBEntity);
+            }, "Moderator B không thể claim đơn đã được Moderator A nhận!");
 
-            evidencePause(page, "5. All DB & UI Assertions Passed Successfully");
+            assertThrows(SecurityException.class, () -> {
+                orderService.verifyOrder(testOrderCode, new BigDecimal("500000"), new BigDecimal("300000"), new BigDecimal("1500000"), moderatorBEntity);
+            }, "Moderator B không thể duyệt đơn được gán cho Moderator A!");
+
+            // =========================================================================
+            // 4. Moderator A opens Order Detail, enters custom fees, and approves via UI
+            // =========================================================================
+            pageA.navigate(getBaseUrl() + "/moderator/orders/" + testOrderCode);
+            pageA.waitForLoadState(LoadState.DOMCONTENTLOADED);
+            evidencePause(pageA, "6. Moderator A Viewing Order Detail for Approval");
+
+            // Enter valid custom fees:
+            // - Deposit Amount: 1,500,000 VNĐ (Explicitly NOT the 30% automatic value 1,350,000 VNĐ)
+            // - Shipping Fee: 300,000 VNĐ
+            // - Crane Fee: 500,000 VNĐ
+            pageA.fill("#approvalDepositAmount", "1500000");
+            pageA.fill("#approvalShippingFee", "300000");
+            pageA.fill("#approvalCraneFee", "500000");
+
+            evidencePause(pageA, "7. Moderator A Entered Custom Deposit (1.5M), Shipping Fee (300k), Crane Fee (500k)");
+
+            // Click "Duyệt đơn" button
+            pageA.click("button.od-action-btn.approve");
+
+            // Confirmation modal
+            pageA.waitForSelector("#orderActionConfirmModal.show", new Page.WaitForSelectorOptions().setTimeout(5000));
+            evidencePause(pageA, "8. Approval Confirmation Modal Displayed");
+
+            // Confirm approval
+            pageA.click("#confirmModalConfirm");
+
+            // Wait for reload
+            pageA.waitForTimeout(3000);
+            evidencePause(pageA, "9. Order Approved via UI & Page Reloaded");
+
+            // =========================================================================
+            // 5. Assert Database & UI State after Approval
+            // =========================================================================
+            Order approvedOrder = orderRepository.findByOrderCodeWithDetails(testOrderCode).orElseThrow();
+
+            // Status transitioned to PENDING_PAYMENT
+            assertEquals("PENDING_PAYMENT", approvedOrder.getOrderStatus(),
+                    "Trạng thái đơn hàng sau duyệt phải là PENDING_PAYMENT!");
+
+            // Exclusivity preserved
+            assertNotNull(approvedOrder.getAssignedTo());
+            assertEquals(moderatorAEntity.getUserId(), approvedOrder.getAssignedTo().getUserId(),
+                    "Đơn hàng vẫn thuộc quyền quản lý của Moderator A!");
+
+            // Fees saved accurately as entered
+            assertEquals(0, new BigDecimal("1500000").compareTo(approvedOrder.getDepositAmount()),
+                    "Tiền đặt cọc phải chính xác là 1,500,000 VNĐ!");
+            assertNotEquals(0, new BigDecimal("1350000").compareTo(approvedOrder.getDepositAmount()),
+                    "Tiền đặt cọc không được bị tính tự động 30% (1,350,000 VNĐ)!");
+
+            assertEquals(0, new BigDecimal("300000").compareTo(approvedOrder.getShippingFee()),
+                    "Phí vận chuyển phải chính xác là 300,000 VNĐ!");
+            assertEquals(0, new BigDecimal("500000").compareTo(approvedOrder.getCraneFee()),
+                    "Phí xe cẩu phải chính xác là 500,000 VNĐ!");
+
+            // Total Amount = 4.5M (Tree) + 300k (Ship) + 500k (Crane) = 5,300,000 VNĐ
+            assertEquals(0, new BigDecimal("5300000").compareTo(approvedOrder.getTotalAmount()),
+                    "Tổng tiền đơn hàng sau duyệt phải bằng 5,300,000 VNĐ!");
+
+            // Product status remains RESERVED
+            Product updatedProduct = productRepository.findById(testProduct.getProductId()).orElseThrow();
+            assertEquals("RESERVED", updatedProduct.getProductStatus(),
+                    "Trạng thái cây vẫn là RESERVED chờ khách thanh toán cọc!");
+
+            // Pending DEPOSIT Payment record created
+            List<Payment> payments = paymentRepository.findByOrderOrderIdOrderByPaymentIdAsc(approvedOrder.getOrderId());
+            assertFalse(payments.isEmpty(), "Bản ghi Payment phải được tạo sau khi duyệt đơn!");
+
+            Payment depositPayment = payments.get(0);
+            assertEquals("DEPOSIT", depositPayment.getPaymentType(), "Loại thanh toán phải là DEPOSIT!");
+            assertEquals("PENDING", depositPayment.getPaymentStatus(), "Trạng thái Payment phải là PENDING!");
+            assertEquals(0, new BigDecimal("1500000").compareTo(depositPayment.getAmount()),
+                    "Số tiền thanh toán cọc phải là 1,500,000 VNĐ!");
+
+            // OrderHandling history recorded
+            List<OrderHandling> handlings = orderHandlingRepository.findByOrderOrderIdOrderByHandledAtDesc(approvedOrder.getOrderId());
+            assertFalse(handlings.isEmpty(), "Phải ghi nhận lịch sử OrderHandling của Moderator A!");
+
+            // OrderLog recorded VERIFY action
+            List<OrderLog> logs = orderLogRepository.findByOrderOrderIdOrderByActionAtAsc(approvedOrder.getOrderId());
+            boolean hasVerifyLog = logs.stream().anyMatch(l -> "VERIFY".equalsIgnoreCase(l.getActionType()));
+            assertTrue(hasVerifyLog, "Phải có bản ghi OrderLog với actionType VERIFY!");
+
+            // UI on Order Detail displays PENDING_PAYMENT status
+            pageA.navigate(getBaseUrl() + "/moderator/orders/" + testOrderCode);
+            pageA.waitForLoadState(LoadState.DOMCONTENTLOADED);
+            assertTrue(pageA.content().contains("PENDING_PAYMENT") || pageA.content().contains("Chờ thanh toán"),
+                    "Giao diện chi tiết đơn hàng phải hiển thị trạng thái Chờ thanh toán / PENDING_PAYMENT!");
+
+            evidencePause(pageA, "10. All Claim & Approval DB and UI Assertions Passed Successfully");
         }
     }
 }

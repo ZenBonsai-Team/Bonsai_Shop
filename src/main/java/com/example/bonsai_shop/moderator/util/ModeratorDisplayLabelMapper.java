@@ -25,6 +25,19 @@ public final class ModeratorDisplayLabelMapper {
         };
     }
 
+    public static String resolveCancelledStatusLabel(boolean hasProductRefund, boolean hasFullRefund, boolean hasForfeitedDeposit) {
+        if (hasProductRefund) {
+            return "Đã hủy – Hoàn tiền giá cây";
+        }
+        if (hasFullRefund) {
+            return "Đã hủy – Hoàn tiền 100%";
+        }
+        if (hasForfeitedDeposit) {
+            return "Đã hủy – Tịch thu tiền cọc";
+        }
+        return "Đã chấm dứt đơn hàng";
+    }
+
     public static String paymentTypeLabel(String value) {
         return switch (normalize(value)) {
             case "DEPOSIT" -> "Thanh toán tiền đặt cọc";
@@ -63,6 +76,7 @@ public final class ModeratorDisplayLabelMapper {
             case COMPLETED_ORDER_REVENUE -> "Doanh thu từ đơn hàng đã hoàn thành";
             case FORFEITED_DEPOSIT_INCOME -> "Thu nhập từ tiền đặt cọc do khách bỏ đơn";
             case FULL_REFUND -> "Hoàn lại toàn bộ tiền cho khách";
+            case PRODUCT_REFUND_ONLY -> "Hoàn tiền giá cây (Khách chịu phí vận chuyển & cẩu)";
         };
     }
 

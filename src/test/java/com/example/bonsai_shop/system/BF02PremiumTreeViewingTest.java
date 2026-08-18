@@ -147,7 +147,7 @@ class BF02PremiumTreeViewingTest {
                 )
                 // Then
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/appointments"));
+                .andExpect(redirectedUrl("/home"));
 
         ViewingAppointment appointment =
                 viewingAppointmentRepository
@@ -184,7 +184,7 @@ class BF02PremiumTreeViewingTest {
                 )
                 // Then - HTTP Flow
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/appointments"))
+                .andExpect(redirectedUrl("/home"))
                 .andExpect(flash().attributeExists("error"));
 
         // Then - DB State
@@ -336,7 +336,7 @@ class BF02PremiumTreeViewingTest {
                 )
                 // Then - HTTP Flow
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/appointments"));
+                .andExpect(redirectedUrl("/home"));
 
         // Then - DB State
         ViewingAppointment updatedAppointment =
@@ -371,7 +371,7 @@ class BF02PremiumTreeViewingTest {
                 )
                 // Then - HTTP Flow
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/appointments"))
+                .andExpect(redirectedUrl("/home"))
                 .andExpect(flash().attributeExists("error"));
 
         // Then - DB State
@@ -444,14 +444,14 @@ class BF02PremiumTreeViewingTest {
 
         // When
         mockMvc.perform(
-                        get("/appointments")
+                        get("/appointments/list")
                                 .with(customerUser(customer))
                                 .with(csrf())
                 )
                 // Then - HTTP Flow
                 .andExpect(status().isOk())
-                .andExpect(view().name("customer/view-appointment"))
-                .andExpect(model().attributeExists("viewingAppointments"));
+                .andExpect(jsonPath("$[0].status").value("PENDING"))
+                .andExpect(jsonPath("$[0].note").value("BF02 Appointment List Test"));
     }
 
     @Test

@@ -48,7 +48,11 @@ public class ArtisanDashboardController {
         List<FinancialLedgerType> feeLedgerTypes = List.copyOf(EnumSet.of(
                 FinancialLedgerType.COMPLETED_ORDER_REVENUE,
                 FinancialLedgerType.FORFEITED_DEPOSIT_INCOME,
-                FinancialLedgerType.FULL_REFUND
+                FinancialLedgerType.PRODUCT_REFUND_ONLY
+        ));
+        List<FinancialLedgerType> refundLedgerTypes = List.copyOf(EnumSet.of(
+                FinancialLedgerType.FULL_REFUND,
+                FinancialLedgerType.PRODUCT_REFUND_ONLY
         ));
 
         products = artisanProductService.getMyProducts(userDetails.getUsername());
@@ -81,9 +85,9 @@ public class ArtisanDashboardController {
                 monthStart,
                 nextMonthStart
         );
-        BigDecimal monthlyRefundAmount = financialLedgerRepository.sumLedgerAmountByArtisan(
+        BigDecimal monthlyRefundAmount = financialLedgerRepository.sumLedgerAmountByArtisanAndTypes(
                 artisanUser.getUserId(),
-                FinancialLedgerType.FULL_REFUND,
+                refundLedgerTypes,
                 FinancialLedgerStatus.RECORDED,
                 monthStart,
                 nextMonthStart
@@ -105,7 +109,7 @@ public class ArtisanDashboardController {
         );
         List<ArtisanDashboardSourceDTO> refundSources = financialLedgerRepository.findRefundSourcesByArtisan(
                 artisanUser.getUserId(),
-                FinancialLedgerType.FULL_REFUND,
+                refundLedgerTypes,
                 FinancialLedgerStatus.RECORDED,
                 monthStart,
                 nextMonthStart

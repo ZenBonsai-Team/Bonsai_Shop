@@ -9,6 +9,7 @@ import com.example.bonsai_shop.entity.Payment;
 import com.example.bonsai_shop.entity.Product;
 import com.example.bonsai_shop.entity.User;
 import com.example.bonsai_shop.finance.enums.FaultParty;
+import com.example.bonsai_shop.finance.enums.FinancialLedgerDirection;
 import com.example.bonsai_shop.finance.enums.FinancialLedgerType;
 import com.example.bonsai_shop.finance.service.FinancialLedgerService;
 import com.example.bonsai_shop.product.enums.PaymentMethod;
@@ -752,5 +753,121 @@ class OrderServicePostPaymentTest {
         assertThat(capturedLog.getFromStatus()).isEqualTo("PENDING_PAYMENT");
         assertThat(capturedLog.getToStatus()).isEqualTo("PAID");
         assertThat(capturedLog.getActionBy()).isEqualTo(moderator);
+    }
+
+    // =========================================================================
+    // Group 8: recordProductRefundOnlyAndCancel
+    // =========================================================================
+
+    @Test
+    @DisplayName("UT-UUT05-034: recordProductRefundOnlyAndCancel - Đơn không tồn tại -> ném IllegalArgumentException")
+    void recordProductRefundOnlyAndCancel_orderNotFound_throwsException() {
+        User moderator = User.builder().userId(5).build();
+        when(orderRepository.findByOrderCode("BSMS-999")).thenReturn(Optional.empty());
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+                () -> orderService.recordProductRefundOnlyAndCancel("BSMS-999", "Lý do", moderator));
+
+        assertThat(ex.getMessage()).contains("Không tìm thấy đơn hàng: BSMS-999");
+    }
+
+    @Test
+    @DisplayName("UT-UUT05-035: recordProductRefundOnlyAndCancel - Moderator không phụ trách đơn -> ném IllegalStateException")
+    void recordProductRefundOnlyAndCancel_unassignedModerator_throwsException() {
+        User assignedMod = User.builder().userId(5).build();
+        User otherMod = User.builder().userId(6).build();
+        Order order = Order.builder().orderId(100).orderCode("BSMS-123").orderStatus("PAID").assignedTo(assignedMod).build();
+
+        when(orderRepository.findByOrderCode("BSMS-123")).thenReturn(Optional.of(order));
+
+        IllegalStateException ex = assertThrows(IllegalStateException.class,
+                () -> orderService.recordProductRefundOnlyAndCancel("BSMS-123", "Lý do", otherMod));
+
+        assertThat(ex.getMessage()).contains("Bạn không phụ trách đơn này.");
+    }
+
+    @Test
+    @DisplayName("UT-UUT05-036: recordProductRefundOnlyAndCancel - Trạng thái không phải PAID -> ném IllegalStateException")
+    void recordProductRefundOnlyAndCancel_statusNotPaid_throwsException() {
+        User moderator = User.builder().userId(5).build();
+        Order order = Order.builder().orderId(100).orderCode("BSMS-123").orderStatus("DEPOSITED").assignedTo(moderator).build();
+
+        when(orderRepository.findByOrderCode("BSMS-123")).thenReturn(Optional.of(order));
+
+        IllegalStateException ex = assertThrows(IllegalStateException.class,
+                () -> orderService.recordProductRefundOnlyAndCancel("BSMS-123", "Lý do", moderator));
+
+        assertThat(ex.getMessage()).contains("Chỉ có thể ghi nhận hoàn tiền giá cây khi đơn hàng đã thanh toán toàn bộ thành công.");
+    }
+
+    @Test
+    @DisplayName("UT-UUT05-037: recordProductRefundOnlyAndCancel - Đã hoàn tiền trước đó -> ném IllegalStateException")
+    void recordProductRefundOnlyAndCancel_alreadyRefunded_throwsException() {
+        User moderator = User.builder().userId(5).build();
+        Order order = Order.builder().orderId(100).orderCode("BSMS-123").orderStatus("PAID").assignedTo(moderator).build();
+
+        when(orderRepository.findByOrderCode("BSMS-123")).thenReturn(Optional.of(order));
+        when(financialLedgerService.hasRecordedAnyRefund(order)).thenReturn(true);
+
+        IllegalStateException ex = assertThrows(IllegalStateException.class,
+                () -> orderService.recordProductRefundOnlyAndCancel("BSMS-123", "Lý do", moderator));
+
+        assertThat(ex.getMessage()).contains("Đơn hàng này đã được ghi nhận hoàn tiền trước đó.");
+    }
+
+    @Test
+    @DisplayName("UT-UUT05-038: recordProductRefundOnlyAndCancel - Thành công: hoàn tiền cây 8M, hủy đơn, giải phóng cây, ghi log và event")
+    void recordProductRefundOnlyAndCancel_success() {
+        User moderator = User.builder().userId(5).build();
+        Product product = Product.builder().productId(1).productStatus("SOLD").build();
+        OrderDetail detail = OrderDetail.builder().product(product).priceAtPurchase(new BigDecimal("8000000")).quantity(1).build();
+
+        Order order = Order.builder()
+                .orderId(100)
+                .orderCode("BSMS-123")
+                .orderStatus("PAID")
+                .assignedTo(moderator)
+                .shippingFee(new BigDecimal("1000000"))
+                .craneFee(new BigDecimal("500000"))
+                .totalAmount(new BigDecimal("9500000"))
+                .orderDetails(List.of(detail))
+                .notes("Giao nhanh")
+                .build();
+
+        FinancialLedger ledger = FinancialLedger.builder()
+                .financialLedgerId(88)
+                .order(order)
+                .ledgerType(FinancialLedgerType.PRODUCT_REFUND_ONLY)
+                .direction(FinancialLedgerDirection.OUTFLOW)
+                .amount(new BigDecimal("8000000"))
+                .build();
+
+        when(orderRepository.findByOrderCode("BSMS-123")).thenReturn(Optional.of(order));
+        when(financialLedgerService.hasRecordedAnyRefund(order)).thenReturn(false);
+        when(financialLedgerService.recordProductRefundOnly(eq(order), any(), eq(moderator))).thenReturn(ledger);
+
+        boolean result = orderService.recordProductRefundOnlyAndCancel(
+                "BSMS-123",
+                "Khách trả cây sau giao hàng; hoàn tiền cây, khách chịu phí vận chuyển và phí cẩu.",
+                moderator
+        );
+
+        assertTrue(result);
+        assertThat(order.getOrderStatus()).isEqualTo("CANCELLED");
+        assertThat(order.getNotes()).contains("Hoàn tiền giá cây, khách chịu phí vận chuyển và phí cẩu");
+        assertThat(product.getProductStatus()).isEqualTo("AVAILABLE");
+
+        verify(orderRepository).save(order);
+        verify(productRepository).save(product);
+
+        ArgumentCaptor<OrderLog> logCaptor = ArgumentCaptor.forClass(OrderLog.class);
+        verify(orderLogRepository).save(logCaptor.capture());
+        OrderLog log = logCaptor.getValue();
+        assertThat(log.getActionType()).isEqualTo("PRODUCT_REFUND_ONLY_RECORDED");
+        assertThat(log.getFromStatus()).isEqualTo("PAID");
+        assertThat(log.getToStatus()).isEqualTo("CANCELLED");
+        assertThat(log.getActionBy()).isEqualTo(moderator);
+
+        verify(eventPublisher).publishEvent(any(OrderRejectedEvent.class));
     }
 }

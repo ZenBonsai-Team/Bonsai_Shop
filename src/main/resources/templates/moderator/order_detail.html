@@ -134,10 +134,16 @@
             .od-table tbody td { border: 1px solid var(--od-border); padding: 10px 12px; color: var(--od-text-primary); vertical-align: middle; }
             .od-table tbody tr:hover td { background: #f9fafb; }
             .od-table .td-num { text-align: right; font-variant-numeric: tabular-nums; }
+            .od-table .td-center { text-align: center; }
             .od-table .td-bold { font-weight: 600; }
-            .od-product-img { width: 40px; height: 40px; object-fit: cover; border-radius: 4px; border: 1px solid var(--od-border); }
+            .od-table-centered th, .od-table-centered td { text-align: center !important; vertical-align: middle !important; }
+            .od-product-img { width: 100px; height: 100px; object-fit: cover; border-radius: 8px; border: 1px solid var(--od-border); background: #f8fafc; display: inline-block; box-shadow: 0 1px 3px rgba(0,0,0,0.06); transition: transform 0.15s ease, box-shadow 0.15s ease; }
+            .od-product-img-link { display: inline-block; text-decoration: none; border-radius: 8px; }
+            .od-product-img-link:hover .od-product-img { transform: scale(1.03); box-shadow: 0 4px 10px rgba(0,0,0,0.12); border-color: var(--od-accent); }
+            .od-product-link { color: var(--od-text-primary); text-decoration: none; font-weight: 600; transition: color 0.15s ease; }
+            .od-product-link:hover { color: var(--od-accent); text-decoration: underline; }
             .od-product-img-placeholder {
-                width: 40px; height: 40px; border-radius: 4px;
+                width: 100px; height: 100px; border-radius: 8px;
                 border: 1px solid var(--od-border); background: #edf2f7;
                 display: inline-flex; align-items: center; justify-content: center;
                 color: var(--od-text-muted); font-size: 11px;
@@ -149,8 +155,8 @@
             .od-payment-table td:last-child { text-align: right; font-variant-numeric: tabular-nums; }
             .od-payment-table .divider td { border-top: 1px solid var(--od-border); padding-top: 10px; padding-bottom: 10px; }
             .od-payment-table .grand-total td { font-weight: 700; font-size: 14px; color: var(--od-text-primary); }
-            .od-payment-table .paid-row td { color: var(--od-green); }
-            .od-payment-table .remain-row td { color: var(--od-red); font-weight: 600; }
+            .od-payment-table .paid-row td { color: var(--od-green); font-weight: 600; }
+            .od-payment-table .remain-row td { color: var(--od-text-primary); font-weight: 600; }
 
             /* ===== PAYMENT HISTORY BADGES ===== */
             .od-pymt-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
@@ -186,19 +192,48 @@
                 display: block; width: 100%;
                 padding: 9px 16px; border-radius: 5px;
                 font-size: 13px; font-weight: 600;
-                border: none; cursor: pointer;
+                border: 1px solid transparent; cursor: pointer;
                 text-align: center; margin-bottom: 7px;
                 letter-spacing: 0.01em;
+                transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
             }
             .od-action-btn:last-child { margin-bottom: 0; }
             .od-action-btn:hover { filter: brightness(0.93); }
             .od-action-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-            .od-action-btn.approve  { background: #38a169; color: white; }
-            .od-action-btn.reject   { background: #c05621; color: white; }
-            .od-action-btn.claim    { background: var(--od-accent); color: white; }
-            .od-action-btn.unclaim  { background: #718096; color: white; }
-            .od-action-btn.complete { background: #276749; color: white; }
-            .od-action-btn.cancel   { background: #c53030; color: white; }
+            .od-action-btn.approve  { background: #276749; color: white; border-color: #276749; }
+            .od-action-btn.reject   { background: #c05621; color: white; border-color: #c05621; }
+            .od-action-btn.claim    { background: var(--od-accent); color: white; border-color: var(--od-accent); }
+            .od-action-btn.unclaim  { background: #718096; color: white; border-color: #718096; }
+            .od-action-btn.complete { background: #276749; color: white; border-color: #276749; }
+            .od-action-btn.cancel   { background: #c53030; color: white; border-color: #c53030; }
+            .od-action-btn.outline-warning {
+                background: white;
+                border-color: #dd6b20;
+                color: #c05621;
+            }
+            .od-action-btn.outline-warning:hover {
+                background: #fffaf0;
+                color: #9c4221;
+            }
+            .od-action-btn.outline-danger {
+                background: white;
+                border-color: #e53e3e;
+                color: #c53030;
+            }
+            .od-action-btn.outline-danger:hover {
+                background: #fff5f5;
+                color: #9b2c2c;
+            }
+            .od-action-divider {
+                border-top: 1px solid var(--od-border);
+                margin: 12px 0 8px 0;
+                padding-top: 8px;
+                font-size: 11px;
+                font-weight: 700;
+                color: var(--od-text-muted);
+                text-transform: uppercase;
+                letter-spacing: 0.04em;
+            }
             .od-action-note { font-size: 12px; color: var(--od-text-muted); margin-bottom: 10px; }
             .od-form-grid { display: grid; grid-template-columns: 1fr; gap: 10px; }
             .od-form-field { display: flex; flex-direction: column; gap: 4px; }
@@ -385,7 +420,7 @@
                     <div class="od-card-title">Thông tin đơn hàng</div>
                     <span class="od-badge"
                           th:classappend="${order.priority == 'HIGH' ? ' priority-high' : (order.priority == 'MEDIUM' ? ' priority-medium' : ' priority-low')}"
-                          th:text="${order.priorityLabel}">---</span>
+                          th:text="'Mức độ ưu tiên: ' + ${order.priorityLabel}">Mức độ ưu tiên: Bình thường</span>
                 </div>
                 <div class="od-card-body">
                     <div class="od-order-header">
@@ -467,37 +502,45 @@
                           th:text="${#lists.size(order.products)} + ' sản phẩm'">0 sản phẩm</span>
                 </div>
                 <div class="od-card-body" style="padding:0;">
-                    <table class="od-table">
+                    <table class="od-table od-table-centered">
                         <thead>
                             <tr>
-                                <th style="width:50px;"></th>
-                                <th>Sản phẩm</th>
-                                <th>Mã SP</th>
-                                <th>Danh mục</th>
-                                <th class="td-num">SL</th>
-                                <th class="td-num">Đơn giá</th>
-                                <th class="td-num">Đặt cọc</th>
-                                <th class="td-num">Thành tiền</th>
+                                <th style="width:130px; text-align:center;">Hình ảnh</th>
+                                <th style="text-align:center;">Sản phẩm</th>
+                                <th style="width:230px; text-align:center;">Mã SP</th>
+                                <th style="width:150px; text-align:center;">Danh mục</th>
+                                <th style="width:150px; text-align:center;">Tiền cây</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr th:each="p : ${order.products}">
-                                <td>
-                                    <img th:if="${p.imageUrl != null and !#strings.isEmpty(p.imageUrl)}"
-                                         th:src="${p.imageUrl}" class="od-product-img" alt="ảnh" />
-                                    <div th:if="${p.imageUrl == null or #strings.isEmpty(p.imageUrl)}"
-                                         class="od-product-img-placeholder">N/A</div>
+                                <td style="text-align:center; padding:12px 10px;">
+                                    <a th:if="${p.productId != null}" th:href="@{'/product/' + ${p.productId}}" target="_blank" class="od-product-img-link" title="Xem chi tiết cây">
+                                        <img th:if="${p.imageUrl != null and !#strings.isEmpty(p.imageUrl)}"
+                                             th:src="${p.imageUrl}" class="od-product-img" alt="ảnh sản phẩm" />
+                                        <img th:if="${p.imageUrl == null or #strings.isEmpty(p.imageUrl)}"
+                                             th:src="@{/images/default-bonsai.png}" class="od-product-img" alt="Bonsai mặc định" />
+                                    </a>
+                                    <th:block th:if="${p.productId == null}">
+                                        <img th:if="${p.imageUrl != null and !#strings.isEmpty(p.imageUrl)}"
+                                             th:src="${p.imageUrl}" class="od-product-img" alt="ảnh sản phẩm" />
+                                        <img th:if="${p.imageUrl == null or #strings.isEmpty(p.imageUrl)}"
+                                             th:src="@{/images/default-bonsai.png}" class="od-product-img" alt="Bonsai mặc định" />
+                                    </th:block>
                                 </td>
-                                <td class="td-bold" th:text="${p.productName ?: '---'}">---</td>
-                                <td th:text="${p.productCode ?: '---'}">---</td>
-                                <td th:text="${p.categoryName ?: '---'}">---</td>
-                                <td class="td-num" th:text="${p.quantity ?: 0}">0</td>
-                                <td class="td-num money" th:text="${#numbers.formatDecimal(p.price, 0, 'COMMA', 0, 'POINT')} + ' đ'">---</td>
-                                <td class="td-num money" th:text="${p.deposit != null ? #numbers.formatDecimal(p.deposit, 0, 'COMMA', 0, 'POINT') + ' đ' : '-'}">---</td>
-                                <td class="td-num money td-bold" th:text="${#numbers.formatDecimal(p.subtotal, 0, 'COMMA', 0, 'POINT')} + ' đ'">---</td>
+                                <td class="td-bold" style="text-align:center;">
+                                    <a th:if="${p.productId != null}" th:href="@{'/product/' + ${p.productId}}" target="_blank" class="od-product-link" th:text="${p.productName ?: '---'}" title="Mở trang chi tiết cây">---</a>
+                                    <span th:if="${p.productId == null}" th:text="${p.productName ?: '---'}">---</span>
+                                </td>
+                                <td style="text-align:center; font-family: monospace; font-size: 12px; color: var(--od-text-secondary);" th:text="${p.productCode ?: '---'}">---</td>
+                                <td style="text-align:center;" th:text="${p.categoryName ?: '---'}">---</td>
+                                <td class="money td-bold" style="text-align:center;" th:text="${#numbers.formatDecimal(p.subtotal, 0, 'COMMA', 0, 'POINT')} + ' đ'">---</td>
                             </tr>
                         </tbody>
                     </table>
+                    <div style="padding: 8px 14px; font-size: 11px; color: var(--od-text-muted); background: #fafafa; border-top: 1px solid var(--od-border);">
+                        * Tiền cây là giá trị cây nguyên bản, chưa bao gồm phí vận chuyển và phí cẩu xe (chi tiết tại Tổng quan thanh toán bên dưới).
+                    </div>
                 </div>
             </div>
 
@@ -520,25 +563,17 @@
                             <td>Phí cẩu</td>
                             <td class="money" th:text="${#numbers.formatDecimal(order.paymentSummary.craneFee, 0, 'COMMA', 0, 'POINT')} + ' đ'">---</td>
                         </tr>
-                        <tr class="divider grand-total">
-                            <td>Tổng cộng</td>
+                        <tr class="grand-total">
+                            <td>Tổng giá trị đơn hàng</td>
                             <td class="money" th:text="${#numbers.formatDecimal(order.paymentSummary.grandTotal, 0, 'COMMA', 0, 'POINT')} + ' đ'">---</td>
                         </tr>
-                        <tr th:if="${order.paymentSummary.depositAmount != null}">
-                            <td>Tiền đặt cọc</td>
-                            <td class="money" th:text="${#numbers.formatDecimal(order.paymentSummary.depositAmount, 0, 'COMMA', 0, 'POINT')} + ' đ'">---</td>
-                        </tr>
-                        <tr class="paid-row">
-                            <td>Tổng số tiền đã thu</td>
+                        <tr class="divider paid-row">
+                            <td th:text="${order.orderStatus == 'DEPOSITED' ? 'Tiền cọc đã thanh toán (Đợt 1)' : 'Tổng số tiền đã thanh toán'}">Tổng số tiền đã thu</td>
                             <td class="money" th:text="${#numbers.formatDecimal(order.paymentSummary.paidAmount, 0, 'COMMA', 0, 'POINT')} + ' đ'">---</td>
                         </tr>
                         <tr class="remain-row">
-                            <td>Còn lại</td>
+                            <td th:text="${order.orderStatus == 'DEPOSITED' ? 'Số tiền còn lại cần thu khi giao cây (Đợt 2)' : 'Số tiền còn lại'}">Số tiền còn lại</td>
                             <td class="money" th:text="${#numbers.formatDecimal(order.paymentSummary.remainingPaymentAmount, 0, 'COMMA', 0, 'POINT')} + ' đ'">---</td>
-                        </tr>
-                        <tr th:if="${order.paymentSummary.recognizedCompletedRevenue != null and order.paymentSummary.recognizedCompletedRevenue > 0}">
-                            <td>Doanh thu đơn hoàn thành đã ghi nhận</td>
-                            <td class="money" th:text="${#numbers.formatDecimal(order.paymentSummary.recognizedCompletedRevenue, 0, 'COMMA', 0, 'POINT')} + ' đ'">---</td>
                         </tr>
                         <tr th:if="${order.paymentSummary.forfeitedDepositIncome != null and order.paymentSummary.forfeitedDepositIncome > 0}">
                             <td>Tiền cọc được ghi nhận</td>
@@ -546,7 +581,19 @@
                         </tr>
                         <tr th:if="${order.paymentSummary.fullRefundAmount != null and order.paymentSummary.fullRefundAmount > 0}">
                             <td>Số tiền hoàn toàn bộ đã ghi nhận</td>
-                            <td class="money" th:text="${#numbers.formatDecimal(order.paymentSummary.fullRefundAmount, 0, 'COMMA', 0, 'POINT')} + ' đ'">---</td>
+                            <td class="money" style="color: #dc3545;" th:text="'- ' + ${#numbers.formatDecimal(order.paymentSummary.fullRefundAmount, 0, 'COMMA', 0, 'POINT')} + ' đ'">---</td>
+                        </tr>
+                        <tr th:if="${order.paymentSummary.productRefundAmount != null and order.paymentSummary.productRefundAmount > 0}">
+                            <td>Số tiền hoàn giá cây đã ghi nhận</td>
+                            <td class="money" style="color: #dc3545;" th:text="'- ' + ${#numbers.formatDecimal(order.paymentSummary.productRefundAmount, 0, 'COMMA', 0, 'POINT')} + ' đ'">---</td>
+                        </tr>
+                        <tr th:if="${(order.paymentSummary.fullRefundAmount != null and order.paymentSummary.fullRefundAmount > 0) or (order.paymentSummary.productRefundAmount != null and order.paymentSummary.productRefundAmount > 0)}">
+                            <td style="font-weight: 600;">Số tiền khách thực trả sau hoàn</td>
+                            <td class="money td-bold" th:text="${#numbers.formatDecimal(order.paymentSummary.actualPaidAfterRefund, 0, 'COMMA', 0, 'POINT')} + ' đ'">---</td>
+                        </tr>
+                        <tr th:if="${order.paymentSummary.productRefundAmount != null and order.paymentSummary.productRefundAmount > 0 and order.paymentSummary.retainedLogisticsAmount != null}">
+                            <td>Phí vận chuyển & cẩu nhà vườn giữ lại</td>
+                            <td class="money td-bold" style="color: #198754;" th:text="${#numbers.formatDecimal(order.paymentSummary.retainedLogisticsAmount, 0, 'COMMA', 0, 'POINT')} + ' đ'">---</td>
                         </tr>
                         <tr th:if="${order.paymentSummary.netRecognizedAmount != null and order.paymentSummary.netRecognizedAmount != 0 and (order.paymentSummary.forfeitedDepositIncome == null or order.paymentSummary.netRecognizedAmount != order.paymentSummary.forfeitedDepositIncome) and (order.paymentSummary.recognizedCompletedRevenue == null or order.paymentSummary.netRecognizedAmount != order.paymentSummary.recognizedCompletedRevenue)}">
                             <td>Giá trị ghi nhận ròng của đơn</td>
@@ -683,13 +730,20 @@
                         </div>
                     </div>
 
-                    <div class="od-inline-actions" th:if="${order.canApprove or order.canReject or order.canReturnInventory or order.canComplete or order.canCustomerNoShow or order.canRecordFaultRefund}">
+                    <div class="od-inline-actions" th:if="${order.canApprove or order.canReject or order.canReturnInventory or order.canComplete or order.canCustomerNoShow or order.canRecordFaultRefund or order.canProductRefundOnly}">
+                        <!-- Luồng duyệt/từ chối đơn PENDING -->
                         <button th:if="${order.canApprove}" class="od-action-btn approve" type="button" onclick="openApproveConfirmation()">Duyệt đơn</button>
                         <button th:if="${order.canReject}" class="od-action-btn reject" type="button" onclick="openRejectConfirmation()">Từ chối đơn</button>
                         <button th:if="${order.canReturnInventory}" class="od-action-btn unclaim" type="button" onclick="openReturnToPoolConfirmation()">Trả lại kho</button>
-                        <button th:if="${order.canCustomerNoShow}" class="od-action-btn reject" type="button" onclick="openCustomerNoShowConfirmation()">Khách không nhận hàng</button>
-                        <button th:if="${order.canComplete}" class="od-action-btn approve" type="button" onclick="openCompleteConfirmation()" th:text="${order.orderStatus == 'DEPOSITED' ? 'Xác nhận thu phần còn lại' : 'Xác nhận khách đã nhận cây'}">Xác nhận khách đã nhận cây</button>
-                        <button th:if="${order.canRecordFaultRefund}" class="od-action-btn reject" type="button" onclick="openFaultRefundConfirmation()">Chấm dứt và ghi nhận hoàn tiền</button>
+
+                        <!-- Luồng hoàn tất đơn (Ưu tiên Happy Path lên đầu) -->
+                        <button th:if="${order.canComplete}" class="od-action-btn approve" type="button" onclick="openCompleteConfirmation()" th:text="${order.orderStatus == 'DEPOSITED' ? 'Xác nhận đã thu đủ tiền còn lại' : 'Xác nhận khách đã nhận cây'}">Xác nhận khách đã nhận cây</button>
+
+                        <!-- Xử lý ngoại lệ / Sự cố cho đơn đã cọc hoặc đã thanh toán -->
+                        <div th:if="${order.canCustomerNoShow or order.canRecordFaultRefund or order.canProductRefundOnly}" class="od-action-divider">Xử lý ngoại lệ / Sự cố</div>
+                        <button th:if="${order.canProductRefundOnly}" class="od-action-btn outline-warning" type="button" onclick="openProductRefundConfirmation()">Khách từ chối nhận hàng</button>
+                        <button th:if="${order.canCustomerNoShow}" class="od-action-btn outline-warning" type="button" onclick="openCustomerNoShowConfirmation()">Khách từ chối nhận hàng</button>
+                        <button th:if="${order.canRecordFaultRefund}" class="od-action-btn outline-danger" type="button" onclick="openFaultRefundConfirmation()">Đơn bị hủy</button>
                     </div>
                 </div>
             </div>
@@ -1200,8 +1254,7 @@
                 },
                 summaryRows: [
                     { label: 'Mã đơn hàng', value: ORDER_CODE },
-                    { label: 'Trạng thái hiện tại', value: ORDER_STATUS_LABEL },
-                    { label: 'Trạng thái sau xử lý', value: 'Đã chấm dứt đơn hàng' }
+                    { label: 'Trạng thái hiện tại', value: ORDER_STATUS_LABEL }
                 ],
                 buildPayload: (reason) => {
                     if (!reason || !reason.trim()) throw new Error('Vui lòng nhập lý do từ chối.');
@@ -1226,9 +1279,9 @@
 
         function openCustomerNoShowConfirmation() {
             openConfirmationModal({
-                title: 'Xác nhận khách không nhận hàng',
-                description: 'Hành động này sẽ hủy đơn hàng và không thể hoàn tác.',
-                confirmLabel: 'Xác nhận hủy đơn',
+                title: 'Xác nhận khách từ chối nhận hàng',
+                description: 'Khách hàng từ chối nhận cây khi giao đến nơi. Hệ thống sẽ hủy đơn hàng, ghi nhận tiền cọc đã thanh toán vào mục thu nhập giữ lại (Sổ cái tài chính) và giải phóng cây về kho để mở bán lại.',
+                confirmLabel: 'Xác nhận Hủy đơn',
                 danger: true,
                 input: {
                     label: 'Lý do khách không nhận hàng',
@@ -1236,8 +1289,7 @@
                 },
                 summaryRows: [
                     { label: 'Mã đơn hàng', value: ORDER_CODE },
-                    { label: 'Tiền đặt cọc đã thanh toán', value: formatCurrency(SUCCESSFUL_DEPOSIT_AMOUNT) },
-                    { label: 'Trạng thái sau xử lý', value: 'Đã chấm dứt đơn hàng' }
+                    { label: 'Tiền đặt cọc bị thu', value: formatCurrency(SUCCESSFUL_DEPOSIT_AMOUNT) }
                 ],
                 buildPayload: (reason) => {
                     if (!reason || !reason.trim()) {
@@ -1251,13 +1303,43 @@
             });
         }
 
+        function openProductRefundConfirmation() {
+            const retainedLogistics = (BASE_SHIPPING_FEE || 0) + (BASE_CRANE_FEE || 0);
+            openConfirmationModal({
+                title: 'Xác nhận khách từ chối nhận hàng',
+                description: 'Khách hàng từ chối nhận hoặc trả lại cây sau khi đã thanh toán toàn bộ và đồng ý chịu toàn bộ phí vận chuyển + phí cẩu. Hệ thống sẽ hủy đơn, ghi nhận hoàn lại tiền giá cây vào Sổ cái tài chính và giải phóng cây về kho để mở bán lại. (Lưu ý: Đây là thao tác ghi nhận hoàn tiền thủ công trên sổ cái, không tự động hoàn tiền qua cổng VNPay).',
+                confirmLabel: 'Xác nhận khách từ chối nhận hàng',
+                danger: true,
+                input: {
+                    label: 'Lý do khách từ chối nhận hàng',
+                    placeholder: 'Bắt buộc nhập lý do (ví dụ: Khách từ chối nhận cây sau khi giao, chịu toàn bộ phí vận chuyển và cẩu)'
+                },
+                summaryRows: [
+                    { label: 'Mã đơn hàng', value: ORDER_CODE },
+                    { label: 'Tiền cây sẽ hoàn cho khách', value: formatCurrency(BASE_TREE_PRICE) },
+                    { label: 'Phí vận chuyển giữ lại', value: formatCurrency(BASE_SHIPPING_FEE) },
+                    { label: 'Phí cẩu giữ lại', value: formatCurrency(BASE_CRANE_FEE) },
+                    { label: 'Tổng phí khách vẫn chịu', value: formatCurrency(retainedLogistics) }
+                ],
+                buildPayload: (reason) => {
+                    if (!reason || !reason.trim()) {
+                        throw new Error('Vui lòng nhập lý do khách từ chối nhận hàng.');
+                    }
+                    return {
+                        action: 'product_refund_only',
+                        reason: reason.trim()
+                    };
+                }
+            });
+        }
+
         function openFaultRefundConfirmation() {
             const refundAmount100 = REFUNDABLE_CASH > 0 ? REFUNDABLE_CASH : (ORDER_STATUS === 'PAID' ? GRAND_TOTAL : SUCCESSFUL_DEPOSIT_AMOUNT);
 
             openConfirmationModal({
-                title: 'Xác nhận chấm dứt đơn và hoàn tiền',
-                description: 'Sau khi xác nhận, đơn hàng sẽ bị chấm dứt và hệ thống ghi nhận hoàn lại toàn bộ số tiền khách đã thực thanh toán cho đơn hàng này. Cây sẽ được trả lại nhà vườn. Hành động này không thể hoàn tác.',
-                confirmLabel: 'Xác nhận chấm dứt và hoàn tiền',
+                title: 'Xác nhận đơn bị hủy (Hoàn tiền 100%)',
+                description: 'Đơn hàng gặp sự cố từ phía nhà vườn hoặc đơn vị vận chuyển (cây hư hại, sai quy cách...). Hệ thống sẽ hủy đơn và ghi nhận hoàn lại toàn bộ số tiền khách đã thực thanh toán. Cây sẽ được trả lại nhà vườn.',
+                confirmLabel: 'Xác nhận hủy đơn & Hoàn tiền',
                 danger: true,
                 faultRefund: {
                     faultParty: 'NURSERY',
@@ -1266,8 +1348,7 @@
                 summaryRows: [
                     { label: 'Mã đơn hàng', value: ORDER_CODE },
                     { label: 'Tổng giá trị đơn hàng', value: formatCurrency(GRAND_TOTAL) },
-                    { label: 'Số tiền hoàn lại cho khách', value: formatCurrency(refundAmount100) },
-                    { label: 'Trạng thái sau xử lý', value: 'Đã chấm dứt đơn hàng' }
+                    { label: 'Số tiền hoàn lại cho khách', value: formatCurrency(refundAmount100) }
                 ],
                 buildPayload: ({ faultParty, reason }) => {
                     if (!faultParty) {
@@ -1289,23 +1370,20 @@
         function openCompleteConfirmation() {
             const isDepositedCompletion = ORDER_STATUS === 'DEPOSITED';
             openConfirmationModal({
-                title: isDepositedCompletion ? 'Xác nhận thanh toán phần còn lại' : 'Xác nhận khách đã nhận cây',
+                title: isDepositedCompletion ? 'Xác nhận đã thu đủ tiền còn lại (Giao cây)' : 'Xác nhận khách đã nhận cây',
                 description: isDepositedCompletion
-                    ? 'Hệ thống sẽ ghi nhận khách hàng đã thanh toán số tiền còn lại và chuyển đơn sang trạng thái Đã thanh toán.'
+                    ? 'Khách hàng đã nhận cây và thanh toán đầy đủ số tiền còn lại. Hệ thống sẽ ghi nhận khoản thanh toán đợt 2, chuyển đơn sang trạng thái \'Đã hoàn thành\' và chuyển trạng thái cây sang \'Đã bán\'.'
                     : 'Xác nhận khách hàng đã nhận đầy đủ cây trong đơn hàng. Sau khi xác nhận, đơn sẽ chuyển từ \'Đã thanh toán\' sang \'Đã hoàn thành\'. Hành động này không làm phát sinh thêm khoản thanh toán.',
-                confirmLabel: isDepositedCompletion ? 'Xác nhận đã thu số tiền còn lại' : 'Xác nhận hoàn thành',
+                confirmLabel: isDepositedCompletion ? 'Xác nhận đã thu đủ & Hoàn thành' : 'Xác nhận hoàn thành',
                 summaryRows: isDepositedCompletion ? [
                     { label: 'Mã đơn hàng', value: ORDER_CODE },
-                    { label: 'Tiền đặt cọc đã thu', value: formatCurrency(SUCCESSFUL_DEPOSIT_AMOUNT) },
-                    { label: 'Số tiền còn lại cần thanh toán', value: formatCurrency(REMAINING_PAYMENT_AMOUNT) },
-                    { label: 'Phương thức thanh toán', value: 'Thanh toán tiền mặt / nhân viên xác nhận thủ công' },
-                    { label: 'Tổng giá trị đơn hàng', value: formatCurrency(GRAND_TOTAL) },
-                    { label: 'Trạng thái sau xử lý', value: 'Đã thanh toán' }
+                    { label: 'Tiền cọc đã thu (Đợt 1)', value: formatCurrency(SUCCESSFUL_DEPOSIT_AMOUNT) },
+                    { label: 'Số tiền còn lại thu đợt 2', value: formatCurrency(REMAINING_PAYMENT_AMOUNT) },
+                    { label: 'Tổng giá trị đơn hàng', value: formatCurrency(GRAND_TOTAL) }
                 ] : [
                     { label: 'Mã đơn hàng', value: ORDER_CODE },
                     { label: 'Trạng thái hiện tại', value: 'Đã thanh toán' },
-                    { label: 'Tổng số tiền khách đã thanh toán', value: formatCurrency(TOTAL_CASH_RECEIVED) },
-                    { label: 'Trạng thái sau xử lý', value: 'Đã hoàn thành' }
+                    { label: 'Tổng số tiền khách đã thanh toán', value: formatCurrency(TOTAL_CASH_RECEIVED) }
                 ],
                 buildPayload: () => ({
                     action: 'complete',
