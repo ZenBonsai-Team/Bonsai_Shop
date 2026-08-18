@@ -1,5 +1,8 @@
 package com.example.bonsai_shop.product.controller;
 
+import com.example.bonsai_shop.artisan.service.ProductJournalService;
+import com.example.bonsai_shop.entity.Product;
+import com.example.bonsai_shop.entity.ProductJournalEvent;
 import com.example.bonsai_shop.product.dto.ProductCardDTO;
 import com.example.bonsai_shop.product.dto.ProductMediaDTO;
 import com.example.bonsai_shop.product.service.ProductService;
@@ -14,6 +17,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -33,6 +38,7 @@ public class PremiumBonsaiController {
     );
 
     private final ProductService productService;
+    private final ProductJournalService productJournalService;
 
     @GetMapping("/bonsai-luxury")
     public String premium(
@@ -55,8 +61,12 @@ public class PremiumBonsaiController {
         if (product == null) {
             return "redirect:/bonsai-luxury";
         }
+        Product productEntity = productService.getProductById(productId);
         productService.incrementViewCountForCustomer(productId, authentication);
         List<ProductMediaDTO> mediaList = productService.getPremiumProductMedia(productId);
+        List<ProductJournalEvent> journalEvents = productJournalService.getPublicEvents(productEntity);
+        List<ProductJournalEvent> journalEventsAscending = new ArrayList<>(journalEvents);
+        Collections.reverse(journalEventsAscending);
         model.addAttribute("product", product);
         model.addAttribute("slotTypeLabels", SLOT_TYPE_LABELS);
         model.addAttribute("imageMediaList", mediaList.stream()
@@ -65,6 +75,8 @@ public class PremiumBonsaiController {
         model.addAttribute("videoMediaList", mediaList.stream()
                 .filter(media -> "VIDEO".equalsIgnoreCase(media.getMediaType()))
                 .toList());
+        model.addAttribute("journalEvents", journalEvents);
+        model.addAttribute("journalEventsAscending", journalEventsAscending);
         return "product/bonsai-luxury-detail";
     }
 }

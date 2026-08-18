@@ -13,7 +13,6 @@ import com.example.bonsai_shop.finance.service.FinancialLedgerService;
 import com.example.bonsai_shop.moderator.service.MyOrderService;
 import com.example.bonsai_shop.moderator.service.OrderActionService;
 import com.example.bonsai_shop.moderator.service.OrderDetailService;
-import com.example.bonsai_shop.notification.service.NotificationService;
 import com.example.bonsai_shop.owner.service.AccountService;
 import com.example.bonsai_shop.product.repository.OrderHandlingRepository;
 import com.example.bonsai_shop.product.repository.OrderLogRepository;
@@ -117,9 +116,6 @@ class SecurityAuthorizationTest {
 
     @MockitoBean
     private ProductService productService;
-
-    @MockitoBean
-    private NotificationService notificationService;
 
     @BeforeEach
     void setUp() {

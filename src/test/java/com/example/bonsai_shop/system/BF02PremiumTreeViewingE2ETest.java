@@ -246,6 +246,63 @@ class BF02PremiumTreeViewingE2ETest {
         page.waitForLoadState(LoadState.DOMCONTENTLOADED);
     }
 
+    private void openBookingModalFromHome() {
+        page.navigate(baseUrl + "/home");
+        page.waitForLoadState(LoadState.DOMCONTENTLOADED);
+        page.locator("#floatingBookingBubble").click(new Locator.ClickOptions().setForce(true));
+        assertThat(page.locator("#bookingModal")).hasClass(java.util.regex.Pattern.compile(".*is-open.*"));
+    }
+
+    private void fillBookingForm(LocalDate appointmentDate, String appointmentTime, String note) {
+        page.locator("#appointmentDate").fill(appointmentDate.toString());
+        page.locator("#appointmentTime").selectOption(appointmentTime);
+        page.locator("#note").fill(note);
+    }
+
+    private void submitBookingForm() {
+        page.locator("#actualBookingForm button[type='submit']").click(new Locator.ClickOptions().setForce(true));
+        page.waitForURL("**/home");
+        page.waitForLoadState(LoadState.DOMCONTENTLOADED);
+    }
+
+    private void submitBookingFromHome(LocalDate appointmentDate, String appointmentTime, String note) {
+        openBookingModalFromHome();
+        fillBookingForm(appointmentDate, appointmentTime, note);
+        submitBookingForm();
+    }
+
+    private Locator openAppointmentListModal() {
+        page.locator("#floatingAppointmentBubble").click(new Locator.ClickOptions().setForce(true));
+        Locator listModal = page.locator("#appointmentListModal");
+        assertThat(listModal).hasClass(java.util.regex.Pattern.compile(".*is-open.*"));
+        page.waitForFunction("() => document.querySelector('#appointmentListLoading')?.hidden === true");
+        return listModal;
+    }
+
+    private ViewingAppointment findAppointmentByNote(String note) {
+        return appointmentRepository.findByCustomerOrderByCreatedAtDesc(customer)
+                .stream()
+                .filter(appointment -> note.equals(appointment.getNote()))
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("Appointment was not persisted: " + note));
+    }
+
+    private Locator appointmentListItem(ViewingAppointment appointment) {
+        return page.locator(".apt-list-item")
+                .filter(new Locator.FilterOptions().setHasText("APT-" + appointment.getAppointmentId()))
+                .first();
+    }
+
+    private Locator openAppointmentDetailModal(ViewingAppointment appointment) {
+        Locator appointmentCard = appointmentListItem(appointment);
+        appointmentCard.waitFor();
+        appointmentCard.locator("[data-view-appointment]").click(new Locator.ClickOptions().setForce(true));
+
+        Locator detailModal = page.locator("#appointmentDetailModal");
+        assertThat(detailModal).hasClass(java.util.regex.Pattern.compile(".*is-open.*"));
+        return detailModal;
+    }
+
     private void configurePauseSetting(LocalDate appointmentDate) {
         AppointmentSetting setting = appointmentSettingRepository.findFirstByOrderBySettingIdAsc()
                 .orElseGet(AppointmentSetting::new);
@@ -346,32 +403,15 @@ class BF02PremiumTreeViewingE2ETest {
 
         loginAs(customerEmail);
 
-        page.navigate(baseUrl + "/bonsai-luxury-detail/" + premiumProduct.getProductId());
-        page.waitForLoadState(LoadState.DOMCONTENTLOADED);
-        page.locator("#productTitle").waitFor();
-        assertThat(page.locator("body")).containsText(premiumProduct.getProductName());
+        submitBookingFromHome(appointmentDate, appointmentTime, note);
+        ViewingAppointment createdAppointment = findAppointmentByNote(note);
+        openAppointmentListModal();
+        Locator appointmentCard = appointmentListItem(createdAppointment);
+        appointmentCard.waitFor();
 
-        page.locator(".schedule-btn").first().click(new Locator.ClickOptions().setForce(true));
-        assertThat(page.locator("#bookingModal")).hasClass(java.util.regex.Pattern.compile(".*is-open.*"));
-
-        page.locator("#appointmentDate").fill(appointmentDate.toString());
-        page.locator("#appointmentTime").selectOption(appointmentTime);
-        page.locator("#note").fill(note);
-
-        page.locator("#actualBookingForm button[type='submit']").click(new Locator.ClickOptions().setForce(true));
-        page.waitForURL("**/appointments");
-        page.waitForLoadState(LoadState.DOMCONTENTLOADED);
-        page.locator(".appointment-card").first().waitFor();
-
-        assertTrue(page.url().endsWith("/appointments"), "Customer should be redirected to appointment page");
-        assertThat(page.locator(".appointment-status-tag[data-status='PENDING']").first()).containsText("Chờ duyệt");
-        assertThat(page.locator("body")).containsText(note);
-
-        List<ViewingAppointment> appointments = appointmentRepository.findByCustomerOrderByCreatedAtDesc(customer);
-        ViewingAppointment createdAppointment = appointments.stream()
-                .filter(appointment -> note.equals(appointment.getNote()))
-                .findFirst()
-                .orElseThrow(() -> new AssertionError("Newly created appointment was not persisted"));
+        assertTrue(page.url().endsWith("/home"), "Customer should be redirected to home page");
+        assertThat(appointmentCard.locator(".apt-status")).hasAttribute("data-status", "PENDING");
+        assertThat(appointmentCard).containsText("APT-" + createdAppointment.getAppointmentId());
 
         assertEquals("PENDING", createdAppointment.getStatus());
         assertEquals(appointmentDate, createdAppointment.getAppointmentDate().toLocalDate());
@@ -389,28 +429,17 @@ class BF02PremiumTreeViewingE2ETest {
 
         loginAs(customerEmail);
 
-        page.navigate(baseUrl + "/bonsai-luxury-detail/" + premiumProduct.getProductId());
-        page.waitForLoadState(LoadState.DOMCONTENTLOADED);
-        page.locator("#productTitle").waitFor();
-        assertThat(page.locator("body")).containsText(premiumProduct.getProductName());
-
-        page.locator(".schedule-btn").first().click(new Locator.ClickOptions().setForce(true));
-        assertThat(page.locator("#bookingModal")).hasClass(java.util.regex.Pattern.compile(".*is-open.*"));
-
-        page.locator("#appointmentDate").fill(appointmentDate.toString());
-        page.locator("#appointmentTime").selectOption(appointmentTime);
-        page.locator("#note").fill(note);
+        openBookingModalFromHome();
+        fillBookingForm(appointmentDate, appointmentTime, note);
 
         int appointmentsBefore = appointmentRepository
                 .findByCustomerOrderByCreatedAtDesc(customer)
                 .size();
 
-        page.locator("#actualBookingForm button[type='submit']").click(new Locator.ClickOptions().setForce(true));
-        page.waitForURL("**/bonsai-luxury-detail/" + premiumProduct.getProductId());
-        page.waitForLoadState(LoadState.DOMCONTENTLOADED);
+        submitBookingForm();
 
-        assertThat(page.locator(".flash-message.flash-error").first())
-                .containsText("BF02 E2E pause schedule");
+        assertThat(page.locator("#homeFlashError"))
+                .hasAttribute("data-message", java.util.regex.Pattern.compile(".*BF02 E2E pause schedule.*"));
 
         List<ViewingAppointment> appointmentsAfter =
                 appointmentRepository.findByCustomerOrderByCreatedAtDesc(customer);
@@ -438,23 +467,7 @@ class BF02PremiumTreeViewingE2ETest {
 
         loginAs(customerEmail);
 
-        page.navigate(baseUrl + "/bonsai-luxury-detail/" + premiumProduct.getProductId());
-        page.waitForLoadState(LoadState.DOMCONTENTLOADED);
-        page.locator("#productTitle").waitFor();
-        assertThat(page.locator("body")).containsText(premiumProduct.getProductName());
-
-        page.locator(".schedule-btn").first().click(new Locator.ClickOptions().setForce(true));
-        assertThat(page.locator("#bookingModal")).hasClass(java.util.regex.Pattern.compile(".*is-open.*"));
-
-        page.locator("#appointmentDate").fill(appointmentDate.toString());
-        page.locator("#appointmentTime").selectOption(appointmentTime);
-        page.locator("#note").fill(note);
-
-        page.locator("#actualBookingForm button[type='submit']").click(new Locator.ClickOptions().setForce(true));
-        page.waitForURL("**/appointments");
-        page.waitForLoadState(LoadState.DOMCONTENTLOADED);
-        page.locator(".appointment-card").first().waitFor();
-
+        submitBookingFromHome(appointmentDate, appointmentTime, note);
         ViewingAppointment createdAppointment = appointmentRepository
                 .findByCustomerOrderByCreatedAtDesc(customer)
                 .stream()
@@ -468,14 +481,16 @@ class BF02PremiumTreeViewingE2ETest {
         int approvedCount = artisanAppointmentService.processAutoApprove();
         assertTrue(approvedCount > 0, "Auto-approve job should approve at least one appointment");
 
-        page.navigate(baseUrl + "/appointments");
+        page.navigate(baseUrl + "/home");
         page.waitForLoadState(LoadState.DOMCONTENTLOADED);
-        page.locator(".appointment-card").first().waitFor();
+        openAppointmentListModal();
+        Locator approvedCard = appointmentListItem(createdAppointment);
+        approvedCard.waitFor();
 
-        assertTrue(page.url().endsWith("/appointments"), "Customer should stay on appointment page");
-        assertThat(page.locator(".appointment-status-tag[data-status='APPROVED']").first()).containsText("Đã duyệt");
-        assertThat(page.locator("body")).containsText(note);
-        assertThat(page.locator("body")).containsText(appointmentDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
+        assertTrue(page.url().endsWith("/home"), "Customer should stay on home page");
+        assertThat(approvedCard.locator(".apt-status")).hasAttribute("data-status", "APPROVED");
+        assertThat(approvedCard).containsText("APT-" + createdAppointment.getAppointmentId());
+        assertThat(approvedCard).containsText(appointmentDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
         showApprovedEvidenceOnScreen(note);
 
         ViewingAppointment approvedAppointment = appointmentRepository.findById(createdAppointment.getAppointmentId())
@@ -501,31 +516,29 @@ class BF02PremiumTreeViewingE2ETest {
 
         loginAs(customerEmail);
 
-        page.navigate(baseUrl + "/appointments");
+        page.navigate(baseUrl + "/home");
         page.waitForLoadState(LoadState.DOMCONTENTLOADED);
+        openAppointmentListModal();
 
-        Locator appointmentCard = page.locator(".appointment-card")
-                .filter(new Locator.FilterOptions().setHasText(note))
-                .first();
+        Locator appointmentCard = appointmentListItem(appointment);
 
         appointmentCard.waitFor();
 
-        assertThat(appointmentCard).containsText(note);
-        assertThat(appointmentCard.locator(".appointment-status-tag"))
+        assertThat(appointmentCard).containsText("APT-" + appointment.getAppointmentId());
+        assertThat(appointmentCard.locator(".apt-status"))
                 .hasAttribute("data-status", "APPROVED");
 
-        appointmentCard.locator(".view-detail-btn").click(new Locator.ClickOptions().setForce(true));
+        appointmentCard.locator("[data-view-appointment]").click(new Locator.ClickOptions().setForce(true));
 
-        Locator detailModal = page.locator("#appointmentModal");
+        Locator detailModal = page.locator("#appointmentDetailModal");
         assertThat(detailModal).hasClass(java.util.regex.Pattern.compile(".*is-open.*"));
 
-        assertThat(detailModal.locator("#detailCode")).containsText("APT-" + appointment.getAppointmentId());
-        assertThat(detailModal.locator("#detailDate"))
+        assertThat(detailModal.locator("#aptDetailCode")).containsText("APT-" + appointment.getAppointmentId());
+        assertThat(detailModal.locator("#aptDetailDate"))
                 .containsText(appointmentDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
-        assertThat(detailModal.locator("#detailTime")).containsText(appointmentTime);
-        assertThat(detailModal.locator("#detailStatus")).not().containsText("Chá»");
-        assertThat(detailModal.locator("#detailName")).containsText("Bonsai");
-        assertThat(detailModal.locator("#detailNote")).containsText(note);
+        assertThat(detailModal.locator("#aptDetailTime")).containsText(appointmentTime);
+        assertThat(detailModal.locator("#aptDetailStatus")).not().containsText("Chá»");
+        assertThat(detailModal.locator("#aptDetailNote")).containsText(note);
 
         showAppointmentDetailEvidenceOnScreen(note);
     }
@@ -539,21 +552,8 @@ class BF02PremiumTreeViewingE2ETest {
 
         loginAs(customerEmail);
 
-        page.navigate(baseUrl + "/bonsai-luxury-detail/" + premiumProduct.getProductId());
-        page.waitForLoadState(LoadState.DOMCONTENTLOADED);
-        page.locator("#productTitle").waitFor();
-        assertThat(page.locator("body")).containsText(premiumProduct.getProductName());
-
-        page.locator(".schedule-btn").first().click(new Locator.ClickOptions().setForce(true));
-        assertThat(page.locator("#bookingModal")).hasClass(java.util.regex.Pattern.compile(".*is-open.*"));
-
-        page.locator("#appointmentDate").fill(appointmentDate.toString());
-        page.locator("#appointmentTime").selectOption(appointmentTime);
-        page.locator("#note").fill(note);
-
-        page.locator("#actualBookingForm button[type='submit']").click(new Locator.ClickOptions().setForce(true));
-        page.waitForURL("**/appointments");
-        page.waitForLoadState(LoadState.DOMCONTENTLOADED);
+        submitBookingFromHome(appointmentDate, appointmentTime, note);
+        openAppointmentListModal();
 
         ViewingAppointment appointment = appointmentRepository.findByCustomerOrderByCreatedAtDesc(customer)
                 .stream()
@@ -563,32 +563,18 @@ class BF02PremiumTreeViewingE2ETest {
 
         assertEquals("PENDING", appointment.getStatus(), "Appointment must initially be PENDING");
 
-        Locator appointmentCard = page.locator(".appointment-card")
-                .filter(new Locator.FilterOptions().setHasText(note))
-                .first();
+        Locator appointmentCard = appointmentListItem(appointment);
 
         appointmentCard.waitFor();
-        assertThat(appointmentCard.locator(".appointment-status-tag"))
+        assertThat(appointmentCard.locator(".apt-status"))
                 .hasAttribute("data-status", "PENDING");
 
-        appointmentCard.locator(".trigger-cancel-modal").click(new Locator.ClickOptions().setForce(true));
-
-        Locator cancelModal = page.locator("#cancelAppointmentModal");
-        assertThat(cancelModal).hasClass(java.util.regex.Pattern.compile(".*is-open.*"));
-
-        cancelModal.locator("button[type='submit']").click(new Locator.ClickOptions().setForce(true));
-        page.waitForURL("**/appointments");
-        page.waitForLoadState(LoadState.DOMCONTENTLOADED);
-
-        Locator cancelledCard = page.locator(".appointment-card")
-                .filter(new Locator.FilterOptions().setHasText(note))
-                .first();
-
-        cancelledCard.waitFor();
-        assertThat(cancelledCard.locator(".appointment-status-tag"))
-                .hasAttribute("data-status", "CANCELLED");
-        assertThat(cancelledCard.locator(".trigger-cancel-modal")).hasCount(0);
-        assertThat(page.locator(".flash-message.flash-success").first()).not().hasCount(0);
+        Locator cancelModal = openAppointmentDetailModal(appointment);
+        cancelModal.locator("#aptCancelAppointmentBtn").click(new Locator.ClickOptions().setForce(true));
+        Locator confirmButton = page.locator(".bsms-modal-btn-confirm");
+        assertThat(confirmButton).isVisible();
+        confirmButton.click(new Locator.ClickOptions().setForce(true));
+        page.waitForTimeout(1000);
 
         ViewingAppointment cancelledAppointment = appointmentRepository.findById(appointment.getAppointmentId())
                 .orElseThrow(() -> new AssertionError("Appointment disappeared from database"));
@@ -598,6 +584,17 @@ class BF02PremiumTreeViewingE2ETest {
                 cancelledAppointment.getStatus(),
                 "Appointment status must change from PENDING to CANCELLED"
         );
+
+        page.navigate(baseUrl + "/home");
+        page.waitForLoadState(LoadState.DOMCONTENTLOADED);
+        openAppointmentListModal();
+
+        Locator cancelledCard = appointmentListItem(appointment);
+
+        cancelledCard.waitFor();
+        assertThat(cancelledCard.locator(".apt-status"))
+                .hasAttribute("data-status", "CANCELLED");
+        assertThat(cancelledCard.locator("#aptCancelAppointmentBtn")).hasCount(0);
 
         showCancelledEvidenceOnScreen(note);
     }
@@ -617,20 +614,20 @@ class BF02PremiumTreeViewingE2ETest {
 
         loginAs(customerEmail);
 
-        page.navigate(baseUrl + "/appointments");
+        page.navigate(baseUrl + "/home");
         page.waitForLoadState(LoadState.DOMCONTENTLOADED);
+        openAppointmentListModal();
 
-        Locator appointmentCard = page.locator(".appointment-card")
-                .filter(new Locator.FilterOptions().setHasText(note))
-                .first();
+        Locator appointmentCard = appointmentListItem(appointment);
 
         appointmentCard.waitFor();
-        assertThat(appointmentCard).containsText(note);
-        assertThat(appointmentCard.locator(".appointment-status-tag"))
+        assertThat(appointmentCard).containsText("APT-" + appointment.getAppointmentId());
+        assertThat(appointmentCard.locator(".apt-status"))
                 .hasAttribute("data-status", "APPROVED");
 
-        assertThat(appointmentCard.locator(".trigger-cancel-modal")).hasCount(0);
-        assertThat(appointmentCard.locator(".type-locked")).isVisible();
+        Locator detailModal = openAppointmentDetailModal(appointment);
+        assertTrue(detailModal.locator("#aptCancelAppointmentBtn").isHidden());
+        assertThat(detailModal.locator("#appointmentLockedMessage")).isVisible();
 
         ViewingAppointment savedAppointment = appointmentRepository.findById(appointment.getAppointmentId())
                 .orElseThrow(() -> new AssertionError("Appointment was not found"));
@@ -675,82 +672,56 @@ class BF02PremiumTreeViewingE2ETest {
 
         loginAs(customerEmail);
 
-        page.navigate(baseUrl + "/appointments");
+        page.navigate(baseUrl + "/home");
         page.waitForLoadState(LoadState.DOMCONTENTLOADED);
+        openAppointmentListModal();
 
-        Locator appointmentCard = page.locator(".appointment-card")
-                .filter(new Locator.FilterOptions().setHasText(note))
-                .first();
+        Locator appointmentCard = appointmentListItem(appointment);
 
         appointmentCard.waitFor();
-        assertThat(appointmentCard).containsText(note);
-        assertThat(appointmentCard.locator(".appointment-status-tag"))
+        assertThat(appointmentCard).containsText("APT-" + appointment.getAppointmentId());
+        assertThat(appointmentCard.locator(".apt-status"))
                 .hasAttribute("data-status", "COMPLETED");
-        assertThat(appointmentCard.locator(".type-locked")).isVisible();
+        Locator detailModal = openAppointmentDetailModal(appointment);
+        assertThat(detailModal.locator("#appointmentLockedMessage")).isVisible();
 
         showCompletedEvidenceOnScreen(note);
     }
 
     @Test
-    @DisplayName("TC-E2E-BF02-008 - Customer can navigate between showroom and appointment history")
-    void tcE2E_BF02_008_customerCanNavigateBetweenShowroomAndAppointmentHistory() {
+    @DisplayName("TC-E2E-BF02-008 - Customer can reopen appointment history from home")
+    void tcE2E_BF02_008_customerCanReopenAppointmentHistoryFromHome() {
         LocalDate appointmentDate = LocalDate.now().plusDays(3);
         String appointmentTime = "14:00";
         String note = "BF02 E2E navigation test " + System.nanoTime();
 
         loginAs(customerEmail);
 
-        page.navigate(baseUrl + "/bonsai-luxury-detail/" + premiumProduct.getProductId());
-        page.waitForLoadState(LoadState.DOMCONTENTLOADED);
-        page.locator("#productTitle").waitFor();
-        assertThat(page.locator("body")).containsText(premiumProduct.getProductName());
+        submitBookingFromHome(appointmentDate, appointmentTime, note);
+        ViewingAppointment createdAppointment = findAppointmentByNote(note);
+        openAppointmentListModal();
 
-        page.locator(".schedule-btn").first().click(new Locator.ClickOptions().setForce(true));
-        assertThat(page.locator("#bookingModal")).hasClass(java.util.regex.Pattern.compile(".*is-open.*"));
-
-        page.locator("#appointmentDate").fill(appointmentDate.toString());
-        page.locator("#appointmentTime").selectOption(appointmentTime);
-        page.locator("#note").fill(note);
-
-        page.locator("#actualBookingForm button[type='submit']").click(new Locator.ClickOptions().setForce(true));
-        page.waitForURL("**/appointments");
-        page.waitForLoadState(LoadState.DOMCONTENTLOADED);
-
-        Locator createdAppointmentCard = page.locator(".appointment-card")
-                .filter(new Locator.FilterOptions().setHasText(note))
-                .first();
+        Locator createdAppointmentCard = appointmentListItem(createdAppointment);
 
         createdAppointmentCard.waitFor();
 
-        assertTrue(page.url().endsWith("/appointments"), "Customer should be redirected to appointment history");
-        assertThat(createdAppointmentCard).containsText(note);
+        assertTrue(page.url().endsWith("/home"), "Customer should be redirected to home page");
+        assertThat(createdAppointmentCard).containsText("APT-" + createdAppointment.getAppointmentId());
         assertThat(createdAppointmentCard)
                 .containsText(appointmentDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
         assertThat(createdAppointmentCard).containsText(appointmentTime);
 
-        page.navigate(baseUrl + "/bonsai-luxury-detail/" + premiumProduct.getProductId());
+        page.navigate(baseUrl + "/home");
         page.waitForLoadState(LoadState.DOMCONTENTLOADED);
-        page.locator("#productTitle").waitFor();
-        assertThat(page.locator("body")).containsText(premiumProduct.getProductName());
+        openAppointmentListModal();
 
-        page.navigate(baseUrl + "/appointments");
-        page.waitForLoadState(LoadState.DOMCONTENTLOADED);
-
-        Locator persistedAppointmentCard = page.locator(".appointment-card")
-                .filter(new Locator.FilterOptions().setHasText(note))
-                .first();
+        Locator persistedAppointmentCard = appointmentListItem(createdAppointment);
 
         persistedAppointmentCard.waitFor();
-        assertThat(persistedAppointmentCard).containsText(note);
+        assertThat(persistedAppointmentCard).containsText("APT-" + createdAppointment.getAppointmentId());
         assertThat(persistedAppointmentCard)
                 .containsText(appointmentDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
         assertThat(persistedAppointmentCard).containsText(appointmentTime);
-
-        ViewingAppointment createdAppointment = appointmentRepository.findByCustomerOrderByCreatedAtDesc(customer)
-                .stream()
-                .filter(appointment -> note.equals(appointment.getNote()))
-                .findFirst()
-                .orElseThrow(() -> new AssertionError("Appointment was lost after navigating between pages"));
 
         assertEquals(appointmentDate, createdAppointment.getAppointmentDate().toLocalDate());
         assertEquals(appointmentTime, createdAppointment.getAppointmentDate().toLocalTime().toString());
@@ -762,11 +733,11 @@ class BF02PremiumTreeViewingE2ETest {
     private void showApprovedEvidenceOnScreen(String note) {
         page.evaluate("""
                 note => {
-                    const cards = Array.from(document.querySelectorAll(".appointment-card"));
+                    const cards = Array.from(document.querySelectorAll(".apt-list-item"));
                     const card = cards.find(item => item.textContent.includes(note));
                     if (!card) return;
 
-                    const badge = card.querySelector(".appointment-status-tag[data-status='APPROVED']");
+                    const badge = card.querySelector(".apt-status[data-status='APPROVED']");
                     card.scrollIntoView({ behavior: "instant", block: "center" });
                     card.style.outline = "5px solid #16a34a";
                     card.style.boxShadow = "0 0 0 10px rgba(22, 163, 74, 0.25)";
@@ -784,9 +755,9 @@ class BF02PremiumTreeViewingE2ETest {
     private void showAppointmentDetailEvidenceOnScreen(String note) {
         page.evaluate("""
                 note => {
-                    const modal = document.querySelector("#appointmentModal");
-                    const noteElement = document.querySelector("#detailNote");
-                    const statusElement = document.querySelector("#detailStatus");
+                    const modal = document.querySelector("#appointmentDetailModal");
+                    const noteElement = document.querySelector("#aptDetailNote");
+                    const statusElement = document.querySelector("#aptDetailStatus");
                     if (!modal || !noteElement || !noteElement.textContent.includes(note)) return;
 
                     modal.scrollIntoView({ behavior: "instant", block: "center" });
@@ -808,11 +779,11 @@ class BF02PremiumTreeViewingE2ETest {
     private void showCancelledEvidenceOnScreen(String note) {
         page.evaluate("""
                 note => {
-                    const cards = Array.from(document.querySelectorAll(".appointment-card"));
+                    const cards = Array.from(document.querySelectorAll(".apt-list-item"));
                     const card = cards.find(item => item.textContent.includes(note));
                     if (!card) return;
 
-                    const badge = card.querySelector(".appointment-status-tag[data-status='CANCELLED']");
+                    const badge = card.querySelector(".apt-status[data-status='CANCELLED']");
                     card.scrollIntoView({ behavior: "instant", block: "center" });
                     card.style.outline = "5px solid #dc2626";
                     card.style.boxShadow = "0 0 0 10px rgba(220, 38, 38, 0.25)";
@@ -830,11 +801,11 @@ class BF02PremiumTreeViewingE2ETest {
     private void showCompletedEvidenceOnScreen(String note) {
         page.evaluate("""
                 note => {
-                    const cards = Array.from(document.querySelectorAll(".appointment-card"));
+                    const cards = Array.from(document.querySelectorAll(".apt-list-item"));
                     const card = cards.find(item => item.textContent.includes(note));
                     if (!card) return;
 
-                    const badge = card.querySelector(".appointment-status-tag[data-status='COMPLETED']");
+                    const badge = card.querySelector(".apt-status[data-status='COMPLETED']");
                     card.scrollIntoView({ behavior: "instant", block: "center" });
                     card.style.outline = "5px solid #7c3aed";
                     card.style.boxShadow = "0 0 0 10px rgba(124, 58, 237, 0.25)";
@@ -852,7 +823,7 @@ class BF02PremiumTreeViewingE2ETest {
     private void showNavigationEvidenceOnScreen(String note) {
         page.evaluate("""
                 note => {
-                    const cards = Array.from(document.querySelectorAll(".appointment-card"));
+                    const cards = Array.from(document.querySelectorAll(".apt-list-item"));
                     const card = cards.find(item => item.textContent.includes(note));
                     if (!card) return;
 
@@ -868,3 +839,6 @@ class BF02PremiumTreeViewingE2ETest {
 
 
 }
+
+
+
