@@ -46,6 +46,7 @@ public class OrderDetailDTO {
     private boolean canCancel;
     private boolean canCustomerNoShow;
     private boolean canRecordFaultRefund;
+    private boolean canProductRefundOnly;
 
     private CustomerInfoDTO customerInfo;
     private List<ProductSummaryDTO> products;

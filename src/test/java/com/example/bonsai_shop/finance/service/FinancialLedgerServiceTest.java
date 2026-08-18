@@ -47,6 +47,8 @@ class FinancialLedgerServiceTest {
                 financialLedgerRepository = mock(FinancialLedgerRepository.class);
                 paymentRepository = mock(PaymentRepository.class);
                 financialLedgerService = new FinancialLedgerService(financialLedgerRepository, paymentRepository);
+                when(financialLedgerRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+                when(financialLedgerRepository.saveAndFlush(any())).thenAnswer(inv -> inv.getArgument(0));
         }
 
         // =========================================================================
@@ -635,11 +637,84 @@ class FinancialLedgerServiceTest {
                 when(financialLedgerRepository.existsByOrderOrderIdAndLedgerTypeAndLedgerStatus(
                                 24, FinancialLedgerType.COMPLETED_ORDER_REVENUE, FinancialLedgerStatus.RECORDED))
                                 .thenReturn(false);
-                when(financialLedgerRepository.save(any())).thenThrow(new DataAccessException("DB Save Failed") {
+                when(financialLedgerRepository.saveAndFlush(any())).thenThrow(new DataAccessException("DB Save Failed") {
                 });
 
                 assertThrows(DataAccessException.class,
                                 () -> financialLedgerService.recordCompletedOrderRevenueIfAbsent(order, actor, null));
+        }
+
+        // =========================================================================
+        // Group 10: PRODUCT_REFUND_ONLY
+        // =========================================================================
+
+        @Test
+        @DisplayName("UT-UUT11-034: recordProductRefundOnly - Ghi nhận thành công khoản hoàn tiền giá cây (OUTFLOW, amount = treePrice)")
+        void recordProductRefundOnly_success() {
+                Order order = order(25);
+                order.setOrderDetails(List.of(detail(order, "8000000", 1)));
+                order.setShippingFee(new BigDecimal("1000000"));
+                order.setCraneFee(new BigDecimal("500000"));
+                order.setTotalAmount(new BigDecimal("9500000"));
+
+                Payment fullPayment = payment(50, order, PaymentType.FULL_PAYMENT.name(), "SUCCESS", "9500000");
+                when(paymentRepository.findByOrderOrderIdOrderByPaymentIdAsc(25)).thenReturn(List.of(fullPayment));
+
+                when(financialLedgerRepository.existsByOrderOrderIdAndLedgerTypeAndLedgerStatus(
+                                25, FinancialLedgerType.FULL_REFUND, FinancialLedgerStatus.RECORDED)).thenReturn(false);
+                when(financialLedgerRepository.existsByOrderOrderIdAndLedgerTypeAndLedgerStatus(
+                                25, FinancialLedgerType.PRODUCT_REFUND_ONLY, FinancialLedgerStatus.RECORDED)).thenReturn(false);
+
+                when(financialLedgerRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+                User moderator = moderator(10);
+                FinancialLedger result = financialLedgerService.recordProductRefundOnly(
+                                order, "Khách trả cây sau giao hàng", moderator);
+
+                assertNotNull(result);
+                assertEquals(FinancialLedgerType.PRODUCT_REFUND_ONLY, result.getLedgerType());
+                assertEquals(FinancialLedgerDirection.OUTFLOW, result.getDirection());
+                assertThat(result.getAmount()).isEqualByComparingTo("8000000");
+                assertEquals(FaultParty.CUSTOMER, result.getFaultParty());
+                assertEquals("Khách trả cây sau giao hàng", result.getReason());
+                assertEquals(moderator, result.getRecordedBy());
+                assertEquals(fullPayment, result.getRelatedPayment());
+        }
+
+        @Test
+        @DisplayName("UT-UUT11-035: recordProductRefundOnly - Đã có refund trước đó -> ném IllegalStateException")
+        void recordProductRefundOnly_alreadyRefunded_throwsIllegalStateException() {
+                Order order = order(26);
+                when(financialLedgerRepository.existsByOrderOrderIdAndLedgerTypeAndLedgerStatus(
+                                26, FinancialLedgerType.PRODUCT_REFUND_ONLY, FinancialLedgerStatus.RECORDED)).thenReturn(true);
+
+                User moderator = moderator(10);
+                IllegalStateException ex = assertThrows(IllegalStateException.class,
+                                () -> financialLedgerService.recordProductRefundOnly(order, "Reason", moderator));
+                assertThat(ex.getMessage()).contains("Đơn hàng này đã được ghi nhận hoàn tiền trước đó.");
+        }
+
+        @Test
+        @DisplayName("UT-UUT11-036: sumRecordedRefunds - Bao gồm cả FULL_REFUND và PRODUCT_REFUND_ONLY")
+        void sumRecordedRefunds_includesBothTypes() {
+                Order order = order(27);
+
+                FinancialLedger fullRefund = FinancialLedger.builder()
+                                .ledgerType(FinancialLedgerType.FULL_REFUND)
+                                .ledgerStatus(FinancialLedgerStatus.RECORDED)
+                                .amount(new BigDecimal("1000000"))
+                                .build();
+                FinancialLedger productRefund = FinancialLedger.builder()
+                                .ledgerType(FinancialLedgerType.PRODUCT_REFUND_ONLY)
+                                .ledgerStatus(FinancialLedgerStatus.RECORDED)
+                                .amount(new BigDecimal("8000000"))
+                                .build();
+
+                when(financialLedgerRepository.findByOrderOrderIdAndLedgerStatus(27, FinancialLedgerStatus.RECORDED))
+                                .thenReturn(List.of(fullRefund, productRefund));
+
+                BigDecimal totalRefunds = financialLedgerService.sumRecordedRefunds(order);
+                assertThat(totalRefunds).isEqualByComparingTo("9000000");
         }
 
         // =========================================================================

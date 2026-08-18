@@ -581,7 +581,19 @@
                         </tr>
                         <tr th:if="${order.paymentSummary.fullRefundAmount != null and order.paymentSummary.fullRefundAmount > 0}">
                             <td>Số tiền hoàn toàn bộ đã ghi nhận</td>
-                            <td class="money" th:text="${#numbers.formatDecimal(order.paymentSummary.fullRefundAmount, 0, 'COMMA', 0, 'POINT')} + ' đ'">---</td>
+                            <td class="money" style="color: #dc3545;" th:text="'- ' + ${#numbers.formatDecimal(order.paymentSummary.fullRefundAmount, 0, 'COMMA', 0, 'POINT')} + ' đ'">---</td>
+                        </tr>
+                        <tr th:if="${order.paymentSummary.productRefundAmount != null and order.paymentSummary.productRefundAmount > 0}">
+                            <td>Số tiền hoàn giá cây đã ghi nhận</td>
+                            <td class="money" style="color: #dc3545;" th:text="'- ' + ${#numbers.formatDecimal(order.paymentSummary.productRefundAmount, 0, 'COMMA', 0, 'POINT')} + ' đ'">---</td>
+                        </tr>
+                        <tr th:if="${(order.paymentSummary.fullRefundAmount != null and order.paymentSummary.fullRefundAmount > 0) or (order.paymentSummary.productRefundAmount != null and order.paymentSummary.productRefundAmount > 0)}">
+                            <td style="font-weight: 600;">Số tiền khách thực trả sau hoàn</td>
+                            <td class="money td-bold" th:text="${#numbers.formatDecimal(order.paymentSummary.actualPaidAfterRefund, 0, 'COMMA', 0, 'POINT')} + ' đ'">---</td>
+                        </tr>
+                        <tr th:if="${order.paymentSummary.productRefundAmount != null and order.paymentSummary.productRefundAmount > 0 and order.paymentSummary.retainedLogisticsAmount != null}">
+                            <td>Phí vận chuyển & cẩu nhà vườn giữ lại</td>
+                            <td class="money td-bold" style="color: #198754;" th:text="${#numbers.formatDecimal(order.paymentSummary.retainedLogisticsAmount, 0, 'COMMA', 0, 'POINT')} + ' đ'">---</td>
                         </tr>
                         <tr th:if="${order.paymentSummary.netRecognizedAmount != null and order.paymentSummary.netRecognizedAmount != 0 and (order.paymentSummary.forfeitedDepositIncome == null or order.paymentSummary.netRecognizedAmount != order.paymentSummary.forfeitedDepositIncome) and (order.paymentSummary.recognizedCompletedRevenue == null or order.paymentSummary.netRecognizedAmount != order.paymentSummary.recognizedCompletedRevenue)}">
                             <td>Giá trị ghi nhận ròng của đơn</td>
@@ -718,7 +730,7 @@
                         </div>
                     </div>
 
-                    <div class="od-inline-actions" th:if="${order.canApprove or order.canReject or order.canReturnInventory or order.canComplete or order.canCustomerNoShow or order.canRecordFaultRefund}">
+                    <div class="od-inline-actions" th:if="${order.canApprove or order.canReject or order.canReturnInventory or order.canComplete or order.canCustomerNoShow or order.canRecordFaultRefund or order.canProductRefundOnly}">
                         <!-- Luồng duyệt/từ chối đơn PENDING -->
                         <button th:if="${order.canApprove}" class="od-action-btn approve" type="button" onclick="openApproveConfirmation()">Duyệt đơn</button>
                         <button th:if="${order.canReject}" class="od-action-btn reject" type="button" onclick="openRejectConfirmation()">Từ chối đơn</button>
@@ -728,9 +740,10 @@
                         <button th:if="${order.canComplete}" class="od-action-btn approve" type="button" onclick="openCompleteConfirmation()" th:text="${order.orderStatus == 'DEPOSITED' ? 'Xác nhận đã thu đủ tiền còn lại' : 'Xác nhận khách đã nhận cây'}">Xác nhận khách đã nhận cây</button>
 
                         <!-- Xử lý ngoại lệ / Sự cố cho đơn đã cọc hoặc đã thanh toán -->
-                        <div th:if="${order.canCustomerNoShow or order.canRecordFaultRefund}" class="od-action-divider">Xử lý ngoại lệ / Sự cố</div>
+                        <div th:if="${order.canCustomerNoShow or order.canRecordFaultRefund or order.canProductRefundOnly}" class="od-action-divider">Xử lý ngoại lệ / Sự cố</div>
+                        <button th:if="${order.canProductRefundOnly}" class="od-action-btn outline-warning" type="button" onclick="openProductRefundConfirmation()">Khách từ chối nhận hàng</button>
                         <button th:if="${order.canCustomerNoShow}" class="od-action-btn outline-warning" type="button" onclick="openCustomerNoShowConfirmation()">Khách từ chối nhận hàng</button>
-                        <button th:if="${order.canRecordFaultRefund}" class="od-action-btn outline-danger" type="button" onclick="openFaultRefundConfirmation()">Hủy đơn và ghi nhận hoàn tiền</button>
+                        <button th:if="${order.canRecordFaultRefund}" class="od-action-btn outline-danger" type="button" onclick="openFaultRefundConfirmation()">Đơn bị hủy</button>
                     </div>
                 </div>
             </div>
@@ -1290,13 +1303,43 @@
             });
         }
 
+        function openProductRefundConfirmation() {
+            const retainedLogistics = (BASE_SHIPPING_FEE || 0) + (BASE_CRANE_FEE || 0);
+            openConfirmationModal({
+                title: 'Xác nhận khách từ chối nhận hàng',
+                description: 'Khách hàng từ chối nhận hoặc trả lại cây sau khi đã thanh toán toàn bộ và đồng ý chịu toàn bộ phí vận chuyển + phí cẩu. Hệ thống sẽ hủy đơn, ghi nhận hoàn lại tiền giá cây vào Sổ cái tài chính và giải phóng cây về kho để mở bán lại. (Lưu ý: Đây là thao tác ghi nhận hoàn tiền thủ công trên sổ cái, không tự động hoàn tiền qua cổng VNPay).',
+                confirmLabel: 'Xác nhận khách từ chối nhận hàng',
+                danger: true,
+                input: {
+                    label: 'Lý do khách từ chối nhận hàng',
+                    placeholder: 'Bắt buộc nhập lý do (ví dụ: Khách từ chối nhận cây sau khi giao, chịu toàn bộ phí vận chuyển và cẩu)'
+                },
+                summaryRows: [
+                    { label: 'Mã đơn hàng', value: ORDER_CODE },
+                    { label: 'Tiền cây sẽ hoàn cho khách', value: formatCurrency(BASE_TREE_PRICE) },
+                    { label: 'Phí vận chuyển giữ lại', value: formatCurrency(BASE_SHIPPING_FEE) },
+                    { label: 'Phí cẩu giữ lại', value: formatCurrency(BASE_CRANE_FEE) },
+                    { label: 'Tổng phí khách vẫn chịu', value: formatCurrency(retainedLogistics) }
+                ],
+                buildPayload: (reason) => {
+                    if (!reason || !reason.trim()) {
+                        throw new Error('Vui lòng nhập lý do khách từ chối nhận hàng.');
+                    }
+                    return {
+                        action: 'product_refund_only',
+                        reason: reason.trim()
+                    };
+                }
+            });
+        }
+
         function openFaultRefundConfirmation() {
             const refundAmount100 = REFUNDABLE_CASH > 0 ? REFUNDABLE_CASH : (ORDER_STATUS === 'PAID' ? GRAND_TOTAL : SUCCESSFUL_DEPOSIT_AMOUNT);
 
             openConfirmationModal({
-                title: 'Xác nhận hủy đơn & Hoàn tiền do sự cố',
+                title: 'Xác nhận đơn bị hủy (Hoàn tiền 100%)',
                 description: 'Đơn hàng gặp sự cố từ phía nhà vườn hoặc đơn vị vận chuyển (cây hư hại, sai quy cách...). Hệ thống sẽ hủy đơn và ghi nhận hoàn lại toàn bộ số tiền khách đã thực thanh toán. Cây sẽ được trả lại nhà vườn.',
-                confirmLabel: 'Xác nhận hoàn tiền & Hủy đơn',
+                confirmLabel: 'Xác nhận hủy đơn & Hoàn tiền',
                 danger: true,
                 faultRefund: {
                     faultParty: 'NURSERY',

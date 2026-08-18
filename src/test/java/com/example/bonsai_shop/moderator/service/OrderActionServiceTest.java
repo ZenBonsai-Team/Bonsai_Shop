@@ -577,4 +577,47 @@ class OrderActionServiceTest {
         assertThrows(DataAccessException.class,
                 () -> orderActionService.executeAction("BSMS-100", req, mod10));
     }
+
+    // =========================================================================
+    // Group 10: product_refund_only Action
+    // =========================================================================
+
+    @Test
+    @DisplayName("UT-UUT08-027: executeAction - product_refund_only thành công")
+    void executeAction_productRefundOnly_success() {
+        User mod10 = User.builder().userId(10).build();
+        Order order = Order.builder().orderId(100).orderCode("BSMS-100").orderStatus("PAID").assignedTo(mod10)
+                .build();
+        when(orderRepository.findByOrderCode("BSMS-100")).thenReturn(Optional.of(order));
+
+        OrderActionRequestDTO req = new OrderActionRequestDTO();
+        req.setAction("product_refund_only");
+        req.setReason("Khách không nhận cây");
+
+        Map<String, Object> res = orderActionService.executeAction("BSMS-100", req, mod10);
+
+        assertTrue((Boolean) res.get("success"));
+        assertEquals("BSMS-100", res.get("orderCode"));
+        assertEquals("product_refund_only", res.get("action"));
+        assertEquals("CANCELLED", res.get("newStatus"));
+
+        verify(orderService).recordProductRefundOnlyAndCancel("BSMS-100", "Khách không nhận cây", mod10);
+    }
+
+    @Test
+    @DisplayName("UT-UUT08-028: executeAction - product_refund_only thất bại do không phải PAID")
+    void executeAction_productRefundOnly_notPaid_throwsIllegalStateException() {
+        User mod10 = User.builder().userId(10).build();
+        Order order = Order.builder().orderId(100).orderCode("BSMS-100").orderStatus("DEPOSITED").assignedTo(mod10)
+                .build();
+        when(orderRepository.findByOrderCode("BSMS-100")).thenReturn(Optional.of(order));
+
+        OrderActionRequestDTO req = new OrderActionRequestDTO();
+        req.setAction("product_refund_only");
+        req.setReason("Khách không nhận cây");
+
+        IllegalStateException ex = assertThrows(IllegalStateException.class,
+                () -> orderActionService.executeAction("BSMS-100", req, mod10));
+        assertEquals("Chỉ áp dụng hoàn tiền giá cây cho đơn đã thanh toán toàn bộ.", ex.getMessage());
+    }
 }

@@ -1262,6 +1262,63 @@ public class OrderService {
     }
 
     /**
+     * [GHI NHẬN KHÁCH TRẢ CÂY - HOÀN TIỀN GIÁ CÂY VÀ HỦY ĐƠN]
+     *
+     * Mục đích:
+     * - Khi đơn hàng đã thanh toán toàn bộ (PAID/FULL_PAYMENT), cây đã giao đến nơi nhưng khách từ chối/trả lại cây
+     *   và đồng ý chịu toàn bộ phí vận chuyển + phí cẩu.
+     * - Ghi nhận bút toán hoàn tiền giá cây (PRODUCT_REFUND_ONLY) vào Sổ cái tài chính FinancialLedger.
+     * - Đổi Order sang CANCELLED và giải phóng cây về AVAILABLE.
+     *
+     * Được gọi từ:
+     * - OrderActionService.handleProductRefundOnly()
+     */
+    @Transactional
+    public boolean recordProductRefundOnlyAndCancel(String orderCode, String reason, User moderator) {
+        Order order = orderRepository.findByOrderCode(orderCode).orElse(null);
+        if (order == null) {
+            throw new IllegalArgumentException("Không tìm thấy đơn hàng: " + orderCode);
+        }
+        validateAssignedModerator(order, moderator);
+
+        String oldStatus = order.getOrderStatus();
+        if (!"PAID".equalsIgnoreCase(oldStatus)) {
+            throw new IllegalStateException("Chỉ có thể ghi nhận hoàn tiền giá cây khi đơn hàng đã thanh toán toàn bộ thành công.");
+        }
+
+        if (financialLedgerService.hasRecordedAnyRefund(order)) {
+            throw new IllegalStateException("Đơn hàng này đã được ghi nhận hoàn tiền trước đó.");
+        }
+
+        String normalizedReason = requireReason(reason);
+
+        FinancialLedger refundLedger = financialLedgerService.recordProductRefundOnly(
+                order,
+                normalizedReason,
+                moderator
+        );
+
+        appendOrderNote(order, normalizedReason + " Hoàn tiền giá cây, khách chịu phí vận chuyển và phí cẩu (Ghi nhận thủ công).");
+
+        order.setOrderStatus("CANCELLED");
+        orderRepository.save(order);
+        releaseProducts(order);
+
+        OrderLog logEntry = OrderLog.builder()
+                .order(order)
+                .actionBy(moderator)
+                .actionType("PRODUCT_REFUND_ONLY_RECORDED")
+                .fromStatus(oldStatus)
+                .toStatus("CANCELLED")
+                .actionAt(LocalDateTime.now())
+                .build();
+        orderLogRepository.save(logEntry);
+
+        eventPublisher.publishEvent(new OrderRejectedEvent(order, normalizedReason));
+        return true;
+    }
+
+    /**
      * [HOÀN TẤT ĐƠN HÀNG ĐÃ THANH TOÁN 100% VNPAY (COMPLETE PAID ORDER)]
      *
      * Mục đích:

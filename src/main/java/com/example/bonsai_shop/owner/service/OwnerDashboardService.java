@@ -212,8 +212,8 @@ public class OwnerDashboardService {
     @Transactional(readOnly = true)
     public BigDecimal getMonthlyRefundAmount(YearMonth selectedMonth) {
         LocalDateTime monthStart = monthStart(selectedMonth);
-        return normalize(financialLedgerRepository.sumLedgerAmount(
-                FinancialLedgerType.FULL_REFUND,
+        return normalize(financialLedgerRepository.sumLedgerAmountByTypes(
+                refundLedgerTypes(),
                 FinancialLedgerStatus.RECORDED,
                 monthStart,
                 monthStart.plusMonths(1)
@@ -249,7 +249,7 @@ public class OwnerDashboardService {
     public List<ArtisanDashboardSourceDTO> getRefundSources(YearMonth selectedMonth) {
         LocalDateTime monthStart = monthStart(selectedMonth);
         return financialLedgerRepository.findRefundSources(
-                FinancialLedgerType.FULL_REFUND,
+                refundLedgerTypes(),
                 FinancialLedgerStatus.RECORDED,
                 monthStart,
                 monthStart.plusMonths(1)
@@ -291,7 +291,14 @@ public class OwnerDashboardService {
         return List.copyOf(EnumSet.of(
                 FinancialLedgerType.COMPLETED_ORDER_REVENUE,
                 FinancialLedgerType.FORFEITED_DEPOSIT_INCOME,
-                FinancialLedgerType.FULL_REFUND
+                FinancialLedgerType.PRODUCT_REFUND_ONLY
+        ));
+    }
+
+    private List<FinancialLedgerType> refundLedgerTypes() {
+        return List.copyOf(EnumSet.of(
+                FinancialLedgerType.FULL_REFUND,
+                FinancialLedgerType.PRODUCT_REFUND_ONLY
         ));
     }
 
