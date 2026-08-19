@@ -3040,3 +3040,134 @@ h1, h2, h3, h4, h5, h6, .serif-text {
         overflow-y: visible;
     }
 }
+
+/* ==========================================================================
+   Premium Table Scroll & Responsive Filters (Mobile Alignment fixes)
+   ========================================================================== */
+
+/* Table Scroll Wrapper */
+.table-container {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin-top: 15px;
+}
+
+/* Base Filter Chips & Tabs styles for pages not loading dashboard.css */
+.filter-chips, .filter-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.filter-chip {
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    padding: 6px 14px;
+    border: 1.5px solid transparent;
+    background: #F4F1EA;
+    color: #536257;
+}
+
+.filter-chip:hover {
+    background: #E8E4DD;
+    color: #1C3322;
+}
+
+.filter-chip.active {
+    background: #1C3322;
+    color: #fff;
+    border-color: #1C3322;
+}
+
+/* Tab buttons for In-Person Order and other pages */
+.tab-btn {
+    padding: 9px 16px;
+    background: transparent;
+    border: none;
+    border-bottom: 2.5px solid transparent;
+    font-size: 0.83rem;
+    font-weight: 500;
+    color: #536257;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+    letter-spacing: 0.01em;
+    font-family: inherit;
+    display: inline-block;
+    text-decoration: none;
+}
+
+.tab-btn:hover {
+    color: #1C3322;
+    background: #F4F1EA;
+}
+
+.tab-btn.active {
+    color: #1C3322;
+    border-bottom-color: #B8926A;
+    font-weight: 700;
+    background: transparent;
+}
+
+/* Mobile responsive fixes (Aligning with 768px/992px layouts) */
+@media (max-width: 992px) {
+    .product-toolbar {
+        padding: 14px 16px !important;
+        margin: -20px -20px 0 !important;
+        gap: 12px !important;
+        display: flex !important;
+        flex-direction: column !important;
+    }
+    
+    .product-toolbar-top {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 10px !important;
+    }
+    
+    .product-toolbar-top input {
+        width: 100% !important;
+        min-width: 0 !important;
+    }
+    
+    .filter-chips, .filter-tabs {
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        overflow-x: auto !important;
+        padding-bottom: 8px !important;
+        gap: 8px !important;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none; /* Hide scrollbar Firefox */
+    }
+    
+    .filter-chips::-webkit-scrollbar,
+    .filter-tabs::-webkit-scrollbar {
+        display: none; /* Hide scrollbar Chrome/Safari */
+    }
+    
+    .filter-chip, .tab-btn {
+        flex: 0 0 auto !important;
+        padding: 6px 14px !important;
+        font-size: 0.8rem !important;
+        border-radius: 20px !important;
+        white-space: nowrap !important;
+    }
+    
+    .portal-card {
+        padding: 16px !important;
+    }
+    
+    .table-container {
+        margin: 0 -16px !important;
+    }
+    
+    .product-table {
+        min-width: 850px !important;
+    }
+}

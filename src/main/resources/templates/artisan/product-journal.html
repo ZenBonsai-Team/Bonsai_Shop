@@ -86,6 +86,24 @@
             @media (max-width: 1200px) { .journal-page { padding: 28px 32px; } .journal-layout { grid-template-columns: 1fr; } .journal-layout .form-card { position: static; } .journal-timeline { max-height: 620px; } }
             @media (max-width: 992px) { .journal-event { grid-template-columns: 88px 1fr; } .journal-event-actions { grid-column: 2; justify-items: start; } .journal-card-tags { justify-items: start; } .journal-card-toolbar { justify-content: flex-start; } .journal-cover-link { width: 88px; height: 72px; } .journal-modal-stage { min-height: 360px; } }
             @media (max-width: 576px) { .journal-page { padding: 22px 18px; } .journal-page .page-header { display: block; } .journal-page .actions { margin-top: 14px; } }
+            
+            /* Responsive optimized journal gallery thumbnail layout */
+            .journal-gallery {
+                display: grid !important;
+                grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)) !important;
+                gap: 8px !important;
+                margin-top: 10px !important;
+            }
+            .journal-gallery img,
+            .journal-gallery video {
+                width: 100% !important;
+                height: 82px !important;
+                object-fit: cover !important;
+                border-radius: 6px !important;
+                border: 1.5px solid #edf2ee !important;
+                display: block !important;
+                background-color: #f8faf8 !important;
+            }
         </style>
     </th:block>
 <body>
