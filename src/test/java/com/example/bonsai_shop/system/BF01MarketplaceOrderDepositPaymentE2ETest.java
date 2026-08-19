@@ -48,6 +48,9 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import com.example.bonsai_shop.integration.support.TestDatabaseSafetyInitializer;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import com.example.bonsai_shop.customer.service.EmailService;
+import com.example.bonsai_shop.product.service.MailService;
 
 import java.math.BigDecimal;
 import java.net.URLEncoder;
@@ -69,7 +72,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * L3 SYSTEM TEST (E2E Business Flow Testing - §3b) cho BF-01: Marketplace Order
  * – Deposit Payment.
  * TC-L3-BF01-001: Quy trình đặt mua cây Bonsai cọc trước (Deposit Flow):
- * 1. Khách xem sản phẩm & thực hiện checkout vắng lai qua OTP Email.
+ * 1. Khách xem sản phẩm & thực hiện checkout vãng lai qua OTP Email.
  * 2. Order Moderator tiếp nhận đơn từ Kho đơn chung (Orders Pool).
  * 3. Order Moderator kiểm duyệt đơn, cập nhật Phí cẩu (Crane Fee), Phí ship
  * (Shipping Fee) & Tiền cọc (Deposit Amount).
@@ -88,6 +91,12 @@ class BF01MarketplaceOrderDepositPaymentE2ETest {
 
         @LocalServerPort
         private int port;
+
+        @MockitoBean
+        private EmailService emailService;
+
+        @MockitoBean
+        private MailService mailService;
 
         @Autowired
         private UserRepository userRepository;
@@ -264,9 +273,25 @@ class BF01MarketplaceOrderDepositPaymentE2ETest {
         }
 
         @Test
-        @org.junit.jupiter.api.Order(1)
-        @DisplayName("TC-E2E-BF01-001 Step 1: Guest Browse & Checkout with OTP Verification")
-        void step1_guestBrowseAndCheckoutWithOtp() {
+        @DisplayName("TC-L3-BF01-001: Marketplace Order Deposit Payment Happy Path Flow")
+        void tcL3Bf01001_depositPaymentHappyPath() throws Exception {
+                // Step 1: Guest Browse & Checkout with OTP Verification
+                step1_guestBrowseAndCheckoutWithOtp();
+
+                // Step 2: Order Moderator claims order from Orders Pool
+                step2_moderatorClaimOrderFromPool();
+
+                // Step 3: Moderator approves order with Crane Fee, Shipping Fee, and Deposit Amount
+                step3_moderatorApproveOrderWithFeesAndDeposit();
+
+                // Step 4: VNPay Deposit Payment Callback Processing (Success)
+                step4_vnpayDepositPaymentSuccess();
+
+                // Step 5: Moderator confirms remaining payment & completes order
+                step5_moderatorConfirmRemainingPaymentAndComplete();
+        }
+
+        private void step1_guestBrowseAndCheckoutWithOtp() {
                 try (BrowserContext context = browser.newContext()) {
                         Page page = context.newPage();
 
@@ -358,10 +383,7 @@ class BF01MarketplaceOrderDepositPaymentE2ETest {
                 }
         }
 
-        @Test
-        @org.junit.jupiter.api.Order(2)
-        @DisplayName("TC-E2E-BF01-001 Step 2: Order Moderator claims order from Orders Pool")
-        void step2_moderatorClaimOrderFromPool() {
+        private void step2_moderatorClaimOrderFromPool() {
                 assertNotNull(createdOrderCode, "Mã đơn hàng từ Bước 1 không được rỗng!");
 
                 try (BrowserContext context = browser.newContext()) {
@@ -405,10 +427,7 @@ class BF01MarketplaceOrderDepositPaymentE2ETest {
                 }
         }
 
-        @Test
-        @org.junit.jupiter.api.Order(3)
-        @DisplayName("TC-E2E-BF01-001 Step 3: Moderator approves order with Crane Fee, Shipping Fee, and Deposit Amount")
-        void step3_moderatorApproveOrderWithFeesAndDeposit() {
+        private void step3_moderatorApproveOrderWithFeesAndDeposit() {
                 assertNotNull(createdOrderCode, "Mã đơn hàng từ Bước 1 không được rỗng!");
 
                 try (BrowserContext context = browser.newContext()) {
@@ -458,8 +477,7 @@ class BF01MarketplaceOrderDepositPaymentE2ETest {
                         assertEquals(0, new BigDecimal("2000000").compareTo(approvedOrder.getDepositAmount()),
                                         "Tiền đặt cọc phải bằng 2,000,000 VNĐ!");
 
-                        // Tổng giá trị đơn hàng mới = 10M (cây) + 1M (cẩu) + 500k (ship) = 11,500,000
-                        // VNĐ
+                        // Tổng giá trị đơn hàng mới = 10M (cây) + 1M (cẩu) + 500k (ship) = 11,500,000 VNĐ
                         assertEquals(0, new BigDecimal("11500000").compareTo(approvedOrder.getTotalAmount()),
                                         "Tổng tiền đơn hàng phải bằng 11,500,000 VNĐ!");
 
@@ -477,10 +495,7 @@ class BF01MarketplaceOrderDepositPaymentE2ETest {
                 }
         }
 
-        @Test
-        @org.junit.jupiter.api.Order(4)
-        @DisplayName("TC-E2E-BF01-001 Step 4: VNPay Deposit Payment Callback Processing (Success)")
-        void step4_vnpayDepositPaymentSuccess() throws Exception {
+        private void step4_vnpayDepositPaymentSuccess() throws Exception {
                 assertNotNull(createdOrderCode, "Mã đơn hàng không được rỗng!");
 
                 try (BrowserContext context = browser.newContext()) {
@@ -540,10 +555,7 @@ class BF01MarketplaceOrderDepositPaymentE2ETest {
                 }
         }
 
-        @Test
-        @org.junit.jupiter.api.Order(5)
-        @DisplayName("TC-E2E-BF01-001 Step 5: Moderator confirms remaining payment & completes order")
-        void step5_moderatorConfirmRemainingPaymentAndComplete() {
+        private void step5_moderatorConfirmRemainingPaymentAndComplete() {
                 assertNotNull(createdOrderCode, "Mã đơn hàng không được rỗng!");
 
                 try (BrowserContext context = browser.newContext()) {
@@ -555,8 +567,7 @@ class BF01MarketplaceOrderDepositPaymentE2ETest {
                         page.waitForLoadState(LoadState.DOMCONTENTLOADED);
                         evidencePause(page, "5.1 Moderator Viewing Deposited Order Detail Page");
 
-                        // 2. Click nút "Xác nhận thu phần còn lại" (button.od-action-btn.approve khi ở
-                        // trạng thái DEPOSITED)
+                        // 2. Click nút "Xác nhận thu phần còn lại" (button.od-action-btn.approve khi ở trạng thái DEPOSITED)
                         page.click("button.od-action-btn.approve");
 
                         // Modal xác nhận xuất hiện (#orderActionConfirmModal)
@@ -606,8 +617,7 @@ class BF01MarketplaceOrderDepositPaymentE2ETest {
                         assertEquals("SOLD", soldProduct.getProductStatus(),
                                         "Sản phẩm Bonsai sau khi hoàn thành đơn phải có trạng thái SOLD!");
 
-                        // Kiểm tra sổ sách tài chính (Financial Ledger) đã ghi nhận doanh thu đơn hoàn
-                        // thành
+                        // Kiểm tra sổ sách tài chính (Financial Ledger) đã ghi nhận doanh thu đơn hoàn thành
                         List<FinancialLedger> ledgers = financialLedgerRepository
                                         .findByOrderOrderIdOrderByRecognizedAtAscFinancialLedgerIdAsc(
                                                         completedOrder.getOrderId());

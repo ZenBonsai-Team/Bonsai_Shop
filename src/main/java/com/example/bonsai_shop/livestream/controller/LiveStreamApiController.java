@@ -18,6 +18,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+/**
+ * Controller cung cấp các API REST điều khiển tính năng Livestream,
+ * quản lý phòng chat và theo dõi cơ hội chốt đơn (Leads).
+ */
 @RestController
 @RequestMapping("/api/live")
 @RequiredArgsConstructor
@@ -30,7 +34,8 @@ public class LiveStreamApiController {
     private final SimpMessagingTemplate messagingTemplate;
 
     /**
-     * POST /api/live/start - Start a new live session
+     * POST /api/live/start - Khởi chạy một phiên livestream mới.
+     * Dữ liệu đầu vào: { "title": "...", "streamUrl": "..." }
      */
     @PostMapping("/start")
     public ResponseEntity<?> startSession(@RequestBody Map<String, String> body) {
@@ -50,7 +55,7 @@ public class LiveStreamApiController {
     }
 
     /**
-     * POST /api/live/{sessionId}/end - End a live session
+     * POST /api/live/{sessionId}/end - Đóng phiên livestream hiện tại.
      */
     @PostMapping("/{sessionId}/end")
     public ResponseEntity<?> endSession(@PathVariable Integer sessionId) {
@@ -63,8 +68,8 @@ public class LiveStreamApiController {
     }
 
     /**
-     * GET /api/live/status - Lightweight status check: is there an active live session?
-     * Used by the floating live bubble on the navbar to update its appearance.
+     * GET /api/live/status - API kiểm tra nhanh xem hệ thống có đang phát Live hay không.
+     * Sử dụng cho hiệu ứng nhấp nháy màu đỏ hiển thị trên nút Live của thanh điều hướng (Navbar).
      */
     @GetMapping("/status")
     public ResponseEntity<?> getLiveStatus() {
@@ -73,7 +78,7 @@ public class LiveStreamApiController {
     }
 
     /**
-     * GET /api/live/active - Get currently active session
+     * GET /api/live/active - Lấy thông tin chi tiết của phiên Live đang chạy hiện tại.
      */
     @GetMapping("/active")
     public ResponseEntity<?> getActiveSession() {
@@ -89,7 +94,15 @@ public class LiveStreamApiController {
     }
 
     /**
-     * GET /api/live/{sessionId}/leads - Get all leads for a session
+     * GET /api/live/sessions/ended - Lấy danh sách các phiên Live Stream đã kết thúc.
+     */
+    @GetMapping("/sessions/ended")
+    public ResponseEntity<List<LiveSession>> getEndedSessions() {
+        return ResponseEntity.ok(liveSessionRepository.findByStatusOrderByStartTimeDesc("ENDED"));
+    }
+
+    /**
+     * GET /api/live/{sessionId}/leads - Lấy toàn bộ danh sách chốt đơn của phiên Live hiện tại.
      */
     @GetMapping("/{sessionId}/leads")
     public ResponseEntity<List<LiveLead>> getLeads(@PathVariable Integer sessionId) {
@@ -97,7 +110,7 @@ public class LiveStreamApiController {
     }
 
     /**
-     * PUT /api/live/leads/{leadId}/status - Update lead status
+     * PUT /api/live/leads/{leadId}/status - Cập nhật trạng thái xử lý đơn chốt (Ví dụ: Chuyển từ PENDING sang DONE).
      */
     @PutMapping("/leads/{leadId}/status")
     public ResponseEntity<?> updateLeadStatus(
@@ -118,13 +131,12 @@ public class LiveStreamApiController {
     }
 
     /**
-     * GET /api/live/{sessionId}/chat-history - Load last 200 persisted chat messages.
-     * Only the most recent 200 messages are returned (sorted chronologically oldest→newest).
-     * This ensures page reload is fast regardless of how many total messages were sent.
+     * GET /api/live/{sessionId}/chat-history - Lấy lịch sử 200 tin nhắn chat gần nhất.
+     * Giúp tải nhanh lịch sử tin nhắn khi khách hàng vào xem live giữa chừng hoặc F5 lại trang.
      */
     @GetMapping("/{sessionId}/chat-history")
     public ResponseEntity<?> getChatHistory(@PathVariable Integer sessionId) {
-        // Fetch last 200 (DESC), then reverse to show oldest→newest in UI
+        // Lấy 200 tin nhắn mới nhất, sau đó đảo ngược thứ tự để hiển thị từ cũ tới mới trên khung chat
         List<LiveChatMessage> messages = liveChatMessageRepository
                 .findTop200ByLiveSessionSessionIdOrderBySentAtDesc(sessionId);
         java.util.Collections.reverse(messages);
@@ -142,12 +154,11 @@ public class LiveStreamApiController {
     }
 
     /**
-     * POST /api/live/chat - Process a chat message from user web chat or moderator panel.
-     *
-     * Flow:
-     *  1. Save message to DB (for persistence / history reload)
-     *  2. Broadcast to /topic/live-chat/{sessionId} so BOTH moderator and viewer see it in real-time
-     *  3. Process for lead detection (phone + product code)
+     * POST /api/live/chat - Nhận tin nhắn chat từ Client (Khung chat trên Web của khách hoặc admin).
+     * Sau khi nhận:
+     * 1. Lưu tin nhắn vào Database.
+     * 2. Phát tin nhắn qua WebSocket tới `/topic/live-chat/{sessionId}` để hiển thị tức thì trên tất cả màn hình.
+     * 3. Gọi bộ trích lọc Lead để kiểm tra xem có chứa SĐT hoặc mã sản phẩm hay không.
      */
     @PostMapping("/chat")
     public ResponseEntity<?> processChat(@RequestBody Map<String, Object> body) {
@@ -158,7 +169,7 @@ public class LiveStreamApiController {
             String source = body.getOrDefault("source", "WEB").toString();
             String time = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm"));
 
-            // 1. Persist message to DB
+            // 1. Lưu trữ tin nhắn chat thô vào DB
             liveSessionRepository.findById(sessionId).ifPresent(session -> {
                 LiveChatMessage chatMsg = LiveChatMessage.builder()
                         .liveSession(session)
@@ -170,11 +181,11 @@ public class LiveStreamApiController {
                 liveChatMessageRepository.save(chatMsg);
             });
 
-            // 2. Broadcast to ALL subscribers (both moderator and viewer pages)
+            // 2. Broadcast tin nhắn qua WebSocket tới người xem khác và bảng điều khiển của admin
             messagingTemplate.convertAndSend("/topic/live-chat/" + sessionId,
                     (Object) Map.of("author", author, "message", message, "time", time, "source", source));
 
-            // 3. Lead detection (phone + product code)
+            // 3. Phân tích tin nhắn để phát hiện cơ hội chốt đơn
             liveSessionRepository.findById(sessionId).ifPresent(session ->
                 liveStreamService.processComment(author, message, session)
             );
@@ -186,10 +197,8 @@ public class LiveStreamApiController {
     }
 
     /**
-     * POST /api/live/{sessionId}/fetch-youtube - Manually fetch new YouTube live chat messages.
-     *
-     * Note: YouTube Data API v3 key must be configured in application.properties as youtube.api.key.
-     * Without it, this endpoint will return success=false with an explanation message.
+     * POST /api/live/{sessionId}/fetch-youtube - Đồng bộ thủ công các bình luận YouTube Live Chat.
+     * Hữu dụng trong trường hợp không chạy cron tự động hoặc cần cưỡng chế kéo bình luận tức thì.
      */
     @PostMapping("/{sessionId}/fetch-youtube")
     public ResponseEntity<?> fetchYouTubeChat(
@@ -218,7 +227,7 @@ public class LiveStreamApiController {
         }
     }
 
-    /** Extract YouTube video ID from URL */
+    /** Trích xuất Video ID từ đường dẫn đầy đủ của YouTube */
     private String extractVideoId(String url) {
         if (url == null) return null;
         if (url.contains("v=")) {

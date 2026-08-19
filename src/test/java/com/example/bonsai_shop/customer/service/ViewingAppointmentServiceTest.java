@@ -5,7 +5,6 @@ import com.example.bonsai_shop.customer.repository.ViewingAppointmentRepository;
 import com.example.bonsai_shop.entity.AppointmentSetting;
 import com.example.bonsai_shop.entity.User;
 import com.example.bonsai_shop.entity.ViewingAppointment;
-import com.example.bonsai_shop.notification.service.NotificationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -30,9 +29,6 @@ class ViewingAppointmentServiceTest {
 
     @Mock
     private UserService userService;
-
-    @Mock
-    private NotificationService notificationService;
 
     @Mock
     private AppointmentSettingService appointmentSettingService;
@@ -76,16 +72,17 @@ class ViewingAppointmentServiceTest {
 
         verify(userService).checkProfileEmailAndPhone(customer);
         verify(viewingAppointmentRepository).save(appointment);
-        verify(notificationService).createNotification(
-                eq(customer),
-                argThat(message -> message.contains(appointment.getAppointmentDate().toString()))
-        );
     }
 
     @Test
     void createViewingAppointment_WhenAppointmentTimeOutsideBusinessHours_ShouldThrow() {
         appointment.setAppointmentDate(
-                LocalDateTime.of(2026, 8, 10, 18, 0)
+                LocalDateTime.now()
+                        .plusDays(1)
+                        .withHour(18)
+                        .withMinute(0)
+                        .withSecond(0)
+                        .withNano(0)
         );
 
         RuntimeException ex = assertThrows(
@@ -99,7 +96,30 @@ class ViewingAppointmentServiceTest {
         );
 
         verify(viewingAppointmentRepository, never()).save(any());
-        verifyNoInteractions(notificationService);
+    }
+
+    @Test
+    void createViewingAppointment_WhenAppointmentDateInPast_ShouldThrowAndNotSave() {
+        appointment.setAppointmentDate(
+                LocalDateTime.now()
+                        .minusDays(1)
+                        .withHour(10)
+                        .withMinute(0)
+                        .withSecond(0)
+                        .withNano(0)
+        );
+
+        when(appointmentSettingService.isPausedAt(appointment.getAppointmentDate())).thenReturn(false);
+
+        RuntimeException ex = assertThrows(
+                RuntimeException.class,
+                () -> viewingAppointmentService.createViewingAppointment(appointment)
+        );
+
+        assertTrue(ex.getMessage().endsWith("qua."));
+
+        verify(userService).checkProfileEmailAndPhone(customer);
+        verify(viewingAppointmentRepository, never()).save(any());
     }
 
     @Test
@@ -117,7 +137,6 @@ class ViewingAppointmentServiceTest {
 
         assertTrue(exception.getMessage().contains("Bao tri"));
         verify(viewingAppointmentRepository, never()).save(any());
-        verify(notificationService, never()).createNotification(any(), anyString());
     }
 
     @Test
@@ -132,7 +151,6 @@ class ViewingAppointmentServiceTest {
         );
 
         verify(viewingAppointmentRepository, never()).save(any());
-        verify(notificationService, never()).createNotification(any(), anyString());
     }
 
     @Test
@@ -155,8 +173,6 @@ class ViewingAppointmentServiceTest {
         verifyNoInteractions(appointmentSettingService);
 
         verify(viewingAppointmentRepository, never()).save(any());
-
-        verifyNoInteractions(notificationService);
     }
 
     @Test
@@ -214,7 +230,12 @@ class ViewingAppointmentServiceTest {
     void updateViewingAppointment_WhenPending_ShouldUpdateSaveAndNotify() {
 
         LocalDateTime newDate =
-                LocalDateTime.of(2026, 8, 10, 10, 0);
+                LocalDateTime.now()
+                        .plusDays(2)
+                        .withHour(10)
+                        .withMinute(0)
+                        .withSecond(0)
+                        .withNano(0);
 
         when(viewingAppointmentRepository.findByAppointmentIdAndCustomer(10, customer))
                 .thenReturn(Optional.of(appointment));
@@ -231,11 +252,6 @@ class ViewingAppointmentServiceTest {
         assertNotNull(appointment.getUpdatedAt());
 
         verify(viewingAppointmentRepository).save(appointment);
-
-        verify(notificationService).createNotification(
-                eq(customer),
-                argThat(message -> message.contains(newDate.toString()))
-        );
     }
 
     @Test
@@ -250,7 +266,6 @@ class ViewingAppointmentServiceTest {
         );
 
         verify(viewingAppointmentRepository, never()).save(any());
-        verify(notificationService, never()).createNotification(any(), anyString());
     }
 
     @Test
@@ -272,14 +287,18 @@ class ViewingAppointmentServiceTest {
         assertEquals("Không tìm thấy lịch hẹn", ex.getMessage());
 
         verify(viewingAppointmentRepository, never()).save(any());
-        verifyNoInteractions(notificationService);
     }
 
     @Test
     void updateViewingAppointment_WhenOutsideBusinessHours_ShouldThrowAndNotSave() {
 
         LocalDateTime invalidDate =
-                LocalDateTime.of(2026, 8, 10, 23, 0);
+                LocalDateTime.now()
+                        .plusDays(2)
+                        .withHour(23)
+                        .withMinute(0)
+                        .withSecond(0)
+                        .withNano(0);
 
         when(viewingAppointmentRepository.findByAppointmentIdAndCustomer(10, customer))
                 .thenReturn(Optional.of(appointment));
@@ -300,7 +319,35 @@ class ViewingAppointmentServiceTest {
         );
 
         verify(viewingAppointmentRepository, never()).save(any());
-        verify(notificationService, never()).createNotification(any(), anyString());
+    }
+
+    @Test
+    void updateViewingAppointment_WhenAppointmentDateInPast_ShouldThrowAndNotSave() {
+
+        LocalDateTime invalidDate =
+                LocalDateTime.now()
+                        .minusDays(1)
+                        .withHour(10)
+                        .withMinute(0)
+                        .withSecond(0)
+                        .withNano(0);
+
+        when(viewingAppointmentRepository.findByAppointmentIdAndCustomer(10, customer))
+                .thenReturn(Optional.of(appointment));
+
+        RuntimeException ex = assertThrows(
+                RuntimeException.class,
+                () -> viewingAppointmentService.updateViewingAppointment(
+                        10,
+                        customer,
+                        invalidDate,
+                        "Updated note"
+                )
+        );
+
+        assertTrue(ex.getMessage().endsWith("qua."));
+
+        verify(viewingAppointmentRepository, never()).save(any());
     }
 
     @Test
@@ -313,10 +360,6 @@ class ViewingAppointmentServiceTest {
         assertEquals("CANCELLED", appointment.getStatus());
         assertNotNull(appointment.getUpdatedAt());
         verify(viewingAppointmentRepository).save(appointment);
-        verify(notificationService).createNotification(
-                eq(customer),
-                argThat(message -> message.contains(appointment.getUpdatedAt().toString()))
-        );
     }
 
     @Test
@@ -331,7 +374,6 @@ class ViewingAppointmentServiceTest {
         );
 
         verify(viewingAppointmentRepository, never()).save(any());
-        verify(notificationService, never()).createNotification(any(), anyString());
     }
 
     @Test
@@ -348,7 +390,6 @@ class ViewingAppointmentServiceTest {
         assertEquals("Không tìm thấy lịch hẹn", ex.getMessage());
 
         verify(viewingAppointmentRepository, never()).save(any());
-        verifyNoInteractions(notificationService);
     }
 
     @Test
@@ -373,6 +414,5 @@ class ViewingAppointmentServiceTest {
         );
 
         verify(viewingAppointmentRepository, never()).save(any());
-        verify(notificationService, never()).createNotification(any(), anyString());
     }
 }

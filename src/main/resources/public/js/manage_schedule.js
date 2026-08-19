@@ -86,6 +86,7 @@
         return parseDateInput(queryDate || "") || getLocalDateString();
     }
 
+    // lấy list appointment theo ngày
     function updateDateParam(dateString) {
         const url = new URL(window.location.href);
         url.pathname = "/artisan/appointments";
@@ -225,6 +226,7 @@
         return createElement("span", `status-badge ${status.toLowerCase()}`, statusLabels[status] || status);
     }
 
+    // Map toàn bộ UI ban đầu
     function mapAppointmentRow(row) {
         const dateText = row.dataset.date || row.dataset.appointmentAt || "";
         const status = row.dataset.status ? row.dataset.status.trim().toUpperCase() : "PENDING";
@@ -263,6 +265,7 @@
         };
     }
 
+    // đọc dữ liệu ban đầu từ HTML
     function extractAppointmentsFromDOM() {
         state.appointments = [];
         elements.appointmentData.querySelectorAll(".appointment-data-row").forEach(row => {
@@ -289,6 +292,7 @@
         state.pendingAppointments = Array.from(pendingAppointmentsById.values());
     }
 
+    // vẽ toàn bộ lịch
     function renderCalendar() {
         elements.currentMonth.textContent = `${monthNames[state.currentMonth]} ${state.currentYear}`;
         elements.calendarGrid.innerHTML = "";
@@ -325,10 +329,12 @@
         }
     }
 
+    // chọn ngày
     function selectCalendarDate(dateString) {
         loadAppointmentsForDate(dateString);
     }
 
+    // load data theo ngày đc chọn
     async function fetchAppointmentsForDate(dateString) {
         const url = new URL("/artisan/appointments/data", window.location.origin);
         url.searchParams.set("date", dateString);
@@ -344,6 +350,7 @@
         return (await response.json()).map(mapAppointmentDto);
     }
 
+    // load ngày được chọn
     async function loadAppointmentsForDate(dateString) {
         if (!dateString || dateString === state.selectedDate) return;
 
@@ -943,6 +950,7 @@
     }
 
 
+    // tự động load trang
     function init() {
         state.selectedDate = getSelectedDateFromPage();
         extractAppointmentsFromDOM();

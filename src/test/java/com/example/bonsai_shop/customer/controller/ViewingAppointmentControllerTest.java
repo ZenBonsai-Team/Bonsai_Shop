@@ -9,7 +9,6 @@ import com.example.bonsai_shop.entity.AppointmentSetting;
 import com.example.bonsai_shop.entity.Role;
 import com.example.bonsai_shop.entity.User;
 import com.example.bonsai_shop.entity.ViewingAppointment;
-import com.example.bonsai_shop.notification.service.NotificationService;
 import jakarta.servlet.ServletException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -27,7 +26,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -41,10 +39,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.flash;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -68,9 +64,6 @@ class ViewingAppointmentControllerTest {
 
     @MockitoBean
     private AppointmentSettingService appointmentSettingService;
-
-    @MockitoBean
-    private NotificationService notificationService;
 
     @BeforeEach
     void setUp() {
@@ -117,7 +110,7 @@ class ViewingAppointmentControllerTest {
                                 .with(csrf())
                 )
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/appointments"));
+                .andExpect(redirectedUrl("/home"));
 
         List<ViewingAppointment> appointments =
                 viewingAppointmentRepository.findByCustomerOrderByCreatedAtDesc(user);
@@ -168,7 +161,7 @@ class ViewingAppointmentControllerTest {
                                 .with(csrf())
                 )
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/appointments"));
+                .andExpect(redirectedUrl("/home"));
 
         List<ViewingAppointment> appointments =
                 viewingAppointmentRepository.findByCustomerOrderByCreatedAtDesc(user);
@@ -199,7 +192,7 @@ class ViewingAppointmentControllerTest {
                                 .with(csrf())
                 )
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/appointments"))
+                .andExpect(redirectedUrl("/home"))
                 .andExpect(flash().attributeExists("error"));
 
         List<ViewingAppointment> appointments =
@@ -221,16 +214,16 @@ class ViewingAppointmentControllerTest {
                 .build());
 
         mockMvc.perform(
-                        get("/appointments")
+                        get("/appointments/list")
                                 .with(user(new CustomUserDetails(
                                         user,
                                         List.of(new SimpleGrantedAuthority("ROLE_CUSTOMER"))
                                 )))
                 )
                 .andExpect(status().isOk())
-                .andExpect(view().name("customer/view-appointment"))
-                .andExpect(model().attributeExists("viewingAppointments"))
-                .andExpect(model().attribute("viewingAppointments", hasSize(1)));
+                .andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$[0].status").value("PENDING"))
+                .andExpect(jsonPath("$[0].note").value("Existing appointment"));
     }
 
     @Test
@@ -239,16 +232,14 @@ class ViewingAppointmentControllerTest {
                 .orElseThrow();
 
         mockMvc.perform(
-                        get("/appointments")
+                        get("/appointments/list")
                                 .with(user(new CustomUserDetails(
                                         user,
                                         List.of(new SimpleGrantedAuthority("ROLE_CUSTOMER"))
                                 )))
                 )
                 .andExpect(status().isOk())
-                .andExpect(view().name("customer/view-appointment"))
-                .andExpect(model().attributeExists("viewingAppointments"))
-                .andExpect(model().attribute("viewingAppointments", empty()));
+                .andExpect(jsonPath("$", hasSize(0)));
     }
 
     @Test
@@ -256,7 +247,7 @@ class ViewingAppointmentControllerTest {
         assertThrows(
                 ServletException.class,
                 () -> mockMvc.perform(
-                        get("/appointments")
+                        get("/appointments/list")
                                 .with(user("missing@test.com").roles("CUSTOMER"))
                 )
         );
@@ -364,7 +355,7 @@ class ViewingAppointmentControllerTest {
                                 .with(csrf())
                 )
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/appointments"))
+                .andExpect(redirectedUrl("/home"))
                 .andExpect(flash().attributeExists("success"));
 
         ViewingAppointment updatedAppointment = viewingAppointmentRepository
@@ -389,7 +380,7 @@ class ViewingAppointmentControllerTest {
                                 .with(csrf())
                 )
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/appointments"))
+                .andExpect(redirectedUrl("/home"))
                 .andExpect(flash().attributeExists("error"));
     }
 
@@ -438,7 +429,7 @@ class ViewingAppointmentControllerTest {
                                 .with(csrf())
                 )
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/appointments"))
+                .andExpect(redirectedUrl("/home"))
                 .andExpect(flash().attributeExists("success"));
 
         ViewingAppointment cancelledAppointment = viewingAppointmentRepository
@@ -456,7 +447,7 @@ class ViewingAppointmentControllerTest {
                                 .with(csrf())
                 )
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/appointments"))
+                .andExpect(redirectedUrl("/home"))
                 .andExpect(flash().attributeExists("error"));
     }
 

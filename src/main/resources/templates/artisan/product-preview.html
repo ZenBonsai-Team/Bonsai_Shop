@@ -1,47 +1,43 @@
-﻿<!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/dashboard-layout :: layout(~{::title}, ~{::#artisan-product-preview-content}, ~{::styles}, ~{::scripts})}">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Preview sản phẩm</title>
-    <link rel="icon" type="image/png" th:href="@{/images/logo.png}">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" th:href="@{/css/common.css}">
-    <link rel="stylesheet" th:href="@{/css/dashboard-layout.css}">
-    <link rel="stylesheet" th:href="@{/css/dashboard.css}">
-    <link rel="stylesheet" th:href="@{/css/artisan.css}">
-    <link rel="stylesheet" th:href="@{/css/bsms-notification.css}">
-    <script th:src="@{/js/bsms-notification.js}"></script>
+    <title>Preview sản phẩm - Artisan</title>
+    <th:block th:fragment="styles">
+        <link rel="stylesheet" th:href="@{/css/artisan.css}">
+    </th:block>
 </head>
 <body>
-<div class="dashboard-layout">
-    <div th:replace="~{fragments/sidebar :: sidebar('artisan-products')}"></div>
 
-    <main class="dashboard-main">
-        <header th:replace="~{fragments/header :: header}"></header>
-        <header class="page-header">
-            <div>
-                <h1>Preview sản phẩm</h1>
-                <p>Kiểm tra lại thông tin sản phẩm trước khi quản lý trên cửa hàng.</p>
+<div id="artisan-product-preview-content" th:with="paramActivePage='artisan-products'">
+    <header class="dashboard-header-title d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <span class="artisan-eyebrow text-muted" style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px;">Kênh Nghệ nhân</span>
+            <div class="dashboard-title-row">
+                <h1 class="serif-text mb-1">Preview sản phẩm</h1>
             </div>
-            <div class="actions">
-                <form th:if="${product.productStatus == 'DRAFT'}" method="post" th:action="@{/artisan/products/{id}/publish(id=${product.productId})}">
-                    <button type="button"
-                            class="btn"
-                            data-open-publish-modal
-                            th:attr="data-product-name=${product.productName}">
-                        Đăng bán
-                    </button>
-                </form>
-                <a th:if="${isEditable}" class="btn secondary" th:href="@{/artisan/products/{id}/media(id=${product.productId})}">Sửa ảnh/video</a>
-                <a th:if="${isEditable}" class="btn secondary" th:href="@{/artisan/products/{id}/edit(id=${product.productId})}">Sửa thông tin</a>
-                <a class="btn secondary" th:href="@{/artisan/products}">Danh sách sản phẩm</a>
-            </div>
-        </header>
+            <p class="text-secondary mb-0">Kiểm tra lại thông tin sản phẩm trước khi quản lý trên cửa hàng.</p>
+        </div>
+        <div class="dashboard-header-actions d-flex align-items-center">
+            <form th:if="${product.productStatus == 'DRAFT'}" method="post" th:action="@{/artisan/products/{id}/publish(id=${product.productId})}" class="me-2">
+                <button type="button"
+                        class="btn btn-success rounded-pill px-4"
+                        data-open-publish-modal
+                        th:attr="data-product-name=${product.productName}">
+                    <i class="fa-solid fa-paper-plane me-1"></i> Đăng bán
+                </button>
+            </form>
+            <a th:if="${isEditable}" class="btn btn-outline-success rounded-pill px-4 me-2" th:href="@{/artisan/products/{id}/media(id=${product.productId})}">
+                <i class="fa-solid fa-images me-1"></i> Sửa ảnh/video
+            </a>
+            <a th:if="${isEditable}" class="btn btn-outline-success rounded-pill px-4 me-2" th:href="@{/artisan/products/{id}/edit(id=${product.productId})}">
+                <i class="fa-solid fa-pen me-1"></i> Sửa thông tin
+            </a>
+            <a class="btn btn-outline-success rounded-pill px-4" th:href="@{/artisan/products}">
+                <i class="fa-solid fa-list me-1"></i> Danh sách sản phẩm
+            </a>
+        </div>
+    </header>
 
         <div id="artisanFlashSuccess" th:if="${success}" th:attr="data-message=${success}" hidden></div>
         <div id="artisanFlashError" th:if="${error}" th:attr="data-message=${error}" hidden></div>
@@ -149,9 +145,6 @@
             </p>
         </section>
 
-    </main>
-</div>
-
 <div id="artisanPublishModal" class="artisan-action-modal-backdrop hidden">
     <div class="artisan-action-modal" role="dialog" aria-modal="true" aria-labelledby="artisanPublishModalTitle">
         <header>
@@ -177,6 +170,9 @@
     </div>
 </div>
 
+</div>
+
+<th:block th:fragment="scripts">
 <script>
     const artisanPublishModal = document.getElementById('artisanPublishModal');
     const artisanPublishProductName = document.getElementById('artisanPublishProductName');
@@ -223,6 +219,7 @@
         }
     });
 </script>
+</th:block>
 </body>
 </html>
 

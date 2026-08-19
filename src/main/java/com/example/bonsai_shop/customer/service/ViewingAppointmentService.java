@@ -5,7 +5,6 @@ import com.example.bonsai_shop.customer.dto.AppointmentDetailDTO;
 import com.example.bonsai_shop.entity.AppointmentSetting;
 import com.example.bonsai_shop.entity.User;
 import com.example.bonsai_shop.entity.ViewingAppointment;
-import com.example.bonsai_shop.notification.service.NotificationService;
 import com.example.bonsai_shop.customer.repository.ViewingAppointmentRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -21,7 +20,6 @@ public class ViewingAppointmentService {
 
     private final ViewingAppointmentRepository viewingAppointmentRepository;
     private final UserService userService;
-    private final NotificationService notificationService;
     private final AppointmentSettingService appointmentSettingService;
 
     @Transactional
@@ -108,13 +106,7 @@ public class ViewingAppointmentService {
 
         viewingAppointmentRepository.save(appointment);
 
-        notificationService.createNotification(
-                customer,
-                "Lịch thăm vườn của bạn đã được thay đổi thành công vào lúc "
-                        + appointment.getAppointmentDate()
-                        + " Ngày thay đổi: "
-                        + appointment.getUpdatedAt()
-        );
+
     }
 
     @Transactional

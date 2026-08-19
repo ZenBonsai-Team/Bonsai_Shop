@@ -231,6 +231,52 @@
     </div>
 </div>
 
+<!-- Past Livestream Sessions History (Live hôm trước) -->
+<div class="container pb-5">
+    <div class="border-top pt-4 mb-4">
+        <h5 class="fw-bold text-dark d-flex align-items-center gap-2" style="font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700;">
+            <i class="fa-solid fa-clock-rotate-left text-success"></i>
+            <span>Các phiên live trước đây (Live hôm trước)</span>
+        </h5>
+        <p class="text-secondary small">Xem lại những buổi phát trực tiếp trước đó của chúng tôi.</p>
+    </div>
+
+    <!-- Grid of past sessions -->
+    <div th:if="${#lists.isEmpty(pastSessions)}" class="text-center py-4 bg-white border rounded-4">
+        <i class="fa-solid fa-video text-muted fs-2 mb-2"></i>
+        <p class="text-secondary small mb-0">Chưa có lịch sử phiên live nào được ghi nhận.</p>
+    </div>
+
+    <div th:if="${!#lists.isEmpty(pastSessions)}" class="row g-3">
+        <div class="col-md-6 col-lg-4" th:each="item : ${pastSessions}">
+            <div class="card border-0 rounded-4 shadow-sm h-100 overflow-hidden">
+                <!-- Thumbnail simulation -->
+                <div class="position-relative bg-dark" style="aspect-ratio: 16/9; display: flex; align-items: center; justify-content: center; overflow: hidden; background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);">
+                    <div class="text-white text-center p-3">
+                        <i class="fa-solid fa-circle-play text-white fs-1 mb-2 opacity-75"></i>
+                        <div class="small fw-semibold text-uppercase tracking-wider" style="font-size: 0.75rem; letter-spacing: 0.5px;">Bản ghi buổi Live</div>
+                    </div>
+                    <span class="position-absolute top-3 start-3 badge bg-secondary text-uppercase fw-semibold" style="font-size: 0.72rem;">Đã kết thúc</span>
+                </div>
+                <div class="card-body d-flex flex-column justify-content-between p-3">
+                    <div>
+                        <h6 class="fw-bold text-dark text-truncate mb-2" th:text="${item.title}">Tiêu đề buổi live</h6>
+                        <p class="text-secondary small mb-3">
+                            <i class="fa-regular fa-calendar-days me-1"></i>
+                            <span th:text="${item.startTime != null ? #temporals.format(item.startTime, 'dd/MM/yyyy HH:mm') : '-'}">Ngày phát</span>
+                        </p>
+                    </div>
+                    <button class="btn btn-outline-success btn-sm rounded-pill w-100 fw-semibold mt-auto btn-replay"
+                            th:data-title="${item.title}"
+                            th:data-url="${item.streamUrl}">
+                        <i class="fa-solid fa-circle-play me-1"></i> Xem lại
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
@@ -239,6 +285,9 @@
     const activeSessionId = /*[[${activeSession != null ? activeSession.sessionId : null}]]*/ null;
     const activeSessionUrl = /*[[${activeSession != null ? activeSession.streamUrl : null}]]*/ null;
     const activeSessionStart = /*[[${activeSession != null ? #temporals.format(activeSession.startTime, 'yyyy-MM-dd''T''HH:mm:ss') : null}]]*/ null;
+    /*]]>*/
+</script>
+<script th:inline="none">
     const csrfToken = document.querySelector('meta[name="_csrf"]')?.content || '';
     const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.content || 'X-CSRF-TOKEN';
     let stompClient = null;
@@ -376,6 +425,92 @@
     function escapeHtml(t) {
         return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
     }
+
+    function replayPastSession(title, streamUrl) {
+        // Scroll smoothly to top of the page
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+
+        // Update titles and hide live tags
+        const titleEl = document.querySelector('.live-hero h1');
+        if (titleEl) {
+            titleEl.textContent = '[Xem lại] ' + title;
+        }
+
+        const liveBadge = document.querySelector('.live-badge');
+        if (liveBadge) {
+            liveBadge.style.display = 'none';
+        }
+        const timerBadge = document.getElementById('liveDurationBadge');
+        if (timerBadge) {
+            timerBadge.style.display = 'none';
+        }
+
+        // Toggle YouTube stream player vs simulation offline banner
+        const container = document.getElementById('liveVideoContainer');
+        const iframe = document.getElementById('liveVideoIframe');
+        const banner = document.getElementById('internalLiveBanner');
+
+        if (streamUrl) {
+            const videoId = extractYouTubeId(streamUrl);
+            if (videoId) {
+                iframe.src = 'https://www.youtube.com/embed/' + videoId + '?autoplay=1';
+                container.style.display = 'block';
+                if (banner) banner.style.display = 'none';
+            } else {
+                if (container) container.style.display = 'none';
+                if (banner) {
+                    banner.innerHTML = `
+                        <i class="fa-solid fa-circle-play display-3 text-success opacity-75 mb-3"></i>
+                        <h4 class="fw-bold">[Xem lại] ${escapeHtml(title)}</h4>
+                        <p class="text-muted">Phiên live này không có liên kết luồng phát video hợp lệ.</p>
+                    `;
+                    banner.style.display = 'block';
+                }
+            }
+        } else {
+            if (container) container.style.display = 'none';
+            if (banner) {
+                banner.innerHTML = `
+                    <i class="fa-solid fa-circle-play display-3 text-success opacity-75 mb-3"></i>
+                    <h4 class="fw-bold">[Xem lại] ${escapeHtml(title)}</h4>
+                    <p class="text-muted">Phiên live này không có liên kết luồng phát video.</p>
+                `;
+                banner.style.display = 'block';
+            }
+        }
+
+        // Disable Chat Input & clean Chat Messages
+        const chatInput = document.getElementById('chatInput');
+        const chatBtn = document.querySelector('.chat-input-bar button');
+        const chatMessages = document.getElementById('chatMessages');
+
+        if (chatInput) {
+            chatInput.disabled = true;
+            chatInput.placeholder = 'Phiên Live đã kết thúc. Khung chat đã đóng.';
+        }
+        if (chatBtn) {
+            chatBtn.disabled = true;
+        }
+        if (chatMessages) {
+            chatMessages.innerHTML = `
+                <div class="text-center text-muted small py-5">
+                    <i class="fa-solid fa-comment-slash fa-2x mb-3 text-secondary opacity-50"></i>
+                    <div class="fw-bold text-dark mb-1">Khung chat trực tiếp đã đóng</div>
+                    <div class="text-muted small">Phiên phát sóng này đã kết thúc. Bạn chỉ có thể xem lại bản ghi video.</div>
+                </div>
+            `;
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('.btn-replay').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const title = btn.getAttribute('data-title');
+                const url = btn.getAttribute('data-url');
+                replayPastSession(title, url);
+            });
+        });
+    });
     /*]]>*/
 </script>
 </body>
