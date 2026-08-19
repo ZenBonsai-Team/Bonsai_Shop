@@ -1,125 +1,7 @@
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/dashboard-layout :: layout(~{::title}, ~{::#artisan-product-journal-content}, ~{::styles}, ~{::scripts})}">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nhật ký cây</title>
-    <link rel="icon" type="image/png" th:href="@{/images/logo.png}">
-    <link rel="stylesheet" th:href="@{/css/common.css}">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" th:href="@{/css/dashboard-layout.css}">
-    <link rel="stylesheet" th:href="@{/css/dashboard.css}">
-    <link rel="stylesheet" th:href="@{/css/artisan.css}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-    <style>
-        .journal-page { padding: 32px 44px; }
-        .journal-page .page-header { align-items: flex-end; margin-bottom: 28px; }
-        .journal-page .page-header h1 { margin: 0 0 6px; color: #183322; font-size: 34px; line-height: 1.15; }
-        .journal-page .page-header p { margin: 0; color: #69786d; }
-        .journal-layout { display: grid; grid-template-columns: minmax(390px, 420px) minmax(0, 1fr); gap: 28px; align-items: start; }
-        .journal-layout *, .journal-layout *::before, .journal-layout *::after { box-sizing: border-box; }
-        .journal-layout .form-card { position: sticky; top: 24px; width: 100%; max-width: none; overflow: hidden; border: 1px solid #e2e7e2; border-radius: 18px; box-shadow: 0 10px 28px rgba(31, 45, 36, 0.06); }
-        .journal-layout .form-card h2 { margin-bottom: 22px; line-height: 1.2; }
-        .journal-form-grid { display: grid; gap: 16px; }
-        .journal-form-grid > label:not(.checkbox), .journal-field { display: grid; gap: 8px; font-weight: 700; color: #1f3026; }
-        .journal-field-text { font-size: 15px; line-height: 1.3; }
-        .journal-form-grid input, .journal-form-grid select, .journal-form-grid textarea { width: 100%; min-width: 0; border: 1px solid #d7dfd8; border-radius: 14px; padding: 12px 14px; font-family: inherit; font-size: 14px; line-height: 1.35; background: #fff; color: #1f3026; }
-        .journal-form-grid textarea { min-height: 180px; resize: vertical; }
-        .journal-form-grid input[type="file"] { padding: 10px; cursor: pointer; }
-        .journal-form-grid .field-error, .journal-form-modal-body .field-error, .journal-add-media .field-error, .journal-media-replace-form .field-error { color: #d32f2f; font-size: 12px; font-weight: 700; margin-top: 2px; }
-        .journal-form-grid .field-invalid input, .journal-form-grid .field-invalid textarea, .journal-form-grid .field-invalid select, .journal-form-modal-body .field-invalid input, .journal-form-modal-body .field-invalid textarea, .journal-add-media .field-invalid input, .journal-media-replace-form.field-invalid input { border-color: #d32f2f !important; box-shadow: 0 0 0 2px rgba(211, 47, 47, 0.12); }
-        .journal-form-grid > .checkbox, .journal-checkbox { display: flex; align-items: flex-start; gap: 10px; font-weight: 700; color: #1f3026; line-height: 1.35; }
-        .journal-form-grid > .checkbox input, .journal-checkbox input { width: 16px; min-width: 16px; height: 16px; margin: 2px 0 0; accent-color: #2d6a4f; }
-        .journal-form-grid button[type="submit"], .journal-submit { width: 100%; border: 0; border-radius: 14px; padding: 13px 16px; background: #246b49; color: #fff; font-weight: 800; font-family: inherit; box-shadow: 0 10px 22px rgba(36, 107, 73, 0.18); }
-        .journal-form-grid button[type="submit"]:hover, .journal-submit:hover { background: #1d573b; }
-        .journal-panel { min-width: 0; background: #fff; border: 1px solid #e2e7e2; border-radius: 18px; box-shadow: 0 10px 28px rgba(31, 45, 36, 0.05); overflow: hidden; }
-        .journal-panel-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 18px; border-bottom: 1px solid #e8eee8; }
-        .journal-panel-head h2 { margin: 0; color: #183322; font-size: 20px; line-height: 1.2; }
-        .journal-count { border-radius: 999px; background: #eef6ef; color: #246b49; padding: 5px 10px; font-size: 12px; font-weight: 800; white-space: nowrap; }
-        .journal-timeline { display: grid; gap: 12px; min-width: 0; max-height: calc(100vh - 280px); overflow-y: auto; overflow-x: visible; padding: 14px; scrollbar-width: thin; }
-        .journal-timeline::-webkit-scrollbar { width: 8px; }
-        .journal-timeline::-webkit-scrollbar-thumb { background: #cfd8d1; border-radius: 999px; }
-        .journal-event { display: grid; grid-template-columns: 104px minmax(0, 1fr) auto; gap: 14px; align-items: center; min-height: 104px; padding: 10px 14px 10px 10px; border: 1px solid #e2e7e2; border-radius: 10px; background: #fff; box-shadow: none; overflow: visible; }
-        .journal-event.is-unpublished { border-color: #f1c75b; background: linear-gradient(90deg, #fff9e8 0%, #ffffff 42%); }
-        .journal-cover-link { display: block; width: 104px; height: 84px; border: 0; padding: 0; border-radius: 4px; overflow: hidden; background: #edf2ee; cursor: zoom-in; }
-        .journal-cover { width: 100%; height: 100%; border-radius: 0; object-fit: cover; background: #edf2ee; display: block; }
-        .journal-event h3 { margin: 0 0 5px; color: #183322; font-size: 15px; line-height: 1.25; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .journal-card-body > p { margin: 0; color: #29372f; line-height: 1.4; font-size: 13px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-        .journal-event-actions { align-items: start; display: grid; gap: 10px; justify-items: end; min-width: 138px; }
-        .journal-event form { margin-top: 0; }
-        .journal-event form button { background: transparent; border: 0; box-shadow: none; font-weight: 700; }
-        .journal-card-toolbar { align-items: center; display: flex; gap: 8px; justify-content: flex-end; }
-        .journal-add-media { display: grid; gap: 8px; min-width: 0; padding: 10px; }
-        .journal-add-media input[type="file"] { width: 100%; border: 1px solid #dfe6df; border-radius: 8px; padding: 7px; font-size: 12px; }
-        .journal-add-media button { color: #246b49; white-space: nowrap; justify-self: start; padding: 0; }
-        .journal-visibility button { align-items: center; display: inline-flex; gap: 7px; padding: 0; transition: .18s ease; white-space: nowrap; }
-        .journal-visibility button.is-public { color: #8a6200; }
-        .journal-visibility button.is-private { color: #7a4d00; }
-        .journal-attention-note { display: none; }
-        .journal-menu { position: relative; }
-        .journal-menu > summary { align-items: center; background: #ffffff; border: 1px solid #dfe6df; border-radius: 8px; color: #1f3026; cursor: pointer; display: inline-flex; gap: 6px; font-size: 13px; font-weight: 800; list-style: none; padding: 8px 14px; transition: background .16s ease, border-color .16s ease, color .16s ease; white-space: nowrap; }
-        .journal-menu > summary:hover { background: #f8fbf8; border-color: #2d6a4f; color: #2d6a4f; }
-        .journal-menu > summary::-webkit-details-marker { display: none; }
-        .journal-menu > summary::after { content: "▾"; font-size: 10px; }
-        .journal-menu[open] > summary::after { content: "▴"; }
-        .journal-menu-panel { background: #fff; border: 1px solid #e2e7e2; border-radius: 12px; box-shadow: 0 14px 34px rgba(31, 45, 36, 0.12); display: grid; gap: 8px; left: var(--journal-menu-left, auto); margin-top: 0; min-width: 260px; padding: 10px; position: fixed; top: var(--journal-menu-top, auto); z-index: 2200; }
-        .journal-menu-panel > details,
-        .journal-menu-panel > form { border-bottom: 1px solid #eef2ee; padding-bottom: 8px; }
-        .journal-menu-panel > details:last-child,
-        .journal-menu-panel > form:last-child { border-bottom: 0; padding-bottom: 0; }
-        .journal-menu-panel summary { cursor: pointer; color: #246b49; font-weight: 800; list-style: none; }
-        .journal-menu-panel summary::-webkit-details-marker { display: none; }
-        .journal-menu-panel summary i,
-        .journal-menu-panel button i { width: 16px; }
-        .journal-menu-panel .journal-visibility { border-bottom: 1px solid #eef2ee; padding-bottom: 8px; }
-        .journal-edit-toggle summary { cursor: pointer; color: #246b49; font-weight: 800; list-style: none; }
-        .journal-edit-toggle summary::-webkit-details-marker { display: none; }
-        .journal-edit-form { display: grid; gap: 8px; grid-column: 1 / -1; width: 100%; margin-top: 4px; padding: 10px; border: 1px solid #e2e7e2; border-radius: 10px; background: #f8fbf8; }
-        .journal-edit-form input, .journal-edit-form textarea { width: 100%; border: 1px solid #d7dfd8; border-radius: 8px; padding: 8px 10px; font: inherit; font-size: 13px; }
-        .journal-edit-form textarea { min-height: 140px; resize: vertical; }
-        .journal-edit-form button { justify-self: start; color: #246b49; }
-        .journal-delete-button { align-items: center; background: transparent !important; border: 0 !important; border-radius: 8px; color: #dc3545 !important; display: inline-flex; gap: 8px; justify-content: flex-start; padding: 9px 10px !important; text-align: left; width: 100%; }
-        .journal-delete-button:hover { background: #fff5f5 !important; color: #b02a37 !important; }
-        .journal-menu-action { align-items: center; background: transparent !important; border: 0 !important; border-radius: 8px; color: #0d6efd !important; display: inline-flex; gap: 8px; justify-content: flex-start; padding: 9px 10px !important; text-align: left; width: 100%; }
-        .journal-menu-action:hover { background: #f4f8f4 !important; color: #174d34 !important; }
-        .journal-form-modal { display: none; position: fixed; inset: 0; z-index: 2100; background: rgba(15, 23, 18, 0.56); padding: 32px 18px; overflow-y: auto; }
-        .journal-form-modal.is-open { display: block; }
-        .journal-form-dialog { width: min(680px, 100%); margin: 0 auto; background: #fff; border: 1px solid #e2e7e2; border-radius: 16px; box-shadow: 0 24px 70px rgba(15, 23, 18, 0.24); overflow: hidden; }
-        .journal-form-dialog header { align-items: center; border-bottom: 1px solid #eef2ee; display: flex; justify-content: space-between; gap: 16px; padding: 18px 22px; }
-        .journal-form-dialog h2 { color: #183322; font-size: 22px; margin: 0; }
-        .journal-form-close { background: transparent; border: 0; color: #66736b; cursor: pointer; font-size: 24px; line-height: 1; padding: 4px 8px; }
-        .journal-form-modal-body { display: grid; gap: 16px; padding: 22px; }
-        .journal-form-modal-body label { color: #1f3026; display: grid; gap: 8px; font-weight: 800; }
-        .journal-form-modal-body input,
-        .journal-form-modal-body textarea { border: 1px solid #d7dfd8; border-radius: 12px; font: inherit; padding: 12px 14px; width: 100%; }
-        .journal-form-modal-body textarea { min-height: 160px; resize: vertical; }
-        .journal-char-counter { color: #66736b; font-size: 12px; font-weight: 700; justify-self: end; line-height: 1.2; }
-        .journal-char-counter.is-over-limit { color: #d32f2f; }
-        .journal-form-actions { align-items: center; display: flex; gap: 10px; justify-content: flex-end; padding: 0 22px 22px; }
-        .journal-form-actions button,
-        .journal-form-actions .btn { border-radius: 10px; padding: 10px 14px; }
-        .journal-form-actions .btn.secondary { background: #eef3ee; color: #1f3026; }
-        .journal-media-manager { display: grid; gap: 14px; }
-        .journal-media-manager h3 { color: #183322; font-size: 16px; margin: 0; }
-        .journal-media-list { display: grid; gap: 12px; }
-        .journal-media-item { align-items: start; border: 1px solid #e2e7e2; border-radius: 12px; display: grid; gap: 12px; grid-template-columns: 112px minmax(0, 1fr); padding: 12px; }
-        .journal-media-item img,
-        .journal-media-item video { border-radius: 8px; height: 88px; object-fit: cover; width: 112px; }
-        .journal-media-fields { display: grid; gap: 10px; min-width: 0; }
-        .journal-media-inline-actions { display: flex; flex-wrap: wrap; gap: 8px; }
-        .journal-media-inline-actions form { margin: 0; }
-        .journal-media-inline-actions button,
-        .journal-media-inline-actions .btn { align-items: center; background: #fff; border: 1px solid #dfe6df; border-radius: 8px; color: #1f3026; display: inline-flex; gap: 6px; font-weight: 700; padding: 8px 10px; }
-        .journal-media-inline-actions .btn-cover { border-color: #2d6a4f; color: #2d6a4f; }
-        .journal-media-inline-actions .btn-replace { border-color: #0d6efd; color: #0d6efd; }
-        .journal-media-inline-actions .btn-delete { border-color: #ef4444; color: #dc3545; }
-        .journal-media-replace-form { align-items: center; display: flex; flex-wrap: wrap; gap: 8px; }
-        .journal-media-replace-form input[type="file"] { max-width: 220px; padding: 7px; }
-        .journal-media-empty { border: 1px dashed #d7dfd8; border-radius: 12px; color: #66736b; padding: 16px; text-align: center; }
-        .journal-placeholder { display: grid; place-items: center; color: #67806d; font-size: 34px; }
-        .journal-meta { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 0; }
-        .journal-date { font-weight: 900; color: #17251c; font-size: 15px; }
-        .journal-type { justify-self: end; border: 1px solid #e2e7e2; border-radius: 999px; background: #fff; color: #66736b; padding: 6px 9px; font-size: 12px; font-weight: 700; line-height: 1.2; max-width: 138px; text-align: center; white-space: normal; }
     <title>Nhật ký cây - Artisan</title>
     <th:block th:fragment="styles">
         <link rel="stylesheet" th:href="@{/css/artisan.css}">
@@ -206,9 +88,31 @@
             @media (max-width: 576px) { .journal-page { padding: 22px 18px; } .journal-page .page-header { display: block; } .journal-page .actions { margin-top: 14px; } }
         </style>
     </th:block>
-</head>
 <body>
-        <div class="journal-layout">
+
+<div id="artisan-product-journal-content" th:with="paramActivePage='artisan-products'">
+    <header class="dashboard-header-title d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <span class="artisan-eyebrow text-muted" style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px;">Kênh Nghệ nhân</span>
+            <div class="dashboard-title-row">
+                <h1 class="serif-text mb-1">Nhật ký cây</h1>
+            </div>
+            <p class="text-secondary mb-0" th:text="${product.productName}">Product</p>
+        </div>
+        <div class="dashboard-header-actions">
+            <a class="btn btn-outline-success rounded-pill px-4 me-2" th:href="@{/artisan/products}">
+                <i class="fa-solid fa-arrow-left me-1"></i> Quay lại sản phẩm
+            </a>
+            <a class="btn btn-success rounded-pill px-4" th:href="@{/artisan/products/{id}/preview(id=${product.productId})}">
+                Xem trước <i class="fa-solid fa-eye ms-1"></i>
+            </a>
+        </div>
+    </header>
+
+    <div id="artisanFlashSuccess" th:if="${success}" th:attr="data-message=${success}" hidden></div>
+    <div id="artisanFlashError" th:if="${error}" th:attr="data-message=${error}" hidden></div>
+
+    <div class="journal-layout">
             <section class="form-card">
                 <h2>Tạo nhật ký mới</h2>
                 <form class="journal-form-grid" method="post" enctype="multipart/form-data" data-min-journal-images="3" novalidate data-journal-validate="create"
