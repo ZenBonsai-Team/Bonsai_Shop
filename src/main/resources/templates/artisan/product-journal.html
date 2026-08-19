@@ -32,6 +32,15 @@
             .journal-count { border-radius: 999px; background: #eef6ef; color: #246b49; padding: 5px 10px; font-size: 12px; font-weight: 800; white-space: nowrap; }
             .journal-timeline { display: grid; gap: 12px; min-width: 0; max-height: calc(100vh - 280px); overflow-y: auto; overflow-x: visible; padding: 14px; scrollbar-width: thin; }
             .journal-timeline::-webkit-scrollbar { width: 8px; }
+            .journal-event { display: grid; grid-template-columns: 104px minmax(0, 1fr) auto; gap: 14px; align-items: center; min-height: 104px; padding: 10px 14px 10px 10px; border: 1px solid #e2e7e2; border-radius: 10px; background: #fff; box-shadow: none; overflow: visible; }
+            .journal-event.is-unpublished { border-color: #f1c75b; background: linear-gradient(90deg, #fff9e8 0%, #ffffff 42%); }
+            .journal-cover-link { display: block; width: 104px; height: 84px; border: 0; padding: 0; border-radius: 4px; overflow: hidden; background: #edf2ee; cursor: zoom-in; }
+            .journal-cover { width: 100%; height: 100%; border-radius: 0; object-fit: cover; background: #edf2ee; display: block; }
+            .journal-event h3 { margin: 0 0 5px; color: #183322; font-size: 15px; line-height: 1.25; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+            .journal-card-body > p { margin: 0; color: #29372f; line-height: 1.4; font-size: 13px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+            .journal-event-actions { align-items: start; display: grid; gap: 10px; justify-items: end; min-width: 138px; }
+            .journal-event form { margin-top: 0; }
+            .journal-event form button { background: transparent; border: 0; box-shadow: none; font-weight: 700; }
             .journal-modal-card { width: min(920px, 100%); margin: 0 auto; background: #fff; border-radius: 4px; padding: 16px; box-shadow: 0 24px 80px rgba(0,0,0,0.24); }
             .journal-modal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
             .journal-modal-head strong { font-size: 19px; color: #0f1d15; }
