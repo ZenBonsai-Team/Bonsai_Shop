@@ -16,11 +16,13 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
+import java.util.regex.Pattern;
 
 @Service
 @RequiredArgsConstructor
 // Service quan ly user customer: dang ky, OTP, profile va mat khau.
 public class UserService {
+    private static final Pattern PHONE_PATTERN = Pattern.compile("^0\\d{9,10}$");
 
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
@@ -100,6 +102,25 @@ public class UserService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy user!"));
 
+        if (fullName != null) {
+            fullName = fullName.trim();
+        }
+        if (username != null) {
+            username = username.trim();
+        }
+        if (phone != null) {
+            phone = phone.trim();
+        }
+        if (address != null) {
+            address = address.trim();
+        }
+
+        validateUpdateUserProfileInput(fullName, phone, username);
+
+        if (username != null && !username.equals(user.getUsername()) && userRepository.existsByUsername(username)) {
+            throw new RuntimeException("Ten dang nhap da duoc su dung!");
+        }
+
         // Chi cap nhat truong nao duoc gui len, cac truong null giu nguyen.
         if (fullName != null)
             user.setFullName(fullName);
@@ -130,6 +151,19 @@ public class UserService {
             }
         }
         userRepository.save(user);
+    }
+
+    // Validate du lieu cap nhat profile tuong tu validate tao tai khoan.
+    private void validateUpdateUserProfileInput(String fullName, String phone, String username) {
+        if (fullName != null && (fullName.length() < 3 || fullName.length() > 50)) {
+            throw new RuntimeException("Ho va ten phai co tu 3 den 50 ky tu!");
+        }
+        if (phone != null && !phone.isBlank() && !PHONE_PATTERN.matcher(phone).matches()) {
+            throw new RuntimeException("So dien thoai phai bat dau bang 0 va co tu 10 den 11 chu so!");
+        }
+        if (username != null && (username.length() < 3 || username.length() > 50)) {
+            throw new RuntimeException("Ten dang nhap phai co tu 3 den 50 ky tu!");
+        }
     }
 
     // ===== OTP =====
@@ -245,8 +279,12 @@ public class UserService {
         }
 
         // Validate do dai mat khau moi.
-        if (newPassword.length() < 6) {
+        if (newPassword.length() < 6 || confirmPassword.length() < 6) {
             throw new RuntimeException("Mật khẩu phải có ít nhất 6 ký tự!");
+        }
+
+        if(newPassword.length() > 50 || confirmPassword.length() > 50) {
+            throw new RuntimeException("Mật khẩu không được vượt quá 50 ký tự!");
         }
 
         // Luu mat khau moi da ma hoa.
