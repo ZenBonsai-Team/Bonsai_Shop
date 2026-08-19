@@ -3249,6 +3249,18 @@ h1, h2, h3, h4, h5, h6, .serif-text {
     background: rgba(83, 98, 87, 0.85);
 }
 
+.badge-floating.badge-available {
+    background: rgba(45, 106, 79, 0.85);
+}
+
+.badge-floating.badge-hidden {
+    background: rgba(197, 48, 48, 0.85);
+}
+
+.badge-floating.badge-reserved {
+    background: rgba(13, 110, 253, 0.85);
+}
+
 /* Glassmorphic Dropdown Actions Menu in Top-Right of Image */
 .product-card-menu {
     position: absolute;
@@ -3532,6 +3544,49 @@ h1, h2, h3, h4, h5, h6, .serif-text {
     border-color: #E8E4DD;
     color: #8E9A90;
     cursor: not-allowed;
+}
+
+.btn-card-action.action-hide-btn {
+    background: #FFF5F5;
+    border-color: #FCDEDE;
+    color: #C53030;
+}
+
+.btn-card-action.action-hide-btn:hover {
+    background: #FCDEDE;
+    color: #9B2C2C;
+    border-color: #F8B4B4;
+}
+
+.btn-card-action.action-edit {
+    background: #FAF3E6;
+    border-color: #F1E2CD;
+    color: #B8926A;
+}
+
+.btn-card-action.action-edit:hover {
+    background: #F1E2CD;
+    color: #8C6A48;
+    border-color: #E2CCA9;
+}
+
+.btn-card-action.action-media {
+    background: #F0F4FD;
+    border-color: #DCE4FC;
+    color: #0D6EFD;
+}
+
+.btn-card-action.action-media:hover {
+    background: #DCE4FC;
+    color: #0B5ED7;
+    border-color: #B9C9F9;
+}
+
+@media (max-width: 576px) {
+    .btn-card-primary-actions {
+        flex-direction: column;
+        gap: 6px;
+    }
 }
 
 /* Premium Empty State */
