@@ -1,34 +1,30 @@
-﻿<!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/dashboard-layout :: layout(~{::title}, ~{::#artisan-in-person-content}, ~{::styles}, ~{::scripts})}">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Đơn hàng tại vườn - Minh Kỷ Garden</title>
-    <link rel="icon" type="image/png" th:href="@{/images/logo.png}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" th:href="@{/css/common.css}">
-    <link rel="stylesheet" th:href="@{/css/dashboard-layout.css}">
-    <link rel="stylesheet" th:href="@{/css/dashboard.css}">
-    <link rel="stylesheet" th:href="@{/css/moderator-orders.css}">
-    <link rel="stylesheet" th:href="@{/css/artisan.css}">
-    <link rel="stylesheet" th:href="@{/css/bsms-notification.css}">
-    <script th:src="@{/js/bsms-notification.js}"></script>
+    <th:block th:fragment="styles">
+        <link rel="stylesheet" th:href="@{/css/moderator-orders.css}">
+        <link rel="stylesheet" th:href="@{/css/artisan.css}">
+    </th:block>
 </head>
 <body>
-<div class="dashboard-layout">
-    <div th:replace="~{fragments/sidebar :: sidebar('artisan-in-person-order')}"></div>
 
-    <main class="dashboard-main">
-        <div th:replace="~{fragments/artisan-topbar :: topbar('Đơn tại vườn')}"></div>
-
-        <header class="page-header">
-            <div>
-                <h1>Đơn tại vườn</h1>
-                <p>Nghệ nhân tạo đơn khách mua trực tiếp tại vườn, giữ cây, xác nhận thanh toán và hoàn thành đơn.</p>
+<div id="artisan-in-person-content" th:with="paramActivePage='artisan-in-person-order'">
+    <header class="dashboard-header-title d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <span class="artisan-eyebrow text-muted" style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px;">Kênh Nghệ nhân</span>
+            <div class="dashboard-title-row">
+                <h1 class="serif-text mb-1">Đơn tại vườn</h1>
             </div>
-            <a class="btn secondary" th:href="@{/artisan/products}">Sản phẩm của tôi</a>
-        </header>
+            <p class="text-secondary mb-0">Nghệ nhân tạo đơn khách mua trực tiếp tại vườn, giữ cây, xác nhận thanh toán và hoàn thành đơn.</p>
+        </div>
+        <div class="dashboard-header-actions">
+            <a class="btn btn-outline-success rounded-pill px-4" th:href="@{/artisan/products}">
+                <i class="fa-solid fa-seedling me-1"></i> Sản phẩm của tôi
+            </a>
+        </div>
+    </header>
 
         <div id="artisanFlashSuccess" th:if="${success}" th:attr="data-message=${success}" hidden></div>
         <div id="artisanFlashError" th:if="${error}" th:attr="data-message=${error}" hidden></div>
@@ -526,7 +522,9 @@
         </footer>
     </div>
 </div>
+</div>
 
+<th:block th:fragment="scripts">
 <script>
 (function () {
     const pendingStatus = 'PENDING_PAYMENT';
@@ -1136,6 +1134,7 @@
         }
     });
 </script>
+</th:block>
 </body>
 </html>
 

@@ -1,36 +1,30 @@
-﻿<!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/dashboard-layout :: layout(~{::title}, ~{::#artisan-product-form-content}, ~{::styles}, ~{::scripts})}">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Thông tin sản phẩm - Artisan</title>
-    <link rel="icon" type="image/png" th:href="@{/images/logo.png}">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" th:href="@{/css/common.css}">
-    <link rel="stylesheet" th:href="@{/css/dashboard-layout.css}">
-    <link rel="stylesheet" th:href="@{/css/dashboard.css}">
-    <link rel="stylesheet" th:href="@{/css/artisan.css}">
-    <link rel="stylesheet" th:href="@{/css/bsms-notification.css}">
-    <script th:src="@{/js/bsms-notification.js}"></script>
+    <th:block th:fragment="styles">
+        <link rel="stylesheet" th:href="@{/css/artisan.css}">
+    </th:block>
 </head>
 <body>
-<div class="dashboard-layout">
-    <div th:replace="~{fragments/sidebar :: sidebar('artisan-products')}"></div>
 
-    <main class="dashboard-main">
-        <header th:replace="~{fragments/header :: header}"></header>
-    <header class="page-header">
+<div id="artisan-product-form-content" th:with="paramActivePage='artisan-products'">
+    <header class="dashboard-header-title d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h1>Bước 1: Thông tin sản phẩm</h1>
-            <p>Thông tin cơ bản của cây bonsai.</p>
+            <span class="artisan-eyebrow text-muted" style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px;">Kênh Nghệ nhân</span>
+            <div class="dashboard-title-row">
+                <h1 class="serif-text mb-1">Bước 1: Thông tin sản phẩm</h1>
+            </div>
+            <p class="text-secondary mb-0">Thông tin cơ bản của cây bonsai.</p>
         </div>
-        <div class="actions">
-            <a class="btn secondary" th:href="@{/artisan/catalog}">Quản lý phân loại</a>
-            <a class="btn secondary" th:href="@{/artisan/products}">Quay lại sản phẩm</a>
+        <div class="dashboard-header-actions">
+            <a class="btn btn-outline-success rounded-pill px-4 me-2" th:href="@{/artisan/catalog}">
+                <i class="fa-solid fa-book me-1"></i> Quản lý phân loại
+            </a>
+            <a class="btn btn-outline-success rounded-pill px-4" th:href="@{/artisan/products}">
+                <i class="fa-solid fa-arrow-left me-1"></i> Quay lại sản phẩm
+            </a>
         </div>
     </header>
 
@@ -181,9 +175,9 @@
         <input th:if="${product != null}" type="hidden" name="productStatus" th:value="${productForm.productStatus}">
         <button type="submit">Lưu & Tiếp tục</button>
     </form>
-</main>
 </div>
 
+<th:block th:fragment="scripts">
 <script>
     const categorySelect = document.getElementById('categorySelect');
     const varietySelect = document.getElementById('varietySelect');
@@ -534,6 +528,7 @@
         }
     });
 </script>
+</th:block>
 </body>
 </html>
 

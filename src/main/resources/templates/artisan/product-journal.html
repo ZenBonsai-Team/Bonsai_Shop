@@ -120,90 +120,94 @@
         .journal-meta { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 0; }
         .journal-date { font-weight: 900; color: #17251c; font-size: 15px; }
         .journal-type { justify-self: end; border: 1px solid #e2e7e2; border-radius: 999px; background: #fff; color: #66736b; padding: 6px 9px; font-size: 12px; font-weight: 700; line-height: 1.2; max-width: 138px; text-align: center; white-space: normal; }
-        .journal-private { background: #fff3cd; border-color: #f4d57f; color: #8a6200; }
-        .journal-public { background: #e8f6ef; border-color: #bfe6cf; color: #167247; }
-        .journal-card-body { min-width: 0; }
-        .journal-card-tags { display: grid; gap: 8px; justify-items: end; }
-        .journal-gallery { display: none; }
-        .journal-modal { display: none; position: fixed; inset: 0; z-index: 2000; background: rgba(15, 23, 18, 0.58); padding: 28px; overflow-y: auto; }
-        .journal-modal.is-open { display: block; }
-        .journal-modal-card { width: min(920px, 100%); margin: 0 auto; background: #fff; border-radius: 4px; padding: 16px; box-shadow: 0 24px 80px rgba(0,0,0,0.24); }
-        .journal-modal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
-        .journal-modal-head strong { font-size: 19px; color: #0f1d15; }
-        .journal-modal-close { border: 0; background: transparent; color: #0f1d15; text-decoration: none; font-size: 24px; line-height: 1; padding: 2px 6px; }
-        .journal-modal-stage { position: relative; min-height: 520px; border-radius: 4px; background: #000; display: grid; place-items: center; overflow: hidden; }
-        .journal-slide { display: none; width: 100%; height: 100%; place-items: center; }
-        .journal-slide.active { display: grid; }
-        .journal-slide img, .journal-slide video { max-width: 100%; max-height: 70vh; object-fit: contain; display: block; }
-        .journal-gallery-control { position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 999px; background: rgba(20, 20, 20, 0.68); color: #fff; font-weight: 800; }
-        .journal-gallery-control button { width: 26px; height: 26px; border: 0; border-radius: 50%; display: grid; place-items: center; background: rgba(255,255,255,0.18); color: #fff; line-height: 1; padding: 0; }
-        .journal-gallery-control button:hover { background: rgba(255,255,255,0.32); }
-        .journal-modal-footer { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 16px; align-items: center; margin-top: 14px; }
-        .journal-modal-thumbs { display: flex; gap: 8px; flex-wrap: nowrap; min-width: 0; max-width: 100%; overflow-x: auto; overflow-y: hidden; padding: 2px 2px 8px; scroll-snap-type: x proximity; scrollbar-width: thin; }
-        .journal-modal-thumbs::-webkit-scrollbar { height: 7px; }
-        .journal-modal-thumbs::-webkit-scrollbar-thumb { background: #cfd8d1; border-radius: 999px; }
-        .journal-thumb-btn { flex: 0 0 auto; width: 64px; height: 52px; padding: 0; border: 2px solid transparent; border-radius: 6px; background: transparent; overflow: hidden; scroll-snap-align: start; }
-        .journal-thumb-btn.active { border-color: #246b49; }
-        .journal-thumb-btn img, .journal-thumb-btn video { width: 100%; height: 100%; object-fit: cover; display: block; border-radius: 4px; }
-        .journal-customer-preview { display: none; position: fixed; inset: 0; z-index: 2300; background: rgba(15, 23, 18, 0.66); padding: 28px; overflow-y: auto; }
-        .journal-customer-preview.is-open { display: block; }
-        .journal-customer-preview-card { width: min(1120px, 100%); margin: 0 auto; background: #efe8d8; border-radius: 18px; box-shadow: 0 24px 80px rgba(0,0,0,.28); overflow: hidden; }
-        .journal-customer-preview-head { align-items: center; display: flex; justify-content: space-between; gap: 14px; padding: 14px 18px; background: #10251a; color: #fffaf0; }
-        .journal-customer-preview-head strong { font-size: 18px; }
-        .journal-customer-preview-close { background: transparent; border: 0; color: #fffaf0; font-size: 26px; line-height: 1; padding: 3px 8px; }
-        .journal-customer-preview-spread { display: grid; grid-template-columns: minmax(300px, 38%) minmax(0, 62%); min-height: 560px; }
-        .journal-customer-story { display: flex; flex-direction: column; min-width: 0; overflow-y: auto; padding: clamp(26px, 3vw, 42px); color: #fffaf0; background: #10251a; }
-        .journal-customer-kicker { color: rgba(255,250,240,.9); display: flex; flex-wrap: wrap; gap: 10px; font-size: 12px; font-weight: 900; letter-spacing: .12em; text-transform: uppercase; }
-        .journal-customer-status { color: #f0d88f; }
-        .journal-customer-title { margin: 20px 0 0; color: #fffaf0; font-family: 'Cormorant Garamond', serif; font-size: clamp(30px, 3.4vw, 46px); line-height: .96; font-weight: 700; letter-spacing: .025em; text-transform: uppercase; overflow-wrap: anywhere; }
-        .journal-customer-author { margin: 8px 0 0; color: rgba(255,250,240,.9); font-size: 14px; font-weight: 700; }
-        .journal-customer-story .journal-customer-description { margin: 24px 0 0; color: #fffaf0; display: block; font-size: 15px; font-weight: 600; line-height: 1.75; max-height: 240px; overflow-y: auto; padding-right: 6px; white-space: pre-line; }
-        .journal-customer-work { margin-top: auto; padding-top: 24px; }
-        .journal-customer-work-title { margin: 0 0 10px; color: rgba(255,250,240,.86); font-size: 11px; font-weight: 900; letter-spacing: .13em; text-transform: uppercase; }
-        .journal-customer-work-list { color: #fffaf0; display: flex; flex-wrap: wrap; gap: 8px 10px; font-size: 13px; font-weight: 800; }
-        .journal-customer-gallery { background: linear-gradient(135deg, #f8f4ea 0%, #e8dfcc 100%); display: grid; grid-template-rows: minmax(0, 1fr) auto; gap: 14px; min-height: 560px; min-width: 0; overflow: hidden; padding: clamp(18px, 2.4vw, 30px); }
-        .journal-customer-stage { min-height: 480px; overflow: visible; position: relative; }
-        .journal-customer-slide { display: grid; height: calc(100% - 24px); left: 50%; opacity: 0; place-items: center; pointer-events: none; position: absolute; top: 50%; transform: translate(-50%, -50%) scale(.88); transition: opacity .24s ease, transform .24s ease; width: 68%; }
-        .journal-customer-slide.active { opacity: 1; pointer-events: auto; transform: translate(-50%, -50%) scale(1); z-index: 2; }
-        .journal-customer-slide.is-prev { opacity: .28; transform: translate(-118%, -50%) scale(.78); z-index: 1; }
-        .journal-customer-slide.is-next { opacity: .28; transform: translate(18%, -50%) scale(.78); z-index: 1; }
-        .journal-customer-slide img, .journal-customer-slide video { display: block; height: auto !important; max-height: 100%; max-width: 100%; object-fit: contain; width: auto !important; }
-        .journal-customer-arrow { background: rgba(16, 37, 26, .86); border: 0; border-radius: 999px; color: #fffaf0; display: grid; height: 38px; place-items: center; position: absolute; top: 50%; transform: translateY(-50%); width: 38px; z-index: 4; }
-        .journal-customer-arrow.prev { left: 8px; }
-        .journal-customer-arrow.next { right: 8px; }
-        .journal-customer-meta { color: #516057; display: grid; font-size: 12px; font-weight: 800; gap: 8px; justify-items: center; }
-        .journal-customer-dots { align-items: center; display: flex; gap: 7px; justify-content: center; }
-        .journal-customer-dot { background: #9fb0a3; border-radius: 999px; height: 7px; width: 7px; }
-        .journal-customer-dot.active { background: #246b49; width: 28px; }
-        .journal-customer-empty { color: #78907e; display: grid; font-size: 42px; height: 100%; place-items: center; }
-        @media (max-width: 992px) { .journal-customer-preview-spread { grid-template-columns: 1fr; min-height: auto; } .journal-customer-gallery { order: 1; min-height: 440px; } .journal-customer-story { order: 2; } .journal-customer-stage { min-height: 380px; } }
-        @media (max-width: 1200px) { .journal-page { padding: 28px 32px; } .journal-layout { grid-template-columns: 1fr; } .journal-layout .form-card { position: static; } .journal-timeline { max-height: 620px; } }
-        @media (max-width: 992px) { .journal-event { grid-template-columns: 88px 1fr; } .journal-event-actions { grid-column: 2; justify-items: start; } .journal-card-tags { justify-items: start; } .journal-card-toolbar { justify-content: flex-start; } .journal-cover-link { width: 88px; height: 72px; } .journal-modal-stage { min-height: 360px; } }
-        @media (max-width: 576px) { .journal-page { padding: 22px 18px; } .journal-page .page-header { display: block; } .journal-page .actions { margin-top: 14px; } }
-    </style>
-    <link rel="stylesheet" th:href="@{/css/bsms-notification.css}">
-    <script th:src="@{/js/bsms-notification.js}"></script>
+    <title>Nhật ký cây - Artisan</title>
+    <th:block th:fragment="styles">
+        <link rel="stylesheet" th:href="@{/css/artisan.css}">
+        <style>
+            .journal-page { padding: 32px 44px; }
+            .journal-page .page-header { align-items: flex-end; margin-bottom: 28px; }
+            .journal-page .page-header h1 { margin: 0 0 6px; color: #183322; font-size: 34px; line-height: 1.15; }
+            .journal-page .page-header p { margin: 0; color: #69786d; }
+            .journal-layout { display: grid; grid-template-columns: minmax(390px, 420px) minmax(0, 1fr); gap: 28px; align-items: start; }
+            .journal-layout *, .journal-layout *::before, .journal-layout *::after { box-sizing: border-box; }
+            .journal-layout .form-card { position: sticky; top: 24px; width: 100%; max-width: none; overflow: hidden; border: 1px solid #e2e7e2; border-radius: 18px; box-shadow: 0 10px 28px rgba(31, 45, 36, 0.06); }
+            .journal-layout .form-card h2 { margin-bottom: 22px; line-height: 1.2; }
+            .journal-form-grid { display: grid; gap: 16px; }
+            .journal-form-grid > label:not(.checkbox), .journal-field { display: grid; gap: 8px; font-weight: 700; color: #1f3026; }
+            .journal-field-text { font-size: 15px; line-height: 1.3; }
+            .journal-form-grid input, .journal-form-grid select, .journal-form-grid textarea { width: 100%; min-width: 0; border: 1px solid #d7dfd8; border-radius: 14px; padding: 12px 14px; font-family: inherit; font-size: 14px; line-height: 1.35; background: #fff; color: #1f3026; }
+            .journal-form-grid textarea { min-height: 180px; resize: vertical; }
+            .journal-form-grid input[type="file"] { padding: 10px; cursor: pointer; }
+            .journal-form-grid .field-error, .journal-form-modal-body .field-error, .journal-add-media .field-error, .journal-media-replace-form .field-error { color: #d32f2f; font-size: 12px; font-weight: 700; margin-top: 2px; }
+            .journal-form-grid .field-invalid input, .journal-form-grid .field-invalid textarea, .journal-form-grid .field-invalid select, .journal-form-modal-body .field-invalid input, .journal-form-modal-body .field-invalid textarea, .journal-add-media .field-invalid input, .journal-media-replace-form.field-invalid input { border-color: #d32f2f !important; box-shadow: 0 0 0 2px rgba(211, 47, 47, 0.12); }
+            .journal-form-grid > .checkbox, .journal-checkbox { display: flex; align-items: flex-start; gap: 10px; font-weight: 700; color: #1f3026; line-height: 1.35; }
+            .journal-form-grid > .checkbox input, .journal-checkbox input { width: 16px; min-width: 16px; height: 16px; margin: 2px 0 0; accent-color: #2d6a4f; }
+            .journal-form-grid button[type="submit"], .journal-submit { width: 100%; border: 0; border-radius: 14px; padding: 13px 16px; background: #246b49; color: #fff; font-weight: 800; font-family: inherit; box-shadow: 0 10px 22px rgba(36, 107, 73, 0.18); }
+            .journal-form-grid button[type="submit"]:hover, .journal-submit:hover { background: #1d573b; }
+            .journal-panel { min-width: 0; background: #fff; border: 1px solid #e2e7e2; border-radius: 18px; box-shadow: 0 10px 28px rgba(31, 45, 36, 0.05); overflow: hidden; }
+            .journal-panel-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 18px; border-bottom: 1px solid #e8eee8; }
+            .journal-panel-head h2 { margin: 0; color: #183322; font-size: 20px; line-height: 1.2; }
+            .journal-count { border-radius: 999px; background: #eef6ef; color: #246b49; padding: 5px 10px; font-size: 12px; font-weight: 800; white-space: nowrap; }
+            .journal-timeline { display: grid; gap: 12px; min-width: 0; max-height: calc(100vh - 280px); overflow-y: auto; overflow-x: visible; padding: 14px; scrollbar-width: thin; }
+            .journal-timeline::-webkit-scrollbar { width: 8px; }
+            .journal-modal-card { width: min(920px, 100%); margin: 0 auto; background: #fff; border-radius: 4px; padding: 16px; box-shadow: 0 24px 80px rgba(0,0,0,0.24); }
+            .journal-modal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+            .journal-modal-head strong { font-size: 19px; color: #0f1d15; }
+            .journal-modal-close { border: 0; background: transparent; color: #0f1d15; text-decoration: none; font-size: 24px; line-height: 1; padding: 2px 6px; }
+            .journal-modal-stage { position: relative; min-height: 520px; border-radius: 4px; background: #000; display: grid; place-items: center; overflow: hidden; }
+            .journal-slide { display: none; width: 100%; height: 100%; place-items: center; }
+            .journal-slide.active { display: grid; }
+            .journal-slide img, .journal-slide video { max-width: 100%; max-height: 70vh; object-fit: contain; display: block; }
+            .journal-gallery-control { position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 999px; background: rgba(20, 20, 20, 0.68); color: #fff; font-weight: 800; }
+            .journal-gallery-control button { width: 26px; height: 26px; border: 0; border-radius: 50%; display: grid; place-items: center; background: rgba(255,255,255,0.18); color: #fff; line-height: 1; padding: 0; }
+            .journal-gallery-control button:hover { background: rgba(255,255,255,0.32); }
+            .journal-modal-footer { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 16px; align-items: center; margin-top: 14px; }
+            .journal-modal-thumbs { display: flex; gap: 8px; flex-wrap: nowrap; min-width: 0; max-width: 100%; overflow-x: auto; overflow-y: hidden; padding: 2px 2px 8px; scroll-snap-type: x proximity; scrollbar-width: thin; }
+            .journal-modal-thumbs::-webkit-scrollbar { height: 7px; }
+            .journal-modal-thumbs::-webkit-scrollbar-thumb { background: #cfd8d1; border-radius: 999px; }
+            .journal-thumb-btn { flex: 0 0 auto; width: 64px; height: 52px; padding: 0; border: 2px solid transparent; border-radius: 6px; background: transparent; overflow: hidden; scroll-snap-align: start; }
+            .journal-thumb-btn.active { border-color: #246b49; }
+            .journal-thumb-btn img, .journal-thumb-btn video { width: 100%; height: 100%; object-fit: cover; display: block; border-radius: 4px; }
+            .journal-customer-preview { display: none; position: fixed; inset: 0; z-index: 2300; background: rgba(15, 23, 18, 0.66); padding: 28px; overflow-y: auto; }
+            .journal-customer-preview.is-open { display: block; }
+            .journal-customer-preview-card { width: min(1120px, 100%); margin: 0 auto; background: #efe8d8; border-radius: 18px; box-shadow: 0 24px 80px rgba(0,0,0,.28); overflow: hidden; }
+            .journal-customer-preview-head { align-items: center; display: flex; justify-content: space-between; gap: 14px; padding: 14px 18px; background: #10251a; color: #fffaf0; }
+            .journal-customer-preview-head strong { font-size: 18px; }
+            .journal-customer-preview-close { background: transparent; border: 0; color: #fffaf0; font-size: 26px; line-height: 1; padding: 3px 8px; }
+            .journal-customer-preview-spread { display: grid; grid-template-columns: minmax(300px, 38%) minmax(0, 62%); min-height: 560px; }
+            .journal-customer-story { display: flex; flex-direction: column; min-width: 0; overflow-y: auto; padding: clamp(26px, 3vw, 42px); color: #fffaf0; background: #10251a; }
+            .journal-customer-kicker { color: rgba(255,250,240,.9); display: flex; flex-wrap: wrap; gap: 10px; font-size: 12px; font-weight: 900; letter-spacing: .12em; text-transform: uppercase; }
+            .journal-customer-status { color: #f0d88f; }
+            .journal-customer-title { margin: 20px 0 0; color: #fffaf0; font-family: 'Cormorant Garamond', serif; font-size: clamp(30px, 3.4vw, 46px); line-height: .96; font-weight: 700; letter-spacing: .025em; text-transform: uppercase; overflow-wrap: anywhere; }
+            .journal-customer-author { margin: 8px 0 0; color: rgba(255,250,240,.9); font-size: 14px; font-weight: 700; }
+            .journal-customer-story .journal-customer-description { margin: 24px 0 0; color: #fffaf0; display: block; font-size: 15px; font-weight: 600; line-height: 1.75; max-height: 240px; overflow-y: auto; padding-right: 6px; white-space: pre-line; }
+            .journal-customer-work { margin-top: auto; padding-top: 24px; }
+            .journal-customer-work-title { margin: 0 0 10px; color: rgba(255,250,240,.86); font-size: 11px; font-weight: 900; letter-spacing: .13em; text-transform: uppercase; }
+            .journal-customer-work-list { color: #fffaf0; display: flex; flex-wrap: wrap; gap: 8px 10px; font-size: 13px; font-weight: 800; }
+            .journal-customer-gallery { background: linear-gradient(135deg, #f8f4ea 0%, #e8dfcc 100%); display: grid; grid-template-rows: minmax(0, 1fr) auto; gap: 14px; min-height: 560px; min-width: 0; overflow: hidden; padding: clamp(18px, 2.4vw, 30px); }
+            .journal-customer-stage { min-height: 480px; overflow: visible; position: relative; }
+            .journal-customer-slide { display: grid; height: calc(100% - 24px); left: 50%; opacity: 0; place-items: center; pointer-events: none; position: absolute; top: 50%; transform: translate(-50%, -50%) scale(.88); transition: opacity .24s ease, transform .24s ease; width: 68%; }
+            .journal-customer-slide.active { opacity: 1; pointer-events: auto; transform: translate(-50%, -50%) scale(1); z-index: 2; }
+            .journal-customer-slide.is-prev { opacity: .28; transform: translate(-118%, -50%) scale(.78); z-index: 1; }
+            .journal-customer-slide.is-next { opacity: .28; transform: translate(18%, -50%) scale(.78); z-index: 1; }
+            .journal-customer-slide img, .journal-customer-slide video { display: block; height: auto !important; max-height: 100%; max-width: 100%; object-fit: contain; width: auto !important; }
+            .journal-customer-arrow { background: rgba(16, 37, 26, .86); border: 0; border-radius: 999px; color: #fffaf0; display: grid; height: 38px; place-items: center; position: absolute; top: 50%; transform: translateY(-50%); width: 38px; z-index: 4; }
+            .journal-customer-arrow.prev { left: 8px; }
+            .journal-customer-arrow.next { right: 8px; }
+            .journal-customer-arrow.prev:hover, .journal-customer-arrow.next:hover { background: #246b49; }
+            .journal-customer-meta { color: #516057; display: grid; font-size: 12px; font-weight: 800; gap: 8px; justify-items: center; }
+            .journal-customer-dots { align-items: center; display: flex; gap: 7px; justify-content: center; }
+            .journal-customer-dot { background: #9fb0a3; border-radius: 999px; height: 7px; width: 7px; }
+            .journal-customer-dot.active { background: #246b49; width: 28px; }
+            .journal-customer-empty { color: #78907e; display: grid; font-size: 42px; height: 100%; place-items: center; }
+            @media (max-width: 992px) { .journal-customer-preview-spread { grid-template-columns: 1fr; min-height: auto; } .journal-customer-gallery { order: 1; min-height: 440px; } .journal-customer-story { order: 2; } .journal-customer-stage { min-height: 380px; } }
+            @media (max-width: 1200px) { .journal-page { padding: 28px 32px; } .journal-layout { grid-template-columns: 1fr; } .journal-layout .form-card { position: static; } .journal-timeline { max-height: 620px; } }
+            @media (max-width: 992px) { .journal-event { grid-template-columns: 88px 1fr; } .journal-event-actions { grid-column: 2; justify-items: start; } .journal-card-tags { justify-items: start; } .journal-card-toolbar { justify-content: flex-start; } .journal-cover-link { width: 88px; height: 72px; } .journal-modal-stage { min-height: 360px; } }
+            @media (max-width: 576px) { .journal-page { padding: 22px 18px; } .journal-page .page-header { display: block; } .journal-page .actions { margin-top: 14px; } }
+        </style>
+    </th:block>
 </head>
 <body>
-<div class="dashboard-layout">
-    <div th:replace="~{fragments/sidebar :: sidebar('artisan-products')}"></div>
-    <main class="dashboard-main">
-        <div th:replace="~{fragments/artisan-topbar :: topbar('Nhật ký cây')}"></div>
-        <div class="dashboard-content-wrapper journal-page">
-        <header class="page-header">
-            <div>
-                <h1>Nhật ký cây</h1>
-                <p th:text="${product.productName}">Product</p>
-            </div>
-            <div class="actions">
-                <a class="btn secondary" th:href="@{/artisan/products}">Quay lại sản phẩm</a>
-                <a class="btn" th:href="@{/artisan/products/{id}/preview(id=${product.productId})}">Xem trước</a>
-            </div>
-        </header>
-
-        <div id="artisanFlashSuccess" th:if="${success}" th:attr="data-message=${success}" hidden></div>
-        <div id="artisanFlashError" th:if="${error}" th:attr="data-message=${error}" hidden></div>
-
         <div class="journal-layout">
             <section class="form-card">
                 <h2>Tạo nhật ký mới</h2>
@@ -535,11 +539,10 @@
                     </div>
                 </article>
                 </div>
-            </section>
         </div>
-        </div>
-    </main>
 </div>
+
+<th:block th:fragment="scripts">
 <script>
     const JOURNAL_MAX_MEDIA_PER_UPLOAD = 10;
     const JOURNAL_MAX_IMAGE_SIZE = 7 * 1024 * 1024;
@@ -976,6 +979,7 @@
         }
     });
 </script>
+</th:block>
 </body>
 </html>
 

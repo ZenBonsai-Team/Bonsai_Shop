@@ -1,53 +1,47 @@
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/dashboard-layout :: layout(~{::title}, ~{::#artisan-catalog-content}, ~{::styles}, ~{::scripts})}">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quản lý dòng cây & thuộc tính - Minh Kỷ Garden</title>
-    <link rel="icon" type="image/png" th:href="@{/images/logo.png}">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" th:href="@{/css/common.css}">
-    <link rel="stylesheet" th:href="@{/css/dashboard-layout.css}">
-    <link rel="stylesheet" th:href="@{/css/dashboard.css}">
-    <link rel="stylesheet" th:href="@{/css/artisan.css}">
-    <link rel="stylesheet" th:href="@{/css/bsms-notification.css}">
-    <script th:src="@{/js/bsms-notification.js}"></script>
-    <style>
-        .catalog-delete-disabled {
-            cursor: not-allowed;
-            opacity: 0.45;
-            text-decoration: none;
-        }
-        .catalog-form .field-error {
-            color: #d32f2f;
-            font-size: 12px;
-            font-weight: 700;
-            margin-top: 2px;
-        }
-        .catalog-form .field-invalid input,
-        .catalog-form .field-invalid select {
-            border-color: #d32f2f !important;
-            box-shadow: 0 0 0 2px rgba(211, 47, 47, 0.12);
-        }
-    </style>
+    <th:block th:fragment="styles">
+        <link rel="stylesheet" th:href="@{/css/artisan.css}">
+        <style>
+            .catalog-delete-disabled {
+                cursor: not-allowed;
+                opacity: 0.45;
+                text-decoration: none;
+            }
+            .catalog-form .field-error {
+                color: #d32f2f;
+                font-size: 12px;
+                font-weight: 700;
+                margin-top: 2px;
+            }
+            .catalog-form .field-invalid input,
+            .catalog-form .field-invalid select {
+                border-color: #d32f2f !important;
+                box-shadow: 0 0 0 2px rgba(211, 47, 47, 0.12);
+            }
+        </style>
+    </th:block>
 </head>
 <body>
-<div class="dashboard-layout">
-    <div th:replace="~{fragments/sidebar :: sidebar('artisan-catalog')}"></div>
 
-    <main class="dashboard-main">
-        <header th:replace="~{fragments/header :: header}"></header>
-        <header class="page-header">
-            <div>
-                <h1>Quản lý dòng cây</h1>
-                <p>Quản lý dòng cây, giống cây và thẻ dùng để phân loại sản phẩm.</p>
+<div id="artisan-catalog-content" th:with="paramActivePage='catalog'">
+    <header class="dashboard-header-title d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <span class="artisan-eyebrow text-muted" style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px;">Kênh Nghệ nhân</span>
+            <div class="dashboard-title-row">
+                <h1 class="serif-text mb-1">Danh mục sản phẩm</h1>
             </div>
-            <button id="catalogPrimaryAction" type="button" class="btn" data-open-modal="category-modal" data-mode="create">+ Thêm dòng cây</button>
-        </header>
+            <p class="text-secondary mb-0">Quản lý dòng cây, giống cây và thẻ dùng để phân loại sản phẩm.</p>
+        </div>
+        <div class="dashboard-header-actions">
+            <button id="catalogPrimaryAction" type="button" class="btn btn-success rounded-pill px-4" data-open-modal="category-modal" data-mode="create">
+                <i class="fa-solid fa-plus me-1"></i> Thêm dòng cây
+            </button>
+        </div>
+    </header>
 
     <div id="artisanFlashSuccess" th:if="${success}" th:attr="data-message=${success}" hidden></div>
     <div id="artisanFlashError" th:if="${error}" th:attr="data-message=${error}" hidden></div>
@@ -344,7 +338,9 @@
         </footer>
     </form>
 </div>
+</div>
 
+<th:block th:fragment="scripts">
 <script>
     const tableState = {};
     const catalogMaxNameLength = 255;
@@ -697,6 +693,7 @@
         }
     });
 </script>
+</th:block>
 </body>
 </html>
 
