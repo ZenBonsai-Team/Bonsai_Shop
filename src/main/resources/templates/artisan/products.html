@@ -423,151 +423,135 @@
 
     productSearch.addEventListener('input', applyProductFilters);
 
+    // Robust Modal Elements Selection & Check
     const artisanPublishModal = document.getElementById('artisanPublishModal');
     const artisanPublishProductName = document.getElementById('artisanPublishProductName');
     let pendingPublishForm = null;
 
     function closeArtisanPublishModal() {
-        artisanPublishModal.classList.add('hidden');
+        if (artisanPublishModal) artisanPublishModal.classList.add('hidden');
         pendingPublishForm = null;
     }
 
-    document.querySelectorAll('[data-open-publish-modal]').forEach((button) => {
-        button.addEventListener('click', () => {
-            pendingPublishForm = button.closest('form');
-            artisanPublishProductName.textContent = button.dataset.productName || '-';
-            artisanPublishModal.classList.remove('hidden');
+    if (artisanPublishModal) {
+        artisanPublishModal.querySelector('.artisan-action-modal-close')?.addEventListener('click', closeArtisanPublishModal);
+        artisanPublishModal.querySelector('.btn-modal-cancel')?.addEventListener('click', closeArtisanPublishModal);
+        artisanPublishModal.addEventListener('click', (event) => {
+            if (event.target === artisanPublishModal) {
+                closeArtisanPublishModal();
+            }
         });
-    });
-
-    artisanPublishModal.querySelector('.artisan-action-modal-close').addEventListener('click', closeArtisanPublishModal);
-    artisanPublishModal.querySelector('.btn-modal-cancel').addEventListener('click', closeArtisanPublishModal);
-    artisanPublishModal.addEventListener('click', (event) => {
-        if (event.target === artisanPublishModal) {
-            closeArtisanPublishModal();
-        }
-    });
-
-    artisanPublishModal.querySelector('.btn-modal-confirm').addEventListener('click', () => {
-        if (pendingPublishForm) {
-            pendingPublishForm.submit();
-        }
-    });
+        artisanPublishModal.querySelector('.btn-modal-confirm')?.addEventListener('click', () => {
+            if (pendingPublishForm) {
+                pendingPublishForm.submit();
+            }
+        });
+    }
 
     const artisanHideModal = document.getElementById('artisanHideModal');
     const artisanHideProductName = document.getElementById('artisanHideProductName');
     let pendingHideForm = null;
 
     function closeArtisanHideModal() {
-        artisanHideModal.classList.add('hidden');
+        if (artisanHideModal) artisanHideModal.classList.add('hidden');
         pendingHideForm = null;
     }
 
-    document.querySelectorAll('[data-open-hide-modal]').forEach((button) => {
-        button.addEventListener('click', () => {
-            pendingHideForm = button.closest('form');
-            artisanHideProductName.textContent = button.dataset.productName || '-';
-            artisanHideModal.classList.remove('hidden');
+    if (artisanHideModal) {
+        artisanHideModal.querySelector('.artisan-action-modal-close')?.addEventListener('click', closeArtisanHideModal);
+        artisanHideModal.querySelector('.btn-modal-cancel')?.addEventListener('click', closeArtisanHideModal);
+        artisanHideModal.addEventListener('click', (event) => {
+            if (event.target === artisanHideModal) {
+                closeArtisanHideModal();
+            }
         });
-    });
-
-    artisanHideModal.querySelector('.artisan-action-modal-close').addEventListener('click', closeArtisanHideModal);
-    artisanHideModal.querySelector('.btn-modal-cancel').addEventListener('click', closeArtisanHideModal);
-    artisanHideModal.addEventListener('click', (event) => {
-        if (event.target === artisanHideModal) {
-            closeArtisanHideModal();
-        }
-    });
-
-    artisanHideModal.querySelector('.btn-modal-confirm').addEventListener('click', () => {
-        if (pendingHideForm) {
-            pendingHideForm.submit();
-        }
-    });
+        artisanHideModal.querySelector('.btn-modal-confirm')?.addEventListener('click', () => {
+            if (pendingHideForm) {
+                pendingHideForm.submit();
+            }
+        });
+    }
 
     const artisanShowModal = document.getElementById('artisanShowModal');
     const artisanShowProductName = document.getElementById('artisanShowProductName');
     let pendingShowForm = null;
 
     function closeArtisanShowModal() {
-        artisanShowModal.classList.add('hidden');
+        if (artisanShowModal) artisanShowModal.classList.add('hidden');
         pendingShowForm = null;
     }
 
-    document.querySelectorAll('[data-open-show-modal]').forEach((button) => {
-        button.addEventListener('click', () => {
-            pendingShowForm = button.closest('form');
-            artisanShowProductName.textContent = button.dataset.productName || '-';
-            artisanShowModal.classList.remove('hidden');
+    if (artisanShowModal) {
+        artisanShowModal.querySelector('.artisan-action-modal-close')?.addEventListener('click', closeArtisanShowModal);
+        artisanShowModal.querySelector('.btn-modal-cancel')?.addEventListener('click', closeArtisanShowModal);
+        artisanShowModal.addEventListener('click', (event) => {
+            if (event.target === artisanShowModal) {
+                closeArtisanShowModal();
+            }
         });
-    });
-
-    artisanShowModal.querySelector('.artisan-action-modal-close').addEventListener('click', closeArtisanShowModal);
-    artisanShowModal.querySelector('.btn-modal-cancel').addEventListener('click', closeArtisanShowModal);
-    artisanShowModal.addEventListener('click', (event) => {
-        if (event.target === artisanShowModal) {
-            closeArtisanShowModal();
-        }
-    });
-
-    artisanShowModal.querySelector('.btn-modal-confirm').addEventListener('click', () => {
-        if (pendingShowForm) {
-            pendingShowForm.submit();
-        }
-    });
+        artisanShowModal.querySelector('.btn-modal-confirm')?.addEventListener('click', () => {
+            if (pendingShowForm) {
+                pendingShowForm.submit();
+            }
+        });
+    }
 
     const artisanDeleteModal = document.getElementById('artisanDeleteModal');
     const artisanDeleteProductName = document.getElementById('artisanDeleteProductName');
     let pendingDeleteForm = null;
 
     function closeArtisanDeleteModal() {
-        artisanDeleteModal.classList.add('hidden');
+        if (artisanDeleteModal) artisanDeleteModal.classList.add('hidden');
         pendingDeleteForm = null;
     }
 
-    document.querySelectorAll('[data-open-delete-modal]').forEach((button) => {
-        button.addEventListener('click', () => {
-            pendingDeleteForm = button.closest('form');
-            artisanDeleteProductName.textContent = button.dataset.productName || '-';
-            artisanDeleteModal.classList.remove('hidden');
+    if (artisanDeleteModal) {
+        artisanDeleteModal.querySelector('.artisan-delete-modal-close')?.addEventListener('click', closeArtisanDeleteModal);
+        artisanDeleteModal.querySelector('.btn-modal-cancel')?.addEventListener('click', closeArtisanDeleteModal);
+        artisanDeleteModal.addEventListener('click', (event) => {
+            if (event.target === artisanDeleteModal) {
+                closeArtisanDeleteModal();
+            }
         });
-    });
+        artisanDeleteModal.querySelector('.btn-modal-confirm')?.addEventListener('click', () => {
+            if (pendingDeleteForm) {
+                pendingDeleteForm.submit();
+            }
+        });
+    }
 
-    artisanDeleteModal.querySelector('.artisan-delete-modal-close').addEventListener('click', closeArtisanDeleteModal);
-    artisanDeleteModal.querySelector('.btn-modal-cancel').addEventListener('click', closeArtisanDeleteModal);
-    artisanDeleteModal.addEventListener('click', (event) => {
-        if (event.target === artisanDeleteModal) {
-            closeArtisanDeleteModal();
-        }
-    });
-
-    artisanDeleteModal.querySelector('.btn-modal-confirm').addEventListener('click', () => {
-        if (pendingDeleteForm) {
-            pendingDeleteForm.submit();
-        }
-    });
-
+    // Global Click Handler for Modal Actions with Fallback Delegated Support
     document.addEventListener('click', (event) => {
         const publishButton = event.target.closest('[data-open-publish-modal]');
         const hideButton = event.target.closest('[data-open-hide-modal]');
         const showButton = event.target.closest('[data-open-show-modal]');
         const deleteButton = event.target.closest('[data-open-delete-modal]');
+        
+        console.log('[DEBUG] Clicked element:', event.target);
         if (publishButton) {
+            event.preventDefault();
+            console.log('[DEBUG] Opening publish modal for product:', publishButton.dataset.productName);
             pendingPublishForm = publishButton.closest('form');
-            artisanPublishProductName.textContent = publishButton.dataset.productName || '-';
-            artisanPublishModal.classList.remove('hidden');
+            if (artisanPublishProductName) artisanPublishProductName.textContent = publishButton.dataset.productName || '-';
+            if (artisanPublishModal) artisanPublishModal.classList.remove('hidden');
         } else if (hideButton) {
+            event.preventDefault();
+            console.log('[DEBUG] Opening hide modal for product:', hideButton.dataset.productName);
             pendingHideForm = hideButton.closest('form');
-            artisanHideProductName.textContent = hideButton.dataset.productName || '-';
-            artisanHideModal.classList.remove('hidden');
+            if (artisanHideProductName) artisanHideProductName.textContent = hideButton.dataset.productName || '-';
+            if (artisanHideModal) artisanHideModal.classList.remove('hidden');
         } else if (showButton) {
+            event.preventDefault();
+            console.log('[DEBUG] Opening show modal for product:', showButton.dataset.productName);
             pendingShowForm = showButton.closest('form');
-            artisanShowProductName.textContent = showButton.dataset.productName || '-';
-            artisanShowModal.classList.remove('hidden');
+            if (artisanShowProductName) artisanShowProductName.textContent = showButton.dataset.productName || '-';
+            if (artisanShowModal) artisanShowModal.classList.remove('hidden');
         } else if (deleteButton) {
+            event.preventDefault();
+            console.log('[DEBUG] Opening delete modal for product:', deleteButton.dataset.productName);
             pendingDeleteForm = deleteButton.closest('form');
-            artisanDeleteProductName.textContent = deleteButton.dataset.productName || '-';
-            artisanDeleteModal.classList.remove('hidden');
+            if (artisanDeleteProductName) artisanDeleteProductName.textContent = deleteButton.dataset.productName || '-';
+            if (artisanDeleteModal) artisanDeleteModal.classList.remove('hidden');
         }
     });
 </script>
