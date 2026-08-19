@@ -113,6 +113,79 @@
                 display: block !important;
                 background-color: #f8faf8 !important;
             }
+
+            /* Re-introduced missing journal styles from history */
+            .journal-card-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+            .journal-card-toolbar { display: flex; align-items: center; gap: 8px; justify-content: flex-end; }
+            .journal-add-media { display: grid; gap: 8px; min-width: 0; padding: 10px; }
+            .journal-add-media input[type="file"] { width: 100%; border: 1px solid #dfe6df; border-radius: 8px; padding: 7px; font-size: 12px; }
+            .journal-add-media button { color: #246b49; white-space: nowrap; justify-self: start; padding: 0; }
+            .journal-visibility button { align-items: center; display: inline-flex; gap: 7px; padding: 0; transition: .18s ease; white-space: nowrap; }
+            .journal-visibility button.is-public { color: #8a6200; }
+            .journal-visibility button.is-private { color: #7a4d00; }
+            .journal-attention-note { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: #b8860b; margin-top: 6px; }
+            .journal-menu { position: relative; }
+            .journal-menu > summary { align-items: center; background: #ffffff; border: 1px solid #dfe6df; border-radius: 8px; color: #1f3026; cursor: pointer; display: inline-flex; gap: 6px; font-size: 13px; font-weight: 800; list-style: none; padding: 8px 14px; transition: background .16s ease, border-color .16s ease, color .16s ease; white-space: nowrap; }
+            .journal-menu > summary:hover { background: #f8fbf8; border-color: #2d6a4f; color: #2d6a4f; }
+            .journal-menu > summary::-webkit-details-marker { display: none; }
+            .journal-menu > summary::after { content: " ▾"; font-size: 10px; }
+            .journal-menu[open] > summary::after { content: " ▴"; }
+            .journal-menu-panel { background: #fff; border: 1px solid #e2e7e2; border-radius: 12px; box-shadow: 0 14px 34px rgba(31, 45, 36, 0.12); display: grid; gap: 8px; left: var(--journal-menu-left, auto); margin-top: 0; min-width: 260px; padding: 10px; position: fixed; top: var(--journal-menu-top, auto); z-index: 2200; }
+            .journal-menu-panel > details,
+            .journal-menu-panel > form { border-bottom: 1px solid #eef2ee; padding-bottom: 8px; }
+            .journal-menu-panel > details:last-child,
+            .journal-menu-panel > form:last-child { border-bottom: 0; padding-bottom: 0; }
+            .journal-menu-panel summary { cursor: pointer; color: #246b49; font-weight: 800; list-style: none; }
+            .journal-menu-panel summary::-webkit-details-marker { display: none; }
+            .journal-menu-panel summary i,
+            .journal-menu-panel button i { width: 16px; }
+            .journal-menu-panel .journal-visibility { border-bottom: 1px solid #eef2ee; padding-bottom: 8px; }
+            .journal-edit-toggle summary { cursor: pointer; color: #246b49; font-weight: 800; list-style: none; }
+            .journal-edit-toggle summary::-webkit-details-marker { display: none; }
+            .journal-edit-form { display: grid; gap: 8px; grid-column: 1 / -1; width: 100%; margin-top: 4px; padding: 10px; border: 1px solid #e2e7e2; border-radius: 10px; background: #f8fbf8; }
+            .journal-edit-form input, .journal-edit-form textarea { width: 100%; border: 1px solid #d7dfd8; border-radius: 8px; padding: 8px 10px; font: inherit; font-size: 13px; }
+            .journal-edit-form textarea { min-height: 140px; resize: vertical; }
+            .journal-edit-form button { justify-self: start; color: #246b49; }
+            .journal-delete-button { align-items: center; background: transparent !important; border: 0 !important; border-radius: 8px; color: #dc3545 !important; display: inline-flex; gap: 8px; justify-content: flex-start; padding: 9px 10px !important; text-align: left; width: 100%; cursor: pointer; }
+            .journal-delete-button:hover { background: #fff5f5 !important; color: #b02a37 !important; }
+            .journal-menu-action { align-items: center; background: transparent !important; border: 0 !important; border-radius: 8px; color: #0d6efd !important; display: inline-flex; gap: 8px; justify-content: flex-start; padding: 9px 10px !important; text-align: left; width: 100%; cursor: pointer; }
+            .journal-menu-action:hover { background: #f4f8f4 !important; color: #174d34 !important; }
+            .journal-form-modal { display: none; position: fixed; inset: 0; z-index: 2100; background: rgba(15, 23, 18, 0.56); padding: 32px 18px; overflow-y: auto; }
+            .journal-form-modal.is-open { display: block; }
+            .journal-form-dialog { width: min(680px, 100%); margin: 10vh auto 0; background: #fff; border: 1px solid #e2e7e2; border-radius: 16px; box-shadow: 0 24px 70px rgba(15, 23, 18, 0.24); overflow: hidden; }
+            .journal-form-dialog header { align-items: center; border-bottom: 1px solid #eef2ee; display: flex; justify-content: space-between; gap: 16px; padding: 18px 22px; }
+            .journal-form-dialog h2 { color: #183322; font-size: 22px; margin: 0; }
+            .journal-form-close { background: transparent; border: 0; color: #66736b; cursor: pointer; font-size: 24px; line-height: 1; padding: 4px 8px; }
+            .journal-form-modal-body { display: grid; gap: 16px; padding: 22px; }
+            .journal-form-modal-body label { color: #1f3026; display: grid; gap: 8px; font-weight: 800; }
+            .journal-form-modal-body input,
+            .journal-form-modal-body textarea { border: 1px solid #d7dfd8; border-radius: 12px; font: inherit; padding: 12px 14px; width: 100%; }
+            .journal-form-modal-body textarea { min-height: 160px; resize: vertical; }
+            .journal-form-actions { align-items: center; display: flex; gap: 10px; justify-content: flex-end; padding: 0 22px 22px; }
+            .journal-form-actions button,
+            .journal-form-actions .btn { border-radius: 10px; padding: 10px 14px; }
+            .journal-form-actions .btn.secondary { background: #eef3ee; color: #1f3026; }
+            .journal-media-manager { display: grid; gap: 14px; }
+            .journal-media-manager h3 { color: #183322; font-size: 16px; margin: 0; }
+            .journal-media-list { display: grid; gap: 12px; }
+            .journal-media-item { align-items: start; border: 1px solid #e2e7e2; border-radius: 12px; display: grid; gap: 12px; grid-template-columns: 112px minmax(0, 1fr); padding: 12px; }
+            .journal-media-item img,
+            .journal-media-item video { border-radius: 8px; height: 88px; object-fit: cover; width: 112px; }
+            .journal-media-fields { display: grid; gap: 10px; min-width: 0; }
+            .journal-media-inline-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+            .journal-media-inline-actions form { margin: 0; }
+            .journal-media-inline-actions button,
+            .journal-media-inline-actions .btn { align-items: center; background: #fff; border: 1px solid #dfe6df; border-radius: 8px; color: #1f3026; display: inline-flex; gap: 6px; font-weight: 700; padding: 8px 10px; }
+            .journal-media-inline-actions .btn-cover { border-color: #2d6a4f; color: #2d6a4f; }
+            .journal-media-inline-actions .btn-replace { border-color: #0d6efd; color: #0d6efd; }
+            .journal-media-inline-actions .btn-delete { border-color: #ef4444; color: #dc3545; }
+            .journal-media-replace-form { align-items: center; display: flex; flex-wrap: wrap; gap: 8px; }
+            .journal-media-replace-form input[type="file"] { max-width: 220px; padding: 7px; }
+            .journal-media-empty { border: 1px dashed #d7dfd8; border-radius: 12px; color: #66736b; padding: 16px; text-align: center; }
+            .journal-placeholder { display: grid; place-items: center; color: #67806d; font-size: 34px; }
+            .journal-meta { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 0; }
+            .journal-date { font-weight: 900; color: #17251c; font-size: 15px; }
+            .journal-type { justify-self: end; border: 1px solid #e2e7e2; border-radius: 999px; background: #fff; color: #66736b; padding: 6px 9px; font-size: 12px; font-weight: 700; line-height: 1.2; max-width: 138px; text-align: center; white-space: normal; }
         </style>
     </th:block>
 <body>
