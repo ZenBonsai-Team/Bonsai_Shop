@@ -110,7 +110,7 @@
                                         <i class="fa-solid fa-eye"></i> Xem trước
                                     </a>
                                     <a class="btn-card-action action-edit" th:href="@{/artisan/products/{id}/edit(id=${product.productId})}">
-                                        <i class="fa-solid fa-pen"></i> Chỉnh sửa
+                                        <i class="fa-solid fa-pen"></i> Sửa
                                     </a>
                                     <form method="post" th:action="@{/artisan/products/{id}/publish(id=${product.productId})}">
                                         <button type="button" class="btn-card-action action-core" data-open-publish-modal th:attr="data-product-name=${product.productName}">
@@ -124,18 +124,21 @@
                                     <a class="btn-card-action action-preview" th:href="@{/artisan/products/{id}/preview(id=${product.productId})}">
                                         <i class="fa-solid fa-eye"></i> Xem trước
                                     </a>
+                                    <a class="btn-card-action action-journal" th:href="@{/artisan/products/{id}/journal(id=${product.productId})}">
+                                        <i class="fa-solid fa-clipboard-list"></i> Nhật ký
+                                    </a>
                                     <form method="post" th:action="@{/artisan/products/{id}/hide(id=${product.productId})}">
                                         <button type="button" class="btn-card-action action-hide-btn" data-open-hide-modal th:attr="data-product-name=${product.productName}">
-                                            <i class="fa-solid fa-eye-slash"></i> Ẩn sản phẩm
+                                            <i class="fa-solid fa-eye-slash"></i> Ẩn
                                         </button>
                                     </form>
                                 </th:block>
 
                                 <!-- STATE 3: HIDDEN (Đang ẩn) -->
-                                <th:block th:if="${product.productStatus != 'DRAFT' and product.isVisible == false}">
+                                <th:block th:if="${product.productStatus == 'AVAILABLE' and product.isVisible == false}">
                                     <form method="post" th:action="@{/artisan/products/{id}/show(id=${product.productId})}">
                                         <button type="button" class="btn-card-action action-core" data-open-show-modal th:attr="data-product-name=${product.productName}">
-                                            <i class="fa-solid fa-eye"></i> Hiện sản phẩm
+                                            <i class="fa-solid fa-eye"></i> Hiện
                                         </button>
                                     </form>
                                     <a class="btn-card-action action-edit" th:href="@{/artisan/products/{id}/edit(id=${product.productId})}">
@@ -154,12 +157,12 @@
                                     <!-- Hide if visible, Show if hidden -->
                                     <form th:if="${product.isVisible != false}" method="post" th:action="@{/artisan/products/{id}/hide(id=${product.productId})}">
                                         <button type="button" class="btn-card-action action-hide-btn" data-open-hide-modal th:attr="data-product-name=${product.productName}">
-                                            <i class="fa-solid fa-eye-slash"></i> Ẩn sản phẩm
+                                            <i class="fa-solid fa-eye-slash"></i> Ẩn
                                         </button>
                                     </form>
                                     <form th:if="${product.isVisible == false}" method="post" th:action="@{/artisan/products/{id}/show(id=${product.productId})}">
                                         <button type="button" class="btn-card-action action-core" data-open-show-modal th:attr="data-product-name=${product.productName}">
-                                            <i class="fa-solid fa-eye"></i> Hiện sản phẩm
+                                            <i class="fa-solid fa-eye"></i> Hiện
                                         </button>
                                     </form>
                                 </th:block>
@@ -170,7 +173,7 @@
                                         <i class="fa-solid fa-eye"></i> Xem trước
                                     </a>
                                     <a class="btn-card-action action-core" th:href="@{/artisan/products/{id}/journal(id=${product.productId})}">
-                                        <i class="fa-solid fa-book"></i> Nhật ký cây
+                                        <i class="fa-solid fa-book"></i> Nhật ký
                                     </a>
                                 </th:block>
                             </div>
