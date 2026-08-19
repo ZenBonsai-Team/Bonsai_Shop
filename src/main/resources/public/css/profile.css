@@ -455,6 +455,15 @@ a {
     cursor: not-allowed;
 }
 
+.field-error {
+    color: #991b1b;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.4;
+    min-height: 18px;
+    margin-top: 6px;
+}
+
 .btn-submit {
     display: inline-block;
     width: 100%;
@@ -604,4 +613,4 @@ a {
     color: #1C3322 !important;
     text-decoration: underline !important;
 }
-
+

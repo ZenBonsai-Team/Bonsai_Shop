@@ -115,7 +115,7 @@ public class UserService {
             address = address.trim();
         }
 
-        validateUpdateUserProfileInput(fullName, phone, username);
+        validateUpdateUserProfileInput(fullName, phone, username, address);
 
         if (username != null && !username.equals(user.getUsername()) && userRepository.existsByUsername(username)) {
             throw new RuntimeException("Ten dang nhap da duoc su dung!");
@@ -154,7 +154,7 @@ public class UserService {
     }
 
     // Validate du lieu cap nhat profile tuong tu validate tao tai khoan.
-    private void validateUpdateUserProfileInput(String fullName, String phone, String username) {
+    private void validateUpdateUserProfileInput(String fullName, String phone, String username, String address) {
         if (fullName != null && (fullName.length() < 3 || fullName.length() > 50)) {
             throw new RuntimeException("Ho va ten phai co tu 3 den 50 ky tu!");
         }
@@ -163,6 +163,9 @@ public class UserService {
         }
         if (username != null && (username.length() < 3 || username.length() > 50)) {
             throw new RuntimeException("Ten dang nhap phai co tu 3 den 50 ky tu!");
+        }
+        if (address != null && address.length() > 30) {
+            throw new RuntimeException("Dia chi khong duoc vuot qua 30 ky tu!");
         }
     }
 
