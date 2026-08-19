@@ -195,7 +195,8 @@
                     </div>
                 </article>
 
-                <article class="journal-event" th:each="event : ${journalEvents}" th:classappend="${!event.isPublic} ? ' is-unpublished' : ''">
+                <th:block th:each="event : ${journalEvents}">
+                    <article class="journal-event" th:classappend="${!event.isPublic} ? ' is-unpublished' : ''">
                     <button type="button" class="journal-cover-link" th:if="${event.firstMedia != null}" th:attr="data-open-journal-modal=${event.eventId}">
                         <img class="journal-cover" th:if="${event.firstMedia.mediaType == 'IMAGE'}" th:src="${event.firstMedia.mediaUrl}" alt="" loading="lazy">
                         <video class="journal-cover" th:if="${event.firstMedia.mediaType == 'VIDEO'}" th:src="${event.firstMedia.mediaUrl}" muted preload="none"></video>
@@ -280,7 +281,9 @@
                             </details>
                         </div>
                     </div>
-                    <div class="journal-customer-preview" th:id="|journal-customer-preview-${event.eventId}|">
+                </article>
+
+                <div class="journal-customer-preview" th:id="|journal-customer-preview-${event.eventId}|">
                         <div class="journal-customer-preview-card" role="dialog" aria-modal="true">
                             <div class="journal-customer-preview-head">
                                 <strong>Preview nhật ký như khách</strong>
@@ -468,7 +471,7 @@
                             </div>
                         </div>
                     </div>
-                </article>
+                </th:block>
                 </div>
         </div>
 </div>
