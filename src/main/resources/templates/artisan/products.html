@@ -65,7 +65,7 @@
                         <span th:if="${product.productStatus != 'DRAFT' and product.isVisible == false}" class="badge-floating badge-hidden">Đang ẩn</span>
                         
                         <!-- Glassmorphic Dropdown Actions Menu in Top-Right of Image -->
-                        <details class="product-card-menu">
+                        <details class="product-card-menu" th:if="${product.productStatus != 'SOLD'}">
                             <summary title="Thao tác khác"><i class="fa-solid fa-ellipsis-vertical"></i></summary>
                             <div class="product-card-menu-panel">
                                 <a th:href="@{/artisan/products/{id}/journal(id=${product.productId})}">
@@ -146,8 +146,26 @@
                                     </a>
                                 </th:block>
 
-                                <!-- STATE 4: SOLD (Đã bán) or RESERVED (Được đặt) -->
-                                <th:block th:if="${product.productStatus == 'SOLD' or product.productStatus == 'RESERVED'}">
+                                <!-- STATE 4: SOLD (Đã bán) -->
+                                <th:block th:if="${product.productStatus == 'SOLD'}">
+                                    <a class="btn-card-action action-preview" th:href="@{/artisan/products/{id}/preview(id=${product.productId})}">
+                                        <i class="fa-solid fa-eye"></i> Xem trước
+                                    </a>
+                                    <!-- Hide if visible, Show if hidden -->
+                                    <form th:if="${product.isVisible != false}" method="post" th:action="@{/artisan/products/{id}/hide(id=${product.productId})}">
+                                        <button type="button" class="btn-card-action action-hide-btn" data-open-hide-modal th:attr="data-product-name=${product.productName}">
+                                            <i class="fa-solid fa-eye-slash"></i> Ẩn sản phẩm
+                                        </button>
+                                    </form>
+                                    <form th:if="${product.isVisible == false}" method="post" th:action="@{/artisan/products/{id}/show(id=${product.productId})}">
+                                        <button type="button" class="btn-card-action action-core" data-open-show-modal th:attr="data-product-name=${product.productName}">
+                                            <i class="fa-solid fa-eye"></i> Hiện sản phẩm
+                                        </button>
+                                    </form>
+                                </th:block>
+
+                                <!-- STATE 5: RESERVED (Đã được đặt) -->
+                                <th:block th:if="${product.productStatus == 'RESERVED'}">
                                     <a class="btn-card-action action-preview" th:href="@{/artisan/products/{id}/preview(id=${product.productId})}">
                                         <i class="fa-solid fa-eye"></i> Xem trước
                                     </a>
