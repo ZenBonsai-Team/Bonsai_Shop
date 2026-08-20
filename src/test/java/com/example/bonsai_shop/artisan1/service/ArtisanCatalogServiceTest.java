@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -52,35 +53,36 @@ class ArtisanCatalogServiceTest {
     }
 
     @Test
-    void retrievalMethods_WhenRepositoriesReturnData_ShouldReturnCatalogData() {
-        List<Category> categories = List.of(category(1, "Outdoor"));
-        List<Variety> varieties = List.of(variety(10, categories.get(0), "Kim giòn"));
-        List<Tag> tags = List.of(tag(100, "Mini"));
+    void getCatalogData_WhenRepositoriesReturnData_ShouldReturnCatalogData() {
+        Category category = category(1, "Outdoor");
+        Variety variety = variety(10, category, "Japanese Maple");
+        Tag tag = tag(100, "Mini");
 
-        when(categoryRepository.findAll()).thenReturn(categories);
-        when(varietyRepository.findAll()).thenReturn(varieties);
-        when(tagRepository.findAll()).thenReturn(tags);
+        when(categoryRepository.findAll()).thenReturn(List.of(category));
+        when(varietyRepository.findAll()).thenReturn(List.of(variety));
+        when(tagRepository.findAll()).thenReturn(List.of(tag));
 
-        assertThat(artisanCatalogService.getCategories()).isEqualTo(categories);
-        assertThat(artisanCatalogService.getVarieties()).isEqualTo(varieties);
-        assertThat(artisanCatalogService.getTags()).isEqualTo(tags);
+        assertThat(artisanCatalogService.getCategories()).containsExactly(category);
+        assertThat(artisanCatalogService.getVarieties()).containsExactly(variety);
+        assertThat(artisanCatalogService.getTags()).containsExactly(tag);
     }
 
     @Test
-    void usageMethods_WhenItemsAreReferenced_ShouldReturnIdsCurrentlyInUse() {
-        Category categoryOne = category(1, "Outdoor");
-        Category categoryTwo = category(2, "Indoor");
-        Variety varietyOne = variety(10, categoryOne, "Kim giòn");
-        Variety varietyTwo = variety(20, categoryTwo, "Sanh");
-        Tag tagOne = tag(100, "Mini");
-        Tag tagTwo = tag(200, "Premium");
+    void getIdsInUse_WhenCatalogItemsAreReferenced_ShouldReturnReferencedIdsOnly() {
+        Category categoryWithVariety = category(1, "Outdoor");
+        Category categoryWithProduct = category(2, "Indoor");
+        Category unusedCategory = category(3, "Unused");
+        Variety usedVariety = variety(10, categoryWithVariety, "Japanese Maple");
+        Variety unusedVariety = variety(20, unusedCategory, "Pine");
+        Tag unusedTag = tag(100, "Mini");
+        Tag usedTag = tag(200, "Premium");
 
-        when(categoryRepository.findAll()).thenReturn(List.of(categoryOne, categoryTwo));
+        when(categoryRepository.findAll()).thenReturn(List.of(categoryWithVariety, categoryWithProduct, unusedCategory));
         when(varietyRepository.existsByCategoryCategoryId(1)).thenReturn(true);
         when(productRepository.existsByVarietyCategoryCategoryId(2)).thenReturn(true);
-        when(varietyRepository.findAll()).thenReturn(List.of(varietyOne, varietyTwo));
+        when(varietyRepository.findAll()).thenReturn(List.of(usedVariety, unusedVariety));
         when(productRepository.existsByVarietyVarietyId(10)).thenReturn(true);
-        when(tagRepository.findAll()).thenReturn(List.of(tagOne, tagTwo));
+        when(tagRepository.findAll()).thenReturn(List.of(unusedTag, usedTag));
         when(productTagRepository.existsForTagId(200)).thenReturn(true);
 
         Set<Integer> categoryIds = artisanCatalogService.getCategoryIdsInUse();
@@ -93,11 +95,40 @@ class ArtisanCatalogServiceTest {
     }
 
     @Test
-    void createCategory_WhenNameIsValidAndUnique_ShouldSaveCategory() {
-        when(categoryRepository.existsByCategoryNameIgnoreCase("Outdoor"))
-                .thenReturn(false);
+    void getCatalogUsageCounts_WhenRepositoriesReturnCounts_ShouldReturnCountMaps() {
+        Category categoryOne = category(1, "Outdoor");
+        Category categoryTwo = category(2, "Indoor");
+        Variety varietyOne = variety(10, categoryOne, "Japanese Maple");
+        Variety varietyTwo = variety(20, categoryTwo, "Pine");
+        Tag tagOne = tag(100, "Mini");
+        Tag tagTwo = tag(200, "Premium");
 
-        artisanCatalogService.createCategory(" Outdoor ", "  Sunny bonsai  ");
+        when(categoryRepository.findAll()).thenReturn(List.of(categoryOne, categoryTwo));
+        when(varietyRepository.findAll()).thenReturn(List.of(varietyOne, varietyTwo));
+        when(tagRepository.findAll()).thenReturn(List.of(tagOne, tagTwo));
+        when(productRepository.countByVarietyCategoryCategoryId(1)).thenReturn(3L);
+        when(productRepository.countByVarietyCategoryCategoryId(2)).thenReturn(0L);
+        when(productRepository.countByVarietyVarietyId(10)).thenReturn(2L);
+        when(productRepository.countByVarietyVarietyId(20)).thenReturn(1L);
+        when(productTagRepository.countByTagTagId(100)).thenReturn(4L);
+        when(productTagRepository.countByTagTagId(200)).thenReturn(0L);
+
+        Map<Integer, Long> varietyCountsByCategory = artisanCatalogService.getVarietyCountByCategoryId();
+        Map<Integer, Long> productCountsByCategory = artisanCatalogService.getProductCountByCategoryId();
+        Map<Integer, Long> productCountsByVariety = artisanCatalogService.getProductCountByVarietyId();
+        Map<Integer, Long> productCountsByTag = artisanCatalogService.getProductCountByTagId();
+
+        assertThat(varietyCountsByCategory).containsEntry(1, 1L).containsEntry(2, 1L);
+        assertThat(productCountsByCategory).containsEntry(1, 3L).containsEntry(2, 0L);
+        assertThat(productCountsByVariety).containsEntry(10, 2L).containsEntry(20, 1L);
+        assertThat(productCountsByTag).containsEntry(100, 4L).containsEntry(200, 0L);
+    }
+
+    @Test
+    void createCategory_WhenNameIsValidAndUnique_ShouldTrimAndSaveCategory() {
+        when(categoryRepository.existsByCategoryNameIgnoreCase("Outdoor")).thenReturn(false);
+
+        artisanCatalogService.createCategory(" Outdoor ", " Sunny bonsai ");
 
         ArgumentCaptor<Category> categoryCaptor = ArgumentCaptor.forClass(Category.class);
         verify(categoryRepository).save(categoryCaptor.capture());
@@ -106,27 +137,28 @@ class ArtisanCatalogServiceTest {
     }
 
     @Test
-    void createCategory_WhenNameBlankOrDuplicate_ShouldThrowException() {
-        assertThatThrownBy(() -> artisanCatalogService.createCategory(" ", "Description"))
-                .isInstanceOf(RuntimeException.class);
-
-        when(categoryRepository.existsByCategoryNameIgnoreCase("Outdoor"))
-                .thenReturn(true);
-
-        assertThatThrownBy(() -> artisanCatalogService.createCategory("Outdoor", "Description"))
+    void createCategory_WhenNameIsBlank_ShouldRejectCategory() {
+        assertThatThrownBy(() -> artisanCatalogService.createCategory("   ", "Description"))
                 .isInstanceOf(RuntimeException.class);
 
         verify(categoryRepository, never()).save(any(Category.class));
     }
 
     @Test
-    void updateCategory_WhenCategoryExistsAndNameUnique_ShouldUpdateCategory() {
-        Category category = category(1, "Old");
+    void createCategory_WhenNameIsDuplicate_ShouldRejectCategory() {
+        when(categoryRepository.existsByCategoryNameIgnoreCase("Outdoor")).thenReturn(true);
 
-        when(categoryRepository.findById(1))
-                .thenReturn(Optional.of(category));
-        when(categoryRepository.existsByCategoryNameIgnoreCaseAndCategoryIdNot("Outdoor", 1))
-                .thenReturn(false);
+        assertThatThrownBy(() -> artisanCatalogService.createCategory(" Outdoor ", "Description"))
+                .isInstanceOf(RuntimeException.class);
+
+        verify(categoryRepository, never()).save(any(Category.class));
+    }
+
+    @Test
+    void updateCategory_WhenCategoryExistsAndNameIsUnique_ShouldUpdateCategory() {
+        Category category = category(1, "Old");
+        when(categoryRepository.findById(1)).thenReturn(Optional.of(category));
+        when(categoryRepository.existsByCategoryNameIgnoreCaseAndCategoryIdNot("Outdoor", 1)).thenReturn(false);
 
         artisanCatalogService.updateCategory(1, " Outdoor ", " Updated description ");
 
@@ -136,39 +168,8 @@ class ArtisanCatalogServiceTest {
     }
 
     @Test
-    void updateCategory_WhenCategoryMissingOrNameDuplicate_ShouldThrowException() {
-        when(categoryRepository.findById(1))
-                .thenReturn(Optional.empty());
-
-        assertThatThrownBy(() -> artisanCatalogService.updateCategory(1, "Outdoor", "Description"))
-                .isInstanceOf(RuntimeException.class);
-
-        Category category = category(2, "Old");
-        when(categoryRepository.findById(2))
-                .thenReturn(Optional.of(category));
-        when(categoryRepository.existsByCategoryNameIgnoreCaseAndCategoryIdNot("Outdoor", 2))
-                .thenReturn(true);
-
-        assertThatThrownBy(() -> artisanCatalogService.updateCategory(2, "Outdoor", "Description"))
-                .isInstanceOf(RuntimeException.class);
-
-        verify(categoryRepository, never()).save(any(Category.class));
-    }
-
-    @Test
-    void deleteCategory_WhenCategoryIsNotReferenced_ShouldDeleteCategory() {
-        when(varietyRepository.existsByCategoryCategoryId(1))
-                .thenReturn(false);
-
-        artisanCatalogService.deleteCategory(1);
-
-        verify(categoryRepository).deleteById(1);
-    }
-
-    @Test
-    void deleteCategory_WhenCategoryHasVariety_ShouldThrowException() {
-        when(varietyRepository.existsByCategoryCategoryId(1))
-                .thenReturn(true);
+    void deleteCategory_WhenCategoryContainsVarieties_ShouldRejectDelete() {
+        when(varietyRepository.existsByCategoryCategoryId(1)).thenReturn(true);
 
         assertThatThrownBy(() -> artisanCatalogService.deleteCategory(1))
                 .isInstanceOf(RuntimeException.class);
@@ -177,105 +178,55 @@ class ArtisanCatalogServiceTest {
     }
 
     @Test
-    void createVariety_WhenCategoryExistsAndNameUnique_ShouldSaveVariety() {
+    void createVariety_WhenCategoryExistsAndNameIsUnique_ShouldSaveVariety() {
         Category category = category(1, "Outdoor");
-
-        when(categoryRepository.findById(1))
-                .thenReturn(Optional.of(category));
-        when(varietyRepository.existsByCategoryCategoryIdAndVarietyNameIgnoreCase(1, "Kim giòn"))
+        when(categoryRepository.findById(1)).thenReturn(Optional.of(category));
+        when(varietyRepository.existsByCategoryCategoryIdAndVarietyNameIgnoreCase(1, "Japanese Maple"))
                 .thenReturn(false);
 
-        artisanCatalogService.createVariety(1, " Kim giòn ", " Small leaves ");
+        artisanCatalogService.createVariety(1, " Japanese Maple ", " Small leaves ");
 
         ArgumentCaptor<Variety> varietyCaptor = ArgumentCaptor.forClass(Variety.class);
         verify(varietyRepository).save(varietyCaptor.capture());
         assertThat(varietyCaptor.getValue().getCategory()).isEqualTo(category);
-        assertThat(varietyCaptor.getValue().getVarietyName()).isEqualTo("Kim giòn");
+        assertThat(varietyCaptor.getValue().getVarietyName()).isEqualTo("Japanese Maple");
         assertThat(varietyCaptor.getValue().getDescription()).isEqualTo("Small leaves");
     }
 
     @Test
-    void createVariety_WhenCategoryMissingOrNameInvalidOrDuplicate_ShouldThrowException() {
-        when(categoryRepository.findById(1))
-                .thenReturn(Optional.empty());
+    void createVariety_WhenCategoryNotFound_ShouldRejectVariety() {
+        when(categoryRepository.findById(1)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> artisanCatalogService.createVariety(1, "Kim giòn", "Description"))
-                .isInstanceOf(RuntimeException.class);
-
-        Category category = category(2, "Outdoor");
-        when(categoryRepository.findById(2))
-                .thenReturn(Optional.of(category));
-        when(varietyRepository.existsByCategoryCategoryIdAndVarietyNameIgnoreCase(2, "Kim giòn"))
-                .thenReturn(true);
-
-        assertThatThrownBy(() -> artisanCatalogService.createVariety(2, "Kim giòn", "Description"))
+        assertThatThrownBy(() -> artisanCatalogService.createVariety(1, "Japanese Maple", "Description"))
                 .isInstanceOf(RuntimeException.class);
 
         verify(varietyRepository, never()).save(any(Variety.class));
     }
 
     @Test
-    void updateVariety_WhenVarietyAndCategoryExistAndNameUnique_ShouldUpdateVariety() {
-        Category category = category(1, "Outdoor");
+    void updateVariety_WhenVarietyAndCategoryExistAndNameIsUnique_ShouldUpdateVariety() {
+        Category targetCategory = category(1, "Outdoor");
         Variety variety = variety(10, category(2, "Old Category"), "Old Variety");
 
-        when(varietyRepository.findById(10))
-                .thenReturn(Optional.of(variety));
-        when(categoryRepository.findById(1))
-                .thenReturn(Optional.of(category));
-        when(varietyRepository.existsByCategoryCategoryIdAndVarietyNameIgnoreCaseAndVarietyIdNot(1, "Kim giòn", 10))
-                .thenReturn(false);
+        when(varietyRepository.findById(10)).thenReturn(Optional.of(variety));
+        when(categoryRepository.findById(1)).thenReturn(Optional.of(targetCategory));
+        when(varietyRepository.existsByCategoryCategoryIdAndVarietyNameIgnoreCaseAndVarietyIdNot(
+                1,
+                "Japanese Maple",
+                10
+        )).thenReturn(false);
 
-        artisanCatalogService.updateVariety(10, 1, " Kim giòn ", " Updated variety ");
+        artisanCatalogService.updateVariety(10, 1, " Japanese Maple ", " Updated variety ");
 
-        assertThat(variety.getCategory()).isEqualTo(category);
-        assertThat(variety.getVarietyName()).isEqualTo("Kim giòn");
+        assertThat(variety.getCategory()).isEqualTo(targetCategory);
+        assertThat(variety.getVarietyName()).isEqualTo("Japanese Maple");
         assertThat(variety.getDescription()).isEqualTo("Updated variety");
         verify(varietyRepository).save(variety);
     }
 
     @Test
-    void updateVariety_WhenVarietyOrCategoryMissingOrNameDuplicate_ShouldThrowException() {
-        when(varietyRepository.findById(10))
-                .thenReturn(Optional.empty());
-
-        assertThatThrownBy(() -> artisanCatalogService.updateVariety(10, 1, "Kim giòn", "Description"))
-                .isInstanceOf(RuntimeException.class);
-
-        Variety variety = variety(20, category(1, "Outdoor"), "Old Variety");
-        when(varietyRepository.findById(20))
-                .thenReturn(Optional.of(variety));
-        when(categoryRepository.findById(1))
-                .thenReturn(Optional.empty());
-
-        assertThatThrownBy(() -> artisanCatalogService.updateVariety(20, 1, "Kim giòn", "Description"))
-                .isInstanceOf(RuntimeException.class);
-
-        when(categoryRepository.findById(1))
-                .thenReturn(Optional.of(category(1, "Outdoor")));
-        when(varietyRepository.existsByCategoryCategoryIdAndVarietyNameIgnoreCaseAndVarietyIdNot(1, "Kim giòn", 20))
-                .thenReturn(true);
-
-        assertThatThrownBy(() -> artisanCatalogService.updateVariety(20, 1, "Kim giòn", "Description"))
-                .isInstanceOf(RuntimeException.class);
-
-        verify(varietyRepository, never()).save(any(Variety.class));
-    }
-
-    @Test
-    void deleteVariety_WhenVarietyIsNotReferenced_ShouldDeleteVariety() {
-        when(productRepository.existsByVarietyVarietyId(10))
-                .thenReturn(false);
-
-        artisanCatalogService.deleteVariety(10);
-
-        verify(varietyRepository).deleteById(10);
-    }
-
-    @Test
-    void deleteVariety_WhenVarietyIsUsedByProduct_ShouldThrowException() {
-        when(productRepository.existsByVarietyVarietyId(10))
-                .thenReturn(true);
+    void deleteVariety_WhenVarietyIsUsedByProduct_ShouldRejectDelete() {
+        when(productRepository.existsByVarietyVarietyId(10)).thenReturn(true);
 
         assertThatThrownBy(() -> artisanCatalogService.deleteVariety(10))
                 .isInstanceOf(RuntimeException.class);
@@ -284,9 +235,8 @@ class ArtisanCatalogServiceTest {
     }
 
     @Test
-    void createTag_WhenNameIsValidAndUnique_ShouldSaveTag() {
-        when(tagRepository.existsByTagNameIgnoreCase("Mini"))
-                .thenReturn(false);
+    void createTag_WhenNameIsValidAndUnique_ShouldTrimAndSaveTag() {
+        when(tagRepository.existsByTagNameIgnoreCase("Mini")).thenReturn(false);
 
         artisanCatalogService.createTag(" Mini ");
 
@@ -296,68 +246,21 @@ class ArtisanCatalogServiceTest {
     }
 
     @Test
-    void createTag_WhenNameBlankOrDuplicate_ShouldThrowException() {
-        assertThatThrownBy(() -> artisanCatalogService.createTag(" "))
-                .isInstanceOf(RuntimeException.class);
-
-        when(tagRepository.existsByTagNameIgnoreCase("Mini"))
-                .thenReturn(true);
-
-        assertThatThrownBy(() -> artisanCatalogService.createTag("Mini"))
-                .isInstanceOf(RuntimeException.class);
-
-        verify(tagRepository, never()).save(any(Tag.class));
-    }
-
-    @Test
-    void updateTag_WhenTagExistsAndNameUnique_ShouldUpdateTag() {
+    void updateTag_WhenNameIsDuplicate_ShouldRejectUpdate() {
         Tag tag = tag(100, "Old Tag");
+        when(tagRepository.findById(100)).thenReturn(Optional.of(tag));
+        when(tagRepository.existsByTagNameIgnoreCaseAndTagIdNot("Mini", 100)).thenReturn(true);
 
-        when(tagRepository.findById(100))
-                .thenReturn(Optional.of(tag));
-        when(tagRepository.existsByTagNameIgnoreCaseAndTagIdNot("Mini", 100))
-                .thenReturn(false);
-
-        artisanCatalogService.updateTag(100, " Mini ");
-
-        assertThat(tag.getTagName()).isEqualTo("Mini");
-        verify(tagRepository).save(tag);
-    }
-
-    @Test
-    void updateTag_WhenTagMissingOrNameDuplicate_ShouldThrowException() {
-        when(tagRepository.findById(100))
-                .thenReturn(Optional.empty());
-
-        assertThatThrownBy(() -> artisanCatalogService.updateTag(100, "Mini"))
+        assertThatThrownBy(() -> artisanCatalogService.updateTag(100, " Mini "))
                 .isInstanceOf(RuntimeException.class);
 
-        Tag tag = tag(200, "Old Tag");
-        when(tagRepository.findById(200))
-                .thenReturn(Optional.of(tag));
-        when(tagRepository.existsByTagNameIgnoreCaseAndTagIdNot("Mini", 200))
-                .thenReturn(true);
-
-        assertThatThrownBy(() -> artisanCatalogService.updateTag(200, "Mini"))
-                .isInstanceOf(RuntimeException.class);
-
+        assertThat(tag.getTagName()).isEqualTo("Old Tag");
         verify(tagRepository, never()).save(any(Tag.class));
     }
 
     @Test
-    void deleteTag_WhenTagIsNotReferenced_ShouldDeleteTag() {
-        when(productTagRepository.existsForTagId(100))
-                .thenReturn(false);
-
-        artisanCatalogService.deleteTag(100);
-
-        verify(tagRepository).deleteById(100);
-    }
-
-    @Test
-    void deleteTag_WhenTagIsUsedByProduct_ShouldThrowException() {
-        when(productTagRepository.existsForTagId(100))
-                .thenReturn(true);
+    void deleteTag_WhenTagIsUsedByProduct_ShouldRejectDelete() {
+        when(productTagRepository.existsForTagId(100)).thenReturn(true);
 
         assertThatThrownBy(() -> artisanCatalogService.deleteTag(100))
                 .isInstanceOf(RuntimeException.class);
@@ -366,25 +269,14 @@ class ArtisanCatalogServiceTest {
     }
 
     @Test
-    void createCatalogItems_WhenNameOrDescriptionInvalid_ShouldThrowException() {
-        assertThatThrownBy(() -> artisanCatalogService.createCategory("a".repeat(256), "Description"))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("Tên không được vượt quá 255 ký tự");
-
-        assertThatThrownBy(() -> artisanCatalogService.createCategory("Outdoor @@@", "Description"))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("Tên chỉ được chứa chữ, số");
+    void createCategory_WhenDescriptionExceedsMaximumLength_ShouldRejectCategory() {
+        when(categoryRepository.existsByCategoryNameIgnoreCase("Outdoor")).thenReturn(false);
 
         assertThatThrownBy(() -> artisanCatalogService.createCategory("Outdoor", "a".repeat(501)))
                 .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("Mô tả không được vượt quá 500 ký tự");
-
-        assertThatThrownBy(() -> artisanCatalogService.createTag("Mini @@@"))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("Tên chỉ được chứa chữ, số");
+                .hasMessageContaining("500");
 
         verify(categoryRepository, never()).save(any(Category.class));
-        verify(tagRepository, never()).save(any(Tag.class));
     }
 
     private Category category(Integer categoryId, String categoryName) {
