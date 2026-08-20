@@ -4,7 +4,7 @@
       th:replace="~{fragments/dashboard-layout :: layout(~{::title}, ~{::#moderator-content}, ~{::#page-styles}, ~{::#page-scripts})}"
       th:with="paramActivePage='my-orders'">
 <head>
-    <title>&#272;&#417;n h&#224;ng c&#7911;a t&#244;i - Moderator Portal</title>
+    <title>Đơn hàng của tôi - Moderator Portal</title>
     <th:block id="page-styles">
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
         <link rel="stylesheet" href="/css/moderator-orders.css">
@@ -183,27 +183,27 @@
     <div id="moderator-content">
         <section class="my-kpi-grid">
             <div class="my-kpi-card card-critical" id="cardCritical" data-filter="CRITICAL">
-                <div class="kpi-title">Kh&#7849;n c&#7845;p</div>
+                <div class="kpi-title">Khẩn cấp</div>
                 <div class="kpi-count" id="kpiCriticalCount" th:text="${kpis != null ? kpis.criticalCount : 0}">0</div>
             </div>
             <div class="my-kpi-card card-approval" id="cardApproval" data-filter="WAITING_APPROVAL">
-                <div class="kpi-title">Ch&#7901; t&#244;i duy&#7879;t</div>
+                <div class="kpi-title">Chờ tôi duyệt</div>
                 <div class="kpi-count" id="kpiApprovalCount" th:text="${kpis != null ? kpis.waitingApprovalCount : 0}">0</div>
             </div>
             <div class="my-kpi-card card-payment" id="cardPayment" data-filter="WAITING_CUSTOMER_PAYMENT">
-                <div class="kpi-title">Ch&#7901; kh&#225;ch thanh to&#225;n</div>
+                <div class="kpi-title">Chờ khách thanh toán</div>
                 <div class="kpi-count" id="kpiPaymentCount" th:text="${kpis != null ? kpis.waitingPaymentCount : 0}">0</div>
             </div>
             <div class="my-kpi-card card-delivery" id="cardDelivery" data-filter="WAITING_DELIVERY_PAYMENT">
-                <div class="kpi-title">Ch&#7901; giao &amp; thu n&#7889;t</div>
+                <div class="kpi-title">Chờ giao &amp; thu nốt</div>
                 <div class="kpi-count" id="kpiDeliveryCount" th:text="${kpis != null ? kpis.waitingDeliveryCount : 0}">0</div>
             </div>
             <div class="my-kpi-card card-completed" id="cardCompleted" data-filter="COMPLETED">
-                <div class="kpi-title">&#272;&#227; ho&#224;n th&#224;nh</div>
+                <div class="kpi-title">Đã hoàn thành</div>
                 <div class="kpi-count" id="kpiCompletedCount" th:text="${kpis != null ? kpis.completedCount : 0}">0</div>
             </div>
             <div class="my-kpi-card card-cancelled" id="cardCancelled" data-filter="CANCELLED">
-                <div class="kpi-title">&#272;&#227; h&#7911;y</div>
+                <div class="kpi-title">Đã hủy</div>
                 <div class="kpi-count" id="kpiCancelledCount" th:text="${kpis != null ? kpis.cancelledCount : 0}">0</div>
             </div>
         </section>
@@ -211,12 +211,12 @@
         <div class="my-toolbar">
             <div class="my-toolbar-search">
                 <span class="search-icon"><i class="fa-solid fa-magnifying-glass"></i></span>
-                <input type="text" id="orderSearchInput" placeholder="T&#236;m theo m&#227; &#273;&#417;n, t&#234;n kh&#225;ch h&#224;ng, s&#7889; &#273;i&#7879;n tho&#7841;i..." th:value="${search}">
+                <input type="text" id="orderSearchInput" placeholder="Tìm theo mã đơn, tên khách hàng, số điện thoại..." th:value="${search}">
             </div>
 
             <div class="my-toolbar-filters">
                 <select id="priorityFilterSelect">
-                    <option value="ALL" th:selected="${priority == 'ALL'}">T&#7845;t c&#7843; &#273;&#7897; &#432;u ti&#234;n</option>
+                    <option value="ALL" th:selected="${priority == 'ALL'}">Tất cả độ ưu tiên</option>
                     <option value="CRITICAL" th:selected="${priority == 'CRITICAL'}">Rất khẩn cấp</option>
                     <option value="HIGH" th:selected="${priority == 'HIGH'}">Ưu tiên cao</option>
                     <option value="NORMAL" th:selected="${priority == 'NORMAL'}">Bình thường</option>
@@ -224,10 +224,10 @@
                 </select>
 
                 <select id="orderSortSelect">
-                    <option value="date_desc" th:selected="${sort == 'date_desc'}">M&#7899;i nh&#7845;t x&#7871;p tr&#432;&#7899;c</option>
-                    <option value="date_asc" th:selected="${sort == 'date_asc'}">C&#361; nh&#7845;t x&#7871;p tr&#432;&#7899;c</option>
-                    <option value="price_desc" th:selected="${sort == 'price_desc'}">Gi&#225; tr&#7883; l&#7899;n nh&#7845;t</option>
-                    <option value="price_asc" th:selected="${sort == 'price_asc'}">Gi&#225; tr&#7883; nh&#7887; nh&#7845;t</option>
+                    <option value="date_desc" th:selected="${sort == 'date_desc'}">Mới nhất xếp trước</option>
+                    <option value="date_asc" th:selected="${sort == 'date_asc'}">Cũ nhất xếp trước</option>
+                    <option value="price_desc" th:selected="${sort == 'price_desc'}">Giá trị lớn nhất</option>
+                    <option value="price_asc" th:selected="${sort == 'price_asc'}">Giá trị nhỏ nhất</option>
                 </select>
             </div>
         </div>
@@ -246,30 +246,30 @@
                 </colgroup>
                 <thead>
                     <tr>
-                        <th>M&#227; &#273;&#417;n</th>
-                        <th>Kh&#225;ch h&#224;ng</th>
-                        <th style="text-align: right;">&#272;&#227; c&#7885;c</th>
-                        <th style="text-align: right;">C&#242;n l&#7841;i</th>
-                        <th style="text-align: center;">&#272;&#7897; &#432;u ti&#234;n</th>
-                        <th style="text-align: center;">T&#7891;n</th>
-                        <th style="text-align: center;">Tr&#7841;ng th&#225;i</th>
-                        <th style="text-align: center;">Thao t&#225;c</th>
+                        <th>Mã đơn</th>
+                        <th>Khách hàng</th>
+                        <th style="text-align: right;">Đã cọc</th>
+                        <th style="text-align: right;">Còn lại</th>
+                        <th style="text-align: center;">Độ ưu tiên</th>
+                        <th style="text-align: center;">Tồn</th>
+                        <th style="text-align: center;">Trạng thái</th>
+                        <th style="text-align: center;">Thao tác</th>
                     </tr>
                 </thead>
                 <tbody id="myOrdersTableBody">
                     <tr th:if="${orders == null or #lists.isEmpty(orders)}">
                         <td colspan="8" style="text-align: center; padding: 40px; color: #a0aec0; font-style: italic;">
-                            Kh&#244;ng t&#236;m th&#7845;y &#273;&#417;n h&#224;ng n&#224;o ph&#249; h&#7907;p
+                            Không tìm thấy đơn hàng nào phù hợp
                         </td>
                     </tr>
                     <tr th:each="order : ${orders}">
                         <td class="col-code" th:text="${order.orderCode}">BSMS-000000</td>
                         <td class="col-customer">
-                            <strong th:text="${order.customerName}">Kh&#225;ch h&#224;ng</strong>
+                            <strong th:text="${order.customerName}">Khách hàng</strong>
                             <span class="cust-phone" th:text="${order.customerPhone}">-</span>
                         </td>
-                        <td class="col-money" th:utext="${order.depositAmount != null ? #numbers.formatDecimal(order.depositAmount, 0, 'POINT', 0, 'COMMA') + ' &#8363;' : '0 &#8363;'}">0 &#8363;</td>
-                        <td class="col-money" th:utext="${order.remainingPaymentAmount != null ? #numbers.formatDecimal(order.remainingPaymentAmount, 0, 'POINT', 0, 'COMMA') + ' &#8363;' : '0 &#8363;'}">0 &#8363;</td>
+                        <td class="col-money" th:utext="${order.depositAmount != null ? #numbers.formatDecimal(order.depositAmount, 0, 'POINT', 0, 'COMMA') + ' ₫' : '0 ₫'}">0 ₫</td>
+                        <td class="col-money" th:utext="${order.remainingPaymentAmount != null ? #numbers.formatDecimal(order.remainingPaymentAmount, 0, 'POINT', 0, 'COMMA') + ' ₫' : '0 ₫'}">0 ₫</td>
                         <td class="col-priority">
                             <span th:class="'badge-priority badge-priority-' + ${#strings.toLowerCase(order.priority != null ? order.priority : 'normal')}"
                                   th:text="${order.priorityLabel != null ? order.priorityLabel : 'Bình thường'}">Bình thường</span>
@@ -289,7 +289,7 @@
                                   th:text="${order.orderStatusLabel}">Chờ kiểm duyệt</span>
                         </td>
                         <td class="col-action">
-                            <a th:href="@{/moderator/orders/{code}(code=${order.orderCode})}" class="btn-view-detail">Chi ti&#7871;t</a>
+                            <a th:href="@{/moderator/orders/{code}(code=${order.orderCode})}" class="btn-view-detail">Chi tiết</a>
                         </td>
                     </tr>
                 </tbody>

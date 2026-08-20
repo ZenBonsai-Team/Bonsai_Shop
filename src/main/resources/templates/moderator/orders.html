@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi" 
       xmlns:th="http://www.thymeleaf.org"
       th:replace="~{fragments/dashboard-layout :: layout(~{::title}, ~{::#moderator-content}, ~{::#page-styles}, ~{::#page-scripts})}"
@@ -202,15 +202,15 @@
                     <div class="fees-form-group">
                         <div class="input-field-group mb-2" id="groupDepositAmount" style="display:none;">
                             <label for="inputDepositAmount">Tiền đặt cọc</label>
-                            <input type="text" id="inputDepositAmount" placeholder="Nhập số tiền đặt cọc (VNĐ)" disabled>
+                            <input type="text" id="inputDepositAmount" placeholder="Nhập số tiền đặt cọc (VNĐ)" inputmode="numeric" maxlength="15" disabled>
                         </div>
                         <div class="input-field-group">
                             <label for="inputCraneFee">Phí xe cẩu</label>
-                            <input type="text" id="inputCraneFee" placeholder="Ví dụ: 500000" disabled>
+                            <input type="text" id="inputCraneFee" placeholder="Ví dụ: 500000" inputmode="numeric" maxlength="11" disabled>
                         </div>
                         <div class="input-field-group mt-2">
                             <label for="inputShippingFee">Phí vận chuyển</label>
-                            <input type="text" id="inputShippingFee" placeholder="Ví dụ: 300000" disabled>
+                            <input type="text" id="inputShippingFee" placeholder="Ví dụ: 300000" inputmode="numeric" maxlength="11" disabled>
                         </div>
                     </div>
                 </div>

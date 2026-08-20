@@ -56,7 +56,7 @@ public class OrderExpirationService {
     @Value("${order.expiration.in-person-minutes:1440}")
     private long inPersonExpirationMinutes;
 
-    @Value("${order.expiration.online-minutes:15}")
+    @Value("${order.expiration.online-minutes:10080}")
     private long onlineExpirationMinutes;
 
     /**

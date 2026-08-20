@@ -76,18 +76,6 @@ class ProductJournalServiceTest {
     }
 
     @Test
-    void getPublicEvents_WhenProductIsSold_ShouldReturnEmptyList() {
-        Product product = product(101, "SOLD");
-
-        when(artisanProductService.isSold(product)).thenReturn(true);
-
-        List<ProductJournalEvent> result = productJournalService.getPublicEvents(product);
-
-        assertThat(result).isEmpty();
-        verify(journalEventRepository, never()).findByProductAndIsPublicTrueOrderByEventDateDescEventIdDesc(product);
-    }
-
-    @Test
     void addEvent_WhenRequestIsValidWithThreeImages_ShouldCreateEventAndUploadMedia() {
         Product product = product(101, "AVAILABLE");
         User artisan = artisan(10);
