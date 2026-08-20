@@ -103,7 +103,7 @@
                 <div class="walk-in-customer-grid">
                     <label>
                         <span>Tên khách</span>
-                        <input name="customerName" required th:value="${createCustomerName}" placeholder="Tên khách hàng">
+                        <input name="customerName" required minlength="3" th:value="${createCustomerName}" placeholder="Tên khách hàng">
                         <span class="field-error" data-error-for="customerName"></span>
                     </label>
 
@@ -384,7 +384,7 @@
                     <div class="walk-in-edit-grid">
                         <label>
                             <span>Tên khách</span>
-                            <input id="editCustomerName" name="customerName" required>
+                            <input id="editCustomerName" name="customerName" required minlength="3">
                             <span class="field-error" data-edit-error-for="customerName"></span>
                         </label>
                         <label>
@@ -684,8 +684,7 @@
     function validateOrderFieldValue(fieldName, value) {
         if (fieldName === 'customerName') {
             if (!value) return 'Vui lòng nhập tên khách.';
-            if (value.length > 100) return 'Tên khách không được vượt quá 100 ký tự.';
-            if (!/^[\p{L}\p{M}\s.'-]+$/u.test(value)) return 'Tên khách chỉ được chứa chữ cái, khoảng trắng và các dấu . \' -.';
+            if (value.length < 3 || value.length > 50) return 'T\u00ean kh\u00e1ch ph\u1ea3i c\u00f3 t\u1eeb 3 \u0111\u1ebfn 50 k\u00fd t\u1ef1.';
         } else if (fieldName === 'customerPhone') {
             if (!value) return 'Vui lòng nhập số điện thoại.';
             if (!/^0[0-9]{9,10}$/.test(value)) return 'Số điện thoại phải gồm 10-11 chữ số và bắt đầu bằng 0.';

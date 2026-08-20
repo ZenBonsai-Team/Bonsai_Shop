@@ -43,7 +43,8 @@ public class ArtisanInPersonOrderService {
     public static final String PAYMENT_METHOD_CASH = "CASH";
     public static final String PAYMENT_METHOD_VNPAY = "VNPAY";
     public static final String PAYMENT_TYPE_FULL_PAYMENT = "FULL_PAYMENT";
-    private static final int CUSTOMER_NAME_MAX_LENGTH = 100;
+    private static final int CUSTOMER_NAME_MIN_LENGTH = 3;
+    private static final int CUSTOMER_NAME_MAX_LENGTH = 50;
     private static final int CUSTOMER_EMAIL_MAX_LENGTH = 100;
     private static final int SHIPPING_ADDRESS_MAX_LENGTH = 255;
     private static final int NOTES_MAX_LENGTH = 500;
@@ -385,9 +386,9 @@ public class ArtisanInPersonOrderService {
 
     // Validate tên khách hàng.
     private String requireCustomerName(String value) {
-        String name = requireText(value, "Vui lòng nhập tên khách in-person.", CUSTOMER_NAME_MAX_LENGTH, "Tên khách không được vượt quá 100 ký tự.");
-        if (!name.matches("^[\\p{L}\\p{M}\\s.'-]+$")) {
-            throw new RuntimeException("Tên khách chỉ được chứa chữ cái, khoảng trắng và các dấu . ' -.");
+        String name = requireText(value, "Vui l\u00f2ng nh\u1eadp t\u00ean kh\u00e1ch in-person.");
+        if (name.length() < CUSTOMER_NAME_MIN_LENGTH || name.length() > CUSTOMER_NAME_MAX_LENGTH) {
+            throw new RuntimeException("T\u00ean kh\u00e1ch ph\u1ea3i c\u00f3 t\u1eeb 3 \u0111\u1ebfn 50 k\u00fd t\u1ef1.");
         }
         return name;
     }
