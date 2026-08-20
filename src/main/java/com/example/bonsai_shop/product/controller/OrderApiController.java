@@ -97,7 +97,7 @@ public class OrderApiController {
     @Autowired
     private EmailService emailService;
 
-    @Value("${order.expiration.online-minutes:15}")
+    @Value("${order.expiration.online-minutes:10080}")
     private int onlineExpirationMinutes;
 
     /**
