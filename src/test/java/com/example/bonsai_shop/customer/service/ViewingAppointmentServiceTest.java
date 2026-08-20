@@ -62,6 +62,9 @@ class ViewingAppointmentServiceTest {
 
     }
 
+
+
+    // Test kiem tra tao lich hen hop le thi service luu lich va goi thong bao.
     @Test
     void createViewingAppointment_WhenValid_ShouldSaveAndNotify() {
         when(appointmentSettingService.isPausedAt(appointment.getAppointmentDate())).thenReturn(false);
@@ -74,6 +77,7 @@ class ViewingAppointmentServiceTest {
         verify(viewingAppointmentRepository).save(appointment);
     }
 
+    // Test kiem tra gio hen ngoai 08:00-17:00 thi service tu choi.
     @Test
     void createViewingAppointment_WhenAppointmentTimeOutsideBusinessHours_ShouldThrow() {
         appointment.setAppointmentDate(
@@ -98,6 +102,7 @@ class ViewingAppointmentServiceTest {
         verify(viewingAppointmentRepository, never()).save(any());
     }
 
+    // Test kiem tra ngay gio hen trong qua khu thi service tu choi va khong luu.
     @Test
     void createViewingAppointment_WhenAppointmentDateInPast_ShouldThrowAndNotSave() {
         appointment.setAppointmentDate(
@@ -122,6 +127,7 @@ class ViewingAppointmentServiceTest {
         verify(viewingAppointmentRepository, never()).save(any());
     }
 
+    // Test kiem tra dat lich trong thoi gian tam dung thi service tu choi va khong luu.
     @Test
     void createViewingAppointment_WhenSchedulePaused_ShouldThrowAndNotSave() {
         AppointmentSetting setting = new AppointmentSetting();
@@ -139,6 +145,7 @@ class ViewingAppointmentServiceTest {
         verify(viewingAppointmentRepository, never()).save(any());
     }
 
+    // Test kiem tra customer da co lich PENDING/APPROVED thi khong duoc tao lich moi.
     @Test
     void createViewingAppointment_WhenCustomerHasActiveAppointment_ShouldThrowAndNotSave() {
         when(appointmentSettingService.isPausedAt(appointment.getAppointmentDate())).thenReturn(false);
@@ -153,6 +160,25 @@ class ViewingAppointmentServiceTest {
         verify(viewingAppointmentRepository, never()).save(any());
     }
 
+    // Test kiem tra note tao lich vuot 500 ky tu thi service tu choi va khong luu.
+    @Test
+    void createViewingAppointment_WhenNoteExceeds500Characters_ShouldThrowAndNotSave() {
+        appointment.setNote("a".repeat(501));
+
+        when(appointmentSettingService.isPausedAt(appointment.getAppointmentDate())).thenReturn(false);
+        when(viewingAppointmentRepository.existsByCustomerAndStatusIn(customer, List.of("PENDING", "APPROVED")))
+                .thenReturn(false);
+
+        RuntimeException ex = assertThrows(
+                RuntimeException.class,
+                () -> viewingAppointmentService.createViewingAppointment(appointment)
+        );
+
+        assertTrue(ex.getMessage().contains("500"));
+        verify(viewingAppointmentRepository, never()).save(any());
+    }
+
+    // Test kiem tra customer thieu email hoac so dien thoai thi service tu choi va khong luu.
     @Test
     void createViewingAppointment_WhenCustomerNotHasProfile_ShouldThrowAndNotSave() {
         doThrow(new RuntimeException("Vui lòng cập nhật số điện thoại trước khi đặt lịch"))
@@ -175,6 +201,7 @@ class ViewingAppointmentServiceTest {
         verify(viewingAppointmentRepository, never()).save(any());
     }
 
+    // Test kiem tra lay danh sach lich hen cua customer thanh cong.
     @Test
     void findByCustomer_ShouldReturnCustomerAppointments() {
         when(viewingAppointmentRepository.findByCustomerOrderByCreatedAtDesc(customer))
@@ -186,6 +213,7 @@ class ViewingAppointmentServiceTest {
         verify(viewingAppointmentRepository).findByCustomerOrderByCreatedAtDesc(customer);
     }
 
+    // Test kiem tra customer chua co lich hen thi service tra ve danh sach rong.
     @Test
     void findByCustomer_NoAppointment() {
         when (viewingAppointmentRepository.findByCustomerOrderByCreatedAtDesc(customer)).thenReturn(Collections.emptyList());
@@ -195,6 +223,7 @@ class ViewingAppointmentServiceTest {
         verify(viewingAppointmentRepository).findByCustomerOrderByCreatedAtDesc(customer);
     }
 
+    // Test kiem tra lay chi tiet lich hen thuoc customer thi service tra ve DTO.
     @Test
     void findByIdAndCustomer_WhenFound_ShouldReturnDetailDto() {
         appointment.setAppointmentId(10);
@@ -209,6 +238,7 @@ class ViewingAppointmentServiceTest {
         assertEquals("Test", result.getNote());
     }
 
+    // Test kiem tra khong tim thay lich hen cua customer thi service bao loi.
     @Test
     void findByIdAndCustomer_WhenNotFound_ShouldThrow() {
 
@@ -226,6 +256,7 @@ class ViewingAppointmentServiceTest {
                 .findByAppointmentIdAndCustomer(10, customer);
     }
 
+    // Test kiem tra cap nhat lich PENDING hop le thi service luu va goi thong bao.
     @Test
     void updateViewingAppointment_WhenPending_ShouldUpdateSaveAndNotify() {
 
@@ -254,6 +285,7 @@ class ViewingAppointmentServiceTest {
         verify(viewingAppointmentRepository).save(appointment);
     }
 
+    // Test kiem tra lich khong o trang thai PENDING thi service tu choi cap nhat.
     @Test
     void updateViewingAppointment_WhenNotPending_ShouldThrowAndNotSave() {
         appointment.setStatus("APPROVED");
@@ -268,6 +300,7 @@ class ViewingAppointmentServiceTest {
         verify(viewingAppointmentRepository, never()).save(any());
     }
 
+    // Test kiem tra cap nhat lich khong ton tai thi service bao loi.
     @Test
     void updateViewingAppointment_WhenNotFound_ShouldThrow() {
 
@@ -289,6 +322,7 @@ class ViewingAppointmentServiceTest {
         verify(viewingAppointmentRepository, never()).save(any());
     }
 
+    // Test kiem tra cap nhat lich ngoai gio lam viec thi service tu choi va khong luu.
     @Test
     void updateViewingAppointment_WhenOutsideBusinessHours_ShouldThrowAndNotSave() {
 
@@ -321,6 +355,7 @@ class ViewingAppointmentServiceTest {
         verify(viewingAppointmentRepository, never()).save(any());
     }
 
+    // Test kiem tra cap nhat lich sang qua khu thi service tu choi va khong luu.
     @Test
     void updateViewingAppointment_WhenAppointmentDateInPast_ShouldThrowAndNotSave() {
 
@@ -350,6 +385,35 @@ class ViewingAppointmentServiceTest {
         verify(viewingAppointmentRepository, never()).save(any());
     }
 
+    // Test kiem tra note cap nhat vuot 500 ky tu thi service tu choi va giu du lieu cu.
+    @Test
+    void updateViewingAppointment_WhenNoteExceeds500Characters_ShouldThrowAndNotSave() {
+        LocalDateTime newDate =
+                LocalDateTime.now()
+                        .plusDays(2)
+                        .withHour(10)
+                        .withMinute(0)
+                        .withSecond(0)
+                        .withNano(0);
+
+        when(viewingAppointmentRepository.findByAppointmentIdAndCustomer(10, customer))
+                .thenReturn(Optional.of(appointment));
+
+        RuntimeException ex = assertThrows(
+                RuntimeException.class,
+                () -> viewingAppointmentService.updateViewingAppointment(
+                        10,
+                        customer,
+                        newDate,
+                        "a".repeat(501)
+                )
+        );
+
+        assertTrue(ex.getMessage().contains("500"));
+        verify(viewingAppointmentRepository, never()).save(any());
+    }
+
+    // Test kiem tra huy lich PENDING thi service doi trang thai va goi thong bao.
     @Test
     void cancelViewAppointment_WhenPending_ShouldCancelSaveAndNotify() {
         when(viewingAppointmentRepository.findByAppointmentIdAndCustomer(10, customer))
@@ -362,6 +426,7 @@ class ViewingAppointmentServiceTest {
         verify(viewingAppointmentRepository).save(appointment);
     }
 
+    // Test kiem tra lich da CANCELLED thi service tu choi huy lai.
     @Test
     void cancelViewAppointment_WhenAlreadyCancelled_ShouldThrowAndNotSave() {
         appointment.setStatus("CANCELLED");
@@ -376,6 +441,7 @@ class ViewingAppointmentServiceTest {
         verify(viewingAppointmentRepository, never()).save(any());
     }
 
+    // Test kiem tra huy lich khong ton tai thi service bao loi.
     @Test
     void cancelViewAppointment_WhenNotFound_ShouldThrow() {
 
@@ -392,6 +458,7 @@ class ViewingAppointmentServiceTest {
         verify(viewingAppointmentRepository, never()).save(any());
     }
 
+    // Test kiem tra lich APPROVED thi customer khong duoc huy.
     @Test
     void cancelViewAppointment_WhenApproved_ShouldThrowAndNotSave() {
 

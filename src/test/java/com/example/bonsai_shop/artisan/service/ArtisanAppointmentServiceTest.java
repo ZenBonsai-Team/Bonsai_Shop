@@ -39,6 +39,7 @@ class ArtisanAppointmentServiceTest {
 
 
     //Find list Appointment By AppointmentDay
+    // Test kiem tra service lay lich trong khoang ngay va map sang DTO dung thong tin.
     @Test
     void findAllByAppointmentDateBetween_WhenAppointmentsExist_ShouldReturnDtoList() {
 
@@ -74,6 +75,7 @@ class ArtisanAppointmentServiceTest {
         );
     }
 
+    // Test kiem tra service lay nhieu lich trong khoang ngay thi tra ve day du DTO.
     @Test
     void findAllByAppointmentDateBetween_WhenMultipleAppointments_ShouldReturnAllDtos() {
 
@@ -116,6 +118,7 @@ class ArtisanAppointmentServiceTest {
         );
     }
 
+    // Test kiem tra khong co lich trong khoang ngay thi service tra ve danh sach rong.
     @Test
     void findAllByAppointmentDateBetween_WhenNoAppointments_ShouldReturnEmptyList() {
 
@@ -138,6 +141,7 @@ class ArtisanAppointmentServiceTest {
     }
 
     //Find Appointment Detail By ID
+    // Test kiem tra tim lich theo id ton tai thi service tra ve DTO chi tiet.
     @Test
     void findById_WhenAppointmentExists_ShouldReturnDto() {
 
@@ -171,6 +175,7 @@ class ArtisanAppointmentServiceTest {
                 .findByAppointmentId(1);
     }
 
+    // Test kiem tra tim lich theo id khong ton tai thi service bao loi.
     @Test
     void findById_WhenAppointmentNotFound_ShouldThrowException() {
 
@@ -192,6 +197,7 @@ class ArtisanAppointmentServiceTest {
     }
 
     //Check hand Update Status
+    // Test kiem tra lich PENDING duoc artisan duyet sang APPROVED va luu lai.
     @Test
     void handUpdateStatus_WhenPendingAndApproved_ShouldUpdateAndSave() {
 
@@ -210,6 +216,7 @@ class ArtisanAppointmentServiceTest {
                 .save(appointment);
     }
 
+    // Test kiem tra lich PENDING duoc artisan tu choi sang REJECTED va luu lai.
     @Test
     void handUpdateStatus_WhenPendingAndRejected_ShouldUpdateAndSave() {
         ViewingAppointment appointment = new ViewingAppointment();
@@ -227,6 +234,7 @@ class ArtisanAppointmentServiceTest {
                 .save(appointment);
     }
 
+    // Test kiem tra cap nhat trang thai lich khong ton tai thi service bao loi.
     @Test
     void handUpdateStatus_WhenNotFound_ShouldThrow() {
         when(artisanAppointmentRepository.findByAppointmentId(1)).thenReturn(Optional.empty());
@@ -238,6 +246,7 @@ class ArtisanAppointmentServiceTest {
                 .save(any());
     }
 
+    // Test kiem tra lich da APPROVED thi khong duoc cap nhat trang thai thu cong tiep.
     @Test
     void handUpdateStatus_WhenAlreadyApproved_ShouldThrow() {
 
@@ -253,6 +262,7 @@ class ArtisanAppointmentServiceTest {
         verify(artisanAppointmentRepository, never()).save(any());
     }
 
+    // Test kiem tra trang thai cap nhat khong hop le thi service tu choi.
     @Test
     void handUpdateStatus_WhenInvalidStatus_ShouldThrow() {
 
@@ -270,6 +280,7 @@ class ArtisanAppointmentServiceTest {
         verify(artisanAppointmentRepository, never()).save(any());
     }
 
+    // Test kiem tra lich da qua thoi gian hen thi khong duoc duyet thu cong.
     @Test
     void handUpdateStatus_WhenAppointmentExpired_ShouldThrow() {
 
@@ -293,6 +304,7 @@ class ArtisanAppointmentServiceTest {
     }
 
     // Check Hand mark Complete
+    // Test kiem tra lich APPROVED da den han thi artisan danh dau COMPLETED thanh cong.
     @Test
     void handMarkComplete_WhenApprovedAndCompleted_ShouldUpdateAndSave() {
 
@@ -313,6 +325,7 @@ class ArtisanAppointmentServiceTest {
         verify(artisanAppointmentRepository).save(appointment);
     }
 
+    // Test kiem tra lich APPROVED da den han thi artisan danh dau ABSENT thanh cong.
     @Test
     void handMarkComplete_WhenApprovedAndAbsent_ShouldUpdateAndSave() {
 
@@ -333,6 +346,7 @@ class ArtisanAppointmentServiceTest {
         verify(artisanAppointmentRepository).save(appointment);
     }
 
+    // Test kiem tra danh dau hoan tat lich khong ton tai thi service bao loi.
     @Test
     void handMarkComplete_WhenNotFound_ShouldThrow() {
 
@@ -349,6 +363,7 @@ class ArtisanAppointmentServiceTest {
         verify(artisanAppointmentRepository, never()).save(any());
     }
 
+    // Test kiem tra lich chua APPROVED thi khong duoc danh dau hoan tat.
     @Test
     void handMarkComplete_WhenNotApproved_ShouldThrow() {
 
@@ -371,6 +386,7 @@ class ArtisanAppointmentServiceTest {
         verify(artisanAppointmentRepository, never()).save(any());
     }
 
+    // Test kiem tra lich chua den thoi gian hen thi khong duoc danh dau hoan tat.
     @Test
     void handMarkComplete_WhenAppointmentNotYet_ShouldThrow() {
 
@@ -397,6 +413,7 @@ class ArtisanAppointmentServiceTest {
     }
 
 
+    // Test kiem tra trang thai hoan tat khong hop le thi service tu choi.
     @Test
     void handMarkComplete_WhenInvalidStatus_ShouldThrow() {
 
@@ -420,6 +437,7 @@ class ArtisanAppointmentServiceTest {
     }
 
     //Check Appointment Setting
+    // Test kiem tra cap nhat cau hinh khi setting khong ton tai thi service bao loi.
     @Test
     void updateSetting_WhenSettingNotFound_ShouldThrow() {
 
@@ -445,6 +463,7 @@ class ArtisanAppointmentServiceTest {
         verify(appointmentSettingRepository, never()).save(any());
     }
 
+    // Test kiem tra cap nhat cau hinh hop le thi service luu lai.
     @Test
     void updateSetting_WhenValid_ShouldUpdateAndSave() {
 
@@ -489,6 +508,7 @@ class ArtisanAppointmentServiceTest {
         verify(appointmentSettingRepository).save(setting);
     }
 
+    // Test kiem tra bat auto approve nhung thieu so phut thi service tu choi.
     @Test
     void updateSetting_WhenAutoApproveMinuteIsNull_ShouldThrow() {
 
@@ -517,6 +537,7 @@ class ArtisanAppointmentServiceTest {
         verify(appointmentSettingRepository, never()).save(any());
     }
 
+    // Test kiem tra auto approve minute bang 0 thi service tu choi.
     @Test
     void updateSetting_WhenAutoApproveMinuteIsZero_ShouldThrow() {
 
@@ -547,6 +568,7 @@ class ArtisanAppointmentServiceTest {
         verify(appointmentSettingRepository, never()).save(any());
     }
 
+    // Test kiem tra auto approve minute lon hon 120 thi service tu choi.
     @Test
     void updateSetting_WhenAutoApproveMinuteGreaterThan120_ShouldThrow() {
 
@@ -576,6 +598,7 @@ class ArtisanAppointmentServiceTest {
 
         verify(appointmentSettingRepository, never()).save(any());
     }
+    // Test kiem tra auto approve minute bang 1 thi service chap nhan va luu.
     @Test
     void updateSetting_WhenAutoApproveMinuteIsOne_ShouldSave() {
 
@@ -600,6 +623,7 @@ class ArtisanAppointmentServiceTest {
 
         verify(appointmentSettingRepository).save(setting);
     }
+    // Test kiem tra auto approve minute bang 120 thi service chap nhan va luu.
     @Test
     void updateSetting_WhenAutoApproveMinuteIs120_ShouldSave() {
 
@@ -625,6 +649,7 @@ class ArtisanAppointmentServiceTest {
         verify(appointmentSettingRepository).save(setting);
     }
 
+    // Test kiem tra tat auto approve thi service giu nguong cu theo logic hien tai.
     @Test
     void updateSetting_WhenAutoApproveDisabled_ShouldKeepCurrentValue() {
 
@@ -651,6 +676,7 @@ class ArtisanAppointmentServiceTest {
         verify(appointmentSettingRepository).save(setting);
     }
 
+    // Test kiem tra bat auto complete nhung thieu so phut thi service tu choi.
     @Test
     void updateSetting_WhenAutoCompleteMinuteIsNull_ShouldThrow() {
 
@@ -681,6 +707,7 @@ class ArtisanAppointmentServiceTest {
         verify(appointmentSettingRepository, never()).save(any());
     }
 
+    // Test kiem tra auto complete minute nho hon 1 thi service tu choi.
     @Test
     void updateSetting_WhenAutoCompleteMinuteLessThanOne_ShouldThrow() {
 
@@ -711,6 +738,7 @@ class ArtisanAppointmentServiceTest {
         verify(appointmentSettingRepository, never()).save(any());
     }
 
+    // Test kiem tra auto complete minute lon hon 120 thi service tu choi.
     @Test
     void updateSetting_WhenAutoCompleteMinuteGreaterThan120_ShouldThrow() {
 
@@ -741,6 +769,7 @@ class ArtisanAppointmentServiceTest {
         verify(appointmentSettingRepository, never()).save(any());
     }
 
+    // Test kiem tra auto complete minute hop le thi service chap nhan va luu.
     @Test
     void updateSetting_WhenAutoCompleteMinuteValid_ShouldSave() {
 
@@ -766,6 +795,7 @@ class ArtisanAppointmentServiceTest {
         verify(appointmentSettingRepository).save(setting);
     }
 
+    // Test kiem tra tat auto complete thi service bo qua minute moi theo logic hien tai.
     @Test
     void updateSetting_WhenAutoCompleteDisabled_ShouldIgnoreMinuteValue() {
 
@@ -792,6 +822,7 @@ class ArtisanAppointmentServiceTest {
         verify(appointmentSettingRepository).save(setting);
     }
 
+    // Test kiem tra pause period va pause reason hop le thi service luu lai.
     @Test
     void updateSetting_WhenPauseIsValid_ShouldSave() {
 
@@ -823,6 +854,7 @@ class ArtisanAppointmentServiceTest {
         assertEquals("Bảo trì", setting.getPauseReason());
     }
 
+    // Test kiem tra thieu pause end khi co pause start thi service tu choi.
     @Test
     void updateSetting_WhenPauseToIsNull_ShouldThrow() {
 
@@ -852,6 +884,7 @@ class ArtisanAppointmentServiceTest {
         verify(appointmentSettingRepository, never()).save(any());
     }
 
+    // Test kiem tra thieu pause date khi cap nhat pause thi service tu choi.
     @Test
     void updateSetting_WhenPauseDateMissing_ShouldThrow() {
 
@@ -875,6 +908,7 @@ class ArtisanAppointmentServiceTest {
         assertEquals("Thiết lập tạm dừng phải nhập đầy đủ thời gian bắt đầu, kết thúc và lý do.", ex.getMessage());
         verify(appointmentSettingRepository, never()).save(any());
     }
+    // Test kiem tra thieu pause reason khi co pause period thi service tu choi.
     @Test
     void updateSetting_WhenPauseReasonIsNull_ShouldThrow() {
 
@@ -899,6 +933,32 @@ class ArtisanAppointmentServiceTest {
         verify(appointmentSettingRepository, never()).save(any());
     }
 
+    // Test kiem tra ly do tam dung vuot 500 ky tu thi service tu choi.
+    @Test
+    void updateSetting_WhenPauseReasonExceeds500Characters_ShouldThrow() {
+
+        AppointmentSetting setting = new AppointmentSetting();
+        when(appointmentSettingRepository.findFirstByOrderBySettingIdAsc()).thenReturn(Optional.of(setting));
+
+        RuntimeException ex = assertThrows(
+                RuntimeException.class,
+                () -> artisanAppointmentService.updateSetting(
+                        false,
+                        null,
+                        false,
+                        null,
+                        LocalDateTime.now().plusDays(1),
+                        LocalDateTime.now().plusDays(1).plusHours(2),
+                        "a".repeat(501),
+                        new User()
+                )
+        );
+
+        assertTrue(ex.getMessage().contains("500"));
+        verify(appointmentSettingRepository, never()).save(any());
+    }
+
+    // Test kiem tra pause start sau pause end thi service tu choi.
     @Test
     void updateSetting_WhenPauseFromAfterPauseTo_ShouldThrow() {
 
@@ -926,6 +986,7 @@ class ArtisanAppointmentServiceTest {
         verify(appointmentSettingRepository, never()).save(any());
     }
 
+    // Test kiem tra pause start trong qua khu thi service tu choi.
     @Test
     void updateSetting_WhenPauseStartInPast_ShouldThrow() {
 
@@ -952,6 +1013,7 @@ class ArtisanAppointmentServiceTest {
 
         verify(appointmentSettingRepository, never()).save(any());
     }
+    // Test kiem tra tat auto approve thi service giu auto approve minute cu.
     @Test
     void updateSetting_WhenAutoApproveDisabled_ShouldKeepOldMinute() {
 
@@ -976,6 +1038,7 @@ class ArtisanAppointmentServiceTest {
         verify(appointmentSettingRepository).save(setting);
     }
 
+    // Test kiem tra tat auto complete thi service giu auto complete minute cu.
     @Test
     void updateSetting_WhenAutoCompleteDisabled_ShouldKeepOldMinute() {
 
@@ -1003,6 +1066,7 @@ class ArtisanAppointmentServiceTest {
         verify(appointmentSettingRepository).save(setting);
     }
     // Process Auto Approve
+    // Test kiem tra auto approve khi thieu setting thi service bao loi.
     @Test
     void processAutoApprove_WhenSettingNotFound_ShouldThrow() {
 
@@ -1013,6 +1077,7 @@ class ArtisanAppointmentServiceTest {
         verify(artisanAppointmentRepository, never()).save(any());
     }
 
+    // Test kiem tra auto approve bi tat thi job tra ve 0.
     @Test
     void processAutoApprove_WhenAutoApproveDisabled_ShouldReturnZero() {
 
@@ -1028,6 +1093,7 @@ class ArtisanAppointmentServiceTest {
         verify(artisanAppointmentRepository, never()).save(any());
     }
 
+    // Test kiem tra khong co lich PENDING thi auto approve tra ve 0.
     @Test
     void processAutoApprove_WhenNoPendingAppointment_ShouldReturnZero() {
 
@@ -1047,6 +1113,7 @@ class ArtisanAppointmentServiceTest {
 
         verify(artisanAppointmentRepository, never()).save(any());
     }
+    // Test kiem tra lich PENDING qua nguong thi auto approve sang APPROVED.
     @Test
     void processAutoApprove_WhenAppointmentReachedThreshold_ShouldApprove() {
 
@@ -1073,6 +1140,7 @@ class ArtisanAppointmentServiceTest {
 
         verify(artisanAppointmentRepository).save(appointment);
     }
+    // Test kiem tra nhieu lich PENDING thi auto approve chi cap nhat lich du dieu kien.
     @Test
     void processAutoApprove_WhenMultipleAppointments_ShouldProcessOnlyEligibleOnes() {
 
@@ -1109,6 +1177,7 @@ class ArtisanAppointmentServiceTest {
         verify(artisanAppointmentRepository, never()).save(appointment2);
     }
     //Process Auto Complete
+    // Test kiem tra auto complete khi thieu setting thi service bao loi.
     @Test
     void processAutoComplete_WhenSettingNotFound_ShouldThrow() {
 
@@ -1119,6 +1188,7 @@ class ArtisanAppointmentServiceTest {
         verify(artisanAppointmentRepository, never()).save(any());
     }
 
+    // Test kiem tra auto complete bi tat thi job tra ve 0.
     @Test
     void processAutoComplete_WhenAutoCompleteDisabled_ShouldReturnZero() {
 
@@ -1135,6 +1205,7 @@ class ArtisanAppointmentServiceTest {
         verify(artisanAppointmentRepository, never()).save(any());
     }
 
+    // Test kiem tra khong co lich APPROVED thi auto complete tra ve 0.
     @Test
     void processAutoComplete_WhenNoApprovedAppointment_ShouldReturnZero() {
 
@@ -1155,6 +1226,7 @@ class ArtisanAppointmentServiceTest {
         verify(artisanAppointmentRepository, never()).save(any());
     }
 
+    // Test kiem tra lich APPROVED qua nguong thi auto complete sang COMPLETED.
     @Test
     void processAutoComplete_WhenAppointmentReachedThreshold_ShouldComplete() {
 
@@ -1179,6 +1251,7 @@ class ArtisanAppointmentServiceTest {
 
         verify(artisanAppointmentRepository).save(appointment);
     }
+    // Test kiem tra lich APPROVED chua qua nguong thi auto complete giu nguyen trang thai.
     @Test
     void processAutoComplete_WhenAppointmentNotReachedThreshold_ShouldKeepApproved() {
 

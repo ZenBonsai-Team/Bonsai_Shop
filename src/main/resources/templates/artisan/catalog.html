@@ -268,8 +268,6 @@
         </div>
     </section>
 
-</main>
-</div>
 
 <div id="category-modal" class="modal-backdrop hidden">
     <form class="modal-card catalog-form" method="post" th:action="@{/artisan/catalog/categories}" data-create-action="/artisan/catalog/categories" novalidate data-catalog-validate="category">
@@ -599,31 +597,38 @@
     window.addEventListener('scroll', closeOpenMenus, true);
     window.addEventListener('resize', closeOpenMenus);
 
-    document.querySelectorAll('[data-open-modal]').forEach((button) => {
-        button.addEventListener('click', () => {
-            const modal = document.getElementById(button.dataset.openModal);
-            const form = modal.querySelector('form');
-            const title = modal.querySelector('[data-modal-title]');
-            const mode = button.dataset.mode;
+    document.addEventListener('click', (event) => {
+        const button = event.target.closest('[data-open-modal]');
+        if (!button) return;
+        
+        const modal = document.getElementById(button.dataset.openModal);
+        if (!modal) return;
+        
+        const form = modal.querySelector('form');
+        const title = modal.querySelector('[data-modal-title]');
+        const mode = button.dataset.mode;
 
+        if (form) {
             form.reset();
             form.querySelectorAll('.field-error').forEach(error => error.textContent = '');
             form.querySelectorAll('.field-invalid').forEach(field => field.classList.remove('field-invalid'));
             form.action = mode === 'edit' ? button.dataset.action : form.dataset.createAction;
-            
-            let itemType = 'thuộc tính';
-            if (button.dataset.openModal === 'category-modal') itemType = 'dòng cây';
-            else if (button.dataset.openModal === 'variety-modal') itemType = 'giống cây';
-            else if (button.dataset.openModal === 'tag-modal') itemType = 'thẻ nhãn';
-            
+        }
+        
+        let itemType = 'thuộc tính';
+        if (button.dataset.openModal === 'category-modal') itemType = 'dòng cây';
+        else if (button.dataset.openModal === 'variety-modal') itemType = 'giống cây';
+        else if (button.dataset.openModal === 'tag-modal') itemType = 'thẻ nhãn';
+        
+        if (title) {
             title.textContent = mode === 'edit' ? `Chỉnh sửa ${itemType}` : `Thêm ${itemType} mới`;
+        }
 
-            modal.querySelectorAll('[data-field]').forEach((field) => {
-                field.value = button.dataset[field.dataset.field] || '';
-            });
-
-            modal.classList.remove('hidden');
+        modal.querySelectorAll('[data-field]').forEach((field) => {
+            field.value = button.dataset[field.dataset.field] || '';
         });
+
+        modal.classList.remove('hidden');
     });
 
     document.querySelectorAll('.modal-close, .modal-backdrop').forEach((element) => {

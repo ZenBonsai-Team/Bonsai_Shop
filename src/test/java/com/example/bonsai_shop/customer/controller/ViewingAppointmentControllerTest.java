@@ -94,6 +94,22 @@ class ViewingAppointmentControllerTest {
         when(appointmentSettingService.isPausedAt(any())).thenReturn(false);
     }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    // Test kiem tra khach hang tao lich hen hop le thi he thong luu lich voi trang thai PENDING.
     @Test
     void createAppointment_WhenValid_ShouldCreateAppointment() throws Exception {
         User user = userRepository.findByEmail(TEST_EMAIL)
@@ -126,6 +142,7 @@ class ViewingAppointmentControllerTest {
         assertEquals(user.getUserId(), appointment.getCustomer().getUserId());
     }
 
+    // Test kiem tra tai khoan nhan su khong duoc phep tao lich hen xem bonsai cho khach hang.
     @ParameterizedTest
     @ValueSource(strings = {
             "OWNER",
@@ -169,6 +186,7 @@ class ViewingAppointmentControllerTest {
         assertTrue(appointments.isEmpty());
     }
 
+    // Test kiem tra tao lich bi service tu choi thi controller chuyen huong kem thong bao loi.
     @Test
     void createAppointment_WhenServiceThrowsException_ShouldRedirectWithError() throws Exception {
         User user = userRepository.findByEmail(TEST_EMAIL)
@@ -201,6 +219,7 @@ class ViewingAppointmentControllerTest {
         assertTrue(appointments.isEmpty());
     }
 
+    // Test kiem tra khach hang co lich hen thi API tra ve danh sach lich hen cua khach do.
     @Test
     void myAppointment_WhenCustomerHasAppointments_ShouldReturnViewWithAppointments() throws Exception {
         User user = userRepository.findByEmail(TEST_EMAIL)
@@ -226,6 +245,7 @@ class ViewingAppointmentControllerTest {
                 .andExpect(jsonPath("$[0].note").value("Existing appointment"));
     }
 
+    // Test kiem tra khach hang chua co lich hen thi API tra ve danh sach rong.
     @Test
     void myAppointment_WhenCustomerHasNoAppointments_ShouldReturnViewWithEmptyAppointments() throws Exception {
         User user = userRepository.findByEmail(TEST_EMAIL)
@@ -242,6 +262,7 @@ class ViewingAppointmentControllerTest {
                 .andExpect(jsonPath("$", hasSize(0)));
     }
 
+    // Test kiem tra khong tim thay nguoi dung hien tai thi he thong phat sinh loi khi xem danh sach lich hen.
     @Test
     void myAppointment_WhenUserNotFound_ShouldThrowException() {
         assertThrows(
@@ -253,6 +274,7 @@ class ViewingAppointmentControllerTest {
         );
     }
 
+    // Test kiem tra khach hang xem chi tiet lich hen cua minh thi API tra ve thong tin chi tiet.
     @Test
     void viewingAppointmentDetail_WhenOwnedAppointmentExists_ShouldReturnDetail() throws Exception {
         User user = userRepository.findByEmail(TEST_EMAIL)
@@ -279,6 +301,7 @@ class ViewingAppointmentControllerTest {
                 .andExpect(jsonPath("$.note").value("Detail note"));
     }
 
+    // Test kiem tra khach hang khong duoc xem chi tiet lich hen cua khach hang khac.
     @Test
     void viewingAppointmentDetail_WhenAppointmentBelongsToAnotherCustomer_ShouldThrowException() {
         User currentUser = userRepository.findByEmail(TEST_EMAIL)
@@ -315,6 +338,7 @@ class ViewingAppointmentControllerTest {
         );
     }
 
+    // Test kiem tra xem chi tiet lich hen khong ton tai thi he thong phat sinh loi.
     @Test
     void viewingAppointmentDetail_WhenAppointmentIdNotFound_ShouldThrowException() {
         User user = userRepository.findByEmail(TEST_EMAIL)
@@ -332,6 +356,7 @@ class ViewingAppointmentControllerTest {
         );
     }
 
+    // Test kiem tra khach hang cap nhat lich hen PENDING hop le thi he thong luu thay doi va bao thanh cong.
     @Test
     void updateAppointment_WhenValid_ShouldUpdateAppointmentAndRedirectWithSuccess() throws Exception {
         User user = userRepository.findByEmail(TEST_EMAIL)
@@ -367,6 +392,7 @@ class ViewingAppointmentControllerTest {
         assertEquals("Updated note", updatedAppointment.getNote());
     }
 
+    // Test kiem tra cap nhat lich hen bi service tu choi thi controller chuyen huong kem thong bao loi.
     @Test
     void updateAppointment_WhenServiceThrowsException_ShouldRedirectWithError() throws Exception {
         LocalDate updatedDate = LocalDate.now().plusDays(2);
@@ -384,6 +410,7 @@ class ViewingAppointmentControllerTest {
                 .andExpect(flash().attributeExists("error"));
     }
 
+    // Test kiem tra dinh dang gio cap nhat khong hop le thi request phat sinh loi truoc khi xu ly nghiep vu.
     @Test
     void updateAppointment_WhenTimeFormatInvalid_ShouldThrowBeforeCatch() {
         User user = userRepository.findByEmail(TEST_EMAIL)
@@ -411,6 +438,7 @@ class ViewingAppointmentControllerTest {
         );
     }
 
+    // Test kiem tra khach hang huy lich hen PENDING hop le thi trang thai chuyen sang CANCELLED.
     @Test
     void cancelAppointment_WhenValid_ShouldCancelAppointmentAndRedirectWithSuccess() throws Exception {
         User user = userRepository.findByEmail(TEST_EMAIL)
@@ -439,6 +467,7 @@ class ViewingAppointmentControllerTest {
         assertEquals("CANCELLED", cancelledAppointment.getStatus());
     }
 
+    // Test kiem tra huy lich hen bi service tu choi thi controller chuyen huong kem thong bao loi.
     @Test
     void cancelAppointment_WhenServiceThrowsException_ShouldRedirectWithError() throws Exception {
         mockMvc.perform(
@@ -451,6 +480,7 @@ class ViewingAppointmentControllerTest {
                 .andExpect(flash().attributeExists("error"));
     }
 
+    // Test kiem tra khong tim thay nguoi dung hien tai thi he thong phat sinh loi khi huy lich hen.
     @Test
     void cancelAppointment_WhenUserNotFound_ShouldThrowBeforeCatch() {
         assertThrows(
