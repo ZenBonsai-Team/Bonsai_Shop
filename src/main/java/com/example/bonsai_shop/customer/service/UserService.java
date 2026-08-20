@@ -23,6 +23,7 @@ import java.util.regex.Pattern;
 // Service quan ly user customer: dang ky, OTP, profile va mat khau.
 public class UserService {
     private static final Pattern PHONE_PATTERN = Pattern.compile("^0\\d{9,10}$");
+    private static final int PROFILE_ADDRESS_MAX_LENGTH = 255;
 
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
@@ -164,8 +165,8 @@ public class UserService {
         if (username != null && (username.length() < 3 || username.length() > 50)) {
             throw new RuntimeException("Ten dang nhap phai co tu 3 den 50 ky tu!");
         }
-        if (address != null && address.length() > 30) {
-            throw new RuntimeException("Dia chi khong duoc vuot qua 30 ky tu!");
+        if (address != null && address.length() > PROFILE_ADDRESS_MAX_LENGTH) {
+            throw new RuntimeException("Dia chi khong duoc vuot qua 255 ky tu!");
         }
     }
 
