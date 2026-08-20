@@ -1122,9 +1122,9 @@ public class OrderApiController {
             return ResponseEntity.status(403).body(response);
         }
 
-        // [Má»šI] Pre-validate tráº¡ng thÃ¡i sáº£n pháº©m cho Logged-in User
-        // Guest: Ä‘Ã£ Ä‘Æ°á»£c validate trong /send-guest-otp trÆ°á»›c khi gá»­i OTP
-        // LÆ¯U Ã: Ä‘Ã¢y lÃ  UX layer â€” khÃ´ng thay tháº¿ Ä‘Æ°á»£c
+        // [MỚI] Pre-validate trạng thái sản phẩm cho Logged-in User
+        // Guest: đã được validate trong /send-guest-otp trước khi gửi OTP
+        // LƯU Ý: đây là UX layer — không thay thế được
         // reserveIfAvailable() trong createOrder()
         if (customer != null) {
             List<Product> productsToCheck = orderService.loadProductsForOrder(dto, customer);
@@ -1144,9 +1144,9 @@ public class OrderApiController {
                         .collect(Collectors.toList());
                 response.put("success", false);
                 response.put("errorType", "PRODUCTS_UNAVAILABLE");
-                response.put("message", "Má»™t sá»‘ tÃ¡c pháº©m khÃ´ng cÃ²n kháº£ dá»¥ng: "
+                response.put("message", "Một số tác phẩm không còn khả dụng: "
                         + String.join(", ", unavailableNames)
-                        + ". Vui lÃ²ng xÃ³a khá»i giá» hÃ ng vÃ  chá»n sáº£n pháº©m khÃ¡c.");
+                        + ". Vui lòng xóa khỏi giỏ hàng và chọn sản phẩm khác.");
                 response.put("unavailableProducts", unavailableDetails);
                 return ResponseEntity.badRequest().body(response);
             }
@@ -1192,7 +1192,7 @@ public class OrderApiController {
             return ResponseEntity.badRequest().body(response);
         } catch (Exception e) {
             response.put("success", false);
-            response.put("message", "Lá»—i táº¡o Ä‘Æ¡n hÃ ng: " + e.getMessage());
+            response.put("message", "Lỗi tạo đơn hàng: " + e.getMessage());
             return ResponseEntity.internalServerError().body(response);
         }
     }

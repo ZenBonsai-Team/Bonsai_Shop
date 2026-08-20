@@ -1,5 +1,24 @@
+let loadedCartItems = [];
+
 document.addEventListener('DOMContentLoaded', () => {
     loadCart();
+
+    const btnProceed = document.getElementById('btnProceedCheckout');
+    if (btnProceed) {
+        btnProceed.addEventListener('click', (e) => {
+            e.preventDefault();
+            if (!loadedCartItems || loadedCartItems.length === 0) {
+                BSMSToast.warning("Giỏ hàng của bạn đang trống! Vui lòng chọn tác phẩm trước.");
+                return;
+            }
+            const unavailableItem = loadedCartItems.find(item => item.productStatus && item.productStatus !== 'AVAILABLE');
+            if (unavailableItem) {
+                BSMSToast.error(`Tác phẩm "${unavailableItem.productName}" đã có người đặt mua hoặc giữ chỗ. Vui lòng xóa khỏi giỏ hàng trước khi đặt.`);
+                return;
+            }
+            window.location.href = '/checkout';
+        });
+    }
 });
 
 async function loadCart() {
@@ -8,6 +27,7 @@ async function loadCart() {
         if (response.ok) {
             const items = await response.json();
             if (items && items.length > 0) {
+                loadedCartItems = items;
                 renderCart(items);
                 if (typeof window.updateCartBadge === 'function') {
                     window.updateCartBadge();
@@ -31,13 +51,16 @@ async function loadCart() {
                         productId: prod.productId,
                         productName: prod.productName,
                         productImage: prod.imageUrl,
-                        price: prod.price
+                        price: prod.price,
+                        productStatus: prod.productStatus
                     });
                 }
             } catch (err) {}
         }
+        loadedCartItems = items;
         renderCart(items);
     } else {
+        loadedCartItems = [];
         renderCart([]);
     }
 
@@ -71,14 +94,25 @@ function renderCart(items) {
         subtotal += itemTotal;
         
         const imgUrl = item.productImage || 'https://images.unsplash.com/photo-1599599810769-bcde5a160d32?auto=format&fit=crop&q=80&w=600';
-        
+        const isUnavailable = item.productStatus && item.productStatus !== 'AVAILABLE';
+        const statusBadge = isUnavailable
+            ? `<span class="badge bg-danger ms-2"><i class="fa-solid fa-lock me-1"></i>${item.productStatus === 'RESERVED' ? 'Đã giữ chỗ' : 'Đã bán'}</span>`
+            : '';
+
+        if (isUnavailable) {
+            tr.classList.add('table-danger');
+        }
+
         tr.innerHTML = `
             <td>
                 <div class="d-flex align-items-center gap-3">
                     <img src="${imgUrl}" class="cart-prod-img" alt="${item.productName}">
                     <div>
                         <a href="/product/${item.productId}" class="cart-prod-name">${item.productName}</a>
-                        <span class="text-muted small">Mã: Bonsai-${item.productId}</span>
+                        <div class="d-flex align-items-center gap-1">
+                            <span class="text-muted small">Mã: Bonsai-${item.productId}</span>
+                            ${statusBadge}
+                        </div>
                     </div>
                 </div>
             </td>
