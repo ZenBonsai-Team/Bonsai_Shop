@@ -180,18 +180,27 @@
                 <div class="filter-tabs product-filter-chips" style="margin:0;">
                     <a class="tab-btn text-decoration-none"
                        th:classappend="${selectedStatus == 'ALL'} ? ' active'"
-                       th:href="@{/artisan/in-person-order(status='ALL',size=${selectedSize})}">Tất cả</a>
+                       th:href="@{/artisan/in-person-order(status='ALL',keyword=${selectedKeyword},size=${selectedSize})}">Tất cả</a>
                     <a class="tab-btn text-decoration-none"
                        th:classappend="${selectedStatus == pendingPaymentStatus} ? ' active'"
-                       th:href="@{/artisan/in-person-order(status=${pendingPaymentStatus},size=${selectedSize})}">Chờ nhận tiền</a>
+                       th:href="@{/artisan/in-person-order(status=${pendingPaymentStatus},keyword=${selectedKeyword},size=${selectedSize})}">Chờ nhận tiền</a>
                     <a class="tab-btn text-decoration-none"
                        th:classappend="${selectedStatus == completedStatus} ? ' active'"
-                       th:href="@{/artisan/in-person-order(status=${completedStatus},size=${selectedSize})}">Hoàn thành</a>
+                       th:href="@{/artisan/in-person-order(status=${completedStatus},keyword=${selectedKeyword},size=${selectedSize})}">Hoàn thành</a>
                     <a class="tab-btn text-decoration-none"
                        th:classappend="${selectedStatus == cancelledStatus} ? ' active'"
-                       th:href="@{/artisan/in-person-order(status=${cancelledStatus},size=${selectedSize})}">Đã hủy</a>
+                       th:href="@{/artisan/in-person-order(status=${cancelledStatus},keyword=${selectedKeyword},size=${selectedSize})}">Đã hủy</a>
                 </div>
             </div>
+            <form class="walk-in-order-search" method="get" th:action="@{/artisan/in-person-order}">
+                <input type="hidden" name="status" th:value="${selectedStatus}">
+                <input type="hidden" name="size" th:value="${selectedSize}">
+                <input id="walkInOrderKeyword" type="text" name="keyword" th:value="${selectedKeyword}" placeholder="Tìm mã đơn, khách hàng, SĐT, tên cây..." autocomplete="off">
+                <button type="submit" class="btn small">Tìm kiếm</button>
+                <a th:if="${selectedKeyword != null && !#strings.isEmpty(selectedKeyword)}"
+                   class="btn small secondary text-decoration-none"
+                   th:href="@{/artisan/in-person-order(status=${selectedStatus},size=${selectedSize})}">Xóa lọc</a>
+            </form>
 
             <div class="table-container" id="walkInOrdersTableContainer">
                 <table class="orders-table">
@@ -275,12 +284,12 @@
                     </select>
                     <a class="product-page-nav"
                        th:classappend="${!orders.hasPrevious()} ? 'disabled'"
-                       th:href="@{/artisan/in-person-order(status=${selectedStatus},page=${orders.hasPrevious() ? orders.number - 1 : 0},size=${selectedSize})}"
+                       th:href="@{/artisan/in-person-order(status=${selectedStatus},keyword=${selectedKeyword},page=${orders.hasPrevious() ? orders.number - 1 : 0},size=${selectedSize})}"
                        aria-label="Trang trước">‹</a>
                     <span th:text="${'Trang ' + (orders.number + 1) + ' / ' + orders.totalPages}">Trang 1 / 1</span>
                     <a class="product-page-nav"
                        th:classappend="${!orders.hasNext()} ? 'disabled'"
-                       th:href="@{/artisan/in-person-order(status=${selectedStatus},page=${orders.hasNext() ? orders.number + 1 : orders.number},size=${selectedSize})}"
+                       th:href="@{/artisan/in-person-order(status=${selectedStatus},keyword=${selectedKeyword},page=${orders.hasNext() ? orders.number + 1 : orders.number},size=${selectedSize})}"
                        aria-label="Trang sau">›</a>
                 </div>
             </div>
@@ -1058,6 +1067,27 @@
         url.searchParams.set('size', event.target.value);
         url.searchParams.set('page', '0');
         loadWalkInOrdersPage(url);
+    });
+
+    const orderSearchForm = document.querySelector('.walk-in-order-search');
+    const orderKeywordInput = document.getElementById('walkInOrderKeyword');
+    let orderSearchTimer = null;
+
+    orderKeywordInput?.addEventListener('input', function () {
+        window.clearTimeout(orderSearchTimer);
+        orderSearchTimer = window.setTimeout(() => {
+            const url = new URL(orderSearchForm.action || window.location.href);
+            new FormData(orderSearchForm).forEach((value, key) => {
+                const normalizedValue = String(value || '').trim();
+                if (normalizedValue) {
+                    url.searchParams.set(key, normalizedValue);
+                } else {
+                    url.searchParams.delete(key);
+                }
+            });
+            url.searchParams.set('page', '0');
+            loadWalkInOrdersPage(url);
+        }, 500);
     });
 
     window.addEventListener('popstate', () => loadWalkInOrdersPage(new URL(window.location.href), false));

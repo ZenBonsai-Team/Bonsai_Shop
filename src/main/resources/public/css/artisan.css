@@ -1400,6 +1400,27 @@ textarea {
     margin-top: 2px;
 }
 
+.walk-in-order-search {
+    align-items: center;
+    display: flex;
+    gap: 10px;
+    margin: 14px 0 16px;
+}
+
+.walk-in-order-search input[type="text"] {
+    border: 1px solid #e0ddd2;
+    border-radius: 999px;
+    flex: 1;
+    min-height: 42px;
+    padding: 0 16px;
+}
+
+.walk-in-order-search input[type="text"]:focus {
+    border-color: #b8926a;
+    box-shadow: 0 0 0 3px rgba(184, 146, 106, 0.14);
+    outline: none;
+}
+
 .walk-in-product-results {
     border: 1px solid #e6e8df;
     border-radius: 12px;

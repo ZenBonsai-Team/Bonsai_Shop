@@ -71,20 +71,22 @@ class ArtisanInPersonOrderServiceTest {
         Page<Order> expectedOrders = new PageImpl<>(List.of(order(1)));
 
         when(artisanProductService.getArtisanUser("artisan@test.com")).thenReturn(artisan);
-        when(orderRepository.findByArtisanUserIdAndTypeAndStatus(
+        when(orderRepository.searchByArtisanUserIdAndTypeAndStatus(
                 10,
                 "IN_PERSON",
                 "ALL",
+                "",
                 PageRequest.of(0, 10)
         )).thenReturn(expectedOrders);
 
-        Page<Order> result = inPersonOrderService.getInPersonOrders("artisan@test.com", "   ", 0, 10);
+        Page<Order> result = inPersonOrderService.getInPersonOrders("artisan@test.com", "   ", "", 0, 10);
 
         assertThat(result).isEqualTo(expectedOrders);
-        verify(orderRepository).findByArtisanUserIdAndTypeAndStatus(
+        verify(orderRepository).searchByArtisanUserIdAndTypeAndStatus(
                 10,
                 "IN_PERSON",
                 "ALL",
+                "",
                 PageRequest.of(0, 10)
         );
     }
@@ -95,21 +97,49 @@ class ArtisanInPersonOrderServiceTest {
         Page<Order> expectedOrders = new PageImpl<>(List.of(order(1)));
 
         when(artisanProductService.getArtisanUser("artisan@test.com")).thenReturn(artisan);
-        when(orderRepository.findByArtisanUserIdAndTypeAndStatus(
+        when(orderRepository.searchByArtisanUserIdAndTypeAndStatus(
                 10,
                 "IN_PERSON",
                 "ALL",
+                "",
                 PageRequest.of(0, 1)
         )).thenReturn(expectedOrders);
 
-        Page<Order> result = inPersonOrderService.getInPersonOrders("artisan@test.com", "ALL", -1, 0);
+        Page<Order> result = inPersonOrderService.getInPersonOrders("artisan@test.com", "ALL", "", -1, 0);
 
         assertThat(result).isEqualTo(expectedOrders);
-        verify(orderRepository).findByArtisanUserIdAndTypeAndStatus(
+        verify(orderRepository).searchByArtisanUserIdAndTypeAndStatus(
                 10,
                 "IN_PERSON",
                 "ALL",
+                "",
                 PageRequest.of(0, 1)
+        );
+    }
+
+    @Test
+    void getInPersonOrders_WhenKeywordProvided_ShouldTrimKeyword() {
+        User artisan = artisan(10);
+        Page<Order> expectedOrders = new PageImpl<>(List.of(order(1)));
+
+        when(artisanProductService.getArtisanUser("artisan@test.com")).thenReturn(artisan);
+        when(orderRepository.searchByArtisanUserIdAndTypeAndStatus(
+                10,
+                "IN_PERSON",
+                "ALL",
+                "BSMS-001",
+                PageRequest.of(0, 10)
+        )).thenReturn(expectedOrders);
+
+        Page<Order> result = inPersonOrderService.getInPersonOrders("artisan@test.com", "ALL", "  BSMS-001  ", 0, 10);
+
+        assertThat(result).isEqualTo(expectedOrders);
+        verify(orderRepository).searchByArtisanUserIdAndTypeAndStatus(
+                10,
+                "IN_PERSON",
+                "ALL",
+                "BSMS-001",
+                PageRequest.of(0, 10)
         );
     }
 

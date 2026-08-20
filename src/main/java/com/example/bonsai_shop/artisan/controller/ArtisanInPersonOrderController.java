@@ -33,6 +33,7 @@ public class ArtisanInPersonOrderController {
     // Hiển thị danh sách đơn tại vườn và sản phẩm còn có thể bán.
     public String index(@AuthenticationPrincipal UserDetails userDetails,
                         @RequestParam(defaultValue = "ALL") String status,
+                        @RequestParam(defaultValue = "") String keyword,
                         @RequestParam(defaultValue = "0") int page,
                         @RequestParam(defaultValue = "10") int size,
                         Model model) {
@@ -40,11 +41,13 @@ public class ArtisanInPersonOrderController {
 
         List<Product> availableProducts = inPersonOrderService.getAvailableProducts(userDetails.getUsername());
         int pageSize = Math.min(Math.max(size, 1), 50);
-        Page<Order> orders = inPersonOrderService.getInPersonOrders(userDetails.getUsername(), status, page, pageSize);
+        String normalizedKeyword = keyword == null ? "" : keyword.trim();
+        Page<Order> orders = inPersonOrderService.getInPersonOrders(userDetails.getUsername(), status, normalizedKeyword, page, pageSize);
 
         model.addAttribute("availableProducts", availableProducts);
         model.addAttribute("orders", orders);
         model.addAttribute("selectedStatus", status);
+        model.addAttribute("selectedKeyword", normalizedKeyword);
         model.addAttribute("selectedSize", pageSize);
         model.addAttribute("pendingPaymentStatus", ArtisanInPersonOrderService.STATUS_PENDING_PAYMENT);
         model.addAttribute("completedStatus", ArtisanInPersonOrderService.STATUS_COMPLETED);

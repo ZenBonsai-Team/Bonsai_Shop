@@ -89,6 +89,29 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
             JOIN o.orderDetails od
             JOIN od.product p
             JOIN p.createdBy a
+            WHERE a.userId = :artisanUserId
+              AND o.orderType = :orderType
+              AND (:status = 'ALL' OR o.orderStatus = :status)
+              AND (:keyword IS NULL OR :keyword = '' OR
+                   LOWER(o.orderCode) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
+                   LOWER(o.customerName) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
+                   LOWER(o.customerPhone) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
+                   LOWER(p.productName) LIKE LOWER(CONCAT('%', :keyword, '%')))
+            ORDER BY o.orderDate DESC
+            """)
+    Page<Order> searchByArtisanUserIdAndTypeAndStatus(
+            @Param("artisanUserId") Integer artisanUserId,
+            @Param("orderType") String orderType,
+            @Param("status") String status,
+            @Param("keyword") String keyword,
+            Pageable pageable);
+
+    @Query("""
+            SELECT DISTINCT o
+            FROM Order o
+            JOIN o.orderDetails od
+            JOIN od.product p
+            JOIN p.createdBy a
             JOIN a.role r
             WHERE LOWER(o.orderType) = LOWER(:orderType)
               AND UPPER(r.roleName) IN ('ARTISAN', 'ROLE_ARTISAN')

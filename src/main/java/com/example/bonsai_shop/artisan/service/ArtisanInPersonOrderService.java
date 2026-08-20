@@ -70,13 +70,14 @@ public class ArtisanInPersonOrderService {
     }
 
     // Lấy danh sách đơn tại vườn theo trạng thái và phân trang.
-    public Page<Order> getInPersonOrders(String artisanEmail, String status, int page, int size) {
+    public Page<Order> getInPersonOrders(String artisanEmail, String status, String keyword, int page, int size) {
         Integer artisanUserId = artisanProductService.getArtisanUser(artisanEmail).getUserId();
         Pageable pageable = PageRequest.of(Math.max(page, 0), Math.max(size, 1));
-        return orderRepository.findByArtisanUserIdAndTypeAndStatus(
+        return orderRepository.searchByArtisanUserIdAndTypeAndStatus(
                 artisanUserId,
                 ORDER_TYPE_IN_PERSON,
                 status == null || status.isBlank() ? "ALL" : status,
+                keyword == null ? "" : keyword.trim(),
                 pageable
         );
     }
