@@ -131,6 +131,59 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
             @Param("search") String search,
             Pageable pageable);
 
+    @Query(value = """
+            SELECT DISTINCT o
+            FROM Order o
+            LEFT JOIN o.orderDetails od
+            LEFT JOIN od.product p
+            LEFT JOIN p.createdBy a
+            LEFT JOIN o.orderHandlings h
+            LEFT JOIN h.moderator m
+            WHERE (:orderType = 'ALL' OR UPPER(o.orderType) = :orderType)
+              AND (:status = 'ALL' OR UPPER(o.orderStatus) = :status)
+              AND (:search IS NULL OR :search = '' OR
+                   LOWER(o.orderCode) LIKE LOWER(CONCAT('%', :search, '%')) OR
+                   LOWER(o.customerName) LIKE LOWER(CONCAT('%', :search, '%')) OR
+                   LOWER(o.customerEmail) LIKE LOWER(CONCAT('%', :search, '%')) OR
+                   LOWER(o.customerPhone) LIKE LOWER(CONCAT('%', :search, '%')) OR
+                   LOWER(o.orderStatus) LIKE LOWER(CONCAT('%', :search, '%')) OR
+                   LOWER(o.orderType) LIKE LOWER(CONCAT('%', :search, '%')) OR
+                   LOWER(p.productName) LIKE LOWER(CONCAT('%', :search, '%')) OR
+                   LOWER(a.fullName) LIKE LOWER(CONCAT('%', :search, '%')) OR
+                   LOWER(a.email) LIKE LOWER(CONCAT('%', :search, '%')) OR
+                   LOWER(m.fullName) LIKE LOWER(CONCAT('%', :search, '%')) OR
+                   LOWER(m.email) LIKE LOWER(CONCAT('%', :search, '%')))
+            ORDER BY o.orderDate DESC
+            """,
+            countQuery = """
+            SELECT COUNT(DISTINCT o)
+            FROM Order o
+            LEFT JOIN o.orderDetails od
+            LEFT JOIN od.product p
+            LEFT JOIN p.createdBy a
+            LEFT JOIN o.orderHandlings h
+            LEFT JOIN h.moderator m
+            WHERE (:orderType = 'ALL' OR UPPER(o.orderType) = :orderType)
+              AND (:status = 'ALL' OR UPPER(o.orderStatus) = :status)
+              AND (:search IS NULL OR :search = '' OR
+                   LOWER(o.orderCode) LIKE LOWER(CONCAT('%', :search, '%')) OR
+                   LOWER(o.customerName) LIKE LOWER(CONCAT('%', :search, '%')) OR
+                   LOWER(o.customerEmail) LIKE LOWER(CONCAT('%', :search, '%')) OR
+                   LOWER(o.customerPhone) LIKE LOWER(CONCAT('%', :search, '%')) OR
+                   LOWER(o.orderStatus) LIKE LOWER(CONCAT('%', :search, '%')) OR
+                   LOWER(o.orderType) LIKE LOWER(CONCAT('%', :search, '%')) OR
+                   LOWER(p.productName) LIKE LOWER(CONCAT('%', :search, '%')) OR
+                   LOWER(a.fullName) LIKE LOWER(CONCAT('%', :search, '%')) OR
+                   LOWER(a.email) LIKE LOWER(CONCAT('%', :search, '%')) OR
+                   LOWER(m.fullName) LIKE LOWER(CONCAT('%', :search, '%')) OR
+                   LOWER(m.email) LIKE LOWER(CONCAT('%', :search, '%')))
+            """)
+    Page<Order> searchOwnerOrderHistory(
+            @Param("orderType") String orderType,
+            @Param("status") String status,
+            @Param("search") String search,
+            Pageable pageable);
+
     /**
      * [TÌM KIẾM ĐƠN HÀNG TỔNG HỢP CHO MODERATOR THEO DANH SÁCH TRẠNG THÁI VÀ TỪ KHÓA]
      */

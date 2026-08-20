@@ -1,0 +1,126 @@
+.owner-order-filter-form {
+    display: grid;
+    grid-template-columns: minmax(260px, 1fr) 190px auto;
+    align-items: center;
+    gap: 12px;
+}
+
+.owner-order-type-select {
+    width: 100%;
+    min-height: 42px;
+    padding: 0 38px 0 14px;
+    border: 1px solid #dfd8cd;
+    border-radius: 10px;
+    background: #fff;
+    color: #1c3322;
+    font-size: 0.9rem;
+    font-weight: 700;
+    outline: none;
+}
+
+.owner-order-type-select:focus {
+    border-color: #1c3322;
+    box-shadow: 0 0 0 3px rgba(28, 51, 34, 0.12);
+}
+
+.owner-order-status-tabs {
+    display: flex;
+    width: 100%;
+    clear: both;
+}
+
+.owner-order-status-tabs {
+    margin-top: 14px;
+}
+
+.owner-order-history-table-container {
+    overflow-x: auto;
+}
+
+.owner-order-history-table {
+    min-width: 1180px;
+    table-layout: fixed;
+}
+
+.owner-order-history-table th:nth-child(1),
+.owner-order-history-table td:nth-child(1) {
+    width: 10%;
+}
+
+.owner-order-history-table th:nth-child(2),
+.owner-order-history-table td:nth-child(2) {
+    width: 9%;
+}
+
+.owner-order-history-table th:nth-child(3),
+.owner-order-history-table td:nth-child(3) {
+    width: 15%;
+}
+
+.owner-order-history-table th:nth-child(4),
+.owner-order-history-table td:nth-child(4) {
+    width: 15%;
+}
+
+.owner-order-history-table th:nth-child(5),
+.owner-order-history-table td:nth-child(5) {
+    width: 14%;
+}
+
+.owner-order-history-table th:nth-child(6),
+.owner-order-history-table td:nth-child(6) {
+    width: 10%;
+}
+
+.owner-order-history-table th:nth-child(7),
+.owner-order-history-table td:nth-child(7) {
+    width: 11%;
+}
+
+.owner-order-history-table th:nth-child(8),
+.owner-order-history-table td:nth-child(8) {
+    width: 10%;
+}
+
+.owner-order-history-table th:nth-child(9),
+.owner-order-history-table td:nth-child(9) {
+    width: 6%;
+}
+
+.owner-order-history-table .col-action {
+    min-width: 92px;
+}
+
+.owner-order-history-table .btn-mini-confirm {
+    width: auto;
+    min-width: 82px;
+    white-space: nowrap;
+}
+
+.owner-order-history-table .handler-role-badge {
+    display: inline-flex;
+    align-items: center;
+    min-height: 22px;
+    margin-bottom: 6px;
+    padding: 0 8px;
+    border-radius: 999px;
+    background: #f4f1ea;
+    color: #536257;
+    font-size: 0.68rem;
+    font-weight: 800;
+    line-height: 1;
+}
+
+@media (max-width: 760px) {
+    .owner-order-filter-form {
+        grid-template-columns: 1fr;
+    }
+
+    .owner-order-history-table {
+        min-width: 0;
+    }
+
+    .owner-order-history-table .btn-mini-confirm {
+        width: 100%;
+    }
+}
