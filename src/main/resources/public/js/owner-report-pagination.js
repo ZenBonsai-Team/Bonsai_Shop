@@ -45,7 +45,18 @@
             const endIndex = Math.min(startIndex + pageSize, entries.length);
 
             entries.forEach((entry, index) => {
-                entry.hidden = index < startIndex || index >= endIndex;
+                const isHidden = index < startIndex || index >= endIndex;
+                entry.hidden = isHidden;
+                const detailRow = entry.nextElementSibling;
+                if (isHidden && detailRow?.hasAttribute('data-page-detail')) {
+                    detailRow.hidden = true;
+                    const toggleButton = entry.querySelector('[data-revenue-toggle]');
+                    toggleButton?.setAttribute('aria-expanded', 'false');
+                    const label = toggleButton?.querySelector('[data-toggle-label]');
+                    if (label) {
+                        label.textContent = 'Xem ngu\u1ed3n \u0111\u01a1n';
+                    }
+                }
             });
 
             info.textContent = `Hiển thị ${startIndex + 1} - ${endIndex} trong tổng số ${entries.length} ${reportLabel}`;
