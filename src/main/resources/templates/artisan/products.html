@@ -44,120 +44,142 @@
             </div>
 
             <div class="table-container">
-            <table class="compact-table product-table">
-                <thead>
-                <tr>
-                    <th>Ảnh</th>
-                    <th>Mã SP</th>
-                    <th>Tên sản phẩm</th>
-                    <th>Giá</th>
-                    <th>Trạng thái</th>
-                    <th>Hiển thị</th>
-                    <th>Hành động</th>
-                </tr>
-                </thead>
-                <tbody id="productTableBody">
-                <tr th:each="product : ${products}"
-                    th:attr="data-status=${product.productStatus},data-visibility=${product.productStatus == 'DRAFT' || product.isVisible == false ? 'INVISIBLE' : 'VISIBLE'},data-search-text=${product.productCode + ' ' + product.productName}">
-                    <td>
-                        <a class="product-preview-link" th:href="@{/artisan/products/{id}/preview(id=${product.productId})}">
-                            <span class="product-table-thumb-wrap">
-                                <img class="product-table-thumb"
-                                     th:src="${product.getFirstImageUrl() != null ? product.getFirstImageUrl() : '/images/default-bonsai.png'}"
-                                     alt="Ảnh sản phẩm">
-                                <img class="product-table-thumb-preview"
-                                     th:src="${product.getFirstImageUrl() != null ? product.getFirstImageUrl() : '/images/default-bonsai.png'}"
-                                     alt="">
-                            </span>
-                        </a>
-                    </td>
-                    <td th:text="${product.productCode}"></td>
-                    <td>
-                        <a class="product-name-link"
-                           th:href="@{/artisan/products/{id}/preview(id=${product.productId})}"
-                           th:text="${product.productName}"></a>
-                    </td>
-                    <td>
-                        <span th:text="${#numbers.formatDecimal(product.price, 0, 'POINT', 0, 'POINT') + ' VNĐ'}"></span>
-                        <span th:if="${!product.isPublicPrice}" class="muted-text">(ẩn với khách hàng)</span>
-                    </td>
-                    <td>
-                        <span th:if="${product.productStatus == 'AVAILABLE'}" class="badge bg-success-subtle text-success px-2 py-1 rounded-pill small">Đang bán</span>
-                        <span th:if="${product.productStatus == 'DRAFT'}" class="badge bg-warning-subtle text-warning px-2 py-1 rounded-pill small">Bản nháp</span>
-                        <span th:if="${product.productStatus == 'RESERVED'}" class="badge bg-info-subtle text-info px-2 py-1 rounded-pill small">Đã được đặt</span>
-                        <span th:if="${product.productStatus == 'SOLD'}" class="badge bg-secondary-subtle text-secondary px-2 py-1 rounded-pill small">Đã bán</span>
-                        <span th:if="${product.productStatus != 'AVAILABLE' && product.productStatus != 'DRAFT' && product.productStatus != 'RESERVED' && product.productStatus != 'SOLD'}" class="badge bg-light text-dark px-2 py-1 rounded-pill small" th:text="${product.productStatus}"></span>
-                    </td>
-                    <td>
-                        <span th:if="${product.productStatus == 'DRAFT'}" class="badge bg-warning-subtle text-warning px-2 py-1 rounded-pill small">Chưa đăng bán</span>
-                        <span th:if="${product.productStatus != 'DRAFT' && product.isVisible != false}" class="badge bg-success-subtle text-success px-2 py-1 rounded-pill small">Đang hiển thị</span>
-                        <span th:if="${product.productStatus != 'DRAFT' && product.isVisible == false}" class="badge bg-danger-subtle text-danger px-2 py-1 rounded-pill small">Đang ẩn</span>
-                    </td>
-                    <td class="table-actions">
-                        <a class="action-primary" th:href="@{/artisan/products/{id}/preview(id=${product.productId})}">
-                            <i class="fa-solid fa-eye"></i>
-                            Xem trước
-                        </a>
-                        <details class="action-menu">
-                            <summary>Thao tác</summary>
-                            <div class="action-menu-panel">
-                                <a th:if="${product.productStatus == 'DRAFT' || (product.isVisible == false && product.productStatus != 'SOLD' && product.productStatus != 'RESERVED')}" th:href="@{/artisan/products/{id}/edit(id=${product.productId})}">
-                                    <i class="fa-solid fa-pen"></i>
-                                    Chỉnh sửa
+                <div th:if="${products == null or #lists.isEmpty(products)}" class="product-empty-state">
+                    <div class="product-empty-icon"><i class="fa-solid fa-seedling"></i></div>
+                    <h3>Chưa có sản phẩm nào</h3>
+                    <p>Hãy tạo sản phẩm mới để bắt đầu đăng bán trên cửa hàng.</p>
+                    <a class="btn btn-success rounded-pill px-4" th:href="@{/artisan/products/new}">
+                        <i class="fa-solid fa-plus me-1"></i> Tạo sản phẩm mới
+                    </a>
+                </div>
+                
+                <div th:if="${products != null and !#lists.isEmpty(products)}" id="productGridBody" class="product-grid-body">
+                    <div class="product-card" th:each="product : ${products}"
+                         th:attr="data-status=${product.productStatus},data-visibility=${product.productStatus == 'DRAFT' || product.isVisible == false ? 'INVISIBLE' : 'VISIBLE'},data-search-text=${product.productCode + ' ' + product.productName}">
+                        
+                        <!-- Floating Badges on top-left of image (Unified status) -->
+                        <span th:if="${product.productStatus == 'DRAFT'}" class="badge-floating badge-draft">Bản nháp</span>
+                        <span th:if="${product.productStatus == 'SOLD'}" class="badge-floating badge-sold">Đã bán</span>
+                        <span th:if="${product.productStatus == 'RESERVED'}" class="badge-floating badge-reserved">Đã được đặt</span>
+                        <span th:if="${product.productStatus == 'AVAILABLE' and product.isVisible != false}" class="badge-floating badge-available">Đang bán</span>
+                        <span th:if="${product.productStatus != 'DRAFT' and product.isVisible == false}" class="badge-floating badge-hidden">Đang ẩn</span>
+                        
+                        <!-- Glassmorphic Dropdown Actions Menu in Top-Right of Image -->
+                        <details class="product-card-menu" th:if="${product.productStatus != 'SOLD'}">
+                            <summary title="Thao tác khác"><i class="fa-solid fa-ellipsis-vertical"></i></summary>
+                            <div class="product-card-menu-panel">
+                                <a th:href="@{/artisan/products/{id}/journal(id=${product.productId})}">
+                                    <i class="fa-solid fa-book"></i> Nhật ký cây
                                 </a>
-                                <a th:if="${product.productStatus == 'DRAFT' || (product.isVisible == false && product.productStatus != 'SOLD' && product.productStatus != 'RESERVED')}" th:href="@{/artisan/products/{id}/media(id=${product.productId})}">
-                                    <i class="fa-solid fa-image"></i>
-                                    Hình ảnh
-                                </a>
-                                <a th:if="${product.productStatus != 'SOLD'}" th:href="@{/artisan/products/{id}/journal(id=${product.productId})}">
-                                    <i class="fa-solid fa-book"></i>
-                                    Nhật ký cây
-                                </a>
-                                <form th:if="${product.productStatus == 'DRAFT'}" method="post" th:action="@{/artisan/products/{id}/publish(id=${product.productId})}">
-                                    <button type="button"
-                                            data-open-publish-modal
-                                            th:attr="data-product-name=${product.productName}">
-                                        <i class="fa-solid fa-upload"></i>
-                                        Đăng bán
-                                    </button>
-                                </form>
-                                <form th:if="${product.isVisible != false && (product.productStatus == 'AVAILABLE' || product.productStatus == 'SOLD')}" method="post" th:action="@{/artisan/products/{id}/hide(id=${product.productId})}">
-                                    <button type="button"
-                                            class="text-warning"
-                                            data-open-hide-modal
-                                            th:attr="data-product-name=${product.productName}">
-                                        <i class="fa-solid fa-eye-slash"></i>
-                                        Ẩn
-                                    </button>
-                                </form>
-                                <form th:if="${product.isVisible == false && product.productStatus != 'DRAFT' && product.productStatus != 'RESERVED'}" method="post" th:action="@{/artisan/products/{id}/show(id=${product.productId})}">
-                                    <button type="button"
-                                            class="text-success"
-                                            data-open-show-modal
-                                            th:attr="data-product-name=${product.productName}">
-                                        <i class="fa-solid fa-eye"></i>
-                                        Hiện
-                                    </button>
-                                </form>
+                                <!-- Delete Action in Menu (only for draft status) -->
                                 <form th:if="${product.productStatus == 'DRAFT'}" method="post" th:action="@{/artisan/products/{id}/delete(id=${product.productId})}">
-                                    <button type="button"
-                                            class="text-danger"
-                                            data-open-delete-modal
-                                            th:attr="data-product-name=${product.productName}">
-                                        <i class="fa-solid fa-trash"></i>
-                                        Xóa
+                                    <button type="button" class="text-danger" data-open-delete-modal th:attr="data-product-name=${product.productName}">
+                                        <i class="fa-solid fa-trash"></i> Xóa sản phẩm
                                     </button>
                                 </form>
-                                <span th:if="${product.productStatus != 'DRAFT' && product.productStatus != 'AVAILABLE' && product.productStatus != 'SOLD'}" class="action-locked">
-                                    <i class="fa-solid fa-lock"></i>
-                                    Đã khóa
-                                </span>
                             </div>
                         </details>
-                    </td>
-                </tr>
-                </tbody>
-            </table>
+
+                        <!-- Large Product Image (300 x 300 px aspect ratio) -->
+                        <a class="product-card-image-link" th:href="@{/artisan/products/{id}/preview(id=${product.productId})}">
+                            <img class="product-card-image"
+                                 th:src="${product.getFirstImageUrl() != null ? product.getFirstImageUrl() : '/images/default-bonsai.png'}"
+                                 alt="Ảnh sản phẩm" loading="lazy">
+                        </a>
+
+                        <!-- Product Information (Clean, unified status display) -->
+                        <div class="product-card-info">
+                            <div class="product-card-code" th:text="${product.productCode}">Code</div>
+                            <h3 class="product-card-title">
+                                <a th:href="@{/artisan/products/{id}/preview(id=${product.productId})}" th:text="${product.productName}">Name</a>
+                            </h3>
+                            <div class="product-card-price-row">
+                                <span class="product-card-price" th:text="${#numbers.formatDecimal(product.price, 0, 'POINT', 0, 'POINT') + ' VNĐ'}">Price</span>
+                                <span th:if="${!product.isPublicPrice}" class="product-card-price-private" title="Giá ẩn với khách hàng">
+                                    <i class="fa-solid fa-eye-slash"></i> Ẩn giá
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Product Core Actions Footer (Dynamic based on state) -->
+                        <div class="product-card-actions">
+                            <div class="btn-card-primary-actions">
+                                <!-- STATE 1: DRAFT -->
+                                <th:block th:if="${product.productStatus == 'DRAFT'}">
+                                    <a class="btn-card-action action-preview" th:href="@{/artisan/products/{id}/preview(id=${product.productId})}">
+                                        <i class="fa-solid fa-eye"></i> Xem trước
+                                    </a>
+                                    <a class="btn-card-action action-edit" th:href="@{/artisan/products/{id}/edit(id=${product.productId})}">
+                                        <i class="fa-solid fa-pen"></i> Sửa
+                                    </a>
+                                    <form method="post" th:action="@{/artisan/products/{id}/publish(id=${product.productId})}">
+                                        <button type="button" class="btn-card-action action-core" data-open-publish-modal th:attr="data-product-name=${product.productName}">
+                                            <i class="fa-solid fa-upload"></i> Đăng bán
+                                        </button>
+                                    </form>
+                                </th:block>
+
+                                <!-- STATE 2: AVAILABLE (Đang bán) -->
+                                <th:block th:if="${product.productStatus == 'AVAILABLE' and product.isVisible != false}">
+                                    <a class="btn-card-action action-preview" th:href="@{/artisan/products/{id}/preview(id=${product.productId})}">
+                                        <i class="fa-solid fa-eye"></i> Xem trước
+                                    </a>
+                                    <a class="btn-card-action action-journal" th:href="@{/artisan/products/{id}/journal(id=${product.productId})}">
+                                        <i class="fa-solid fa-clipboard-list"></i> Nhật ký
+                                    </a>
+                                    <form method="post" th:action="@{/artisan/products/{id}/hide(id=${product.productId})}">
+                                        <button type="button" class="btn-card-action action-hide-btn" data-open-hide-modal th:attr="data-product-name=${product.productName}">
+                                            <i class="fa-solid fa-eye-slash"></i> Ẩn
+                                        </button>
+                                    </form>
+                                </th:block>
+
+                                <!-- STATE 3: HIDDEN (Đang ẩn) -->
+                                <th:block th:if="${product.productStatus == 'AVAILABLE' and product.isVisible == false}">
+                                    <form method="post" th:action="@{/artisan/products/{id}/show(id=${product.productId})}">
+                                        <button type="button" class="btn-card-action action-core" data-open-show-modal th:attr="data-product-name=${product.productName}">
+                                            <i class="fa-solid fa-eye"></i> Hiện
+                                        </button>
+                                    </form>
+                                    <a class="btn-card-action action-edit" th:href="@{/artisan/products/{id}/edit(id=${product.productId})}">
+                                        <i class="fa-solid fa-pen"></i> Sửa
+                                    </a>
+                                    <a class="btn-card-action action-media" th:href="@{/artisan/products/{id}/media(id=${product.productId})}">
+                                        <i class="fa-solid fa-image"></i> Ảnh
+                                    </a>
+                                </th:block>
+
+                                <!-- STATE 4: SOLD (Đã bán) -->
+                                <th:block th:if="${product.productStatus == 'SOLD'}">
+                                    <a class="btn-card-action action-preview" th:href="@{/artisan/products/{id}/preview(id=${product.productId})}">
+                                        <i class="fa-solid fa-eye"></i> Xem trước
+                                    </a>
+                                    <!-- Hide if visible, Show if hidden -->
+                                    <form th:if="${product.isVisible != false}" method="post" th:action="@{/artisan/products/{id}/hide(id=${product.productId})}">
+                                        <button type="button" class="btn-card-action action-hide-btn" data-open-hide-modal th:attr="data-product-name=${product.productName}">
+                                            <i class="fa-solid fa-eye-slash"></i> Ẩn
+                                        </button>
+                                    </form>
+                                    <form th:if="${product.isVisible == false}" method="post" th:action="@{/artisan/products/{id}/show(id=${product.productId})}">
+                                        <button type="button" class="btn-card-action action-core" data-open-show-modal th:attr="data-product-name=${product.productName}">
+                                            <i class="fa-solid fa-eye"></i> Hiện
+                                        </button>
+                                    </form>
+                                </th:block>
+
+                                <!-- STATE 5: RESERVED (Đã được đặt) -->
+                                <th:block th:if="${product.productStatus == 'RESERVED'}">
+                                    <a class="btn-card-action action-preview" th:href="@{/artisan/products/{id}/preview(id=${product.productId})}">
+                                        <i class="fa-solid fa-eye"></i> Xem trước
+                                    </a>
+                                    <a class="btn-card-action action-core" th:href="@{/artisan/products/{id}/journal(id=${product.productId})}">
+                                        <i class="fa-solid fa-book"></i> Nhật ký
+                                    </a>
+                                </th:block>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div class="catalog-table-footer product-pagination-footer" th:if="${productPage != null}">
@@ -184,8 +206,6 @@
                 </div>
             </div>
         </section>
-    </main>
-</div>
 
 <div id="artisanPublishModal" class="artisan-action-modal-backdrop hidden">
     <div class="artisan-action-modal" role="dialog" aria-modal="true" aria-labelledby="artisanPublishModalTitle">
@@ -288,13 +308,33 @@
 <th:block th:fragment="scripts">
 <script>
     const productSearch = document.getElementById('productSearch');
-    let productRows = [...document.querySelectorAll('#productTableBody tr')];
+    let productRows = [...document.querySelectorAll('#productGridBody .product-card')];
     let currentStatus = 'ALL';
 
     function refreshProductRows() {
-        productRows = [...document.querySelectorAll('#productTableBody tr')];
+        productRows = [...document.querySelectorAll('#productGridBody .product-card')];
         applyProductFilters();
     }
+
+    // Auto-close other product card menus when one is toggled
+    document.addEventListener('toggle', (event) => {
+        const toggledMenu = event.target.closest('.product-card-menu');
+        if (!toggledMenu || !toggledMenu.open) return;
+        document.querySelectorAll('.product-card-menu[open]').forEach((menu) => {
+            if (menu !== toggledMenu) {
+                menu.removeAttribute('open');
+            }
+        });
+    }, true);
+
+    // Close product card menu when clicking outside
+    document.addEventListener('click', (event) => {
+        if (!event.target.closest('.product-card-menu')) {
+            document.querySelectorAll('.product-card-menu[open]').forEach((menu) => {
+                menu.removeAttribute('open');
+            });
+        }
+    });
 
     function applyProductFilters() {
         const keyword = productSearch.value.trim().toLowerCase();
@@ -384,151 +424,108 @@
 
     productSearch.addEventListener('input', applyProductFilters);
 
-    const artisanPublishModal = document.getElementById('artisanPublishModal');
-    const artisanPublishProductName = document.getElementById('artisanPublishProductName');
+    // Global Click Handler for Modals (Open, Close & Confirm via Event Delegation)
     let pendingPublishForm = null;
-
-    function closeArtisanPublishModal() {
-        artisanPublishModal.classList.add('hidden');
-        pendingPublishForm = null;
-    }
-
-    document.querySelectorAll('[data-open-publish-modal]').forEach((button) => {
-        button.addEventListener('click', () => {
-            pendingPublishForm = button.closest('form');
-            artisanPublishProductName.textContent = button.dataset.productName || '-';
-            artisanPublishModal.classList.remove('hidden');
-        });
-    });
-
-    artisanPublishModal.querySelector('.artisan-action-modal-close').addEventListener('click', closeArtisanPublishModal);
-    artisanPublishModal.querySelector('.btn-modal-cancel').addEventListener('click', closeArtisanPublishModal);
-    artisanPublishModal.addEventListener('click', (event) => {
-        if (event.target === artisanPublishModal) {
-            closeArtisanPublishModal();
-        }
-    });
-
-    artisanPublishModal.querySelector('.btn-modal-confirm').addEventListener('click', () => {
-        if (pendingPublishForm) {
-            pendingPublishForm.submit();
-        }
-    });
-
-    const artisanHideModal = document.getElementById('artisanHideModal');
-    const artisanHideProductName = document.getElementById('artisanHideProductName');
     let pendingHideForm = null;
-
-    function closeArtisanHideModal() {
-        artisanHideModal.classList.add('hidden');
-        pendingHideForm = null;
-    }
-
-    document.querySelectorAll('[data-open-hide-modal]').forEach((button) => {
-        button.addEventListener('click', () => {
-            pendingHideForm = button.closest('form');
-            artisanHideProductName.textContent = button.dataset.productName || '-';
-            artisanHideModal.classList.remove('hidden');
-        });
-    });
-
-    artisanHideModal.querySelector('.artisan-action-modal-close').addEventListener('click', closeArtisanHideModal);
-    artisanHideModal.querySelector('.btn-modal-cancel').addEventListener('click', closeArtisanHideModal);
-    artisanHideModal.addEventListener('click', (event) => {
-        if (event.target === artisanHideModal) {
-            closeArtisanHideModal();
-        }
-    });
-
-    artisanHideModal.querySelector('.btn-modal-confirm').addEventListener('click', () => {
-        if (pendingHideForm) {
-            pendingHideForm.submit();
-        }
-    });
-
-    const artisanShowModal = document.getElementById('artisanShowModal');
-    const artisanShowProductName = document.getElementById('artisanShowProductName');
     let pendingShowForm = null;
-
-    function closeArtisanShowModal() {
-        artisanShowModal.classList.add('hidden');
-        pendingShowForm = null;
-    }
-
-    document.querySelectorAll('[data-open-show-modal]').forEach((button) => {
-        button.addEventListener('click', () => {
-            pendingShowForm = button.closest('form');
-            artisanShowProductName.textContent = button.dataset.productName || '-';
-            artisanShowModal.classList.remove('hidden');
-        });
-    });
-
-    artisanShowModal.querySelector('.artisan-action-modal-close').addEventListener('click', closeArtisanShowModal);
-    artisanShowModal.querySelector('.btn-modal-cancel').addEventListener('click', closeArtisanShowModal);
-    artisanShowModal.addEventListener('click', (event) => {
-        if (event.target === artisanShowModal) {
-            closeArtisanShowModal();
-        }
-    });
-
-    artisanShowModal.querySelector('.btn-modal-confirm').addEventListener('click', () => {
-        if (pendingShowForm) {
-            pendingShowForm.submit();
-        }
-    });
-
-    const artisanDeleteModal = document.getElementById('artisanDeleteModal');
-    const artisanDeleteProductName = document.getElementById('artisanDeleteProductName');
     let pendingDeleteForm = null;
 
-    function closeArtisanDeleteModal() {
-        artisanDeleteModal.classList.add('hidden');
-        pendingDeleteForm = null;
-    }
-
-    document.querySelectorAll('[data-open-delete-modal]').forEach((button) => {
-        button.addEventListener('click', () => {
-            pendingDeleteForm = button.closest('form');
-            artisanDeleteProductName.textContent = button.dataset.productName || '-';
-            artisanDeleteModal.classList.remove('hidden');
-        });
-    });
-
-    artisanDeleteModal.querySelector('.artisan-delete-modal-close').addEventListener('click', closeArtisanDeleteModal);
-    artisanDeleteModal.querySelector('.btn-modal-cancel').addEventListener('click', closeArtisanDeleteModal);
-    artisanDeleteModal.addEventListener('click', (event) => {
-        if (event.target === artisanDeleteModal) {
-            closeArtisanDeleteModal();
-        }
-    });
-
-    artisanDeleteModal.querySelector('.btn-modal-confirm').addEventListener('click', () => {
-        if (pendingDeleteForm) {
-            pendingDeleteForm.submit();
-        }
-    });
-
     document.addEventListener('click', (event) => {
+        // --- OPEN MODAL ACTIONS ---
         const publishButton = event.target.closest('[data-open-publish-modal]');
         const hideButton = event.target.closest('[data-open-hide-modal]');
         const showButton = event.target.closest('[data-open-show-modal]');
         const deleteButton = event.target.closest('[data-open-delete-modal]');
+
         if (publishButton) {
+            event.preventDefault();
             pendingPublishForm = publishButton.closest('form');
-            artisanPublishProductName.textContent = publishButton.dataset.productName || '-';
-            artisanPublishModal.classList.remove('hidden');
-        } else if (hideButton) {
+            const targetText = document.getElementById('artisanPublishProductName');
+            if (targetText) targetText.textContent = publishButton.dataset.productName || '-';
+            const modal = document.getElementById('artisanPublishModal');
+            if (modal) modal.classList.remove('hidden');
+            return;
+        }
+        if (hideButton) {
+            event.preventDefault();
             pendingHideForm = hideButton.closest('form');
-            artisanHideProductName.textContent = hideButton.dataset.productName || '-';
-            artisanHideModal.classList.remove('hidden');
-        } else if (showButton) {
+            const targetText = document.getElementById('artisanHideProductName');
+            if (targetText) targetText.textContent = hideButton.dataset.productName || '-';
+            const modal = document.getElementById('artisanHideModal');
+            if (modal) modal.classList.remove('hidden');
+            return;
+        }
+        if (showButton) {
+            event.preventDefault();
             pendingShowForm = showButton.closest('form');
-            artisanShowProductName.textContent = showButton.dataset.productName || '-';
-            artisanShowModal.classList.remove('hidden');
-        } else if (deleteButton) {
+            const targetText = document.getElementById('artisanShowProductName');
+            if (targetText) targetText.textContent = showButton.dataset.productName || '-';
+            const modal = document.getElementById('artisanShowModal');
+            if (modal) modal.classList.remove('hidden');
+            return;
+        }
+        if (deleteButton) {
+            event.preventDefault();
             pendingDeleteForm = deleteButton.closest('form');
-            artisanDeleteProductName.textContent = deleteButton.dataset.productName || '-';
-            artisanDeleteModal.classList.remove('hidden');
+            const targetText = document.getElementById('artisanDeleteProductName');
+            if (targetText) targetText.textContent = deleteButton.dataset.productName || '-';
+            const modal = document.getElementById('artisanDeleteModal');
+            if (modal) modal.classList.remove('hidden');
+            return;
+        }
+
+        // --- CLOSE MODAL ACTIONS ---
+        // Close publish modal
+        const closePublish = event.target.closest('#artisanPublishModal .artisan-action-modal-close') || 
+                             event.target.closest('#artisanPublishModal .btn-modal-cancel');
+        if (closePublish || event.target === document.getElementById('artisanPublishModal')) {
+            const modal = document.getElementById('artisanPublishModal');
+            if (modal) modal.classList.add('hidden');
+            pendingPublishForm = null;
+            return;
+        }
+        // Close hide modal
+        const closeHide = event.target.closest('#artisanHideModal .artisan-action-modal-close') || 
+                          event.target.closest('#artisanHideModal .btn-modal-cancel');
+        if (closeHide || event.target === document.getElementById('artisanHideModal')) {
+            const modal = document.getElementById('artisanHideModal');
+            if (modal) modal.classList.add('hidden');
+            pendingHideForm = null;
+            return;
+        }
+        // Close show modal
+        const closeShow = event.target.closest('#artisanShowModal .artisan-action-modal-close') || 
+                          event.target.closest('#artisanShowModal .btn-modal-cancel');
+        if (closeShow || event.target === document.getElementById('artisanShowModal')) {
+            const modal = document.getElementById('artisanShowModal');
+            if (modal) modal.classList.add('hidden');
+            pendingShowForm = null;
+            return;
+        }
+        // Close delete modal
+        const closeDelete = event.target.closest('#artisanDeleteModal .artisan-delete-modal-close') || 
+                            event.target.closest('#artisanDeleteModal .btn-modal-cancel');
+        if (closeDelete || event.target === document.getElementById('artisanDeleteModal')) {
+            const modal = document.getElementById('artisanDeleteModal');
+            if (modal) modal.classList.add('hidden');
+            pendingDeleteForm = null;
+            return;
+        }
+
+        // --- CONFIRM MODAL ACTIONS ---
+        if (event.target.closest('#artisanPublishModal .btn-modal-confirm')) {
+            if (pendingPublishForm) pendingPublishForm.submit();
+            return;
+        }
+        if (event.target.closest('#artisanHideModal .btn-modal-confirm')) {
+            if (pendingHideForm) pendingHideForm.submit();
+            return;
+        }
+        if (event.target.closest('#artisanShowModal .btn-modal-confirm')) {
+            if (pendingShowForm) pendingShowForm.submit();
+        }
+        if (event.target.closest('#artisanDeleteModal .btn-modal-confirm')) {
+            if (pendingDeleteForm) pendingDeleteForm.submit();
         }
     });
 </script>
