@@ -445,8 +445,6 @@
                 </form>
             </div>
         </div>
-    </main>
-</div>
 
 <div id="walkInCancelConfirmModal" class="artisan-action-modal-backdrop hidden">
     <div class="artisan-action-modal" role="dialog" aria-modal="true" aria-labelledby="walkInCancelConfirmTitle">
@@ -536,17 +534,17 @@
     const createForm = document.getElementById('walkInCreateForm');
     const createConfirmModal = document.getElementById('walkInCreateConfirmModal');
     const createConfirmProduct = document.getElementById('walkInCreateConfirmProduct');
-    const createConfirmClose = createConfirmModal.querySelector('.artisan-action-modal-close');
-    const createConfirmCancel = createConfirmModal.querySelector('.btn-modal-cancel');
-    const createConfirmSubmit = createConfirmModal.querySelector('.btn-modal-confirm');
+    const createConfirmClose = createConfirmModal?.querySelector('.artisan-action-modal-close');
+    const createConfirmCancel = createConfirmModal?.querySelector('.btn-modal-cancel');
+    const createConfirmSubmit = createConfirmModal?.querySelector('.btn-modal-confirm');
     let allowCreateSubmit = false;
     const footer = document.getElementById('walkInDrawerFooter');
     const confirmForm = document.getElementById('walkInConfirmForm');
     const paymentConfirmModal = document.getElementById('walkInPaymentConfirmModal');
     const paymentConfirmCode = document.getElementById('walkInPaymentConfirmCode');
-    const paymentConfirmClose = paymentConfirmModal.querySelector('.artisan-action-modal-close');
-    const paymentConfirmCancel = paymentConfirmModal.querySelector('.btn-modal-cancel');
-    const paymentConfirmSubmit = paymentConfirmModal.querySelector('.btn-modal-confirm');
+    const paymentConfirmClose = paymentConfirmModal?.querySelector('.artisan-action-modal-close');
+    const paymentConfirmCancel = paymentConfirmModal?.querySelector('.btn-modal-cancel');
+    const paymentConfirmSubmit = paymentConfirmModal?.querySelector('.btn-modal-confirm');
     let allowPaymentSubmit = false;
     const cancelButton = document.getElementById('walkInCancelButton');
     const cancelForm = document.getElementById('walkInCancelForm');
@@ -554,9 +552,9 @@
     const cancelReasonClose = document.getElementById('walkInCancelReasonClose');
     const cancelConfirmModal = document.getElementById('walkInCancelConfirmModal');
     const cancelConfirmCode = document.getElementById('walkInCancelConfirmCode');
-    const cancelConfirmClose = cancelConfirmModal.querySelector('.artisan-action-modal-close');
-    const cancelConfirmCancel = cancelConfirmModal.querySelector('.btn-modal-cancel');
-    const cancelConfirmSubmit = cancelConfirmModal.querySelector('.btn-modal-confirm');
+    const cancelConfirmClose = cancelConfirmModal?.querySelector('.artisan-action-modal-close');
+    const cancelConfirmCancel = cancelConfirmModal?.querySelector('.btn-modal-cancel');
+    const cancelConfirmSubmit = cancelConfirmModal?.querySelector('.btn-modal-confirm');
     let allowCancelSubmit = false;
     const editButton = document.getElementById('walkInEditButton');
     const editForm = document.getElementById('walkInEditForm');
@@ -854,15 +852,15 @@
         createConfirmModal.classList.add('hidden');
     }
 
-    createConfirmClose.addEventListener('click', closeCreateConfirmModal);
-    createConfirmCancel.addEventListener('click', closeCreateConfirmModal);
-    createConfirmModal.addEventListener('click', function (event) {
+    createConfirmClose?.addEventListener('click', closeCreateConfirmModal);
+    createConfirmCancel?.addEventListener('click', closeCreateConfirmModal);
+    createConfirmModal?.addEventListener('click', function (event) {
         if (event.target === createConfirmModal) {
             closeCreateConfirmModal();
         }
     });
 
-    createConfirmSubmit.addEventListener('click', function () {
+    createConfirmSubmit?.addEventListener('click', function () {
         if (createConfirmSubmit.disabled) return;
         createConfirmSubmit.disabled = true;
         allowCreateSubmit = true;
@@ -1047,15 +1045,15 @@
         paymentConfirmModal.classList.add('hidden');
     }
 
-    paymentConfirmClose.addEventListener('click', closePaymentConfirmModal);
-    paymentConfirmCancel.addEventListener('click', closePaymentConfirmModal);
-    paymentConfirmModal.addEventListener('click', function (event) {
+    paymentConfirmClose?.addEventListener('click', closePaymentConfirmModal);
+    paymentConfirmCancel?.addEventListener('click', closePaymentConfirmModal);
+    paymentConfirmModal?.addEventListener('click', function (event) {
         if (event.target === paymentConfirmModal) {
             closePaymentConfirmModal();
         }
     });
 
-    paymentConfirmSubmit.addEventListener('click', function () {
+    paymentConfirmSubmit?.addEventListener('click', function () {
         if (paymentConfirmSubmit.disabled) return;
         paymentConfirmSubmit.disabled = true;
         allowPaymentSubmit = true;
@@ -1105,15 +1103,15 @@
         cancelConfirmModal.classList.add('hidden');
     }
 
-    cancelConfirmClose.addEventListener('click', closeCancelConfirmModal);
-    cancelConfirmCancel.addEventListener('click', closeCancelConfirmModal);
-    cancelConfirmModal.addEventListener('click', function (event) {
+    cancelConfirmClose?.addEventListener('click', closeCancelConfirmModal);
+    cancelConfirmCancel?.addEventListener('click', closeCancelConfirmModal);
+    cancelConfirmModal?.addEventListener('click', function (event) {
         if (event.target === cancelConfirmModal) {
             closeCancelConfirmModal();
         }
     });
 
-    cancelConfirmSubmit.addEventListener('click', function () {
+    cancelConfirmSubmit?.addEventListener('click', function () {
         if (cancelConfirmSubmit.disabled) return;
         cancelConfirmSubmit.disabled = true;
         allowCancelSubmit = true;
