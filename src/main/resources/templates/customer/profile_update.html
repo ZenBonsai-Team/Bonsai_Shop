@@ -133,12 +133,12 @@
 
                 <div class="form-group">
                     <label>Họ và tên</label>
-                    <input type="text" name="fullName" th:value="${user.fullName}" required>
+                    <input type="text" name="fullName" th:value="${fullNameInput != null ? fullNameInput : user.fullName}" required>
                 </div>
 
                 <div class="form-group">
                     <label>Tên đăng nhập</label>
-                    <input type="text" name="username" th:value="${user.username}" placeholder="Chưa cập nhật">
+                    <input type="text" name="username" th:value="${usernameInput != null ? usernameInput : user.username}" placeholder="Chưa cập nhật">
                 </div>
 
                 <div class="form-group">
@@ -148,12 +148,23 @@
 
                 <div class="form-group">
                     <label>Số điện thoại</label>
-                    <input type="text" name="phone" th:value="${user.phone}" placeholder="Chưa cập nhật">
+                    <input type="text"
+                           name="phone"
+                           id="phoneInput"
+                           maxlength="11"
+                           inputmode="numeric"
+                           th:value="${phoneInput != null ? phoneInput : user.phone}"
+                           placeholder="Chưa cập nhật">
+                    <div id="phoneLimitError" class="field-error"></div>
                 </div>
 
                 <div class="form-group">
                     <label>Địa chỉ</label>
-                    <input type="text" name="address" th:value="${user.address}" placeholder="Chưa cập nhật">
+                    <input type="text"
+                           name="address"
+                           maxlength="30"
+                           th:value="${addressInput != null ? addressInput : user.address}"
+                           placeholder="Chưa cập nhật">
                 </div>
 
                 <div class="form-group">
@@ -196,6 +207,51 @@
                     '<i class="fa-solid fa-angle-right"></i>' : 
                     '<i class="fa-solid fa-angle-left"></i>';
             });
+        }
+
+        const phoneInput = document.getElementById('phoneInput');
+        const phoneLimitError = document.getElementById('phoneLimitError');
+        if (phoneInput) {
+            const showPhoneLimitError = function() {
+                if (phoneLimitError) {
+                    phoneLimitError.textContent = 'Số điện thoại chỉ được nhập tối đa 11 số!';
+                }
+            };
+
+            const clearPhoneLimitError = function() {
+                if (phoneLimitError) {
+                    phoneLimitError.textContent = '';
+                }
+            };
+
+            phoneInput.addEventListener('beforeinput', function(event) {
+                if (!event.data) {
+                    return;
+                }
+
+                const selectedLength = phoneInput.selectionEnd - phoneInput.selectionStart;
+                const nextLength = phoneInput.value.length - selectedLength + event.data.length;
+                if (nextLength > 11) {
+                    event.preventDefault();
+                    showPhoneLimitError();
+                } else {
+                    clearPhoneLimitError();
+                }
+            });
+
+            phoneInput.addEventListener('paste', function(event) {
+                const pasteText = (event.clipboardData || window.clipboardData).getData('text');
+                const selectedLength = phoneInput.selectionEnd - phoneInput.selectionStart;
+                const nextLength = phoneInput.value.length - selectedLength + pasteText.length;
+                if (nextLength > 11) {
+                    event.preventDefault();
+                    showPhoneLimitError();
+                } else {
+                    clearPhoneLimitError();
+                }
+            });
+
+            phoneInput.addEventListener('input', clearPhoneLimitError);
         }
     });
 </script>
