@@ -69,7 +69,8 @@
                 <i class="fa-solid fa-bag-shopping"></i>
                 <span>Đơn hàng</span>
             </a>
-            <a th:href="@{/profile/change-password}">
+            <a th:if="${user.password != null and !#strings.isEmpty(user.password)}"
+               th:href="@{/profile/change-password}">
                 <i class="fa-solid fa-lock"></i>
                 <span>Đổi mật khẩu</span>
             </a>
