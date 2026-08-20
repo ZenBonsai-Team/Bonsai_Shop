@@ -4,6 +4,7 @@ import com.example.bonsai_shop.artisan.controller.ArtisanProductController;
 import com.example.bonsai_shop.artisan.dto.ArtisanProductFormDTO;
 import com.example.bonsai_shop.artisan.service.ArtisanProductService;
 import com.example.bonsai_shop.artisan.service.ProductJournalService;
+import com.example.bonsai_shop.data.service.CloudinaryStorageService;
 import com.example.bonsai_shop.customer.repository.UserRepository;
 import com.example.bonsai_shop.product.controller.OrderApiController;
 import com.example.bonsai_shop.product.dto.PurchaseOrderRequestDTO;
@@ -128,7 +129,8 @@ class InputValidationTest {
         void init() {
             ArtisanProductService artisanProductService = mock(ArtisanProductService.class);
             ProductJournalService productJournalService = mock(ProductJournalService.class);
-            ArtisanProductController controller = new ArtisanProductController(artisanProductService, productJournalService);
+            CloudinaryStorageService cloudinaryStorageService = mock(CloudinaryStorageService.class);
+            ArtisanProductController controller = new ArtisanProductController(artisanProductService, productJournalService, cloudinaryStorageService);
             mockMvc = MockMvcBuilders.standaloneSetup(controller)
                     .setCustomArgumentResolvers(new AuthenticationPrincipalArgumentResolver())
                     .build();
