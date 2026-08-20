@@ -2,6 +2,7 @@
 
 document.addEventListener('DOMContentLoaded', () => {
     initRealtimeValidation();
+    initCheckoutNotesCounter();
 
     const phoneInput = document.getElementById('customerPhone');
     if (phoneInput) {
@@ -67,6 +68,7 @@ function resetCheckoutForm() {
     inputs.forEach(input => {
         input.classList.remove('is-invalid', 'is-valid');
     });
+    updateCheckoutNotesCounter();
     
     // Đảm bảo phương thức Cọc trước (DEPOSIT) được chọn mặc định
     selectPaymentMethod('DEPOSIT');
@@ -102,10 +104,11 @@ function selectPaymentMethod(method) {
  */
 function initRealtimeValidation() {
     const rules = {
-        customerName: (val) => val.trim().length >= 2,
+        customerName: (val) => val.trim().length >= 3 && val.trim().length <= 50,
         customerPhone: (val) => /^0\d{9}$/.test(val.trim()),
         customerEmail: (val) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val.trim()),
-        shippingAddress: (val) => val.trim().length >= 10
+        shippingAddress: (val) => val.trim().length > 0 && val.trim().length <= 255,
+        checkoutNotes: (val) => val.trim().length <= 400
     };
     
     Object.keys(rules).forEach(fieldId => {
@@ -134,10 +137,11 @@ function initRealtimeValidation() {
  */
 function validateWholeForm() {
     const rules = {
-        customerName: (val) => val.trim().length >= 2,
+        customerName: (val) => val.trim().length >= 3 && val.trim().length <= 50,
         customerPhone: (val) => /^(0|\+84)(\d{9})$/.test(val.trim()),
         customerEmail: (val) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val.trim()),
-        shippingAddress: (val) => val.trim().length >= 10
+        shippingAddress: (val) => val.trim().length > 0 && val.trim().length <= 255,
+        checkoutNotes: (val) => val.trim().length <= 400
     };
     
     let isAllValid = true;
@@ -193,6 +197,7 @@ function processOrderSubmit() {
     const customerPhone = document.getElementById('customerPhone').value.trim();
     const customerEmail = document.getElementById('customerEmail').value.trim();
     const shippingAddress = document.getElementById('shippingAddress').value.trim();
+    const notes = document.getElementById('checkoutNotes')?.value.trim() || '';
     const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
     
     const requestData = {
@@ -201,6 +206,7 @@ function processOrderSubmit() {
         customerPhone,
         customerEmail,
         shippingAddress,
+        notes,
         paymentMethod
     };
     
@@ -293,4 +299,24 @@ function setupFocusTrap(modalEl) {
             lastFocusedElement.focus();
         }
     });
+}
+
+function initCheckoutNotesCounter() {
+    const notesInput = document.getElementById('checkoutNotes');
+    if (!notesInput) return;
+
+    notesInput.addEventListener('input', updateCheckoutNotesCounter);
+    notesInput.addEventListener('blur', updateCheckoutNotesCounter);
+    updateCheckoutNotesCounter();
+}
+
+function updateCheckoutNotesCounter() {
+    const notesInput = document.getElementById('checkoutNotes');
+    const counter = document.getElementById('checkoutNotesCounter');
+    if (!notesInput || !counter) return;
+
+    const length = notesInput.value.trim().length;
+    counter.textContent = `${length}/400`;
+    counter.classList.toggle('text-danger', length > 400);
+    counter.classList.toggle('text-muted', length <= 400);
 }

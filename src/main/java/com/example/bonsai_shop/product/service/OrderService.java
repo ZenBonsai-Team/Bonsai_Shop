@@ -709,17 +709,17 @@ public class OrderService {
      */
     @Transactional
     public Order createOrder(PurchaseOrderRequestDTO dto, User customer) {
-        if (dto.getCustomerName() != null && dto.getCustomerName().length() > 255) {
-            throw new IllegalArgumentException("Tên khách hàng không được vượt quá 255 ký tự.");
+        if (dto.getCustomerName() != null && (dto.getCustomerName().trim().length() < 3 || dto.getCustomerName().trim().length() > 50)) {
+            throw new IllegalArgumentException("H\u1ecd v\u00e0 t\u00ean ng\u01b0\u1eddi nh\u1eadn ph\u1ea3i c\u00f3 t\u1eeb 3 \u0111\u1ebfn 50 k\u00fd t\u1ef1.");
         }
         if (dto.getCustomerEmail() != null && dto.getCustomerEmail().length() > 255) {
-            throw new IllegalArgumentException("Email không được vượt quá 255 ký tự.");
+            throw new IllegalArgumentException("Email kh??ng ???????c v?????t qu?? 255 k?? t???.");
         }
-        if (dto.getShippingAddress() != null && dto.getShippingAddress().length() > 500) {
-            throw new IllegalArgumentException("Địa chỉ nhận hàng không được vượt quá 500 ký tự.");
+        if (dto.getShippingAddress() != null && dto.getShippingAddress().length() > 255) {
+            throw new IllegalArgumentException("\u0110\u1ecba ch\u1ec9 nh\u1eadn kh\u00f4ng \u0111\u01b0\u1ee3c v\u01b0\u1ee3t qu\u00e1 255 k\u00fd t\u1ef1.");
         }
-        if (dto.getNotes() != null && dto.getNotes().length() > 500) {
-            throw new IllegalArgumentException("Ghi chú không được vượt quá 500 ký tự.");
+        if (dto.getNotes() != null && dto.getNotes().length() > 400) {
+            throw new IllegalArgumentException("Ghi ch\u00fa kh\u00f4ng \u0111\u01b0\u1ee3c v\u01b0\u1ee3t qu\u00e1 400 k\u00fd t\u1ef1.");
         }
 
         List<Product> productsToBuy = resolveProductsToBuy(dto, customer);

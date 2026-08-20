@@ -60,7 +60,7 @@
                     <td class="text-end owner-money-cell" th:text="${#numbers.formatDecimal(source.sourceAmount(), 0, 'POINT', 0, 'POINT') + ' VND'}">0 VND</td>
                     <td class="text-end">
                         <a class="owner-table-action-link"
-                           th:href="@{/owner/order-handling-history/orders/{orderCode}(orderCode=${source.orderCode()})}">
+                           th:href="@{/owner/order-history/orders/{orderCode}(orderCode=${source.orderCode()})}">
                             Xem đơn
                         </a>
                     </td>

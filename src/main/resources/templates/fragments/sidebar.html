@@ -33,17 +33,11 @@
                     <span class="nav-icon"><i class="fa-solid fa-users"></i></span>
                     <span>Quản lý người dùng</span>
                 </a>
-                <a th:href="@{/owner/order-handling-history}"
+                <a th:href="@{/owner/order-history}"
                    class="sidebar-nav-item"
-                   th:classappend="${activePage == 'order-handling-history' ? 'active' : ''}">
+                   th:classappend="${activePage == 'order-history' or activePage == 'history' ? 'active' : ''}">
                     <span class="nav-icon"><i class="fa-solid fa-clock-rotate-left"></i></span>
-                    <span>Lịch sử xử lý đơn</span>
-                </a>
-                <a th:href="@{/owner/in-person-order-history}"
-                   class="sidebar-nav-item"
-                   th:classappend="${activePage == 'in-person-order-history' ? 'active' : ''}">
-                    <span class="nav-icon"><i class="fa-solid fa-cash-register"></i></span>
-                    <span>Lịch sử đơn tại vườn</span>
+                    <span>L&#7883;ch s&#7917; &#273;&#417;n h&#224;ng</span>
                 </a>
                 <a th:href="@{/owner/system-config}" class="sidebar-nav-item" 
                    th:classappend="${activePage == 'system-config' ? 'active' : ''}">
@@ -98,12 +92,6 @@
 
             <!-- 4. ARTISAN MENU -->
             <th:block sec:authorize="hasRole('ARTISAN')">
-                <a th:href="@{/artisan}" 
-                   class="sidebar-nav-item" 
-                   th:classappend="${activePage == 'dashboard' or activePage == 'artisan-dashboard' ? 'active' : ''}">
-                    <span class="nav-icon"><i class="fa-solid fa-gauge-high"></i></span>
-                    <span>Bảng điều khiển</span>
-                </a>
                 <a th:href="@{/artisan/products}" 
                    class="sidebar-nav-item" 
                    th:classappend="${activePage == 'products' or activePage == 'artisan-products' ? 'active' : ''}">

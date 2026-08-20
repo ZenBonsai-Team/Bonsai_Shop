@@ -89,6 +89,29 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
             JOIN o.orderDetails od
             JOIN od.product p
             JOIN p.createdBy a
+            WHERE a.userId = :artisanUserId
+              AND o.orderType = :orderType
+              AND (:status = 'ALL' OR o.orderStatus = :status)
+              AND (:keyword IS NULL OR :keyword = '' OR
+                   LOWER(o.orderCode) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
+                   LOWER(o.customerName) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
+                   LOWER(o.customerPhone) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
+                   LOWER(p.productName) LIKE LOWER(CONCAT('%', :keyword, '%')))
+            ORDER BY o.orderDate DESC
+            """)
+    Page<Order> searchByArtisanUserIdAndTypeAndStatus(
+            @Param("artisanUserId") Integer artisanUserId,
+            @Param("orderType") String orderType,
+            @Param("status") String status,
+            @Param("keyword") String keyword,
+            Pageable pageable);
+
+    @Query("""
+            SELECT DISTINCT o
+            FROM Order o
+            JOIN o.orderDetails od
+            JOIN od.product p
+            JOIN p.createdBy a
             JOIN a.role r
             WHERE LOWER(o.orderType) = LOWER(:orderType)
               AND UPPER(r.roleName) IN ('ARTISAN', 'ROLE_ARTISAN')
@@ -103,6 +126,59 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
             ORDER BY o.orderDate DESC
             """)
     Page<Order> searchOwnerInPersonOrders(
+            @Param("orderType") String orderType,
+            @Param("status") String status,
+            @Param("search") String search,
+            Pageable pageable);
+
+    @Query(value = """
+            SELECT DISTINCT o
+            FROM Order o
+            LEFT JOIN o.orderDetails od
+            LEFT JOIN od.product p
+            LEFT JOIN p.createdBy a
+            LEFT JOIN o.orderHandlings h
+            LEFT JOIN h.moderator m
+            WHERE (:orderType = 'ALL' OR UPPER(o.orderType) = :orderType)
+              AND (:status = 'ALL' OR UPPER(o.orderStatus) = :status)
+              AND (:search IS NULL OR :search = '' OR
+                   LOWER(o.orderCode) LIKE LOWER(CONCAT('%', :search, '%')) OR
+                   LOWER(o.customerName) LIKE LOWER(CONCAT('%', :search, '%')) OR
+                   LOWER(o.customerEmail) LIKE LOWER(CONCAT('%', :search, '%')) OR
+                   LOWER(o.customerPhone) LIKE LOWER(CONCAT('%', :search, '%')) OR
+                   LOWER(o.orderStatus) LIKE LOWER(CONCAT('%', :search, '%')) OR
+                   LOWER(o.orderType) LIKE LOWER(CONCAT('%', :search, '%')) OR
+                   LOWER(p.productName) LIKE LOWER(CONCAT('%', :search, '%')) OR
+                   LOWER(a.fullName) LIKE LOWER(CONCAT('%', :search, '%')) OR
+                   LOWER(a.email) LIKE LOWER(CONCAT('%', :search, '%')) OR
+                   LOWER(m.fullName) LIKE LOWER(CONCAT('%', :search, '%')) OR
+                   LOWER(m.email) LIKE LOWER(CONCAT('%', :search, '%')))
+            ORDER BY o.orderDate DESC
+            """,
+            countQuery = """
+            SELECT COUNT(DISTINCT o)
+            FROM Order o
+            LEFT JOIN o.orderDetails od
+            LEFT JOIN od.product p
+            LEFT JOIN p.createdBy a
+            LEFT JOIN o.orderHandlings h
+            LEFT JOIN h.moderator m
+            WHERE (:orderType = 'ALL' OR UPPER(o.orderType) = :orderType)
+              AND (:status = 'ALL' OR UPPER(o.orderStatus) = :status)
+              AND (:search IS NULL OR :search = '' OR
+                   LOWER(o.orderCode) LIKE LOWER(CONCAT('%', :search, '%')) OR
+                   LOWER(o.customerName) LIKE LOWER(CONCAT('%', :search, '%')) OR
+                   LOWER(o.customerEmail) LIKE LOWER(CONCAT('%', :search, '%')) OR
+                   LOWER(o.customerPhone) LIKE LOWER(CONCAT('%', :search, '%')) OR
+                   LOWER(o.orderStatus) LIKE LOWER(CONCAT('%', :search, '%')) OR
+                   LOWER(o.orderType) LIKE LOWER(CONCAT('%', :search, '%')) OR
+                   LOWER(p.productName) LIKE LOWER(CONCAT('%', :search, '%')) OR
+                   LOWER(a.fullName) LIKE LOWER(CONCAT('%', :search, '%')) OR
+                   LOWER(a.email) LIKE LOWER(CONCAT('%', :search, '%')) OR
+                   LOWER(m.fullName) LIKE LOWER(CONCAT('%', :search, '%')) OR
+                   LOWER(m.email) LIKE LOWER(CONCAT('%', :search, '%')))
+            """)
+    Page<Order> searchOwnerOrderHistory(
             @Param("orderType") String orderType,
             @Param("status") String status,
             @Param("search") String search,

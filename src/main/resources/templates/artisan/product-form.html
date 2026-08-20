@@ -115,12 +115,14 @@
 
         <label>Mô tả
             <textarea th:field="*{description}" rows="5" data-product-field="description"></textarea>
+            <small class="field-counter" data-product-counter-for="description">0/1000</small>
             <small th:if="${#fields.hasErrors('description')}" th:errors="*{description}" class="field-error"></small>
             <small class="field-error" data-product-error-for="description"></small>
         </label>
 
         <label>Câu chuyện cây
             <textarea th:field="*{treeStory}" rows="5" data-product-field="treeStory" placeholder="Nguồn gốc, hành trình chăm sóc, ý nghĩa hoặc câu chuyện riêng của cây..."></textarea>
+            <small class="field-counter" data-product-counter-for="treeStory">0/1500</small>
             <small th:if="${#fields.hasErrors('treeStory')}" th:errors="*{treeStory}" class="field-error"></small>
             <small class="field-error" data-product-error-for="treeStory"></small>
         </label>
@@ -217,6 +219,10 @@
         style: document.querySelector('[data-product-field="style"]'),
         price: priceDisplay
     };
+    const productTextLimits = {
+        description: 1000,
+        treeStory: 1500
+    };
     const tagLimitError = document.querySelector('[data-product-error-for="tagIds"]');
 
     function setProductFieldError(fieldName, message) {
@@ -227,6 +233,16 @@
             errorElement.textContent = message || '';
         }
         fieldWrapper?.classList.toggle('field-invalid', Boolean(message));
+    }
+
+    function updateProductTextCounter(fieldName) {
+        const maxLength = productTextLimits[fieldName];
+        if (!maxLength) return;
+        const counter = productForm.querySelector(`[data-product-counter-for="${fieldName}"]`);
+        const length = productFields[fieldName]?.value?.trim().length || 0;
+        if (!counter) return;
+        counter.textContent = `${length}/${maxLength}`;
+        counter.classList.toggle('is-over-limit', length > maxLength);
     }
 
     function hasTooManyDecimals(value, maxDecimals) {
@@ -330,6 +346,7 @@
         }
 
         setProductFieldError(fieldName, message);
+        updateProductTextCounter(fieldName);
         return !message;
     }
 
@@ -396,6 +413,7 @@
     productForm.querySelectorAll('.field-error:not(:empty)').forEach(errorElement => {
         errorElement.closest('label')?.classList.add('field-invalid');
     });
+    Object.keys(productTextLimits).forEach(updateProductTextCounter);
 
     const tagMultiselect = document.querySelector('[data-tag-multiselect]');
     if (tagMultiselect) {

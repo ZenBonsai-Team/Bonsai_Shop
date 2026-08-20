@@ -631,6 +631,62 @@ class UserServiceTest {
         }
 
         @Test
+        void updateUserProfile_WhenAddressHasTwoHundredFiftyFiveCharacters_ShouldUpdateProfile() {
+                String email = "test@gmail.com";
+                String address = "A".repeat(255);
+
+                User user = new User();
+                user.setEmail(email);
+                user.setFullName("Old Name");
+                user.setUsername("olduser");
+                user.setPhone("0900000000");
+
+                when(userRepository.findByEmail(email))
+                                .thenReturn(Optional.of(user));
+
+                userService.updateUserProfile(
+                                email,
+                                "New Name",
+                                "newuser",
+                                "0912345678",
+                                address,
+                                null);
+
+                assertEquals(address, user.getAddress());
+
+                verify(userRepository, times(1))
+                                .save(user);
+        }
+
+        @Test
+        void updateUserProfile_WhenAddressExceedsTwoHundredFiftyFiveCharacters_ShouldThrowException() {
+                String email = "test@gmail.com";
+                String address = "A".repeat(256);
+
+                User user = new User();
+                user.setEmail(email);
+                user.setUsername("olduser");
+
+                when(userRepository.findByEmail(email))
+                                .thenReturn(Optional.of(user));
+
+                RuntimeException exception = assertThrows(
+                                RuntimeException.class,
+                                () -> userService.updateUserProfile(
+                                                email,
+                                                "New Name",
+                                                "newuser",
+                                                "0912345678",
+                                                address,
+                                                null));
+
+                assertEquals("Dia chi khong duoc vuot qua 255 ky tu!", exception.getMessage());
+
+                verify(userRepository, never())
+                                .save(any(User.class));
+        }
+
+        @Test
         void updateUserProfile_WhenUploadingInitialAvatar_ShouldSaveNewUrlAndPublicId() {
 
                 // Arrange

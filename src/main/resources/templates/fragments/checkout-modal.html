@@ -49,11 +49,11 @@
                             
                             <!-- Họ Tên -->
                             <div class="mb-3">
-                                <label for="customerName" class="form-label required-label">Họ và tên người mua</label>
+                                <label for="customerName" class="form-label required-label">Họ và tên người nhận</label>
                                 <div class="input-group">
                                     <span class="input-group-text"><i class="fa-regular fa-user"></i></span>
                                     <input type="text" class="form-control" id="customerName" name="customerName" required placeholder="Nguyễn Văn A">
-                                    <div class="invalid-feedback" id="customerNameFeedback">Vui lòng nhập họ và tên của bạn.</div>
+                                    <div class="invalid-feedback" id="customerNameFeedback">Họ và tên người nhận phải có từ 3 đến 50 ký tự.</div>
                                 </div>
                             </div>
                             
@@ -64,7 +64,7 @@
                                     <div class="input-group">
                                         <span class="input-group-text"><i class="fa-solid fa-phone"></i></span>
                                         <input type="tel" class="form-control" id="customerPhone" name="customerPhone" required placeholder="0987654321" inputmode="numeric" pattern="0[0-9]{9}" maxlength="10" oninput="this.value=this.value.replace(/\D/g,'').slice(0,10)">
-                                        <div class="invalid-feedback" id="customerPhoneFeedback">SĐT không hợp lệ (10 chữ số).</div>
+                                        <div class="invalid-feedback" id="customerPhoneFeedback">SĐT không hợp lệ (10 chữ số bắt đầu bằng 0).</div>
                                     </div>
                                 </div>
                                 <div class="col-sm-6 mb-3">
@@ -79,12 +79,19 @@
                             
                             <!-- Địa chỉ giao hàng -->
                             <div class="mb-3">
-                                <label for="shippingAddress" class="form-label required-label">Địa chỉ giao hàng</label>
+                                <label for="shippingAddress" class="form-label required-label">Địa chỉ nhận</label>
                                 <div class="input-group">
                                     <span class="input-group-text"><i class="fa-solid fa-map-location-dot"></i></span>
                                     <textarea class="form-control" id="shippingAddress" name="shippingAddress" rows="2" required placeholder="Số nhà, ngõ/đường, Phường/Xã, Quận/Huyện..."></textarea>
-                                    <div class="invalid-feedback" id="shippingAddressFeedback">Vui lòng nhập địa chỉ nhận hàng.</div>
+                                    <div class="invalid-feedback" id="shippingAddressFeedback">Địa chỉ nhận không được trống và không vượt quá 255 ký tự.</div>
                                 </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="checkoutNotes" class="form-label">Yêu cầu thêm / Ghi chú</label>
+                                <textarea class="form-control" id="checkoutNotes" name="notes" rows="3" placeholder="Ví dụ: Giao hàng vào thứ Bảy, gọi trước khi giao..."></textarea>
+                                <div class="invalid-feedback" id="checkoutNotesFeedback">Ghi chú không được vượt quá 400 ký tự.</div>
+                                <small class="text-muted d-block text-end mt-1" id="checkoutNotesCounter">0/400</small>
                             </div>
                             
                             <!-- Phương thức thanh toán -->
