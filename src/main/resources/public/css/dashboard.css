@@ -1648,6 +1648,7 @@ a.artisan-metric-card:hover {
     min-height: 104px;
     padding: 16px 14px;
     transition: background-color 0.16s ease, border-color 0.16s ease;
+    text-decoration: none;
 }
 
 .revenue-summary-card:hover {
@@ -1716,13 +1717,9 @@ a.artisan-metric-card:hover {
     font-size: clamp(1.08rem, 1.45vw, 1.34rem);
 }
 
-.owner-artisan-revenue-card {
-    cursor: default;
-}
-
 .owner-artisan-revenue-card:hover {
-    background: #F3FBF5;
-    border-color: #CFE5D5;
+    background: #fffdf9;
+    border-color: #DED3C4;
 }
 
 .owner-table-action-link {
@@ -1737,6 +1734,46 @@ a.artisan-metric-card:hover {
 .owner-table-action-link:focus {
     color: #155d32;
     text-decoration: underline;
+}
+
+.owner-inline-toggle {
+    align-items: center;
+    background: #eef7ef;
+    border: 1px solid #cfe5d5;
+    border-radius: 999px;
+    color: #17643a;
+    display: inline-flex;
+    font-size: 0.78rem;
+    font-weight: 850;
+    gap: 8px;
+    min-height: 34px;
+    padding: 0 12px;
+    white-space: nowrap;
+}
+
+.owner-inline-toggle:hover,
+.owner-inline-toggle:focus {
+    background: #e2f2e6;
+    border-color: #9fc8aa;
+}
+
+.owner-inline-toggle[aria-expanded="true"] i {
+    transform: rotate(180deg);
+}
+
+.owner-revenue-source-row > td {
+    background: #fbfaf7;
+    padding: 0 12px 16px;
+}
+
+.owner-revenue-source-panel {
+    border: 1px solid #e6ded2;
+    border-radius: 14px;
+    padding: 14px;
+}
+
+.owner-artisan-revenue-table .source-report-table {
+    margin-bottom: 0;
 }
 
 .owner-clickable-row {

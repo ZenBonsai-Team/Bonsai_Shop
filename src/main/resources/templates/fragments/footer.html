@@ -62,7 +62,140 @@
     
     <!-- Bootstrap Bundle JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- ============================================================
+         IMAGE COMPRESSION + UPLOAD PROGRESS
+         Nén ảnh phía client trước khi gửi lên server → giảm thời gian upload 5-10x
+         Hiển thị thanh tiến trình khi đang upload → user không bị bối rối chờ đợi
+    ============================================================ -->
+    <!-- Thư viện nén ảnh phía browser (chỉ 9KB, không cần cài đặt) -->
+    <script src="https://cdn.jsdelivr.net/npm/browser-image-compression@2.0.2/dist/browser-image-compression.min.js"></script>
+
+    <style>
+        /* Overlay tiến trình upload toàn màn hình */
+        #upload-progress-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.55);
+            z-index: 99999;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 18px;
+        }
+        #upload-progress-overlay.show { display: flex; }
+        #upload-progress-box {
+            background: #fff;
+            border-radius: 16px;
+            padding: 32px 40px;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+            min-width: 300px;
+        }
+        #upload-progress-box .spinner {
+            width: 48px; height: 48px;
+            border: 5px solid #e0e0e0;
+            border-top-color: #4CAF50;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 16px;
+        }
+        #upload-progress-box p { margin: 0; color: #333; font-size: 15px; font-weight: 500; }
+        #upload-progress-box small { color: #888; font-size: 12px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+
+    <!-- Overlay HTML (ẩn mặc định, hiện khi đang upload) -->
+    <div id="upload-progress-overlay">
+        <div id="upload-progress-box">
+            <div class="spinner"></div>
+            <p id="upload-progress-msg">Đang tải lên...</p>
+            <small>Vui lòng không đóng trang này</small>
+        </div>
+    </div>
+
+    <script>
+    (function () {
+        // Cấu hình nén ảnh
+        var IMG_COMPRESS_OPTIONS = {
+            maxSizeMB: 1,          // Nén xuống tối đa 1MB
+            maxWidthOrHeight: 1200, // Resize xuống tối đa 1200px
+            useWebWorker: true,     // Chạy nén trên Web Worker, không block UI
+            fileType: 'image/webp'  // Chuyển sang WebP để nhỏ hơn JPEG
+        };
+
+        var overlay = document.getElementById('upload-progress-overlay');
+        var progressMsg = document.getElementById('upload-progress-msg');
+
+        // Hàm hiển thị overlay loading
+        function showOverlay(msg) {
+            progressMsg.textContent = msg || 'Đang tải lên...';
+            overlay.classList.add('show');
+        }
+        function hideOverlay() {
+            overlay.classList.remove('show');
+        }
+
+        // Hàm nén ảnh từ input file, trả về File mới đã nén
+        async function compressImageInput(fileInput) {
+            var files = fileInput.files;
+            if (!files || files.length === 0) return;
+
+            var dataTransfer = new DataTransfer();
+            for (var i = 0; i < files.length; i++) {
+                var file = files[i];
+                // Chỉ nén ảnh, không xử lý video
+                if (file.type.startsWith('image/')) {
+                    try {
+                        showOverlay('Đang nén ảnh ' + (i + 1) + '/' + files.length + '...');
+                        var compressed = await imageCompression(file, IMG_COMPRESS_OPTIONS);
+                        // Giữ tên file gốc để backend không bị lỗi validate tên
+                        var newFile = new File([compressed], file.name, { type: compressed.type });
+                        dataTransfer.items.add(newFile);
+                    } catch (e) {
+                        // Nếu nén thất bại, dùng file gốc
+                        dataTransfer.items.add(file);
+                    }
+                } else {
+                    // Video hoặc file khác: giữ nguyên
+                    dataTransfer.items.add(file);
+                }
+            }
+            fileInput.files = dataTransfer.files;
+        }
+
+        // Lắng nghe tất cả form có chứa input[type=file]
+        document.addEventListener('DOMContentLoaded', function () {
+            // Lazy loading cho img
+            document.querySelectorAll('img:not([loading])').forEach(function (img) {
+                img.setAttribute('loading', 'lazy');
+            });
+
+            document.querySelectorAll('form').forEach(function (form) {
+                form.addEventListener('submit', async function (e) {
+                    var fileInputs = form.querySelectorAll('input[type="file"]');
+                    if (fileInputs.length === 0) return; // Form không có file, bỏ qua
+
+                    e.preventDefault(); // Chặn submit ngay, chờ nén xong
+
+                    // Nén lần lượt từng input file trong form
+                    for (var fi = 0; fi < fileInputs.length; fi++) {
+                        await compressImageInput(fileInputs[fi]);
+                    }
+
+                    showOverlay('Đang tải lên server...');
+                    // Submit form sau khi nén xong
+                    form.removeEventListener('submit', arguments.callee);
+                    form.submit();
+                });
+            });
+        });
+
+        // Ẩn overlay nếu user nhấn nút back của browser
+        window.addEventListener('pageshow', hideOverlay);
+    })();
+    </script>
 </div>
 </body>
 </html>
-

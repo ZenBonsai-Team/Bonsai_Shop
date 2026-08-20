@@ -3,6 +3,7 @@ package com.example.bonsai_shop.product.dto;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 /**
@@ -28,10 +29,12 @@ public class PurchaseOrderRequestDTO {
     private String otpCode;
 
     /** Ghi chú đơn hàng từ khách. */
+    @Size(max = 400, message = "Ghi chú không được vượt quá 400 ký tự")
     private String notes;
 
     /** Họ tên người nhận hàng. */
     @NotBlank(message = "Tên khách hàng không được trống")
+    @Size(min = 3, max = 50, message = "Họ và tên người nhận phải có từ 3 đến 50 ký tự")
     private String customerName;
 
     /** Số điện thoại nhận hàng (bắt buộc đúng 10 số). */
@@ -46,6 +49,7 @@ public class PurchaseOrderRequestDTO {
 
     /** Địa chỉ nhận cây chi tiết. */
     @NotBlank(message = "Địa chỉ giao hàng không được trống")
+    @Size(max = 255, message = "Địa chỉ nhận không được vượt quá 255 ký tự")
     private String shippingAddress;
 
     /** Phương thức thanh toán lựa chọn: "DEPOSIT" (đặt cọc trước) hoặc "FULL_PAYMENT" (thanh toán đủ 100%). */

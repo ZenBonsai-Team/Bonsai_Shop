@@ -1,29 +1,87 @@
-name: CI/CD Deploy to Raspberry Pi 5
+name: CI/CD Deploy to Multi-Server (Pi 5 + GCP VM)
 
 on:
   push:
     branches:
-      - AnhPQ # Tự động deploy khi push lên nhánh AnhPQ (hoặc đổi thành master nếu muốn)
+      - AnhPQ
 
 jobs:
-  deploy:
-    runs-on: self-hosted # Chạy trên self-hosted runner đã đăng ký trên Pi 5
-
+  # ------------------------------------------------------------
+  # JOB 1: BUILD TRÊN CLOUD RUNNER (CỰC NHANH + ĐƯỜNG TRUYỀN GBPS)
+  # ------------------------------------------------------------
+  build:
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: maven
+
       - name: Grant execute permission for mvnw
         run: chmod +x mvnw
 
-      - name: Restore local config (not tracked by git)
-        run: cp /home/quanganh/Desktop/bonsai/Bonsai_Shop/src/main/resources/application-local.properties src/main/resources/application-local.properties
-
-      - name: Build Project with Maven
+      - name: Build with Maven
         run: ./mvnw clean package -DskipTests
 
-      - name: Copy built JAR to Desktop folder
-        run: cp target/Bonsai_Shop-0.0.1-SNAPSHOT.jar /home/quanganh/Desktop/bonsai/Bonsai_Shop/target/
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: bonsai-jar
+          path: target/Bonsai_Shop-0.0.1-SNAPSHOT.jar
+          retention-days: 1
 
-      - name: Restart Web Service
-        run: sudo systemctl restart bonsai-shop.service
+  # ------------------------------------------------------------
+  # JOB 2: DEPLOY LÊN GCP VM (CHẠY SONG SONG)
+  # ------------------------------------------------------------
+  deploy-gcp:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download Build Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: bonsai-jar
+          path: ./dist
+
+      - name: Copy JAR to GCP VM
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.GCP_HOST }}
+          username: ${{ secrets.GCP_USERNAME }}
+          key: ${{ secrets.GCP_SSH_KEY }}
+          source: "dist/Bonsai_Shop-0.0.1-SNAPSHOT.jar"
+          target: "/home/vualen121324/app/"
+          strip_components: 1
+
+      - name: Restart Service on GCP VM
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.GCP_HOST }}
+          username: ${{ secrets.GCP_USERNAME }}
+          key: ${{ secrets.GCP_SSH_KEY }}
+          script: |
+            mv /home/vualen121324/app/Bonsai_Shop-0.0.1-SNAPSHOT.jar /home/vualen121324/app/app.jar
+            sudo systemctl restart bonsai-backend.service
+
+  # ------------------------------------------------------------
+  # JOB 3: DEPLOY LÊN PI 5 (CHẠY SONG SONG)
+  # ------------------------------------------------------------
+  deploy-pi5:
+    needs: build
+    runs-on: self-hosted
+    steps:
+      - name: Download Build Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: bonsai-jar
+          path: ./dist
+
+      - name: Deploy on Pi 5
+        run: |
+          cp dist/Bonsai_Shop-0.0.1-SNAPSHOT.jar /home/quanganh/Desktop/bonsai/Bonsai_Shop/target/
+          sudo systemctl restart bonsai-shop.service

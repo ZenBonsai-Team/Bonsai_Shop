@@ -16,7 +16,7 @@
     <th:block th:if="${crumbs == null}">
         <span class="breadcrumb-item active" 
               th:text="${activePageLabel != null ? activePageLabel : 
-                       (paramActivePage == 'moderator-dashboard' or paramActivePage == 'artisan-dashboard' or paramActivePage == 'dashboard' or paramActivePage == 'admin-dashboard' ? 'Bảng điều khiển' : 
+                       (paramActivePage == 'moderator-dashboard' or paramActivePage == 'dashboard' or paramActivePage == 'admin-dashboard' ? 'Bảng điều khiển' : 
                        (paramActivePage == 'moderator-orders' or paramActivePage == 'orders' ? 'Quản lý đơn hàng' : 
                        (paramActivePage == 'moderator-users' or paramActivePage == 'users' or paramActivePage == 'admin-users' ? 'Quản lý người dùng' : 
                        (paramActivePage == 'moderator-community' or paramActivePage == 'community' ? 'Quản lý bài viết' : 

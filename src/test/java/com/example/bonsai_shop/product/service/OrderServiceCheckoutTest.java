@@ -414,4 +414,46 @@ class OrderServiceCheckoutTest {
         verify(cartService, never()).clearCart(anyInt());
         verify(eventPublisher, never()).publishEvent(any());
     }
+
+    @Test
+    @DisplayName("Checkout validation: tên người nhận phải có từ 3 đến 50 ký tự")
+    void createOrder_customerNameOutsideAllowedLength_throwsIllegalArgumentException() {
+        PurchaseOrderRequestDTO dto = new PurchaseOrderRequestDTO();
+        dto.setCustomerName("AB");
+        dto.setProductIds(List.of(1));
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> orderService.createOrder(dto, User.builder().userId(10).build()));
+
+        assertThat(exception.getMessage()).isEqualTo("H\u1ecd v\u00e0 t\u00ean ng\u01b0\u1eddi nh\u1eadn ph\u1ea3i c\u00f3 t\u1eeb 3 \u0111\u1ebfn 50 k\u00fd t\u1ef1.");
+    }
+
+    @Test
+    @DisplayName("Checkout validation: địa chỉ nhận không vượt quá 255 ký tự")
+    void createOrder_shippingAddressExceedsAllowedLength_throwsIllegalArgumentException() {
+        PurchaseOrderRequestDTO dto = new PurchaseOrderRequestDTO();
+        dto.setCustomerName("Nguyen Van A");
+        dto.setShippingAddress("A".repeat(256));
+        dto.setProductIds(List.of(1));
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> orderService.createOrder(dto, User.builder().userId(10).build()));
+
+        assertThat(exception.getMessage()).isEqualTo("\u0110\u1ecba ch\u1ec9 nh\u1eadn kh\u00f4ng \u0111\u01b0\u1ee3c v\u01b0\u1ee3t qu\u00e1 255 k\u00fd t\u1ef1.");
+    }
+
+    @Test
+    @DisplayName("Checkout validation: ghi chú không vượt quá 400 ký tự")
+    void createOrder_notesExceedsAllowedLength_throwsIllegalArgumentException() {
+        PurchaseOrderRequestDTO dto = new PurchaseOrderRequestDTO();
+        dto.setCustomerName("Nguyen Van A");
+        dto.setShippingAddress("FPT HCM");
+        dto.setNotes("A".repeat(401));
+        dto.setProductIds(List.of(1));
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> orderService.createOrder(dto, User.builder().userId(10).build()));
+
+        assertThat(exception.getMessage()).isEqualTo("Ghi ch\u00fa kh\u00f4ng \u0111\u01b0\u1ee3c v\u01b0\u1ee3t qu\u00e1 400 k\u00fd t\u1ef1.");
+    }
 }

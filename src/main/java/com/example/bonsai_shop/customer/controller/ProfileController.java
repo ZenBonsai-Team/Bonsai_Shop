@@ -143,6 +143,10 @@ public class ProfileController {
         } catch (RuntimeException e) {
             User user = userService.getCurrentUserProfile(email);
             model.addAttribute("user", user);
+            model.addAttribute("fullNameInput", fullName);
+            model.addAttribute("usernameInput", username);
+            model.addAttribute("phoneInput", phone);
+            model.addAttribute("addressInput", address);
             model.addAttribute("error", e.getMessage());
         }
         return "customer/profile_update";

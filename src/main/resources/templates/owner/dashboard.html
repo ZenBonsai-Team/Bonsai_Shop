@@ -41,56 +41,56 @@
         </div>
 
         <div class="revenue-summary-grid">
-            <div class="revenue-summary-card revenue-summary-primary owner-artisan-revenue-card">
+            <a class="revenue-summary-card revenue-summary-primary owner-artisan-revenue-card" th:href="@{/owner/dashboard/artisan-revenue(month=${selectedMonth})}">
                 <span class="summary-icon"><i class="fa-solid fa-user-tie"></i></span>
                 <div>
                     <small>Doanh thu tháng của nghệ nhân</small>
                     <strong class="money-value owner-artisan-revenue-total" th:text="${#numbers.formatDecimal(monthlyRevenue, 0, 'POINT', 0, 'POINT') + ' VNĐ'}">0 VNĐ</strong>
-                    <a class="finance-card-detail" th:href="@{/owner/dashboard/artisan-revenue(month=${selectedMonth})}">
+                    <span class="finance-card-detail">
                         Xem chi tiết <i class="fa-solid fa-arrow-right"></i>
-                    </a>
+                    </span>
                 </div>
-            </div>
-            <div class="revenue-summary-card">
+            </a>
+            <a class="revenue-summary-card" th:href="@{/owner/dashboard/forfeited-deposits(month=${selectedMonth})}">
                 <span class="summary-icon"><i class="fa-solid fa-hand-holding-dollar"></i></span>
                 <div>
                     <small>Cọc khách bỏ</small>
                     <strong class="money-value" th:text="${#numbers.formatDecimal(monthlyForfeitedDepositIncome, 0, 'POINT', 0, 'POINT') + ' VNĐ'}">0 VNĐ</strong>
-                    <a class="finance-card-detail" th:href="@{/owner/dashboard/forfeited-deposits(month=${selectedMonth})}">
+                    <span class="finance-card-detail">
                         Xem chi tiết <i class="fa-solid fa-arrow-right"></i>
-                    </a>
+                    </span>
                 </div>
-            </div>
-            <div class="revenue-summary-card">
+            </a>
+            <a class="revenue-summary-card" th:href="@{/owner/dashboard/customer-refunds(month=${selectedMonth})}">
                 <span class="summary-icon"><i class="fa-solid fa-rotate-left"></i></span>
                 <div>
                     <small>Hoàn lại khách</small>
                     <strong class="money-value" th:text="${#numbers.formatDecimal(monthlyRefundAmount, 0, 'POINT', 0, 'POINT') + ' VNĐ'}">0 VNĐ</strong>
-                    <a class="finance-card-detail" th:href="@{/owner/dashboard/customer-refunds(month=${selectedMonth})}">
+                    <span class="finance-card-detail">
                         Xem chi tiết <i class="fa-solid fa-arrow-right"></i>
-                    </a>
+                    </span>
                 </div>
-            </div>
-            <div class="revenue-summary-card">
+            </a>
+            <a class="revenue-summary-card" th:href="@{/owner/dashboard/shipping-fees(month=${selectedMonth})}">
                 <span class="summary-icon"><i class="fa-solid fa-truck-fast"></i></span>
                 <div>
                     <small>Phí ship</small>
                     <strong class="money-value" th:text="${#numbers.formatDecimal(monthlyShippingFee, 0, 'POINT', 0, 'POINT') + ' VNĐ'}">0 VNĐ</strong>
-                    <a class="finance-card-detail" th:href="@{/owner/dashboard/shipping-fees(month=${selectedMonth})}">
+                    <span class="finance-card-detail">
                         Xem chi tiết <i class="fa-solid fa-arrow-right"></i>
-                    </a>
+                    </span>
                 </div>
-            </div>
-            <div class="revenue-summary-card">
+            </a>
+            <a class="revenue-summary-card" th:href="@{/owner/dashboard/crane-fees(month=${selectedMonth})}">
                 <span class="summary-icon"><i class="fa-solid fa-truck-ramp-box"></i></span>
                 <div>
                     <small>Phí cẩu</small>
                     <strong class="money-value" th:text="${#numbers.formatDecimal(monthlyCraneFee, 0, 'POINT', 0, 'POINT') + ' VNĐ'}">0 VNĐ</strong>
-                    <a class="finance-card-detail" th:href="@{/owner/dashboard/crane-fees(month=${selectedMonth})}">
+                    <span class="finance-card-detail">
                         Xem chi tiết <i class="fa-solid fa-arrow-right"></i>
-                    </a>
+                    </span>
                 </div>
-            </div>
+            </a>
         </div>
     </section>
 

@@ -3,6 +3,7 @@ package com.example.bonsai_shop.customer.controller;
 import com.example.bonsai_shop.entity.Product;
 import com.example.bonsai_shop.entity.User;
 import com.example.bonsai_shop.customer.repository.UserRepository;
+import com.example.bonsai_shop.entity.LiveSession;
 import com.example.bonsai_shop.livestream.repository.LiveSessionRepository;
 import com.example.bonsai_shop.product.service.ProductService;
 import lombok.RequiredArgsConstructor;
@@ -113,6 +114,11 @@ public class HomeController {
         // Find the currently active session to show it
         liveSessionRepository.findFirstByStatusOrderByStartTimeDesc("ONGOING")
                 .ifPresent(session -> model.addAttribute("activeSession", session));
+        
+        // Lấy danh sách các phiên Live Stream đã kết thúc để phát lại trên giao diện khách hàng
+        List<LiveSession> pastSessions = liveSessionRepository.findByStatusOrderByStartTimeDesc("ENDED");
+        model.addAttribute("pastSessions", pastSessions);
+        
         model.addAttribute("activePage", "live");
         return "customer/live";
     }
