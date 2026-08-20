@@ -74,6 +74,7 @@
                                 th:each="product : ${availableProducts}"
                                 th:attr="data-product-id=${product.productId},
                                          data-search-text=${#strings.toLowerCase(product.productCode + ' ' + product.productName)},
+                                         data-detail-url=@{/product/{id}(id=${product.productId})},
                                          data-code=${product.productCode},
                                          data-name=${product.productName},
                                          data-segment=${product.segment != null ? product.segment.segmentName : 'N/A'},
@@ -86,12 +87,11 @@
                     </div>
 
                     <div class="walk-in-selected-product hidden" id="walkInSelectedProduct">
-                        <div class="walk-in-selected-title">✓ Đã chọn</div>
                         <div class="walk-in-selected-body">
                             <img id="walkInSelectedImage" src="" alt="Thumbnail">
                             <div class="walk-in-selected-info">
                                 <strong id="walkInSelectedCode">E-010</strong>
-                                <span id="walkInSelectedName">Tùng Kim Cương Dáng Huyền</span>
+                                <a id="walkInSelectedName" class="walk-in-product-link" href="#" target="_blank" rel="noopener">Tùng Kim Cương Dáng Huyền</a>
                                 <small id="walkInSelectedSegment">Premium</small>
                                 <b id="walkInSelectedPrice">135.000.000đ</b>
                             </div>
@@ -232,6 +232,8 @@
                                     th:data-customer-phone="${order.customerPhone}"
                                     th:data-customer-email="${order.customerEmail != null ? order.customerEmail : '-'}"
                                     th:data-shipping-address="${order.shippingAddress}"
+                                    th:data-product-detail-url="${!#lists.isEmpty(order.orderDetails) ? '/product/' + order.orderDetails[0].product.productId : '#'}"
+                                    th:data-product-code="${!#lists.isEmpty(order.orderDetails) ? order.orderDetails[0].product.productCode : '-'}"
                                     th:data-product-name="${!#lists.isEmpty(order.orderDetails) ? order.orderDetails[0].product.productName : '-'}"
                                     th:data-product-price="${!#lists.isEmpty(order.orderDetails) ? order.orderDetails[0].priceAtPurchase : 0}"
                                     th:data-product-image="${(!#lists.isEmpty(order.orderDetails) && order.orderDetails[0].product.firstImageUrl != null) ? order.orderDetails[0].product.firstImageUrl : ''}"
@@ -323,12 +325,13 @@
 
                 <div class="drawer-section">
                     <h4 class="section-title">Thông tin tác phẩm Bonsai</h4>
-                    <div class="product-card-info">
-                        <img src="" id="drawerProdImg" class="product-card-img" alt="Bonsai Image">
-                        <div class="product-card-details">
-                            <span class="product-card-name" id="drawerProdName">Bonsai Name</span>
-                            <span class="product-card-price" id="drawerProdPrice">0 VND</span>
-                            <span style="font-size:12px; color:var(--text-muted);">Số lượng đặt: <strong>1</strong></span>
+                    <div class="walk-in-drawer-product-card">
+                        <img src="" id="drawerProdImg" class="walk-in-drawer-product-img" alt="Bonsai Image">
+                        <div class="walk-in-drawer-product-info">
+                            <h5><a id="drawerProdName" class="walk-in-product-link" href="#" target="_blank" rel="noopener">Bonsai Name</a></h5>
+                            <div class="walk-in-drawer-product-meta">
+                                <span>Mã cây: <strong id="drawerProdCode">-</strong></span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -604,7 +607,7 @@
         paymentMethod: document.getElementById('drawerPaymentMethod'),
         productImage: document.getElementById('drawerProdImg'),
         productName: document.getElementById('drawerProdName'),
-        productPrice: document.getElementById('drawerProdPrice'),
+        productCode: document.getElementById('drawerProdCode'),
         notes: document.getElementById('drawerNotes'),
         craneFee: document.getElementById('drawerCraneFee'),
         shippingFee: document.getElementById('drawerShippingFee'),
@@ -812,6 +815,7 @@
         selectedImage.onerror = function () { selectedImage.src = productFallbackImage; };
         selectedCode.textContent = data.code || '-';
         selectedName.textContent = data.name || '-';
+        selectedName.href = data.detailUrl || '#';
         selectedSegment.textContent = data.segment || 'N/A';
         selectedPrice.textContent = formatInputVnd(data.price) + 'đ';
         selectedProduct.classList.remove('hidden');
@@ -916,7 +920,8 @@
         fields.customerAddress.textContent = data.shippingAddress || '-';
         fields.paymentMethod.textContent = data.paymentMethod || 'CASH';
         fields.productName.textContent = data.productName || '-';
-        fields.productPrice.textContent = formatVnd(data.productPrice);
+        fields.productName.href = data.productDetailUrl || '#';
+        fields.productCode.textContent = data.productCode || '-';
         fields.productImage.src = data.productImage || fallbackImage;
         fields.productImage.onerror = function () { fields.productImage.src = fallbackImage; };
         fields.notes.textContent = data.notes || 'Không có ghi chú thêm.';

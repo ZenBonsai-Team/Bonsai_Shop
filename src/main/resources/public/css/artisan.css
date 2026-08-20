@@ -1462,11 +1462,6 @@ textarea {
     padding: 16px 0;
 }
 
-.walk-in-selected-title {
-    color: #2b7a4c;
-    font-weight: 800;
-}
-
 .walk-in-selected-body {
     align-items: center;
     display: grid;
@@ -1500,6 +1495,25 @@ textarea {
     font-weight: 800;
 }
 
+.walk-in-product-link {
+    color: #1c3322;
+    font-weight: 850;
+    text-decoration: none;
+    transition: color 0.15s ease;
+}
+
+.walk-in-product-link::after {
+    content: " ↗";
+    color: #8a958d;
+    font-size: 0.78em;
+    font-weight: 700;
+}
+
+.walk-in-product-link:hover {
+    color: #2d6a4f;
+    text-decoration: underline;
+}
+
 .walk-in-selected-info small {
     color: #6c757d;
     font-weight: 700;
@@ -1508,6 +1522,17 @@ textarea {
 .walk-in-selected-info b {
     color: #b8926a;
     font-size: 1.05rem;
+}
+
+.walk-in-selected-badge {
+    background: #e8f5ec;
+    border: 1px solid #bfe3cb;
+    border-radius: 999px;
+    color: #267347;
+    font-size: 11px;
+    font-weight: 800;
+    padding: 4px 9px;
+    text-transform: uppercase;
 }
 
 .walk-in-edit-form {
@@ -1576,6 +1601,62 @@ textarea {
     font-style: italic;
     padding: 8px;
     white-space: pre-line;
+}
+
+.walk-in-drawer-product-card {
+    background: linear-gradient(135deg, #fbfaf5 0%, #f2efe6 100%);
+    border: 1px solid #e3ddcf;
+    border-radius: 16px;
+    box-shadow: 0 10px 24px rgba(28, 51, 34, 0.06);
+    display: grid;
+    gap: 16px;
+    grid-template-columns: 132px minmax(0, 1fr);
+    padding: 16px;
+}
+
+.walk-in-drawer-product-img {
+    aspect-ratio: 1 / 1;
+    background: #f1f3ed;
+    border: 1px solid #e6e8df;
+    border-radius: 14px;
+    height: auto;
+    object-fit: cover;
+    width: 100%;
+}
+
+.walk-in-drawer-product-info {
+    align-content: center;
+    display: grid;
+    gap: 10px;
+    min-width: 0;
+}
+
+.walk-in-drawer-product-info h5 {
+    color: #1c3322;
+    font-size: 1.15rem;
+    font-weight: 850;
+    margin: 0;
+    overflow-wrap: anywhere;
+}
+
+.walk-in-drawer-product-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.walk-in-drawer-product-meta span {
+    background: #fff;
+    border: 1px solid #eee8dc;
+    border-radius: 999px;
+    color: #627064;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 5px 10px;
+}
+
+.walk-in-drawer-product-meta strong {
+    color: #1c3322;
 }
 
 .walk-in-cancel-box .walk-in-cancel-helper {
