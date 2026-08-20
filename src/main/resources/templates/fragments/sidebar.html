@@ -98,12 +98,6 @@
 
             <!-- 4. ARTISAN MENU -->
             <th:block sec:authorize="hasRole('ARTISAN')">
-                <a th:href="@{/artisan}" 
-                   class="sidebar-nav-item" 
-                   th:classappend="${activePage == 'dashboard' or activePage == 'artisan-dashboard' ? 'active' : ''}">
-                    <span class="nav-icon"><i class="fa-solid fa-gauge-high"></i></span>
-                    <span>Bảng điều khiển</span>
-                </a>
                 <a th:href="@{/artisan/products}" 
                    class="sidebar-nav-item" 
                    th:classappend="${activePage == 'products' or activePage == 'artisan-products' ? 'active' : ''}">

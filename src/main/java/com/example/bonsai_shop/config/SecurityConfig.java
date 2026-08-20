@@ -175,8 +175,8 @@ public class SecurityConfig {
                                 // Moderator xu ly don hang vao dashboard don.
                                 response.sendRedirect("/moderator/orders");
                         } else if (isArtisan) {
-                                // Artisan vao khu vuc quan ly san pham/lich cua nghe nhan.
-                                response.sendRedirect("/artisan");
+                                // Artisan vao thang trang quan ly san pham.
+                                response.sendRedirect("/artisan/products");
                         } else {
                                 // Customer hoac role mac dinh ve trang chu.
                                 response.sendRedirect("/home");
