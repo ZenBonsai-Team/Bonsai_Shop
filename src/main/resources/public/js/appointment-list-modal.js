@@ -127,7 +127,7 @@ document.addEventListener("DOMContentLoaded", () => {
             <div class="apt-list-item-main">
                 <div>
                     <span class="apt-status" data-status="${appointment.status || "PENDING"}">${statusLabels[appointment.status] || appointment.status || "Chờ duyệt"}</span>
-                    <h3>Lịch thăm vườn Bonsai Luxury</h3>
+                    <h3>Lịch thăm vườn Bonsai </h3>
                     <div class="apt-list-meta">
                         <span><i class="fa-regular fa-calendar" aria-hidden="true"></i> ${dateTime.date}</span>
                         <span><i class="fa-regular fa-clock" aria-hidden="true"></i> ${dateTime.time}</span>
@@ -135,7 +135,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 </div>
             </div>
             <div class="apt-detail-actions">
-                <span class="apt-list-code">APT-${appointment.appointmentId}</span>
+                <span class="apt-list-code">${appointment.appointmentId}</span>
                 <button type="button" class="apt-btn apt-btn-primary" data-view-appointment="${appointment.appointmentId}">Xem chi tiết</button>
             </div>
         `;
@@ -174,7 +174,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const dateTime = formatDateTime(appointment.appointmentDate);
         const isPending = appointment.status === "PENDING";
 
-        $("#aptDetailCode").textContent = `APT-${appointment.appointmentId}`;
+        $("#aptDetailCode").textContent = `${appointment.appointmentId}`;
         $("#aptDetailStatus").textContent = statusLabels[appointment.status] || appointment.status || "Chờ duyệt";
         $("#aptDetailDate").textContent = dateTime.date;
         $("#aptDetailTime").textContent = dateTime.time;

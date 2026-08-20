@@ -449,6 +449,21 @@ a {
     box-shadow: 0 0 0 3px rgba(6, 33, 15, 0.08);
 }
 
+.form-group input.is-valid {
+    border-color: #198754;
+    background-color: #ffffff;
+}
+
+.form-group input.is-invalid {
+    border-color: #dc3545;
+    background-color: #fff7f7;
+}
+
+.form-group input.is-invalid:focus {
+    border-color: #dc3545;
+    box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.12);
+}
+
 .form-group input:disabled {
     background: #f3f3ee;
     color: #999;
@@ -456,12 +471,17 @@ a {
 }
 
 .field-error {
+    display: none;
     color: #991b1b;
     font-size: 13px;
     font-weight: 600;
     line-height: 1.4;
     min-height: 18px;
     margin-top: 6px;
+}
+
+.form-group input.is-invalid + .field-error {
+    display: block;
 }
 
 .btn-submit {

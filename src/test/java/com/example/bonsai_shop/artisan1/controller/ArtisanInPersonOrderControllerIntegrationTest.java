@@ -73,7 +73,7 @@ class ArtisanInPersonOrderControllerIntegrationTest {
 
                 when(inPersonOrderService.getAvailableProducts("artisan@test.com"))
                                 .thenReturn(availableProducts);
-                when(inPersonOrderService.getInPersonOrders("artisan@test.com", "ALL", 0, 10))
+                when(inPersonOrderService.getInPersonOrders("artisan@test.com", "ALL", "", 0, 10))
                                 .thenReturn(orders);
 
                 mockMvc.perform(get("/artisan/in-person-order"))
@@ -87,7 +87,7 @@ class ArtisanInPersonOrderControllerIntegrationTest {
                                 .andExpect(model().attribute("cancelledStatus", "CANCELLED"));
 
                 verify(inPersonOrderService).getAvailableProducts("artisan@test.com");
-                verify(inPersonOrderService).getInPersonOrders("artisan@test.com", "ALL", 0, 10);
+                verify(inPersonOrderService).getInPersonOrders("artisan@test.com", "ALL", "", 0, 10);
                 verify(orderExpirationService).cancelExpiredInPersonOrders();
         }
 
@@ -97,7 +97,7 @@ class ArtisanInPersonOrderControllerIntegrationTest {
 
                 when(inPersonOrderService.getAvailableProducts("artisan@test.com"))
                                 .thenReturn(List.of(product(101)));
-                when(inPersonOrderService.getInPersonOrders("artisan@test.com", "PENDING_PAYMENT", 0, 10))
+                when(inPersonOrderService.getInPersonOrders("artisan@test.com", "PENDING_PAYMENT", "", 0, 10))
                                 .thenReturn(pendingOrders);
 
                 mockMvc.perform(get("/artisan/in-person-order")
@@ -107,7 +107,7 @@ class ArtisanInPersonOrderControllerIntegrationTest {
                                 .andExpect(model().attribute("selectedStatus", "PENDING_PAYMENT"))
                                 .andExpect(model().attribute("orders", pendingOrders));
 
-                verify(inPersonOrderService).getInPersonOrders("artisan@test.com", "PENDING_PAYMENT", 0, 10);
+                verify(inPersonOrderService).getInPersonOrders("artisan@test.com", "PENDING_PAYMENT", "", 0, 10);
         }
 
         @Test
@@ -116,7 +116,7 @@ class ArtisanInPersonOrderControllerIntegrationTest {
 
                 when(inPersonOrderService.getAvailableProducts("artisan@test.com"))
                                 .thenReturn(List.of(product(101)));
-                when(inPersonOrderService.getInPersonOrders("artisan@test.com", "ALL", 1, 10))
+                when(inPersonOrderService.getInPersonOrders("artisan@test.com", "ALL", "", 1, 10))
                                 .thenReturn(secondPage);
 
                 mockMvc.perform(get("/artisan/in-person-order")
@@ -125,7 +125,26 @@ class ArtisanInPersonOrderControllerIntegrationTest {
                                 .andExpect(view().name("artisan/in-person-order"))
                                 .andExpect(model().attribute("orders", secondPage));
 
-                verify(inPersonOrderService).getInPersonOrders("artisan@test.com", "ALL", 1, 10);
+                verify(inPersonOrderService).getInPersonOrders("artisan@test.com", "ALL", "", 1, 10);
+        }
+
+        @Test
+        void index_WhenKeywordProvided_ShouldPassTrimmedKeywordToService() throws Exception {
+                Page<Order> orders = new PageImpl<>(List.of(order(1, "PENDING_PAYMENT")));
+
+                when(inPersonOrderService.getAvailableProducts("artisan@test.com"))
+                                .thenReturn(List.of(product(101)));
+                when(inPersonOrderService.getInPersonOrders("artisan@test.com", "ALL", "BSMS-001", 0, 10))
+                                .thenReturn(orders);
+
+                mockMvc.perform(get("/artisan/in-person-order")
+                                .param("keyword", "  BSMS-001  "))
+                                .andExpect(status().isOk())
+                                .andExpect(view().name("artisan/in-person-order"))
+                                .andExpect(model().attribute("selectedKeyword", "BSMS-001"))
+                                .andExpect(model().attribute("orders", orders));
+
+                verify(inPersonOrderService).getInPersonOrders("artisan@test.com", "ALL", "BSMS-001", 0, 10);
         }
 
         @Test
@@ -337,25 +356,23 @@ class ArtisanInPersonOrderControllerIntegrationTest {
         @Test
         void cancel_WhenPendingOrderIsValid_ShouldRedirectWithSuccess() throws Exception {
                 Order order = order(1, "CANCELLED");
-                when(inPersonOrderService.cancelInPersonOrder("artisan@test.com", 1, "Customer changed mind"))
+                when(inPersonOrderService.cancelInPersonOrder("artisan@test.com", 1))
                                 .thenReturn(order);
 
-                mockMvc.perform(post("/artisan/in-person-order/1/cancel")
-                                .param("reason", "Customer changed mind"))
+                mockMvc.perform(post("/artisan/in-person-order/1/cancel"))
                                 .andExpect(status().is3xxRedirection())
                                 .andExpect(redirectedUrl("/artisan/in-person-order#walkInOrdersSection"))
                                 .andExpect(flash().attributeExists("success"));
 
-                verify(inPersonOrderService).cancelInPersonOrder("artisan@test.com", 1, "Customer changed mind");
+                verify(inPersonOrderService).cancelInPersonOrder("artisan@test.com", 1);
         }
 
         @Test
         void cancel_WhenOrderAlreadyCompleted_ShouldRedirectWithError() throws Exception {
-                when(inPersonOrderService.cancelInPersonOrder("artisan@test.com", 1, "Too late"))
+                when(inPersonOrderService.cancelInPersonOrder("artisan@test.com", 1))
                                 .thenThrow(new RuntimeException("Order cannot be cancelled"));
 
-                mockMvc.perform(post("/artisan/in-person-order/1/cancel")
-                                .param("reason", "Too late"))
+                mockMvc.perform(post("/artisan/in-person-order/1/cancel"))
                                 .andExpect(status().is3xxRedirection())
                                 .andExpect(redirectedUrl("/artisan/in-person-order#walkInOrdersSection"))
                                 .andExpect(flash().attribute("error", "Order cannot be cancelled"));
@@ -363,11 +380,10 @@ class ArtisanInPersonOrderControllerIntegrationTest {
 
         @Test
         void cancel_WhenOrderBelongsToAnotherArtisan_ShouldRedirectWithError() throws Exception {
-                when(inPersonOrderService.cancelInPersonOrder("artisan@test.com", 1, "Not mine"))
+                when(inPersonOrderService.cancelInPersonOrder("artisan@test.com", 1))
                                 .thenThrow(new RuntimeException("Order does not belong to current artisan"));
 
-                mockMvc.perform(post("/artisan/in-person-order/1/cancel")
-                                .param("reason", "Not mine"))
+                mockMvc.perform(post("/artisan/in-person-order/1/cancel"))
                                 .andExpect(status().is3xxRedirection())
                                 .andExpect(redirectedUrl("/artisan/in-person-order#walkInOrdersSection"))
                                 .andExpect(flash().attribute("error", "Order does not belong to current artisan"));

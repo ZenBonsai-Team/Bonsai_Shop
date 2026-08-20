@@ -110,6 +110,7 @@ class ArtisanAppointmentControllerTest {
         appointmentSettingRepository.deleteAll();
     }
 
+    // Test kiem tra artisan mo trang lich theo ngay duoc chon thi tra ve view quan ly lich.
     @Test
     void showAppointments_WhenDateIsProvided_ShouldReturnManageScheduleView() throws Exception {
         LocalDate selectedDate = LocalDate.now().plusDays(2);
@@ -125,6 +126,7 @@ class ArtisanAppointmentControllerTest {
                 .andExpect(model().attribute("appointments", hasSize(1)));
     }
 
+    // Test kiem tra artisan mo trang lich khong co ngay thi mac dinh dung ngay hien tai.
     @Test
     void showAppointments_WhenDateIsMissing_ShouldUseToday() throws Exception {
         LocalDate today = LocalDate.now();
@@ -138,6 +140,7 @@ class ArtisanAppointmentControllerTest {
                 .andExpect(model().attribute("appointments", hasSize(1)));
     }
 
+    // Test kiem tra ngay khong co lich hen thi model tra ve danh sach rong.
     @Test
     void showAppointments_WhenNoAppointments_ShouldReturnEmptyModelList() throws Exception {
         LocalDate selectedDate = LocalDate.now().plusDays(3);
@@ -151,6 +154,7 @@ class ArtisanAppointmentControllerTest {
                 .andExpect(model().attribute("appointments", empty()));
     }
 
+    // Test kiem tra API lay lich theo ngay tra ve JSON danh sach lich hen.
     @Test
     void getAppointmentsByDate_WhenDateIsProvided_ShouldReturnAppointmentsJson() throws Exception {
         LocalDate selectedDate = LocalDate.now().plusDays(4);
@@ -172,6 +176,7 @@ class ArtisanAppointmentControllerTest {
                 .andExpect(jsonPath("$[0].customerEmail").value(CUSTOMER_EMAIL));
     }
 
+    // Test kiem tra API lay lich khong co ngay thi mac dinh dung ngay hien tai.
     @Test
     void getAppointmentsByDate_WhenDateIsMissing_ShouldUseToday() throws Exception {
         LocalDate today = LocalDate.now();
@@ -184,6 +189,7 @@ class ArtisanAppointmentControllerTest {
                 .andExpect(jsonPath("$[0].appointmentId").value(appointment.getAppointmentId()));
     }
 
+    // Test kiem tra API lay lich khi khong co du lieu thi tra ve JSON rong.
     @Test
     void getAppointmentsByDate_WhenNoAppointments_ShouldReturnEmptyJsonList() throws Exception {
         LocalDate selectedDate = LocalDate.now().plusDays(5);
@@ -195,6 +201,7 @@ class ArtisanAppointmentControllerTest {
                 .andExpect(jsonPath("$", empty()));
     }
 
+    // Test kiem tra artisan duyet lich PENDING va quay lai ngay dang chon.
     @Test
     void updateAppointment_WhenPendingAppointmentAndDateProvided_ShouldApproveAndRedirectSelectedDate() throws Exception {
         LocalDate selectedDate = LocalDate.now().plusDays(6);
@@ -216,6 +223,7 @@ class ArtisanAppointmentControllerTest {
         assertEquals("APPROVED", updatedAppointment.getStatus());
     }
 
+    // Test kiem tra duyet lich bi service tu choi thi quay lai ngay dang chon kem loi.
     @Test
     void updateAppointment_WhenServiceThrows_ShouldRedirectSelectedDateWithError() throws Exception {
         LocalDate selectedDate = LocalDate.now().plusDays(7);
@@ -237,6 +245,7 @@ class ArtisanAppointmentControllerTest {
         assertEquals("APPROVED", unchangedAppointment.getStatus());
     }
 
+    // Test kiem tra duyet lich khi thieu ngay thi quay ve trang appointments goc.
     @Test
     void updateAppointment_WhenDateIsMissing_ShouldRedirectAppointmentsRoot() throws Exception {
         ViewingAppointment appointment = createAppointment(
@@ -255,6 +264,7 @@ class ArtisanAppointmentControllerTest {
                 .andExpect(flash().attributeExists("success"));
     }
 
+    // Test kiem tra artisan hoan tat lich APPROVED va quay lai ngay dang chon.
     @Test
     void markComplete_WhenApprovedPastAppointmentAndDateProvided_ShouldCompleteAndRedirectSelectedDate() throws Exception {
         LocalDate selectedDate = LocalDate.now().minusDays(1);
@@ -276,6 +286,7 @@ class ArtisanAppointmentControllerTest {
         assertEquals("COMPLETED", updatedAppointment.getStatus());
     }
 
+    // Test kiem tra hoan tat lich bi service tu choi thi quay lai ngay dang chon kem loi.
     @Test
     void markComplete_WhenServiceThrows_ShouldRedirectSelectedDateWithError() throws Exception {
         LocalDate selectedDate = LocalDate.now().minusDays(2);
@@ -297,6 +308,7 @@ class ArtisanAppointmentControllerTest {
         assertEquals("PENDING", unchangedAppointment.getStatus());
     }
 
+    // Test kiem tra hoan tat lich khi thieu ngay thi quay ve trang appointments goc.
     @Test
     void markComplete_WhenDateIsMissing_ShouldRedirectAppointmentsRoot() throws Exception {
         ViewingAppointment appointment = createAppointment(
@@ -315,6 +327,7 @@ class ArtisanAppointmentControllerTest {
                 .andExpect(flash().attributeExists("success"));
     }
 
+    // Test kiem tra cap nhat cau hinh lich hen hop le thi controller chuyen huong thanh cong.
     @Test
     void updateSetting_WhenValid_ShouldUpdateSettingAndRedirect() throws Exception {
         AppointmentSetting setting = appointmentSettingRepository.save(AppointmentSetting.builder()
@@ -354,6 +367,7 @@ class ArtisanAppointmentControllerTest {
         assertEquals(artisan.getUserId(), updatedSetting.getUpdatedBy().getUserId());
     }
 
+    // Test kiem tra cap nhat cau hinh bi service tu choi thi controller chuyen huong kem loi.
     @Test
     void updateSetting_WhenServiceThrows_ShouldRedirectWithError() throws Exception {
         appointmentSettingRepository.save(AppointmentSetting.builder()
@@ -375,6 +389,7 @@ class ArtisanAppointmentControllerTest {
                 .andExpect(flash().attributeExists("error"));
     }
 
+    // Test kiem tra khong co cau hinh lich hen thi controller chuyen huong kem loi.
     @Test
     void updateSetting_WhenNoSettingExists_ShouldRedirectWithError() throws Exception {
         mockMvc.perform(post("/artisan/appointments/settings")

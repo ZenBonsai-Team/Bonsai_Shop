@@ -275,6 +275,11 @@ public class ArtisanProductService {
         int selectedThumbnailIndex = thumbnailIndex == null
                 ? findDefaultThumbnailIndex(files, mediaTypes, existingMedia.isEmpty())
                 : thumbnailIndex;
+        if (selectedThumbnailIndex >= 0
+                && "VIDEO".equals(resolveMediaType(files.get(selectedThumbnailIndex),
+                        getListValue(mediaTypes, selectedThumbnailIndex)))) {
+            throw new RuntimeException("Video khÃ´ng thá»ƒ Ä‘áº·t lÃ m media Ä‘áº¡i diá»‡n!");
+        }
 
         if (selectedThumbnailIndex >= 0) {
             // Chi mot image duoc lam thumbnail, nen reset thumbnail cu truoc khi luu batch

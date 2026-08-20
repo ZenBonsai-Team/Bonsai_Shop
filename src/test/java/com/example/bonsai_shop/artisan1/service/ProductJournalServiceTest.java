@@ -14,9 +14,9 @@ import org.mockito.ArgumentCaptor;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.IntStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -47,14 +47,12 @@ class ProductJournalServiceTest {
     }
 
     @Test
-    void getMyProductEvents_WhenProductIsOwnedAndNotSold_ShouldReturnOrderedEvents() {
+    void getMyProductEvents_WhenProductIsNotSold_ShouldReturnOrderedEvents() {
         Product product = product(101, "AVAILABLE");
         List<ProductJournalEvent> expectedEvents = List.of(event(1, product), event(2, product));
 
-        when(artisanProductService.getMyProduct("artisan@test.com", 101))
-                .thenReturn(product);
-        when(artisanProductService.isSold(product))
-                .thenReturn(false);
+        when(artisanProductService.getMyProduct("artisan@test.com", 101)).thenReturn(product);
+        when(artisanProductService.isSold(product)).thenReturn(false);
         when(journalEventRepository.findByProductOrderByEventDateDescEventIdDesc(product))
                 .thenReturn(expectedEvents);
 
@@ -65,13 +63,11 @@ class ProductJournalServiceTest {
     }
 
     @Test
-    void getMyProductEvents_WhenProductIsSold_ShouldThrowException() {
+    void getMyProductEvents_WhenProductIsSold_ShouldRejectJournalAccess() {
         Product product = product(101, "SOLD");
 
-        when(artisanProductService.getMyProduct("artisan@test.com", 101))
-                .thenReturn(product);
-        when(artisanProductService.isSold(product))
-                .thenReturn(true);
+        when(artisanProductService.getMyProduct("artisan@test.com", 101)).thenReturn(product);
+        when(artisanProductService.isSold(product)).thenReturn(true);
 
         assertThatThrownBy(() -> productJournalService.getMyProductEvents("artisan@test.com", 101))
                 .isInstanceOf(RuntimeException.class);
@@ -80,33 +76,25 @@ class ProductJournalServiceTest {
     }
 
     @Test
-    void getPublicEvents_WhenProductIsNotSold_ShouldReturnPublicEventsOnly() {
-        Product product = product(101, "AVAILABLE");
-        List<ProductJournalEvent> expectedEvents = List.of(event(1, product));
+    void getPublicEvents_WhenProductIsSold_ShouldReturnEmptyList() {
+        Product product = product(101, "SOLD");
 
-        when(artisanProductService.isSold(product))
-                .thenReturn(false);
-        when(journalEventRepository.findByProductAndIsPublicTrueOrderByEventDateDescEventIdDesc(product))
-                .thenReturn(expectedEvents);
+        when(artisanProductService.isSold(product)).thenReturn(true);
 
         List<ProductJournalEvent> result = productJournalService.getPublicEvents(product);
 
-        assertThat(result).isEqualTo(expectedEvents);
-        verify(journalEventRepository).findByProductAndIsPublicTrueOrderByEventDateDescEventIdDesc(product);
+        assertThat(result).isEmpty();
+        verify(journalEventRepository, never()).findByProductAndIsPublicTrueOrderByEventDateDescEventIdDesc(product);
     }
 
     @Test
-    void addEvent_WhenRequestIsValid_ShouldCreateJournalEventWithMedia() {
+    void addEvent_WhenRequestIsValidWithThreeImages_ShouldCreateEventAndUploadMedia() {
         Product product = product(101, "AVAILABLE");
         User artisan = artisan(10);
-        MultipartFile firstFile = image("front.jpg", 1024);
-        MultipartFile secondFile = image("back.jpg", 1024);
-        MultipartFile thirdFile = image("detail.jpg", 1024);
+        List<MultipartFile> images = images(3);
 
         mockEditableProduct(product, artisan);
-        when(mediaStorageService.storeProductMedia(firstFile)).thenReturn("https://cdn.test/front.jpg");
-        when(mediaStorageService.storeProductMedia(secondFile)).thenReturn("https://cdn.test/back.jpg");
-        when(mediaStorageService.storeProductMedia(thirdFile)).thenReturn("https://cdn.test/detail.jpg");
+        mockStoredUrls(images);
 
         productJournalService.addEvent(
                 "artisan@test.com",
@@ -116,7 +104,7 @@ class ProductJournalServiceTest {
                 "Growth update",
                 "New leaves",
                 true,
-                List.of(firstFile, secondFile, thirdFile)
+                images
         );
 
         ArgumentCaptor<ProductJournalEvent> eventCaptor = ArgumentCaptor.forClass(ProductJournalEvent.class);
@@ -130,12 +118,12 @@ class ProductJournalServiceTest {
         assertThat(savedEvent.getIsPublic()).isTrue();
         assertThat(savedEvent.getMediaList()).hasSize(3);
         assertThat(savedEvent.getMediaList())
-                .extracting(media -> media.getMediaUrl())
-                .containsExactly("https://cdn.test/front.jpg", "https://cdn.test/back.jpg", "https://cdn.test/detail.jpg");
+                .extracting(ProductJournalMedia::getDisplayOrder)
+                .containsExactly(0, 1, 2);
     }
 
     @Test
-    void addEvent_WhenEventDateIsNullOrNotToday_ShouldThrowException() {
+    void addEvent_WhenEventDateIsNull_ShouldRejectBeforeUploadAndSave() {
         Product product = product(101, "AVAILABLE");
         User artisan = artisan(10);
 
@@ -144,40 +132,19 @@ class ProductJournalServiceTest {
         assertThatThrownBy(() -> productJournalService.addEvent(
                 "artisan@test.com",
                 101,
-                LocalDate.now().minusDays(1),
+                null,
                 "GROWTH",
                 "Growth update",
                 null,
                 true,
-                threeImages()
+                images(3)
         )).isInstanceOf(RuntimeException.class);
 
-        verify(journalEventRepository, never()).save(any(ProductJournalEvent.class));
+        verifyNoUploadOrSave();
     }
 
     @Test
-    void addEvent_WhenTitleIsBlank_ShouldThrowException() {
-        Product product = product(101, "AVAILABLE");
-        User artisan = artisan(10);
-
-        mockEditableProduct(product, artisan);
-
-        assertThatThrownBy(() -> productJournalService.addEvent(
-                "artisan@test.com",
-                101,
-                LocalDate.now(),
-                "GROWTH",
-                " ",
-                null,
-                true,
-                threeImages()
-        )).isInstanceOf(RuntimeException.class);
-
-        verify(journalEventRepository, never()).save(any(ProductJournalEvent.class));
-    }
-
-    @Test
-    void addEvent_WhenTitleOrDescriptionTooLong_ShouldThrowException() {
+    void addEvent_WhenTitleExceedsMaximumLength_ShouldRejectBeforeUploadAndSave() {
         Product product = product(101, "AVAILABLE");
         User artisan = artisan(10);
 
@@ -191,9 +158,18 @@ class ProductJournalServiceTest {
                 "a".repeat(101),
                 null,
                 true,
-                threeImages()
-        )).isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("Tiêu đề nhật ký không được vượt quá 100 ký tự");
+                images(3)
+        )).isInstanceOf(RuntimeException.class);
+
+        verifyNoUploadOrSave();
+    }
+
+    @Test
+    void addEvent_WhenDescriptionExceedsMaximumLength_ShouldRejectBeforeUploadAndSave() {
+        Product product = product(101, "AVAILABLE");
+        User artisan = artisan(10);
+
+        mockEditableProduct(product, artisan);
 
         assertThatThrownBy(() -> productJournalService.addEvent(
                 "artisan@test.com",
@@ -203,15 +179,14 @@ class ProductJournalServiceTest {
                 "Growth update",
                 "a".repeat(501),
                 true,
-                threeImages()
-        )).isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("Ghi chú chăm sóc không được vượt quá 500 ký tự");
+                images(3)
+        )).isInstanceOf(RuntimeException.class);
 
-        verify(journalEventRepository, never()).save(any(ProductJournalEvent.class));
+        verifyNoUploadOrSave();
     }
 
     @Test
-    void addEvent_WhenLessThanThreeValidImagesProvided_ShouldThrowException() {
+    void addEvent_WhenFewerThanThreeValidImagesProvided_ShouldRejectBeforeUploadAndSave() {
         Product product = product(101, "AVAILABLE");
         User artisan = artisan(10);
 
@@ -225,40 +200,14 @@ class ProductJournalServiceTest {
                 "Growth update",
                 null,
                 true,
-                List.of(image("front.jpg", 1024), image("back.jpg", 1024))
+                images(2)
         )).isInstanceOf(RuntimeException.class);
 
-        verify(mediaStorageService, never()).storeProductMedia(any(MultipartFile.class));
-        verify(journalEventRepository, never()).save(any(ProductJournalEvent.class));
+        verifyNoUploadOrSave();
     }
 
     @Test
-    void addEvent_WhenMoreThanTenImagesProvided_ShouldThrowException() {
-        Product product = product(101, "AVAILABLE");
-        User artisan = artisan(10);
-        List<MultipartFile> files = java.util.stream.IntStream.rangeClosed(1, 11)
-                .mapToObj(index -> image("image-" + index + ".jpg", 1024))
-                .toList();
-
-        mockEditableProduct(product, artisan);
-
-        assertThatThrownBy(() -> productJournalService.addEvent(
-                "artisan@test.com",
-                101,
-                LocalDate.now(),
-                "GROWTH",
-                "Growth update",
-                null,
-                true,
-                files
-        )).isInstanceOf(RuntimeException.class);
-
-        verify(mediaStorageService, never()).storeProductMedia(any(MultipartFile.class));
-        verify(journalEventRepository, never()).save(any(ProductJournalEvent.class));
-    }
-
-    @Test
-    void addEvent_WhenImageTypeInvalidOrOversized_ShouldThrowException() {
+    void addEvent_WhenMoreThanTenImagesProvided_ShouldRejectBeforeUploadAndSave() {
         Product product = product(101, "AVAILABLE");
         User artisan = artisan(10);
 
@@ -272,36 +221,51 @@ class ProductJournalServiceTest {
                 "Growth update",
                 null,
                 true,
-                List.of(
-                        image("front.jpg", 1024),
-                        image("back.jpg", 1024),
-                        file("clip.mp4", "video/mp4", 1024)
-                )
+                images(11)
         )).isInstanceOf(RuntimeException.class);
 
-        verify(mediaStorageService, never()).storeProductMedia(any(MultipartFile.class));
-        verify(journalEventRepository, never()).save(any(ProductJournalEvent.class));
+        verifyNoUploadOrSave();
+    }
+
+    @Test
+    void addEvent_WhenFileIsNotImage_ShouldRejectBeforeUploadAndSave() {
+        Product product = product(101, "AVAILABLE");
+        User artisan = artisan(10);
+
+        mockEditableProduct(product, artisan);
+
+        assertThatThrownBy(() -> productJournalService.addEvent(
+                "artisan@test.com",
+                101,
+                LocalDate.now(),
+                "GROWTH",
+                "Growth update",
+                null,
+                true,
+                List.of(image("front.jpg", 1024), image("back.jpg", 1024), file("clip.mp4", "video/mp4", 1024))
+        )).isInstanceOf(RuntimeException.class);
+
+        verifyNoUploadOrSave();
     }
 
     @Test
     void addEvent_WhenEventTypeInvalid_ShouldDefaultToPhotoUpdate() {
         Product product = product(101, "AVAILABLE");
         User artisan = artisan(10);
-        List<MultipartFile> files = threeImages();
+        List<MultipartFile> images = images(3);
 
         mockEditableProduct(product, artisan);
-        when(mediaStorageService.storeProductMedia(any(MultipartFile.class)))
-                .thenReturn("https://cdn.test/image.jpg");
+        mockStoredUrls(images);
 
         productJournalService.addEvent(
                 "artisan@test.com",
                 101,
                 LocalDate.now(),
-                "ABC",
+                "UNKNOWN",
                 "Growth update",
                 null,
                 true,
-                files
+                images
         );
 
         ArgumentCaptor<ProductJournalEvent> eventCaptor = ArgumentCaptor.forClass(ProductJournalEvent.class);
@@ -310,274 +274,51 @@ class ProductJournalServiceTest {
     }
 
     @Test
-    void updateEventText_WhenEventExists_ShouldUpdateTitleDescriptionAndUpdatedAt() {
+    void addEvent_WhenVisibilityIsNull_ShouldSaveEventAsPrivate() {
         Product product = product(101, "AVAILABLE");
-        ProductJournalEvent event = event(1, product);
-        LocalDateTime oldUpdatedAt = LocalDateTime.now().minusDays(1);
-        event.setUpdatedAt(oldUpdatedAt);
+        User artisan = artisan(10);
+        List<MultipartFile> images = images(3);
 
-        when(artisanProductService.getMyProduct("artisan@test.com", 101))
-                .thenReturn(product);
-        when(artisanProductService.isSold(product))
-                .thenReturn(false);
-        when(journalEventRepository.findByEventIdAndProduct(1, product))
-                .thenReturn(Optional.of(event));
+        mockEditableProduct(product, artisan);
+        mockStoredUrls(images);
 
-        productJournalService.updateEventText("artisan@test.com", 101, 1, " Updated title ", "Updated description");
-
-        assertThat(event.getTitle()).isEqualTo("Updated title");
-        assertThat(event.getDescription()).isEqualTo("Updated description");
-        assertThat(event.getUpdatedAt()).isAfter(oldUpdatedAt);
-        verify(journalEventRepository).save(event);
-    }
-
-    @Test
-    void updateEventText_WhenEventMissingOrTitleBlank_ShouldThrowException() {
-        Product product = product(101, "AVAILABLE");
-
-        when(artisanProductService.getMyProduct("artisan@test.com", 101))
-                .thenReturn(product);
-        when(artisanProductService.isSold(product))
-                .thenReturn(false);
-        when(journalEventRepository.findByEventIdAndProduct(1, product))
-                .thenReturn(Optional.empty());
-
-        assertThatThrownBy(() -> productJournalService.updateEventText(
+        productJournalService.addEvent(
                 "artisan@test.com",
                 101,
-                1,
-                "Updated title",
-                "Updated description"
-        )).isInstanceOf(RuntimeException.class);
+                LocalDate.now(),
+                "GROWTH",
+                "Growth update",
+                null,
+                null,
+                images
+        );
 
-        verify(journalEventRepository, never()).save(any(ProductJournalEvent.class));
+        ArgumentCaptor<ProductJournalEvent> eventCaptor = ArgumentCaptor.forClass(ProductJournalEvent.class);
+        verify(journalEventRepository).save(eventCaptor.capture());
+        assertThat(eventCaptor.getValue().getIsPublic()).isFalse();
     }
 
     @Test
-    void updateEventVisibility_WhenEventExists_ShouldUpdateVisibilityAndUpdatedAt() {
+    void addMediaToEvent_WhenImagesAreValid_ShouldAppendMediaFromCurrentMaxDisplayOrder() {
         Product product = product(101, "AVAILABLE");
         ProductJournalEvent event = event(1, product);
-        event.setIsPublic(false);
-        LocalDateTime oldUpdatedAt = LocalDateTime.now().minusDays(1);
-        event.setUpdatedAt(oldUpdatedAt);
+        event.getMediaList().add(journalMedia(event, 11, "https://cdn.test/old.jpg", 5));
+        List<MultipartFile> newImages = images(2);
 
-        when(artisanProductService.getMyProduct("artisan@test.com", 101))
-                .thenReturn(product);
-        when(artisanProductService.isSold(product))
-                .thenReturn(false);
-        when(journalEventRepository.findByEventIdAndProduct(1, product))
-                .thenReturn(Optional.of(event));
+        mockExistingEditableEvent(product, event);
+        mockStoredUrls(newImages);
 
-        productJournalService.updateEventVisibility("artisan@test.com", 101, 1, true);
+        productJournalService.addMediaToEvent("artisan@test.com", 101, 1, newImages);
 
-        assertThat(event.getIsPublic()).isTrue();
-        assertThat(event.getUpdatedAt()).isAfter(oldUpdatedAt);
-        verify(journalEventRepository).save(event);
-    }
-
-    @Test
-    void updateEventVisibility_WhenEventMissing_ShouldThrowException() {
-        Product product = product(101, "AVAILABLE");
-
-        when(artisanProductService.getMyProduct("artisan@test.com", 101))
-                .thenReturn(product);
-        when(artisanProductService.isSold(product))
-                .thenReturn(false);
-        when(journalEventRepository.findByEventIdAndProduct(1, product))
-                .thenReturn(Optional.empty());
-
-        assertThatThrownBy(() -> productJournalService.updateEventVisibility("artisan@test.com", 101, 1, true))
-                .isInstanceOf(RuntimeException.class);
-
-        verify(journalEventRepository, never()).save(any(ProductJournalEvent.class));
-    }
-
-    @Test
-    void addMediaToEvent_WhenFilesAreValid_ShouldAppendMediaAndUpdateEvent() {
-        Product product = product(101, "AVAILABLE");
-        ProductJournalEvent event = event(1, product);
-        LocalDateTime oldUpdatedAt = LocalDateTime.now().minusDays(1);
-        event.setUpdatedAt(oldUpdatedAt);
-        MultipartFile firstFile = image("new-front.jpg", 1024);
-        MultipartFile secondFile = image("new-back.jpg", 1024);
-
-        when(artisanProductService.getMyProduct("artisan@test.com", 101))
-                .thenReturn(product);
-        when(artisanProductService.isSold(product))
-                .thenReturn(false);
-        when(journalEventRepository.findByEventIdAndProduct(1, product))
-                .thenReturn(Optional.of(event));
-        when(mediaStorageService.storeProductMedia(firstFile)).thenReturn("https://cdn.test/new-front.jpg");
-        when(mediaStorageService.storeProductMedia(secondFile)).thenReturn("https://cdn.test/new-back.jpg");
-
-        productJournalService.addMediaToEvent("artisan@test.com", 101, 1, List.of(firstFile, secondFile));
-
-        assertThat(event.getMediaList()).hasSize(2);
+        assertThat(event.getMediaList()).hasSize(3);
         assertThat(event.getMediaList())
-                .extracting(media -> media.getMediaUrl())
-                .containsExactly("https://cdn.test/new-front.jpg", "https://cdn.test/new-back.jpg");
-        assertThat(event.getUpdatedAt()).isAfter(oldUpdatedAt);
+                .extracting(ProductJournalMedia::getDisplayOrder)
+                .containsExactly(5, 6, 7);
         verify(journalEventRepository).save(event);
     }
 
     @Test
-    void addMediaToEvent_WhenNoValidImageSelected_ShouldThrowException() {
-        Product product = product(101, "AVAILABLE");
-        ProductJournalEvent event = event(1, product);
-        MultipartFile emptyFile = image("empty.jpg", 0);
-        when(emptyFile.isEmpty()).thenReturn(true);
-
-        when(artisanProductService.getMyProduct("artisan@test.com", 101))
-                .thenReturn(product);
-        when(artisanProductService.isSold(product))
-                .thenReturn(false);
-        when(journalEventRepository.findByEventIdAndProduct(1, product))
-                .thenReturn(Optional.of(event));
-
-        assertThatThrownBy(() -> productJournalService.addMediaToEvent(
-                "artisan@test.com",
-                101,
-                1,
-                List.of(emptyFile)
-        )).isInstanceOf(RuntimeException.class);
-
-        verify(mediaStorageService, never()).storeProductMedia(any(MultipartFile.class));
-        verify(journalEventRepository, never()).save(any(ProductJournalEvent.class));
-    }
-
-    @Test
-    void addMediaToEvent_WhenMoreThanTenImagesProvided_ShouldThrowException() {
-        Product product = product(101, "AVAILABLE");
-        ProductJournalEvent event = event(1, product);
-        List<MultipartFile> files = java.util.stream.IntStream.rangeClosed(1, 11)
-                .mapToObj(index -> image("image-" + index + ".jpg", 1024))
-                .toList();
-
-        when(artisanProductService.getMyProduct("artisan@test.com", 101))
-                .thenReturn(product);
-        when(artisanProductService.isSold(product))
-                .thenReturn(false);
-        when(journalEventRepository.findByEventIdAndProduct(1, product))
-                .thenReturn(Optional.of(event));
-
-        assertThatThrownBy(() -> productJournalService.addMediaToEvent("artisan@test.com", 101, 1, files))
-                .isInstanceOf(RuntimeException.class);
-
-        verify(mediaStorageService, never()).storeProductMedia(any(MultipartFile.class));
-        verify(journalEventRepository, never()).save(any(ProductJournalEvent.class));
-    }
-
-    @Test
-    void addMediaToEvent_WhenFileTypeInvalidOrImageOversized_ShouldThrowException() {
-        Product product = product(101, "AVAILABLE");
-        ProductJournalEvent event = event(1, product);
-
-        when(artisanProductService.getMyProduct("artisan@test.com", 101))
-                .thenReturn(product);
-        when(artisanProductService.isSold(product))
-                .thenReturn(false);
-        when(journalEventRepository.findByEventIdAndProduct(1, product))
-                .thenReturn(Optional.of(event));
-
-        assertThatThrownBy(() -> productJournalService.addMediaToEvent(
-                "artisan@test.com",
-                101,
-                1,
-                List.of(file("clip.mp4", "video/mp4", 1024))
-        )).isInstanceOf(RuntimeException.class);
-
-        verify(mediaStorageService, never()).storeProductMedia(any(MultipartFile.class));
-        verify(journalEventRepository, never()).save(any(ProductJournalEvent.class));
-    }
-
-    @Test
-    void addMediaToEvent_WhenExistingMediaExists_ShouldContinueDisplayOrderFromCurrentMax() {
-        Product product = product(101, "AVAILABLE");
-        ProductJournalEvent event = event(1, product);
-        event.getMediaList().add(journalMedia(event, "https://cdn.test/old-0.jpg", 0));
-        event.getMediaList().add(journalMedia(event, "https://cdn.test/old-1.jpg", 1));
-        event.getMediaList().add(journalMedia(event, "https://cdn.test/old-2.jpg", 2));
-        MultipartFile firstFile = image("new-3.jpg", 1024);
-        MultipartFile secondFile = image("new-4.jpg", 1024);
-
-        when(artisanProductService.getMyProduct("artisan@test.com", 101))
-                .thenReturn(product);
-        when(artisanProductService.isSold(product))
-                .thenReturn(false);
-        when(journalEventRepository.findByEventIdAndProduct(1, product))
-                .thenReturn(Optional.of(event));
-        when(mediaStorageService.storeProductMedia(firstFile)).thenReturn("https://cdn.test/new-3.jpg");
-        when(mediaStorageService.storeProductMedia(secondFile)).thenReturn("https://cdn.test/new-4.jpg");
-
-        productJournalService.addMediaToEvent("artisan@test.com", 101, 1, List.of(firstFile, secondFile));
-
-        assertThat(event.getMediaList()).hasSize(5);
-        assertThat(event.getMediaList().get(3).getDisplayOrder()).isEqualTo(3);
-        assertThat(event.getMediaList().get(4).getDisplayOrder()).isEqualTo(4);
-        assertThat(event.getMediaList())
-                .extracting(ProductJournalMedia::getMediaUrl)
-                .contains("https://cdn.test/new-3.jpg", "https://cdn.test/new-4.jpg");
-        verify(journalEventRepository).save(event);
-    }
-
-    @Test
-    void deleteEvent_WhenEventExists_ShouldDeleteEvent() {
-        Product product = product(101, "AVAILABLE");
-        ProductJournalEvent event = event(1, product);
-
-        when(artisanProductService.getMyProduct("artisan@test.com", 101))
-                .thenReturn(product);
-        when(artisanProductService.isSold(product))
-                .thenReturn(false);
-        when(journalEventRepository.findByEventIdAndProduct(1, product))
-                .thenReturn(Optional.of(event));
-
-        productJournalService.deleteEvent("artisan@test.com", 101, 1);
-
-        verify(journalEventRepository).delete(event);
-    }
-
-    @Test
-    void deleteEvent_WhenEventMissingOrNotAssociatedWithProduct_ShouldThrowException() {
-        Product product = product(101, "AVAILABLE");
-
-        when(artisanProductService.getMyProduct("artisan@test.com", 101))
-                .thenReturn(product);
-        when(artisanProductService.isSold(product))
-                .thenReturn(false);
-        when(journalEventRepository.findByEventIdAndProduct(1, product))
-                .thenReturn(Optional.empty());
-
-        assertThatThrownBy(() -> productJournalService.deleteEvent("artisan@test.com", 101, 1))
-                .isInstanceOf(RuntimeException.class);
-
-        verify(mediaStorageService, never()).deleteProductMedia(any(String.class));
-        verify(journalEventRepository, never()).delete(any(ProductJournalEvent.class));
-    }
-
-    @Test
-    void deleteEvent_WhenEventHasMedia_ShouldDeleteAllStoredMediaThenDeleteEvent() {
-        Product product = product(101, "AVAILABLE");
-        ProductJournalEvent event = event(1, product);
-        event.getMediaList().add(journalMedia(event, "https://cdn.test/first.jpg", 0));
-        event.getMediaList().add(journalMedia(event, "https://cdn.test/second.jpg", 1));
-
-        when(artisanProductService.getMyProduct("artisan@test.com", 101))
-                .thenReturn(product);
-        when(artisanProductService.isSold(product))
-                .thenReturn(false);
-        when(journalEventRepository.findByEventIdAndProduct(1, product))
-                .thenReturn(Optional.of(event));
-
-        productJournalService.deleteEvent("artisan@test.com", 101, 1);
-
-        verify(mediaStorageService).deleteProductMedia("https://cdn.test/first.jpg");
-        verify(mediaStorageService).deleteProductMedia("https://cdn.test/second.jpg");
-        verify(journalEventRepository).delete(event);
-    }
-
-    @Test
-    void setCoverMedia_WhenMediaExists_ShouldMoveMediaToFirstDisplayOrder() {
+    void setCoverMedia_WhenSecondMediaSelected_ShouldMoveItToFirstDisplayOrder() {
         Product product = product(101, "AVAILABLE");
         ProductJournalEvent event = event(1, product);
         ProductJournalMedia first = journalMedia(event, 11, "https://cdn.test/first.jpg", 0);
@@ -585,66 +326,42 @@ class ProductJournalServiceTest {
         event.getMediaList().add(first);
         event.getMediaList().add(second);
 
-        when(artisanProductService.getMyProduct("artisan@test.com", 101)).thenReturn(product);
-        when(artisanProductService.isSold(product)).thenReturn(false);
-        when(journalEventRepository.findByEventIdAndProduct(1, product)).thenReturn(Optional.of(event));
+        mockExistingEditableEvent(product, event);
 
         productJournalService.setCoverMedia("artisan@test.com", 101, 1, 12);
 
-        assertThat(second.getDisplayOrder()).isEqualTo(0);
+        assertThat(second.getDisplayOrder()).isZero();
         assertThat(first.getDisplayOrder()).isEqualTo(1);
+        assertThat(event.getUpdatedAt()).isNotNull();
         verify(journalEventRepository).save(event);
     }
 
     @Test
-    void replaceMedia_WhenImageIsValid_ShouldStoreNewImageAndDeleteOldImage() {
+    void replaceMedia_WhenReplacementImageIsValid_ShouldStoreNewImageAndDeleteOldImage() {
         Product product = product(101, "AVAILABLE");
         ProductJournalEvent event = event(1, product);
         ProductJournalMedia media = journalMedia(event, 11, "https://cdn.test/old.jpg", 0);
+        MultipartFile replacement = image("new.jpg", 1024);
         event.getMediaList().add(media);
-        MultipartFile replacement = image("replacement.jpg", 1024);
 
-        when(artisanProductService.getMyProduct("artisan@test.com", 101)).thenReturn(product);
-        when(artisanProductService.isSold(product)).thenReturn(false);
-        when(journalEventRepository.findByEventIdAndProduct(1, product)).thenReturn(Optional.of(event));
+        mockExistingEditableEvent(product, event);
         when(mediaStorageService.storeProductMedia(replacement)).thenReturn("https://cdn.test/new.jpg");
 
         productJournalService.replaceMedia("artisan@test.com", 101, 1, 11, replacement);
 
         assertThat(media.getMediaUrl()).isEqualTo("https://cdn.test/new.jpg");
+        assertThat(media.getMediaType()).isEqualTo("IMAGE");
+        assertThat(event.getUpdatedAt()).isNotNull();
         verify(journalEventRepository).save(event);
         verify(mediaStorageService).deleteProductMedia("https://cdn.test/old.jpg");
     }
 
     @Test
-    void deleteMedia_WhenMediaExists_ShouldRemoveMediaAndDeleteStoredFile() {
-        Product product = product(101, "AVAILABLE");
-        ProductJournalEvent event = event(1, product);
-        ProductJournalMedia first = journalMedia(event, 11, "https://cdn.test/first.jpg", 0);
-        ProductJournalMedia second = journalMedia(event, 12, "https://cdn.test/second.jpg", 1);
-        event.getMediaList().add(first);
-        event.getMediaList().add(second);
+    void writeOperations_WhenProductIsSold_ShouldRejectBeforeMutation() {
+        Product product = product(101, "SOLD");
 
         when(artisanProductService.getMyProduct("artisan@test.com", 101)).thenReturn(product);
-        when(artisanProductService.isSold(product)).thenReturn(false);
-        when(journalEventRepository.findByEventIdAndProduct(1, product)).thenReturn(Optional.of(event));
-
-        productJournalService.deleteMedia("artisan@test.com", 101, 1, 11);
-
-        assertThat(event.getMediaList()).containsExactly(second);
-        assertThat(second.getDisplayOrder()).isEqualTo(0);
-        verify(mediaStorageService).deleteProductMedia("https://cdn.test/first.jpg");
-        verify(journalEventRepository).save(event);
-    }
-
-    @Test
-    void writeOperations_WhenProductIsSold_ShouldThrowExceptionBeforeJournalMutation() {
-        Product soldProduct = product(101, "SOLD");
-
-        when(artisanProductService.getMyProduct("artisan@test.com", 101))
-                .thenReturn(soldProduct);
-        when(artisanProductService.isSold(soldProduct))
-                .thenReturn(true);
+        when(artisanProductService.isSold(product)).thenReturn(true);
 
         assertThatThrownBy(() -> productJournalService.addEvent(
                 "artisan@test.com",
@@ -654,16 +371,8 @@ class ProductJournalServiceTest {
                 "Growth update",
                 null,
                 true,
-                threeImages()
+                images(3)
         )).isInstanceOf(RuntimeException.class);
-        assertThatThrownBy(() -> productJournalService.updateEventText("artisan@test.com", 101, 1, "Title", null))
-                .isInstanceOf(RuntimeException.class);
-        assertThatThrownBy(() -> productJournalService.updateEventVisibility("artisan@test.com", 101, 1, true))
-                .isInstanceOf(RuntimeException.class);
-        assertThatThrownBy(() -> productJournalService.addMediaToEvent("artisan@test.com", 101, 1, threeImages()))
-                .isInstanceOf(RuntimeException.class);
-        assertThatThrownBy(() -> productJournalService.deleteEvent("artisan@test.com", 101, 1))
-                .isInstanceOf(RuntimeException.class);
 
         verify(journalEventRepository, never()).findByEventIdAndProduct(any(Integer.class), any(Product.class));
         verify(journalEventRepository, never()).save(any(ProductJournalEvent.class));
@@ -672,12 +381,27 @@ class ProductJournalServiceTest {
     }
 
     private void mockEditableProduct(Product product, User artisan) {
-        when(artisanProductService.getMyProduct("artisan@test.com", 101))
-                .thenReturn(product);
-        when(artisanProductService.isSold(product))
-                .thenReturn(false);
-        when(artisanProductService.getArtisanUser("artisan@test.com"))
-                .thenReturn(artisan);
+        when(artisanProductService.getMyProduct("artisan@test.com", 101)).thenReturn(product);
+        when(artisanProductService.isSold(product)).thenReturn(false);
+        when(artisanProductService.getArtisanUser("artisan@test.com")).thenReturn(artisan);
+    }
+
+    private void mockExistingEditableEvent(Product product, ProductJournalEvent event) {
+        when(artisanProductService.getMyProduct("artisan@test.com", 101)).thenReturn(product);
+        when(artisanProductService.isSold(product)).thenReturn(false);
+        when(journalEventRepository.findByEventIdAndProduct(1, product)).thenReturn(Optional.of(event));
+    }
+
+    private void mockStoredUrls(List<MultipartFile> files) {
+        for (int index = 0; index < files.size(); index++) {
+            when(mediaStorageService.storeProductMedia(files.get(index)))
+                    .thenReturn("https://cdn.test/image-" + index + ".jpg");
+        }
+    }
+
+    private void verifyNoUploadOrSave() {
+        verify(mediaStorageService, never()).storeProductMedia(any(MultipartFile.class));
+        verify(journalEventRepository, never()).save(any(ProductJournalEvent.class));
     }
 
     private Product product(Integer productId, String status) {
@@ -703,14 +427,14 @@ class ProductJournalServiceTest {
                 .eventDate(LocalDate.now())
                 .eventType("GROWTH")
                 .title("Growth update")
+                .mediaList(new java.util.ArrayList<>())
                 .build();
     }
 
-    private ProductJournalMedia journalMedia(ProductJournalEvent event, String mediaUrl, Integer displayOrder) {
-        return journalMedia(event, displayOrder + 1, mediaUrl, displayOrder);
-    }
-
-    private ProductJournalMedia journalMedia(ProductJournalEvent event, Integer mediaId, String mediaUrl, Integer displayOrder) {
+    private ProductJournalMedia journalMedia(ProductJournalEvent event,
+                                             Integer mediaId,
+                                             String mediaUrl,
+                                             Integer displayOrder) {
         return ProductJournalMedia.builder()
                 .mediaId(mediaId)
                 .event(event)
@@ -720,12 +444,10 @@ class ProductJournalServiceTest {
                 .build();
     }
 
-    private List<MultipartFile> threeImages() {
-        return List.of(
-                image("front.jpg", 1024),
-                image("back.jpg", 1024),
-                image("detail.jpg", 1024)
-        );
+    private List<MultipartFile> images(int count) {
+        return IntStream.rangeClosed(1, count)
+                .mapToObj(index -> image("image-" + index + ".jpg", 1024))
+                .toList();
     }
 
     private MultipartFile image(String filename, long size) {

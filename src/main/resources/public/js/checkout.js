@@ -1,3 +1,6 @@
+const CHECKOUT_NAME_MAX_LENGTH = 50;
+const CHECKOUT_ADDRESS_MAX_LENGTH = 255;
+const CHECKOUT_NOTES_MAX_LENGTH = 400;
 document.addEventListener('DOMContentLoaded', () => {
     loadCheckoutSummary();
     
@@ -33,7 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (phoneInput) {
         phoneInput.addEventListener('input', () => {
             phoneInput.value = phoneInput.value.replace(/\D/g, '').slice(0, 10);
-            phoneInput.classList.remove('is-invalid');
+            validateCheckoutField('custPhone');
         });
         phoneInput.addEventListener('keypress', (e) => {
             if (!/[0-9]/.test(e.key)) {
@@ -43,15 +46,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     // Đăng ký xóa trạng thái lỗi khi người dùng nhập liệu lại
-    const inputs = ['custName', 'custEmail', 'custAddress', 'orderNotes'];
+    const inputs = ['custName', 'custPhone', 'custEmail', 'custAddress', 'orderNotes'];
     inputs.forEach(id => {
         const inputEl = document.getElementById(id);
         if (inputEl) {
-            inputEl.addEventListener('input', () => {
-                inputEl.classList.remove('is-invalid');
-            });
+            inputEl.addEventListener('input', () => validateCheckoutField(id));
+            inputEl.addEventListener('blur', () => validateCheckoutField(id));
         }
     });
+    updateNotesCounter();
 });
 
 async function loadCheckoutSummary() {
@@ -140,6 +143,70 @@ function renderSummary(items) {
     document.getElementById('checkoutSubtotal').textContent = formatVND(subtotal);
 }
 
+function setCheckoutFieldState(input, feedbackId, isValid, message) {
+    if (!input) return false;
+    const feedback = feedbackId ? document.getElementById(feedbackId) : null;
+    input.classList.toggle('is-valid', isValid);
+    input.classList.toggle('is-invalid', !isValid);
+    if (feedback && message) feedback.textContent = message;
+    return isValid;
+}
+
+function validateCheckoutField(fieldId) {
+    const input = document.getElementById(fieldId);
+    const value = input?.value?.trim() || '';
+
+    if (fieldId === 'custName') {
+        return setCheckoutFieldState(input, 'nameFeedback', value.length >= 3 && value.length <= CHECKOUT_NAME_MAX_LENGTH, 'H\u1ecd v\u00e0 t\u00ean ng\u01b0\u1eddi nh\u1eadn ph\u1ea3i c\u00f3 t\u1eeb 3 \u0111\u1ebfn 50 k\u00fd t\u1ef1.');
+    }
+
+    if (fieldId === 'custPhone') {
+        return setCheckoutFieldState(input, 'phoneFeedback', /^0\d{9}$/.test(value), 'S\u1ed1 \u0111i\u1ec7n tho\u1ea1i kh\u00f4ng h\u1ee3p l\u1ec7 (10 ch\u1eef s\u1ed1 b\u1eaft \u0111\u1ea7u b\u1eb1ng 0).');
+    }
+
+    if (fieldId === 'custEmail') {
+        return setCheckoutFieldState(input, 'emailFeedback', /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) && value.length <= 255, '\u0110\u1ecba ch\u1ec9 email kh\u00f4ng h\u1ee3p l\u1ec7 ho\u1eb7c v\u01b0\u1ee3t qu\u00e1 255 k\u00fd t\u1ef1.');
+    }
+
+    if (fieldId === 'custAddress') {
+        return setCheckoutFieldState(input, 'addressFeedback', value.length > 0 && value.length <= CHECKOUT_ADDRESS_MAX_LENGTH, '\u0110\u1ecba ch\u1ec9 nh\u1eadn kh\u00f4ng \u0111\u01b0\u1ee3c tr\u1ed1ng v\u00e0 kh\u00f4ng v\u01b0\u1ee3t qu\u00e1 255 k\u00fd t\u1ef1.');
+    }
+
+    if (fieldId === 'orderNotes') {
+        updateNotesCounter();
+        return setCheckoutFieldState(input, 'notesFeedback', value.length <= CHECKOUT_NOTES_MAX_LENGTH, 'Ghi ch\u00fa kh\u00f4ng \u0111\u01b0\u1ee3c v\u01b0\u1ee3t qu\u00e1 400 k\u00fd t\u1ef1.');
+    }
+
+    return true;
+}
+
+function updateNotesCounter() {
+    const notesInput = document.getElementById('orderNotes');
+    const counter = document.getElementById('notesCounter');
+    if (!notesInput || !counter) return;
+
+    const length = notesInput.value.trim().length;
+    counter.textContent = length + '/400';
+    counter.classList.toggle('text-danger', length > CHECKOUT_NOTES_MAX_LENGTH);
+    counter.classList.toggle('text-muted', length <= CHECKOUT_NOTES_MAX_LENGTH);
+}
+
+function validateCheckoutForm() {
+    const fieldIds = ['custName', 'custPhone', 'custEmail', 'custAddress', 'orderNotes'];
+    const firstInvalidFieldId = fieldIds.find(fieldId => !validateCheckoutField(fieldId));
+    if (!firstInvalidFieldId) return true;
+
+    const firstErrorField = document.getElementById(firstInvalidFieldId);
+    const toastEl = document.getElementById('validationToast');
+    if (toastEl) {
+        const toast = new bootstrap.Toast(toastEl);
+        toast.show();
+    }
+    firstErrorField?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    firstErrorField?.focus();
+    return false;
+}
+
 let pendingOrderPayload = null;
 
 async function placeOrder() {
@@ -157,99 +224,9 @@ async function placeOrder() {
     const paymentMethodEl = document.querySelector('input[name="paymentMethod"]:checked');
     const paymentMethod = paymentMethodEl ? paymentMethodEl.value : 'DEPOSIT';
     
-    // --- BẮT ĐẦU VALIDATE PHÍA CLIENT ---
-    let hasError = false;
-    let firstErrorField = null;
-    
-    if (!custName) {
-        custNameEl.classList.add('is-invalid');
-        document.getElementById('nameFeedback').textContent = "Vui lòng nhập họ tên người nhận.";
-        hasError = true;
-        if (!firstErrorField) firstErrorField = custNameEl;
-    } else if (custName.length > 255) {
-        custNameEl.classList.add('is-invalid');
-        document.getElementById('nameFeedback').textContent = "Họ tên người nhận không được vượt quá 255 ký tự.";
-        hasError = true;
-        if (!firstErrorField) firstErrorField = custNameEl;
-    } else {
-        custNameEl.classList.remove('is-invalid');
-    }
-    
-    const phoneRegex = /^0\d{9}$/;
-    if (!custPhone) {
-        custPhoneEl.classList.add('is-invalid');
-        document.getElementById('phoneFeedback').textContent = "Vui lòng nhập số điện thoại liên lạc.";
-        hasError = true;
-        if (!firstErrorField) firstErrorField = custPhoneEl;
-    } else if (!phoneRegex.test(custPhone)) {
-        custPhoneEl.classList.add('is-invalid');
-        document.getElementById('phoneFeedback').textContent = "Số điện thoại không hợp lệ (Cần 10 chữ số bắt đầu bằng số 0).";
-        hasError = true;
-        if (!firstErrorField) firstErrorField = custPhoneEl;
-    } else {
-        custPhoneEl.classList.remove('is-invalid');
-    }
-    
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!custEmail) {
-        custEmailEl.classList.add('is-invalid');
-        document.getElementById('emailFeedback').textContent = "Vui lòng nhập địa chỉ email.";
-        hasError = true;
-        if (!firstErrorField) firstErrorField = custEmailEl;
-    } else if (!emailRegex.test(custEmail)) {
-        custEmailEl.classList.add('is-invalid');
-        document.getElementById('emailFeedback').textContent = "Địa chỉ email không hợp lệ (ví dụ: name@domain.com).";
-        hasError = true;
-        if (!firstErrorField) firstErrorField = custEmailEl;
-    } else if (custEmail.length > 255) {
-        custEmailEl.classList.add('is-invalid');
-        document.getElementById('emailFeedback').textContent = "Địa chỉ email không được vượt quá 255 ký tự.";
-        hasError = true;
-        if (!firstErrorField) firstErrorField = custEmailEl;
-    } else {
-        custEmailEl.classList.remove('is-invalid');
-    }
-    
-    if (!custAddress) {
-        custAddressEl.classList.add('is-invalid');
-        document.getElementById('addressFeedback').textContent = "Vui lòng nhập địa chỉ nhận cây.";
-        hasError = true;
-        if (!firstErrorField) firstErrorField = custAddressEl;
-    } else if (custAddress.length > 500) {
-        custAddressEl.classList.add('is-invalid');
-        document.getElementById('addressFeedback').textContent = "Địa chỉ nhận cây không được vượt quá 500 ký tự.";
-        hasError = true;
-        if (!firstErrorField) firstErrorField = custAddressEl;
-    } else {
-        custAddressEl.classList.remove('is-invalid');
-    }
-
-    const notesEl = document.getElementById('orderNotes');
-    if (notes && notes.length > 500) {
-        if (notesEl) {
-            notesEl.classList.add('is-invalid');
-            document.getElementById('notesFeedback').textContent = "Ghi chú không được vượt quá 500 ký tự.";
-            hasError = true;
-            if (!firstErrorField) firstErrorField = notesEl;
-        }
-    } else {
-        if (notesEl) notesEl.classList.remove('is-invalid');
-    }
-    
-    if (hasError) {
-        const toastEl = document.getElementById('validationToast');
-        if (toastEl) {
-            const toast = new bootstrap.Toast(toastEl);
-            toast.show();
-        }
-        
-        if (firstErrorField) {
-            firstErrorField.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            firstErrorField.focus();
-        }
+    if (!validateCheckoutForm()) {
         return;
     }
-    // --- KẾT THÚC VALIDATE PHÍA CLIENT ---
 
     pendingOrderPayload = {
         customerName: custName,
