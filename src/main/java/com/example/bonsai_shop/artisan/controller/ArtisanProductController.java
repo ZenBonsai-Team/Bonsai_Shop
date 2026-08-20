@@ -24,9 +24,16 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import com.example.bonsai_shop.artisan.dto.ArtisanMediaItemDTO;
+import com.example.bonsai_shop.data.common.CloudinaryFolder;
+import com.example.bonsai_shop.data.service.CloudinaryStorageService;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 @Controller
 @RequestMapping("/artisan/products")
@@ -36,6 +43,7 @@ public class ArtisanProductController {
 
     private final ArtisanProductService artisanProductService;
     private final ProductJournalService productJournalService;
+    private final CloudinaryStorageService cloudinaryStorageService;
 
     @GetMapping
     // Hiển thị danh sách sản phẩm của artisan theo bộ lọc trạng thái.
@@ -146,6 +154,37 @@ public class ArtisanProductController {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
         return "redirect:/artisan/products";
+    }
+
+    @GetMapping("/{productId}/media/signature")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> getUploadSignature(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PathVariable Integer productId,
+            @RequestParam String mediaType) {
+        Product product = artisanProductService.getMyProduct(userDetails.getUsername(), productId);
+        artisanProductService.ensureEditable(product);
+
+        CloudinaryFolder folder = "VIDEO".equalsIgnoreCase(mediaType)
+                ? CloudinaryFolder.PRODUCT_VIDEO
+                : CloudinaryFolder.PRODUCT_IMAGE;
+
+        Map<String, Object> signatureData = cloudinaryStorageService.generateUploadSignature(folder);
+        return ResponseEntity.ok(signatureData);
+    }
+
+    @PostMapping("/{productId}/media/save-batch")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> saveMediaBatch(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PathVariable Integer productId,
+            @RequestBody List<ArtisanMediaItemDTO> mediaItems) {
+        try {
+            artisanProductService.saveMediaBatch(userDetails.getUsername(), productId, mediaItems);
+            return ResponseEntity.ok(Map.of("success", true, "message", "Đã lưu " + mediaItems.size() + " media."));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", e.getMessage()));
+        }
     }
 
     @GetMapping("/{productId}/media")

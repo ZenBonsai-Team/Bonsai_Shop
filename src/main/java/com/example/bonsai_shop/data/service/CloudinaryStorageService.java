@@ -16,6 +16,22 @@ public class CloudinaryStorageService {
 
     private final Cloudinary cloudinary;
 
+    public Map<String, Object> generateUploadSignature(CloudinaryFolder folder) {
+        long timestamp = System.currentTimeMillis() / 1000L;
+        Map<String, Object> params = Map.of(
+                "timestamp", timestamp,
+                "folder", folder.getPath()
+        );
+        String signature = cloudinary.apiSignRequest(params, cloudinary.config.apiSecret);
+        return Map.of(
+                "signature", signature,
+                "timestamp", timestamp,
+                "folder", folder.getPath(),
+                "apiKey", cloudinary.config.apiKey,
+                "cloudName", cloudinary.config.cloudName
+        );
+    }
+
     public CloudinaryUploadResponse uploadImage(MultipartFile file, CloudinaryFolder folder) {
         // Validate MIME va dung luong truoc khi goi Cloudinary de tranh upload file sai loai.
         validateFile(file, "image");
