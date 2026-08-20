@@ -337,25 +337,23 @@ class ArtisanInPersonOrderControllerIntegrationTest {
         @Test
         void cancel_WhenPendingOrderIsValid_ShouldRedirectWithSuccess() throws Exception {
                 Order order = order(1, "CANCELLED");
-                when(inPersonOrderService.cancelInPersonOrder("artisan@test.com", 1, "Customer changed mind"))
+                when(inPersonOrderService.cancelInPersonOrder("artisan@test.com", 1))
                                 .thenReturn(order);
 
-                mockMvc.perform(post("/artisan/in-person-order/1/cancel")
-                                .param("reason", "Customer changed mind"))
+                mockMvc.perform(post("/artisan/in-person-order/1/cancel"))
                                 .andExpect(status().is3xxRedirection())
                                 .andExpect(redirectedUrl("/artisan/in-person-order#walkInOrdersSection"))
                                 .andExpect(flash().attributeExists("success"));
 
-                verify(inPersonOrderService).cancelInPersonOrder("artisan@test.com", 1, "Customer changed mind");
+                verify(inPersonOrderService).cancelInPersonOrder("artisan@test.com", 1);
         }
 
         @Test
         void cancel_WhenOrderAlreadyCompleted_ShouldRedirectWithError() throws Exception {
-                when(inPersonOrderService.cancelInPersonOrder("artisan@test.com", 1, "Too late"))
+                when(inPersonOrderService.cancelInPersonOrder("artisan@test.com", 1))
                                 .thenThrow(new RuntimeException("Order cannot be cancelled"));
 
-                mockMvc.perform(post("/artisan/in-person-order/1/cancel")
-                                .param("reason", "Too late"))
+                mockMvc.perform(post("/artisan/in-person-order/1/cancel"))
                                 .andExpect(status().is3xxRedirection())
                                 .andExpect(redirectedUrl("/artisan/in-person-order#walkInOrdersSection"))
                                 .andExpect(flash().attribute("error", "Order cannot be cancelled"));
@@ -363,11 +361,10 @@ class ArtisanInPersonOrderControllerIntegrationTest {
 
         @Test
         void cancel_WhenOrderBelongsToAnotherArtisan_ShouldRedirectWithError() throws Exception {
-                when(inPersonOrderService.cancelInPersonOrder("artisan@test.com", 1, "Not mine"))
+                when(inPersonOrderService.cancelInPersonOrder("artisan@test.com", 1))
                                 .thenThrow(new RuntimeException("Order does not belong to current artisan"));
 
-                mockMvc.perform(post("/artisan/in-person-order/1/cancel")
-                                .param("reason", "Not mine"))
+                mockMvc.perform(post("/artisan/in-person-order/1/cancel"))
                                 .andExpect(status().is3xxRedirection())
                                 .andExpect(redirectedUrl("/artisan/in-person-order#walkInOrdersSection"))
                                 .andExpect(flash().attribute("error", "Order does not belong to current artisan"));

@@ -175,6 +175,19 @@ textarea {
     display: block;
 }
 
+.field-counter {
+    color: #7a817d;
+    display: block;
+    font-size: 12px;
+    font-weight: 700;
+    margin-top: 4px;
+    text-align: right;
+}
+
+.field-counter.is-over-limit {
+    color: #d32f2f;
+}
+
 .field-invalid input,
 .field-invalid textarea,
 .field-invalid select,
@@ -1563,6 +1576,21 @@ textarea {
     font-style: italic;
     padding: 8px;
     white-space: pre-line;
+}
+
+.walk-in-cancel-box .walk-in-cancel-helper {
+    color: #7c2d2d;
+    font-size: 13px;
+    margin: 14px 0 0;
+}
+
+.walk-in-cancel-box .artisan-action-warning {
+    margin-bottom: 18px;
+}
+
+#walkInCancelSubmitButton:disabled {
+    cursor: not-allowed;
+    opacity: 0.45;
 }
 
 #walkInDrawerPanel {

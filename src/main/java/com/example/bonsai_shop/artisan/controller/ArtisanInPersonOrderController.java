@@ -104,13 +104,12 @@ public class ArtisanInPersonOrderController {
     }
 
     @PostMapping("/{orderId}/cancel")
-    // Hủy đơn tại vườn kèm lý do từ artisan.
+    // Hủy đơn tại vườn với lý do mặc định từ hệ thống.
     public String cancel(@AuthenticationPrincipal UserDetails userDetails,
                          @PathVariable Integer orderId,
-                         @RequestParam(required = false) String reason,
                          RedirectAttributes redirectAttributes) {
         try {
-            Order order = inPersonOrderService.cancelInPersonOrder(userDetails.getUsername(), orderId, reason);
+            Order order = inPersonOrderService.cancelInPersonOrder(userDetails.getUsername(), orderId);
             redirectAttributes.addFlashAttribute("success", "Đã hủy In-person Order " + order.getOrderCode() + " và mở bán lại sản phẩm.");
         } catch (RuntimeException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());

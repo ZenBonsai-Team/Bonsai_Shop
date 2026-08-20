@@ -47,6 +47,8 @@ public class ArtisanInPersonOrderService {
     private static final int CUSTOMER_EMAIL_MAX_LENGTH = 100;
     private static final int SHIPPING_ADDRESS_MAX_LENGTH = 255;
     private static final int NOTES_MAX_LENGTH = 500;
+    private static final int ORDER_NOTE_MAX_LENGTH = 400;
+    private static final String DEFAULT_MANUAL_CANCEL_REASON = "Khách đổi ý không mua.";
     private static final BigDecimal MAX_FEE_AMOUNT = new BigDecimal("200000000");
     private static final BigDecimal MAX_MONEY_AMOUNT = new BigDecimal("999999999999.99");
 
@@ -120,7 +122,7 @@ public class ArtisanInPersonOrderService {
                 .shippingFee(normalizedShippingFee)
                 .orderStatus(STATUS_PENDING_PAYMENT)
                 .orderType(ORDER_TYPE_IN_PERSON)
-                .notes(optionalText(notes, NOTES_MAX_LENGTH, "Ghi chú không được vượt quá 500 ký tự."))
+                .notes(optionalText(notes, ORDER_NOTE_MAX_LENGTH, "Ghi chú không được vượt quá 400 ký tự."))
                 .build();
 
         OrderDetail detail = OrderDetail.builder()
@@ -151,7 +153,7 @@ public class ArtisanInPersonOrderService {
 
     @Transactional
     // Hủy đơn tại vườn, trả sản phẩm về AVAILABLE nếu còn giữ chỗ.
-    public Order cancelInPersonOrder(String artisanEmail, Integer orderId, String reason) {
+    public Order cancelInPersonOrder(String artisanEmail, Integer orderId) {
         User artisanUser = artisanProductService.getArtisanUser(artisanEmail);
         Order order = orderRepository.findByIdWithDetailsForUpdate(orderId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy in-person order."));
@@ -167,7 +169,7 @@ public class ArtisanInPersonOrderService {
 
         String oldStatus = order.getOrderStatus();
         order.setOrderStatus(STATUS_CANCELLED);
-        order.setNotes(appendCancelReason(order.getNotes(), reason));
+        order.setNotes(appendCancelReason(order.getNotes()));
 
         Payment payment = getFirstPayment(order);
         if (payment != null) {
@@ -223,7 +225,7 @@ public class ArtisanInPersonOrderService {
         order.setCraneFee(normalizedCraneFee);
         order.setShippingFee(normalizedShippingFee);
         order.setTotalAmount(totalAmount);
-        order.setNotes(optionalText(notes, NOTES_MAX_LENGTH, "Ghi chú không được vượt quá 500 ký tự."));
+        order.setNotes(optionalText(notes, ORDER_NOTE_MAX_LENGTH, "Ghi chú không được vượt quá 400 ký tự."));
 
         Payment payment = getFirstPayment(order);
         if (payment == null) {
@@ -408,14 +410,17 @@ public class ArtisanInPersonOrderService {
     }
 
     // Gắn lý do hủy vào ghi chú đơn.
-    private String appendCancelReason(String currentNotes, String reason) {
-        String normalizedReason = blankToNull(reason);
-        if (normalizedReason == null) {
-            normalizedReason = "Khách đổi ý không mua.";
-        }
+    private String appendCancelReason(String currentNotes) {
+        String normalizedReason = DEFAULT_MANUAL_CANCEL_REASON;
         String cancelNote = "Lý do hủy: " + normalizedReason;
         String normalizedCurrentNotes = blankToNull(currentNotes);
-        return normalizedCurrentNotes == null ? cancelNote : normalizedCurrentNotes + "\n" + cancelNote;
+        String finalNotes = normalizedCurrentNotes == null ? cancelNote : normalizedCurrentNotes + "\n" + cancelNote;
+        if (finalNotes.length() > NOTES_MAX_LENGTH) {
+            int maxCurrentNotesLength = NOTES_MAX_LENGTH - cancelNote.length() - 1;
+            String truncatedCurrentNotes = normalizedCurrentNotes.substring(0, Math.max(maxCurrentNotesLength, 0)).trim();
+            return truncatedCurrentNotes.isBlank() ? cancelNote : truncatedCurrentNotes + "\n" + cancelNote;
+        }
+        return finalNotes;
     }
 
     // Chuẩn hóa số tiền null thành 0 và chặn giá trị âm.

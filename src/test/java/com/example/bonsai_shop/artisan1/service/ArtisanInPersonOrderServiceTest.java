@@ -219,7 +219,7 @@ class ArtisanInPersonOrderServiceTest {
         Product product = product(101, artisan, "AVAILABLE");
         mockProductLookup(artisan, product);
 
-        assertThatThrownBy(() -> createOrder("CASH", BigDecimal.ZERO, BigDecimal.ZERO, "a".repeat(501)))
+        assertThatThrownBy(() -> createOrder("CASH", BigDecimal.ZERO, BigDecimal.ZERO, "a".repeat(401)))
                 .isInstanceOf(RuntimeException.class);
 
         verifyNoCreateSideEffects();
@@ -236,7 +236,7 @@ class ArtisanInPersonOrderServiceTest {
         mockOrderLookup(artisan, order);
         when(orderRepository.save(order)).thenReturn(order);
 
-        Order result = inPersonOrderService.cancelInPersonOrder("artisan@test.com", 1, "Customer changed mind");
+        Order result = inPersonOrderService.cancelInPersonOrder("artisan@test.com", 1);
 
         assertThat(result).isEqualTo(order);
         assertThat(order.getOrderStatus()).isEqualTo("CANCELLED");
@@ -249,6 +249,25 @@ class ArtisanInPersonOrderServiceTest {
     }
 
     @Test
+    void cancelInPersonOrder_WhenExistingNotesAreTooLong_ShouldTrimNotesBeforeAppendingCancelReason() {
+        User artisan = artisan(10);
+        Product product = product(101, artisan, "RESERVED");
+        Order order = inPersonOrder(1, product, "PENDING_PAYMENT", "IN_PERSON");
+        Payment payment = pendingPayment(11, order);
+        order.setPayments(List.of(payment));
+        order.setNotes("a".repeat(500));
+
+        mockOrderLookup(artisan, order);
+        when(orderRepository.save(order)).thenReturn(order);
+
+        inPersonOrderService.cancelInPersonOrder("artisan@test.com", 1);
+
+        assertThat(order.getNotes()).hasSizeLessThanOrEqualTo(500);
+        assertThat(order.getNotes()).endsWith("Lý do hủy: Khách đổi ý không mua.");
+        verify(orderRepository).save(order);
+    }
+
+    @Test
     void cancelInPersonOrder_WhenOrderBelongsToAnotherArtisan_ShouldRejectWithoutPersisting() {
         User artisan = artisan(10);
         Product product = product(101, artisan(99), "RESERVED");
@@ -258,7 +277,7 @@ class ArtisanInPersonOrderServiceTest {
 
         mockOrderLookup(artisan, order);
 
-        assertThatThrownBy(() -> inPersonOrderService.cancelInPersonOrder("artisan@test.com", 1, "No reason"))
+        assertThatThrownBy(() -> inPersonOrderService.cancelInPersonOrder("artisan@test.com", 1))
                 .isInstanceOf(RuntimeException.class);
 
         assertThat(order.getOrderStatus()).isEqualTo("PENDING_PAYMENT");

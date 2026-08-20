@@ -156,6 +156,7 @@
                     <label class="walk-in-field-wide">
                         <span>Ghi chú</span>
                         <textarea name="notes" rows="3" th:text="${createNotes}" placeholder="Ví dụ: Khách thanh toán tiền mặt tại vườn"></textarea>
+                        <span class="field-counter" data-counter-for="notes">0/400</span>
                         <span class="field-error" data-error-for="notes"></span>
                     </label>
 
@@ -417,6 +418,7 @@
                         <label class="walk-in-field-wide">
                             <span>Ghi chú</span>
                             <textarea id="editNotes" name="notes" rows="3"></textarea>
+                            <span class="field-counter" data-edit-counter-for="notes">0/400</span>
                             <span class="field-error" data-edit-error-for="notes"></span>
                         </label>
                     </div>
@@ -426,15 +428,6 @@
                     </div>
                 </form>
 
-                <form id="walkInCancelForm" class="reject-reason-box walk-in-cancel-box" method="post">
-                    <input th:if="${_csrf != null}" type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-                    <label for="walkInCancelReason">Nhập lý do hủy In-person Order:</label>
-                    <textarea id="walkInCancelReason" name="reason" rows="3" placeholder="Ví dụ: Khách đổi ý không mua, hẹn xem lại cây khác..."></textarea>
-                    <div class="reject-action-row">
-                        <button class="btn-mini btn-mini-cancel" id="walkInCancelReasonClose" type="button">Hủy</button>
-                        <button class="btn-mini btn-mini-confirm" type="submit">Xác nhận hủy</button>
-                    </div>
-                </form>
             </div>
 
             <div class="drawer-footer walk-in-drawer-footer" id="walkInDrawerFooter">
@@ -448,26 +441,30 @@
 
 <div id="walkInCancelConfirmModal" class="artisan-action-modal-backdrop hidden">
     <div class="artisan-action-modal" role="dialog" aria-modal="true" aria-labelledby="walkInCancelConfirmTitle">
-        <header>
-            <h2 id="walkInCancelConfirmTitle">Xác nhận hủy In-person Order</h2>
-            <button type="button" class="artisan-action-modal-close" aria-label="Đóng">×</button>
-        </header>
-        <div class="artisan-action-modal-body">
-            <p class="artisan-action-target">
-                Order: <strong id="walkInCancelConfirmCode">-</strong>
-            </p>
-            <div class="artisan-action-warning">
-                <i class="fa-solid fa-ban"></i>
-                <div>
-                    <strong>Sản phẩm sẽ được mở bán lại</strong>
-                    <p>Order sẽ chuyển sang CANCELLED, payment sẽ bị hủy và cây đang RESERVED sẽ quay lại AVAILABLE.</p>
+        <form id="walkInCancelForm" method="post" novalidate>
+            <input th:if="${_csrf != null}" type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+            <header>
+                <h2 id="walkInCancelConfirmTitle">Hủy In-person Order</h2>
+                <button type="button" class="artisan-action-modal-close" aria-label="Đóng">×</button>
+            </header>
+            <div class="artisan-action-modal-body walk-in-cancel-box">
+                <p class="artisan-action-target">
+                    Order: <strong id="walkInCancelConfirmCode">-</strong>
+                </p>
+                <div class="artisan-action-warning">
+                    <i class="fa-solid fa-ban"></i>
+                    <div>
+                        <strong>Sản phẩm sẽ được mở bán lại</strong>
+                        <p>Order sẽ chuyển sang CANCELLED, payment sẽ bị hủy và cây đang RESERVED sẽ quay lại AVAILABLE.</p>
+                    </div>
                 </div>
+                <p class="walk-in-cancel-helper">Lý do hủy sẽ được ghi nhận tự động: Khách đổi ý không mua.</p>
             </div>
-        </div>
-        <footer>
-            <button type="button" class="btn-modal-cancel">Quay lại</button>
-            <button type="button" class="btn-modal-confirm">Hủy order</button>
-        </footer>
+            <footer>
+                <button type="button" class="btn-modal-cancel">Quay lại</button>
+                <button type="submit" class="btn-modal-confirm" id="walkInCancelSubmitButton" disabled>Hủy order</button>
+            </footer>
+        </form>
     </div>
 </div>
 
@@ -526,6 +523,7 @@
 <script>
 (function () {
     const pendingStatus = 'PENDING_PAYMENT';
+    const noteMaxLength = 400;
     const fallbackImage = 'https://picsum.photos/200/200?random=walkin';
     const productFallbackImage = 'https://images.unsplash.com/photo-1599599810769-bcde5a160d32?auto=format&fit=crop&q=80&w=300';
     const backdrop = document.getElementById('walkInDrawerBackdrop');
@@ -548,14 +546,11 @@
     let allowPaymentSubmit = false;
     const cancelButton = document.getElementById('walkInCancelButton');
     const cancelForm = document.getElementById('walkInCancelForm');
-    const cancelReasonInput = document.getElementById('walkInCancelReason');
-    const cancelReasonClose = document.getElementById('walkInCancelReasonClose');
+    const cancelSubmitButton = document.getElementById('walkInCancelSubmitButton');
     const cancelConfirmModal = document.getElementById('walkInCancelConfirmModal');
     const cancelConfirmCode = document.getElementById('walkInCancelConfirmCode');
     const cancelConfirmClose = cancelConfirmModal?.querySelector('.artisan-action-modal-close');
     const cancelConfirmCancel = cancelConfirmModal?.querySelector('.btn-modal-cancel');
-    const cancelConfirmSubmit = cancelConfirmModal?.querySelector('.btn-modal-confirm');
-    let allowCancelSubmit = false;
     const editButton = document.getElementById('walkInEditButton');
     const editForm = document.getElementById('walkInEditForm');
     const cancelEditButton = document.getElementById('walkInCancelEditButton');
@@ -694,8 +689,8 @@
             const feeValue = Number(value || 0);
             if (feeValue < 0) return 'Phí không được âm.';
             if (feeValue > 200000000) return 'Phí không được vượt quá 200.000.000 VNĐ.';
-        } else if (fieldName === 'notes' && value.length > 500) {
-            return 'Ghi chú không được vượt quá 500 ký tự.';
+        } else if (fieldName === 'notes' && value.length > 400) {
+            return 'Ghi chú không được vượt quá 400 ký tự.';
         }
         return '';
     }
@@ -710,6 +705,14 @@
         fieldWrapper?.classList.toggle('field-invalid', Boolean(message));
     }
 
+    function updateCreateNoteCounter() {
+        const counter = createForm.querySelector('[data-counter-for="notes"]');
+        const length = createFields.notes?.value?.trim().length || 0;
+        if (!counter) return;
+        counter.textContent = `${length}/${noteMaxLength}`;
+        counter.classList.toggle('is-over-limit', length > noteMaxLength);
+    }
+
     function validateCreateField(fieldName) {
         const value = createFields[fieldName]?.value?.trim() || '';
         let message = '';
@@ -721,6 +724,9 @@
         }
 
         setCreateFieldError(fieldName, message);
+        if (fieldName === 'notes') {
+            updateCreateNoteCounter();
+        }
         return !message;
     }
 
@@ -745,10 +751,21 @@
         fieldWrapper?.classList.toggle('field-invalid', Boolean(message));
     }
 
+    function updateEditNoteCounter() {
+        const counter = editForm.querySelector('[data-edit-counter-for="notes"]');
+        const length = editFields.notes?.value?.trim().length || 0;
+        if (!counter) return;
+        counter.textContent = `${length}/${noteMaxLength}`;
+        counter.classList.toggle('is-over-limit', length > noteMaxLength);
+    }
+
     function validateEditField(fieldName) {
         const value = editFields[fieldName]?.value?.trim() || '';
         const message = validateOrderFieldValue(fieldName, value);
         setEditFieldError(fieldName, message);
+        if (fieldName === 'notes') {
+            updateEditNoteCounter();
+        }
         return !message;
     }
 
@@ -770,6 +787,7 @@
     });
 
     const createServerFieldError = document.getElementById('createServerFieldError');
+    updateCreateNoteCounter();
     if (createServerFieldError?.dataset.field) {
         setCreateFieldError(createServerFieldError.dataset.field, createServerFieldError.dataset.message || 'Thông tin không hợp lệ.');
     }
@@ -916,16 +934,14 @@
         editFields.customerEmail.value = data.editCustomerEmail || '';
         editFields.paymentMethod.value = data.paymentMethod || 'CASH';
         editFields.notes.value = data.editNotes || (data.notes === 'Không có ghi chú thêm.' ? '' : data.notes || '');
+        updateEditNoteCounter();
         setFeeInput(editFeeInputs[0], data.craneFee);
         setFeeInput(editFeeInputs[1], data.shippingFee);
         editForm.classList.add('hidden');
-        cancelForm.style.display = 'none';
-        cancelReasonInput.value = '';
         allowPaymentSubmit = false;
-        allowCancelSubmit = false;
         paymentConfirmSubmit.disabled = false;
         createConfirmSubmit.disabled = false;
-        cancelConfirmSubmit.disabled = false;
+        cancelSubmitButton.disabled = false;
         paymentConfirmModal.classList.add('hidden');
         cancelConfirmModal.classList.add('hidden');
         footer.style.display = data.orderStatus === pendingStatus ? 'flex' : 'none';
@@ -949,13 +965,14 @@
 
         openDrawer(trigger);
         editForm.classList.remove('hidden');
-        cancelForm.style.display = 'none';
+        closeCancelConfirmModal();
         editFields.customerName.value = serverError.dataset.customerName || '';
         editFields.customerPhone.value = serverError.dataset.customerPhone || '';
         editFields.shippingAddress.value = serverError.dataset.shippingAddress || '';
         editFields.customerEmail.value = serverError.dataset.customerEmail || '';
         editFields.paymentMethod.value = serverError.dataset.paymentMethod || 'CASH';
         editFields.notes.value = serverError.dataset.notes || '';
+        updateEditNoteCounter();
         setFeeInput(editFeeInputs[0], serverError.dataset.craneFee || 0);
         setFeeInput(editFeeInputs[1], serverError.dataset.shippingFee || 0);
         setEditFieldError(serverError.dataset.field, serverError.dataset.message || 'Thông tin không hợp lệ.');
@@ -997,9 +1014,23 @@
                 }
             })
             .catch(() => {
-                window.location.href = targetUrl;
+                if (pushHistory) {
+                    window.location.href = targetUrl;
+                }
             })
             .finally(() => document.getElementById('walkInOrdersSection')?.classList.remove('is-loading'));
+    }
+
+    function isUserEditingWalkInPage() {
+        const activeElement = document.activeElement;
+        const isTyping = activeElement?.matches('input, textarea, select, button');
+        const hasOpenModal = !createConfirmModal.classList.contains('hidden')
+            || !paymentConfirmModal.classList.contains('hidden')
+            || !cancelConfirmModal.classList.contains('hidden');
+        return document.hidden
+            || Boolean(isTyping)
+            || hasOpenModal
+            || panel.classList.contains('show');
     }
 
     document.addEventListener('click', function (event) {
@@ -1027,7 +1058,7 @@
     window.addEventListener('popstate', () => loadWalkInOrdersPage(new URL(window.location.href), false));
 
     setInterval(() => {
-        if (panel.classList.contains('show')) {
+        if (isUserEditingWalkInPage()) {
             return;
         }
         loadWalkInOrdersPage(new URL(window.location.href), false);
@@ -1061,7 +1092,7 @@
     });
 
     editButton.addEventListener('click', function () {
-        cancelForm.style.display = 'none';
+        closeCancelConfirmModal();
         editForm.classList.remove('hidden');
         editFields.customerName.focus();
     });
@@ -1082,26 +1113,22 @@
 
     cancelButton.addEventListener('click', function () {
         editForm.classList.add('hidden');
-        cancelForm.style.display = 'flex';
-        cancelReasonInput.focus();
-    });
-
-    cancelReasonClose.addEventListener('click', function () {
-        cancelForm.style.display = 'none';
-        cancelReasonInput.value = '';
-    });
-
-    cancelForm.addEventListener('submit', function (event) {
-        if (!allowCancelSubmit) {
-            event.preventDefault();
-            cancelConfirmCode.textContent = fields.code.textContent || '-';
-            cancelConfirmModal.classList.remove('hidden');
-        }
+        cancelConfirmCode.textContent = fields.code.textContent || '-';
+        cancelConfirmModal.classList.remove('hidden');
+        cancelSubmitButton.disabled = false;
     });
 
     function closeCancelConfirmModal() {
         cancelConfirmModal.classList.add('hidden');
     }
+
+    cancelForm.addEventListener('submit', function (event) {
+        if (cancelSubmitButton.disabled) {
+            event.preventDefault();
+            return;
+        }
+        cancelSubmitButton.disabled = true;
+    });
 
     cancelConfirmClose?.addEventListener('click', closeCancelConfirmModal);
     cancelConfirmCancel?.addEventListener('click', closeCancelConfirmModal);
@@ -1109,13 +1136,6 @@
         if (event.target === cancelConfirmModal) {
             closeCancelConfirmModal();
         }
-    });
-
-    cancelConfirmSubmit?.addEventListener('click', function () {
-        if (cancelConfirmSubmit.disabled) return;
-        cancelConfirmSubmit.disabled = true;
-        allowCancelSubmit = true;
-        cancelForm.submit();
     });
 
     closeButton.addEventListener('click', closeDrawer);
