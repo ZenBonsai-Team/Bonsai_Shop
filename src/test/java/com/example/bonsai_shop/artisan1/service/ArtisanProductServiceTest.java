@@ -354,7 +354,7 @@ class ArtisanProductServiceTest {
     private Variety variety(Integer varietyId) {
         return Variety.builder()
                 .varietyId(varietyId)
-                .varietyName("Kim giÃ²n")
+                .varietyName("Kim giòn")
                 .category(Category.builder()
                         .categoryId(1)
                         .categoryName("Japanese Maple")

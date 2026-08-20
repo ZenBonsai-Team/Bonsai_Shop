@@ -99,10 +99,11 @@ const OrderDrawer = {
     },
 
     /**
-     * Prevents letters in fee inputs
+     * Prevents letters in fee inputs and limits maximum digit length
      */
     sanitizeNumericInput(input) {
-        input.value = input.value.replace(/[^0-9]/g, '');
+        const maxLen = input.id === 'inputDepositAmount' ? 12 : 9;
+        input.value = input.value.replace(/[^0-9]/g, '').slice(0, maxLen);
         this.calculateFinalTotalOnTheFly();
     },
 
@@ -294,8 +295,8 @@ const OrderDrawer = {
         }
 
         const effectiveDeposit = isDeposit ? depositAmount : 0;
-        if (isDeposit && effectiveDeposit > (base + craneValue + shippingValue)) {
-            BSMSToast.error('Tiền đặt cọc không được lớn hơn giá trị của cây.');
+        if (isDeposit && effectiveDeposit > base) {
+            BSMSToast.error('Tiền đặt cọc không được vượt quá giá trị của cây.');
             if (this.inputDepositAmount) this.inputDepositAmount.focus();
             return;
         }

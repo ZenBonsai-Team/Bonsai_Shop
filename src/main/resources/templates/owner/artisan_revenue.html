@@ -2,7 +2,7 @@
 <html lang="vi" xmlns:th="http://www.thymeleaf.org"
       th:replace="~{fragments/dashboard-layout :: layout(~{::title}, ~{::#owner-artisan-revenue-content}, ~{::styles}, ~{::scripts})}">
 <head>
-    <title>Doanh thu theo ngh&#7879; nh&#226;n - Minh K&#7927; Garden</title>
+    <title>Doanh thu theo nghệ nhân - Minh Kỷ Garden</title>
     <th:block th:fragment="styles">
         <link rel="stylesheet" th:href="@{/css/dashboard.css}">
     </th:block>
@@ -34,25 +34,25 @@
 <div id="owner-artisan-revenue-content" class="owner-report-page" th:with="paramActivePage='dashboard'">
     <header class="owner-report-header">
         <div>
-            <span class="owner-eyebrow">B&#7843;ng &#273;i&#7873;u khi&#7875;n ch&#7911; v&#432;&#7901;n</span>
-            <h1>Doanh thu theo ngh&#7879; nh&#226;n</h1>
-            <p th:text="|Doanh thu s&#7843;n ph&#7849;m &#273;&#227; ho&#224;n t&#7845;t trong ${reportMonth}.|">Doanh thu s&#7843;n ph&#7849;m &#273;&#227; ho&#224;n t&#7845;t trong 08/2026.</p>
+            <span class="owner-eyebrow">Bảng điều khiển chủ vườn</span>
+            <h1>Doanh thu theo nghệ nhân</h1>
+            <p th:text="|Doanh thu sản phẩm đã hoàn tất trong ${reportMonth}.|">Doanh thu sản phẩm đã hoàn tất trong 08/2026.</p>
         </div>
         <div class="revenue-summary-toolbar">
             <form class="dashboard-month-filter" method="get" th:action="@{/owner/dashboard/artisan-revenue}">
-                <label for="ownerArtisanRevenueMonth">Th&#225;ng b&#225;o c&#225;o</label>
+                <label for="ownerArtisanRevenueMonth">Tháng báo cáo</label>
                 <input id="ownerArtisanRevenueMonth" type="month" name="month" th:value="${selectedMonth}" onchange="this.form.submit()">
             </form>
             <a class="owner-back-link" th:href="@{/owner(month=${selectedMonth})}">
                 <i class="fa-solid fa-arrow-left"></i>
-                B&#7843;ng &#273;i&#7873;u khi&#7875;n
+                Bảng điều khiển
             </a>
         </div>
     </header>
 
     <section class="owner-panel owner-report-panel">
         <div class="owner-report-summary">
-            <span>Ngh&#7879; nh&#226;n c&#243; doanh thu</span>
+            <span>Nghệ nhân có doanh thu</span>
             <strong th:text="${#lists.size(artisanRevenueDetails)}">0</strong>
         </div>
 
@@ -60,17 +60,17 @@
             <table class="owner-report-table owner-artisan-revenue-table">
                 <thead>
                 <tr>
-                    <th>Ngh&#7879; nh&#226;n</th>
+                    <th>Nghệ nhân</th>
                     <th>Email</th>
-                    <th class="text-end">C&#226;y &#273;&#227; b&#225;n</th>
+                    <th class="text-end">Cây đã bán</th>
                     <th class="text-end">Doanh thu</th>
-                    <th class="text-end">Ngu&#7891;n &#273;&#417;n</th>
+                    <th class="text-end">Nguồn đơn</th>
                 </tr>
                 </thead>
-                <tbody data-owner-paginated-list data-page-size="10" data-report-label="d&#242;ng doanh thu ngh&#7879; nh&#226;n">
+                <tbody data-owner-paginated-list data-page-size="10" data-report-label="dòng doanh thu nghệ nhân">
                 <th:block th:each="item : ${artisanRevenueDetails}">
                     <tr data-page-entry>
-                        <td class="fw-semibold" th:text="${item.summary().artisanName() ?: '-'}">Ngh&#7879; nh&#226;n</td>
+                        <td class="fw-semibold" th:text="${item.summary().artisanName() ?: '-'}">Nghệ nhân</td>
                         <td th:text="${item.summary().artisanEmail() ?: '-'}">artisan@example.com</td>
                         <td class="text-end" th:text="${item.summary().treesSold()}">0</td>
                         <td class="text-end owner-money-cell" th:text="${#numbers.formatDecimal(item.summary().revenue(), 0, 'POINT', 0, 'POINT') + ' VND'}">0 VND</td>
@@ -79,7 +79,7 @@
                                     class="owner-inline-toggle"
                                     th:attr="data-revenue-toggle=${item.sourcePanelId()}"
                                     aria-expanded="false">
-                                <span data-toggle-label>Xem ngu&#7891;n &#273;&#417;n</span>
+                                <span data-toggle-label>Xem nguồn đơn</span>
                                 <i class="fa-solid fa-chevron-down"></i>
                             </button>
                         </td>
@@ -88,40 +88,40 @@
                         <td colspan="5">
                             <div class="owner-revenue-source-panel">
                                 <div class="source-report-summary">
-                                    Doanh thu &#273;&#417;n ho&#224;n th&#224;nh c&#7911;a
-                                    <strong th:text="${item.summary().artisanName() ?: '-'}">Ngh&#7879; nh&#226;n</strong>
-                                    <strong th:text="${#numbers.formatDecimal(item.summary().revenue(), 0, 'POINT', 0, 'POINT') + ' VN&#272;'}">0 VN&#272;</strong>
+                                    Doanh thu đơn hoàn thành của
+                                    <strong th:text="${item.summary().artisanName() ?: '-'}">Nghệ nhân</strong>
+                                    <strong th:text="${#numbers.formatDecimal(item.summary().revenue(), 0, 'POINT', 0, 'POINT') + ' VNĐ'}">0 VNĐ</strong>
                                 </div>
                                 <div class="table-responsive">
                                     <table class="table table-sm align-middle source-report-table">
                                         <thead>
                                         <tr>
-                                            <th>Ng&#224;y ghi nh&#7853;n</th>
-                                            <th>M&#227; &#273;&#417;n</th>
-                                            <th>Kh&#225;ch h&#224;ng</th>
-                                            <th>M&#227; SP</th>
-                                            <th>Tr&#7841;ng th&#225;i</th>
-                                            <th class="text-end">S&#7889; ti&#7873;n c&#7897;ng</th>
-                                            <th class="text-end">Thao t&#225;c</th>
+                                            <th>Ngày ghi nhận</th>
+                                            <th>Mã đơn</th>
+                                            <th>Khách hàng</th>
+                                            <th>Mã SP</th>
+                                            <th>Trạng thái</th>
+                                            <th class="text-end">Số tiền cộng</th>
+                                            <th class="text-end">Thao tác</th>
                                         </tr>
                                         </thead>
                                         <tbody>
                                         <tr th:each="source : ${item.completedRevenueSources()}">
                                             <td th:text="${source.sourceDate() != null ? #temporals.format(source.sourceDate(), 'dd/MM/yyyy HH:mm') : '-'}">-</td>
                                             <td class="fw-semibold" th:text="${source.orderCode()}">DH001</td>
-                                            <td th:text="${source.customerName() ?: '-'}">Kh&#225;ch h&#224;ng</td>
+                                            <td th:text="${source.customerName() ?: '-'}">Khách hàng</td>
                                             <td th:text="${source.productCode() ?: '-'}">SP001</td>
                                             <td th:text="${source.orderStatus()}">COMPLETED</td>
-                                            <td class="text-end fw-semibold" th:text="${#numbers.formatDecimal(source.sourceAmount(), 0, 'POINT', 0, 'POINT') + ' VN&#272;'}">0 VN&#272;</td>
+                                            <td class="text-end fw-semibold" th:text="${#numbers.formatDecimal(source.sourceAmount(), 0, 'POINT', 0, 'POINT') + ' VNĐ'}">0 VNĐ</td>
                                             <td class="text-end">
                                                 <a class="owner-table-action-link"
                                                    th:href="@{/owner/order-history/orders/{orderCode}(orderCode=${source.orderCode()})}">
-                                                    Chi ti&#7871;t &#273;&#417;n
+                                                    Chi tiết đơn
                                                 </a>
                                             </td>
                                         </tr>
                                         <tr th:if="${#lists.isEmpty(item.completedRevenueSources())}">
-                                            <td colspan="7" class="text-center text-muted py-3">Kh&#244;ng c&#243; ngu&#7891;n ghi nh&#7853;n trong th&#225;ng n&#224;y.</td>
+                                            <td colspan="7" class="text-center text-muted py-3">Không có nguồn ghi nhận trong tháng này.</td>
                                         </tr>
                                         </tbody>
                                     </table>
@@ -131,7 +131,7 @@
                     </tr>
                 </th:block>
                 <tr th:if="${#lists.isEmpty(artisanRevenueDetails)}">
-                    <td colspan="5" class="owner-empty-state">Ch&#432;a c&#243; doanh thu ngh&#7879; nh&#226;n n&#224;o trong th&#225;ng n&#224;y.</td>
+                    <td colspan="5" class="owner-empty-state">Chưa có doanh thu nghệ nhân nào trong tháng này.</td>
                 </tr>
                 </tbody>
             </table>

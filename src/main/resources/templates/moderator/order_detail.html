@@ -378,10 +378,10 @@
             }
 
             /* ===== META ROWS ===== */
-            .od-meta-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--od-border); font-size: 13px; }
+            .od-meta-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--od-border); font-size: 13px; }
             .od-meta-row:last-child { border-bottom: none; }
-            .od-meta-label { color: var(--od-text-muted); }
-            .od-meta-value { color: var(--od-text-primary); font-weight: 500; text-align: right; }
+            .od-meta-label { color: var(--od-text-muted); flex-shrink: 0; }
+            .od-meta-value { color: var(--od-text-primary); font-weight: 500; text-align: right; word-break: break-word; }
 
             /* ===== NOTE BOXES ===== */
             .od-note-box { background: #fffff0; border-left: 3px solid #ecc94b; border-radius: 0 4px 4px 0; padding: 8px 12px; font-size: 13px; color: #744210; margin-top: 4px; }
@@ -696,17 +696,17 @@
                     <div th:if="${order.canApprove or order.canReject or order.canReturnInventory}" class="od-form-grid">
                         <div class="od-form-field">
                             <label class="od-form-label" for="approvalDepositAmount">Tiền đặt cọc</label>
-                            <input id="approvalDepositAmount" class="od-form-input js-money-input" type="text" inputmode="numeric" autocomplete="off" data-error-id="approvalDepositAmountError">
+                            <input id="approvalDepositAmount" class="od-form-input js-money-input" type="text" inputmode="numeric" autocomplete="off" data-error-id="approvalDepositAmountError" maxlength="15" data-max-digits="12">
                             <div id="approvalDepositAmountError" class="od-field-error"></div>
                         </div>
                         <div class="od-form-field">
                             <label class="od-form-label" for="approvalShippingFee">Phí vận chuyển</label>
-                            <input id="approvalShippingFee" class="od-form-input js-money-input" type="text" inputmode="numeric" autocomplete="off" data-error-id="approvalShippingFeeError" value="0">
+                            <input id="approvalShippingFee" class="od-form-input js-money-input" type="text" inputmode="numeric" autocomplete="off" data-error-id="approvalShippingFeeError" value="0" maxlength="11" data-max-digits="9">
                             <div id="approvalShippingFeeError" class="od-field-error"></div>
                         </div>
                         <div class="od-form-field">
                             <label class="od-form-label" for="approvalCraneFee">Phí xe cẩu</label>
-                            <input id="approvalCraneFee" class="od-form-input js-money-input" type="text" inputmode="numeric" autocomplete="off" data-error-id="approvalCraneFeeError" value="0">
+                            <input id="approvalCraneFee" class="od-form-input js-money-input" type="text" inputmode="numeric" autocomplete="off" data-error-id="approvalCraneFeeError" value="0" maxlength="11" data-max-digits="9">
                             <div id="approvalCraneFeeError" class="od-field-error"></div>
                         </div>
                     </div>
@@ -862,15 +862,19 @@
             return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(Number(value || 0));
         }
 
-        function formatMoneyInputValue(value) {
-            const digits = String(value ?? '').replace(/\D/g, '');
+        function formatMoneyInputValue(value, maxDigits = 12) {
+            let digits = String(value ?? '').replace(/\D/g, '');
             if (digits === '') return '';
+            if (maxDigits && digits.length > maxDigits) {
+                digits = digits.slice(0, maxDigits);
+            }
             return new Intl.NumberFormat('en-US').format(Number(digits));
         }
 
         function normalizeMoneyInput(el) {
             if (!el) return;
-            el.value = formatMoneyInputValue(el.value);
+            const maxDigits = el.dataset.maxDigits ? Number(el.dataset.maxDigits) : 12;
+            el.value = formatMoneyInputValue(el.value, maxDigits);
         }
 
         function setFieldError(id, message) {
@@ -891,7 +895,8 @@
         function readRawAmount(id) {
             const el = document.getElementById(id);
             if (!el || el.disabled) return '';
-            return String(el.value || '').replace(/,/g, '').trim();
+            const maxDigits = el.dataset.maxDigits ? Number(el.dataset.maxDigits) : 12;
+            return String(el.value || '').replace(/\D/g, '').slice(0, maxDigits);
         }
 
         function readAmount(id) {
@@ -942,52 +947,73 @@
             if (remainEl) remainEl.textContent = formatCurrency(remaining);
         }
 
-        function validateApprovalInput() {
-            let isValid = true;
-            const MAX_FEE = 200000000;
-            const MAX_TOTAL = 999999999999;
+        const MAX_FEE = 200000000;
+        const MAX_TOTAL = 999999999999;
 
-            const validateMoneyField = (id, label, required, maxLimit) => {
-                const el = document.getElementById(id);
-                if (!el || el.disabled) {
-                    clearFieldError(id);
-                    return 0;
+        function validateApprovalField(id) {
+            const el = document.getElementById(id);
+            if (!el || el.disabled) {
+                clearFieldError(id);
+                return true;
+            }
+
+            const rawValue = String(el.value || '').trim();
+            const raw = readRawAmount(id);
+            let message = '';
+
+            if (id === 'approvalDepositAmount') {
+                if (IS_COD) {
+                    if (raw === '') {
+                        message = 'Vui lòng nhập số tiền đặt cọc.';
+                    } else if (rawValue.includes('-')) {
+                        message = 'Số tiền không được là số âm.';
+                    } else if (rawValue.includes('.')) {
+                        message = 'Số tiền phải là số nguyên.';
+                    } else if (!/^\d+$/.test(raw)) {
+                        message = 'Số tiền chỉ được nhập số nguyên không âm.';
+                    } else {
+                        const deposit = Number(raw);
+                        if (deposit <= 0) {
+                            message = 'Vui lòng nhập số tiền đặt cọc lớn hơn 0.';
+                        } else if (deposit > BASE_TREE_PRICE) {
+                            message = `Tiền đặt cọc không được vượt quá tiền cây (${formatCurrency(BASE_TREE_PRICE)}).`;
+                        }
+                    }
                 }
-                const rawValue = String(el.value || '').trim();
-                const raw = readRawAmount(id);
-                let message = '';
-
-                if (required && raw === '') {
-                    message = `Vui lòng nhập ${label}.`;
-                } else if (rawValue.includes('-')) {
+            } else if (id === 'approvalShippingFee' || id === 'approvalCraneFee') {
+                const label = id === 'approvalShippingFee' ? 'phí vận chuyển' : 'phí xe cẩu';
+                if (rawValue.includes('-')) {
                     message = 'Số tiền không được là số âm.';
                 } else if (rawValue.includes('.')) {
                     message = 'Số tiền phải là số nguyên.';
                 } else if (raw !== '' && !/^\d+$/.test(raw)) {
                     message = 'Số tiền chỉ được nhập số nguyên không âm.';
-                } else if (maxLimit && Number(raw) > maxLimit) {
-                    message = `${label.charAt(0).toUpperCase() + label.slice(1)} không được vượt quá ${formatCurrency(maxLimit)}.`;
-                }
-
-                setFieldError(id, message);
-                if (message) isValid = false;
-                return raw === '' ? 0 : Number(raw);
-            };
-
-            const crane = validateMoneyField('approvalCraneFee', 'phí xe cẩu', false, MAX_FEE);
-            const shipping = validateMoneyField('approvalShippingFee', 'phí vận chuyển', false, MAX_FEE);
-            const deposit = validateMoneyField('approvalDepositAmount', 'tiền đặt cọc', IS_COD);
-
-            if (IS_COD) {
-                if (deposit <= 0) {
-                    setFieldError('approvalDepositAmount', 'Vui lòng nhập số tiền đặt cọc lớn hơn 0.');
-                    isValid = false;
-                } else if (deposit > BASE_TREE_PRICE) {
-                    setFieldError('approvalDepositAmount', `Tiền đặt cọc không được vượt quá tiền cây (${formatCurrency(BASE_TREE_PRICE)}).`);
-                    isValid = false;
+                } else {
+                    const feeValue = raw === '' ? 0 : Number(raw);
+                    if (feeValue < 0) {
+                        message = `${label.charAt(0).toUpperCase() + label.slice(1)} không được âm.`;
+                    } else if (feeValue > MAX_FEE) {
+                        message = `${label.charAt(0).toUpperCase() + label.slice(1)} không được vượt quá ${formatCurrency(MAX_FEE)}.`;
+                    }
                 }
             }
 
+            setFieldError(id, message);
+            return !message;
+        }
+
+        function validateApprovalInput() {
+            let isValid = true;
+            const isCraneValid = validateApprovalField('approvalCraneFee');
+            const isShippingValid = validateApprovalField('approvalShippingFee');
+            const isDepositValid = validateApprovalField('approvalDepositAmount');
+
+            if (!isCraneValid || !isShippingValid || !isDepositValid) {
+                isValid = false;
+            }
+
+            const crane = readAmount('approvalCraneFee');
+            const shipping = readAmount('approvalShippingFee');
             const orderTotal = BASE_TREE_PRICE + crane + shipping;
             if (orderTotal > MAX_TOTAL && crane <= MAX_FEE && shipping <= MAX_FEE) {
                 setFieldError('approvalCraneFee', 'Tổng tiền đơn hàng không được vượt quá 999.999.999.999 đ.');
@@ -1048,13 +1074,22 @@
             if (event.inputType === 'insertFromPaste') return;
             if (event.data && !/^\d+$/.test(event.data)) {
                 event.preventDefault();
+                return;
+            }
+            const input = event.target;
+            const maxDigits = input.dataset.maxDigits ? Number(input.dataset.maxDigits) : 12;
+            const currentDigits = input.value.replace(/\D/g, '');
+            const selectedText = input.value.substring(input.selectionStart || 0, input.selectionEnd || 0).replace(/\D/g, '');
+            const insertedDigits = (event.data || '').replace(/\D/g, '');
+            if (currentDigits.length - selectedText.length + insertedDigits.length > maxDigits) {
+                event.preventDefault();
             }
         }
 
         function handleMoneyInput(event) {
             normalizeMoneyInput(event.target);
-            clearFieldError(event.target.id);
             updateApprovalSummary();
+            validateApprovalField(event.target.id);
         }
 
         let pendingConfirmAction = null;
@@ -1409,11 +1444,21 @@
             if (!input) return;
             input.addEventListener('beforeinput', handleMoneyBeforeInput);
             input.addEventListener('input', handleMoneyInput);
+            input.addEventListener('change', (e) => {
+                normalizeMoneyInput(e.target);
+                updateApprovalSummary();
+                validateApprovalField(e.target.id);
+            });
+            input.addEventListener('blur', (e) => {
+                normalizeMoneyInput(e.target);
+                updateApprovalSummary();
+                validateApprovalField(e.target.id);
+            });
             input.addEventListener('paste', () => {
                 window.setTimeout(() => {
                     normalizeMoneyInput(input);
-                    clearFieldError(input.id);
                     updateApprovalSummary();
+                    validateApprovalField(input.id);
                 }, 0);
             });
         });

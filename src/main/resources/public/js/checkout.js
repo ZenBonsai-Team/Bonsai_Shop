@@ -92,7 +92,8 @@ async function loadCheckoutSummary() {
                     items.push({
                         productId: prod.productId,
                         productName: prod.productName,
-                        price: prod.price
+                        price: prod.price,
+                        productStatus: prod.productStatus
                     });
                 }
             } catch (err) {}
@@ -120,6 +121,12 @@ function renderSummary(items) {
             BSMSToast.warning("Giỏ hàng của bạn đang trống! Không thể thanh toán.");
             setTimeout(() => { window.location.href = '/cart'; }, 1500);
         }
+        return;
+    }
+
+    const unavailableItem = items.find(item => item.productStatus && item.productStatus !== 'AVAILABLE');
+    if (unavailableItem) {
+        showBusinessErrorModal(`Một số tác phẩm không còn khả dụng: ${unavailableItem.productName}. Vui lòng quay lại giỏ hàng và chọn sản phẩm khác.`);
         return;
     }
     
@@ -398,6 +405,9 @@ function showBusinessErrorModal(message) {
     if (match && match[1]) {
         titleEl.textContent = match[0];
         descEl.textContent = "đã được bán hoặc giữ chỗ bởi khách hàng khác.";
+    } else if (message.includes('không còn khả dụng')) {
+        titleEl.textContent = "Tác phẩm không còn khả dụng";
+        descEl.textContent = message;
     } else {
         titleEl.textContent = "Giao dịch không thành công";
         descEl.textContent = message;

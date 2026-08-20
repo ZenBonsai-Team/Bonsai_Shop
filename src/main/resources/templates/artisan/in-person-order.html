@@ -638,7 +638,7 @@
         } else {
             digitsOnly = trimmedValue.replace(/[^\d]/g, '');
         }
-        return digitsOnly.replace(/^0+(?=\d)/, '');
+        return digitsOnly.replace(/^0+(?=\d)/, '').slice(0, 12);
     }
 
     function formatInputVnd(value) {

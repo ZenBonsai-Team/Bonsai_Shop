@@ -2,7 +2,7 @@
 <html lang="vi" xmlns:th="http://www.thymeleaf.org"
       th:replace="~{fragments/dashboard-layout :: layout(~{::title}, ~{::#order-history-content}, ~{::styles}, ~{::scripts})}">
 <head>
-    <title>L&#7883;ch s&#7917; &#273;&#417;n h&#224;ng - Minh K&#7927; Garden</title>
+    <title>Lịch sử đơn hàng - Minh Kỷ Garden</title>
     <th:block th:fragment="styles">
         <link rel="stylesheet" th:href="@{/css/dashboard.css}">
         <link rel="stylesheet" th:href="@{/css/moderator-orders.css}">
@@ -15,8 +15,8 @@
 <div id="order-history-content" th:with="paramActivePage='order-history'">
     <header class="page-header owner-walkin-header">
         <div>
-            <h1>L&#7883;ch s&#7917; &#273;&#417;n h&#224;ng</h1>
-            <p>Theo d&#245;i t&#7853;p trung &#273;&#417;n online v&#224; &#273;&#417;n tr&#7921;c ti&#7871;p t&#7841;i v&#432;&#7901;n.</p>
+            <h1>Lịch sử đơn hàng</h1>
+            <p>Theo dõi tập trung đơn online và đơn trực tiếp tại vườn.</p>
         </div>
     </header>
 
@@ -26,33 +26,33 @@
                 <input type="hidden" name="status" th:value="${selectedStatus}">
                 <div class="search-input-wrapper">
                     <input type="text" id="ownerOrderHistorySearchInput" name="search" th:value="${search}"
-                           placeholder="T&#236;m theo m&#227; &#273;&#417;n, kh&#225;ch h&#224;ng, s&#7843;n ph&#7849;m ho&#7863;c ng&#432;&#7901;i ph&#7909; tr&#225;ch"
+                           placeholder="Tìm theo mã đơn, khách hàng, sản phẩm hoặc người phụ trách"
                            autocomplete="off" data-auto-filter-input>
                 </div>
-                <select id="ownerOrderTypeSelect" class="owner-order-type-select" name="type" aria-label="Lo&#7841;i &#273;&#417;n">
-                    <option th:value="${allType}" th:selected="${selectedType == allType}">T&#7845;t c&#7843; lo&#7841;i &#273;&#417;n</option>
-                    <option th:value="${onlineType}" th:selected="${selectedType == onlineType}">&#272;&#417;n online</option>
-                    <option th:value="${inPersonType}" th:selected="${selectedType == inPersonType}">&#272;&#417;n tr&#7921;c ti&#7871;p</option>
+                <select id="ownerOrderTypeSelect" class="owner-order-type-select" name="type" aria-label="Loại đơn">
+                    <option th:value="${allType}" th:selected="${selectedType == allType}">Tất cả loại đơn</option>
+                    <option th:value="${onlineType}" th:selected="${selectedType == onlineType}">Đơn online</option>
+                    <option th:value="${inPersonType}" th:selected="${selectedType == inPersonType}">Đơn trực tiếp</option>
                 </select>
                 <a class="btn-mini btn-mini-secondary" th:if="${search != null and !search.isBlank()}"
-                   th:href="@{/owner/order-history(type=${selectedType}, status=${selectedStatus})}">X&#243;a l&#7885;c</a>
+                   th:href="@{/owner/order-history(type=${selectedType}, status=${selectedStatus})}">Xóa lọc</a>
             </form>
 
             <div class="filter-tabs product-filter-chips owner-order-status-tabs">
                 <a class="tab-btn text-decoration-none" th:classappend="${selectedStatus == 'ALL'} ? ' active'"
-                   th:href="@{/owner/order-history(type=${selectedType}, status='ALL', search=${search})}">T&#7845;t c&#7843; tr&#7841;ng th&#225;i</a>
+                   th:href="@{/owner/order-history(type=${selectedType}, status='ALL', search=${search})}">Tất cả trạng thái</a>
                 <a class="tab-btn text-decoration-none" th:classappend="${selectedStatus == pendingStatus} ? ' active'"
-                   th:href="@{/owner/order-history(type=${selectedType}, status=${pendingStatus}, search=${search})}">Ch&#7901; x&#7917; l&#253;</a>
+                   th:href="@{/owner/order-history(type=${selectedType}, status=${pendingStatus}, search=${search})}">Chờ xử lý</a>
                 <a class="tab-btn text-decoration-none" th:classappend="${selectedStatus == pendingPaymentStatus} ? ' active'"
-                   th:href="@{/owner/order-history(type=${selectedType}, status=${pendingPaymentStatus}, search=${search})}">Ch&#7901; ti&#7873;n</a>
+                   th:href="@{/owner/order-history(type=${selectedType}, status=${pendingPaymentStatus}, search=${search})}">Chờ tiền</a>
                 <a class="tab-btn text-decoration-none" th:classappend="${selectedStatus == depositedStatus} ? ' active'"
-                   th:href="@{/owner/order-history(type=${selectedType}, status=${depositedStatus}, search=${search})}">&#272;&#227; c&#7885;c</a>
+                   th:href="@{/owner/order-history(type=${selectedType}, status=${depositedStatus}, search=${search})}">Đã cọc</a>
                 <a class="tab-btn text-decoration-none" th:classappend="${selectedStatus == paidStatus} ? ' active'"
-                   th:href="@{/owner/order-history(type=${selectedType}, status=${paidStatus}, search=${search})}">&#272;&#227; thanh to&#225;n</a>
+                   th:href="@{/owner/order-history(type=${selectedType}, status=${paidStatus}, search=${search})}">Đã thanh toán</a>
                 <a class="tab-btn text-decoration-none" th:classappend="${selectedStatus == completedStatus} ? ' active'"
-                   th:href="@{/owner/order-history(type=${selectedType}, status=${completedStatus}, search=${search})}">Ho&#224;n th&#224;nh</a>
+                   th:href="@{/owner/order-history(type=${selectedType}, status=${completedStatus}, search=${search})}">Hoàn thành</a>
                 <a class="tab-btn text-decoration-none" th:classappend="${selectedStatus == cancelledStatus} ? ' active'"
-                   th:href="@{/owner/order-history(type=${selectedType}, status=${cancelledStatus}, search=${search})}">&#272;&#227; h&#7911;y</a>
+                   th:href="@{/owner/order-history(type=${selectedType}, status=${cancelledStatus}, search=${search})}">Đã hủy</a>
             </div>
         </div>
 
@@ -60,47 +60,47 @@
             <table class="orders-table owner-walkin-table handling-history-table owner-order-history-table">
                 <thead>
                 <tr>
-                    <th>M&#227; &#273;&#417;n</th>
-                    <th>Lo&#7841;i &#273;&#417;n</th>
-                    <th>Kh&#225;ch h&#224;ng</th>
-                    <th>Ng&#432;&#7901;i ph&#7909; tr&#225;ch</th>
-                    <th>S&#7843;n ph&#7849;m</th>
-                    <th>Ng&#224;y t&#7841;o</th>
-                    <th>Tr&#7841;ng th&#225;i</th>
-                    <th class="col-price">T&#7893;ng ti&#7873;n</th>
-                    <th class="col-action">Thao t&#225;c</th>
+                    <th>Mã đơn</th>
+                    <th>Loại đơn</th>
+                    <th>Khách hàng</th>
+                    <th>Người phụ trách</th>
+                    <th>Sản phẩm</th>
+                    <th>Ngày tạo</th>
+                    <th>Trạng thái</th>
+                    <th class="col-price">Tổng tiền</th>
+                    <th class="col-action">Thao tác</th>
                 </tr>
                 </thead>
                 <tbody>
                 <tr th:each="item : ${historyItems}">
-                    <td class="col-code" data-label="M&#227; &#273;&#417;n" th:text="${item.orderCode}">BSMS-001</td>
-                    <td data-label="Lo&#7841;i &#273;&#417;n">
+                    <td class="col-code" data-label="Mã đơn" th:text="${item.orderCode}">BSMS-001</td>
+                    <td data-label="Loại đơn">
                         <span th:if="${item.orderType == onlineType}" class="status-badge pending">Online</span>
-                        <span th:if="${item.orderType == inPersonType}" class="status-badge approved">Tr&#7921;c ti&#7871;p</span>
+                        <span th:if="${item.orderType == inPersonType}" class="status-badge approved">Trực tiếp</span>
                         <span th:if="${item.orderType != onlineType && item.orderType != inPersonType}" class="status-badge cancelled" th:text="${item.orderType}">-</span>
                     </td>
-                    <td data-label="Kh&#225;ch h&#224;ng">
-                        <strong th:text="${item.customerName}">Nguy&#7877;n V&#259;n A</strong>
+                    <td data-label="Khách hàng">
+                        <strong th:text="${item.customerName}">Nguyễn Văn A</strong>
                         <small class="d-block text-muted" th:text="${item.customerContact}">customer@example.com</small>
                     </td>
-                    <td data-label="Ng&#432;&#7901;i ph&#7909; tr&#225;ch">
+                    <td data-label="Người phụ trách">
                         <span class="handler-role-badge" th:text="${item.handlerRoleLabel}">Moderator</span>
-                        <strong th:text="${item.handlerName}">Nh&#226;n s&#7921;</strong>
+                        <strong th:text="${item.handlerName}">Nhân sự</strong>
                         <small class="d-block text-muted" th:text="${item.handlerEmail}">staff@example.com</small>
                     </td>
-                    <td data-label="S&#7843;n ph&#7849;m" th:text="${item.productName}">S&#7843;n ph&#7849;m</td>
-                    <td data-label="Ng&#224;y t&#7841;o" class="date-cell">
+                    <td data-label="Sản phẩm" th:text="${item.productName}">Sản phẩm</td>
+                    <td data-label="Ngày tạo" class="date-cell">
                         <span th:if="${item.orderDate != null}" th:text="${#temporals.format(item.orderDate, 'dd/MM/yyyy')}">01/08/2026</span>
                         <small th:if="${item.orderDate != null}" th:text="${#temporals.format(item.orderDate, 'HH:mm')}">09:00</small>
                         <span th:if="${item.orderDate == null}">-</span>
                     </td>
-                    <td data-label="Tr&#7841;ng th&#225;i" class="status-cell">
-                        <span th:if="${item.orderStatus == pendingStatus}" class="status-badge pending">Ch&#7901; x&#7917; l&#253;</span>
-                        <span th:if="${item.orderStatus == pendingPaymentStatus}" class="status-badge pending">Ch&#7901; ti&#7873;n</span>
-                        <span th:if="${item.orderStatus == depositedStatus}" class="status-badge pending">&#272;&#227; c&#7885;c</span>
-                        <span th:if="${item.orderStatus == paidStatus}" class="status-badge pending">&#272;&#227; thanh to&#225;n</span>
-                        <span th:if="${item.orderStatus == completedStatus}" class="status-badge approved">Ho&#224;n th&#224;nh</span>
-                        <span th:if="${item.orderStatus == cancelledStatus}" class="status-badge cancelled">&#272;&#227; h&#7911;y</span>
+                    <td data-label="Trạng thái" class="status-cell">
+                        <span th:if="${item.orderStatus == pendingStatus}" class="status-badge pending">Chờ xử lý</span>
+                        <span th:if="${item.orderStatus == pendingPaymentStatus}" class="status-badge pending">Chờ tiền</span>
+                        <span th:if="${item.orderStatus == depositedStatus}" class="status-badge pending">Đã cọc</span>
+                        <span th:if="${item.orderStatus == paidStatus}" class="status-badge pending">Đã thanh toán</span>
+                        <span th:if="${item.orderStatus == completedStatus}" class="status-badge approved">Hoàn thành</span>
+                        <span th:if="${item.orderStatus == cancelledStatus}" class="status-badge cancelled">Đã hủy</span>
                         <span th:if="${item.orderStatus != pendingStatus
                               && item.orderStatus != pendingPaymentStatus
                               && item.orderStatus != depositedStatus
@@ -108,17 +108,17 @@
                               && item.orderStatus != completedStatus
                               && item.orderStatus != cancelledStatus}" class="status-badge cancelled" th:text="${item.orderStatus}">-</span>
                     </td>
-                    <td data-label="T&#7893;ng ti&#7873;n" class="col-price money-cell"
-                        th:text="${item.totalAmount != null ? #numbers.formatDecimal(item.totalAmount, 0, 'COMMA', 0, 'POINT') + ' &#273;' : '0 &#273;'}">0 &#273;</td>
-                    <td data-label="Thao t&#225;c" class="col-action">
-                        <a class="btn-mini btn-mini-confirm" th:href="@{/owner/order-history/orders/{orderCode}(orderCode=${item.orderCode})}">Chi ti&#7871;t</a>
+                    <td data-label="Tổng tiền" class="col-price money-cell"
+                        th:text="${item.totalAmount != null ? #numbers.formatDecimal(item.totalAmount, 0, 'COMMA', 0, 'POINT') + ' đ' : '0 đ'}">0 đ</td>
+                    <td data-label="Thao tác" class="col-action">
+                        <a class="btn-mini btn-mini-confirm" th:href="@{/owner/order-history/orders/{orderCode}(orderCode=${item.orderCode})}">Chi tiết</a>
                     </td>
                 </tr>
                 <tr th:if="${historyItems == null or historyItems.isEmpty()}">
                     <td colspan="9" class="empty-state">
                         <div class="empty-state-icon"><i class="fa-solid fa-clipboard-list"></i></div>
-                        <div class="empty-state-title">Ch&#432;a c&#243; &#273;&#417;n ph&#249; h&#7907;p.</div>
-                        <div class="empty-state-desc">Th&#7917; &#273;&#7893;i lo&#7841;i &#273;&#417;n, tr&#7841;ng th&#225;i ho&#7863;c t&#7915; kh&#243;a t&#236;m ki&#7871;m.</div>
+                        <div class="empty-state-title">Chưa có đơn phù hợp.</div>
+                        <div class="empty-state-desc">Thử đổi loại đơn, trạng thái hoặc từ khóa tìm kiếm.</div>
                     </td>
                 </tr>
                 </tbody>
@@ -126,10 +126,10 @@
         </div>
 
         <div class="pagination-footer" th:if="${historyPage.totalPages > 0}">
-            <div class="pagination-info" th:text="${'Hi&#7875;n th&#7883; trang ' + (historyPage.number + 1) + ' / ' + (historyPage.totalPages == 0 ? 1 : historyPage.totalPages)}">Hi&#7875;n th&#7883; trang 1 / 1</div>
+            <div class="pagination-info" th:text="${'Hiển thị trang ' + (historyPage.number + 1) + ' / ' + (historyPage.totalPages == 0 ? 1 : historyPage.totalPages)}">Hiển thị trang 1 / 1</div>
             <div class="pagination-controls">
                 <a class="page-btn" th:classappend="${historyPage.first ? ' disabled' : ''}"
-                   th:href="@{/owner/order-history(type=${selectedType}, status=${selectedStatus}, search=${search}, page=${historyPage.number - 1})}">Tr&#432;&#7899;c</a>
+                   th:href="@{/owner/order-history(type=${selectedType}, status=${selectedStatus}, search=${search}, page=${historyPage.number - 1})}">Trước</a>
                 <a class="page-btn" th:classappend="${historyPage.last ? ' disabled' : ''}"
                    th:href="@{/owner/order-history(type=${selectedType}, status=${selectedStatus}, search=${search}, page=${historyPage.number + 1})}">Sau</a>
             </div>

@@ -41,6 +41,7 @@ public class CartApiController {
                 .productName(item.getProduct().getProductName())
                 .productImage(item.getProduct().getFirstImageUrl())
                 .price(item.getProduct().getPrice())
+                .productStatus(item.getProduct().getProductStatus())
                 .build()).collect(Collectors.toList());
 
         return ResponseEntity.ok(dtoList);

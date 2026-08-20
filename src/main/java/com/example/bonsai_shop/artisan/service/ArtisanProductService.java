@@ -278,7 +278,7 @@ public class ArtisanProductService {
         if (selectedThumbnailIndex >= 0
                 && "VIDEO".equals(resolveMediaType(files.get(selectedThumbnailIndex),
                         getListValue(mediaTypes, selectedThumbnailIndex)))) {
-            throw new RuntimeException("Video khÃ´ng thá»ƒ Ä‘áº·t lÃ m media Ä‘áº¡i diá»‡n!");
+            throw new RuntimeException("Video không thể đặt làm media đại diện!");
         }
 
         if (selectedThumbnailIndex >= 0) {
