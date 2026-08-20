@@ -136,7 +136,7 @@
                     <label>
                         <span>Phí cẩu</span>
                         <span class="input-with-unit walk-in-fee-field">
-                            <input id="craneFeeDisplay" type="text" inputmode="numeric" th:attr="data-price=${createCraneFee != null ? createCraneFee : 0}">
+                            <input id="craneFeeDisplay" type="text" inputmode="numeric" maxlength="11" th:attr="data-price=${createCraneFee != null ? createCraneFee : 0}">
                             <input id="craneFeeValue" type="hidden" name="craneFee" th:value="${createCraneFee != null ? createCraneFee : 0}">
                             <span>VNĐ</span>
                         </span>
@@ -146,7 +146,7 @@
                     <label>
                         <span>Phí vận chuyển</span>
                         <span class="input-with-unit walk-in-fee-field">
-                            <input id="shippingFeeDisplay" type="text" inputmode="numeric" th:attr="data-price=${createShippingFee != null ? createShippingFee : 0}">
+                            <input id="shippingFeeDisplay" type="text" inputmode="numeric" maxlength="11" th:attr="data-price=${createShippingFee != null ? createShippingFee : 0}">
                             <input id="shippingFeeValue" type="hidden" name="shippingFee" th:value="${createShippingFee != null ? createShippingFee : 0}">
                             <span>VNĐ</span>
                         </span>
@@ -412,7 +412,7 @@
                         <label>
                             <span>Phí cẩu</span>
                             <span class="input-with-unit walk-in-fee-field">
-                                <input id="editCraneFeeDisplay" type="text" inputmode="numeric">
+                                <input id="editCraneFeeDisplay" type="text" inputmode="numeric" maxlength="11">
                                 <input id="editCraneFeeValue" type="hidden" name="craneFee" value="0">
                                 <span>VNĐ</span>
                             </span>
@@ -421,7 +421,7 @@
                         <label>
                             <span>Phí vận chuyển</span>
                             <span class="input-with-unit walk-in-fee-field">
-                                <input id="editShippingFeeDisplay" type="text" inputmode="numeric">
+                                <input id="editShippingFeeDisplay" type="text" inputmode="numeric" maxlength="11">
                                 <input id="editShippingFeeValue" type="hidden" name="shippingFee" value="0">
                                 <span>VNĐ</span>
                             </span>
@@ -565,6 +565,7 @@
     const cancelConfirmCancel = cancelConfirmModal?.querySelector('.btn-modal-cancel');
     const editButton = document.getElementById('walkInEditButton');
     const editForm = document.getElementById('walkInEditForm');
+    const MAX_FEE_INPUT_VALUE = 200000000;
     const cancelEditButton = document.getElementById('walkInCancelEditButton');
     const editFields = {
         customerName: document.getElementById('editCustomerName'),
@@ -645,20 +646,26 @@
         return normalizedValue ? normalizedValue.replace(/\B(?=(\d{3})+(?!\d))/g, '.') : '';
     }
 
+    function clampFeeValue(value) {
+        const normalizedValue = normalizePrice(value);
+        if (!normalizedValue) return '';
+        return String(Math.min(Number(normalizedValue), MAX_FEE_INPUT_VALUE));
+    }
+
     function syncFeeInput(feeInput) {
-        const normalizedValue = normalizePrice(feeInput.display.value);
+        const normalizedValue = clampFeeValue(feeInput.display.value);
         feeInput.value.value = normalizedValue || '0';
         feeInput.display.value = formatInputVnd(normalizedValue);
     }
 
     function setFeeInput(feeInput, value) {
-        feeInput.value.value = normalizePrice(value) || '0';
-        feeInput.display.value = formatInputVnd(value);
+        const normalizedValue = clampFeeValue(value);
+        feeInput.value.value = normalizedValue || '0';
+        feeInput.display.value = formatInputVnd(normalizedValue);
     }
 
     [...feeInputs, ...editFeeInputs].forEach(feeInput => {
-        feeInput.display.value = formatInputVnd(feeInput.display.dataset.price || feeInput.value.value);
-        feeInput.value.value = normalizePrice(feeInput.display.dataset.price || feeInput.value.value) || '0';
+        setFeeInput(feeInput, feeInput.display.dataset.price || feeInput.value.value);
         feeInput.display.addEventListener('input', () => {
             syncFeeInput(feeInput);
             if (createForm.contains(feeInput.value)) {

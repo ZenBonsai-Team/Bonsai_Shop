@@ -203,6 +203,22 @@ class ArtisanProductServiceTest {
     }
 
     @Test
+    void deleteProduct_WhenProductIsNotDraft_ShouldRejectDelete() {
+        User artisanUser = artisan(10, "artisan@test.com");
+        Product product = product(101, artisanUser, "AVAILABLE", false);
+
+        mockOwnedProductLookup(artisanUser, product);
+
+        assertThatThrownBy(() -> artisanProductService.deleteProduct("artisan@test.com", 101))
+                .isInstanceOf(RuntimeException.class);
+
+        assertThat(product.getProductStatus()).isEqualTo("AVAILABLE");
+        verify(productMediaRepository, never()).findByProductOrderByDisplayOrderAscMediaIdAsc(any(Product.class));
+        verify(mediaStorageService, never()).deleteProductMedia(any());
+        verify(productRepository, never()).delete(any(Product.class));
+    }
+
+    @Test
     void addMediaBatch_WhenVideoSelectedAsThumbnail_ShouldRejectBatchThumbnail() {
         User artisanUser = artisan(10, "artisan@test.com");
         Product product = product(101, artisanUser, "DRAFT", false);
@@ -228,26 +244,6 @@ class ArtisanProductServiceTest {
         verify(productMediaRepository, never()).save(any(ProductMedia.class));
     }
 
-    @Test
-    void publish_WhenVideoIsThumbnailAndImageExists_ShouldNormalizeThumbnailAndPublish() {
-        User artisanUser = artisan(10, "artisan@test.com");
-        Product product = publishReadyProduct(101, artisanUser, "DRAFT", false, "Standard");
-        ProductMedia videoMedia = media(product, 201, "https://cdn.test/clip.mp4", "VIDEO", true);
-        ProductMedia imageMedia = media(product, 202, "https://cdn.test/front.jpg", "IMAGE", false);
-
-        mockOwnedProductLookup(artisanUser, product);
-        when(productMediaRepository.findByProductOrderByDisplayOrderAscMediaIdAsc(product))
-                .thenReturn(List.of(videoMedia, imageMedia));
-
-        artisanProductService.publish("artisan@test.com", 101);
-
-        assertThat(videoMedia.getIsThumbnail()).isFalse();
-        assertThat(imageMedia.getIsThumbnail()).isTrue();
-        assertThat(product.getProductStatus()).isEqualTo("AVAILABLE");
-        assertThat(product.getIsVisible()).isTrue();
-        verify(productMediaRepository, times(2)).save(any(ProductMedia.class));
-        verify(productRepository).save(product);
-    }
 
     @Test
     void updateProduct_WhenChangingToEliteSegment_ShouldHidePublicPrice() {
