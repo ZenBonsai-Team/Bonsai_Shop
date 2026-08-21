@@ -709,17 +709,21 @@ public class OrderService {
      */
     @Transactional
     public Order createOrder(PurchaseOrderRequestDTO dto, User customer) {
-        if (dto.getCustomerName() != null && (dto.getCustomerName().trim().length() < 3 || dto.getCustomerName().trim().length() > 50)) {
-            throw new IllegalArgumentException("H\u1ecd v\u00e0 t\u00ean ng\u01b0\u1eddi nh\u1eadn ph\u1ea3i c\u00f3 t\u1eeb 3 \u0111\u1ebfn 50 k\u00fd t\u1ef1.");
+        if (dto.getCustomerName() != null
+                && (dto.getCustomerName().trim().length() < 3 || dto.getCustomerName().trim().length() > 50)) {
+            throw new IllegalArgumentException(
+                    "H\u1ecd v\u00e0 t\u00ean ng\u01b0\u1eddi nh\u1eadn ph\u1ea3i c\u00f3 t\u1eeb 3 \u0111\u1ebfn 50 k\u00fd t\u1ef1.");
         }
         if (dto.getCustomerEmail() != null && dto.getCustomerEmail().length() > 255) {
             throw new IllegalArgumentException("Email kh??ng ???????c v?????t qu?? 255 k?? t???.");
         }
         if (dto.getShippingAddress() != null && dto.getShippingAddress().length() > 255) {
-            throw new IllegalArgumentException("\u0110\u1ecba ch\u1ec9 nh\u1eadn kh\u00f4ng \u0111\u01b0\u1ee3c v\u01b0\u1ee3t qu\u00e1 255 k\u00fd t\u1ef1.");
+            throw new IllegalArgumentException(
+                    "\u0110\u1ecba ch\u1ec9 nh\u1eadn kh\u00f4ng \u0111\u01b0\u1ee3c v\u01b0\u1ee3t qu\u00e1 255 k\u00fd t\u1ef1.");
         }
         if (dto.getNotes() != null && dto.getNotes().length() > 400) {
-            throw new IllegalArgumentException("Ghi ch\u00fa kh\u00f4ng \u0111\u01b0\u1ee3c v\u01b0\u1ee3t qu\u00e1 400 k\u00fd t\u1ef1.");
+            throw new IllegalArgumentException(
+                    "Ghi ch\u00fa kh\u00f4ng \u0111\u01b0\u1ee3c v\u01b0\u1ee3t qu\u00e1 400 k\u00fd t\u1ef1.");
         }
 
         List<Product> productsToBuy = resolveProductsToBuy(dto, customer);
@@ -1265,9 +1269,11 @@ public class OrderService {
      * [GHI NHẬN KHÁCH TRẢ CÂY - HOÀN TIỀN GIÁ CÂY VÀ HỦY ĐƠN]
      *
      * Mục đích:
-     * - Khi đơn hàng đã thanh toán toàn bộ (PAID/FULL_PAYMENT), cây đã giao đến nơi nhưng khách từ chối/trả lại cây
-     *   và đồng ý chịu toàn bộ phí vận chuyển + phí cẩu.
-     * - Ghi nhận bút toán hoàn tiền giá cây (PRODUCT_REFUND_ONLY) vào Sổ cái tài chính FinancialLedger.
+     * - Khi đơn hàng đã thanh toán toàn bộ (PAID/FULL_PAYMENT), cây đã giao đến nơi
+     * nhưng khách từ chối/trả lại cây
+     * và đồng ý chịu toàn bộ phí vận chuyển + phí cẩu.
+     * - Ghi nhận bút toán hoàn tiền giá cây (PRODUCT_REFUND_ONLY) vào Sổ cái tài
+     * chính FinancialLedger.
      * - Đổi Order sang CANCELLED và giải phóng cây về AVAILABLE.
      *
      * Được gọi từ:
@@ -1283,7 +1289,8 @@ public class OrderService {
 
         String oldStatus = order.getOrderStatus();
         if (!"PAID".equalsIgnoreCase(oldStatus)) {
-            throw new IllegalStateException("Chỉ có thể ghi nhận hoàn tiền giá cây khi đơn hàng đã thanh toán toàn bộ thành công.");
+            throw new IllegalStateException(
+                    "Chỉ có thể ghi nhận hoàn tiền giá cây khi đơn hàng đã thanh toán toàn bộ thành công.");
         }
 
         if (financialLedgerService.hasRecordedAnyRefund(order)) {
@@ -1292,13 +1299,8 @@ public class OrderService {
 
         String normalizedReason = requireReason(reason);
 
-        FinancialLedger refundLedger = financialLedgerService.recordProductRefundOnly(
-                order,
-                normalizedReason,
-                moderator
-        );
-
-        appendOrderNote(order, normalizedReason + " Hoàn tiền giá cây, khách chịu phí vận chuyển và phí cẩu (Ghi nhận thủ công).");
+        appendOrderNote(order,
+                normalizedReason + " Hoàn tiền giá cây, khách chịu phí vận chuyển và phí cẩu (Ghi nhận thủ công).");
 
         order.setOrderStatus("CANCELLED");
         orderRepository.save(order);

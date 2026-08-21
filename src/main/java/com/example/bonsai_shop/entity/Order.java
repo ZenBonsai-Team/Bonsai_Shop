@@ -62,6 +62,7 @@ public class Order {
     private String shippingAddress;
 
     /** Thời điểm đặt hàng. */
+    @Builder.Default
     @Column(name = "OrderDate")
     private LocalDateTime orderDate = LocalDateTime.now();
 
@@ -70,22 +71,27 @@ public class Order {
     private BigDecimal totalAmount;
 
     /** Số tiền đặt cọc cần thanh toán đợt 1 (nếu là flow DEPOSIT). */
+    @Builder.Default
     @Column(name = "DepositAmount", precision = 15, scale = 2)
     private BigDecimal depositAmount = BigDecimal.ZERO;
 
     /** Trạng thái đơn hàng: PENDING, PENDING_PAYMENT, DEPOSITED, PAID, COMPLETED, CANCELLED. */
+    @Builder.Default
     @Column(name = "OrderStatus", length = 50)
     private String orderStatus = "PENDING";
 
     /** Loại đơn hàng: ONLINE (mua trực tuyến) hoặc IN_PERSON (mua trực tiếp tại vườn). */
+    @Builder.Default
     @Column(name = "OrderType", length = 50, nullable = false)
     private String orderType = "ONLINE";
 
     /** Phí cẩu cây nặng đặc thù (áp sau khi Moderator duyệt). */
+    @Builder.Default
     @Column(name = "CraneFee", precision = 15, scale = 2)
     private BigDecimal craneFee = BigDecimal.ZERO;
 
     /** Phí vận chuyển cây (áp sau khi Moderator duyệt). */
+    @Builder.Default
     @Column(name = "ShippingFee", precision = 15, scale = 2)
     private BigDecimal shippingFee = BigDecimal.ZERO;
 
@@ -107,6 +113,7 @@ public class Order {
     private LocalDateTime completedAt;
 
     /** Khóa lạc quan (Optimistic Locking) chống ghi đè đồng thời. */
+    @Builder.Default
     @Version
     @Column(name = "version")
     private Integer version = 0;

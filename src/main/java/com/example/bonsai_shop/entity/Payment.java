@@ -9,18 +9,21 @@ import java.time.LocalDateTime;
  * Entity đại diện cho một giao dịch thanh toán.
  *
  * QUAN HỆ: Nhiều Payment → Một Order (ManyToOne)
- *   Lý do: Business rule Bonsai Shop yêu cầu 1 Order có thể có nhiều Payment records:
- *   - Payment #1: DEPOSIT (đặt cọc qua VNPay)
- *   - Payment #2: REMAINING_PAYMENT (phần còn lại, tiền mặt, Moderator xác nhận)
- *   Hoặc:
- *   - Payment #1: FULL_PAYMENT (thanh toán đủ qua VNPay)
+ * Lý do: Business rule Bonsai Shop yêu cầu 1 Order có thể có nhiều Payment
+ * records:
+ * - Payment #1: DEPOSIT (đặt cọc qua VNPay)
+ * - Payment #2: REMAINING_PAYMENT (phần còn lại, tiền mặt, Moderator xác nhận)
+ * Hoặc:
+ * - Payment #1: FULL_PAYMENT (thanh toán đủ qua VNPay)
  *
- *   Trước đây quan hệ là @OneToOne (UNIQUE constraint trên OrderID).
- *   Migration V3 đã bỏ UNIQUE constraint và chuyển thành @ManyToOne.
+ * Trước đây quan hệ là @OneToOne (UNIQUE constraint trên OrderID).
+ * Migration V3 đã bỏ UNIQUE constraint và chuyển thành @ManyToOne.
  *
- * PaymentType và PaymentMethod được lưu dưới dạng String trong DB (không dùng @Enumerated).
- *   → Dễ đọc khi debug SQL, không bị lỗi khi thêm enum value mới.
- *   → Các giá trị hợp lệ: xem enum PaymentType và PaymentMethod trong package enums.
+ * PaymentType và PaymentMethod được lưu dưới dạng String trong DB (không
+ * dùng @Enumerated).
+ * → Dễ đọc khi debug SQL, không bị lỗi khi thêm enum value mới.
+ * → Các giá trị hợp lệ: xem enum PaymentType và PaymentMethod trong package
+ * enums.
  */
 @Entity
 @Table(name = "PAYMENT")
@@ -58,6 +61,7 @@ public class Payment {
      * - SUCCESS: đã thanh toán thành công
      * - FAILED: giao dịch thất bại (VNPay trả về lỗi)
      */
+    @Builder.Default
     @Column(name = "PaymentStatus", length = 50)
     private String paymentStatus = "PENDING";
 
