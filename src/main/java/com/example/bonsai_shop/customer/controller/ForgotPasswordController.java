@@ -26,6 +26,7 @@ public class ForgotPasswordController {
             model.addAttribute("success", "Mã OTP đã được gửi đến " + email);
             return "customer/verify-otp-reset-password";
         } catch (RuntimeException e) {
+            model.addAttribute("emailInput", email);
             model.addAttribute("error", e.getMessage());
             return "customer/forgot-password";
         }
@@ -70,6 +71,16 @@ public class ForgotPasswordController {
         if (!newPassword.equals(confirmPassword)) {
             model.addAttribute("email", email);
             model.addAttribute("error", "Mật khẩu xác nhận không khớp!");
+            return "customer/reset-password";
+        }
+        if (newPassword.isBlank()) {
+            model.addAttribute("email", email);
+            model.addAttribute("error", "Mật khẩu không được để trống!");
+            return "customer/reset-password";
+        }
+        if (newPassword.length() < 6 || newPassword.length() > 50) {
+            model.addAttribute("email", email);
+            model.addAttribute("error", "Mật khẩu phải có từ 6 đến 50 ký tự!");
             return "customer/reset-password";
         }
         try {

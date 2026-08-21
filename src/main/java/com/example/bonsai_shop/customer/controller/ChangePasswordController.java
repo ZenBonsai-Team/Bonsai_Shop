@@ -34,14 +34,14 @@ public class ChangePasswordController {
             @RequestParam String confirmPassword,
             Model model) {
 
+        String email = extractEmail(principal);
+        if (email == null) {
+            return "redirect:/login";
+        }
+
+        model.addAttribute("user", userService.getCurrentUserProfile(email));
+
         try {
-            String email = extractEmail(principal);
-            if (email == null) {
-                return "redirect:/login";
-            }
-
-            model.addAttribute("user", userService.getCurrentUserProfile(email));
-
             userService.changePassword(
                     email,
                     currentPassword,
