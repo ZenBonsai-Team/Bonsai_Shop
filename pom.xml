@@ -173,6 +173,17 @@
                 </configuration>
             </plugin>
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <excludes>
+                        <exclude>**/RecreateDatabaseTest.java</exclude>
+                        <exclude>**/DatabaseResetTest.java</exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+            <!-- spring-boot-maven-plugin -->
+            <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
@@ -184,7 +195,38 @@
                     </excludes>
                 </configuration>
             </plugin>
+
+            <!-- JaCoCo -->
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>0.8.15</version>
+
+                <executions>
+                    <execution>
+                        <id>prepare-agent</id>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+
+                    <execution>
+                        <id>report-core-bf01</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                        <configuration>
+                            <includes>
+                                <include>**/product/service/OrderService.class</include>
+                                <include>**/product/service/OrderExpirationService.class</include>
+                                <include>**/finance/service/FinancialLedgerService.class</include>
+                                <include>**/config/VNPayConfig.class</include>
+                            </includes>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
-
 </project>
