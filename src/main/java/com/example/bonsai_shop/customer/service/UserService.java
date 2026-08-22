@@ -24,6 +24,8 @@ import java.util.regex.Pattern;
 public class UserService {
     private static final Pattern PHONE_PATTERN = Pattern.compile("^0\\d{9,10}$");
     private static final int PROFILE_ADDRESS_MAX_LENGTH = 255;
+    private static final String GOOGLE_ACCOUNT_PASSWORD_MESSAGE =
+            "Tai khoan dang nhap bang Google khong duoc doi mat khau!";
 
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
@@ -224,8 +226,10 @@ public class UserService {
     @Transactional
     public void sendOtpResetPassword(String email) {
         // Kiểm tra email tồn tại
-        userRepository.findByEmail(email)
+        User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Email không tồn tại trong hệ thống!"));
+
+        validatePasswordChangeAllowed(user);
 
         // Xóa OTP cũ
         otpRepository.deleteByEmail(email);
@@ -254,6 +258,7 @@ public class UserService {
         // Validate email phai ton tai trong he thong.
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Email không tồn tại!"));
+        validatePasswordChangeAllowed(user);
         // Validate mat khau moi toi thieu 6 ky tu.
         if (newPassword.length() < 6) {
             throw new RuntimeException("Mật khẩu phải có ít nhất 6 ký tự!");
@@ -272,6 +277,7 @@ public class UserService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Email không tồn tại!"));
 
+        validatePasswordChangeAllowed(user);
         // Validate mat khau cu bang BCrypt matches.
         if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
             throw new RuntimeException("Mật khẩu cũ không đúng!");
@@ -294,6 +300,12 @@ public class UserService {
         // Luu mat khau moi da ma hoa.
         user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
+    }
+
+    private void validatePasswordChangeAllowed(User user) {
+        if (user.getPassword() == null || user.getPassword().isBlank()) {
+            throw new RuntimeException(GOOGLE_ACCOUNT_PASSWORD_MESSAGE);
+        }
     }
 
     // Validate profile co phone/email truoc khi cho thuc hien cac chuc nang can
