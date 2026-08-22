@@ -218,9 +218,7 @@
                         </goals>
                         <configuration>
                             <includes>
-                                <include>**/product/service/OrderService.class</include>
-                                <include>**/product/service/OrderExpirationService.class</include>
-                                <include>**/finance/service/FinancialLedgerService.class</include>
+                                <include>**/service/*Service.class</include>
                                 <include>**/config/VNPayConfig.class</include>
                             </includes>
                         </configuration>

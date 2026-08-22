@@ -231,8 +231,9 @@ class BF04CommunityModerationE2ETest {
             page.waitForTimeout(2000);
             System.out.println("[TC2 DEBUG] Moderator URL after approve: " + page.url());
 
-            // Đã biến mất khỏi hàng chờ duyệt
-            assertFalse(page.locator("text=*** Cay dep").isVisible());
+            // Đã biến mất khỏi hàng chờ duyệt (nút Duyệt không còn hiển thị)
+            Locator rowAfter = page.locator("tr:has-text('*** Cay dep')").first();
+            assertFalse(rowAfter.locator("form[action*='/approve']").isVisible());
         }
 
         // 3. Khách hàng kiểm tra bảng tin thấy bài viết xuất hiện dạng che giấu

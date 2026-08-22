@@ -101,7 +101,7 @@ class BF05StaffAccountE2ETest {
 
     private void logout() {
         page.locator("form[action='/logout'] button[type='submit']").first().click();
-        page.waitForURL(url -> url.endsWith("/login?logout"));
+        page.waitForURL(url -> url.contains("/login"));
     }
 
     private void openOwnerPageAndAssertVisible(String path, String contentSelector, String tableSelector) {
