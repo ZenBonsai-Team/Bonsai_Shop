@@ -415,9 +415,216 @@ class BF03ProductCatalogSystemTest {
                 .andExpect(flash().attributeExists("error"));
 
         Product unchangedProduct = productRepository.findById(product.getProductId()).orElseThrow();
-
         assertEquals("DRAFT", unchangedProduct.getProductStatus());
         assertEquals(Boolean.FALSE, unchangedProduct.getIsVisible());
+    }
+
+    @Test
+    void tcSysBF03004_catalogManageCategorySuccessAndFailures() throws Exception {
+        // 1. Get catalog page
+        mockMvc.perform(get("/artisan/catalog")
+                        .with(artisanUser()))
+                .andExpect(status().isOk())
+                .andExpect(model().attributeExists("categories"))
+                .andExpect(model().attributeExists("varieties"))
+                .andExpect(model().attributeExists("tags"));
+
+        // 2. Create Category success
+        mockMvc.perform(post("/artisan/catalog/categories")
+                        .with(artisanUser())
+                        .with(csrf())
+                        .param("categoryName", "Valid Category New")
+                        .param("description", "A valid category description"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/artisan/catalog"))
+                .andExpect(flash().attribute("success", "Đã tạo category."));
+
+        Category created = categoryRepository.findAll().stream()
+                .filter(c -> "Valid Category New".equals(c.getCategoryName()))
+                .findFirst().orElseThrow();
+
+        // 3. Create Duplicate Category fails
+        mockMvc.perform(post("/artisan/catalog/categories")
+                        .with(artisanUser())
+                        .with(csrf())
+                        .param("categoryName", "Valid Category New")
+                        .param("description", "duplicate"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/artisan/catalog"))
+                .andExpect(flash().attribute("error", "Tên category đã tồn tại."));
+
+        // 4. Update Category success
+        mockMvc.perform(post("/artisan/catalog/categories/" + created.getCategoryId())
+                        .with(artisanUser())
+                        .with(csrf())
+                        .param("categoryName", "Updated Category Name")
+                        .param("description", "Updated desc"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/artisan/catalog"))
+                .andExpect(flash().attribute("success", "Đã cập nhật category."));
+
+        // 5. Delete Category success
+        mockMvc.perform(post("/artisan/catalog/categories/" + created.getCategoryId() + "/delete")
+                        .with(artisanUser())
+                        .with(csrf()))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/artisan/catalog"))
+                .andExpect(flash().attribute("success", "Đã xóa category."));
+    }
+
+    @Test
+    void tcSysBF03005_catalogManageVarietySuccessAndFailures() throws Exception {
+        Category category = categoryRepository.save(Category.builder().categoryName("Variety Parent Category").build());
+
+        // 1. Create Variety success
+        mockMvc.perform(post("/artisan/catalog/varieties")
+                        .with(artisanUser())
+                        .with(csrf())
+                        .param("categoryId", String.valueOf(category.getCategoryId()))
+                        .param("varietyName", "New Variety Name")
+                        .param("description", "Variety description"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/artisan/catalog"))
+                .andExpect(flash().attribute("success", "Đã tạo variety."));
+
+        Variety variety = varietyRepository.findAll().stream()
+                .filter(v -> "New Variety Name".equals(v.getVarietyName()))
+                .findFirst().orElseThrow();
+
+        // 2. Create Duplicate Variety fails
+        mockMvc.perform(post("/artisan/catalog/varieties")
+                        .with(artisanUser())
+                        .with(csrf())
+                        .param("categoryId", String.valueOf(category.getCategoryId()))
+                        .param("varietyName", "New Variety Name")
+                        .param("description", "another"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/artisan/catalog"))
+                .andExpect(flash().attribute("error", "Tên variety đã tồn tại trong category này."));
+
+        // 3. Update Variety success
+        mockMvc.perform(post("/artisan/catalog/varieties/" + variety.getVarietyId())
+                        .with(artisanUser())
+                        .with(csrf())
+                        .param("categoryId", String.valueOf(category.getCategoryId()))
+                        .param("varietyName", "Updated Variety Name")
+                        .param("description", "Updated desc"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/artisan/catalog"))
+                .andExpect(flash().attribute("success", "Đã cập nhật variety."));
+
+        // 4. Delete Variety success
+        mockMvc.perform(post("/artisan/catalog/varieties/" + variety.getVarietyId() + "/delete")
+                        .with(artisanUser())
+                        .with(csrf()))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/artisan/catalog"))
+                .andExpect(flash().attribute("success", "Đã xóa variety."));
+    }
+
+    @Test
+    void tcSysBF03006_catalogManageTagSuccessAndFailures() throws Exception {
+        // 1. Create Tag success
+        mockMvc.perform(post("/artisan/catalog/tags")
+                        .with(artisanUser())
+                        .with(csrf())
+                        .param("tagName", "New Tag Name"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/artisan/catalog"))
+                .andExpect(flash().attribute("success", "Đã tạo tag."));
+
+        Tag tag = tagRepository.findAll().stream()
+                .filter(t -> "New Tag Name".equals(t.getTagName()))
+                .findFirst().orElseThrow();
+
+        // 2. Create Duplicate Tag fails
+        mockMvc.perform(post("/artisan/catalog/tags")
+                        .with(artisanUser())
+                        .with(csrf())
+                        .param("tagName", "New Tag Name"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/artisan/catalog"))
+                .andExpect(flash().attribute("error", "Tên tag đã tồn tại."));
+
+        // 3. Update Tag success
+        mockMvc.perform(post("/artisan/catalog/tags/" + tag.getTagId())
+                        .with(artisanUser())
+                        .with(csrf())
+                        .param("tagName", "Updated Tag Name"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/artisan/catalog"))
+                .andExpect(flash().attribute("success", "Đã cập nhật tag."));
+
+        // 4. Delete Tag success
+        mockMvc.perform(post("/artisan/catalog/tags/" + tag.getTagId() + "/delete")
+                        .with(artisanUser())
+                        .with(csrf()))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/artisan/catalog"))
+                .andExpect(flash().attribute("success", "Đã xóa tag."));
+    }
+
+    @Test
+    void tcSysBF03007_catalogValidationAndDependencyConstraints() throws Exception {
+        // 1. Category name empty fail
+        mockMvc.perform(post("/artisan/catalog/categories")
+                        .with(artisanUser())
+                        .with(csrf())
+                        .param("categoryName", "")
+                        .param("description", "desc"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/artisan/catalog"))
+                .andExpect(flash().attribute("error", "Tên category không được để trống!"));
+
+        // 2. Category name too long fail
+        String tooLongName = "A".repeat(256);
+        mockMvc.perform(post("/artisan/catalog/categories")
+                        .with(artisanUser())
+                        .with(csrf())
+                        .param("categoryName", tooLongName)
+                        .param("description", "desc"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/artisan/catalog"))
+                .andExpect(flash().attribute("error", "Tên không được vượt quá 255 ký tự."));
+
+        // 3. Category name invalid characters fail
+        mockMvc.perform(post("/artisan/catalog/categories")
+                        .with(artisanUser())
+                        .with(csrf())
+                        .param("categoryName", "Category#@!$%")
+                        .param("description", "desc"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/artisan/catalog"))
+                .andExpect(flash().attribute("error", "Tên chỉ được chứa chữ, số, khoảng trắng và các ký tự . , ' - ( )."));
+
+        // 4. Description too long fail
+        String tooLongDesc = "A".repeat(501);
+        mockMvc.perform(post("/artisan/catalog/categories")
+                        .with(artisanUser())
+                        .with(csrf())
+                        .param("categoryName", "Valid Name Desc Too Long")
+                        .param("description", tooLongDesc))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/artisan/catalog"))
+                .andExpect(flash().attribute("error", "Mô tả không được vượt quá 500 ký tự."));
+
+        // 5. Delete Category in use with variety fails
+        Category inUseCategory = categoryRepository.save(Category.builder().categoryName("Category In Use").build());
+        varietyRepository.save(Variety.builder().category(inUseCategory).varietyName("Child Variety").build());
+        
+        mockMvc.perform(post("/artisan/catalog/categories/" + inUseCategory.getCategoryId() + "/delete")
+                        .with(artisanUser())
+                        .with(csrf()))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/artisan/catalog"))
+                .andExpect(flash().attribute("error", "Không thể xóa category đang có variety."));
+
+        // 6. Delete Category/Variety/Tag not found fails
+        mockMvc.perform(post("/artisan/catalog/categories/99999/delete")
+                        .with(artisanUser())
+                        .with(csrf()))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/artisan/catalog"));
     }
 
     private record CatalogData(
