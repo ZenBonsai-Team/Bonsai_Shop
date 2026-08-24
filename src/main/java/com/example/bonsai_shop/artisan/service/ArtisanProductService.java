@@ -405,7 +405,7 @@ public class ArtisanProductService {
                 media.setSlotType(normalizeShotType(slotTypes.get(index), media.getMediaType()));
             }
             if (captions != null) {
-                media.setCaption(normalizeMediaCaption(captions.get(index)));
+                media.setCaption(normalizeMediaCaption(getListValue(captions, index)));
             }
             productMediaRepository.save(media);
         }
