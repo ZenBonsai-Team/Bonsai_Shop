@@ -37,6 +37,7 @@ src/main/resources/application-local.properties
 
 # Tài liệu cá nhân
 docs/
+evidence/
 
 # File upload directories (dynamic local runtime files)
 /uploads/

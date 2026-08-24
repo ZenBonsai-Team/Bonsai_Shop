@@ -219,10 +219,10 @@
                             </td>
                             <td>
                                  <div class="d-flex align-items-center gap-2" th:if="${order.orderDetails != null and !#lists.isEmpty(order.orderDetails)}">
-                                     <!-- Group of tree images (overlapping style for premium look) -->
+                                     <!-- Group of tree images (max 5 images, 6th is +N) -->
                                      <div class="d-flex align-items-center me-2">
                                          <th:block th:each="detail, iter : ${order.orderDetails}">
-                                             <div th:if="${detail != null and detail.product != null}"
+                                             <div th:if="${iter.index < 5 and detail != null and detail.product != null}"
                                                   class="position-relative order-product-thumb" 
                                                   th:style="|z-index: ${10 - iter.index}; margin-right: -24px;|"
                                                   th:id="|detail-thumb-${detail.orderDetailId}|">
@@ -237,16 +237,19 @@
                                                        th:if="${detail.quantity > 1}" th:text="${detail.quantity}">1</span>
                                              </div>
                                          </th:block>
+                                         <!-- 6th circle showing +N remaining items if order has more than 5 trees -->
+                                         <div th:if="${#lists.size(order.orderDetails) > 5}"
+                                              class="position-relative order-product-thumb order-product-more d-flex align-items-center justify-content-center rounded-circle border border-2 border-white shadow-sm"
+                                              style="width: 80px; height: 80px; z-index: 5;"
+                                              th:title="|Còn ${#lists.size(order.orderDetails) - 5} cây khác trong đơn hàng|"
+                                              th:text="|+${#lists.size(order.orderDetails) - 5}|">
+                                             +1
+                                         </div>
                                      </div>
-                                     <div class="ms-4" style="max-width: 250px;">
+                                     <div class="ms-4" style="max-width: 250px;" th:if="${#lists.size(order.orderDetails) == 1}">
                                          <!-- If 1 item, show its name -->
-                                         <div th:if="${#lists.size(order.orderDetails) == 1}" 
-                                              class="fw-semibold text-dark text-truncate small"
+                                         <div class="fw-semibold text-dark text-truncate small"
                                               th:text="${order.orderDetails[0].product?.productName} ?: 'Sản phẩm'">Bonsai Tùng Cối</div>
-                                         <!-- If multiple items, show total items count -->
-                                         <div th:if="${#lists.size(order.orderDetails) > 1}" 
-                                              class="fw-bold text-success small"
-                                              th:text="${#lists.size(order.orderDetails)} + ' cây đã mua'">3 cây đã mua</div>
                                      </div>
                                  </div>
                                  <span class="text-muted small" th:if="${order.orderDetails == null or #lists.isEmpty(order.orderDetails)}">Không có sản phẩm</span>
