@@ -558,7 +558,8 @@
 
         const hasImages = selectedFiles.some(f => !isVideoFile(f.file));
         const hasThumbnail = selectedFiles.some(f => f.isThumbnail);
-        if (hasImages && !hasThumbnail) {
+        const hasExistingMedia = mediaUploadList?.dataset.hasExistingMedia === 'true';
+        if (hasImages && !hasThumbnail && !hasExistingMedia) {
             if (window.BSMSToast) {
                 BSMSToast.error('Vui lòng chọn 1 ảnh làm ảnh đại diện.');
             } else {
