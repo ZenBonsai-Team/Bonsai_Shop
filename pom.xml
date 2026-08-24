@@ -211,15 +211,38 @@
                     </execution>
 
                     <execution>
-                        <id>report-core-bf01</id>
+                        <id>report-team-l1</id>
                         <phase>verify</phase>
                         <goals>
                             <goal>report</goal>
                         </goals>
                         <configuration>
+                            <outputDirectory>${project.build.directory}/site/jacoco-team-l1</outputDirectory>
                             <includes>
                                 <include>**/service/*Service.class</include>
                                 <include>**/config/VNPayConfig.class</include>
+                                <include>**/product/service/MailService.class</include>
+                                <include>**/moderator/service/OrderActionService.class</include>
+                                <include>**/moderator/service/OrderDetailService.class</include>
+                                <include>**/moderator/service/MyOrderService.class</include>
+                                <include>**/moderator/util/ModeratorDisplayLabelMapper.class</include>
+
+                                <include>**/appointmentSetting/service/AppointmentSettingService.class</include>
+                                <include>**/artisan/service/ArtisanAppointmentService.class</include>
+                                <include>**/customer/service/ViewingAppointmentService.class</include>
+
+                                <include>**/artisan/service/ArtisanProductService.class</include>
+                                <include>**/artisan/service/ArtisanCatalogService.class</include>
+                                <include>**/artisan/service/ArtisanInPersonOrderService.class</include>
+                                <include>**/artisan/service/ProductJournalService.class</include>
+
+                                <include>**/customer/controller/CommunityController.class</include>
+                                <include>**/customer/service/ProfanityFilterService.class</include>
+
+                                <include>**/livestream/controller/LiveStreamApiController.class</include>
+                                <include>**/livestream/service/LiveStreamService.class</include>
+
+                                <include>**/customer/service/UserService.class</include>
                             </includes>
                         </configuration>
                     </execution>
@@ -227,4 +250,101 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>team-l2</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <argLine>@{jacoco.l2.argLine}</argLine>
+                            <excludes>
+                                <exclude>**/RecreateDatabaseTest.java</exclude>
+                                <exclude>**/DatabaseResetTest.java</exclude>
+                            </excludes>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.jacoco</groupId>
+                        <artifactId>jacoco-maven-plugin</artifactId>
+                        <version>0.8.15</version>
+                        <executions>
+                            <execution>
+                                <id>prepare-agent-l2</id>
+                                <goals>
+                                    <goal>prepare-agent</goal>
+                                </goals>
+                                <configuration>
+                                    <destFile>${project.build.directory}/jacoco-l2.exec</destFile>
+                                    <propertyName>jacoco.l2.argLine</propertyName>
+                                    <append>false</append>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>report-team-l2</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>report</goal>
+                                </goals>
+                                <configuration>
+                                    <dataFile>${project.build.directory}/jacoco-l2.exec</dataFile>
+                                    <outputDirectory>${project.build.directory}/site/jacoco-team-l2</outputDirectory>
+                                    <includes>
+                                        <include>**/customer/controller/AuthController.class</include>
+                                        <include>**/customer/controller/ProfileController.class</include>
+                                        <include>**/customer/controller/ForgotPasswordController.class</include>
+                                        <include>**/customer/controller/ChangePasswordController.class</include>
+                                        <include>**/customer/controller/CartMvcController.class</include>
+                                        <include>**/customer/controller/CommunityController.class</include>
+                                        <include>**/customer/controller/ViewingAppointmentController.class</include>
+
+                                        <include>**/product/controller/OrderApiController.class</include>
+                                        <include>**/product/controller/PaymentController.class</include>
+                                        <include>**/product/controller/IPNController.class</include>
+                                        <include>**/product/controller/CartApiController.class</include>
+
+                                        <include>**/moderator/controller/ModeratorOrderController.class</include>
+
+                                        <include>**/artisan/controller/ArtisanAppointmentController.class</include>
+                                        <include>**/artisan/controller/ArtisanInPersonOrderController.class</include>
+                                        <include>**/artisan/controller/ArtisanProductController.class</include>
+                                        <include>**/artisan/controller/ArtisanCatalogController.class</include>
+
+                                        <include>**/livestream/controller/LiveStreamApiController.class</include>
+
+                                        <include>**/artisan/scheduler/AppointmentAutoStatusScheduler.class</include>
+
+                                        <include>**/product/service/OrderService.class</include>
+                                        <include>**/product/service/OrderExpirationService.class</include>
+                                        <include>**/product/service/MailService.class</include>
+                                        <include>**/product/service/CartService.class</include>
+                                        <include>**/finance/service/FinancialLedgerService.class</include>
+                                        <include>**/config/VNPayConfig.class</include>
+                                        <include>**/moderator/service/OrderActionService.class</include>
+                                        <include>**/moderator/service/OrderDetailService.class</include>
+                                        <include>**/moderator/service/MyOrderService.class</include>
+                                        <include>**/moderator/util/ModeratorDisplayLabelMapper.class</include>
+                                        <include>**/appointmentSetting/service/AppointmentSettingService.class</include>
+                                        <include>**/artisan/service/ArtisanAppointmentService.class</include>
+                                        <include>**/artisan/service/ArtisanCatalogService.class</include>
+                                        <include>**/artisan/service/ArtisanInPersonOrderService.class</include>
+                                        <include>**/artisan/service/ArtisanProductService.class</include>
+                                        <include>**/artisan/service/ProductJournalService.class</include>
+                                        <include>**/customer/service/ViewingAppointmentService.class</include>
+                                        <include>**/customer/service/UserService.class</include>
+                                        <include>**/customer/service/ProfanityFilterService.class</include>
+                                        <include>**/customer/service/CustomUserDetailsService.class</include>
+                                        <include>**/livestream/service/LiveStreamService.class</include>
+                                    </includes>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>
