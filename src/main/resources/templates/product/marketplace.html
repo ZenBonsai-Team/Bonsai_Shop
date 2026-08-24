@@ -21,6 +21,158 @@
     <!-- ===================================================== -->
     <link rel="stylesheet" th:href="@{/css/common.css}">
     <link rel="stylesheet" th:href="@{/css/marketplace.css}">
+    <style>
+        .compact-filter-dropdown {
+            position: relative;
+        }
+
+        .compact-filter-toggle {
+            width: 100%;
+            border: 1px solid #dfe7df;
+            background: #fff;
+            color: #1C3322;
+            border-radius: 14px;
+            padding: 0.75rem 0.85rem;
+            font-size: 0.92rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+        }
+
+        .compact-filter-toggle:hover,
+        .compact-filter-dropdown.open .compact-filter-toggle {
+            border-color: #1C3322;
+            box-shadow: 0 8px 22px rgba(28, 51, 34, 0.08);
+        }
+
+        .compact-filter-menu {
+            display: none;
+            position: absolute;
+            z-index: 30;
+            top: calc(100% + 8px);
+            left: 0;
+            right: 0;
+            background: #fff;
+            border: 1px solid #e5ece5;
+            border-radius: 16px;
+            padding: 0.75rem;
+            box-shadow: 0 18px 40px rgba(28, 51, 34, 0.16);
+        }
+
+        .compact-filter-dropdown.open .compact-filter-menu {
+            display: block;
+        }
+
+        .compact-filter-search {
+            border-radius: 12px;
+            font-size: 0.9rem;
+            margin-bottom: 0.65rem;
+        }
+
+        .compact-filter-options {
+            max-height: 220px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
+        }
+
+        .compact-filter-option {
+            cursor: pointer;
+            border-radius: 12px;
+            padding: 0.55rem 0.65rem;
+            display: flex;
+            align-items: center;
+            gap: 0.55rem;
+            font-size: 0.9rem;
+            color: #324438;
+        }
+
+        .compact-filter-option:hover {
+            background: #f3f7f2;
+        }
+
+        .compact-filter-option input {
+            accent-color: #1C3322;
+        }
+
+        .compact-filter-actions {
+            border-top: 1px solid #edf2ed;
+            margin-top: 0.65rem;
+            padding-top: 0.65rem;
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .compact-filter-apply {
+            background: #1C3322;
+            border: none;
+            color: #fff;
+            border-radius: 999px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            padding: 0.45rem 0.8rem;
+            flex: 1;
+        }
+
+        .range-step-filter {
+            background: #f7faf6;
+            border: 1px solid #e4ece3;
+            border-radius: 16px;
+            padding: 0.85rem 0.65rem 0.7rem;
+        }
+
+        .range-step-track {
+            position: relative;
+            display: grid;
+            gap: 0;
+        }
+
+        .age-range-track {
+            grid-template-columns: repeat(4, 1fr);
+        }
+
+        .price-range-track {
+            grid-template-columns: repeat(6, 1fr);
+        }
+
+        .range-step-option {
+            position: relative;
+            cursor: pointer;
+            text-align: center;
+            z-index: 1;
+            color: #617066;
+            font-size: 0.78rem;
+            font-weight: 700;
+        }
+
+        .range-step-option span {
+            display: flex;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 0.35rem;
+            background: #fff;
+            border: 2px solid #d7e1d6;
+            color: #617066;
+            transition: all 0.18s ease;
+        }
+
+        .range-step-option input:checked + span {
+            background: #1C3322;
+            border-color: #1C3322;
+            color: #fff;
+            box-shadow: 0 8px 18px rgba(28, 51, 34, 0.18);
+        }
+
+        .price-range-track .range-step-option {
+            font-size: 0.72rem;
+        }
+    </style>
 </head>
 <body>
 
@@ -144,84 +296,144 @@
                         </label>
                     </div>
 
-                    <!-- Species Checklist (Touchable Pills!) -->
+                    <!-- Species Multi Select -->
                     <div class="filter-block mb-4">
                         <div class="filter-block-title fw-bold text-dark mb-2 small text-uppercase text-muted">Dòng cây</div>
-                        <div class="d-flex flex-wrap gap-2">
-                            <label class="filter-pill-btn">
-                                <input type="checkbox" name="species" value="Sanh Nam Điền" th:checked="${species != null && species.contains('Sanh Nam Điền')}" class="visually-hidden">
-                                <span>Sanh Nam Điền</span>
-                            </label>
-                            <label class="filter-pill-btn">
-                                <input type="checkbox" name="species" value="Sanh Quê" th:checked="${species != null && species.contains('Sanh Quê')}" class="visually-hidden">
-                                <span>Sanh Quê</span>
-                            </label>
-                            <label class="filter-pill-btn">
-                                <input type="checkbox" name="species" value="Tùng La Hán" th:checked="${species != null && species.contains('Tùng La Hán')}" class="visually-hidden">
-                                <span>Tùng La Hán</span>
-                            </label>
-                            <label class="filter-pill-btn">
-                                <input type="checkbox" name="species" value="Linh Sam" th:checked="${species != null && species.contains('Linh Sam')}" class="visually-hidden">
-                                <span>Linh Sam</span>
-                            </label>
-                            <label class="filter-pill-btn">
-                                <input type="checkbox" name="species" value="Mai Chiếu Thủy" th:checked="${species != null && species.contains('Mai Chiếu Thủy')}" class="visually-hidden">
-                                <span>Mai Chiếu Thủy</span>
-                            </label>
-                        </div>
-                    </div>
-    
-                    <!-- Age Checklist (Touchable Pills!) -->
-                    <div class="filter-block mb-4">
-                        <div class="filter-block-title fw-bold text-dark mb-2 small text-uppercase text-muted">Tuổi cây</div>
-                        <div class="d-flex flex-wrap gap-2">
-                            <label class="filter-pill-btn">
-                                <input type="checkbox" name="ages" value="under5" th:checked="${ages != null && ages.contains('under5')}" class="visually-hidden">
-                                <span th:text="${#locale.language == 'en' ? 'Under 5 years' : 'Dưới 5 năm'}">Dưới 5 năm</span>
-                            </label>
-                            <label class="filter-pill-btn">
-                                <input type="checkbox" name="ages" value="5to10" th:checked="${ages != null && ages.contains('5to10')}" class="visually-hidden">
-                                <span th:text="${#locale.language == 'en' ? '5–10 years' : '5–10 năm'}">5–10 năm</span>
-                            </label>
-                            <label class="filter-pill-btn">
-                                <input type="checkbox" name="ages" value="11to20" th:checked="${ages != null && ages.contains('11to20')}" class="visually-hidden">
-                                <span th:text="${#locale.language == 'en' ? '11–20 years' : '11–20 năm'}">11–20 năm</span>
-                            </label>
-                            <label class="filter-pill-btn">
-                                <input type="checkbox" name="ages" value="over20" th:checked="${ages != null && ages.contains('over20')}" class="visually-hidden">
-                                <span th:text="${#locale.language == 'en' ? 'Over 20 years' : 'Trên 20 năm'}">Trên 20 năm</span>
-                            </label>
+                        <div class="compact-filter-dropdown" id="speciesFilterDropdown">
+                            <button type="button" class="compact-filter-toggle" id="speciesFilterToggle">
+                                <span th:text="${species != null && !#lists.isEmpty(species) ? #lists.size(species) + ' dòng cây đã chọn' : 'Chọn dòng cây'}">Chọn dòng cây</span>
+                                <i class="fa-solid fa-chevron-down small"></i>
+                            </button>
+                            <div class="compact-filter-menu">
+                                <input type="search"
+                                       class="form-control compact-filter-search"
+                                       id="speciesFilterSearch"
+                                       placeholder="Tìm dòng cây...">
+                                <div class="compact-filter-options">
+                                    <label class="compact-filter-option" data-filter-name="sanh nam điền">
+                                        <input type="checkbox" name="species" value="Sanh Nam Điền" th:checked="${species != null && species.contains('Sanh Nam Điền')}">
+                                        <span>Sanh Nam Điền</span>
+                                    </label>
+                                    <label class="compact-filter-option" data-filter-name="sanh quê">
+                                        <input type="checkbox" name="species" value="Sanh Quê" th:checked="${species != null && species.contains('Sanh Quê')}">
+                                        <span>Sanh Quê</span>
+                                    </label>
+                                    <label class="compact-filter-option" data-filter-name="tùng la hán">
+                                        <input type="checkbox" name="species" value="Tùng La Hán" th:checked="${species != null && species.contains('Tùng La Hán')}">
+                                        <span>Tùng La Hán</span>
+                                    </label>
+                                    <label class="compact-filter-option" data-filter-name="linh sam">
+                                        <input type="checkbox" name="species" value="Linh Sam" th:checked="${species != null && species.contains('Linh Sam')}">
+                                        <span>Linh Sam</span>
+                                    </label>
+                                    <label class="compact-filter-option" data-filter-name="mai chiếu thủy">
+                                        <input type="checkbox" name="species" value="Mai Chiếu Thủy" th:checked="${species != null && species.contains('Mai Chiếu Thủy')}">
+                                        <span>Mai Chiếu Thủy</span>
+                                    </label>
+                                </div>
+                                <div class="compact-filter-actions">
+                                    <button type="submit" class="compact-filter-apply">Áp dụng dòng cây</button>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
-                    <!-- Price Filter (Touchable Quick Ranges!) -->
+                    <!-- Tag Multi Select -->
+                    <div class="filter-block mb-4">
+                        <div class="filter-block-title fw-bold text-dark mb-2 small text-uppercase text-muted">Tag cây</div>
+                        <div class="compact-filter-dropdown" id="tagFilterDropdown" th:if="${tags != null && !#lists.isEmpty(tags)}">
+                            <button type="button" class="compact-filter-toggle" id="tagFilterToggle">
+                                <span id="tagFilterSummary"
+                                      th:text="${tagIds != null && !#lists.isEmpty(tagIds) ? #lists.size(tagIds) + ' tag đã chọn' : 'Chọn tag cây'}">Chọn tag cây</span>
+                                <i class="fa-solid fa-chevron-down small"></i>
+                            </button>
+                            <div class="compact-filter-menu" id="tagFilterMenu">
+                                <input type="search"
+                                       class="form-control compact-filter-search"
+                                       id="tagFilterSearch"
+                                       placeholder="Tìm tag...">
+                                <div class="compact-filter-options" id="tagFilterOptions">
+                                    <label class="compact-filter-option" th:each="tag : ${tags}" th:attr="data-filter-name=${#strings.toLowerCase(tag.tagName)}">
+                                        <input type="checkbox"
+                                               name="tagIds"
+                                               th:value="${tag.tagId}"
+                                               th:checked="${tagIds != null && tagIds.contains(tag.tagId)}">
+                                        <span th:text="${tag.tagName}">Tag</span>
+                                    </label>
+                                </div>
+                                <div class="compact-filter-actions">
+                                    <button type="submit" class="compact-filter-apply">Áp dụng tag</button>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="text-muted small mb-0" th:if="${tags == null || #lists.isEmpty(tags)}">Chưa có tag nào để lọc.</p>
+                    </div>
+    
+                    <!-- Age Range Track -->
+                    <div class="filter-block mb-4">
+                        <div class="filter-block-title fw-bold text-dark mb-2 small text-uppercase text-muted">Tuổi cây</div>
+                        <div class="range-step-filter">
+                            <div class="range-step-track age-range-track">
+                            <label class="range-step-option">
+                                <input type="radio" name="ages" value="under5" th:checked="${ages != null && ages.contains('under5')}" class="visually-hidden">
+                                <span>5</span>
+                                &lt; 5 năm
+                            </label>
+                            <label class="range-step-option">
+                                <input type="radio" name="ages" value="5to10" th:checked="${ages != null && ages.contains('5to10')}" class="visually-hidden">
+                                <span>10</span>
+                                5–10
+                            </label>
+                            <label class="range-step-option">
+                                <input type="radio" name="ages" value="11to20" th:checked="${ages != null && ages.contains('11to20')}" class="visually-hidden">
+                                <span>20</span>
+                                11–20
+                            </label>
+                            <label class="range-step-option">
+                                <input type="radio" name="ages" value="over20" th:checked="${ages != null && ages.contains('over20')}" class="visually-hidden">
+                                <span>20+</span>
+                                &gt; 20
+                            </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Price Range Track -->
                     <div class="filter-block mb-4">
                         <div class="filter-block-title fw-bold text-dark mb-2 small text-uppercase text-muted">Chọn khoảng giá</div>
-                        <div class="d-flex flex-wrap gap-2">
-                            <label class="filter-pill-btn">
-                                <input type="checkbox" name="priceRanges" value="under1M" th:checked="${priceRanges != null && priceRanges.contains('under1M')}" class="visually-hidden">
-                                <span th:text="${#locale.language == 'en' ? 'Under 1M' : 'Dưới 1 triệu'}">Dưới 1 triệu</span>
+                        <div class="range-step-filter">
+                            <div class="range-step-track price-range-track">
+                            <label class="range-step-option">
+                                <input type="radio" name="priceRanges" value="under1M" th:checked="${priceRanges != null && priceRanges.contains('under1M')}" class="visually-hidden">
+                                <span>1</span>
+                                &lt;1tr
                             </label>
-                            <label class="filter-pill-btn">
-                                <input type="checkbox" name="priceRanges" value="1Mto5M" th:checked="${priceRanges != null && priceRanges.contains('1Mto5M')}" class="visually-hidden">
-                                <span th:text="${#locale.language == 'en' ? '1M – 5M' : 'Từ 1 đến 5 triệu'}">1 – 5 triệu</span>
+                            <label class="range-step-option">
+                                <input type="radio" name="priceRanges" value="1Mto5M" th:checked="${priceRanges != null && priceRanges.contains('1Mto5M')}" class="visually-hidden">
+                                <span>5</span>
+                                1–5tr
                             </label>
-                            <label class="filter-pill-btn">
-                                <input type="checkbox" name="priceRanges" value="5Mto10M" th:checked="${priceRanges != null && priceRanges.contains('5Mto10M')}" class="visually-hidden">
-                                <span th:text="${#locale.language == 'en' ? '5M – 10M' : '5 – 10 triệu'}">5 – 10 triệu</span>
+                            <label class="range-step-option">
+                                <input type="radio" name="priceRanges" value="5Mto10M" th:checked="${priceRanges != null && priceRanges.contains('5Mto10M')}" class="visually-hidden">
+                                <span>10</span>
+                                5–10tr
                             </label>
-                            <label class="filter-pill-btn">
-                                <input type="checkbox" name="priceRanges" value="10Mto30M" th:checked="${priceRanges != null && priceRanges.contains('10Mto30M')}" class="visually-hidden">
-                                <span th:text="${#locale.language == 'en' ? '10M – 30M' : '10 – 30 triệu'}">10 – 30 triệu</span>
+                            <label class="range-step-option">
+                                <input type="radio" name="priceRanges" value="10Mto30M" th:checked="${priceRanges != null && priceRanges.contains('10Mto30M')}" class="visually-hidden">
+                                <span>30</span>
+                                10–30tr
                             </label>
-                            <label class="filter-pill-btn">
-                                <input type="checkbox" name="priceRanges" value="30Mto100M" th:checked="${priceRanges != null && priceRanges.contains('30Mto100M')}" class="visually-hidden">
-                                <span th:text="${#locale.language == 'en' ? '30M – 100M' : '30 – 100 triệu'}">30 – 100 triệu</span>
+                            <label class="range-step-option">
+                                <input type="radio" name="priceRanges" value="30Mto100M" th:checked="${priceRanges != null && priceRanges.contains('30Mto100M')}" class="visually-hidden">
+                                <span>100</span>
+                                30–100tr
                             </label>
-                            <label class="filter-pill-btn">
-                                <input type="checkbox" name="priceRanges" value="over100M" th:checked="${priceRanges != null && priceRanges.contains('over100M')}" class="visually-hidden">
-                                <span th:text="${#locale.language == 'en' ? 'Over 100M' : 'Trên 100 triệu'}">Trên 100 triệu</span>
+                            <label class="range-step-option">
+                                <input type="radio" name="priceRanges" value="over100M" th:checked="${priceRanges != null && priceRanges.contains('over100M')}" class="visually-hidden">
+                                <span>100+</span>
+                                &gt;100tr
                             </label>
+                            </div>
                         </div>
                     </div>
      
@@ -716,10 +928,48 @@
     if (filterForm) {
         filterForm.querySelectorAll('input[type="radio"], input[type="checkbox"], select').forEach(input => {
             input.addEventListener('change', () => {
+                if (input.closest('.compact-filter-dropdown')) {
+                    return;
+                }
+
                 filterForm.submit();
             });
         });
     }
+
+    document.querySelectorAll('.compact-filter-dropdown').forEach(dropdown => {
+        const toggle = dropdown.querySelector('.compact-filter-toggle');
+        const search = dropdown.querySelector('.compact-filter-search');
+        const options = dropdown.querySelectorAll('.compact-filter-option');
+
+        if (toggle) {
+            toggle.addEventListener('click', () => {
+                dropdown.classList.toggle('open');
+                if (dropdown.classList.contains('open') && search) {
+                    search.focus();
+                }
+            });
+        }
+
+        if (search) {
+            search.addEventListener('input', () => {
+                const keyword = search.value.trim().toLowerCase();
+
+                options.forEach(option => {
+                    const filterName = option.dataset.filterName || '';
+                    option.classList.toggle('d-none', keyword && !filterName.includes(keyword));
+                });
+            });
+        }
+    });
+
+    document.addEventListener('click', event => {
+        document.querySelectorAll('.compact-filter-dropdown.open').forEach(dropdown => {
+            if (!dropdown.contains(event.target)) {
+                dropdown.classList.remove('open');
+            }
+        });
+    });
 
     // Accordion filter toggle logic
     document.querySelectorAll('.filter-block-title').forEach(title => {

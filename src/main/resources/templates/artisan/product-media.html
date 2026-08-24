@@ -68,6 +68,64 @@
                 height: 100%;
                 object-fit: cover;
             }
+            #existingMediaGrid {
+                grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            }
+            #existingMediaGrid .media-card {
+                gap: 12px;
+                padding: 12px;
+            }
+            #existingMediaGrid .media-preview-frame {
+                aspect-ratio: 4 / 3;
+                height: auto;
+                width: 100%;
+            }
+            #existingMediaGrid .media-card-body {
+                gap: 10px;
+            }
+            #existingMediaGrid .media-card-body strong {
+                background: #eef5ef;
+                border-radius: 999px;
+                color: #1c3322;
+                display: inline-flex;
+                font-size: 0.78rem;
+                justify-self: start;
+                padding: 5px 9px;
+            }
+            #existingMediaGrid .media-card-body label {
+                display: grid;
+                gap: 5px;
+            }
+            #existingMediaGrid .media-position-label {
+                align-items: center;
+                border-top: 1px solid #edf1ed;
+                display: grid;
+                gap: 8px;
+                grid-template-columns: 1fr auto;
+                padding-top: 8px;
+            }
+            #existingMediaGrid .media-move-actions {
+                grid-column: 1 / -1;
+            }
+            #existingMediaGrid .media-card-actions {
+                align-items: center;
+                border-top: 1px solid #edf1ed;
+                gap: 10px;
+                justify-content: space-between;
+                padding-top: 10px;
+            }
+            #existingMediaGrid .media-card-actions form {
+                margin: 0;
+            }
+            #existingMediaGrid .media-delete-icon-btn {
+                align-items: center;
+                border-radius: 10px;
+                display: inline-flex;
+                height: 40px;
+                justify-content: center;
+                padding: 0;
+                width: 40px;
+            }
             .media-upload-progress-wrapper {
                 margin-top: 12px;
                 width: 100%;
@@ -118,6 +176,29 @@
                 align-items: center;
                 gap: 8px;
                 cursor: pointer;
+            }
+            .media-image-preview-popover {
+                background: #ffffff;
+                border: 1px solid #dfe7df;
+                border-radius: 14px;
+                box-shadow: 0 18px 45px rgba(15, 23, 42, 0.24);
+                display: none;
+                max-height: 420px;
+                max-width: 420px;
+                padding: 8px;
+                pointer-events: none;
+                position: fixed;
+                z-index: 3000;
+            }
+            .media-image-preview-popover.show {
+                display: block;
+            }
+            .media-image-preview-popover img {
+                border-radius: 10px;
+                display: block;
+                max-height: 400px;
+                max-width: 400px;
+                object-fit: contain;
             }
         </style>
     </th:block>
@@ -175,6 +256,11 @@
         <button type="submit" form="mediaOrderForm">Lưu thứ tự & caption</button>
     </div>
 
+    <div class="alert warning"
+         th:if="${!#lists.isEmpty(mediaList) && #lists.isEmpty(mediaList.?[mediaType == 'IMAGE'])}">
+        Sản phẩm hiện chỉ có video. Vui lòng tải thêm ít nhất 1 ảnh để có thể hiện trên marketplace.
+    </div>
+
     <section class="media-grid" id="existingMediaGrid">
         <article class="media-card" th:each="media : ${mediaList}">
             <div class="media-preview-frame">
@@ -188,7 +274,7 @@
                     <input th:if="${media.mediaType == 'VIDEO'}" type="hidden" name="slotTypes" value="" form="mediaOrderForm">
                     <select name="slotTypes" th:disabled="${!isEditable || media.mediaType == 'VIDEO'}" form="mediaOrderForm">
                         <option th:if="${media.mediaType == 'VIDEO'}" value="" th:selected="${media.slotType == null}">-- Không áp dụng --</option>
-                        <option th:if="${media.mediaType == 'IMAGE'}" value="" th:selected="${media.slotType == null}">-- Chọn góc chụp --</option>
+                        <option th:if="${media.mediaType == 'IMAGE' && media.slotType == null}" value="" selected disabled>-- Chọn góc chụp --</option>
                         <option value="FRONT" th:selected="${media.slotType == 'FRONT'}">FRONT - Chính diện</option>
                         <option value="BACK" th:selected="${media.slotType == 'BACK'}">BACK - Mặt sau</option>
                         <option value="LEFT" th:selected="${media.slotType == 'LEFT'}">LEFT - Bên trái</option>
@@ -205,7 +291,7 @@
                     <input type="text" name="captions" th:value="${media.caption}" th:disabled="${!isEditable}" form="mediaOrderForm" placeholder="Nhập chú thích ảnh/video">
                     <span class="field-error" data-media-order-caption-error></span>
                 </label>
-                <label class="media-position-label">⠿ Kéo để sắp xếp
+                <label class="media-position-label">
                     <input type="hidden" name="mediaIds" th:value="${media.mediaId}" form="mediaOrderForm">
                     <input class="media-order-input" type="hidden" name="displayOrders" min="1" th:value="${media.displayOrder}" readonly th:disabled="${!isEditable}" form="mediaOrderForm">
                     <span class="media-position-text">Vị trí <span data-media-position>1</span></span>
@@ -222,7 +308,9 @@
                 <span th:if="${media.isThumbnail && media.mediaType == 'IMAGE'}" class="media-current-thumbnail">Đang là ảnh đại diện</span>
                 <span th:if="${media.mediaType == 'VIDEO'}" class="media-current-thumbnail">Video không dùng làm ảnh đại diện</span>
                 <form method="post" class="media-delete-form" th:action="@{/artisan/products/{productId}/media/{mediaId}/delete(productId=${product.productId},mediaId=${media.mediaId})}">
-                    <button type="submit" class="btn danger">🗑 Xóa media</button>
+                    <button type="submit" class="btn danger media-delete-icon-btn" aria-label="Xóa media" title="Xóa media">
+                        <i class="fa-solid fa-trash" aria-hidden="true"></i>
+                    </button>
                 </form>
             </div>
         </article>
@@ -237,6 +325,10 @@
             <button type="button" class="btn danger-fill" id="confirmMediaDeleteBtn">🗑 Xóa media</button>
         </div>
     </div>
+</div>
+
+<div class="media-image-preview-popover" id="mediaImagePreviewPopover" aria-hidden="true">
+    <img src="" alt="Xem trước ảnh phóng to">
 </div>
 
 </div>
@@ -558,7 +650,8 @@
 
         const hasImages = selectedFiles.some(f => !isVideoFile(f.file));
         const hasThumbnail = selectedFiles.some(f => f.isThumbnail);
-        if (hasImages && !hasThumbnail) {
+        const hasExistingMedia = mediaUploadList?.dataset.hasExistingMedia === 'true';
+        if (hasImages && !hasThumbnail && !hasExistingMedia) {
             if (window.BSMSToast) {
                 BSMSToast.error('Vui lòng chọn 1 ảnh làm ảnh đại diện.');
             } else {
@@ -746,6 +839,51 @@
 
     // Sắp xếp thứ tự ảnh hiện có
     const existingMediaGrid = document.getElementById('existingMediaGrid');
+    const mediaOrderForm = document.getElementById('mediaOrderForm');
+    const imagePreviewPopover = document.getElementById('mediaImagePreviewPopover');
+    const imagePreviewElement = imagePreviewPopover?.querySelector('img');
+
+    function moveImagePreview(event) {
+        if (!imagePreviewPopover) {
+            return;
+        }
+
+        const gap = 18;
+        const previewRect = imagePreviewPopover.getBoundingClientRect();
+        let left = event.clientX + gap;
+        let top = event.clientY + gap;
+
+        if (left + previewRect.width > window.innerWidth - gap) {
+            left = event.clientX - previewRect.width - gap;
+        }
+        if (top + previewRect.height > window.innerHeight - gap) {
+            top = event.clientY - previewRect.height - gap;
+        }
+
+        imagePreviewPopover.style.left = `${Math.max(gap, left)}px`;
+        imagePreviewPopover.style.top = `${Math.max(gap, top)}px`;
+    }
+
+    existingMediaGrid?.querySelectorAll('.media-preview-frame img').forEach(image => {
+        image.addEventListener('mouseenter', event => {
+            if (!imagePreviewPopover || !imagePreviewElement) {
+                return;
+            }
+            imagePreviewElement.src = image.currentSrc || image.src;
+            imagePreviewPopover.classList.add('show');
+            imagePreviewPopover.setAttribute('aria-hidden', 'false');
+            moveImagePreview(event);
+        });
+        image.addEventListener('mousemove', moveImagePreview);
+        image.addEventListener('mouseleave', () => {
+            if (!imagePreviewPopover || !imagePreviewElement) {
+                return;
+            }
+            imagePreviewPopover.classList.remove('show');
+            imagePreviewPopover.setAttribute('aria-hidden', 'true');
+            imagePreviewElement.src = '';
+        });
+    });
 
     function refreshExistingMediaOrder() {
         if (!existingMediaGrid) {
@@ -790,6 +928,46 @@
             }
             refreshExistingMediaOrder();
         });
+    });
+
+    function setMediaOrderError(element, message) {
+        const label = element?.closest('label');
+        const errorElement = label?.querySelector('[data-media-order-slot-error], [data-media-order-caption-error]');
+        if (errorElement) {
+            errorElement.textContent = message || '';
+        }
+        label?.classList.toggle('field-invalid', Boolean(message));
+    }
+
+    function validateMediaOrderForm() {
+        let isValid = true;
+        existingMediaGrid?.querySelectorAll('.media-card').forEach(card => {
+            const mediaType = card.querySelector('.media-card-body strong')?.textContent?.trim()?.toUpperCase();
+            const slotSelect = card.querySelector('select[name="slotTypes"]');
+            const captionInput = card.querySelector('input[name="captions"]');
+
+            if (mediaType === 'IMAGE' && slotSelect && !slotSelect.value) {
+                setMediaOrderError(slotSelect, 'Vui lòng chọn góc chụp.');
+                isValid = false;
+            } else if (slotSelect) {
+                setMediaOrderError(slotSelect, '');
+            }
+
+            if (captionInput && captionInput.value.length > maxCaptionLength) {
+                setMediaOrderError(captionInput, `Chú thích không được vượt quá ${maxCaptionLength} ký tự.`);
+                isValid = false;
+            } else if (captionInput) {
+                setMediaOrderError(captionInput, '');
+            }
+        });
+        return isValid;
+    }
+
+    mediaOrderForm?.addEventListener('submit', event => {
+        if (!validateMediaOrderForm()) {
+            event.preventDefault();
+            existingMediaGrid?.querySelector('.field-invalid')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
     });
 
     const mediaDeleteModal = document.getElementById('mediaDeleteModal');

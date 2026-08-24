@@ -472,6 +472,7 @@ public class ArtisanProductController {
     // Ẩn sản phẩm khỏi marketplace khi trạng thái cho phép.
     public String hide(@AuthenticationPrincipal UserDetails userDetails,
                        @PathVariable Integer productId,
+                       @RequestParam(required = false) String returnUrl,
                        RedirectAttributes redirectAttributes) {
         try {
             artisanProductService.hideProduct(userDetails.getUsername(), productId);
@@ -479,19 +480,27 @@ public class ArtisanProductController {
         } catch (RuntimeException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
-        return "redirect:/artisan/products";
+        return safeRedirect(returnUrl);
     }
 
     @PostMapping("/{productId}/show")
     // Hiện lại sản phẩm trên marketplace.
     public String show(@AuthenticationPrincipal UserDetails userDetails,
                        @PathVariable Integer productId,
+                       @RequestParam(required = false) String returnUrl,
                        RedirectAttributes redirectAttributes) {
         try {
             artisanProductService.showProduct(userDetails.getUsername(), productId);
             redirectAttributes.addFlashAttribute("success", "Đã hiện sản phẩm trên marketplace.");
         } catch (RuntimeException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
+        }
+        return safeRedirect(returnUrl);
+    }
+
+    private String safeRedirect(String returnUrl) {
+        if (returnUrl != null && returnUrl.startsWith("/artisan/products")) {
+            return "redirect:" + returnUrl;
         }
         return "redirect:/artisan/products";
     }
