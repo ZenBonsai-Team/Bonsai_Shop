@@ -4,6 +4,7 @@ import com.example.bonsai_shop.artisan.controller.ArtisanProductController;
 import com.example.bonsai_shop.artisan.dto.ArtisanProductFormDTO;
 import com.example.bonsai_shop.artisan.service.ArtisanProductService;
 import com.example.bonsai_shop.artisan.service.ProductJournalService;
+import com.example.bonsai_shop.data.service.CloudinaryStorageService;
 import com.example.bonsai_shop.entity.Category;
 import com.example.bonsai_shop.entity.Product;
 import com.example.bonsai_shop.entity.ProductJournalEvent;
@@ -49,14 +50,16 @@ class ArtisanProductControllerIntegrationTest {
 
         private ArtisanProductService artisanProductService;
         private ProductJournalService productJournalService;
+        private CloudinaryStorageService cloudinaryStorageService;
         private MockMvc mockMvc;
 
         @BeforeEach
         void setUp() {
                 artisanProductService = mock(ArtisanProductService.class);
                 productJournalService = mock(ProductJournalService.class);
+                cloudinaryStorageService = mock(CloudinaryStorageService.class);
                 ArtisanProductController controller = new ArtisanProductController(artisanProductService,
-                                productJournalService);
+                                productJournalService, cloudinaryStorageService);
                 mockMvc = MockMvcBuilders.standaloneSetup(controller)
                                 .setCustomArgumentResolvers(new AuthenticationPrincipalArgumentResolver())
                                 .build();

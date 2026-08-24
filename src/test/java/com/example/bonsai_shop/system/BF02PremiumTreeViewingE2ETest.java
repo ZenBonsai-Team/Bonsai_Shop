@@ -7,19 +7,9 @@ import com.example.bonsai_shop.customer.repository.RoleRepository;
 import com.example.bonsai_shop.customer.repository.UserRepository;
 import com.example.bonsai_shop.customer.repository.ViewingAppointmentRepository;
 import com.example.bonsai_shop.entity.AppointmentSetting;
-import com.example.bonsai_shop.entity.Category;
-import com.example.bonsai_shop.entity.Product;
-import com.example.bonsai_shop.entity.ProductMedia;
-import com.example.bonsai_shop.entity.ProductSegment;
 import com.example.bonsai_shop.entity.Role;
 import com.example.bonsai_shop.entity.User;
-import com.example.bonsai_shop.entity.Variety;
 import com.example.bonsai_shop.entity.ViewingAppointment;
-import com.example.bonsai_shop.product.repository.CategoryRepository;
-import com.example.bonsai_shop.product.repository.ProductMediaRepository;
-import com.example.bonsai_shop.product.repository.ProductRepository;
-import com.example.bonsai_shop.product.repository.ProductSegmentRepository;
-import com.example.bonsai_shop.product.repository.VarietyRepository;
 import com.microsoft.playwright.Browser;
 import com.microsoft.playwright.BrowserContext;
 import com.microsoft.playwright.BrowserType;
@@ -38,8 +28,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.security.crypto.password.PasswordEncoder;
-
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -64,21 +52,6 @@ class BF02PremiumTreeViewingE2ETest {
     private RoleRepository roleRepository;
 
     @Autowired
-    private CategoryRepository categoryRepository;
-
-    @Autowired
-    private VarietyRepository varietyRepository;
-
-    @Autowired
-    private ProductSegmentRepository segmentRepository;
-
-    @Autowired
-    private ProductRepository productRepository;
-
-    @Autowired
-    private ProductMediaRepository mediaRepository;
-
-    @Autowired
     private ViewingAppointmentRepository appointmentRepository;
 
     @Autowired
@@ -100,7 +73,6 @@ class BF02PremiumTreeViewingE2ETest {
     private String baseUrl;
     private String customerEmail;
     private User customer;
-    private Product premiumProduct;
 
     @BeforeAll
     void setUpAll() {
@@ -116,7 +88,6 @@ class BF02PremiumTreeViewingE2ETest {
         clearPauseSetting();
         customerEmail = "bf02.e2e.customer." + System.nanoTime() + "@test.com";
         customer = createUser(customerEmail, "BF02 E2E Customer", findRole("CUSTOMER", "ROLE_CUSTOMER"));
-        premiumProduct = createPremiumProduct();
 
         context = browser.newContext(new Browser.NewContextOptions()
                 .setLocale("vi-VN")
@@ -141,57 +112,6 @@ class BF02PremiumTreeViewingE2ETest {
         if (playwright != null) {
             playwright.close();
         }
-    }
-
-    private Product createPremiumProduct() {
-        User artisan = createUser(
-                "bf02.e2e.artisan@test.com",
-                "BF02 E2E Artisan",
-                findRole("ARTISAN", "ROLE_ARTISAN"));
-
-        Category category = categoryRepository.save(Category.builder()
-                .categoryName("BF02 E2E Category " + System.nanoTime())
-                .description("BF02 E2E category")
-                .build());
-        Variety variety = varietyRepository.save(Variety.builder()
-                .category(category)
-                .varietyName("BF02 E2E Variety " + System.nanoTime())
-                .description("BF02 E2E variety")
-                .build());
-        ProductSegment eliteSegment = segmentRepository.findById(3)
-                .orElseThrow(() -> new IllegalStateException("Premium segment with id 3 is required"));
-
-        Product product = productRepository.save(Product.builder()
-                .createdBy(artisan)
-                .variety(variety)
-                .segment(eliteSegment)
-                .productCode("BF02-E2E-" + System.nanoTime())
-                .productName("BF02 E2E Premium Bonsai")
-                .description("BF02 E2E premium tree")
-                .treeStory("BF02 E2E tree story")
-                .age(25)
-                .height(80.0F)
-                .trunkDiameter(12.0F)
-                .style("Formal")
-                .price(new BigDecimal("25000000"))
-                .isPublicPrice(false)
-                .productStatus("AVAILABLE")
-                .isVisible(true)
-                .viewCount(0)
-                .createdAt(LocalDateTime.now())
-                .build());
-
-        mediaRepository.save(ProductMedia.builder()
-                .product(product)
-                .mediaUrl("https://example.com/bf02-e2e-bonsai.jpg")
-                .mediaType("IMAGE")
-                .slotType("OVERVIEW")
-                .caption("BF02 E2E thumbnail")
-                .isThumbnail(true)
-                .displayOrder(0)
-                .build());
-
-        return product;
     }
 
     private User createUser(String email, String fullName, Role role) {
@@ -353,8 +273,7 @@ class BF02PremiumTreeViewingE2ETest {
 
     private ViewingAppointment createCompletedCandidateAppointment(
             LocalDateTime appointmentDateTime,
-            String note
-    ) {
+            String note) {
         ViewingAppointment appointment = new ViewingAppointment();
         appointment.setCustomer(customer);
         appointment.setAppointmentDate(appointmentDateTime);
@@ -382,8 +301,7 @@ class BF02PremiumTreeViewingE2ETest {
     private ViewingAppointment createApprovedAppointment(
             LocalDate appointmentDate,
             String appointmentTime,
-            String note
-    ) {
+            String note) {
         ViewingAppointment appointment = new ViewingAppointment();
         appointment.setCustomer(customer);
         appointment.setAppointmentDate(LocalDateTime.parse(appointmentDate + "T" + appointmentTime));
@@ -441,14 +359,12 @@ class BF02PremiumTreeViewingE2ETest {
         assertThat(page.locator("#homeFlashError"))
                 .hasAttribute("data-message", java.util.regex.Pattern.compile(".*BF02 E2E pause schedule.*"));
 
-        List<ViewingAppointment> appointmentsAfter =
-                appointmentRepository.findByCustomerOrderByCreatedAtDesc(customer);
+        List<ViewingAppointment> appointmentsAfter = appointmentRepository.findByCustomerOrderByCreatedAtDesc(customer);
 
         assertEquals(
                 appointmentsBefore,
                 appointmentsAfter.size(),
-                "No new appointment should be created during Artisan pause schedule"
-        );
+                "No new appointment should be created during Artisan pause schedule");
 
         boolean createdConflictAppointment = appointmentsAfter.stream()
                 .anyMatch(appointment -> note.equals(appointment.getNote()));
@@ -511,8 +427,7 @@ class BF02PremiumTreeViewingE2ETest {
         ViewingAppointment appointment = createApprovedAppointment(
                 appointmentDate,
                 appointmentTime,
-                note
-        );
+                note);
 
         loginAs(customerEmail);
 
@@ -582,8 +497,7 @@ class BF02PremiumTreeViewingE2ETest {
         assertEquals(
                 "CANCELLED",
                 cancelledAppointment.getStatus(),
-                "Appointment status must change from PENDING to CANCELLED"
-        );
+                "Appointment status must change from PENDING to CANCELLED");
 
         page.navigate(baseUrl + "/home");
         page.waitForLoadState(LoadState.DOMCONTENTLOADED);
@@ -609,8 +523,7 @@ class BF02PremiumTreeViewingE2ETest {
         ViewingAppointment appointment = createApprovedAppointment(
                 appointmentDate,
                 appointmentTime,
-                note
-        );
+                note);
 
         loginAs(customerEmail);
 
@@ -635,8 +548,7 @@ class BF02PremiumTreeViewingE2ETest {
         assertEquals(
                 "APPROVED",
                 savedAppointment.getStatus(),
-                "APPROVED appointment must remain APPROVED"
-        );
+                "APPROVED appointment must remain APPROVED");
 
         showApprovedEvidenceOnScreen(note);
     }
@@ -651,8 +563,7 @@ class BF02PremiumTreeViewingE2ETest {
 
         ViewingAppointment appointment = createCompletedCandidateAppointment(
                 appointmentDateTime,
-                note
-        );
+                note);
 
         ViewingAppointment before = appointmentRepository.findById(appointment.getAppointmentId())
                 .orElseThrow(() -> new AssertionError("Appointment was not found before scheduler run"));
@@ -667,8 +578,7 @@ class BF02PremiumTreeViewingE2ETest {
         assertEquals(
                 "COMPLETED",
                 completedAppointment.getStatus(),
-                "Scheduler should automatically change appointment status to COMPLETED"
-        );
+                "Scheduler should automatically change appointment status to COMPLETED");
 
         loginAs(customerEmail);
 
@@ -835,10 +745,4 @@ class BF02PremiumTreeViewingE2ETest {
         page.waitForTimeout(Double.parseDouble(System.getProperty("playwright.evidencePause", "3000")));
     }
 
-
-
-
 }
-
-
-

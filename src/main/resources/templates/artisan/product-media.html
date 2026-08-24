@@ -5,6 +5,121 @@
     <title>Tải lên hình ảnh & video - Artisan</title>
     <th:block th:fragment="styles">
         <link rel="stylesheet" th:href="@{/css/artisan.css}">
+        <style>
+            .media-dropzone {
+                border: 2px dashed #cbd5e1;
+                border-radius: 12px;
+                padding: 40px 20px;
+                text-align: center;
+                background-color: #f8fafc;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                margin-bottom: 24px;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+            }
+            .media-dropzone:hover {
+                border-color: var(--success);
+                background-color: #f0fdf4;
+            }
+            .media-dropzone.dragover {
+                border-color: var(--success);
+                background-color: #ecfdf5;
+            }
+            .media-upload-item {
+                border: 1px solid #e2e8f0;
+                border-radius: 12px;
+                padding: 16px;
+                margin-bottom: 16px;
+                background-color: #ffffff;
+                position: relative;
+            }
+            .media-upload-item-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 12px;
+                border-bottom: 1px solid #f1f5f9;
+                padding-bottom: 8px;
+            }
+            .media-upload-row {
+                display: flex;
+                gap: 16px;
+                align-items: flex-start;
+                flex-wrap: wrap;
+            }
+            .media-preview-frame {
+                width: 120px;
+                height: 120px;
+                position: relative;
+                overflow: hidden;
+                border-radius: 8px;
+                border: 1px solid #cbd5e1;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                background-color: #f8fafc;
+                flex-shrink: 0;
+            }
+            .media-preview-frame img, .media-preview-frame video {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+            }
+            .media-upload-progress-wrapper {
+                margin-top: 12px;
+                width: 100%;
+                display: none;
+            }
+            .progress-bar-container {
+                height: 8px;
+                background-color: #e2e8f0;
+                border-radius: 4px;
+                overflow: hidden;
+                margin-bottom: 4px;
+                width: 100%;
+            }
+            .progress-bar-fill {
+                height: 100%;
+                width: 0%;
+                background-color: #10b981;
+                transition: width 0.1s linear;
+            }
+            .progress-text {
+                font-size: 0.8rem;
+                color: #64748b;
+                display: flex;
+                justify-content: space-between;
+            }
+            .media-upload-fields {
+                flex-grow: 1;
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+                min-width: 250px;
+            }
+            .media-upload-fields label {
+                display: flex;
+                flex-direction: column;
+                gap: 4px;
+                font-weight: 500;
+                font-size: 0.9rem;
+            }
+            .media-upload-fields select, .media-upload-fields input[type="text"] {
+                padding: 8px 12px;
+                border-radius: 6px;
+                border: 1px solid #cbd5e1;
+                font-size: 0.9rem;
+            }
+            .media-upload-fields .checkbox {
+                flex-direction: row;
+                align-items: center;
+                gap: 8px;
+                cursor: pointer;
+            }
+        </style>
     </th:block>
 </head>
 <body>
@@ -35,15 +150,24 @@
     <div id="artisanFlashError" th:if="${error}" th:attr="data-message=${error}" hidden></div>
     <div th:if="${!isEditable}" class="alert warning">Chỉ có thể sửa media của sản phẩm nháp hoặc đã ẩn.</div>
 
-    <form th:if="${isEditable}" id="mediaUploadForm" class="form-card" method="post" enctype="multipart/form-data" novalidate
-          th:action="@{/artisan/products/{id}/media(id=${product.productId})}">
+    <form th:if="${isEditable}" id="mediaUploadForm" class="form-card" novalidate>
+        <div class="media-dropzone" id="mediaDropzone">
+            <i class="fa-solid fa-cloud-arrow-up" style="font-size: 2.5rem; color: #10b981; margin-bottom: 12px;"></i>
+            <span class="dropzone-text" style="font-weight: 500; margin-bottom: 4px; font-size: 1.1rem;">Kéo thả hình ảnh & video vào đây</span>
+            <span class="dropzone-subtext text-muted" style="font-size: 0.85rem; margin-bottom: 12px;">Hoặc click để chọn từ thiết bị của bạn</span>
+            <input type="file" id="dropzoneFileInput" multiple accept="image/*,video/mp4,video/webm" style="display: none;">
+            <button type="button" class="btn secondary rounded-pill px-4" id="selectFilesBtn">Chọn tệp</button>
+        </div>
+
         <div class="media-upload-list" id="mediaUploadList"
              th:attr="data-has-existing-media=${!#lists.isEmpty(mediaList)}"></div>
-        <div class="actions media-toolbar">
-            <button type="button" class="btn secondary" id="addMediaItemBtn">+ Thêm media khác</button>
-        </div>
+        
         <p class="form-hint">Mỗi lượt tối đa 10 media. Ảnh tối đa 7MB, video tối đa 100MB. Video không cần góc chụp và không dùng làm media đại diện.</p>
-        <button type="submit" id="uploadAllBtn">Tải lên tất cả 1 media</button>
+        
+        <div class="actions media-toolbar" style="margin-top: 16px; display: flex; gap: 12px;">
+            <button type="button" class="btn btn-success rounded-pill px-4" id="uploadAllBtn" disabled>Bắt đầu tải lên (0 tệp)</button>
+            <button type="button" class="btn secondary rounded-pill px-4" id="clearAllBtn" style="display: none;">Xóa tất cả</button>
+        </div>
     </form>
 
     <form id="mediaOrderForm" method="post" th:action="@{/artisan/products/{id}/media/order(id=${product.productId})}"></form>
@@ -120,13 +244,19 @@
 <th:block th:fragment="scripts">
 <script>
     const mediaUploadList = document.getElementById('mediaUploadList');
-    const addMediaItemBtn = document.getElementById('addMediaItemBtn');
+    const mediaDropzone = document.getElementById('mediaDropzone');
+    const dropzoneFileInput = document.getElementById('dropzoneFileInput');
+    const selectFilesBtn = document.getElementById('selectFilesBtn');
     const uploadAllBtn = document.getElementById('uploadAllBtn');
+    const clearAllBtn = document.getElementById('clearAllBtn');
     const mediaUploadForm = document.getElementById('mediaUploadForm');
     const maxMediaPerUpload = 10;
     const maxImageSizeBytes = 7 * 1024 * 1024;
     const maxVideoSizeBytes = 100 * 1024 * 1024;
     const maxCaptionLength = 255;
+    
+    let selectedFiles = [];
+
     const shotTypeOptions = `
         <option value="">-- Chọn góc chụp --</option>
         <option value="FRONT">FRONT - Chính diện</option>
@@ -140,293 +270,481 @@
         <option value="OVERVIEW">OVERVIEW - Tổng quan</option>
     `;
 
-    function refreshMediaUploadIndexes() {
-        if (!mediaUploadList || !uploadAllBtn) {
-            return;
-        }
-
-        const items = mediaUploadList.querySelectorAll('.media-upload-item');
-        items.forEach((item, index) => {
-            item.querySelector('[data-media-title]').textContent = `Media ${index + 1}`;
-            item.querySelector('[name="thumbnailIndex"]').value = String(index);
-            item.querySelector('[data-remove-media]').disabled = items.length === 1;
-        });
-        uploadAllBtn.textContent = `Tải lên tất cả ${items.length} media`;
-        if (addMediaItemBtn) {
-            addMediaItemBtn.disabled = items.length >= maxMediaPerUpload;
-        }
-    }
-
-    function setMediaFieldError(field, message) {
-        const wrapper = field?.closest('label') || field?.closest('.media-upload-row') || field?.closest('.media-upload-item');
-        if (!wrapper) {
-            return;
-        }
-        wrapper.classList.toggle('field-invalid', Boolean(message));
-        const error = wrapper.querySelector('.field-error');
-        if (error) {
-            error.textContent = message || '';
-        }
-    }
-
-    function clearUploadItemErrors(item) {
-        item.querySelectorAll('.field-error').forEach(error => error.textContent = '');
-        item.querySelectorAll('.field-invalid').forEach(field => field.classList.remove('field-invalid'));
-    }
-
-    function scrollToFirstMediaError(scope) {
-        const firstError = scope.querySelector('.field-error:not(:empty)');
-        const errorWrapper = firstError?.closest('.field-invalid') || firstError?.closest('label') || firstError?.closest('.media-upload-item');
-        if (!errorWrapper) {
-            return;
-        }
-
-        errorWrapper.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        const field = errorWrapper.querySelector('input:not([type="hidden"]):not([disabled]), select:not([disabled]), textarea:not([disabled])');
-        if (field) {
-            setTimeout(() => field.focus({ preventScroll: true }), 250);
-        }
-    }
-
-    function isVideoUpload(file) {
-        if (!file) {
-            return false;
-        }
-
-        // Detect video o client de tat goc chup va khong cho chon lam thumbnail.
-        const fileName = file.name ? file.name.toLowerCase() : '';
-        return file.type.startsWith('video/') || fileName.endsWith('.mp4') || fileName.endsWith('.webm');
-    }
-
-    function syncUploadItemFileState(item) {
-        const fileInput = item.querySelector('[name="files"]');
-        const shotTypeSelect = item.querySelector('select[name="slotTypes"]');
-        const shotTypeHidden = item.querySelector('input[data-slot-type-hidden]');
-        const mediaTypeInput = item.querySelector('[data-media-type-input]');
-        const thumbnailInput = item.querySelector('[name="thumbnailIndex"]');
-        const thumbnailLabel = item.querySelector('[data-thumbnail-label]');
-        const preview = item.querySelector('[data-media-preview]');
-        const file = fileInput.files[0];
-        const isVideo = isVideoUpload(file);
-
-        // Dong bo hidden mediaTypes voi server, va tat slotType/thumbnail cho video.
-        mediaTypeInput.value = isVideo ? 'VIDEO' : 'IMAGE';
-        shotTypeSelect.required = !isVideo;
-        shotTypeSelect.disabled = isVideo;
-        shotTypeHidden.disabled = !isVideo;
-        thumbnailInput.disabled = isVideo;
-        if (isVideo && thumbnailInput.checked) {
-            thumbnailInput.checked = false;
-        }
-        if (thumbnailLabel) {
-            thumbnailLabel.classList.toggle('is-disabled', isVideo);
-        }
-        if (isVideo) {
-            shotTypeSelect.value = '';
-        }
-        setMediaFieldError(fileInput, '');
-        setMediaFieldError(shotTypeSelect, '');
-        if (!mediaUploadList.querySelector('[name="thumbnailIndex"]:checked')) {
-            const firstImageThumbnail = Array.from(mediaUploadList.querySelectorAll('.media-upload-item'))
-                    .map(uploadItem => uploadItem.querySelector('[name="thumbnailIndex"]'))
-                    .find(input => input && !input.disabled);
-            if (firstImageThumbnail) {
-                firstImageThumbnail.checked = true;
+    if (mediaDropzone) {
+        mediaDropzone.addEventListener('click', (e) => {
+            if (e.target !== selectFilesBtn && !selectFilesBtn.contains(e.target)) {
+                dropzoneFileInput.click();
             }
-        }
+        });
+        selectFilesBtn?.addEventListener('click', () => {
+            dropzoneFileInput.click();
+        });
+        dropzoneFileInput?.addEventListener('change', (e) => {
+            handleSelectedFiles(e.target.files);
+            dropzoneFileInput.value = ''; // Reset to allow same file select
+        });
 
-        preview.innerHTML = '<span>Chưa chọn file</span>';
-        if (!file) {
-            return;
-        }
+        // drag behaviors
+        ['dragenter', 'dragover'].forEach(eventName => {
+            mediaDropzone.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                mediaDropzone.classList.add('dragover');
+            }, false);
+        });
 
-        const objectUrl = URL.createObjectURL(file);
-        if (isVideo) {
-            preview.innerHTML = `<video controls src="${objectUrl}"></video>`;
-        } else {
-            preview.innerHTML = `<img src="${objectUrl}" alt="Xem trước ảnh">`;
-        }
+        ['dragleave', 'drop'].forEach(eventName => {
+            mediaDropzone.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                mediaDropzone.classList.remove('dragover');
+            }, false);
+        });
+
+        mediaDropzone.addEventListener('drop', (e) => {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            handleSelectedFiles(files);
+        }, false);
     }
 
-    function createMediaUploadItem() {
-        if (!mediaUploadList) {
-            return;
-        }
-        if (mediaUploadList.querySelectorAll('.media-upload-item').length >= maxMediaPerUpload) {
+    function handleSelectedFiles(files) {
+        if (!files || files.length === 0) return;
+
+        const currentCount = selectedFiles.length;
+        if (currentCount + files.length > maxMediaPerUpload) {
             if (window.BSMSToast) {
-                BSMSToast.error(`Mỗi lần chỉ được tải lên tối đa ${maxMediaPerUpload} media.`);
+                BSMSToast.error(`Mỗi lượt chỉ được tải lên tối đa ${maxMediaPerUpload} tệp.`);
+            } else {
+                alert(`Mỗi lượt chỉ được tải lên tối đa ${maxMediaPerUpload} tệp.`);
             }
             return;
         }
 
-        const item = document.createElement('div');
-        item.className = 'media-upload-item';
-        item.innerHTML = `
-            <div class="media-upload-item-header">
-                <strong data-media-title>Media</strong>
-                <button type="button" class="btn secondary" data-remove-media>Xóa media</button>
-            </div>
-            <div class="media-upload-row">
-                <div class="media-preview-frame media-upload-preview" data-media-preview>
-                    <span>Chưa chọn file</span>
-                </div>
-                <label>Chọn file
-                    <input type="file" name="files" accept="image/*,video/mp4,video/webm" required>
-                    <span class="field-error" data-file-error></span>
-                </label>
-            </div>
-            <input type="hidden" name="mediaTypes" value="IMAGE" data-media-type-input>
-            <label>Góc chụp
-                <input type="hidden" name="slotTypes" value="" disabled data-slot-type-hidden>
-                <select name="slotTypes" required>${shotTypeOptions}</select>
-                <span class="field-error" data-slot-type-error></span>
-            </label>
-            <label>Chú thích
-                <input name="captions" placeholder="Nhập chú thích ảnh/video">
-                <span class="field-error" data-caption-error></span>
-            </label>
-            <label class="checkbox" data-thumbnail-label>
-                <input type="radio" name="thumbnailIndex" value="0">
-                Đặt làm media đại diện
-            </label>
-        `;
+        Array.from(files).forEach(file => {
+            const isVideo = isVideoFile(file);
+            const maxSize = isVideo ? maxVideoSizeBytes : maxImageSizeBytes;
 
-        item.querySelector('[name="files"]').addEventListener('change', () => syncUploadItemFileState(item));
-        item.querySelector('select[name="slotTypes"]').addEventListener('change', event => setMediaFieldError(event.target, ''));
-        item.querySelector('[name="captions"]').addEventListener('input', event => validateCaptionInput(event.target));
-        item.querySelector('[data-remove-media]').addEventListener('click', () => {
-            const wasThumbnail = item.querySelector('[name="thumbnailIndex"]').checked;
-            item.remove();
-            if (wasThumbnail) {
-                const firstThumbnail = mediaUploadList.querySelector('[name="thumbnailIndex"]');
-                if (firstThumbnail) {
-                    firstThumbnail.checked = true;
+            if (file.size > maxSize) {
+                const sizeMb = maxSize / (1024 * 1024);
+                if (window.BSMSToast) {
+                    BSMSToast.error(`Tệp ${file.name} vượt quá dung lượng tối đa ${sizeMb}MB.`);
+                } else {
+                    alert(`Tệp ${file.name} vượt quá dung lượng tối đa ${sizeMb}MB.`);
                 }
+                return;
             }
-            refreshMediaUploadIndexes();
+
+            const fileObj = {
+                id: 'file_' + Math.random().toString(36).substr(2, 9),
+                file: file,
+                caption: '',
+                slotType: '',
+                isThumbnail: false,
+                status: 'pending',
+                progress: 0,
+                cloudinaryUrl: null,
+                publicId: null,
+                errorMsg: ''
+            };
+
+            selectedFiles.push(fileObj);
         });
 
-        mediaUploadList.appendChild(item);
-        const thumbnails = mediaUploadList.querySelectorAll('[name="thumbnailIndex"]');
-        const hasExistingMedia = mediaUploadList.dataset.hasExistingMedia === 'true';
-        if (!hasExistingMedia && thumbnails.length === 1) {
-            thumbnails[0].checked = true;
-        }
-        refreshMediaUploadIndexes();
+        // Auto-select first image thumbnail if none selected and there is no existing thumbnail
+        ensureThumbnailSelected();
+
+        renderUploadList();
+        updateToolbarState();
     }
 
-    addMediaItemBtn?.addEventListener('click', createMediaUploadItem);
-    createMediaUploadItem();
+    function isVideoFile(file) {
+        const name = file.name.toLowerCase();
+        return file.type.startsWith('video/') || name.endsWith('.mp4') || name.endsWith('.webm');
+    }
 
-    function validateCaptionInput(input) {
-        const valueLength = input.value.trim().length;
-        if (valueLength > maxCaptionLength) {
-            setMediaFieldError(input, `Chú thích media không được vượt quá ${maxCaptionLength} ký tự.`);
+    function ensureThumbnailSelected() {
+        const hasExistingMedia = mediaUploadList?.dataset.hasExistingMedia === 'true';
+        if (hasExistingMedia) return;
+
+        const imageFiles = selectedFiles.filter(f => !isVideoFile(f.file));
+        const hasThumbnail = selectedFiles.some(f => f.isThumbnail);
+        if (!hasThumbnail && imageFiles.length > 0) {
+            imageFiles[0].isThumbnail = true;
+        }
+    }
+
+    function renderUploadList() {
+        if (!mediaUploadList) return;
+        mediaUploadList.innerHTML = '';
+
+        selectedFiles.forEach((fileObj, index) => {
+            const isVideo = isVideoFile(fileObj.file);
+            const item = document.createElement('div');
+            item.className = 'media-upload-item';
+            item.id = fileObj.id;
+
+            const objectUrl = URL.createObjectURL(fileObj.file);
+            const previewHTML = isVideo
+                ? `<video src="${objectUrl}" preload="metadata" controls></video>`
+                : `<img src="${objectUrl}" alt="Xem trước">`;
+
+            item.innerHTML = `
+                <div class="media-upload-item-header">
+                    <strong>Media ${index + 1}: ${escapeHtml(fileObj.file.name)} (${formatBytes(fileObj.file.size)})</strong>
+                    <button type="button" class="btn secondary px-3 py-1 btn-remove-item" data-id="${fileObj.id}">Xóa</button>
+                </div>
+                <div class="media-upload-row">
+                    <div class="media-preview-frame">
+                        ${previewHTML}
+                    </div>
+                    <div class="media-upload-fields">
+                        ${!isVideo ? `
+                        <label>Góc chụp <span style="color:red">*</span>
+                            <select class="select-slot-type" required data-id="${fileObj.id}">
+                                ${shotTypeOptions}
+                            </select>
+                            <span class="field-error text-danger" style="font-size:0.8rem"></span>
+                        </label>
+                        ` : `
+                        <input type="hidden" class="select-slot-type" value="" data-id="${fileObj.id}">
+                        `}
+                        <label>Chú thích
+                            <input type="text" class="input-caption" placeholder="Nhập chú thích ảnh/video" value="${escapeHtml(fileObj.caption)}" data-id="${fileObj.id}">
+                            <span class="field-error text-danger" style="font-size:0.8rem"></span>
+                        </label>
+                        ${!isVideo ? `
+                        <label class="checkbox">
+                            <input type="radio" name="thumbnailIndex" class="radio-thumbnail" data-id="${fileObj.id}" ${fileObj.isThumbnail ? 'checked' : ''}>
+                            Đặt làm media đại diện
+                        </label>
+                        ` : ''}
+                    </div>
+                </div>
+                <div class="media-upload-progress-wrapper" id="progress_${fileObj.id}">
+                    <div class="progress-bar-container">
+                        <div class="progress-bar-fill" id="bar_${fileObj.id}"></div>
+                    </div>
+                    <div class="progress-text">
+                        <span class="status-text" id="status_${fileObj.id}">Đang chờ tải lên...</span>
+                        <span class="percent-text" id="percent_${fileObj.id}">0%</span>
+                    </div>
+                </div>
+            `;
+
+            // Bind values
+            const selectSlot = item.querySelector('.select-slot-type');
+            if (selectSlot) {
+                selectSlot.value = fileObj.slotType;
+                selectSlot.addEventListener('change', (e) => {
+                    fileObj.slotType = e.target.value;
+                    clearError(selectSlot);
+                });
+            }
+
+            const inputCaption = item.querySelector('.input-caption');
+            if (inputCaption) {
+                inputCaption.addEventListener('input', (e) => {
+                    fileObj.caption = e.target.value;
+                    validateCaption(inputCaption);
+                });
+            }
+
+            const radioThumb = item.querySelector('.radio-thumbnail');
+            if (radioThumb) {
+                radioThumb.addEventListener('change', () => {
+                    selectedFiles.forEach(f => f.isThumbnail = false);
+                    fileObj.isThumbnail = true;
+                });
+            }
+
+            item.querySelector('.btn-remove-item').addEventListener('click', () => {
+                removeFile(fileObj.id);
+            });
+
+            mediaUploadList.appendChild(item);
+        });
+    }
+
+    function removeFile(id) {
+        const wasThumbnail = selectedFiles.find(f => f.id === id)?.isThumbnail;
+        selectedFiles = selectedFiles.filter(f => f.id !== id);
+        if (wasThumbnail) {
+            ensureThumbnailSelected();
+        }
+        renderUploadList();
+        updateToolbarState();
+    }
+
+    function updateToolbarState() {
+        if (!uploadAllBtn || !clearAllBtn) return;
+        const count = selectedFiles.length;
+        uploadAllBtn.disabled = count === 0;
+        uploadAllBtn.textContent = `Bắt đầu tải lên (${count} tệp)`;
+        clearAllBtn.style.display = count > 0 ? 'inline-block' : 'none';
+    }
+
+    clearAllBtn?.addEventListener('click', () => {
+        selectedFiles = [];
+        renderUploadList();
+        updateToolbarState();
+    });
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+    }
+
+    function formatBytes(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
+    function clearError(element) {
+        const parentLabel = element.closest('label');
+        if (parentLabel) {
+            parentLabel.classList.remove('field-invalid');
+            const errSpan = parentLabel.querySelector('.field-error');
+            if (errSpan) errSpan.textContent = '';
+        }
+    }
+
+    function setError(element, message) {
+        const parentLabel = element.closest('label');
+        if (parentLabel) {
+            parentLabel.classList.add('field-invalid');
+            const errSpan = parentLabel.querySelector('.field-error');
+            if (errSpan) errSpan.textContent = message;
+        }
+    }
+
+    function validateCaption(input) {
+        if (input.value.length > maxCaptionLength) {
+            setError(input, `Chú thích không được vượt quá ${maxCaptionLength} ký tự.`);
             return false;
         }
-        setMediaFieldError(input, '');
+        clearError(input);
         return true;
     }
 
-    function validateExistingMediaSlot(select) {
-        if (select.disabled || select.value) {
-            setMediaFieldError(select, '');
-            return true;
-        }
-        setMediaFieldError(select, 'Chỉ video mới được để Không áp dụng. Vui lòng chọn góc chụp cho ảnh.');
-        return false;
-    }
-
-    function validateUploadItem(item) {
-        clearUploadItemErrors(item);
+    function validateAllSelected() {
         let isValid = true;
-        const fileInput = item.querySelector('[name="files"]');
-        const slotTypeSelect = item.querySelector('select[name="slotTypes"]');
-        const captionInput = item.querySelector('[name="captions"]');
-        const file = fileInput.files[0];
+        selectedFiles.forEach(fileObj => {
+            const itemEl = document.getElementById(fileObj.id);
+            if (!itemEl) return;
 
-        if (!file) {
-            setMediaFieldError(fileInput, 'Vui lòng chọn file media.');
-            isValid = false;
-        } else {
-            const isVideo = isVideoUpload(file);
-            const maxSize = isVideo ? maxVideoSizeBytes : maxImageSizeBytes;
-            const allowedImage = file.type.startsWith('image/');
-            const allowedVideo = file.type === 'video/mp4' || file.type === 'video/webm' || isVideo;
-            // Validate nhanh tren UI; server van validate lai truoc khi upload Cloudinary.
-            if (!allowedImage && !allowedVideo) {
-                setMediaFieldError(fileInput, 'Chỉ được tải ảnh hoặc video MP4/WebM.');
-                isValid = false;
-            } else if (file.size > maxSize) {
-                setMediaFieldError(fileInput, `${isVideo ? 'Video' : 'Ảnh'} không được vượt quá ${maxSize / 1024 / 1024}MB.`);
-                isValid = false;
+            const isVideo = isVideoFile(fileObj.file);
+            if (!isVideo) {
+                const selectSlot = itemEl.querySelector('.select-slot-type');
+                if (!fileObj.slotType) {
+                    setError(selectSlot, 'Vui lòng chọn góc chụp.');
+                    isValid = false;
+                } else {
+                    clearError(selectSlot);
+                }
             }
 
-            if (!isVideo && !slotTypeSelect.value) {
-                setMediaFieldError(slotTypeSelect, 'Vui lòng chọn góc chụp.');
+            const inputCaption = itemEl.querySelector('.input-caption');
+            if (fileObj.caption.length > maxCaptionLength) {
+                setError(inputCaption, `Chú thích không được vượt quá ${maxCaptionLength} ký tự.`);
                 isValid = false;
+            } else {
+                clearError(inputCaption);
             }
-        }
+        });
 
-        if (!validateCaptionInput(captionInput)) {
+        const hasImages = selectedFiles.some(f => !isVideoFile(f.file));
+        const hasThumbnail = selectedFiles.some(f => f.isThumbnail);
+        if (hasImages && !hasThumbnail) {
+            if (window.BSMSToast) {
+                BSMSToast.error('Vui lòng chọn 1 ảnh làm ảnh đại diện.');
+            } else {
+                alert('Vui lòng chọn 1 ảnh làm ảnh đại diện.');
+            }
             isValid = false;
         }
+
         return isValid;
     }
 
-    mediaUploadForm?.addEventListener('submit', event => {
-        const items = mediaUploadList.querySelectorAll('.media-upload-item');
-        let isValid = true;
-        // Chan submit neu batch vuot gioi han, tranh gui request multipart lon khong can thiet.
-        if (items.length > maxMediaPerUpload) {
-            event.preventDefault();
-            const firstItem = items[0];
-            setMediaFieldError(firstItem, `Mỗi lần chỉ được tải lên tối đa ${maxMediaPerUpload} media.`);
-            scrollToFirstMediaError(mediaUploadForm);
-            return;
-        }
+    const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
+    const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content');
 
-        for (const item of items) {
-            if (!validateUploadItem(item)) {
-                isValid = false;
-            }
-        }
-        if (!isValid) {
-            event.preventDefault();
-            scrollToFirstMediaError(mediaUploadForm);
-        }
-    });
+    async function startBatchUpload() {
+        if (!validateAllSelected()) return;
 
-    document.getElementById('mediaOrderForm')?.addEventListener('submit', event => {
-        let isValid = true;
-        document.querySelectorAll('[data-media-order-slot-error]').forEach(error => {
-            const select = error.closest('label')?.querySelector('select[name="slotTypes"]');
-            if (select && !validateExistingMediaSlot(select)) {
-                isValid = false;
+        // Disable all inputs
+        toggleInputs(true);
+
+        const uploadPromises = selectedFiles.map(async (fileObj) => {
+            try {
+                const progressWrapper = document.getElementById(`progress_${fileObj.id}`);
+                if (progressWrapper) progressWrapper.style.display = 'block';
+                updateProgress(fileObj.id, 0, 'Đang chuẩn bị...');
+
+                const isVideo = isVideoFile(fileObj.file);
+                const mediaType = isVideo ? 'VIDEO' : 'IMAGE';
+                
+                const pathParts = window.location.pathname.split('/');
+                const productId = pathParts[3];
+
+                const sigUrl = `/artisan/products/${productId}/media/signature?mediaType=${mediaType}`;
+                const sigResponse = await fetch(sigUrl);
+                if (!sigResponse.ok) {
+                    throw new Error('Không thể tạo chữ ký số từ server.');
+                }
+                const sigData = await sigResponse.json();
+
+                updateProgress(fileObj.id, 5, 'Đang gửi lên Cloudinary...');
+                const cloudinaryData = await uploadToCloudinary(fileObj, sigData);
+                
+                fileObj.cloudinaryUrl = cloudinaryData.secure_url;
+                fileObj.publicId = cloudinaryData.public_id;
+                fileObj.status = 'success';
+                updateProgress(fileObj.id, 100, 'Tải lên thành công!');
+            } catch (err) {
+                fileObj.status = 'error';
+                fileObj.errorMsg = err.message;
+                updateProgress(fileObj.id, 0, `Lỗi: ${err.message}`, true);
+                throw err;
             }
         });
-        document.querySelectorAll('[data-media-order-caption-error]').forEach(error => {
-            const input = error.closest('label')?.querySelector('[name="captions"]');
-            if (input && !validateCaptionInput(input)) {
-                isValid = false;
+
+        try {
+            await Promise.all(uploadPromises);
+
+            const pathParts = window.location.pathname.split('/');
+            const productId = pathParts[3];
+            
+            const saveUrl = `/artisan/products/${productId}/media/save-batch`;
+            const headers = {
+                'Content-Type': 'application/json'
+            };
+            if (csrfHeader && csrfToken) {
+                headers[csrfHeader] = csrfToken;
             }
-        });
-        if (!isValid) {
-            event.preventDefault();
-            scrollToFirstMediaError(document);
+
+            const payload = selectedFiles.map((fileObj, idx) => ({
+                mediaUrl: fileObj.cloudinaryUrl,
+                mediaType: isVideoFile(fileObj.file) ? 'VIDEO' : 'IMAGE',
+                slotType: fileObj.slotType,
+                caption: fileObj.caption,
+                isThumbnail: fileObj.isThumbnail,
+                displayOrder: idx
+            }));
+
+            const saveResponse = await fetch(saveUrl, {
+                method: 'POST',
+                headers: headers,
+                body: JSON.stringify(payload)
+            });
+
+            const saveResult = await saveResponse.json();
+            if (!saveResponse.ok || !saveResult.success) {
+                throw new Error(saveResult.message || 'Lỗi lưu thông tin sản phẩm.');
+            }
+
+            if (window.BSMSToast) {
+                BSMSToast.success(saveResult.message || 'Đã tải lên thành công.');
+            }
+            
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
+
+        } catch (err) {
+            toggleInputs(false);
+            if (window.BSMSToast) {
+                BSMSToast.error(`Tải lên thất bại: ${err.message}`);
+            } else {
+                alert(`Tải lên thất bại: ${err.message}`);
+            }
         }
-    });
+    }
 
-    document.querySelectorAll('[data-media-order-caption-error]').forEach(error => {
-        const input = error.closest('label')?.querySelector('[name="captions"]');
-        input?.addEventListener('input', () => validateCaptionInput(input));
-    });
+    function toggleInputs(disabled) {
+        if (mediaDropzone) {
+            mediaDropzone.style.pointerEvents = disabled ? 'none' : 'auto';
+            mediaDropzone.style.opacity = disabled ? '0.6' : '1';
+        }
+        document.querySelectorAll('.btn-remove-item, .select-slot-type, .input-caption, .radio-thumbnail, #uploadAllBtn, #clearAllBtn').forEach(el => {
+            el.disabled = disabled;
+        });
+    }
 
-    document.querySelectorAll('[data-media-order-slot-error]').forEach(error => {
-        const select = error.closest('label')?.querySelector('select[name="slotTypes"]');
-        select?.addEventListener('change', () => validateExistingMediaSlot(select));
-    });
+    function updateProgress(id, percent, text, isError = false) {
+        const bar = document.getElementById(`bar_${id}`);
+        const status = document.getElementById(`status_${id}`);
+        const percentText = document.getElementById(`percent_${id}`);
 
+        if (bar) {
+            bar.style.width = `${percent}%`;
+            if (isError) {
+                bar.style.backgroundColor = '#ef4444';
+            } else {
+                bar.style.backgroundColor = '#10b981';
+            }
+        }
+        if (status) {
+            status.textContent = text;
+            status.style.color = isError ? '#ef4444' : '#64748b';
+        }
+        if (percentText) {
+            percentText.textContent = `${percent}%`;
+            percentText.style.color = isError ? '#ef4444' : '#64748b';
+        }
+    }
+
+    function uploadToCloudinary(fileObj, sigData) {
+        return new Promise((resolve, reject) => {
+            const xhr = new XMLHttpRequest();
+            const isVideo = isVideoFile(fileObj.file);
+            const resourceType = isVideo ? 'video' : 'image';
+            const uploadUrl = `https://api.cloudinary.com/v1_1/${sigData.cloudName}/${resourceType}/upload`;
+
+            xhr.open('POST', uploadUrl, true);
+
+            xhr.upload.addEventListener('progress', (e) => {
+                if (e.lengthComputable) {
+                    const percent = Math.round((e.loaded / e.total) * 90);
+                    updateProgress(fileObj.id, 5 + percent, 'Đang gửi lên Cloudinary...');
+                }
+            });
+
+            xhr.onload = () => {
+                if (xhr.status === 200) {
+                    try {
+                        const res = JSON.parse(xhr.responseText);
+                        resolve(res);
+                    } catch (e) {
+                        reject(new Error('Lỗi phân tích phản hồi từ Cloudinary.'));
+                    }
+                } else {
+                    reject(new Error(`Cloudinary trả về lỗi ${xhr.status}: ${xhr.statusText}`));
+                }
+            };
+
+            xhr.onerror = () => {
+                reject(new Error('Lỗi kết nối mạng đến Cloudinary.'));
+            };
+
+            const formData = new FormData();
+            formData.append('file', fileObj.file);
+            formData.append('api_key', sigData.apiKey);
+            formData.append('timestamp', sigData.timestamp);
+            formData.append('signature', sigData.signature);
+            formData.append('folder', sigData.folder);
+
+            xhr.send(formData);
+        });
+    }
+
+    uploadAllBtn?.addEventListener('click', startBatchUpload);
+
+    // Sắp xếp thứ tự ảnh hiện có
     const existingMediaGrid = document.getElementById('existingMediaGrid');
 
     function refreshExistingMediaOrder() {
@@ -509,8 +827,7 @@
     });
 
     refreshExistingMediaOrder();
-</script>
-<script>
+
     document.addEventListener('DOMContentLoaded', () => {
         const successFlash = document.getElementById('artisanFlashSuccess');
         const errorFlash = document.getElementById('artisanFlashError');

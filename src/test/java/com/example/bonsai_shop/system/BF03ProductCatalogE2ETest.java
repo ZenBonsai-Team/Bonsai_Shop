@@ -22,6 +22,7 @@ import com.microsoft.playwright.BrowserContext;
 import com.microsoft.playwright.BrowserType;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.Playwright;
+import com.microsoft.playwright.Route;
 import com.microsoft.playwright.options.LoadState;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
@@ -118,6 +119,14 @@ class BF03ProductCatalogE2ETest {
         mockImageUpload();
         context = browser.newContext();
         page = context.newPage();
+        
+        page.route("https://api.cloudinary.com/v1_1/**", route -> {
+            route.fulfill(new Route.FulfillOptions()
+                    .setStatus(200)
+                    .setContentType("application/json")
+                    .setBody("{\"secure_url\":\"http://mock/image.png\",\"public_id\":\"mock_id\"}"));
+        });
+
         page.onConsoleMessage(message -> System.out.println("[BF03 BROWSER CONSOLE] "
                 + message.type() + ": " + message.text()));
         page.onPageError(error -> System.out.println("[BF03 BROWSER ERROR] " + error));
@@ -188,7 +197,7 @@ class BF03ProductCatalogE2ETest {
         assertTrue(page.url().contains("/media"));
         assertThat(page.locator("body")).containsText("Bước 2");
         assertThat(page.locator(".dashboard-layout")).isVisible();
-        assertThat(page.locator(".page-header h1")).isVisible();
+        assertThat(page.locator("h1")).isVisible();
         Integer productId = extractProductIdFromCurrentUrl();
 
         Product draftProduct = productRepository.findById(productId).orElseThrow();
@@ -231,7 +240,7 @@ class BF03ProductCatalogE2ETest {
         loginAs(CUSTOMER_EMAIL);
         page.navigate(baseUrl + "/marketplace?keyword=" + URLEncoder.encode(productName, StandardCharsets.UTF_8));
         assertThat(page.locator("body")).containsText(productName);
-        page.locator(".btn-card-view-details").first().click();
+        page.locator(".product-card").first().click();
         page.waitForURL("**/product/*");
         page.waitForLoadState(LoadState.LOAD);
         assertThat(page.locator(".product-title")).containsText(productName);
@@ -249,13 +258,9 @@ class BF03ProductCatalogE2ETest {
         Integer productId = createDraftProduct(productName, catalogData, catalogData.standardSegment());
 
         Path oversizedImage = createOversizedImageFile();
-        page.setInputFiles(".media-upload-item input[type='file'][name='files']", oversizedImage);
-        page.locator(".media-upload-item select[name='slotTypes']").selectOption("OVERVIEW");
-        page.locator(".media-upload-item input[name='captions']").fill("This media must be rejected");
-        page.locator(".media-upload-item input[name='thumbnailIndex']").check();
-        page.locator("#uploadAllBtn").click();
+        page.setInputFiles("#dropzoneFileInput", oversizedImage);
 
-        assertThat(page.locator(".bsms-toast")).containsText("Ảnh vượt quá dung lượng tối đa 7MB");
+        assertThat(page.locator(".bsms-toast-error")).containsText("vượt quá dung lượng tối đa");
         Product product = productRepository.findById(productId).orElseThrow();
         assertEquals(0, productMediaRepository.findByProductOrderByDisplayOrderAscMediaIdAsc(product).size());
         assertThat(page.locator(".media-card")).hasCount(0);
@@ -372,11 +377,11 @@ class BF03ProductCatalogE2ETest {
     }
 
     private void uploadMedia() {
-        page.waitForSelector(".media-upload-item input[type='file'][name='files']");
-        page.setInputFiles(".media-upload-item input[type='file'][name='files']", Path.of("src/test/resources/e2e/bf03-bonsai.png"));
-        page.locator(".media-upload-item select[name='slotTypes']").selectOption("OVERVIEW");
-        page.locator(".media-upload-item input[name='captions']").fill("E2E overview image");
-        page.locator(".media-upload-item input[name='thumbnailIndex']").check();
+        page.setInputFiles("#dropzoneFileInput", Path.of("src/test/resources/e2e/bf03-bonsai.png"));
+        page.waitForSelector(".media-upload-item");
+        page.locator(".media-upload-item select.select-slot-type").selectOption("OVERVIEW");
+        page.locator(".media-upload-item input.input-caption").fill("E2E overview image");
+        page.locator(".media-upload-item input.radio-thumbnail").check();
         page.locator("#uploadAllBtn").click();
         page.waitForLoadState(LoadState.DOMCONTENTLOADED);
         page.waitForSelector(".media-card");

@@ -1,6 +1,7 @@
 package com.example.bonsai_shop.artisan.service;
 
 import com.example.bonsai_shop.artisan.dto.ArtisanProductFormDTO;
+import com.example.bonsai_shop.artisan.dto.ArtisanMediaItemDTO;
 import com.example.bonsai_shop.customer.repository.UserRepository;
 import com.example.bonsai_shop.entity.Category;
 import com.example.bonsai_shop.entity.Product;
@@ -320,6 +321,49 @@ public class ArtisanProductService {
     }
 
     @Transactional
+    public void saveMediaBatch(String artisanEmail, Integer productId, List<ArtisanMediaItemDTO> mediaItems) {
+        Product product = getMyProduct(artisanEmail, productId);
+        ensureEditable(product);
+
+        if (mediaItems == null || mediaItems.isEmpty()) {
+            return;
+        }
+
+        boolean hasNewThumbnail = mediaItems.stream().anyMatch(item -> Boolean.TRUE.equals(item.getIsThumbnail()));
+
+        List<ProductMedia> existingMedia = productMediaRepository
+                .findByProductOrderByDisplayOrderAscMediaIdAsc(product);
+
+        if (hasNewThumbnail) {
+            existingMedia.forEach(media -> {
+                media.setIsThumbnail(false);
+                productMediaRepository.save(media);
+            });
+        }
+
+        int nextDisplayOrder = getNextDisplayOrder(existingMedia);
+
+        for (int i = 0; i < mediaItems.size(); i++) {
+            ArtisanMediaItemDTO item = mediaItems.get(i);
+            String mediaType = "VIDEO".equalsIgnoreCase(item.getMediaType()) ? "VIDEO" : "IMAGE";
+            String normalizedShotType = normalizeShotType(item.getSlotType(), mediaType);
+            String normalizedCaption = normalizeMediaCaption(item.getCaption());
+
+            ProductMedia media = ProductMedia.builder()
+                    .product(product)
+                    .mediaUrl(item.getMediaUrl())
+                    .mediaType(mediaType)
+                    .slotType(normalizedShotType)
+                    .caption(normalizedCaption)
+                    .isThumbnail(Boolean.TRUE.equals(item.getIsThumbnail()))
+                    .displayOrder(nextDisplayOrder + i)
+                    .build();
+
+            productMediaRepository.save(media);
+        }
+    }
+
+    @Transactional
     // Chọn một ảnh làm thumbnail duy nhất của sản phẩm.
     public void setThumbnail(String artisanEmail, Integer productId, Integer mediaId) {
         Product product = getMyProduct(artisanEmail, productId);
@@ -603,7 +647,7 @@ public class ArtisanProductService {
     }
 
     // Chặn chỉnh sửa nếu trạng thái sản phẩm không cho phép.
-    private void ensureEditable(Product product) {
+    public void ensureEditable(Product product) {
         if (!isEditable(product)) {
             throw new RuntimeException("Chỉ có thể sửa sản phẩm nháp hoặc đã ẩn.");
         }

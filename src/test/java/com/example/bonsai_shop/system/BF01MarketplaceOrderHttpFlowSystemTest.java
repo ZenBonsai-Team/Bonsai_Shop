@@ -35,7 +35,6 @@ import com.example.bonsai_shop.product.repository.ProductSegmentRepository;
 import com.example.bonsai_shop.product.repository.VarietyRepository;
 import com.example.bonsai_shop.product.service.MailService;
 import com.example.bonsai_shop.product.service.OrderExpirationService;
-import com.example.bonsai_shop.product.service.OrderService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.junit.jupiter.api.AfterEach;
@@ -148,9 +147,6 @@ public class BF01MarketplaceOrderHttpFlowSystemTest {
 
         @Autowired
         private RegisterOtpRepository registerOtpRepository;
-
-        @Autowired
-        private OrderService orderService;
 
         @Autowired
         private OrderExpirationService orderExpirationService;
@@ -844,9 +840,6 @@ public class BF01MarketplaceOrderHttpFlowSystemTest {
                 assertEquals("RESERVED", product1AfterCancel.getProductStatus(),
                                 "Cây vẫn giữ trạng thái RESERVED trong thời gian chờ");
 
-                // --- Branch 2: Tampered / Invalid signature ---
-                Product product2 = createProduct("Bonsai Kim Quýt TC-HTTP-006-2", new BigDecimal("3500000"),
-                                "RESERVED");
                 String orderCode2 = "BSMS-HTTP-006-2-" + System.currentTimeMillis();
                 Order order2 = Order.builder()
                                 .orderCode(orderCode2)

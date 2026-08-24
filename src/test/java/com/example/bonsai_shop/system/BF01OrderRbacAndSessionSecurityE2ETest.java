@@ -55,8 +55,6 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -65,13 +63,19 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * Business Flow: BF-01 Order Processing RBAC and Session Security
  * Actors: Customer, Order Moderator A, Order Moderator B
  *
- * <p><strong>Security Checks:</strong>
+ * <p>
+ * <strong>Security Checks:</strong>
  * <ol>
- *   <li>Customer cannot access moderator protected pages (403 Forbidden or login redirect).</li>
- *   <li>Moderator B cannot view or process order claimed by Moderator A (UI isolation + SecurityException on backend).</li>
- *   <li>Unassigned order cannot be approved before claim (IllegalStateException guard).</li>
- *   <li>Logged out session cannot access protected pages via history / back navigation.</li>
- *   <li>Database integrity is completely preserved after all unauthorized attempts.</li>
+ * <li>Customer cannot access moderator protected pages (403 Forbidden or login
+ * redirect).</li>
+ * <li>Moderator B cannot view or process order claimed by Moderator A (UI
+ * isolation + SecurityException on backend).</li>
+ * <li>Unassigned order cannot be approved before claim (IllegalStateException
+ * guard).</li>
+ * <li>Logged out session cannot access protected pages via history / back
+ * navigation.</li>
+ * <li>Database integrity is completely preserved after all unauthorized
+ * attempts.</li>
  * </ol>
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -312,7 +316,8 @@ public class BF01OrderRbacAndSessionSecurityE2ETest {
         try {
             if (testOrderCode != null) {
                 orderRepository.findByOrderCode(testOrderCode).ifPresent(o -> {
-                    financialLedgerRepository.deleteAll(financialLedgerRepository.findByOrderOrderIdOrderByRecognizedAtAscFinancialLedgerIdAsc(o.getOrderId()));
+                    financialLedgerRepository.deleteAll(financialLedgerRepository
+                            .findByOrderOrderIdOrderByRecognizedAtAscFinancialLedgerIdAsc(o.getOrderId()));
                     orderRepository.delete(o);
                 });
             }
@@ -335,7 +340,8 @@ public class BF01OrderRbacAndSessionSecurityE2ETest {
     @DisplayName("TC-L3-BF01-007: Order Processing RBAC and Session Security")
     void tcL3Bf01007_orderProcessingRbacAndSessionSecurity() {
         // =========================================================================
-        // 1. Customer attempts to access Moderator URLs -> Blocked (403 or Access Denied)
+        // 1. Customer attempts to access Moderator URLs -> Blocked (403 or Access
+        // Denied)
         // =========================================================================
         try (BrowserContext custContext = browser.newContext()) {
             Page custPage = custContext.newPage();
@@ -358,11 +364,13 @@ public class BF01OrderRbacAndSessionSecurityE2ETest {
         // 2. Unassigned Order Approval Guard: Cannot approve order before claim
         // =========================================================================
         assertThrows(SecurityException.class, () -> {
-            orderService.verifyOrder(testOrderCode, new BigDecimal("500000"), new BigDecimal("300000"), new BigDecimal("2000000"), moderatorAEntity);
+            orderService.verifyOrder(testOrderCode, new BigDecimal("500000"), new BigDecimal("300000"),
+                    new BigDecimal("2000000"), moderatorAEntity);
         }, "Backend phải từ chối phê duyệt đơn hàng khi đơn chưa được tiếp nhận (assignedTo == null)!");
 
         // =========================================================================
-        // 3. Moderator A claims Order -> Moderator B is blocked from viewing/processing it
+        // 3. Moderator A claims Order -> Moderator B is blocked from viewing/processing
+        // it
         // =========================================================================
         orderService.claimOrder(testOrderCode, moderatorAEntity);
 
@@ -392,7 +400,8 @@ public class BF01OrderRbacAndSessionSecurityE2ETest {
         }, "Backend phải từ chối khi Moderator B cố claim lại đơn đã thuộc Moderator A!");
 
         assertThrows(SecurityException.class, () -> {
-            orderService.verifyOrder(testOrderCode, new BigDecimal("500000"), new BigDecimal("300000"), new BigDecimal("2000000"), moderatorBEntity);
+            orderService.verifyOrder(testOrderCode, new BigDecimal("500000"), new BigDecimal("300000"),
+                    new BigDecimal("2000000"), moderatorBEntity);
         }, "Backend phải từ chối duyệt (SecurityException) khi Moderator B duyệt đơn của Moderator A!");
 
         // =========================================================================
@@ -426,8 +435,10 @@ public class BF01OrderRbacAndSessionSecurityE2ETest {
         // 5. Database State Integrity Verification
         // =========================================================================
         Order dbOrder = orderRepository.findByOrderCode(testOrderCode).orElseThrow();
-        assertEquals("PENDING", dbOrder.getOrderStatus(), "Trạng thái đơn không bị thay đổi bởi các hành động trái phép!");
-        assertEquals(moderatorAEntity.getUserId(), dbOrder.getAssignedTo().getUserId(), "Đơn vẫn chỉ thuộc Moderator A!");
+        assertEquals("PENDING", dbOrder.getOrderStatus(),
+                "Trạng thái đơn không bị thay đổi bởi các hành động trái phép!");
+        assertEquals(moderatorAEntity.getUserId(), dbOrder.getAssignedTo().getUserId(),
+                "Đơn vẫn chỉ thuộc Moderator A!");
 
         Product dbProduct = productRepository.findById(testProduct.getProductId()).orElseThrow();
         assertEquals("RESERVED", dbProduct.getProductStatus(), "Trạng thái cây không bị ảnh hưởng!");

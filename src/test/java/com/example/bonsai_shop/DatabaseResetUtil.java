@@ -1,15 +1,18 @@
 package com.example.bonsai_shop;
 
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Test;
-
 import java.sql.DriverManager;
 
-class DatabaseResetTest {
+/**
+ * Tiện ích cục bộ dùng để reset CSDL bonsai_shop.
+ * Chạy trực tiếp dưới dạng Java Application (không phải unit test).
+ */
+public class DatabaseResetUtil {
 
-    @Test
-    @Disabled("Destructive test. Remove @Disabled and set RESET_BONSAI_DB=YES only when you intentionally reset the local database.")
-    void dropAndCreateBonsaiShopDatabase() throws Exception {
+    public static void main(String[] args) throws Exception {
+        dropAndCreateBonsaiShopDatabase();
+    }
+
+    public static void dropAndCreateBonsaiShopDatabase() throws Exception {
         if (!"YES".equals(System.getenv("RESET_BONSAI_DB"))) {
             throw new IllegalStateException("Set RESET_BONSAI_DB=YES before running this destructive reset.");
         }

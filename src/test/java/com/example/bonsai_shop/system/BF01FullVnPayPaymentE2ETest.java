@@ -8,7 +8,6 @@ import com.example.bonsai_shop.customer.service.EmailService;
 import com.example.bonsai_shop.entity.Category;
 import com.example.bonsai_shop.entity.FinancialLedger;
 import com.example.bonsai_shop.entity.Order;
-import com.example.bonsai_shop.entity.OrderDetail;
 import com.example.bonsai_shop.entity.PasswordResetOtp;
 import com.example.bonsai_shop.entity.Payment;
 import com.example.bonsai_shop.entity.Product;
@@ -19,15 +18,12 @@ import com.example.bonsai_shop.entity.Variety;
 import com.example.bonsai_shop.finance.repository.FinancialLedgerRepository;
 import com.example.bonsai_shop.integration.support.TestDatabaseSafetyInitializer;
 import com.example.bonsai_shop.product.repository.CategoryRepository;
-import com.example.bonsai_shop.product.repository.OrderDetailRepository;
-import com.example.bonsai_shop.product.repository.OrderLogRepository;
 import com.example.bonsai_shop.product.repository.OrderRepository;
 import com.example.bonsai_shop.product.repository.PaymentRepository;
 import com.example.bonsai_shop.product.repository.ProductRepository;
 import com.example.bonsai_shop.product.repository.ProductSegmentRepository;
 import com.example.bonsai_shop.product.repository.VarietyRepository;
 import com.example.bonsai_shop.product.service.MailService;
-import com.example.bonsai_shop.product.service.OrderService;
 
 import com.microsoft.playwright.Browser;
 import com.microsoft.playwright.BrowserContext;
@@ -55,7 +51,6 @@ import java.math.BigDecimal;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -72,14 +67,20 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * Business Flow: BF-01 Full VNPay Payment (100%) and Delivery Completion
  * Actors: Guest Customer, Order Moderator
  *
- * <p><strong>Test Workflow:</strong>
+ * <p>
+ * <strong>Test Workflow:</strong>
  * <ol>
- *   <li>Guest customer checks out with 100% full VNPay payment method and OTP verification.</li>
- *   <li>Moderator claims the order from Orders Pool and approves shipping/crane fees without deposit amount.</li>
- *   <li>Simulate 100% full amount VNPay payment success callback.</li>
- *   <li>Assert Order transitions to PAID (not auto-completed), Payment is SUCCESS with full total amount, and Product remains RESERVED.</li>
- *   <li>Moderator confirms tree delivery via UI ("Xác nhận khách đã nhận cây").</li>
- *   <li>Assert Order becomes COMPLETED, Product becomes SOLD, and FinancialLedger records revenue exactly once.</li>
+ * <li>Guest customer checks out with 100% full VNPay payment method and OTP
+ * verification.</li>
+ * <li>Moderator claims the order from Orders Pool and approves shipping/crane
+ * fees without deposit amount.</li>
+ * <li>Simulate 100% full amount VNPay payment success callback.</li>
+ * <li>Assert Order transitions to PAID (not auto-completed), Payment is SUCCESS
+ * with full total amount, and Product remains RESERVED.</li>
+ * <li>Moderator confirms tree delivery via UI ("Xác nhận khách đã nhận
+ * cây").</li>
+ * <li>Assert Order becomes COMPLETED, Product becomes SOLD, and FinancialLedger
+ * records revenue exactly once.</li>
  * </ol>
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -123,22 +124,13 @@ public class BF01FullVnPayPaymentE2ETest {
     private OrderRepository orderRepository;
 
     @Autowired
-    private OrderDetailRepository orderDetailRepository;
-
-    @Autowired
     private PaymentRepository paymentRepository;
-
-    @Autowired
-    private OrderLogRepository orderLogRepository;
 
     @Autowired
     private FinancialLedgerRepository financialLedgerRepository;
 
     @Autowired
     private RegisterOtpRepository registerOtpRepository;
-
-    @Autowired
-    private OrderService orderService;
 
     private Playwright playwright;
     private Browser browser;
@@ -241,7 +233,8 @@ public class BF01FullVnPayPaymentE2ETest {
         try {
             if (createdOrderCode != null) {
                 orderRepository.findByOrderCode(createdOrderCode).ifPresent(o -> {
-                    financialLedgerRepository.deleteAll(financialLedgerRepository.findByOrderOrderIdOrderByRecognizedAtAscFinancialLedgerIdAsc(o.getOrderId()));
+                    financialLedgerRepository.deleteAll(financialLedgerRepository
+                            .findByOrderOrderIdOrderByRecognizedAtAscFinancialLedgerIdAsc(o.getOrderId()));
                     orderRepository.delete(o);
                 });
             }
@@ -316,7 +309,8 @@ public class BF01FullVnPayPaymentE2ETest {
             // DB assertion after creation
             Order createdOrder = orderRepository.findByOrderCode(createdOrderCode).orElseThrow();
             assertEquals("PENDING", createdOrder.getOrderStatus(), "Đơn mới tạo ở trạng thái PENDING");
-            assertEquals(0, BigDecimal.ZERO.compareTo(createdOrder.getDepositAmount()), "Đơn thanh toán 100% có depositAmount = 0");
+            assertEquals(0, BigDecimal.ZERO.compareTo(createdOrder.getDepositAmount()),
+                    "Đơn thanh toán 100% có depositAmount = 0");
 
             Product reservedProduct = productRepository.findById(testProduct.getProductId()).orElseThrow();
             assertEquals("RESERVED", reservedProduct.getProductStatus(), "Cây chuyển sang RESERVED");
@@ -340,7 +334,8 @@ public class BF01FullVnPayPaymentE2ETest {
             page.waitForLoadState(LoadState.DOMCONTENTLOADED);
             evidencePause(page, "6. Moderator Viewing Order Detail for Full Payment Approval");
 
-            // Enter fees: Shipping 400k, Crane 600k (Deposit field is disabled for full payment)
+            // Enter fees: Shipping 400k, Crane 600k (Deposit field is disabled for full
+            // payment)
             page.fill("#approvalShippingFee", "400000");
             page.fill("#approvalCraneFee", "600000");
             evidencePause(page, "7. Fees Entered: Ship 400k, Crane 600k (Total: 6,000,000 VNĐ)");
@@ -354,7 +349,8 @@ public class BF01FullVnPayPaymentE2ETest {
             // DB assertions after approval: Total = 5M + 400k + 600k = 6,000,000 VNĐ
             Order approvedOrder = orderRepository.findByOrderCode(createdOrderCode).orElseThrow();
             assertEquals("PENDING_PAYMENT", approvedOrder.getOrderStatus(), "Trạng thái sau duyệt là PENDING_PAYMENT");
-            assertEquals(0, new BigDecimal("6000000").compareTo(approvedOrder.getTotalAmount()), "Tổng tiền là 6,000,000 VNĐ");
+            assertEquals(0, new BigDecimal("6000000").compareTo(approvedOrder.getTotalAmount()),
+                    "Tổng tiền là 6,000,000 VNĐ");
             assertEquals(0, BigDecimal.ZERO.compareTo(approvedOrder.getDepositAmount()), "Tiền cọc vẫn là 0");
 
             // =========================================================================
@@ -378,10 +374,12 @@ public class BF01FullVnPayPaymentE2ETest {
                 String key = itr.next();
                 String val = params.get(key);
                 sb.append(key).append('=').append(URLEncoder.encode(val, StandardCharsets.US_ASCII));
-                if (itr.hasNext()) sb.append('&');
+                if (itr.hasNext())
+                    sb.append('&');
             }
             String secureHash = VNPayConfig.hmacSHA512(VNPayConfig.vnp_HashSecret, sb.toString());
-            String callbackUrl = getBaseUrl() + "/vnpay/payment-callback?" + sb.toString() + "&vnp_SecureHash=" + secureHash;
+            String callbackUrl = getBaseUrl() + "/vnpay/payment-callback?" + sb.toString() + "&vnp_SecureHash="
+                    + secureHash;
 
             page.navigate(callbackUrl);
             page.waitForLoadState(LoadState.DOMCONTENTLOADED);
@@ -389,16 +387,19 @@ public class BF01FullVnPayPaymentE2ETest {
 
             // DB assertions after payment: Order is PAID, NOT yet COMPLETED
             Order paidOrder = orderRepository.findByOrderCode(createdOrderCode).orElseThrow();
-            assertEquals("PAID", paidOrder.getOrderStatus(), "Trạng thái đơn hàng sau thanh toán đủ 100% phải là PAID!");
+            assertEquals("PAID", paidOrder.getOrderStatus(),
+                    "Trạng thái đơn hàng sau thanh toán đủ 100% phải là PAID!");
 
             List<Payment> payments = paymentRepository.findByOrderOrderIdOrderByPaymentIdAsc(paidOrder.getOrderId());
             assertFalse(payments.isEmpty(), "Bản ghi Payment không được rỗng");
             Payment fullPayment = payments.get(0);
             assertEquals("SUCCESS", fullPayment.getPaymentStatus(), "Payment 100% phải ở trạng thái SUCCESS");
-            assertEquals(0, new BigDecimal("6000000").compareTo(fullPayment.getAmount()), "Số tiền thanh toán đúng 6,000,000 VNĐ");
+            assertEquals(0, new BigDecimal("6000000").compareTo(fullPayment.getAmount()),
+                    "Số tiền thanh toán đúng 6,000,000 VNĐ");
 
             Product pendingDeliveryProduct = productRepository.findById(testProduct.getProductId()).orElseThrow();
-            assertEquals("RESERVED", pendingDeliveryProduct.getProductStatus(), "Cây vẫn giữ RESERVED trong khi chờ giao");
+            assertEquals("RESERVED", pendingDeliveryProduct.getProductStatus(),
+                    "Cây vẫn giữ RESERVED trong khi chờ giao");
 
             List<FinancialLedger> midLedgers = financialLedgerRepository
                     .findByOrderOrderIdOrderByRecognizedAtAscFinancialLedgerIdAsc(paidOrder.getOrderId());
@@ -438,7 +439,8 @@ public class BF01FullVnPayPaymentE2ETest {
 
             FinancialLedger revenueLedger = finalLedgers.get(0);
             assertEquals("INCOME", revenueLedger.getDirection().name(), "Doanh thu phải là dòng tiền INCOME!");
-            assertEquals(0, new BigDecimal("6000000").compareTo(revenueLedger.getAmount()), "Số tiền ghi nhận doanh thu là 6,000,000 VNĐ!");
+            assertEquals(0, new BigDecimal("6000000").compareTo(revenueLedger.getAmount()),
+                    "Số tiền ghi nhận doanh thu là 6,000,000 VNĐ!");
 
             evidencePause(page, "13. All TC-008 DB and UI Assertions Passed Successfully");
         }

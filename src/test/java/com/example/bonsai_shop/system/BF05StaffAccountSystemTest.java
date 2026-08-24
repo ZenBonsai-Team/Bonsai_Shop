@@ -237,7 +237,7 @@ class BF05StaffAccountSystemTest {
                         .user(email)
                         .password(rawPassword))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/artisan"));
+                .andExpect(redirectedUrl("/artisan/products"));
     }
 
     private RequestPostProcessor artisanUser() {
@@ -291,7 +291,7 @@ class BF05StaffAccountSystemTest {
     @Test
     void tcSysBF05007_staffCanAccessAuthorizedFunction() throws Exception {
 
-        mockMvc.perform(get("/artisan")
+        mockMvc.perform(get("/artisan/products")
                         .with(artisanUser()))
                 .andExpect(status().isOk());
     }
@@ -516,7 +516,7 @@ class BF05StaffAccountSystemTest {
                         .user(email)
                         .password(rawPassword))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/artisan"));
+                .andExpect(redirectedUrl("/artisan/products"));
     }
 
     @Test
@@ -567,7 +567,7 @@ class BF05StaffAccountSystemTest {
                 .andExpect(flash()
                         .attribute(
                                 "error",
-                                "Email da ton tai trong he thong!"
+                                "Email đã tồn tại trong hệ thống!"
                         ));
 
         long countAfter = accountRepository.findAll()
@@ -609,7 +609,7 @@ class BF05StaffAccountSystemTest {
                 .andExpect(flash()
                         .attribute(
                                 "error",
-                                "Role khong ton tai!"
+                                "Phân quyền không tồn tại!"
                         ));
 
         assertFalse(

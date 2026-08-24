@@ -1,7 +1,5 @@
 package com.example.bonsai_shop;
 
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Disabled;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -10,11 +8,17 @@ import java.sql.DriverManager;
 import java.sql.Statement;
 import java.util.Properties;
 
-class RecreateDatabaseTest {
+/**
+ * Tiện ích cục bộ dùng để xóa và tạo lại CSDL bonsai_shop khi cần thiết.
+ * Chạy trực tiếp dưới dạng Java Application (không phải unit test).
+ */
+public class RecreateDatabaseUtil {
 
-    @Test
-    @Disabled("Destructive local utility. Use DatabaseResetTest with explicit RESET_BONSAI_DB=YES instead.")
-    void cleanAndRecreateDb() {
+    public static void main(String[] args) {
+        cleanAndRecreateDb();
+    }
+
+    public static void cleanAndRecreateDb() {
         Properties props = new Properties();
         try {
             // Read application-local.properties if exists, otherwise application.properties

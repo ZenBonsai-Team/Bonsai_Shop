@@ -15,7 +15,6 @@ import java.time.YearMonth;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -35,8 +34,7 @@ class OwnerDashboardServiceTest {
         ownerDashboardService = new OwnerDashboardService(
                 financialLedgerRepository,
                 productRepository,
-                orderDetailRepository
-        );
+                orderDetailRepository);
     }
 
     @Test
@@ -50,8 +48,7 @@ class OwnerDashboardServiceTest {
                 eq(List.of(FinancialLedgerType.FULL_REFUND, FinancialLedgerType.PRODUCT_REFUND_ONLY)),
                 eq(FinancialLedgerStatus.RECORDED),
                 eq(start),
-                eq(end)
-        )).thenReturn(new BigDecimal("8000000"));
+                eq(end))).thenReturn(new BigDecimal("8000000"));
 
         BigDecimal refundAmount = ownerDashboardService.getMonthlyRefundAmount(ym);
         assertThat(refundAmount).isEqualByComparingTo("8000000");
@@ -65,18 +62,18 @@ class OwnerDashboardServiceTest {
         LocalDateTime end = start.plusMonths(1);
 
         when(financialLedgerRepository.sumShippingFeeByLedgerTypes(
-                eq(List.of(FinancialLedgerType.COMPLETED_ORDER_REVENUE, FinancialLedgerType.FORFEITED_DEPOSIT_INCOME, FinancialLedgerType.PRODUCT_REFUND_ONLY)),
+                eq(List.of(FinancialLedgerType.COMPLETED_ORDER_REVENUE, FinancialLedgerType.FORFEITED_DEPOSIT_INCOME,
+                        FinancialLedgerType.PRODUCT_REFUND_ONLY)),
                 eq(FinancialLedgerStatus.RECORDED),
                 eq(start),
-                eq(end)
-        )).thenReturn(new BigDecimal("1000000"));
+                eq(end))).thenReturn(new BigDecimal("1000000"));
 
         when(financialLedgerRepository.sumCraneFeeByLedgerTypes(
-                eq(List.of(FinancialLedgerType.COMPLETED_ORDER_REVENUE, FinancialLedgerType.FORFEITED_DEPOSIT_INCOME, FinancialLedgerType.PRODUCT_REFUND_ONLY)),
+                eq(List.of(FinancialLedgerType.COMPLETED_ORDER_REVENUE, FinancialLedgerType.FORFEITED_DEPOSIT_INCOME,
+                        FinancialLedgerType.PRODUCT_REFUND_ONLY)),
                 eq(FinancialLedgerStatus.RECORDED),
                 eq(start),
-                eq(end)
-        )).thenReturn(new BigDecimal("500000"));
+                eq(end))).thenReturn(new BigDecimal("500000"));
 
         BigDecimal shippingFee = ownerDashboardService.getMonthlyShippingFee(ym);
         BigDecimal craneFee = ownerDashboardService.getMonthlyCraneFee(ym);

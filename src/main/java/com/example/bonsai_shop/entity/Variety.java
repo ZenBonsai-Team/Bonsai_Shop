@@ -1,5 +1,6 @@
 package com.example.bonsai_shop.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import java.util.List;
@@ -25,6 +26,7 @@ public class Variety {
     private String description;
 
     @OneToMany(mappedBy = "variety", cascade = CascadeType.ALL)
+    @JsonIgnore
     private List<Product> products;
 }
 
