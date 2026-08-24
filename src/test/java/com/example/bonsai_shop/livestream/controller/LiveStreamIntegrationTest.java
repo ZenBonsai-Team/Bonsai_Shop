@@ -104,8 +104,9 @@ public class LiveStreamIntegrationTest {
         @DisplayName("TC-INT-LiveStream-001: Bắt đầu phiên LiveStream thành công và lưu vào DB")
         @WithMockUser(username = "artisan@bsms.com", roles = "ARTISAN")
         void testStartSession_CreatesActiveSessionInDatabase() throws Exception {
+                String uniqueTitle = "New Live Session " + System.currentTimeMillis();
                 Map<String, String> body = new HashMap<>();
-                body.put("title", "New Live Session");
+                body.put("title", uniqueTitle);
                 body.put("streamUrl", "https://youtube.com/live/new");
 
                 mockMvc.perform(post("/api/live/start").with(csrf())
@@ -116,7 +117,7 @@ public class LiveStreamIntegrationTest {
 
                 // Kiểm chứng DB State: Kiểm tra xem session mới có ở trạng thái ONGOING không
                 Optional<LiveSession> newSessionOpt = liveSessionRepository.findAll().stream()
-                                .filter(s -> "New Live Session".equals(s.getTitle()))
+                                .filter(s -> uniqueTitle.equals(s.getTitle()))
                                 .findFirst();
 
                 assertThat(newSessionOpt).isPresent();
@@ -127,9 +128,10 @@ public class LiveStreamIntegrationTest {
         @DisplayName("TC-INT-LiveStream-004: Gửi tin nhắn chốt đơn phân tích lưu khách hàng tiềm năng vào DB")
         @WithMockUser(username = "customer@bsms.com", roles = "CUSTOMER")
         void testProcessChat_ChotDon_CreatesLiveLeadInDatabase() throws Exception {
+                String uniqueViewer = "Khách hàng A " + System.currentTimeMillis();
                 Map<String, Object> body = new HashMap<>();
                 body.put("sessionId", ongoingSession.getSessionId());
-                body.put("author", "Khách hàng A");
+                body.put("author", uniqueViewer);
                 body.put("message", "Chốt BON-101 0987654321");
                 body.put("source", "WEB");
 
@@ -141,7 +143,7 @@ public class LiveStreamIntegrationTest {
                 // Kiểm chứng DB State: Hệ thống tự động phân tích cú pháp tạo ra khách hàng
                 // tiềm năng chốt đơn (LiveLead) trong DB
                 Optional<LiveLead> leadOpt = liveLeadRepository.findAll().stream()
-                                .filter(l -> "Khách hàng A".equals(l.getViewerName()))
+                                .filter(l -> uniqueViewer.equals(l.getViewerName()))
                                 .findFirst();
 
                 assertThat(leadOpt).isPresent();
@@ -155,10 +157,11 @@ public class LiveStreamIntegrationTest {
         @DisplayName("TC-INT-LiveStream-006: Cập nhật trạng thái khách hàng tiềm năng lưu vào DB")
         @WithMockUser(username = "artisan@bsms.com", roles = "ARTISAN")
         void testUpdateLeadStatus_PersistsInDatabase() throws Exception {
+                String uniqueViewer = "Khách hàng B " + System.currentTimeMillis();
                 // Tạo trước một Lead chờ tư vấn (PENDING)
                 LiveLead pendingLead = LiveLead.builder()
                                 .liveSession(ongoingSession)
-                                .viewerName("Khách hàng B")
+                                .viewerName(uniqueViewer)
                                 .rawComment("Tư vấn cây cảnh")
                                 .intentType("TU_VAN")
                                 .leadStatus("PENDING")
