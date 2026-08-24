@@ -352,27 +352,14 @@
                     </p>
                 </div>
 
-                <div class="drawer-section">
-                    <h4 class="section-title">Phí Vận Chuyển & Cẩu Cây</h4>
-                    <p style="font-size:12px; color:var(--text-muted); margin-bottom:8px;">In-person order đã chốt phụ phí khi artisan tạo đơn.</p>
-                    <div class="fees-form-group">
-                        <div class="input-field-group">
-                            <label>Phí xe cẩu</label>
-                            <input type="text" id="drawerCraneFee" disabled>
-                        </div>
-                        <div class="input-field-group">
-                            <label>Phí vận chuyển</label>
-                            <input type="text" id="drawerShippingFee" disabled>
-                        </div>
-                    </div>
-                </div>
-
                 <div class="drawer-section summary-container">
                     <div class="detail-grid">
                         <span class="detail-label">Giá gốc Bonsai:</span>
                         <span class="detail-value" id="drawerBasePrice">0 VND</span>
-                        <span class="detail-label">Đặt cọc trước:</span>
-                        <span class="detail-value" id="drawerDeposit">0 VND</span>
+                        <span class="detail-label">Phí cẩu:</span>
+                        <span class="detail-value" id="drawerSummaryCraneFee">0 VND</span>
+                        <span class="detail-label">Phí vận chuyển:</span>
+                        <span class="detail-value" id="drawerSummaryShippingFee">0 VND</span>
                         <span class="detail-label" style="color:var(--primary-color); font-weight:700; font-size:15px;">TỔNG THANH TOÁN:</span>
                         <span class="detail-value" style="color:var(--primary-color); font-weight:700; font-size:15px;" id="drawerFinalTotal">0 VND</span>
                     </div>
@@ -619,10 +606,9 @@
         productName: document.getElementById('drawerProdName'),
         productCode: document.getElementById('drawerProdCode'),
         notes: document.getElementById('drawerNotes'),
-        craneFee: document.getElementById('drawerCraneFee'),
-        shippingFee: document.getElementById('drawerShippingFee'),
         basePrice: document.getElementById('drawerBasePrice'),
-        deposit: document.getElementById('drawerDeposit'),
+        summaryCraneFee: document.getElementById('drawerSummaryCraneFee'),
+        summaryShippingFee: document.getElementById('drawerSummaryShippingFee'),
         finalTotal: document.getElementById('drawerFinalTotal')
     };
 
@@ -940,10 +926,9 @@
         fields.productImage.src = data.productImage || fallbackImage;
         fields.productImage.onerror = function () { fields.productImage.src = fallbackImage; };
         fields.notes.textContent = data.notes || 'Không có ghi chú thêm.';
-        fields.craneFee.value = formatVnd(data.craneFee);
-        fields.shippingFee.value = formatVnd(data.shippingFee);
         fields.basePrice.textContent = formatVnd(data.productPrice);
-        fields.deposit.textContent = formatVnd(data.depositAmount);
+        fields.summaryCraneFee.textContent = formatVnd(data.craneFee);
+        fields.summaryShippingFee.textContent = formatVnd(data.shippingFee);
         fields.finalTotal.textContent = formatVnd(data.totalAmount);
         confirmForm.action = data.confirmUrl || '#';
         cancelForm.action = data.cancelUrl || '#';

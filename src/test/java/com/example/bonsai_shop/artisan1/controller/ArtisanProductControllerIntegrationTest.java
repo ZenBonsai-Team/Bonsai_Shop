@@ -592,10 +592,32 @@ class ArtisanProductControllerIntegrationTest {
         }
 
         @Test
+        void hide_WhenReturnUrlProvided_ShouldRedirectBackToReturnUrl() throws Exception {
+                mockMvc.perform(post("/artisan/products/101/hide")
+                                .param("returnUrl", "/artisan/products/101/preview"))
+                                .andExpect(status().is3xxRedirection())
+                                .andExpect(redirectedUrl("/artisan/products/101/preview"))
+                                .andExpect(flash().attributeExists("success"));
+
+                verify(artisanProductService).hideProduct("artisan@test.com", 101);
+        }
+
+        @Test
         void show_WhenServiceShowsSuccessfully_ShouldRedirectWithSuccess() throws Exception {
                 mockMvc.perform(post("/artisan/products/101/show"))
                                 .andExpect(status().is3xxRedirection())
                                 .andExpect(redirectedUrl("/artisan/products"))
+                                .andExpect(flash().attributeExists("success"));
+
+                verify(artisanProductService).showProduct("artisan@test.com", 101);
+        }
+
+        @Test
+        void show_WhenReturnUrlProvided_ShouldRedirectBackToReturnUrl() throws Exception {
+                mockMvc.perform(post("/artisan/products/101/show")
+                                .param("returnUrl", "/artisan/products/101/preview"))
+                                .andExpect(status().is3xxRedirection())
+                                .andExpect(redirectedUrl("/artisan/products/101/preview"))
                                 .andExpect(flash().attributeExists("success"));
 
                 verify(artisanProductService).showProduct("artisan@test.com", 101);

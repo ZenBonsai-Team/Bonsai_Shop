@@ -394,18 +394,15 @@ public class ArtisanProductService {
         if (mediaIds == null || displayOrders == null || mediaIds.size() != displayOrders.size()) {
             throw new RuntimeException("Dữ liệu thứ tự media không hợp lệ!");
         }
-        if (slotTypes != null && slotTypes.size() != mediaIds.size()) {
-            throw new RuntimeException("Dữ liệu góc chụp media không hợp lệ!");
-        }
         for (int index = 0; index < mediaIds.size(); index++) {
             ProductMedia media = productMediaRepository.findByMediaIdAndProduct(mediaIds.get(index), product)
                     .orElseThrow(() -> new RuntimeException("Media không tồn tại!"));
             media.setDisplayOrder(displayOrders.get(index) == null ? 1 : Math.max(displayOrders.get(index), 1));
             if (slotTypes != null) {
-                media.setSlotType(normalizeShotType(slotTypes.get(index), media.getMediaType()));
+                media.setSlotType(normalizeShotType(getListValue(slotTypes, index), media.getMediaType()));
             }
             if (captions != null) {
-                media.setCaption(normalizeMediaCaption(captions.get(index)));
+                media.setCaption(normalizeMediaCaption(getListValue(captions, index)));
             }
             productMediaRepository.save(media);
         }
@@ -544,10 +541,13 @@ public class ArtisanProductService {
         if (product.getPrice() == null || product.getPrice().compareTo(BigDecimal.ZERO) <= 0) {
             throw new RuntimeException("Vui lòng nhập giá sản phẩm hợp lệ trước khi publish.");
         }
-        if (productMediaRepository.findByProductOrderByDisplayOrderAscMediaIdAsc(product).isEmpty()) {
-            throw new RuntimeException("Cần ít nhất một ảnh hoặc video trước khi publish.");
+        List<ProductMedia> mediaList = productMediaRepository.findByProductOrderByDisplayOrderAscMediaIdAsc(product);
+        boolean hasImageMedia = mediaList.stream()
+                .anyMatch(media -> "IMAGE".equalsIgnoreCase(media.getMediaType()));
+        if (!hasImageMedia) {
+            throw new RuntimeException("Sản phẩm cần ít nhất 1 ảnh trước khi hiển thị trên marketplace. Video không được dùng làm ảnh đại diện.");
         }
-        ensureImageThumbnail(productMediaRepository.findByProductOrderByDisplayOrderAscMediaIdAsc(product));
+        ensureImageThumbnail(mediaList);
     }
 
     // Validate các thông số kỹ thuật bắt buộc của cây.

@@ -33,6 +33,27 @@
             <a th:if="${isEditable}" class="btn btn-outline-success rounded-pill px-4 me-2" th:href="@{/artisan/products/{id}/edit(id=${product.productId})}">
                 <i class="fa-solid fa-pen me-1"></i> Sửa thông tin
             </a>
+            <a class="btn btn-outline-success rounded-pill px-4 me-2" th:href="@{/artisan/products/{id}/journal(id=${product.productId})}">
+                <i class="fa-solid fa-clipboard-list me-1"></i> Nhật ký cây
+            </a>
+            <form th:if="${isHideable}" method="post" th:action="@{/artisan/products/{id}/hide(id=${product.productId})}" class="me-2">
+                <input type="hidden" name="returnUrl" th:value="@{/artisan/products/{id}/preview(id=${product.productId})}">
+                <button type="button"
+                        class="btn btn-outline-success rounded-pill px-4"
+                        data-open-hide-modal
+                        th:attr="data-product-name=${product.productName}">
+                    <i class="fa-solid fa-eye-slash me-1"></i> Ẩn sản phẩm
+                </button>
+            </form>
+            <form th:if="${product.productStatus != 'DRAFT' && !isVisible}" method="post" th:action="@{/artisan/products/{id}/show(id=${product.productId})}" class="me-2">
+                <input type="hidden" name="returnUrl" th:value="@{/artisan/products/{id}/preview(id=${product.productId})}">
+                <button type="button"
+                        class="btn btn-success rounded-pill px-4"
+                        data-open-show-modal
+                        th:attr="data-product-name=${product.productName}">
+                    <i class="fa-solid fa-eye me-1"></i> Hiện sản phẩm
+                </button>
+            </form>
             <a class="btn btn-outline-success rounded-pill px-4" th:href="@{/artisan/products}">
                 <i class="fa-solid fa-list me-1"></i> Danh sách sản phẩm
             </a>
@@ -170,13 +191,69 @@
     </div>
 </div>
 
+<div id="artisanHideModal" class="artisan-action-modal-backdrop hidden">
+    <div class="artisan-action-modal" role="dialog" aria-modal="true" aria-labelledby="artisanHideModalTitle">
+        <header>
+            <h2 id="artisanHideModalTitle">Xác nhận ẩn sản phẩm</h2>
+            <button type="button" class="artisan-action-modal-close" aria-label="Đóng">×</button>
+        </header>
+        <div class="artisan-action-modal-body">
+            <p class="artisan-action-target">
+                Sản phẩm: <strong id="artisanHideProductName">-</strong>
+            </p>
+            <div class="artisan-action-warning">
+                <i class="fa-solid fa-eye-slash"></i>
+                <div>
+                    <strong>Ẩn khỏi cửa hàng công khai</strong>
+                    <p>Sản phẩm sẽ không còn hiển thị với khách hàng, nhưng nghệ nhân vẫn có thể chỉnh sửa và hiện lại sau.</p>
+                </div>
+            </div>
+        </div>
+        <footer>
+            <button type="button" class="btn-modal-cancel">Hủy</button>
+            <button type="button" class="btn-modal-confirm">Ẩn sản phẩm</button>
+        </footer>
+    </div>
+</div>
+
+<div id="artisanShowModal" class="artisan-action-modal-backdrop hidden">
+    <div class="artisan-action-modal" role="dialog" aria-modal="true" aria-labelledby="artisanShowModalTitle">
+        <header>
+            <h2 id="artisanShowModalTitle">Xác nhận hiện sản phẩm</h2>
+            <button type="button" class="artisan-action-modal-close" aria-label="Đóng">×</button>
+        </header>
+        <div class="artisan-action-modal-body">
+            <p class="artisan-action-target">
+                Sản phẩm: <strong id="artisanShowProductName">-</strong>
+            </p>
+            <div class="artisan-action-warning">
+                <i class="fa-solid fa-eye"></i>
+                <div>
+                    <strong>Hiện trên cửa hàng công khai</strong>
+                    <p>Sản phẩm sẽ được hiển thị lại với khách hàng nếu đủ điều kiện, bao gồm có ít nhất một ảnh.</p>
+                </div>
+            </div>
+        </div>
+        <footer>
+            <button type="button" class="btn-modal-cancel">Hủy</button>
+            <button type="button" class="btn-modal-confirm">Hiện sản phẩm</button>
+        </footer>
+    </div>
+</div>
+
 </div>
 
 <th:block th:fragment="scripts">
 <script>
     const artisanPublishModal = document.getElementById('artisanPublishModal');
     const artisanPublishProductName = document.getElementById('artisanPublishProductName');
+    const artisanHideModal = document.getElementById('artisanHideModal');
+    const artisanHideProductName = document.getElementById('artisanHideProductName');
+    const artisanShowModal = document.getElementById('artisanShowModal');
+    const artisanShowProductName = document.getElementById('artisanShowProductName');
     let pendingPublishForm = null;
+    let pendingHideForm = null;
+    let pendingShowForm = null;
 
     function closeArtisanPublishModal() {
         artisanPublishModal.classList.add('hidden');
@@ -204,6 +281,52 @@
             pendingPublishForm.submit();
         }
     });
+
+    function bindActionModal(modal, targetElement, triggerSelector, pendingSetter, pendingGetter) {
+        if (!modal) return;
+
+        function closeModal() {
+            modal.classList.add('hidden');
+            pendingSetter(null);
+        }
+
+        document.querySelectorAll(triggerSelector).forEach((button) => {
+            button.addEventListener('click', () => {
+                pendingSetter(button.closest('form'));
+                targetElement.textContent = button.dataset.productName || '-';
+                modal.classList.remove('hidden');
+            });
+        });
+
+        modal.querySelector('.artisan-action-modal-close')?.addEventListener('click', closeModal);
+        modal.querySelector('.btn-modal-cancel')?.addEventListener('click', closeModal);
+        modal.addEventListener('click', (event) => {
+            if (event.target === modal) {
+                closeModal();
+            }
+        });
+        modal.querySelector('.btn-modal-confirm')?.addEventListener('click', () => {
+            const pendingForm = pendingGetter();
+            if (pendingForm) {
+                pendingForm.submit();
+            }
+        });
+    }
+
+    bindActionModal(
+        artisanHideModal,
+        artisanHideProductName,
+        '[data-open-hide-modal]',
+        (form) => pendingHideForm = form,
+        () => pendingHideForm
+    );
+    bindActionModal(
+        artisanShowModal,
+        artisanShowProductName,
+        '[data-open-show-modal]',
+        (form) => pendingShowForm = form,
+        () => pendingShowForm
+    );
 </script>
 <script>
     document.addEventListener('DOMContentLoaded', () => {
