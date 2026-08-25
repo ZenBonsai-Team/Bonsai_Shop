@@ -323,7 +323,7 @@ public class OrderDetailService {
         boolean hasFullRefund = fullRefundAmount.compareTo(BigDecimal.ZERO) > 0;
         boolean hasAnyRefund = hasProductRefund || hasFullRefund;
 
-        boolean canReject = "PENDING".equals(currentStatus) && isAssignedToMe;
+        boolean canReject = ("PENDING".equals(currentStatus) || "PENDING_PAYMENT".equals(currentStatus)) && isAssignedToMe;
         boolean canApprove = "PENDING".equals(currentStatus) && isAssignedToMe;
         boolean canClaim = assignedUserId == null && "PENDING".equals(currentStatus);
         boolean canReturnInventory = isAssignedToMe && "PENDING".equals(currentStatus);
