@@ -537,7 +537,7 @@ public class OrderService {
             throw new IllegalArgumentException("Nội dung không được vượt quá 500 ký tự.");
         }
         Order order = orderRepository.findByOrderCodeWithDetails(orderCode).orElse(null);
-        if (order == null || !"PENDING".equalsIgnoreCase(order.getOrderStatus())) {
+        if (order == null || (!"PENDING".equalsIgnoreCase(order.getOrderStatus()) && !"PENDING_PAYMENT".equalsIgnoreCase(order.getOrderStatus()))) {
             return false;
         }
 

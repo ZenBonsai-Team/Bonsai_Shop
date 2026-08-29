@@ -261,11 +261,7 @@ public class MailService {
             if (treePrice.compareTo(java.math.BigDecimal.ZERO) < 0) treePrice = java.math.BigDecimal.ZERO;
         }
 
-        boolean isDeposit = (depositAmount.compareTo(java.math.BigDecimal.ZERO) > 0)
-                || (order.getPayments() != null && order.getPayments().stream().anyMatch(p -> 
-                        "DEPOSIT".equalsIgnoreCase(p.getPaymentType()) ||
-                        "DEPOSIT".equalsIgnoreCase(p.getPaymentMethod()) ||
-                        "COD".equalsIgnoreCase(p.getPaymentMethod())));
+        boolean isDeposit = depositAmount != null && depositAmount.compareTo(java.math.BigDecimal.ZERO) > 0;
 
         java.math.BigDecimal immediatePayment = isDeposit ? depositAmount : totalAmount;
         java.math.BigDecimal remainingTreePrice = isDeposit ? treePrice.subtract(depositAmount) : java.math.BigDecimal.ZERO;

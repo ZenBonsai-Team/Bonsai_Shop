@@ -128,8 +128,8 @@ public class OrderActionService {
         if (!isAssignedToMe) {
             throw new IllegalStateException("Bạn không phụ trách đơn này.");
         }
-        if (!"PENDING".equals(status)) {
-            throw new IllegalStateException("Chỉ có thể từ chối đơn hàng đang chờ kiểm duyệt.");
+        if (!"PENDING".equals(status) && !"PENDING_PAYMENT".equals(status)) {
+            throw new IllegalStateException("Chỉ có thể từ chối đơn hàng đang chờ kiểm duyệt hoặc chờ thanh toán.");
         }
 
         if (reason == null || reason.isBlank()) {
