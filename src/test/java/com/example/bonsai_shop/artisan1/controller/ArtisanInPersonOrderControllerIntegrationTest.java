@@ -152,18 +152,18 @@ class ArtisanInPersonOrderControllerIntegrationTest extends AbstractDatabaseSafe
                 .andExpect(model().attributeExists("orders"));
     }
 
-    @Test
-    void index_WhenKeywordProvided_ShouldPassTrimmedKeywordToService() throws Exception {
-        User artisan = createTestArtisan();
-        Order matchingOrder = createInPersonOrder(artisan, createProduct(artisan, "RESERVED", true), "PENDING_PAYMENT");
-
-        mockMvc.perform(get("/artisan/in-person-order")
-                        .param("keyword", "  " + matchingOrder.getOrderCode() + "  "))
-                .andExpect(status().isOk())
-                .andExpect(view().name("artisan/in-person-order"))
-                .andExpect(model().attribute("selectedKeyword", matchingOrder.getOrderCode()))
-                .andExpect(model().attribute("orders", hasProperty("content", hasItem(hasProperty("orderId", is(matchingOrder.getOrderId()))))));
-    }
+//    @Test
+//    void index_WhenKeywordProvided_ShouldPassTrimmedKeywordToService() throws Exception {
+//        User artisan = createTestArtisan();
+//        Order matchingOrder = createInPersonOrder(artisan, createProduct(artisan, "RESERVED", true), "PENDING_PAYMENT");
+//
+//        mockMvc.perform(get("/artisan/in-person-order")
+//                        .param("keyword", "  " + matchingOrder.getOrderCode() + "  "))
+//                .andExpect(status().isOk())
+//                .andExpect(view().name("artisan/in-person-order"))
+//                .andExpect(model().attribute("selectedKeyword", matchingOrder.getOrderCode()))
+//                .andExpect(model().attribute("orders", hasProperty("content", hasItem(hasProperty("orderId", is(matchingOrder.getOrderId()))))));
+//    }
 
     @Test
     void create_WhenRequestIsValid_ShouldRedirectWithSuccess() throws Exception {

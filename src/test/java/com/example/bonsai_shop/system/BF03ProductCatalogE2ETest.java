@@ -282,7 +282,7 @@ class BF03ProductCatalogE2ETest {
         page.waitForLoadState(LoadState.LOAD);
 
         assertThat(page.locator("#artisanFlashError"))
-                .hasAttribute("data-message", "Cần ít nhất một ảnh hoặc video trước khi publish.");
+                .hasAttribute("data-message", "Sản phẩm cần ít nhất 1 ảnh trước khi hiển thị trên marketplace. Video không được dùng làm ảnh đại diện.");
         Product product = productRepository.findById(productId).orElseThrow();
         assertEquals("DRAFT", product.getProductStatus());
         assertEquals(Boolean.FALSE, product.getIsVisible());

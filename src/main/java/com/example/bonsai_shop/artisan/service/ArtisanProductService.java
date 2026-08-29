@@ -40,7 +40,7 @@ public class ArtisanProductService {
     private static final SecureRandom RANDOM = new SecureRandom();
     private static final String CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
     private static final Set<String> VALID_SHOT_TYPES = Set.of("FRONT", "BACK", "LEFT", "RIGHT", "DETAIL", "TRUNK",
-            "BRANCH", "POT", "OVERVIEW");
+            "BRANCH", "POT", "OVERVIEW", "OTHER");
     private static final int MAX_MEDIA_PER_UPLOAD = 10;
     private static final int MAX_TAGS_PER_PRODUCT = 12;
     private static final long MAX_IMAGE_SIZE_BYTES = 7L * 1024 * 1024;
@@ -545,7 +545,8 @@ public class ArtisanProductService {
         boolean hasImageMedia = mediaList.stream()
                 .anyMatch(media -> "IMAGE".equalsIgnoreCase(media.getMediaType()));
         if (!hasImageMedia) {
-            throw new RuntimeException("Sản phẩm cần ít nhất 1 ảnh trước khi hiển thị trên marketplace. Video không được dùng làm ảnh đại diện.");
+            throw new RuntimeException(
+                    "Sản phẩm cần ít nhất 1 ảnh trước khi hiển thị trên marketplace. Video không được dùng làm ảnh đại diện.");
         }
         ensureImageThumbnail(mediaList);
     }
