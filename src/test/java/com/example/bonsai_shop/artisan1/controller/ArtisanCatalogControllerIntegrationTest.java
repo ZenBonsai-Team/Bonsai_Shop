@@ -1,22 +1,47 @@
 package com.example.bonsai_shop.artisan1.controller;
 
-import com.example.bonsai_shop.artisan.controller.ArtisanCatalogController;
-import com.example.bonsai_shop.artisan.service.ArtisanCatalogService;
+import com.example.bonsai_shop.customer.repository.RoleRepository;
+import com.example.bonsai_shop.customer.repository.UserRepository;
 import com.example.bonsai_shop.entity.Category;
+import com.example.bonsai_shop.entity.Product;
+import com.example.bonsai_shop.entity.ProductSegment;
+import com.example.bonsai_shop.entity.ProductTag;
+import com.example.bonsai_shop.entity.Role;
 import com.example.bonsai_shop.entity.Tag;
+import com.example.bonsai_shop.entity.User;
 import com.example.bonsai_shop.entity.Variety;
+import com.example.bonsai_shop.integration.support.AbstractDatabaseSafeIntegrationTest;
+import com.example.bonsai_shop.product.repository.CategoryRepository;
+import com.example.bonsai_shop.product.repository.ProductRepository;
+import com.example.bonsai_shop.product.repository.ProductSegmentRepository;
+import com.example.bonsai_shop.product.repository.ProductTagRepository;
+import com.example.bonsai_shop.product.repository.TagRepository;
+import com.example.bonsai_shop.product.repository.VarietyRepository;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.context.WebApplicationContext;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.hasProperty;
+import static org.hamcrest.Matchers.is;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.flash;
@@ -25,225 +50,358 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 
-class ArtisanCatalogControllerIntegrationTest {
+@Transactional
+class ArtisanCatalogControllerIntegrationTest extends AbstractDatabaseSafeIntegrationTest {
 
-    private ArtisanCatalogService artisanCatalogService;
+    private static final String ARTISAN_EMAIL = "artisan-catalog-controller-it@example.com";
+
+    @Autowired
+    private WebApplicationContext webApplicationContext;
+
+    @Autowired
+    private CategoryRepository categoryRepository;
+
+    @Autowired
+    private VarietyRepository varietyRepository;
+
+    @Autowired
+    private TagRepository tagRepository;
+
+    @Autowired
+    private ProductRepository productRepository;
+
+    @Autowired
+    private ProductSegmentRepository productSegmentRepository;
+
+    @Autowired
+    private ProductTagRepository productTagRepository;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private RoleRepository roleRepository;
+
     private MockMvc mockMvc;
 
     @BeforeEach
-    void setUp() {
-        artisanCatalogService = mock(ArtisanCatalogService.class);
-        ArtisanCatalogController controller = new ArtisanCatalogController(artisanCatalogService);
-        mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
+    void setUpMockMvc() {
+        mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
+        TestArtisanPrincipal principal = new TestArtisanPrincipal(ARTISAN_EMAIL);
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities()));
+    }
+
+    @AfterEach
+    void clearSecurityContext() {
+        SecurityContextHolder.clearContext();
     }
 
     @Test
     void catalog_WhenRequested_ShouldDisplayCatalogManagementPage() throws Exception {
-        Category category = category(1);
-        Variety variety = variety(10, category);
-        Tag tag = tag(100);
-        when(artisanCatalogService.getCategories()).thenReturn(List.of(category));
-        when(artisanCatalogService.getVarieties()).thenReturn(List.of(variety));
-        when(artisanCatalogService.getTags()).thenReturn(List.of(tag));
-        when(artisanCatalogService.getCategoryIdsInUse()).thenReturn(Set.of(1));
-        when(artisanCatalogService.getVarietyIdsInUse()).thenReturn(Set.of(10));
-        when(artisanCatalogService.getTagIdsInUse()).thenReturn(Set.of(100));
+        Category category = createCategory("Catalog IT Category");
+        Variety variety = createVariety(category, "Catalog IT Variety");
+        Tag tag = createTag("Catalog IT Tag");
 
         mockMvc.perform(get("/artisan/catalog"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("artisan/catalog"))
-                .andExpect(model().attribute("categories", List.of(category)))
-                .andExpect(model().attribute("varieties", List.of(variety)))
-                .andExpect(model().attribute("tags", List.of(tag)))
-                .andExpect(model().attribute("categoryIdsInUse", Set.of(1)))
-                .andExpect(model().attribute("varietyIdsInUse", Set.of(10)))
-                .andExpect(model().attribute("tagIdsInUse", Set.of(100)));
+                .andExpect(model().attribute("categories", hasItem(hasProperty("categoryId", is(category.getCategoryId())))))
+                .andExpect(model().attribute("varieties", hasItem(hasProperty("varietyId", is(variety.getVarietyId())))))
+                .andExpect(model().attribute("tags", hasItem(hasProperty("tagId", is(tag.getTagId())))))
+                .andExpect(model().attributeExists(
+                        "categoryIdsInUse",
+                        "varietyIdsInUse",
+                        "tagIdsInUse",
+                        "varietyCountByCategoryId",
+                        "productCountByCategoryId",
+                        "productCountByVarietyId",
+                        "productCountByTagId"));
     }
 
     @Test
     void createCategory_WhenRequestIsValid_ShouldRedirectWithSuccess() throws Exception {
+        String categoryName = uniqueName("Outdoor");
+
         mockMvc.perform(post("/artisan/catalog/categories")
-                        .param("categoryName", "Outdoor")
+                        .param("categoryName", categoryName)
                         .param("description", "Outdoor bonsai"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/artisan/catalog"))
                 .andExpect(flash().attributeExists("success"));
 
-        verify(artisanCatalogService).createCategory("Outdoor", "Outdoor bonsai");
+        assertTrue(categoryRepository.existsByCategoryNameIgnoreCase(categoryName));
     }
 
     @Test
     void createCategory_WhenServiceRejectsCreation_ShouldRedirectWithError() throws Exception {
-        doThrow(new RuntimeException("Category invalid or duplicate"))
-                .when(artisanCatalogService).createCategory("Outdoor", "Outdoor bonsai");
+        String categoryName = uniqueName("Duplicate Category");
+        createCategory(categoryName);
 
         mockMvc.perform(post("/artisan/catalog/categories")
-                        .param("categoryName", "Outdoor")
+                        .param("categoryName", categoryName)
                         .param("description", "Outdoor bonsai"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/artisan/catalog"))
-                .andExpect(flash().attribute("error", "Category invalid or duplicate"));
+                .andExpect(flash().attributeExists("error"));
     }
 
     @Test
     void updateCategory_WhenRequestIsValid_ShouldRedirectWithSuccess() throws Exception {
-        mockMvc.perform(post("/artisan/catalog/categories/1")
-                        .param("categoryName", "Updated Outdoor")
+        Category category = createCategory(uniqueName("Old Category"));
+        String updatedName = uniqueName("Updated Category");
+
+        mockMvc.perform(post("/artisan/catalog/categories/" + category.getCategoryId())
+                        .param("categoryName", updatedName)
                         .param("description", "Updated description"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/artisan/catalog"))
                 .andExpect(flash().attributeExists("success"));
 
-        verify(artisanCatalogService).updateCategory(1, "Updated Outdoor", "Updated description");
+        assertEquals(updatedName, categoryRepository.findById(category.getCategoryId()).orElseThrow().getCategoryName());
     }
 
     @Test
     void deleteCategory_WhenServiceAllowsOrRejectsDeletion_ShouldRedirectWithExpectedFlash() throws Exception {
-        mockMvc.perform(post("/artisan/catalog/categories/1/delete"))
+        Category unusedCategory = createCategory(uniqueName("Unused Category"));
+
+        mockMvc.perform(post("/artisan/catalog/categories/" + unusedCategory.getCategoryId() + "/delete"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/artisan/catalog"))
                 .andExpect(flash().attributeExists("success"));
 
-        verify(artisanCatalogService).deleteCategory(1);
+        assertFalse(categoryRepository.existsById(unusedCategory.getCategoryId()));
 
-        doThrow(new RuntimeException("Category is in use"))
-                .when(artisanCatalogService).deleteCategory(2);
+        Category categoryInUse = createCategory(uniqueName("Category In Use"));
+        createVariety(categoryInUse, uniqueName("Variety Blocks Category Delete"));
 
-        mockMvc.perform(post("/artisan/catalog/categories/2/delete"))
+        mockMvc.perform(post("/artisan/catalog/categories/" + categoryInUse.getCategoryId() + "/delete"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/artisan/catalog"))
-                .andExpect(flash().attribute("error", "Category is in use"));
+                .andExpect(flash().attributeExists("error"));
     }
 
     @Test
     void createVariety_WhenRequestIsValid_ShouldRedirectWithSuccess() throws Exception {
+        Category category = createCategory(uniqueName("Variety Parent"));
+        String varietyName = uniqueName("Kim Gion");
+
         mockMvc.perform(post("/artisan/catalog/varieties")
-                        .param("categoryId", "1")
-                        .param("varietyName", "Kim giòn")
+                        .param("categoryId", category.getCategoryId().toString())
+                        .param("varietyName", varietyName)
                         .param("description", "Small leaves"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/artisan/catalog"))
                 .andExpect(flash().attributeExists("success"));
 
-        verify(artisanCatalogService).createVariety(1, "Kim giòn", "Small leaves");
+        assertTrue(varietyRepository.existsByCategoryCategoryIdAndVarietyNameIgnoreCase(
+                category.getCategoryId(), varietyName));
     }
 
     @Test
     void createVariety_WhenCategoryInvalid_ShouldRedirectWithError() throws Exception {
-        doThrow(new RuntimeException("Category does not exist"))
-                .when(artisanCatalogService).createVariety(999, "Kim giòn", "Small leaves");
-
         mockMvc.perform(post("/artisan/catalog/varieties")
-                        .param("categoryId", "999")
-                        .param("varietyName", "Kim giòn")
+                        .param("categoryId", "999999")
+                        .param("varietyName", uniqueName("Kim Gion"))
                         .param("description", "Small leaves"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/artisan/catalog"))
-                .andExpect(flash().attribute("error", "Category does not exist"));
+                .andExpect(flash().attributeExists("error"));
     }
 
     @Test
     void updateVariety_WhenRequestIsValid_ShouldRedirectWithSuccess() throws Exception {
-        mockMvc.perform(post("/artisan/catalog/varieties/10")
-                        .param("categoryId", "1")
-                        .param("varietyName", "Updated Kim giòn")
+        Category oldCategory = createCategory(uniqueName("Old Parent"));
+        Category newCategory = createCategory(uniqueName("New Parent"));
+        Variety variety = createVariety(oldCategory, uniqueName("Old Variety"));
+        String updatedName = uniqueName("Updated Variety");
+
+        mockMvc.perform(post("/artisan/catalog/varieties/" + variety.getVarietyId())
+                        .param("categoryId", newCategory.getCategoryId().toString())
+                        .param("varietyName", updatedName)
                         .param("description", "Updated leaves"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/artisan/catalog"))
                 .andExpect(flash().attributeExists("success"));
 
-        verify(artisanCatalogService).updateVariety(10, 1, "Updated Kim giòn", "Updated leaves");
+        Variety updatedVariety = varietyRepository.findById(variety.getVarietyId()).orElseThrow();
+        assertEquals(updatedName, updatedVariety.getVarietyName());
+        assertEquals(newCategory.getCategoryId(), updatedVariety.getCategory().getCategoryId());
     }
 
     @Test
     void deleteVariety_WhenServiceAllowsOrRejectsDeletion_ShouldRedirectWithExpectedFlash() throws Exception {
-        mockMvc.perform(post("/artisan/catalog/varieties/10/delete"))
+        Category category = createCategory(uniqueName("Delete Variety Parent"));
+        Variety unusedVariety = createVariety(category, uniqueName("Unused Variety"));
+
+        mockMvc.perform(post("/artisan/catalog/varieties/" + unusedVariety.getVarietyId() + "/delete"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/artisan/catalog"))
                 .andExpect(flash().attributeExists("success"));
 
-        verify(artisanCatalogService).deleteVariety(10);
+        assertFalse(varietyRepository.existsById(unusedVariety.getVarietyId()));
 
-        doThrow(new RuntimeException("Variety is in use"))
-                .when(artisanCatalogService).deleteVariety(20);
+        Variety varietyInUse = createVariety(category, uniqueName("Variety In Use"));
+        createProduct(varietyInUse);
 
-        mockMvc.perform(post("/artisan/catalog/varieties/20/delete"))
+        mockMvc.perform(post("/artisan/catalog/varieties/" + varietyInUse.getVarietyId() + "/delete"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/artisan/catalog"))
-                .andExpect(flash().attribute("error", "Variety is in use"));
+                .andExpect(flash().attributeExists("error"));
     }
 
     @Test
     void createTag_WhenRequestIsValid_ShouldRedirectWithSuccess() throws Exception {
+        String tagName = uniqueName("Mini");
+
         mockMvc.perform(post("/artisan/catalog/tags")
-                        .param("tagName", "Mini"))
+                        .param("tagName", tagName))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/artisan/catalog"))
                 .andExpect(flash().attributeExists("success"));
 
-        verify(artisanCatalogService).createTag("Mini");
+        assertTrue(tagRepository.existsByTagNameIgnoreCase(tagName));
     }
 
     @Test
     void createTag_WhenServiceRejectsCreation_ShouldRedirectWithError() throws Exception {
-        doThrow(new RuntimeException("Tag invalid or duplicate"))
-                .when(artisanCatalogService).createTag("Mini");
+        String tagName = uniqueName("Duplicate Tag");
+        createTag(tagName);
 
         mockMvc.perform(post("/artisan/catalog/tags")
-                        .param("tagName", "Mini"))
+                        .param("tagName", tagName))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/artisan/catalog"))
-                .andExpect(flash().attribute("error", "Tag invalid or duplicate"));
+                .andExpect(flash().attributeExists("error"));
     }
 
     @Test
     void updateTag_WhenRequestIsValid_ShouldRedirectWithSuccess() throws Exception {
-        mockMvc.perform(post("/artisan/catalog/tags/100")
-                        .param("tagName", "Updated Mini"))
+        Tag tag = createTag(uniqueName("Old Tag"));
+        String updatedName = uniqueName("Updated Tag");
+
+        mockMvc.perform(post("/artisan/catalog/tags/" + tag.getTagId())
+                        .param("tagName", updatedName))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/artisan/catalog"))
                 .andExpect(flash().attributeExists("success"));
 
-        verify(artisanCatalogService).updateTag(100, "Updated Mini");
+        assertEquals(updatedName, tagRepository.findById(tag.getTagId()).orElseThrow().getTagName());
     }
 
     @Test
     void deleteTag_WhenServiceAllowsOrRejectsDeletion_ShouldRedirectWithExpectedFlash() throws Exception {
-        mockMvc.perform(post("/artisan/catalog/tags/100/delete"))
+        Tag unusedTag = createTag(uniqueName("Unused Tag"));
+
+        mockMvc.perform(post("/artisan/catalog/tags/" + unusedTag.getTagId() + "/delete"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/artisan/catalog"))
                 .andExpect(flash().attributeExists("success"));
 
-        verify(artisanCatalogService).deleteTag(100);
+        assertFalse(tagRepository.existsById(unusedTag.getTagId()));
 
-        doThrow(new RuntimeException("Tag is in use"))
-                .when(artisanCatalogService).deleteTag(200);
+        Category category = createCategory(uniqueName("Tagged Product Category"));
+        Variety variety = createVariety(category, uniqueName("Tagged Product Variety"));
+        Product product = createProduct(variety);
+        Tag tagInUse = createTag(uniqueName("Tag In Use"));
+        productTagRepository.save(ProductTag.builder()
+                .product(product)
+                .tag(tagInUse)
+                .build());
 
-        mockMvc.perform(post("/artisan/catalog/tags/200/delete"))
+        mockMvc.perform(post("/artisan/catalog/tags/" + tagInUse.getTagId() + "/delete"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/artisan/catalog"))
-                .andExpect(flash().attribute("error", "Tag is in use"));
+                .andExpect(flash().attributeExists("error"));
     }
 
-    private Category category(Integer categoryId) {
-        return Category.builder()
-                .categoryId(categoryId)
-                .categoryName("Outdoor")
-                .build();
+    private Category createCategory(String categoryName) {
+        return categoryRepository.save(Category.builder()
+                .categoryName(categoryName)
+                .description("Integration test category")
+                .build());
     }
 
-    private Variety variety(Integer varietyId, Category category) {
-        return Variety.builder()
-                .varietyId(varietyId)
+    private Variety createVariety(Category category, String varietyName) {
+        return varietyRepository.save(Variety.builder()
                 .category(category)
-                .varietyName("Kim giòn")
-                .build();
+                .varietyName(varietyName)
+                .description("Integration test variety")
+                .build());
     }
 
-    private Tag tag(Integer tagId) {
-        return Tag.builder()
-                .tagId(tagId)
-                .tagName("Mini")
-                .build();
+    private Tag createTag(String tagName) {
+        return tagRepository.save(Tag.builder()
+                .tagName(tagName)
+                .build());
+    }
+
+    private Product createProduct(Variety variety) {
+        ProductSegment segment = productSegmentRepository.save(ProductSegment.builder()
+                .segmentName(uniqueName("Standard Segment"))
+                .build());
+        return productRepository.save(Product.builder()
+                .createdBy(userRepository.findByEmail(ARTISAN_EMAIL).orElseGet(this::createTestArtisan))
+                .variety(variety)
+                .segment(segment)
+                .productCode("ACC-IT-" + System.nanoTime())
+                .productName("Catalog Integration Bonsai")
+                .description("Product used by catalog integration test")
+                .treeStory("Catalog integration")
+                .age(10)
+                .height(40.0f)
+                .trunkDiameter(7.0f)
+                .style("Formal Upright")
+                .price(new BigDecimal("3000000"))
+                .productStatus("AVAILABLE")
+                .isVisible(true)
+                .isPublicPrice(true)
+                .viewCount(0)
+                .createdAt(LocalDateTime.now())
+                .build());
+    }
+
+    private User createTestArtisan() {
+        Role role = roleRepository.findByRoleName("ARTISAN")
+                .orElseGet(() -> roleRepository.save(Role.builder().roleName("ARTISAN").description("ARTISAN").build()));
+        return userRepository.save(User.builder()
+                .email(ARTISAN_EMAIL)
+                .username(ARTISAN_EMAIL)
+                .fullName("Artisan Catalog Controller IT")
+                .phone("0987654321")
+                .password("password123")
+                .status("ACTIVE")
+                .role(role)
+                .build());
+    }
+
+    private String uniqueName(String prefix) {
+        return prefix + " " + System.nanoTime();
+    }
+
+    private record TestArtisanPrincipal(String username) implements UserDetails {
+
+        public String getFullName() {
+            return "Artisan Catalog Controller IT";
+        }
+
+        public String getAvatar() {
+            return "";
+        }
+
+        @Override
+        public String getUsername() {
+            return username;
+        }
+
+        @Override
+        public Collection<? extends GrantedAuthority> getAuthorities() {
+            return List.of(new SimpleGrantedAuthority("ROLE_ARTISAN"));
+        }
+
+        @Override
+        public String getPassword() {
+            return "password123";
+        }
     }
 }

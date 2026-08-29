@@ -118,9 +118,8 @@ Bonsai_Shop/
 
 | Họ và Tên                  | Vai trò            | Email                       |
 | -------------------------- | ------------------ | --------------------------- |
-| **Bùi Nam Kha**            | Developer / Leader | khabnhe182308@fpt.edu.vn    |
+| **Bùi Nam Kha**            | Developer          | khabnhe182308@fpt.edu.vn    |
 | **Phạm Quang Anh**         | Developer          | anhpqhe180656@fpt.edu.vn    |
 | **Nguyễn Kiều Tùng Dương** | Developer          | duongnkthe186476@fpt.edu.vn |
-
-|
-| _(Các thành viên khác)_ | ... | ... |
+| **Bùi Tuấn Hiệp**          | Developer          | hiepbthe182078@fpt.edu.vn   |
+| **Nguyễn Tùng Khánh**      | Developer/Leader   | khanhnthe181799@fpt.edu.vn  |
